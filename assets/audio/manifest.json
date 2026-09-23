@@ -1,0 +1,28 @@
+{
+  "_note": "Runtime sound list for ui/audio.gd. Files are made by tools/ui/audio-events.json (ElevenLabs sound effects, generated for this game). bus: Master, Music, SFX, UI, Ambience. db: level offset.",
+  "sounds": {
+    "click": {"file": "click.mp3", "bus": "UI", "db": -8},
+    "hover": {"file": "hover.mp3", "bus": "UI", "db": -22},
+    "tick": {"file": "tick.mp3", "bus": "UI", "db": -10},
+    "select": {"file": "select.mp3", "bus": "UI", "db": -10},
+    "confirm": {"file": "confirm.mp3", "bus": "UI", "db": -6},
+    "place": {"file": "place.mp3", "bus": "SFX", "db": -6},
+    "error": {"file": "error.mp3", "bus": "UI", "db": -8},
+    "open": {"file": "open.mp3", "bus": "UI", "db": -12},
+    "close": {"file": "close.mp3", "bus": "UI", "db": -14},
+    "toast": {"file": "toast.mp3", "bus": "UI", "db": -10},
+    "alert_warning": {"file": "alert_warning.mp3", "bus": "SFX", "db": -6},
+    "alert_critical": {"file": "alert_critical.mp3", "bus": "SFX", "db": -4},
+    "award": {"file": "award.mp3", "bus": "SFX", "db": -4},
+    "chapter": {"file": "chapter.mp3", "bus": "SFX", "db": -4},
+    "research": {"file": "research.mp3", "bus": "SFX", "db": -6},
+    "goal": {"file": "confirm.mp3", "bus": "SFX", "db": -4},
+    "construct": {"file": "construct.mp3", "bus": "SFX", "db": -8},
+    "airlock": {"file": "airlock.mp3", "bus": "SFX", "db": -10}
+  },
+  "loops": {
+    "wind": {"file": "amb_wind.mp3", "bus": "Ambience", "db": -14},
+    "hum": {"file": "amb_hum.mp3", "bus": "Ambience", "db": -18},
+    "night": {"file": "amb_night.mp3", "bus": "Ambience", "db": -16}
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "planets": {
+    "dry": {
+      "name": "Dry world",
+      "daylight_seconds": 360,
+      "solar_mult": 1.0,
+      "wind_avg": 3.0,
+      "wind_max": 8.0,
+      "wind_var": 2.6,
+      "radiation_mult": 1.0,
+      "terrain": {
+        "amplitude": 7.0,
+        "roughness": 0.5,
+        "flat_radius": 46.0,
+        "deposits": 5
+      }
+    },
+    "cold": {
+      "name": "Cold world",
+      "daylight_seconds": 300,
+      "solar_mult": 0.6,
+      "wind_avg": 5.0,
+      "wind_max": 10.0,
+      "wind_var": 3.0,
+      "radiation_mult": 1.0,
+      "terrain": {
+        "amplitude": 9.0,
+        "roughness": 0.55,
+        "flat_radius": 42.0,
+        "deposits": 5
+      }
+    },
+    "airless": {
+      "name": "Airless world",
+      "daylight_seconds": 360,
+      "solar_mult": 1.2,
+      "wind_avg": 0.0,
+      "wind_max": 0.0,
+      "wind_var": 0.0,
+      "radiation_mult": 2.0,
+      "terrain": {
+        "amplitude": 6.0,
+        "roughness": 0.6,
+        "flat_radius": 46.0,
+        "deposits": 6
+      }
+    }
+  },
+  "scenarios": {
+    "tutorial": {
+      "name": "First landing",
+      "planet": "dry",
+      "map_size": 256,
+      "colonists": [
+        "technician",
+        "technician",
+        "grower",
+        "grower",
+        "operator",
+        "operator",
+        "medic",
+        "scientist"
+      ],
+      "lander_cargo": {
+        "meals": 48,
+        "water": 64,
+        "metal": 120,
+        "polymer": 70,
+        "spare_parts": 8
+      },
+      "no_disaster_days": 5,
+      "tutorial_seeds": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005
+      ]
+    }
+  },
+  "names": [
+    "Asha Verrin",
+    "Tomas Okoye",
+    "Lin Halvorsen",
+    "Marek Dufour",
+    "Yara Castell",
+    "Ike Brandt",
+    "Sol Natarajan",
+    "Petra Quill",
+    "Noor Havel",
+    "Dmitri Sato",
+    "Esme Okafor",
+    "Rafael Lund",
+    "Kaito Mbeki",
+    "Ines Varga",
+    "Bram Achebe",
+    "Freya Moreau",
+    "Jonas Adeyemi",
+    "Mila Kovac",
+    "Oren Takeda",
+    "Saskia Nwosu",
+    "Teo Lindqvist",
+    "Wren Aguilar",
+    "Zofia Banerjee",
+    "Calla Rios",
+    "Emeka Strand",
+    "Hana Pereira",
+    "Idris Vance",
+    "Juno Eriksen",
+    "Kofi Marchetti",
+    "Lena Osei",
+    "Milo Tanaka",
+    "Nadia Brooks",
+    "Otis Rahman",
+    "Pia Solberg",
+    "Quinn Abara",
+    "Rosa Lindholm",
+    "Stellan Mori",
+    "Tala Winters",
+    "Uma Fontaine",
+    "Viktor Eze"
+  ]
+}

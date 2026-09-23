@@ -1,0 +1,11 @@
+{
+  "_note": "What a tray can grow. cycle_seconds: from seeding to ready. yield: crop units per harvest; biomass: by-product units. water_per_day while growing. building: where it grows. research: tech that unlocks it ('' = from the start). Algae grows continuously in a bioreactor (see balance.json algae).",
+  "potato":   {"name": "Potato",   "building": "greenhouse",       "cycle_seconds": 300, "yield": 5, "biomass": 2, "water_per_day": 4, "research": "",       "color": "#C9A15A"},
+  "wheat":    {"name": "Wheat",    "building": "greenhouse",       "cycle_seconds": 300, "yield": 5, "biomass": 3, "water_per_day": 4, "research": "",       "color": "#E3C16F"},
+  "greens":   {"name": "Greens",   "building": "greenhouse",       "cycle_seconds": 180, "yield": 4, "biomass": 1, "water_per_day": 3, "research": "",       "color": "#5DBB4B"},
+  "tomato":   {"name": "Tomato",   "building": "greenhouse",       "cycle_seconds": 240, "yield": 4, "biomass": 1, "water_per_day": 4, "research": "agri_1", "color": "#E5483A"},
+  "soybean":  {"name": "Soybean",  "building": "greenhouse",       "cycle_seconds": 360, "yield": 3, "biomass": 2, "water_per_day": 5, "research": "agri_1", "color": "#A8B85A"},
+  "herbs":    {"name": "Herbs",    "building": "greenhouse",       "cycle_seconds": 200, "yield": 3, "biomass": 1, "water_per_day": 2, "research": "agri_1", "color": "#7BC96F"},
+  "mushroom": {"name": "Mushroom", "building": "fungus_farm",      "cycle_seconds": 240, "yield": 4, "biomass": 1, "water_per_day": 2, "research": "agri_2", "color": "#C8B8A6"},
+  "algae":    {"name": "Algae",    "building": "algae_bioreactor", "cycle_seconds": 0,   "yield": 0, "biomass": 0, "water_per_day": 6, "research": "agri_3", "color": "#2FAF7A"}
+}

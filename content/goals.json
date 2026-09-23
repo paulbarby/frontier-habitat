@@ -1,0 +1,44 @@
+{
+  "_note": "The mission. Chapters open in order. A goal is a pure check of the state; sustain = seconds the condition must hold without a break. Rewards arrive as a supply pod next to the lander (real units) plus research points. kind + params are evaluated by sim/goals.gd. See AAA_DESIGN §7.",
+  "chapters": [
+    {"id": "touchdown", "name": "Touchdown", "desc": "Make the base live before the lander air runs out.",
+     "goals": [
+      {"id": "power_online", "name": "Power online", "desc": "A generator and a battery on one network, with 2 E stored.", "hint": "Solar array + battery, joined by a cable.", "kind": "power_online", "params": {"stored_e": 2}, "reward": {"items": {"metal": 10}}},
+      {"id": "water_flowing", "name": "Water flowing", "desc": "20 water in reservoirs.", "hint": "Water extractor + reservoir on a powered network.", "kind": "network_water", "params": {"units": 20}, "reward": {"items": {"polymer": 6}}},
+      {"id": "first_breath", "name": "First breath", "desc": "A room of the base has its own oxygen.", "hint": "Oxygen plant joined to rooms by corridors.", "kind": "base_air", "params": {}, "reward": {"items": {"spare_parts": 2}}},
+      {"id": "shelter", "name": "Shelter", "desc": "Every colonist has a bed in the base.", "hint": "A habitat with air. The lander air ends on day 3.", "kind": "all_housed", "params": {}, "reward": {"items": {"metal": 15, "polymer": 10}}}
+    ]},
+    {"id": "sustain", "name": "Sustain", "desc": "Supply oxygen, water, food and power without help.",
+     "goals": [
+      {"id": "o2_supply", "name": "O2 supply", "desc": "Make at least 120% of the oxygen people breathe, for one full day.", "hint": "More oxygen plants, or a bigger one.", "kind": "o2_ratio", "params": {"ratio": 1.2}, "sustain": 600, "reward": {"items": {"electronics": 2}, "rp": 20}},
+      {"id": "water_supply", "name": "Water supply", "desc": "Keep 1.5 days of drinking water, for one full day.", "hint": "A second extractor or a bigger reservoir.", "kind": "water_days", "params": {"days": 1.5}, "sustain": 600, "reward": {"items": {"metal": 10}, "rp": 20}},
+      {"id": "food_supply", "name": "Food supply", "desc": "2 days of cooked dishes in stock.", "hint": "Greenhouses grow crops; the kitchen cooks them.", "kind": "dish_days", "params": {"days": 2.0, "exclude": ["meals"]}, "reward": {"items": {"polymer": 10}, "rp": 20}},
+      {"id": "power_supply", "name": "Power supply", "desc": "Pass one full night with no life-support structure switched off.", "hint": "Enough batteries for the night, or wind turbines.", "kind": "night_no_shed", "params": {}, "reward": {"items": {"metal": 10}, "rp": 20}},
+      {"id": "balanced_diet", "name": "Balanced diet", "desc": "Average nutrition 55 or more over one full day.", "hint": "Cook different dishes. Soy stew (kitchen level 2) gives protein and fat.", "kind": "nutrition_avg", "params": {"score": 55, "window": 600}, "reward": {"rp": 40}}
+    ]},
+    {"id": "industry", "name": "Industry", "desc": "Build the industry that the ship needs.",
+     "goals": [
+      {"id": "iron_will", "name": "Iron will", "desc": "Refine 50 steel.", "hint": "Mine on a deposit, then a refinery.", "kind": "produced", "params": {"item": "metal", "count": 50}, "reward": {"items": {"spare_parts": 4}, "rp": 30}},
+      {"id": "silicon_age", "name": "Silicon age", "desc": "Make 20 electronics.", "hint": "Research Microelectronics. The fab needs silicate and steel.", "kind": "produced", "params": {"item": "electronics", "count": 20}, "reward": {"items": {"glass": 10}, "rp": 30}},
+      {"id": "science", "name": "Science", "desc": "Complete 3 research projects.", "hint": "A research lab and a scientist.", "kind": "techs_done", "params": {"count": 3}, "reward": {"items": {"electronics": 3}}},
+      {"id": "growing", "name": "Growing settlement", "desc": "20 colonists.", "hint": "Admit settlers when beds, air and food allow.", "kind": "pop", "params": {"count": 20}, "reward": {"items": {"metal": 20, "polymer": 20}}},
+      {"id": "first_upgrade", "name": "Upgrade", "desc": "Upgrade any structure to level 3.", "hint": "Select a structure and use Upgrade.", "kind": "max_level", "params": {"level": 3}, "reward": {"items": {"electronics": 4}, "rp": 40}}
+    ]},
+    {"id": "meridian", "name": "The Meridian", "desc": "Repair the crashed colony ship.",
+     "goals": [
+      {"id": "ship_survey", "name": "Survey the wreck", "desc": "A colonist surveys the Meridian.", "hint": "It is out of reach from far away: build an airlock near it.", "kind": "ship_stage", "params": {"stage": 1}, "reward": {"items": {"hull_plate": 4}, "rp": 30}},
+      {"id": "ship_hull", "name": "Patch the hull", "desc": "Deliver 30 hull plates and 40 steel, then repair.", "hint": "Hull plates come from a fabricator.", "kind": "ship_stage", "params": {"stage": 2}, "reward": {"rp": 60}},
+      {"id": "ship_systems", "name": "Restore systems", "desc": "Deliver 25 electronics and 10 glass, then repair.", "hint": "", "kind": "ship_stage", "params": {"stage": 3}, "reward": {"rp": 60}},
+      {"id": "ship_engines", "name": "Fuel the engines", "desc": "Deliver 40 rocket fuel and 10 composite, then repair.", "hint": "Rocket fuel comes from a fuel refinery.", "kind": "ship_stage", "params": {"stage": 4}, "reward": {"rp": 80}},
+      {"id": "ship_flight", "name": "Test flight", "desc": "The Meridian flies.", "hint": "", "kind": "ship_stage", "params": {"stage": 5}, "reward": {"items": {"exotic": 6}, "rp": 100}}
+    ]},
+    {"id": "frontier", "name": "Frontier", "desc": "Make the colony self-sufficient and keep the ship flying.",
+     "goals": [
+      {"id": "full_supply", "name": "Full supply", "desc": "O2, water, food, balanced diet, power and spare parts, all at once, for 3 days.", "hint": "Every supply bar green at the same time.", "kind": "full_supply", "params": {"o2_ratio": 1.1, "water_days": 1.5, "dish_days": 2.0, "nutrition": 70, "spares": 10}, "sustain": 1800, "reward": {"items": {"exotic": 6}, "rp": 150}},
+      {"id": "ship_maintenance", "name": "Ship maintenance", "desc": "Keep the Meridian's readiness at 80% or more for 5 days.", "hint": "Maintenance uses rocket fuel and spare parts.", "kind": "ship_readiness", "params": {"min": 80}, "sustain": 3000, "reward": {"items": {"exotic": 6}, "rp": 150}},
+      {"id": "established", "name": "Established colony", "desc": "50 colonists.", "hint": "", "kind": "pop", "params": {"count": 50}, "reward": {"rp": 150}},
+      {"id": "pinnacle", "name": "Pinnacle", "desc": "Any structure at level 5.", "hint": "Level 5 needs special research and exotic crystals.", "kind": "max_level", "params": {"level": 5}, "reward": {"rp": 150}}
+    ]}
+  ],
+  "victory": {"name": "Frontier established", "desc": "Every chapter is complete. The colony stands on its own, and the Meridian flies. You can go on playing."}
+}

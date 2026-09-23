@@ -1,0 +1,13 @@
+{
+  "_note": "work is in work points. One work point = one second of work by a healthy, qualified colonist. 'cook' is the kitchen menu: the dish, its ingredients and its work come from dishes.json (see sim/production.gd). A machine with several recipes lists them in buildings.json 'recipes'; the player picks one with set_recipe. stock_max: the machine stops while the colony holds this many units of its output (it would only fill the stores).",
+  "cook":       {"name": "Cook dishes",      "role": "operator",   "category": "food",     "inputs": {},                                  "outputs": {},                  "work": 0.0, "menu": true},
+  "mine":       {"name": "Mine ore",         "role": "operator",   "category": "industry", "inputs": {},                                  "outputs": {"ore": 2},          "work": 40.0, "from_deposit": 2},
+  "refine":     {"name": "Refine steel",     "role": "technician", "category": "industry", "inputs": {"ore": 2},                          "outputs": {"metal": 1},        "work": 20.0},
+  "polymerize": {"name": "Make polymer",     "role": "technician", "category": "industry", "inputs": {"biomass": 2},                      "outputs": {"polymer": 1},      "work": 20.0, "stock_max": 80},
+  "spares":     {"name": "Make spare parts", "role": "technician", "category": "industry", "inputs": {"metal": 1, "polymer": 1},           "outputs": {"spare_parts": 2},  "work": 30.0, "stock_max": 16},
+  "glass":      {"name": "Melt glass",       "role": "technician", "category": "industry", "inputs": {"silicate": 2},                     "outputs": {"glass": 1},        "work": 30.0, "stock_max": 30},
+  "electronics":{"name": "Make electronics", "role": "technician", "category": "industry", "inputs": {"silicate": 1, "metal": 1},          "outputs": {"electronics": 1},  "work": 40.0, "stock_max": 40},
+  "hull_plate": {"name": "Press hull plates","role": "technician", "category": "industry", "inputs": {"metal": 1, "polymer": 1},           "outputs": {"hull_plate": 1},   "work": 30.0, "stock_max": 30, "stock_for": "ship"},
+  "composite":  {"name": "Lay composite",    "role": "technician", "category": "industry", "inputs": {"polymer": 2, "glass": 1},           "outputs": {"composite": 1},    "work": 40.0, "stock_max": 20},
+  "medicine":   {"name": "Make medicine",    "role": "medic",      "category": "industry", "inputs": {"herbs": 1, "polymer": 1},           "outputs": {"medicine": 2},     "work": 30.0, "stock_max": 12}
+}

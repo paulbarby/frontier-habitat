@@ -1,0 +1,7745 @@
+{
+ "generator": "rooms_build.py",
+ "blender": "5.2.1 LTS",
+ "models": [
+  {
+   "id": "habitat_s",
+   "type": "habitat",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2858,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 724,
+    "Roof": 736,
+    "Interior": 570,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 20
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.819
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 171140,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 272544,
+   "trays": [],
+   "verify": {
+    "tris": 2858,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "habitat_m",
+   "type": "habitat",
+   "size": "m",
+   "footprint": 5.5,
+   "tris": 4324,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1036,
+    "Roof": 1280,
+    "Interior": 1034,
+    "L2": 172,
+    "L3": 174,
+    "L4": 284,
+    "L5": 304,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.366,
+    -5.366,
+    -0.2
+   ],
+   "bbox_max": [
+    5.366,
+    5.366,
+    5.881
+   ],
+   "max_radius": 5.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 244984,
+   "color0": true,
+   "also": [
+    "habitat"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 413472,
+   "trays": [],
+   "verify": {
+    "tris": 4324,
+    "rmax": 5.400000110322884,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "habitat_l",
+   "type": "habitat",
+   "size": "l",
+   "footprint": 7.0,
+   "tris": 6468,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1452,
+    "Roof": 2128,
+    "Interior": 1792,
+    "L2": 204,
+    "L3": 190,
+    "L4": 310,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.874,
+    -6.874,
+    -0.2
+   ],
+   "bbox_max": [
+    6.874,
+    6.874,
+    8.048
+   ],
+   "max_radius": 6.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 352692,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.2,
+   "ao_rays": 619488,
+   "trays": [],
+   "verify": {
+    "tris": 6468,
+    "rmax": 6.900000160993702,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "habitat_xl",
+   "type": "habitat",
+   "size": "xl",
+   "footprint": 8.5,
+   "tris": 8184,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1796,
+    "Roof": 2668,
+    "Interior": 2388,
+    "L2": 376,
+    "L3": 206,
+    "L4": 326,
+    "L5": 384,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -8.379,
+    -8.379,
+    -0.2
+   ],
+   "bbox_max": [
+    8.379,
+    8.379,
+    9.107
+   ],
+   "max_radius": 8.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 440352,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.5,
+   "ao_rays": 784224,
+   "trays": [],
+   "verify": {
+    "tris": 8184,
+    "rmax": 8.400000448298453,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "greenhouse_s",
+   "type": "greenhouse",
+   "size": "s",
+   "footprint": 4.3,
+   "tris": 2668,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 568,
+    "Roof": 838,
+    "Interior": 342,
+    "L2": 156,
+    "L3": 226,
+    "L4": 266,
+    "L5": 232,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.164,
+    -4.164,
+    -0.2
+   ],
+   "bbox_max": [
+    4.164,
+    4.164,
+    5.22
+   ],
+   "max_radius": 4.2,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 174988,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 261216,
+   "trays": [
+    [
+     0.0,
+     -1.2
+    ],
+    [
+     0.0,
+     1.2
+    ]
+   ],
+   "verify": {
+    "tris": 2668,
+    "rmax": 4.200000022940183,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 4.768371586472142e-08,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "greenhouse_m",
+   "type": "greenhouse",
+   "size": "m",
+   "footprint": 6.0,
+   "tris": 3706,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 884,
+    "Roof": 1308,
+    "Interior": 530,
+    "L2": 188,
+    "L3": 242,
+    "L4": 282,
+    "L5": 232,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.872,
+    -5.872,
+    -0.2
+   ],
+   "bbox_max": [
+    5.872,
+    5.872,
+    6.12
+   ],
+   "max_radius": 5.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 236328,
+   "color0": true,
+   "also": [
+    "greenhouse"
+   ],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 363072,
+   "trays": [
+    [
+     2.2,
+     -1.7
+    ],
+    [
+     2.2,
+     1.7
+    ],
+    [
+     -2.2,
+     -1.7
+    ],
+    [
+     -2.2,
+     1.7
+    ]
+   ],
+   "verify": {
+    "tris": 3706,
+    "rmax": 5.8999999627750945,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 1.9660499713218698e-07,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "greenhouse_l",
+   "type": "greenhouse",
+   "size": "l",
+   "footprint": 7.8,
+   "tris": 5088,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1298,
+    "Roof": 1898,
+    "Interior": 834,
+    "L2": 220,
+    "L3": 258,
+    "L4": 308,
+    "L5": 232,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    7.02
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 320664,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 498528,
+   "trays": [
+    [
+     2.2,
+     -5.1
+    ],
+    [
+     2.2,
+     -1.7
+    ],
+    [
+     2.2,
+     1.7
+    ],
+    [
+     2.2,
+     5.1
+    ],
+    [
+     -2.2,
+     -5.1
+    ],
+    [
+     -2.2,
+     -1.7
+    ],
+    [
+     -2.2,
+     1.7
+    ],
+    [
+     -2.2,
+     5.1
+    ]
+   ],
+   "verify": {
+    "tris": 5088,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 2.3841857945683385e-07,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "greenhouse_xl",
+   "type": "greenhouse",
+   "size": "xl",
+   "footprint": 9.6,
+   "tris": 6015,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1640,
+    "Roof": 2195,
+    "Interior": 1058,
+    "L2": 252,
+    "L3": 274,
+    "L4": 324,
+    "L5": 232,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -9.48,
+    -9.48,
+    -0.2
+   ],
+   "bbox_max": [
+    9.48,
+    9.48,
+    7.92
+   ],
+   "max_radius": 9.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 370168,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.2,
+   "ao_rays": 589104,
+   "trays": [
+    [
+     4.4,
+     -5.1
+    ],
+    [
+     4.4,
+     -1.7
+    ],
+    [
+     4.4,
+     1.7
+    ],
+    [
+     4.4,
+     5.1
+    ],
+    [
+     0.0,
+     -5.1
+    ],
+    [
+     0.0,
+     -1.7
+    ],
+    [
+     0.0,
+     1.7
+    ],
+    [
+     0.0,
+     5.1
+    ],
+    [
+     -4.4,
+     -5.1
+    ],
+    [
+     -4.4,
+     -1.7
+    ],
+    [
+     -4.4,
+     1.7
+    ],
+    [
+     -4.4,
+     5.1
+    ]
+   ],
+   "verify": {
+    "tris": 6015,
+    "rmax": 9.50000029528455,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 2.578891234936507e-07,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "kitchen_s",
+   "type": "kitchen",
+   "size": "s",
+   "footprint": 3.6,
+   "tris": 2950,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 632,
+    "Roof": 1082,
+    "Interior": 388,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    4.738
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 179212,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 287328,
+   "trays": [],
+   "verify": {
+    "tris": 2950,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "kitchen_m",
+   "type": "kitchen",
+   "size": "m",
+   "footprint": 4.6,
+   "tris": 4102,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1304,
+    "Roof": 1274,
+    "Interior": 598,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.462,
+    -4.462,
+    -0.2
+   ],
+   "bbox_max": [
+    4.462,
+    4.462,
+    5.308
+   ],
+   "max_radius": 4.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 231088,
+   "color0": true,
+   "also": [
+    "kitchen"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 398112,
+   "trays": [],
+   "verify": {
+    "tris": 4102,
+    "rmax": 4.500000200870693,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "kitchen_l",
+   "type": "kitchen",
+   "size": "l",
+   "footprint": 6.0,
+   "tris": 5570,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1592,
+    "Roof": 2078,
+    "Interior": 778,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.872,
+    -5.872,
+    -0.2
+   ],
+   "bbox_max": [
+    5.872,
+    5.872,
+    6.086
+   ],
+   "max_radius": 5.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke1",
+    "Anchor_Smoke2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 299356,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 540000,
+   "trays": [],
+   "verify": {
+    "tris": 5570,
+    "rmax": 5.8999999627750945,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke1",
+     "Anchor_Smoke2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "kitchen_xl",
+   "type": "kitchen",
+   "size": "xl",
+   "footprint": 7.4,
+   "tris": 6466,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1826,
+    "Roof": 2138,
+    "Interior": 1254,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.277,
+    -7.277,
+    -0.2
+   ],
+   "bbox_max": [
+    7.277,
+    7.277,
+    6.583
+   ],
+   "max_radius": 7.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke1",
+    "Anchor_Smoke2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 349180,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 626400,
+   "trays": [],
+   "verify": {
+    "tris": 6466,
+    "rmax": 7.300000036441908,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke1",
+     "Anchor_Smoke2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "storehouse_s",
+   "type": "storehouse",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2886,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 756,
+    "Roof": 638,
+    "Interior": 596,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.9
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Hatch",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 185836,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 280704,
+   "trays": [],
+   "verify": {
+    "tris": 2886,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Hatch"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "storehouse_m",
+   "type": "storehouse",
+   "size": "m",
+   "footprint": 5.5,
+   "tris": 3902,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 996,
+    "Roof": 750,
+    "Interior": 1166,
+    "L2": 172,
+    "L3": 174,
+    "L4": 284,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.366,
+    -5.366,
+    -0.2
+   ],
+   "bbox_max": [
+    5.366,
+    5.366,
+    5.1
+   ],
+   "max_radius": 5.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Hatch",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 246412,
+   "color0": true,
+   "also": [
+    "storehouse"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 378816,
+   "trays": [],
+   "verify": {
+    "tris": 3902,
+    "rmax": 5.400000110322884,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Hatch"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "storehouse_l",
+   "type": "storehouse",
+   "size": "l",
+   "footprint": 7.0,
+   "tris": 6010,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1428,
+    "Roof": 1656,
+    "Interior": 1720,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.874,
+    -6.874,
+    -0.2
+   ],
+   "bbox_max": [
+    6.874,
+    6.874,
+    6.023
+   ],
+   "max_radius": 6.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Hatch",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 356476,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 582816,
+   "trays": [],
+   "verify": {
+    "tris": 6010,
+    "rmax": 6.900000160993702,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Hatch"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "storehouse_xl",
+   "type": "storehouse",
+   "size": "xl",
+   "footprint": 8.5,
+   "tris": 7620,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1748,
+    "Roof": 2416,
+    "Interior": 2134,
+    "L2": 376,
+    "L3": 206,
+    "L4": 316,
+    "L5": 384,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -8.379,
+    -8.379,
+    -0.2
+   ],
+   "bbox_max": [
+    8.379,
+    8.379,
+    6.767
+   ],
+   "max_radius": 8.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Hatch",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 437976,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.2,
+   "ao_rays": 738336,
+   "trays": [],
+   "verify": {
+    "tris": 7620,
+    "rmax": 8.400000448298453,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Hatch"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "oxygen_plant_s",
+   "type": "oxygen_plant",
+   "size": "s",
+   "footprint": 2.8,
+   "tris": 2672,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 580,
+    "Roof": 926,
+    "Interior": 348,
+    "L2": 156,
+    "L3": 166,
+    "L4": 236,
+    "L5": 240,
+    "Lights": 20
+   },
+   "bbox_min": [
+    -2.677,
+    -2.677,
+    -0.2
+   ],
+   "bbox_max": [
+    2.677,
+    2.677,
+    4.97
+   ],
+   "max_radius": 2.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent1",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 148104,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.4,
+   "ao_rays": 260352,
+   "trays": [],
+   "verify": {
+    "tris": 2672,
+    "rmax": 2.700000072377878,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent1"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "oxygen_plant_m",
+   "type": "oxygen_plant",
+   "size": "m",
+   "footprint": 3.6,
+   "tris": 3482,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 728,
+    "Roof": 1272,
+    "Interior": 576,
+    "L2": 156,
+    "L3": 166,
+    "L4": 256,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    5.57
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent1",
+    "Anchor_Vent2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 181964,
+   "color0": true,
+   "also": [
+    "oxygen_plant"
+   ],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 338976,
+   "trays": [],
+   "verify": {
+    "tris": 3482,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent1",
+     "Anchor_Vent2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "oxygen_plant_l",
+   "type": "oxygen_plant",
+   "size": "l",
+   "footprint": 4.8,
+   "tris": 4174,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 840,
+    "Roof": 1554,
+    "Interior": 784,
+    "L2": 236,
+    "L3": 166,
+    "L4": 266,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.66,
+    -4.66,
+    -0.2
+   ],
+   "bbox_max": [
+    4.66,
+    4.66,
+    6.17
+   ],
+   "max_radius": 4.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent1",
+    "Anchor_Vent2",
+    "Anchor_Vent3",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 214412,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 405696,
+   "trays": [],
+   "verify": {
+    "tris": 4174,
+    "rmax": 4.700000144862144,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent1",
+     "Anchor_Vent2",
+     "Anchor_Vent3"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "oxygen_plant_xl",
+   "type": "oxygen_plant",
+   "size": "xl",
+   "footprint": 6.0,
+   "tris": 5408,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1064,
+    "Roof": 2240,
+    "Interior": 992,
+    "L2": 288,
+    "L3": 182,
+    "L4": 282,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.872,
+    -5.872,
+    -0.2
+   ],
+   "bbox_max": [
+    5.872,
+    5.872,
+    6.87
+   ],
+   "max_radius": 5.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent1",
+    "Anchor_Vent2",
+    "Anchor_Vent3",
+    "Anchor_Vent4",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 258660,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 524832,
+   "trays": [],
+   "verify": {
+    "tris": 5408,
+    "rmax": 5.8999999627750945,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent1",
+     "Anchor_Vent2",
+     "Anchor_Vent3",
+     "Anchor_Vent4"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "research_lab_s",
+   "type": "research_lab",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2972,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 632,
+    "Roof": 1060,
+    "Interior": 384,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.649
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Telescope",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 173460,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 287232,
+   "trays": [],
+   "verify": {
+    "tris": 2972,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Telescope"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "research_lab_m",
+   "type": "research_lab",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 4028,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1256,
+    "Roof": 1318,
+    "Interior": 528,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    4.825
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Telescope",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 223400,
+   "color0": true,
+   "also": [
+    "research_lab"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 388320,
+   "trays": [],
+   "verify": {
+    "tris": 4028,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Telescope"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "research_lab_l",
+   "type": "research_lab",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 5436,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1872,
+    "Roof": 1706,
+    "Interior": 720,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    6.426
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Telescope",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 294264,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 524448,
+   "trays": [],
+   "verify": {
+    "tris": 5436,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Telescope"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "research_lab_xl",
+   "type": "research_lab",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 6644,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 2354,
+    "Roof": 2192,
+    "Interior": 834,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    6.426
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Telescope",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 349240,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.2,
+   "ao_rays": 641760,
+   "trays": [],
+   "verify": {
+    "tris": 6644,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Telescope"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "mine_s",
+   "type": "mine",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2986,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 1002,
+    "Interior": 424,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    6.23
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 183668,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 288768,
+   "trays": [],
+   "verify": {
+    "tris": 2986,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "mine_m",
+   "type": "mine",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3608,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1342,
+    "Interior": 484,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    7.13
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 212556,
+   "color0": true,
+   "also": [
+    "mine"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 348384,
+   "trays": [],
+   "verify": {
+    "tris": 3608,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "mine_l",
+   "type": "mine",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 4792,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1904,
+    "Interior": 550,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    8.18
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 268876,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 462240,
+   "trays": [],
+   "verify": {
+    "tris": 4792,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "mine_xl",
+   "type": "mine",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5352,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 1958,
+    "Interior": 608,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    9.18
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 294776,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 515616,
+   "trays": [],
+   "verify": {
+    "tris": 5352,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "refinery_s",
+   "type": "refinery",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2562,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 918,
+    "Interior": 352,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    6.32
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 149352,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.4,
+   "ao_rays": 249504,
+   "trays": [],
+   "verify": {
+    "tris": 2562,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "refinery_m",
+   "type": "refinery",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 2916,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1044,
+    "Interior": 436,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    7.32
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 168528,
+   "color0": true,
+   "also": [
+    "refinery"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 283488,
+   "trays": [],
+   "verify": {
+    "tris": 2916,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "refinery_l",
+   "type": "refinery",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 4180,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1564,
+    "Interior": 520,
+    "L2": 288,
+    "L3": 64,
+    "L4": 152,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    8.32
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Smoke2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 237468,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 405888,
+   "trays": [],
+   "verify": {
+    "tris": 4180,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke",
+     "Anchor_Smoke2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "refinery_xl",
+   "type": "refinery",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5306,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 2124,
+    "Interior": 520,
+    "L2": 350,
+    "L3": 198,
+    "L4": 168,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    9.32
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Smoke2",
+    "Anchor_Smoke3",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Ore",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 295644,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 514848,
+   "trays": [],
+   "verify": {
+    "tris": 5306,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke",
+     "Anchor_Smoke2",
+     "Anchor_Smoke3"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "polymer_plant_s",
+   "type": "polymer_plant",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2636,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 952,
+    "Interior": 196,
+    "L2": 156,
+    "L3": 166,
+    "L4": 126,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    5.025
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 155436,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 255072,
+   "trays": [],
+   "verify": {
+    "tris": 2636,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "polymer_plant_m",
+   "type": "polymer_plant",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3324,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1332,
+    "Interior": 298,
+    "L2": 156,
+    "L3": 166,
+    "L4": 188,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    5.267
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 178456,
+   "color0": true,
+   "also": [
+    "polymer_plant"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 322080,
+   "trays": [],
+   "verify": {
+    "tris": 3324,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "polymer_plant_l",
+   "type": "polymer_plant",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 4612,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1858,
+    "Interior": 400,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    5.509
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 239956,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 446400,
+   "trays": [],
+   "verify": {
+    "tris": 4612,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "polymer_plant_xl",
+   "type": "polymer_plant",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5640,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 2336,
+    "Interior": 502,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    5.751
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 281396,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 545184,
+   "trays": [],
+   "verify": {
+    "tris": 5640,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "workshop_s",
+   "type": "workshop",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2786,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 952,
+    "Interior": 542,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.76
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 172004,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 269568,
+   "trays": [],
+   "verify": {
+    "tris": 2786,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "workshop_m",
+   "type": "workshop",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3010,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1052,
+    "Interior": 522,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    5.16
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 181608,
+   "color0": true,
+   "also": [
+    "workshop"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 291168,
+   "trays": [],
+   "verify": {
+    "tris": 3010,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "workshop_l",
+   "type": "workshop",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 3936,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1270,
+    "Interior": 570,
+    "L2": 288,
+    "L3": 64,
+    "L4": 152,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    5.46
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 231896,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 381024,
+   "trays": [],
+   "verify": {
+    "tris": 3936,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "workshop_xl",
+   "type": "workshop",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5078,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 1628,
+    "Interior": 648,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    5.76
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 292716,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 492000,
+   "trays": [],
+   "verify": {
+    "tris": 5078,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "medical_s",
+   "type": "medical",
+   "size": "s",
+   "footprint": 3.6,
+   "tris": 2734,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 920,
+    "Roof": 724,
+    "Interior": 242,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    4.552
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 158064,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 266976,
+   "trays": [],
+   "verify": {
+    "tris": 2734,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "medical_m",
+   "type": "medical",
+   "size": "m",
+   "footprint": 4.5,
+   "tris": 3364,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1240,
+    "Roof": 804,
+    "Interior": 394,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.362,
+    -4.362,
+    -0.2
+   ],
+   "bbox_max": [
+    4.362,
+    4.362,
+    5.13
+   ],
+   "max_radius": 4.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 186408,
+   "color0": true,
+   "also": [
+    "medical"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 327648,
+   "trays": [],
+   "verify": {
+    "tris": 3364,
+    "rmax": 4.400000224984986,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "medical_l",
+   "type": "medical",
+   "size": "l",
+   "footprint": 5.8,
+   "tris": 4474,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 1284,
+    "Interior": 588,
+    "L2": 262,
+    "L3": 174,
+    "L4": 284,
+    "L5": 304,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.664,
+    -5.664,
+    -0.2
+   ],
+   "bbox_max": [
+    5.664,
+    5.664,
+    5.86
+   ],
+   "max_radius": 5.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 239024,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 435360,
+   "trays": [],
+   "verify": {
+    "tris": 4474,
+    "rmax": 5.700000180340323,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "medical_xl",
+   "type": "medical",
+   "size": "xl",
+   "footprint": 7.2,
+   "tris": 5494,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1784,
+    "Roof": 1768,
+    "Interior": 752,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.073,
+    -7.073,
+    -0.2
+   ],
+   "bbox_max": [
+    7.073,
+    7.073,
+    6.48
+   ],
+   "max_radius": 7.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 280040,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 535008,
+   "trays": [],
+   "verify": {
+    "tris": 5494,
+    "rmax": 7.100000106081658,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "lounge_s",
+   "type": "lounge",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2522,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 612,
+    "Roof": 772,
+    "Interior": 310,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 20
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.837
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 151360,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.4,
+   "ao_rays": 247968,
+   "trays": [],
+   "verify": {
+    "tris": 2522,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "lounge_m",
+   "type": "lounge",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3196,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 760,
+    "Roof": 932,
+    "Interior": 578,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    5.577
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 187420,
+   "color0": true,
+   "also": [
+    "lounge"
+   ],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 314400,
+   "trays": [],
+   "verify": {
+    "tris": 3196,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "lounge_l",
+   "type": "lounge",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 4432,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1104,
+    "Roof": 1412,
+    "Interior": 794,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    6.316
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 244580,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 434400,
+   "trays": [],
+   "verify": {
+    "tris": 4432,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "lounge_xl",
+   "type": "lounge",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5468,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1394,
+    "Roof": 1804,
+    "Interior": 1022,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    6.855
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "PlantDark",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 288812,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 538464,
+   "trays": [],
+   "verify": {
+    "tris": 5468,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "airlock",
+   "type": "airlock",
+   "size": "-",
+   "footprint": 2.8,
+   "tris": 2454,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 804,
+    "Roof": 924,
+    "Interior": 686,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -2.677,
+    -2.677,
+    -0.2
+   ],
+   "bbox_max": [
+    2.677,
+    2.677,
+    4.82
+   ],
+   "max_radius": 2.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Light"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Metal",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 142576,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.4,
+   "ao_rays": 242880,
+   "trays": [],
+   "verify": {
+    "tris": 2454,
+    "rmax": 2.700000072377878,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Door",
+     "Anchor_Light"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "junction",
+   "type": "junction",
+   "size": "-",
+   "footprint": 2.5,
+   "tris": 1594,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 648,
+    "Roof": 762,
+    "Interior": 144,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -2.379,
+    -2.379,
+    -0.2
+   ],
+   "bbox_max": [
+    2.379,
+    2.379,
+    3.153
+   ],
+   "max_radius": 2.4,
+   "margin": 0.1,
+   "anchors": [],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Metal"
+   ],
+   "file_size": 82916,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.3,
+   "ao_rays": 155136,
+   "trays": [],
+   "verify": {
+    "tris": 1594,
+    "rmax": 2.4000000564839428,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "Lights",
+     "Roof"
+    ],
+    "empties": []
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "corridor",
+   "type": "corridor",
+   "size": "-",
+   "footprint": 1.2,
+   "tris": 260,
+   "budget": 1200,
+   "tris_by_object": {
+    "Base": 36,
+    "Roof": 224
+   },
+   "bbox_min": [
+    -0.5,
+    -1.2,
+    -0.06
+   ],
+   "bbox_max": [
+    0.5,
+    1.2,
+    2.4
+   ],
+   "max_radius": 1.3,
+   "margin": -0.1,
+   "anchors": [],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hull",
+    "HullDark",
+    "Light"
+   ],
+   "file_size": 19112,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.1,
+   "ao_rays": 24960,
+   "trays": [],
+   "verify": {
+    "tris": 260,
+    "rmax": 1.3000000440157378,
+    "zmin": -0.05000000074505806,
+    "ao_min": 0.18447503447532654,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Roof"
+    ],
+    "empties": []
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "glassworks_s",
+   "type": "glassworks",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2626,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 958,
+    "Interior": 180,
+    "L2": 156,
+    "L3": 166,
+    "L4": 126,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.726
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 157344,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.4,
+   "ao_rays": 255456,
+   "trays": [],
+   "verify": {
+    "tris": 2626,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "glassworks_m",
+   "type": "glassworks",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3146,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1132,
+    "Interior": 232,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    4.895
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 180604,
+   "color0": true,
+   "also": [
+    "glassworks"
+   ],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 306336,
+   "trays": [],
+   "verify": {
+    "tris": 3146,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "glassworks_l",
+   "type": "glassworks",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 4394,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1756,
+    "Interior": 284,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    5.03
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Smoke2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 238488,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 428064,
+   "trays": [],
+   "verify": {
+    "tris": 4394,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke",
+     "Anchor_Smoke2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "glassworks_xl",
+   "type": "glassworks",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 5230,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 2092,
+    "Interior": 336,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    5.132
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Smoke",
+    "Anchor_Smoke2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 280384,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 508704,
+   "trays": [],
+   "verify": {
+    "tris": 5230,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Smoke",
+     "Anchor_Smoke2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "electronics_fab_s",
+   "type": "electronics_fab",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2902,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 1192,
+    "Interior": 418,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.25
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plasma",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 174892,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 282144,
+   "trays": [],
+   "verify": {
+    "tris": 2902,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "electronics_fab_m",
+   "type": "electronics_fab",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 3422,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1288,
+    "Interior": 698,
+    "L2": 156,
+    "L3": 48,
+    "L4": 48,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    4.45
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plasma",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 205880,
+   "color0": true,
+   "also": [
+    "electronics_fab"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 332064,
+   "trays": [],
+   "verify": {
+    "tris": 3422,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "electronics_fab_l",
+   "type": "electronics_fab",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 5538,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 2176,
+    "Interior": 1008,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    4.65
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plasma",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 328968,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.9,
+   "ao_rays": 538272,
+   "trays": [],
+   "verify": {
+    "tris": 5538,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "electronics_fab_xl",
+   "type": "electronics_fab",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 6386,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1538,
+    "Roof": 2460,
+    "Interior": 1124,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    4.85
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plasma",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 368628,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 620064,
+   "trays": [],
+   "verify": {
+    "tris": 6386,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fabricator_s",
+   "type": "fabricator",
+   "size": "s",
+   "footprint": 4.4,
+   "tris": 2772,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 712,
+    "Roof": 1158,
+    "Interior": 244,
+    "L2": 156,
+    "L3": 48,
+    "L4": 126,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.263,
+    -4.263,
+    -0.2
+   ],
+   "bbox_max": [
+    4.263,
+    4.263,
+    6.37
+   ],
+   "max_radius": 4.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 174300,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 268224,
+   "trays": [],
+   "verify": {
+    "tris": 2772,
+    "rmax": 4.30000002696324,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fabricator_m",
+   "type": "fabricator",
+   "size": "m",
+   "footprint": 5.5,
+   "tris": 3454,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 936,
+    "Roof": 1462,
+    "Interior": 294,
+    "L2": 172,
+    "L3": 174,
+    "L4": 56,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.366,
+    -5.366,
+    -0.2
+   ],
+   "bbox_max": [
+    5.366,
+    5.366,
+    7.07
+   ],
+   "max_radius": 5.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 209548,
+   "color0": true,
+   "also": [
+    "fabricator"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 335040,
+   "trays": [],
+   "verify": {
+    "tris": 3454,
+    "rmax": 5.400000110322884,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fabricator_l",
+   "type": "fabricator",
+   "size": "l",
+   "footprint": 7.0,
+   "tris": 4730,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1384,
+    "Roof": 1846,
+    "Interior": 294,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.874,
+    -6.874,
+    -0.2
+   ],
+   "bbox_max": [
+    6.874,
+    6.874,
+    7.67
+   ],
+   "max_radius": 6.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 277056,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 459072,
+   "trays": [],
+   "verify": {
+    "tris": 4730,
+    "rmax": 6.900000160993702,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fabricator_xl",
+   "type": "fabricator",
+   "size": "xl",
+   "footprint": 8.5,
+   "tris": 5690,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1688,
+    "Roof": 2336,
+    "Interior": 344,
+    "L2": 376,
+    "L3": 206,
+    "L4": 316,
+    "L5": 384,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -8.379,
+    -8.379,
+    -0.2
+   ],
+   "bbox_max": [
+    8.379,
+    8.379,
+    8.07
+   ],
+   "max_radius": 8.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 322592,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 551616,
+   "trays": [],
+   "verify": {
+    "tris": 5690,
+    "rmax": 8.400000448298453,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fungus_farm_s",
+   "type": "fungus_farm",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2868,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 568,
+    "Roof": 916,
+    "Interior": 536,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 240,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.94
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 179400,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 283488,
+   "trays": [
+    [
+     0.0,
+     -1.2
+    ],
+    [
+     0.0,
+     1.2
+    ]
+   ],
+   "verify": {
+    "tris": 2868,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 4.768371586472142e-08,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fungus_farm_m",
+   "type": "fungus_farm",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 4082,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 696,
+    "Roof": 1388,
+    "Interior": 1072,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    5.554
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 246512,
+   "color0": true,
+   "also": [
+    "fungus_farm"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 403680,
+   "trays": [
+    [
+     1.9,
+     -1.5
+    ],
+    [
+     1.9,
+     1.5
+    ],
+    [
+     -1.9,
+     -1.5
+    ],
+    [
+     -1.9,
+     1.5
+    ]
+   ],
+   "verify": {
+    "tris": 4082,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 8.344650259672903e-08,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fungus_farm_l",
+   "type": "fungus_farm",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 5546,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1024,
+    "Roof": 1872,
+    "Interior": 1528,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    6.169
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 323008,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 547680,
+   "trays": [
+    [
+     1.9,
+     -3.6
+    ],
+    [
+     1.9,
+     0.0
+    ],
+    [
+     1.9,
+     3.6
+    ],
+    [
+     -1.9,
+     -3.6
+    ],
+    [
+     -1.9,
+     0.0
+    ],
+    [
+     -1.9,
+     3.6
+    ]
+   ],
+   "verify": {
+    "tris": 5546,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 8.678567266547412e-08,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "fungus_farm_xl",
+   "type": "fungus_farm",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 6894,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1298,
+    "Roof": 2404,
+    "Interior": 1944,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    6.611
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 390896,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.2,
+   "ao_rays": 680544,
+   "trays": [
+    [
+     1.9,
+     -5.1
+    ],
+    [
+     1.9,
+     -1.7
+    ],
+    [
+     1.9,
+     1.7
+    ],
+    [
+     1.9,
+     5.1
+    ],
+    [
+     -1.9,
+     -5.1
+    ],
+    [
+     -1.9,
+     -1.7
+    ],
+    [
+     -1.9,
+     1.7
+    ],
+    [
+     -1.9,
+     5.1
+    ]
+   ],
+   "verify": {
+    "tris": 6894,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": 1.656108380727564e-07,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "algae_bioreactor_s",
+   "type": "algae_bioreactor",
+   "size": "s",
+   "footprint": 3.6,
+   "tris": 2932,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 632,
+    "Roof": 1010,
+    "Interior": 400,
+    "L2": 156,
+    "L3": 166,
+    "L4": 280,
+    "L5": 248,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    7.19
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "PlantDark",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 182288,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 285312,
+   "trays": [],
+   "verify": {
+    "tris": 2932,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "algae_bioreactor_m",
+   "type": "algae_bioreactor",
+   "size": "m",
+   "footprint": 4.5,
+   "tris": 4402,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 728,
+    "Roof": 1888,
+    "Interior": 860,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.362,
+    -4.362,
+    -0.2
+   ],
+   "bbox_max": [
+    4.362,
+    4.362,
+    7.49
+   ],
+   "max_radius": 4.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "PlantDark",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 224392,
+   "color0": true,
+   "also": [
+    "algae_bioreactor"
+   ],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 425376,
+   "trays": [],
+   "verify": {
+    "tris": 4402,
+    "rmax": 4.400000224984986,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "algae_bioreactor_l",
+   "type": "algae_bioreactor",
+   "size": "l",
+   "footprint": 5.8,
+   "tris": 5356,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 930,
+    "Roof": 2344,
+    "Interior": 1002,
+    "L2": 262,
+    "L3": 174,
+    "L4": 284,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.664,
+    -5.664,
+    -0.2
+   ],
+   "bbox_max": [
+    5.664,
+    5.664,
+    8.02
+   ],
+   "max_radius": 5.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "PlantDark",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 268348,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 517152,
+   "trays": [],
+   "verify": {
+    "tris": 5356,
+    "rmax": 5.700000180340323,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "algae_bioreactor_xl",
+   "type": "algae_bioreactor",
+   "size": "xl",
+   "footprint": 7.2,
+   "tris": 6854,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1256,
+    "Roof": 3248,
+    "Interior": 1144,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.073,
+    -7.073,
+    -0.2
+   ],
+   "bbox_max": [
+    7.073,
+    7.073,
+    8.44
+   ],
+   "max_radius": 7.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "PlantDark",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 338980,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 660960,
+   "trays": [],
+   "verify": {
+    "tris": 6854,
+    "rmax": 7.100000106081658,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "water_recycler_s",
+   "type": "water_recycler",
+   "size": "s",
+   "footprint": 3.2,
+   "tris": 2838,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 580,
+    "Roof": 1018,
+    "Interior": 404,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 248,
+    "Lights": 20
+   },
+   "bbox_min": [
+    -3.073,
+    -3.073,
+    -0.2
+   ],
+   "bbox_max": [
+    3.073,
+    3.073,
+    4.048
+   ],
+   "max_radius": 3.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 172332,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 278112,
+   "trays": [],
+   "verify": {
+    "tris": 2838,
+    "rmax": 3.10000010461286,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "water_recycler_m",
+   "type": "water_recycler",
+   "size": "m",
+   "footprint": 4.0,
+   "tris": 3920,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 728,
+    "Roof": 1570,
+    "Interior": 706,
+    "L2": 156,
+    "L3": 166,
+    "L4": 266,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    4.4
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 211708,
+   "color0": true,
+   "also": [
+    "water_recycler"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 382752,
+   "trays": [],
+   "verify": {
+    "tris": 3920,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "water_recycler_l",
+   "type": "water_recycler",
+   "size": "l",
+   "footprint": 5.2,
+   "tris": 4622,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 930,
+    "Roof": 1814,
+    "Interior": 888,
+    "L2": 172,
+    "L3": 174,
+    "L4": 284,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.068,
+    -5.068,
+    -0.2
+   ],
+   "bbox_max": [
+    5.068,
+    5.068,
+    4.8
+   ],
+   "max_radius": 5.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 247228,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 451872,
+   "trays": [],
+   "verify": {
+    "tris": 4622,
+    "rmax": 5.100000162037289,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "water_recycler_xl",
+   "type": "water_recycler",
+   "size": "xl",
+   "footprint": 6.4,
+   "tris": 5436,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1104,
+    "Roof": 2194,
+    "Interior": 1100,
+    "L2": 188,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    5.2
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vent",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "file_size": 281644,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 530976,
+   "trays": [],
+   "verify": {
+    "tris": 5436,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vent"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "atmo_processor_s",
+   "type": "atmo_processor",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2988,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 696,
+    "Roof": 1070,
+    "Interior": 366,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 248,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    6.22
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vapour1",
+    "Anchor_Vapour2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 171704,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 292032,
+   "trays": [],
+   "verify": {
+    "tris": 2988,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vapour1",
+     "Anchor_Vapour2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "atmo_processor_m",
+   "type": "atmo_processor",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 4062,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 856,
+    "Roof": 1820,
+    "Interior": 460,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    7.12
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vapour1",
+    "Anchor_Vapour2",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 218424,
+   "color0": true,
+   "also": [
+    "atmo_processor"
+   ],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 396000,
+   "trays": [],
+   "verify": {
+    "tris": 4062,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vapour1",
+     "Anchor_Vapour2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "atmo_processor_l",
+   "type": "atmo_processor",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 5526,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 2502,
+    "Interior": 670,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 336,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    7.72
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vapour1",
+    "Anchor_Vapour2",
+    "Anchor_Vapour3",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 284376,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 538752,
+   "trays": [],
+   "verify": {
+    "tris": 5526,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vapour1",
+     "Anchor_Vapour2",
+     "Anchor_Vapour3"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "atmo_processor_xl",
+   "type": "atmo_processor",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 6868,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1522,
+    "Roof": 3202,
+    "Interior": 880,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 368,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    8.32
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Vapour1",
+    "Anchor_Vapour2",
+    "Anchor_Vapour3",
+    "Anchor_Vapour4",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 341620,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.4,
+   "ao_rays": 669024,
+   "trays": [],
+   "verify": {
+    "tris": 6868,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Vapour1",
+     "Anchor_Vapour2",
+     "Anchor_Vapour3",
+     "Anchor_Vapour4"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "bio_lab_s",
+   "type": "bio_lab",
+   "size": "s",
+   "footprint": 3.6,
+   "tris": 2914,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 632,
+    "Roof": 938,
+    "Interior": 448,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    5.15
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Fume",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 169052,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.5,
+   "ao_rays": 283200,
+   "trays": [],
+   "verify": {
+    "tris": 2914,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Fume"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "bio_lab_m",
+   "type": "bio_lab",
+   "size": "m",
+   "footprint": 4.5,
+   "tris": 3636,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 728,
+    "Roof": 1354,
+    "Interior": 628,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.362,
+    -4.362,
+    -0.2
+   ],
+   "bbox_max": [
+    4.362,
+    4.362,
+    5.55
+   ],
+   "max_radius": 4.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Fume",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 205940,
+   "color0": true,
+   "also": [
+    "bio_lab"
+   ],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 353664,
+   "trays": [],
+   "verify": {
+    "tris": 3636,
+    "rmax": 4.400000224984986,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Fume"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "bio_lab_l",
+   "type": "bio_lab",
+   "size": "l",
+   "footprint": 5.8,
+   "tris": 4540,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 930,
+    "Roof": 1722,
+    "Interior": 808,
+    "L2": 262,
+    "L3": 174,
+    "L4": 284,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.664,
+    -5.664,
+    -0.2
+   ],
+   "bbox_max": [
+    5.664,
+    5.664,
+    5.95
+   ],
+   "max_radius": 5.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Fume",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 253712,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 442368,
+   "trays": [],
+   "verify": {
+    "tris": 4540,
+    "rmax": 5.700000180340323,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Fume"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "bio_lab_xl",
+   "type": "bio_lab",
+   "size": "xl",
+   "footprint": 7.2,
+   "tris": 5708,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1256,
+    "Roof": 2202,
+    "Interior": 1044,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.073,
+    -7.073,
+    -0.2
+   ],
+   "bbox_max": [
+    7.073,
+    7.073,
+    6.35
+   ],
+   "max_radius": 7.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Fume",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Plant",
+    "Rubber",
+    "Soil",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 304420,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.1,
+   "ao_rays": 553920,
+   "trays": [],
+   "verify": {
+    "tris": 5708,
+    "rmax": 7.100000106081658,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door",
+     "Anchor_Fume"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cantina_s",
+   "type": "cantina",
+   "size": "s",
+   "footprint": 4.0,
+   "tris": 2898,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 632,
+    "Roof": 1054,
+    "Interior": 328,
+    "L2": 156,
+    "L3": 166,
+    "L4": 266,
+    "L5": 256,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.867,
+    -3.867,
+    -0.2
+   ],
+   "bbox_max": [
+    3.867,
+    3.867,
+    5.368
+   ],
+   "max_radius": 3.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 173972,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 279648,
+   "trays": [],
+   "verify": {
+    "tris": 2898,
+    "rmax": 3.9000000383224456,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cantina_m",
+   "type": "cantina",
+   "size": "m",
+   "footprint": 5.0,
+   "tris": 4042,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1336,
+    "Roof": 1206,
+    "Interior": 616,
+    "L2": 156,
+    "L3": 166,
+    "L4": 266,
+    "L5": 256,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.858,
+    -4.858,
+    -0.2
+   ],
+   "bbox_max": [
+    4.858,
+    4.858,
+    5.739
+   ],
+   "max_radius": 4.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 227176,
+   "color0": true,
+   "also": [
+    "cantina"
+   ],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 386400,
+   "trays": [],
+   "verify": {
+    "tris": 4042,
+    "rmax": 4.900000088853593,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cantina_l",
+   "type": "cantina",
+   "size": "l",
+   "footprint": 6.4,
+   "tris": 5204,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1632,
+    "Roof": 1578,
+    "Interior": 904,
+    "L2": 288,
+    "L3": 182,
+    "L4": 292,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -6.27,
+    -6.27,
+    -0.2
+   ],
+   "bbox_max": [
+    6.27,
+    6.27,
+    6.1
+   ],
+   "max_radius": 6.3,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 286548,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.8,
+   "ao_rays": 496800,
+   "trays": [],
+   "verify": {
+    "tris": 5204,
+    "rmax": 6.300000228184786,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cantina_xl",
+   "type": "cantina",
+   "size": "xl",
+   "footprint": 7.8,
+   "tris": 6112,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1874,
+    "Roof": 1976,
+    "Interior": 1062,
+    "L2": 350,
+    "L3": 198,
+    "L4": 308,
+    "L5": 304,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.676,
+    -7.676,
+    -0.2
+   ],
+   "bbox_max": [
+    7.676,
+    7.676,
+    6.48
+   ],
+   "max_radius": 7.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 330672,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 581856,
+   "trays": [],
+   "verify": {
+    "tris": 6112,
+    "rmax": 7.70000011678486,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cold_storage_s",
+   "type": "cold_storage",
+   "size": "s",
+   "footprint": 3.6,
+   "tris": 2830,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 682,
+    "Roof": 876,
+    "Interior": 376,
+    "L2": 156,
+    "L3": 166,
+    "L4": 246,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -3.47,
+    -3.47,
+    -0.2
+   ],
+   "bbox_max": [
+    3.47,
+    3.47,
+    4.01
+   ],
+   "max_radius": 3.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Frost",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 181040,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 276192,
+   "trays": [],
+   "verify": {
+    "tris": 2830,
+    "rmax": 3.500000093844677,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cold_storage_m",
+   "type": "cold_storage",
+   "size": "m",
+   "footprint": 4.5,
+   "tris": 3466,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 778,
+    "Roof": 928,
+    "Interior": 834,
+    "L2": 156,
+    "L3": 166,
+    "L4": 276,
+    "L5": 288,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -4.362,
+    -4.362,
+    -0.2
+   ],
+   "bbox_max": [
+    4.362,
+    4.362,
+    4.415
+   ],
+   "max_radius": 4.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Frost",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 221668,
+   "color0": true,
+   "also": [
+    "cold_storage"
+   ],
+   "flags": [],
+   "seconds": 0.6,
+   "ao_rays": 337440,
+   "trays": [],
+   "verify": {
+    "tris": 3466,
+    "rmax": 4.400000224984986,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cold_storage_l",
+   "type": "cold_storage",
+   "size": "l",
+   "footprint": 5.8,
+   "tris": 4282,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 980,
+    "Roof": 1204,
+    "Interior": 1018,
+    "L2": 262,
+    "L3": 174,
+    "L4": 284,
+    "L5": 320,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -5.664,
+    -5.664,
+    -0.2
+   ],
+   "bbox_max": [
+    5.664,
+    5.664,
+    5.66
+   ],
+   "max_radius": 5.7,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Frost",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 266812,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 0.7,
+   "ao_rays": 417312,
+   "trays": [],
+   "verify": {
+    "tris": 4282,
+    "rmax": 5.700000180340323,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "cold_storage_xl",
+   "type": "cold_storage",
+   "size": "xl",
+   "footprint": 7.2,
+   "tris": 5472,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1306,
+    "Roof": 1616,
+    "Interior": 1344,
+    "L2": 324,
+    "L3": 190,
+    "L4": 300,
+    "L5": 352,
+    "Lights": 40
+   },
+   "bbox_min": [
+    -7.073,
+    -7.073,
+    -0.2
+   ],
+   "bbox_max": [
+    7.073,
+    7.073,
+    5.88
+   ],
+   "max_radius": 7.1,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Door",
+    "Anchor_Beacon"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Frost",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "file_size": 326364,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 1.0,
+   "ao_rays": 532704,
+   "trays": [],
+   "verify": {
+    "tris": 5472,
+    "rmax": 7.100000106081658,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.18116429448127747,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "Lights",
+     "Roof"
+    ],
+    "empties": [
+     "Anchor_Beacon",
+     "Anchor_Door"
+    ]
+   },
+   "verify_problems": []
+  }
+ ]
+}

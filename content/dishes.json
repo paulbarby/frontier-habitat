@@ -1,0 +1,16 @@
+{
+  "_note": "One dish = one colonist's food for one day. A batch uses the ingredients and makes as many dishes as ingredient units used. kitchen_level: lowest kitchen level that can cook it. nutrition values are LEVELS: each meal moves the colonist's four values toward the dish values by nutrition.meal_weight (0.4), so a colonist's values are a moving average of what they eat. A one-dish diet sits at that dish's values. taste adds to morale. See AAA_DESIGN section 5.",
+  "nutrients": ["protein", "carbs", "fat", "vitamins"],
+  "meals":            {"ingredients": {},                                                                   "kitchen_level": 0, "work_per_dish": 0,  "nutrition": {"protein": 50, "carbs": 50, "fat": 50, "vitamins": 50}, "taste": 0},
+  "mashed_potato":    {"ingredients": {"potato": 2},                                                        "kitchen_level": 1, "work_per_dish": 8,  "nutrition": {"protein": 20, "carbs": 80, "fat": 30, "vitamins": 35}, "taste": 3},
+  "flatbread":        {"ingredients": {"wheat": 2},                                                         "kitchen_level": 1, "work_per_dish": 8,  "nutrition": {"protein": 30, "carbs": 80, "fat": 25, "vitamins": 15}, "taste": 2},
+  "garden_salad":     {"ingredients": {"greens": 1, "tomato": 1},                                           "kitchen_level": 1, "work_per_dish": 8,  "nutrition": {"protein": 15, "carbs": 25, "fat": 25, "vitamins": 90}, "taste": 4},
+  "algae_bar":        {"ingredients": {"algae": 1, "wheat": 1},                                             "kitchen_level": 1, "work_per_dish": 8,  "nutrition": {"protein": 80, "carbs": 45, "fat": 30, "vitamins": 35}, "taste": 1},
+  "herb_potatoes":    {"ingredients": {"potato": 2, "herbs": 1},                                            "kitchen_level": 2, "work_per_dish": 10, "nutrition": {"protein": 35, "carbs": 80, "fat": 45, "vitamins": 60}, "taste": 7},
+  "tomato_pasta":     {"ingredients": {"wheat": 2, "tomato": 1},                                            "kitchen_level": 2, "work_per_dish": 10, "nutrition": {"protein": 45, "carbs": 85, "fat": 45, "vitamins": 60}, "taste": 6},
+  "soy_stew":         {"ingredients": {"soybean": 1, "potato": 1, "greens": 1},                             "kitchen_level": 2, "work_per_dish": 10, "nutrition": {"protein": 75, "carbs": 65, "fat": 60, "vitamins": 75}, "taste": 6},
+  "mushroom_risotto": {"ingredients": {"mushroom": 1, "wheat": 1, "herbs": 1},                              "kitchen_level": 3, "work_per_dish": 12, "nutrition": {"protein": 60, "carbs": 85, "fat": 60, "vitamins": 65}, "taste": 8},
+  "tofu_stirfry":     {"ingredients": {"soybean": 2, "greens": 1, "herbs": 1},                              "kitchen_level": 3, "work_per_dish": 12, "nutrition": {"protein": 90, "carbs": 55, "fat": 70, "vitamins": 80}, "taste": 8},
+  "veggie_pizza":     {"ingredients": {"wheat": 2, "tomato": 1, "mushroom": 1, "herbs": 1},                 "kitchen_level": 4, "work_per_dish": 16, "nutrition": {"protein": 65, "carbs": 85, "fat": 75, "vitamins": 70}, "taste": 11},
+  "colony_feast":     {"ingredients": {"potato": 1, "wheat": 1, "soybean": 1, "tomato": 1, "greens": 1, "herbs": 1}, "kitchen_level": 5, "work_per_dish": 20, "nutrition": {"protein": 85, "carbs": 85, "fat": 85, "vitamins": 90}, "taste": 16}
+}

@@ -1,0 +1,25 @@
+{
+  "outDir": "../../assets/audio/",
+  "events": {
+    "click":          { "type": "sfx", "prompt": "short soft futuristic user interface click, clean digital tap, sci-fi console button", "duration": 0.5 },
+    "hover":          { "type": "sfx", "prompt": "very quiet subtle UI hover tick, tiny soft high blip, minimal", "duration": 0.5 },
+    "tick":           { "type": "sfx", "prompt": "tiny crisp mechanical toggle tick, sci-fi switch, dry", "duration": 0.5 },
+    "confirm":        { "type": "sfx", "prompt": "positive sci-fi interface confirm chime, two rising soft tones, clean", "duration": 0.8 },
+    "place":          { "type": "sfx", "prompt": "hologram blueprint placed on ground, soft digital thunk with a short shimmer", "duration": 0.8 },
+    "error":          { "type": "sfx", "prompt": "soft low sci-fi interface denied buzz, short, not harsh", "duration": 0.6 },
+    "open":           { "type": "sfx", "prompt": "sci-fi holographic panel opening whoosh, short airy swipe up", "duration": 0.6 },
+    "close":          { "type": "sfx", "prompt": "sci-fi holographic panel closing, short soft swipe down", "duration": 0.5 },
+    "toast":          { "type": "sfx", "prompt": "gentle notification ping, soft glassy single tone, sci-fi colony computer", "duration": 0.8 },
+    "alert_warning":  { "type": "sfx", "prompt": "amber warning alert, two mid tones, sci-fi base computer, attention but calm", "duration": 1.2 },
+    "alert_critical": { "type": "sfx", "prompt": "urgent critical alarm tone, three fast pulses, sci-fi space station, short", "duration": 1.5 },
+    "award":          { "type": "sfx", "prompt": "short triumphant orchestral brass and synth fanfare with sparkle, achievement unlocked", "duration": 3.0 },
+    "chapter":        { "type": "sfx", "prompt": "cinematic sci-fi mission update sting, deep swell and bright synth chord", "duration": 3.0 },
+    "research":       { "type": "sfx", "prompt": "scientific discovery chime, bright arpeggio of glassy synth notes, sci-fi lab", "duration": 1.5 },
+    "construct":      { "type": "sfx", "prompt": "construction complete, heavy metal clamps lock, pneumatic hiss, small power-up hum", "duration": 2.0 },
+    "airlock":        { "type": "sfx", "prompt": "space airlock cycle, heavy door seal, air pressure hiss, metallic clunk", "duration": 3.0 },
+    "select":         { "type": "sfx", "prompt": "soft sci-fi selection chirp, short scanning beep", "duration": 0.5 },
+    "amb_wind":       { "type": "sfx", "prompt": "steady dry wind over a desert planet, low howl, fine sand, seamless ambience, no gusts spikes", "duration": 20 },
+    "amb_hum":        { "type": "sfx", "prompt": "low steady machinery hum of a habitat base, ventilation and distant pumps, calm seamless loop", "duration": 20 },
+    "amb_night":      { "type": "sfx", "prompt": "quiet alien night ambience, very soft wind, faint distant electronic hum, calm and empty", "duration": 20 }
+  }
+}

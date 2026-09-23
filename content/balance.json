@@ -1,0 +1,499 @@
+{
+  "_note": "All tuning values of the simulation. Rates are per in-game day unless the key says otherwise. Edit here, not in code.",
+  "schema": 1,
+  "day_length": 600,
+  "tick_hz": 10,
+  "fixed_point_scale": 60000,
+  "carry_human": 2,
+  "speed_indoor": 3.6,
+  "speed_outdoor": 3.2,
+  "suit_air_seconds": 90,
+  "suit_task_fraction": 0.7,
+  "suit_return_fraction": 0.3,
+  "suit_return_margin_seconds": 6,
+  "suit_refill_per_second": 30,
+  "exterior_work_chunk_seconds": 10,
+  "unload_keep_free_units": 40,
+  "o2_grace_seconds": 20,
+  "o2_damage_per_second": 2.5,
+  "oxygen_per_colonist": 1,
+  "oxygen_per_occupant_capacity": 0.5,
+  "oxygen_per_corridor_10m": 0.1,
+  "breach_drain_per_day": 2,
+  "need_trigger": 60,
+  "need_critical": 85,
+  "hunger_per_day": 100,
+  "thirst_per_day": 100,
+  "fatigue_awake_seconds": 450,
+  "sleep_seconds_full": 150,
+  "night_sleep_trigger": 40,
+  "meal_hunger": 100,
+  "drink_units": 2,
+  "drink_thirst": 100,
+  "eat_seconds": 12,
+  "drink_seconds": 5,
+  "recreation_seconds": 60,
+  "recreation_interval_days": 1,
+  "starve_damage_per_day": 45,
+  "dehydrate_damage_per_day": 70,
+  "exhaustion_damage_per_day": 10,
+  "health_regen_per_day": 12,
+  "medical_regen_per_day": 60,
+  "morale_start": 70,
+  "morale_rate_per_day": 25,
+  "morale_base": 62,
+  "morale_dining_bonus": 6,
+  "morale_recreation_bonus": 12,
+  "morale_no_recreation_penalty": 10,
+  "morale_crowding_penalty": 15,
+  "morale_tired_penalty": 10,
+  "morale_hungry_penalty": 12,
+  "morale_death_penalty": 18,
+  "morale_death_memory_days": 2,
+  "morale_low": 30,
+  "morale_very_low": 15,
+  "productivity_low": 0.75,
+  "productivity_very_low": 0.5,
+  "work_per_material": 10,
+  "technician_build_mult": 1.25,
+  "demolish_work_fraction": 0.3,
+  "demolish_refund_fraction": 0.5,
+  "airlock_cycle_seconds": 10,
+  "airlock_slots": 2,
+  "airlock_unpowered_mult": 2,
+  "airlock_unsafe_wait_seconds": 25,
+  "wear_start_day": 5,
+  "wear_per_day": 2,
+  "health_degraded": 50,
+  "degraded_output": 0.75,
+  "repair_trigger_health": 70,
+  "repair_health": 25,
+  "repair_work": 30,
+  "shed_min_off_seconds": 5,
+  "water_reserve_drink_units_per_colonist": 1,
+  "water_reserve_oxygen_units": 2,
+  "crop_cycle_seconds": 300,
+  "crop_water_per_day": 4,
+  "crop_seed_work": 10,
+  "crop_harvest_work": 20,
+  "crop_interrupt_limit_seconds": 120,
+  "crop_yield": {
+    "raw_food": 4,
+    "biomass": 2
+  },
+  "corridor_cost_per_10m": {
+    "metal": 1,
+    "polymer": 1
+  },
+  "cable_cost_per_20m": {
+    "metal": 1
+  },
+  "corridor_max_length": 26,
+  "corridor_min_length": 0.6,
+  "cable_max_length": 60,
+  "link_min_angle_deg": 28,
+  "door_strip_length": 3.5,
+  "door_strip_half_width": 1.6,
+  "max_slope_rooms": 0.22,
+  "max_slope_exterior": 0.3,
+  "max_walk_slope": 0.6,
+  "map_margin": 4,
+  "task_backoff_seconds": 12,
+  "task_max_path_fails": 3,
+  "haul_outstanding_per_destination": 6,
+  "machine_input_batches": 4,
+  "dining_restock_below": 6,
+  "kitchen_keep_meals": 8,
+  "solar_ramp_seconds": 30,
+  "wind_step_seconds": 30,
+  "autosave_interval_real_seconds": 300,
+  "autosave_slots": 3,
+  "history_sample_seconds": 10,
+  "history_max_samples": 720,
+  "log_max_entries": 400,
+  "power_class_order": [
+    "life_support",
+    "food",
+    "medical",
+    "industry",
+    "comfort"
+  ],
+  "task_categories": [
+    "construction",
+    "food",
+    "industry",
+    "logistics",
+    "repair"
+  ],
+  "default_priority": {
+    "construction": 2,
+    "food": 2,
+    "industry": 2,
+    "logistics": 1,
+    "repair": 2
+  },
+  "resources": [
+    "metal",
+    "polymer",
+    "spare_parts",
+    "meals",
+    "water",
+    "raw_food",
+    "biomass",
+    "ore",
+    "medicine"
+  ],
+  "resource_names": {
+    "metal": "Steel",
+    "polymer": "Polymer",
+    "spare_parts": "Spare parts",
+    "meals": "Emergency ration",
+    "water": "Water can",
+    "raw_food": "Raw food (old)",
+    "biomass": "Biomass",
+    "ore": "Iron ore",
+    "medicine": "Medicine",
+    "silicate": "Silicate sand",
+    "exotic": "Exotic crystal",
+    "glass": "Glass",
+    "electronics": "Electronics",
+    "hull_plate": "Hull plate",
+    "composite": "Composite panel",
+    "rocket_fuel": "Rocket fuel",
+    "potato": "Potato",
+    "wheat": "Wheat",
+    "soybean": "Soybean",
+    "tomato": "Tomato",
+    "greens": "Greens",
+    "mushroom": "Mushroom",
+    "algae": "Algae",
+    "herbs": "Herbs",
+    "mashed_potato": "Mashed potatoes",
+    "flatbread": "Flatbread",
+    "garden_salad": "Garden salad",
+    "algae_bar": "Algae protein bar",
+    "herb_potatoes": "Herb roast potatoes",
+    "tomato_pasta": "Tomato pasta",
+    "soy_stew": "Soy stew",
+    "mushroom_risotto": "Mushroom risotto",
+    "tofu_stirfry": "Tofu stir-fry",
+    "veggie_pizza": "Veggie pizza",
+    "colony_feast": "Colony feast"
+  },
+  "role_names": {
+    "technician": "Technician",
+    "grower": "Grower",
+    "operator": "Operator",
+    "medic": "Medic",
+    "scientist": "Scientist"
+  },
+  "stages": [
+    {
+      "id": "landing",
+      "name": "Landing"
+    },
+    {
+      "id": "stable_outpost",
+      "name": "Stable outpost",
+      "pop": 8,
+      "safe_reserve_days": 1
+    },
+    {
+      "id": "growing_settlement",
+      "name": "Growing settlement",
+      "pop": 20,
+      "morale": 60,
+      "no_death_days": 3
+    },
+    {
+      "id": "established_colony",
+      "name": "Established colony",
+      "pop": 50,
+      "districts": 2,
+      "meal_days": 2
+    },
+    {
+      "id": "scenario_complete",
+      "name": "Scenario complete",
+      "pop": 100,
+      "no_death_days": 5,
+      "morale": 70
+    }
+  ],
+  "specialist_bonus": 80,
+  "content_version": 2,
+  "sizes": {
+    "_note": "Index 0..3 = S, M, L, XL. M is the v1 building. Per-building arrays in buildings.json override these multipliers.",
+    "names": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "research": [
+      "",
+      "",
+      "eng_1",
+      "eng_2"
+    ],
+    "cost_mult": [
+      0.6,
+      1,
+      1.7,
+      2.6
+    ],
+    "power_mult": [
+      0.6,
+      1,
+      1.6,
+      2.3
+    ],
+    "work_mult": [
+      0.7,
+      1,
+      1.6,
+      2.3
+    ],
+    "capacity_mult": [
+      0.5,
+      1,
+      1.9,
+      3
+    ],
+    "default": 1
+  },
+  "levels": {
+    "_note": "Index 0..4 = level 1..5. research: tech needed to REACH that level (\"family\" = the tier-5 special tech of the building family).",
+    "max": 5,
+    "output_mult": [
+      1,
+      1.25,
+      1.5,
+      1.8,
+      2.2
+    ],
+    "power_mult": [
+      1,
+      1.1,
+      1.2,
+      1.25,
+      1.3
+    ],
+    "wear_mult": [
+      1,
+      0.9,
+      0.8,
+      0.7,
+      0.5
+    ],
+    "comfort_morale": [
+      0,
+      3,
+      6,
+      9,
+      14
+    ],
+    "research": [
+      "",
+      "eng_1",
+      "eng_2",
+      "eng_3",
+      "family"
+    ],
+    "cost_mult": [
+      0,
+      0.5,
+      0.8,
+      1.2,
+      1.6
+    ],
+    "extra_cost": [
+      {},
+      {},
+      {
+        "electronics": 2
+      },
+      {
+        "electronics": 4,
+        "composite": 3
+      },
+      {
+        "electronics": 6,
+        "composite": 4,
+        "exotic": 3
+      }
+    ],
+    "work_mult": [
+      0,
+      0.6,
+      0.9,
+      1.3,
+      1.8
+    ]
+  },
+  "research": {
+    "rp_per_work": 0.1,
+    "scientist_only": true,
+    "comms_bonus": 0.1
+  },
+  "nutrition": {
+    "start": 50,
+    "meal_weight": 0.4,
+    "hungry_drift_per_day": 30,
+    "target": 70,
+    "well_fed_score": 70,
+    "well_fed_min": 40,
+    "well_fed_morale": 6,
+    "well_fed_regen_mult": 1.5,
+    "deficient_below": 20,
+    "deficient_morale": -8,
+    "deficient_work_mult": 0.9,
+    "starved_below": 8,
+    "starved_damage_per_day": 10,
+    "variety_window": 6,
+    "variety_good": 4,
+    "variety_good_morale": 5,
+    "variety_bad_morale": -4,
+    "taste_window": 3,
+    "taste_morale_mult": 0.5,
+    "choice_novelty_bonus": 4,
+    "choice_taste_weight": 0.6,
+    "kitchen_crop_stock": 4,
+    "kitchen_stock_days": 2.1,
+    "crop_stock_min": 12,
+    "crop_stock_per_colonist": 1,
+    "kitchen_stock_days_cold": 2.6
+  },
+  "spoilage": {
+    "enabled": true,
+    "cold_building_flag": "cold",
+    "no_spoil_roles": [
+      "in",
+      "site",
+      "carry"
+    ]
+  },
+  "algae": {
+    "_note": "Continuous growth in algae_bioreactor; values per size live in buildings.json."
+  },
+  "ship": {
+    "distance_min": 55,
+    "distance_max": 75,
+    "capsule_length": 44,
+    "capsule_radius": 7,
+    "stages": [
+      {
+        "name": "Wreck",
+        "deliver": {},
+        "work": 60,
+        "any_role": true
+      },
+      {
+        "name": "Hull",
+        "deliver": {
+          "hull_plate": 30,
+          "metal": 40
+        },
+        "work": 600
+      },
+      {
+        "name": "Systems",
+        "deliver": {
+          "electronics": 25,
+          "glass": 10
+        },
+        "work": 500
+      },
+      {
+        "name": "Engines",
+        "deliver": {
+          "rocket_fuel": 40,
+          "composite": 10
+        },
+        "work": 400
+      },
+      {
+        "name": "Test flight",
+        "deliver": {},
+        "work": 0,
+        "flight_seconds": 40
+      }
+    ],
+    "readiness_decay_per_day": 8,
+    "maintenance": {
+      "items": {
+        "rocket_fuel": 1,
+        "spare_parts": 1
+      },
+      "work": 40,
+      "readiness": 15,
+      "below": 90
+    },
+    "supply_run": {
+      "every_days": 2,
+      "min_readiness": 60,
+      "fuel": 10,
+      "readiness_cost": 10,
+      "away_days": 1,
+      "cargo": {
+        "exotic": 4,
+        "medicine": 6,
+        "electronics": 6
+      },
+      "settlers": 4
+    }
+  },
+  "roles": [
+    "technician",
+    "grower",
+    "operator",
+    "medic",
+    "scientist"
+  ],
+  "difficulty": {
+    "relaxed": {
+      "name": "Relaxed",
+      "cargo_mult": 1.5,
+      "need_mult": 0.85,
+      "research_mult": 1.3,
+      "spoilage": false,
+      "wear_mult": 0.6
+    },
+    "standard": {
+      "name": "Standard",
+      "cargo_mult": 1,
+      "need_mult": 1,
+      "research_mult": 1,
+      "spoilage": true,
+      "wear_mult": 1
+    },
+    "hard": {
+      "name": "Hard",
+      "cargo_mult": 0.8,
+      "need_mult": 1.15,
+      "research_mult": 0.85,
+      "spoilage": true,
+      "wear_mult": 1.3
+    }
+  },
+  "series": {
+    "sample_seconds": 10,
+    "max_points": 720,
+    "item_sample_seconds": 60
+  },
+  "storm": {
+    "_note": "Dust storm (spec 11). Never before the scenario's no_disaster_days. interval_days: days between storms (hazard random stream). duration_seconds: [min, max].",
+    "enabled": true,
+    "interval_days": [
+      3,
+      5
+    ],
+    "warning_seconds": 60,
+    "duration_seconds": [
+      90,
+      180
+    ],
+    "solar_mult": 0.2,
+    "speed_mult": 0.5
+  }
+}

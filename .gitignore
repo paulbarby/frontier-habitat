@@ -1,0 +1,11 @@
+# Godot import cache (rebuilt on import)
+.godot/
+.godot_editor.lock
+# builders' private exports; build/web is the published game
+build/web_*/
+# regenerable Blender review renders (curated copies live in art/)
+tools/blender/previews/
+tools/blender/previews_ext/
+__pycache__/
+*.tmp.glb
+*.tmp

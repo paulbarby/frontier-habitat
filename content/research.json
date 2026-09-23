@@ -1,0 +1,47 @@
+{
+  "_note": "The tech tree. cost in research points (RP). requires: techs that must be done first. unlocks: buildings, crops, recipes, sizes, levels. bonus: colony-wide multipliers added to 1.0 (e.g. solar_mult 0.2 = +20%). items: special research needs these units delivered to a research lab. family: tier-5 tech that unlocks Level 5 for that building family. branch/tier place the node in the tree screen.",
+  "branches": {
+    "eng": {"name": "Engineering", "color": "#B8C2CC", "row": 0},
+    "life": {"name": "Life support", "color": "#29B6C6", "row": 1},
+    "agri": {"name": "Agriculture", "color": "#6ABF4B", "row": 2},
+    "ind": {"name": "Industry", "color": "#E07A3A", "row": 3},
+    "energy": {"name": "Energy", "color": "#4A90D9", "row": 4},
+    "sci": {"name": "Science and medicine", "color": "#7C8CFF", "row": 5},
+    "space": {"name": "Space and logistics", "color": "#C9D3E0", "row": 6}
+  },
+  "techs": {
+    "eng_1":     {"name": "Structural Engineering",  "tier": 1, "branch": "eng",    "cost": 40,  "requires": [],                    "unlocks": {"sizes": [2], "levels": [2]}, "desc": "Size L for every structure. Upgrades to level 2."},
+    "life_1":    {"name": "Water Reclamation",       "tier": 1, "branch": "life",   "cost": 40,  "requires": [],                    "unlocks": {"buildings": ["water_recycler"]}, "desc": "The water recycler returns used water to the network."},
+    "agri_1":    {"name": "Crop Genetics",           "tier": 1, "branch": "agri",   "cost": 40,  "requires": [],                    "unlocks": {"crops": ["tomato", "soybean", "herbs"]}, "desc": "Tomatoes, soybeans and herbs. New dishes become possible."},
+    "ind_1":     {"name": "Silicate Processing",     "tier": 1, "branch": "ind",    "cost": 40,  "requires": [],                    "unlocks": {"buildings": ["regolith_harvester", "glassworks"]}, "desc": "Harvest silicate sand and melt it into glass."},
+    "energy_1":  {"name": "Photovoltaics II",        "tier": 1, "branch": "energy", "cost": 40,  "requires": [],                    "bonus": {"solar_mult": 0.2}, "desc": "Solar arrays make 20% more power."},
+    "sci_1":     {"name": "Field Science",           "tier": 1, "branch": "sci",    "cost": 40,  "requires": [],                    "bonus": {"research_mult": 0.25}, "desc": "Research labs make 25% more research points."},
+
+    "eng_2":     {"name": "Advanced Construction",   "tier": 2, "branch": "eng",    "cost": 90,  "requires": ["eng_1"],             "unlocks": {"sizes": [3], "levels": [3]}, "desc": "Size XL for every structure. Upgrades to level 3."},
+    "life_2":    {"name": "Atmospheric Processing",  "tier": 2, "branch": "life",   "cost": 90,  "requires": ["life_1"],            "unlocks": {"buildings": ["atmo_processor"]}, "desc": "Makes oxygen from the thin air outside, with power and no water."},
+    "agri_2":    {"name": "Fungiculture",            "tier": 2, "branch": "agri",   "cost": 90,  "requires": ["agri_1"],            "unlocks": {"buildings": ["fungus_farm"], "crops": ["mushroom"]}, "desc": "Mushrooms grow in the dark with little power and water."},
+    "ind_2":     {"name": "Microelectronics",        "tier": 2, "branch": "ind",    "cost": 90,  "requires": ["ind_1"],             "unlocks": {"buildings": ["electronics_fab"], "recipes": ["electronics"]}, "desc": "Circuit boards from silicate and steel."},
+    "energy_2":  {"name": "Grid Storage",            "tier": 2, "branch": "energy", "cost": 90,  "requires": ["energy_1"],          "bonus": {"battery_mult": 0.3, "wind_mult": 0.2}, "desc": "Batteries hold 30% more. Wind turbines make 20% more."},
+    "med_1":     {"name": "Pharmacology",            "tier": 2, "branch": "sci",    "cost": 90,  "requires": ["sci_1"],             "unlocks": {"buildings": ["bio_lab"], "recipes": ["medicine"]}, "desc": "Medicine from herbs and polymer."},
+    "comfort_1": {"name": "Recreation Science",      "tier": 2, "branch": "sci",    "cost": 90,  "requires": ["sci_1"],             "unlocks": {"buildings": ["cantina"]}, "desc": "The cantina: more recreation places and better morale."},
+    "log_1":     {"name": "Cold Chain",              "tier": 2, "branch": "space",  "cost": 90,  "requires": ["agri_1"],            "unlocks": {"buildings": ["cold_storage"]}, "desc": "Cold storage stops food from spoiling."},
+
+    "eng_3":     {"name": "Precision Engineering",   "tier": 3, "branch": "eng",    "cost": 180, "requires": ["eng_2", "ind_2"],    "unlocks": {"levels": [4]}, "desc": "Upgrades to level 4."},
+    "agri_3":    {"name": "Algae Culture",           "tier": 3, "branch": "agri",   "cost": 180, "requires": ["agri_2"],            "unlocks": {"buildings": ["algae_bioreactor"], "crops": ["algae"]}, "desc": "Bioreactors grow protein-rich algae and add oxygen."},
+    "ind_3":     {"name": "Composite Fabrication",   "tier": 3, "branch": "ind",    "cost": 180, "requires": ["ind_2"],             "unlocks": {"buildings": ["fabricator"], "recipes": ["hull_plate", "composite"]}, "desc": "Hull plates and composite panels."},
+    "sci_2":     {"name": "Deep Survey",             "tier": 3, "branch": "sci",    "cost": 180, "requires": ["sci_1", "ind_1"],    "unlocks": {"buildings": ["deep_drill"]}, "desc": "Find exotic crystals deep under mineral deposits."},
+    "space_1":   {"name": "Propellant Chemistry",    "tier": 3, "branch": "space",  "cost": 180, "requires": ["ind_2"],             "unlocks": {"buildings": ["fuel_refinery"]}, "desc": "Rocket fuel from water and power."},
+
+    "energy_3":  {"name": "Fusion Ignition",         "tier": 4, "branch": "energy", "cost": 320, "requires": ["energy_2", "eng_3"], "unlocks": {"buildings": ["fusion_reactor"]}, "desc": "A fusion reactor: 60 P day and night."},
+    "agri_4":    {"name": "Gene-tuned Crops",        "tier": 4, "branch": "agri",   "cost": 320, "requires": ["agri_3"],            "bonus": {"crop_yield_mult": 0.25}, "desc": "Every harvest gives 25% more."},
+    "ind_4":     {"name": "Automated Production",    "tier": 4, "branch": "ind",    "cost": 320, "requires": ["ind_3"],             "bonus": {"industry_work_mult": 0.25}, "desc": "Industry work is 25% faster."},
+    "life_3":    {"name": "Bioregenerative Systems", "tier": 4, "branch": "life",   "cost": 320, "requires": ["life_2", "agri_3"],  "bonus": {"o2_mult": 0.2, "recycle_mult": 0.2}, "desc": "Oxygen production +20%. Water recycling +20%."},
+    "space_2":   {"name": "Orbital Logistics",       "tier": 4, "branch": "space",  "cost": 320, "requires": ["space_1"],           "unlocks": {"buildings": ["comms_tower"], "ship": ["supply_run"]}, "desc": "The comms tower. The Meridian can fly supply runs."},
+
+    "s_agri":    {"name": "Quantum Hydroponics",     "tier": 5, "branch": "agri",   "cost": 500, "requires": ["agri_4", "eng_3"],   "items": {"exotic": 8}, "family": "agri",     "desc": "SPECIAL. Level 5 for greenhouses, fungus farms, bioreactors and kitchens."},
+    "s_life":    {"name": "Terraforming Catalysts",  "tier": 5, "branch": "life",   "cost": 500, "requires": ["life_3", "eng_3"],   "items": {"exotic": 8}, "family": "life",     "desc": "SPECIAL. Level 5 for oxygen, water and atmosphere structures."},
+    "s_ind":     {"name": "Nanofabrication",         "tier": 5, "branch": "ind",    "cost": 500, "requires": ["ind_4", "eng_3"],    "items": {"exotic": 8}, "family": "industry", "desc": "SPECIAL. Level 5 for every industry structure."},
+    "s_energy":  {"name": "Stellarator Containment", "tier": 5, "branch": "energy", "cost": 500, "requires": ["energy_3"],          "items": {"exotic": 8}, "family": "energy",   "desc": "SPECIAL. Level 5 for solar, wind, batteries and fusion."},
+    "s_hab":     {"name": "Arcology Design",         "tier": 5, "branch": "eng",    "cost": 500, "requires": ["eng_3", "comfort_1"], "items": {"exotic": 8}, "family": "habitat",  "families": ["habitat", "science"], "desc": "SPECIAL. Level 5 for habitats, lounges, cantinas, medical, storage and research labs."}
+  }
+}

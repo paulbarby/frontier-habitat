@@ -1,0 +1,2913 @@
+{
+ "blender": "5.2.1 LTS",
+ "models": [
+  {
+   "id": "meridian",
+   "kind": "special",
+   "footprint": null,
+   "tris": 20564,
+   "tris_base": 20564,
+   "budget": 30000,
+   "tris_by_object": {
+    "Hull": 13794,
+    "Damage1": 1392,
+    "Damage2": 618,
+    "Damage3": 634,
+    "Scaffold": 3224,
+    "Lights": 566,
+    "EngineGlow": 336
+   },
+   "bbox_min": [
+    -22.955,
+    -6.998,
+    -2.0
+   ],
+   "bbox_max": [
+    23.64,
+    6.93,
+    9.823
+   ],
+   "max_radius": 23.652,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 1069596,
+   "objects": [
+    "Anchor_Engine_L",
+    "Anchor_Engine_R",
+    "Anchor_Ramp",
+    "Damage1",
+    "Damage2",
+    "Damage3",
+    "EngineGlow",
+    "Hull",
+    "Lights",
+    "Scaffold"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Metal",
+    "Ore",
+    "OreVein",
+    "Plasma",
+    "Rubber",
+    "Soil",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 3.1,
+   "also": []
+  },
+  {
+   "id": "debris_a",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 296,
+   "tris_base": 296,
+   "budget": 900,
+   "tris_by_object": {
+    "Base": 296
+   },
+   "bbox_min": [
+    -2.052,
+    -1.638,
+    -0.243
+   ],
+   "bbox_max": [
+    1.922,
+    1.91,
+    0.991
+   ],
+   "max_radius": 2.241,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 25196,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Metal"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "debris_b",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 568,
+   "tris_base": 568,
+   "budget": 900,
+   "tris_by_object": {
+    "Base": 568
+   },
+   "bbox_min": [
+    -1.568,
+    -0.725,
+    -0.08
+   ],
+   "bbox_max": [
+    1.279,
+    0.725,
+    1.32
+   ],
+   "max_radius": 1.677,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 27284,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Frame",
+    "HullDark",
+    "Metal",
+    "Rubber"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "debris_c",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 468,
+   "tris_base": 468,
+   "budget": 900,
+   "tris_by_object": {
+    "Base": 468
+   },
+   "bbox_min": [
+    -1.83,
+    -0.411,
+    -0.075
+   ],
+   "bbox_max": [
+    2.223,
+    1.048,
+    1.034
+   ],
+   "max_radius": 2.247,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 35828,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Frame",
+    "Hull",
+    "Metal"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "colonist_indoor",
+   "kind": "unit",
+   "footprint": null,
+   "tris": 1244,
+   "tris_base": 1244,
+   "budget": 1500,
+   "tris_by_object": {
+    "Body": 636,
+    "ArmL": 184,
+    "ArmR": 184,
+    "LegL": 120,
+    "LegR": 120
+   },
+   "bbox_min": [
+    -0.167,
+    -0.419,
+    0.0
+   ],
+   "bbox_max": [
+    0.175,
+    0.419,
+    1.776
+   ],
+   "max_radius": 0.424,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 62120,
+   "objects": [
+    "ArmL",
+    "ArmR",
+    "Body",
+    "LegL",
+    "LegR"
+   ],
+   "materials": [
+    "Frame",
+    "Hair",
+    "Pack",
+    "Rubber",
+    "Skin",
+    "SuitAccent",
+    "SuitMain",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.2,
+   "also": []
+  },
+  {
+   "id": "colonist_suit",
+   "kind": "unit",
+   "footprint": null,
+   "tris": 1438,
+   "tris_base": 1438,
+   "budget": 1500,
+   "tris_by_object": {
+    "Body": 754,
+    "ArmL": 178,
+    "ArmR": 178,
+    "LegL": 164,
+    "LegR": 164
+   },
+   "bbox_min": [
+    -0.401,
+    -0.419,
+    0.0
+   ],
+   "bbox_max": [
+    0.226,
+    0.419,
+    1.82
+   ],
+   "max_radius": 0.443,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 77308,
+   "objects": [
+    "ArmL",
+    "ArmR",
+    "Body",
+    "LegL",
+    "LegR"
+   ],
+   "materials": [
+    "Frame",
+    "Light",
+    "Pack",
+    "Rubber",
+    "SuitAccent",
+    "SuitMain",
+    "Visor"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": [
+    "colonist"
+   ]
+  },
+  {
+   "id": "crop_algae",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2310,
+   "tris_base": 2310,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 658,
+    "Stage2": 826,
+    "Stage3": 826
+   },
+   "bbox_min": [
+    -0.59,
+    -0.59,
+    0.0
+   ],
+   "bbox_max": [
+    0.59,
+    0.59,
+    2.07
+   ],
+   "max_radius": 0.594,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 119596,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Glass",
+    "Glow",
+    "Metal",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "crop_greens",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2664,
+   "tris_base": 2664,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 384,
+    "Stage2": 840,
+    "Stage3": 1440
+   },
+   "bbox_min": [
+    -1.377,
+    -0.548,
+    0.01
+   ],
+   "bbox_max": [
+    1.396,
+    0.539,
+    0.221
+   ],
+   "max_radius": 1.427,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 264272,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Plant",
+    "PlantDark",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.7,
+   "also": []
+  },
+  {
+   "id": "crop_herbs",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2088,
+   "tris_base": 2088,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 392,
+    "Stage2": 800,
+    "Stage3": 896
+   },
+   "bbox_min": [
+    -1.272,
+    -0.485,
+    -0.003
+   ],
+   "bbox_max": [
+    1.363,
+    0.478,
+    0.45
+   ],
+   "max_radius": 1.404,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 207408,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Fabric",
+    "Plant",
+    "PlantDark",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.6,
+   "also": []
+  },
+  {
+   "id": "crop_mushroom",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 3408,
+   "tris_base": 3408,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 976,
+    "Stage2": 1216,
+    "Stage3": 1216
+   },
+   "bbox_min": [
+    -1.365,
+    -0.583,
+    0.0
+   ],
+   "bbox_max": [
+    1.365,
+    0.583,
+    1.45
+   ],
+   "max_radius": 1.47,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 223776,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Frame",
+    "Frost",
+    "HullDark",
+    "Produce",
+    "Soil"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.8,
+   "also": []
+  },
+  {
+   "id": "crop_potato",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2670,
+   "tris_base": 2670,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 330,
+    "Stage2": 918,
+    "Stage3": 1422
+   },
+   "bbox_min": [
+    -1.371,
+    -0.585,
+    0.0
+   ],
+   "bbox_max": [
+    1.4,
+    0.594,
+    0.55
+   ],
+   "max_radius": 1.479,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 249952,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Frost",
+    "Plant",
+    "PlantDark",
+    "Produce",
+    "Soil"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.8,
+   "also": [
+    "crop"
+   ]
+  },
+  {
+   "id": "crop_soybean",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2340,
+   "tris_base": 2340,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 378,
+    "Stage2": 810,
+    "Stage3": 1152
+   },
+   "bbox_min": [
+    -1.32,
+    -0.507,
+    0.0
+   ],
+   "bbox_max": [
+    1.324,
+    0.507,
+    0.469
+   ],
+   "max_radius": 1.373,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 226912,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Plant",
+    "PlantDark",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.6,
+   "also": []
+  },
+  {
+   "id": "crop_tomato",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2480,
+   "tris_base": 2480,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 208,
+    "Stage2": 832,
+    "Stage3": 1440
+   },
+   "bbox_min": [
+    -1.317,
+    -0.495,
+    -0.004
+   ],
+   "bbox_max": [
+    1.317,
+    0.502,
+    0.95
+   ],
+   "max_radius": 1.36,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 192904,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Frame",
+    "Hazard",
+    "Metal",
+    "Plant",
+    "PlantDark",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": []
+  },
+  {
+   "id": "crop_wheat",
+   "kind": "crop",
+   "footprint": null,
+   "tris": 2120,
+   "tris_base": 2120,
+   "budget": 4500,
+   "tris_by_object": {
+    "Stage1": 560,
+    "Stage2": 390,
+    "Stage3": 1170
+   },
+   "bbox_min": [
+    -1.4,
+    -0.6,
+    0.0
+   ],
+   "bbox_max": [
+    1.4,
+    0.6,
+    0.74
+   ],
+   "max_radius": 1.501,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 152368,
+   "objects": [
+    "Stage1",
+    "Stage2",
+    "Stage3"
+   ],
+   "materials": [
+    "Plant",
+    "PlantDark",
+    "Produce"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "solar_array_l",
+   "kind": "exterior",
+   "footprint": 4.4,
+   "tris": 2990,
+   "tris_base": 1812,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1812,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -4.31,
+    -4.31,
+    0.0
+   ],
+   "bbox_max": [
+    4.31,
+    4.31,
+    2.785
+   ],
+   "max_radius": 4.31,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 218368,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "solar_array_m",
+   "kind": "exterior",
+   "footprint": 3.2,
+   "tris": 2098,
+   "tris_base": 920,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 920,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.11,
+    -3.11,
+    0.0
+   ],
+   "bbox_max": [
+    3.11,
+    3.11,
+    2.335
+   ],
+   "max_radius": 3.11,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 155932,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": [
+    "solar_array"
+   ]
+  },
+  {
+   "id": "solar_array_s",
+   "kind": "exterior",
+   "footprint": 2.2,
+   "tris": 1586,
+   "tris_base": 408,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 408,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.11,
+    -2.11,
+    0.0
+   ],
+   "bbox_max": [
+    2.11,
+    2.11,
+    1.985
+   ],
+   "max_radius": 2.11,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 120892,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "solar_array_xl",
+   "kind": "exterior",
+   "footprint": 5.6,
+   "tris": 3698,
+   "tris_base": 2224,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 2224,
+    "L2": 408,
+    "L3": 248,
+    "L4": 340,
+    "L5": 478
+   },
+   "bbox_min": [
+    -5.51,
+    -5.51,
+    -0.02
+   ],
+   "bbox_max": [
+    5.51,
+    5.51,
+    3.737
+   ],
+   "max_radius": 5.51,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 253864,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.6,
+   "also": []
+  },
+  {
+   "id": "wind_turbine_l",
+   "kind": "exterior",
+   "footprint": 2.2,
+   "tris": 2954,
+   "tris_base": 1552,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1304,
+    "Rotor": 248,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.656,
+    -1.824,
+    -0.05
+   ],
+   "bbox_max": [
+    2.661,
+    1.824,
+    16.466
+   ],
+   "max_radius": 1.999,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {
+    "Rotor": 2.749
+   },
+   "file_size": 194728,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Rotor"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "wind_turbine_m",
+   "kind": "exterior",
+   "footprint": 1.6,
+   "tris": 2618,
+   "tris_base": 1216,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 968,
+    "Rotor": 248,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.137,
+    -1.332,
+    -0.05
+   ],
+   "bbox_max": [
+    2.142,
+    1.332,
+    11.77
+   ],
+   "max_radius": 1.507,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {
+    "Rotor": 2.227
+   },
+   "file_size": 172032,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Rotor"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": [
+    "wind_turbine"
+   ]
+  },
+  {
+   "id": "wind_turbine_s",
+   "kind": "exterior",
+   "footprint": 1.2,
+   "tris": 2498,
+   "tris_base": 1096,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 848,
+    "Rotor": 248,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -1.79,
+    -1.004,
+    -0.05
+   ],
+   "bbox_max": [
+    1.795,
+    1.004,
+    8.28
+   ],
+   "max_radius": 1.084,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {
+    "Rotor": 1.872
+   },
+   "file_size": 162144,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Rotor"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.2,
+   "also": []
+  },
+  {
+   "id": "wind_turbine_xl",
+   "kind": "exterior",
+   "footprint": 2.8,
+   "tris": 2954,
+   "tris_base": 1552,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1304,
+    "Rotor": 248,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.176,
+    -2.316,
+    -0.05
+   ],
+   "bbox_max": [
+    3.181,
+    2.316,
+    22.162
+   ],
+   "max_radius": 2.49,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {
+    "Rotor": 3.273
+   },
+   "file_size": 194708,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Rotor"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "battery_l",
+   "kind": "exterior",
+   "footprint": 2.5,
+   "tris": 2674,
+   "tris_base": 1496,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1496,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.45,
+    -2.45,
+    0.0
+   ],
+   "bbox_max": [
+    2.45,
+    2.45,
+    2.915
+   ],
+   "max_radius": 2.45,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 189552,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "battery_m",
+   "kind": "exterior",
+   "footprint": 1.8,
+   "tris": 2140,
+   "tris_base": 962,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 962,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -1.75,
+    -1.75,
+    0.0
+   ],
+   "bbox_max": [
+    1.75,
+    1.75,
+    2.755
+   ],
+   "max_radius": 1.763,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 153256,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Rubber",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": [
+    "battery"
+   ]
+  },
+  {
+   "id": "battery_s",
+   "kind": "exterior",
+   "footprint": 1.3,
+   "tris": 1786,
+   "tris_base": 608,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 608,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -1.25,
+    -1.25,
+    0.0
+   ],
+   "bbox_max": [
+    1.25,
+    1.25,
+    2.475
+   ],
+   "max_radius": 1.25,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 128304,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.2,
+   "also": []
+  },
+  {
+   "id": "battery_xl",
+   "kind": "exterior",
+   "footprint": 3.2,
+   "tris": 3118,
+   "tris_base": 1940,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1940,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.15,
+    -3.15,
+    0.0
+   ],
+   "bbox_max": [
+    3.15,
+    3.15,
+    3.075
+   ],
+   "max_radius": 3.158,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 225056,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Solar",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "water_extractor_l",
+   "kind": "exterior",
+   "footprint": 3.4,
+   "tris": 3320,
+   "tris_base": 1918,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1918,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.33,
+    -3.33,
+    0.0
+   ],
+   "bbox_max": [
+    3.33,
+    3.33,
+    7.155
+   ],
+   "max_radius": 3.33,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 207980,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "water_extractor_m",
+   "kind": "exterior",
+   "footprint": 2.6,
+   "tris": 2828,
+   "tris_base": 1426,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1426,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.53,
+    -2.53,
+    0.0
+   ],
+   "bbox_max": [
+    2.53,
+    2.53,
+    5.655
+   ],
+   "max_radius": 2.53,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 174016,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": [
+    "water_extractor"
+   ]
+  },
+  {
+   "id": "water_extractor_s",
+   "kind": "exterior",
+   "footprint": 1.9,
+   "tris": 2266,
+   "tris_base": 864,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 864,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -1.83,
+    -1.83,
+    0.0
+   ],
+   "bbox_max": [
+    1.83,
+    1.83,
+    4.355
+   ],
+   "max_radius": 1.83,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 151788,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": []
+  },
+  {
+   "id": "water_extractor_xl",
+   "kind": "exterior",
+   "footprint": 4.2,
+   "tris": 3800,
+   "tris_base": 2398,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 2398,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -4.13,
+    -4.13,
+    0.0
+   ],
+   "bbox_max": [
+    4.13,
+    4.13,
+    6.155
+   ],
+   "max_radius": 4.13,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 227548,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.8,
+   "also": []
+  },
+  {
+   "id": "reservoir_l",
+   "kind": "exterior",
+   "footprint": 4.0,
+   "tris": 3166,
+   "tris_base": 1764,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1764,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.93,
+    -3.93,
+    0.0
+   ],
+   "bbox_max": [
+    3.93,
+    3.93,
+    4.055
+   ],
+   "max_radius": 3.93,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 178936,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": []
+  },
+  {
+   "id": "reservoir_m",
+   "kind": "exterior",
+   "footprint": 3.0,
+   "tris": 2586,
+   "tris_base": 1184,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1184,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.93,
+    -2.93,
+    0.0
+   ],
+   "bbox_max": [
+    2.93,
+    2.93,
+    4.275
+   ],
+   "max_radius": 2.93,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 151840,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": [
+    "reservoir"
+   ]
+  },
+  {
+   "id": "reservoir_s",
+   "kind": "exterior",
+   "footprint": 2.2,
+   "tris": 2074,
+   "tris_base": 672,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 672,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.13,
+    -2.13,
+    0.0
+   ],
+   "bbox_max": [
+    2.13,
+    2.13,
+    2.925
+   ],
+   "max_radius": 2.13,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 127888,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "reservoir_xl",
+   "kind": "exterior",
+   "footprint": 5.0,
+   "tris": 2886,
+   "tris_base": 1484,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 1484,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -4.93,
+    -4.93,
+    -0.007
+   ],
+   "bbox_max": [
+    4.93,
+    4.93,
+    7.075
+   ],
+   "max_radius": 4.93,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 178260,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "regolith_harvester_l",
+   "kind": "exterior",
+   "footprint": 3.8,
+   "tris": 3174,
+   "tris_base": 1996,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 1996,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.73,
+    -3.73,
+    -0.0
+   ],
+   "bbox_max": [
+    3.73,
+    3.73,
+    3.545
+   ],
+   "max_radius": 3.73,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 219648,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "regolith_harvester_m",
+   "kind": "exterior",
+   "footprint": 3.0,
+   "tris": 2686,
+   "tris_base": 1508,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 1508,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.93,
+    -2.93,
+    -0.0
+   ],
+   "bbox_max": [
+    2.93,
+    2.93,
+    3.245
+   ],
+   "max_radius": 2.93,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 188788,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": [
+    "regolith_harvester"
+   ]
+  },
+  {
+   "id": "regolith_harvester_s",
+   "kind": "exterior",
+   "footprint": 2.2,
+   "tris": 2102,
+   "tris_base": 924,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 924,
+    "L2": 408,
+    "L3": 136,
+    "L4": 156,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.13,
+    -2.13,
+    -0.0
+   ],
+   "bbox_max": [
+    2.13,
+    2.13,
+    3.065
+   ],
+   "max_radius": 2.13,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 150624,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": []
+  },
+  {
+   "id": "regolith_harvester_xl",
+   "kind": "exterior",
+   "footprint": 4.6,
+   "tris": 3720,
+   "tris_base": 2318,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 2318,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -4.53,
+    -4.53,
+    -0.02
+   ],
+   "bbox_max": [
+    4.53,
+    4.53,
+    4.725
+   ],
+   "max_radius": 4.597,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 247760,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "OreVein",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "fuel_refinery_l",
+   "kind": "exterior",
+   "footprint": 4.4,
+   "tris": 4424,
+   "tris_base": 3022,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 3022,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -4.33,
+    -4.33,
+    -0.003
+   ],
+   "bbox_max": [
+    4.33,
+    4.33,
+    7.675
+   ],
+   "max_radius": 4.33,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 259936,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "fuel_refinery_m",
+   "kind": "exterior",
+   "footprint": 3.5,
+   "tris": 3710,
+   "tris_base": 2308,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 2308,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.43,
+    -3.43,
+    -0.003
+   ],
+   "bbox_max": [
+    3.43,
+    3.43,
+    6.605
+   ],
+   "max_radius": 3.43,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 224732,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": [
+    "fuel_refinery"
+   ]
+  },
+  {
+   "id": "fuel_refinery_s",
+   "kind": "exterior",
+   "footprint": 2.6,
+   "tris": 2854,
+   "tris_base": 1452,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 1452,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -2.53,
+    -2.53,
+    -0.003
+   ],
+   "bbox_max": [
+    2.53,
+    2.53,
+    4.725
+   ],
+   "max_radius": 2.53,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 178176,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "fuel_refinery_xl",
+   "kind": "exterior",
+   "footprint": 5.4,
+   "tris": 6400,
+   "tris_base": 4998,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 4998,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -5.33,
+    -5.33,
+    -0.003
+   ],
+   "bbox_max": [
+    5.33,
+    5.33,
+    8.745
+   ],
+   "max_radius": 5.33,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 368080,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Neon",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.7,
+   "also": []
+  },
+  {
+   "id": "fusion_reactor",
+   "kind": "exterior",
+   "footprint": 6.5,
+   "tris": 7338,
+   "tris_base": 5788,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 5132,
+    "Plasma": 656,
+    "L2": 408,
+    "L3": 248,
+    "L4": 416,
+    "L5": 478
+   },
+   "bbox_min": [
+    -6.22,
+    -6.22,
+    -0.05
+   ],
+   "bbox_max": [
+    6.22,
+    6.22,
+    4.855
+   ],
+   "max_radius": 6.22,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 375216,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Plasma"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Plasma",
+    "Trim",
+    "WaterBlue",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 1.2,
+   "also": []
+  },
+  {
+   "id": "deep_drill",
+   "kind": "exterior",
+   "footprint": 3.5,
+   "tris": 4088,
+   "tris_base": 2686,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 2650,
+    "Lights": 36,
+    "L2": 408,
+    "L3": 248,
+    "L4": 268,
+    "L5": 478
+   },
+   "bbox_min": [
+    -3.42,
+    -3.42,
+    -0.039
+   ],
+   "bbox_max": [
+    3.42,
+    3.42,
+    15.225
+   ],
+   "max_radius": 3.441,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 278412,
+   "objects": [
+    "Base",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "Lights"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glass",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "Light",
+    "Metal",
+    "Produce",
+    "Rubber",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.8,
+   "also": []
+  },
+  {
+   "id": "comms_tower",
+   "kind": "exterior",
+   "footprint": 2.5,
+   "tris": 2440,
+   "tris_base": 2440,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 2248,
+    "Lights": 192
+   },
+   "bbox_min": [
+    -2.006,
+    -2.29,
+    -0.05
+   ],
+   "bbox_max": [
+    2.089,
+    1.85,
+    24.35
+   ],
+   "max_radius": 2.353,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 164448,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Metal",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "lander",
+   "kind": "special",
+   "footprint": 5.5,
+   "tris": 4076,
+   "tris_base": 4076,
+   "budget": 6500,
+   "tris_by_object": {
+    "Base": 3904,
+    "Lights": 172
+   },
+   "bbox_min": [
+    -4.43,
+    -4.385,
+    -0.028
+   ],
+   "bbox_max": [
+    5.043,
+    4.385,
+    8.18
+   ],
+   "max_radius": 5.103,
+   "max_radius_overhang": 5.96,
+   "max_radius_free": {},
+   "file_size": 208252,
+   "objects": [
+    "Anchor_Engine",
+    "Anchor_Ramp",
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Metal",
+    "Rubber",
+    "Solar",
+    "Trim",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.5,
+   "also": []
+  },
+  {
+   "id": "landing_pad",
+   "kind": "exterior",
+   "footprint": 9.0,
+   "tris": 3052,
+   "tris_base": 3052,
+   "budget": 9000,
+   "tris_by_object": {
+    "Base": 2470,
+    "Lights": 582
+   },
+   "bbox_min": [
+    -8.9,
+    -8.9,
+    0.0
+   ],
+   "bbox_max": [
+    8.9,
+    8.9,
+    4.68
+   ],
+   "max_radius": 8.9,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 161784,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Frost",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Neon",
+    "Rubber",
+    "Solar",
+    "Window"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.2,
+   "also": []
+  },
+  {
+   "id": "supply_pod",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 780,
+   "tris_base": 780,
+   "budget": 1500,
+   "tris_by_object": {
+    "Base": 756,
+    "Lights": 24
+   },
+   "bbox_min": [
+    -0.658,
+    -0.658,
+    0.0
+   ],
+   "bbox_max": [
+    1.555,
+    0.957,
+    1.62
+   ],
+   "max_radius": 1.575,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 45976,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Fabric",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Light",
+    "Rubber"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "crate_component",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 158,
+   "tris_base": 158,
+   "budget": 300,
+   "tris_by_object": {
+    "Crate": 158
+   },
+   "bbox_min": [
+    -0.226,
+    -0.242,
+    0.0
+   ],
+   "bbox_max": [
+    0.231,
+    0.242,
+    0.43
+   ],
+   "max_radius": 0.32,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 16312,
+   "objects": [
+    "Crate"
+   ],
+   "materials": [
+    "Cargo",
+    "Frame",
+    "HullDark",
+    "Light",
+    "Metal"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": [
+    "crate"
+   ]
+  },
+  {
+   "id": "crate_food",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 160,
+   "tris_base": 160,
+   "budget": 300,
+   "tris_by_object": {
+    "Crate": 160
+   },
+   "bbox_min": [
+    -0.228,
+    -0.228,
+    0.0
+   ],
+   "bbox_max": [
+    0.231,
+    0.228,
+    0.43
+   ],
+   "max_radius": 0.322,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 15652,
+   "objects": [
+    "Crate"
+   ],
+   "materials": [
+    "Accent",
+    "Cargo",
+    "Frame",
+    "Frost"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "crate_material",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 304,
+   "tris_base": 304,
+   "budget": 400,
+   "tris_by_object": {
+    "Crate": 304
+   },
+   "bbox_min": [
+    -0.225,
+    -0.228,
+    0.0
+   ],
+   "bbox_max": [
+    0.225,
+    0.228,
+    0.401
+   ],
+   "max_radius": 0.318,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 25372,
+   "objects": [
+    "Crate"
+   ],
+   "materials": [
+    "Cargo",
+    "Frame",
+    "Metal"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "crate_medical",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 188,
+   "tris_base": 188,
+   "budget": 300,
+   "tris_by_object": {
+    "Crate": 188
+   },
+   "bbox_min": [
+    -0.227,
+    -0.227,
+    0.0
+   ],
+   "bbox_max": [
+    0.227,
+    0.227,
+    0.45
+   ],
+   "max_radius": 0.32,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 16468,
+   "objects": [
+    "Crate"
+   ],
+   "materials": [
+    "Cargo",
+    "Frame",
+    "Hull"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "crate_raw",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 76,
+   "tris_base": 76,
+   "budget": 300,
+   "tris_by_object": {
+    "Crate": 76
+   },
+   "bbox_min": [
+    -0.23,
+    -0.25,
+    0.0
+   ],
+   "bbox_max": [
+    0.23,
+    0.25,
+    0.44
+   ],
+   "max_radius": 0.325,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 10496,
+   "objects": [
+    "Crate"
+   ],
+   "materials": [
+    "Cargo",
+    "Frame",
+    "Hazard",
+    "HullDark",
+    "Metal"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.0,
+   "also": []
+  },
+  {
+   "id": "rock_a",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 178,
+   "tris_base": 178,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 178
+   },
+   "bbox_min": [
+    -1.142,
+    -0.85,
+    -0.03
+   ],
+   "bbox_max": [
+    1.336,
+    1.035,
+    1.154
+   ],
+   "max_radius": 1.424,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 18644,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore",
+    "OreVein"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "rock_b",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 196,
+   "tris_base": 196,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 196
+   },
+   "bbox_min": [
+    -1.205,
+    -0.81,
+    -0.03
+   ],
+   "bbox_max": [
+    1.261,
+    1.125,
+    0.977
+   ],
+   "max_radius": 1.338,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 20288,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore",
+    "OreVein"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "rock_c",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 108,
+   "tris_base": 108,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 108
+   },
+   "bbox_min": [
+    -0.678,
+    -0.507,
+    -0.03
+   ],
+   "bbox_max": [
+    0.662,
+    0.542,
+    1.046
+   ],
+   "max_radius": 0.682,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 12424,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore",
+    "OreVein"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "rock_d",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 146,
+   "tris_base": 146,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 146
+   },
+   "bbox_min": [
+    -1.423,
+    -0.982,
+    -0.03
+   ],
+   "bbox_max": [
+    1.646,
+    1.007,
+    1.041
+   ],
+   "max_radius": 1.861,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 16980,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore",
+    "OreVein"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "rock_e",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 188,
+   "tris_base": 188,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 188
+   },
+   "bbox_min": [
+    -0.716,
+    -0.647,
+    -0.03
+   ],
+   "bbox_max": [
+    0.9,
+    0.707,
+    2.16
+   ],
+   "max_radius": 0.989,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 20420,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "rock_f",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 210,
+   "tris_base": 210,
+   "budget": 600,
+   "tris_by_object": {
+    "Rock": 210
+   },
+   "bbox_min": [
+    -1.017,
+    -0.987,
+    -0.03
+   ],
+   "bbox_max": [
+    1.195,
+    0.747,
+    0.756
+   ],
+   "max_radius": 1.237,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 21744,
+   "objects": [
+    "Rock"
+   ],
+   "materials": [
+    "Ore",
+    "OreVein"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "pebbles",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 316,
+   "tris_base": 316,
+   "budget": 600,
+   "tris_by_object": {
+    "Pebbles": 316
+   },
+   "bbox_min": [
+    -0.82,
+    -0.93,
+    -0.02
+   ],
+   "bbox_max": [
+    1.03,
+    0.891,
+    0.134
+   ],
+   "max_radius": 1.242,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 34408,
+   "objects": [
+    "Pebbles"
+   ],
+   "materials": [
+    "HullDark",
+    "Ore"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  }
+ ]
+}
