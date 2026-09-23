@@ -46,7 +46,7 @@ Engine: Godot 4.4.1. Models: Blender 5.2. All code, models and text are original
 **Browser (the delivery target).** Start the static server and open the page:
 
 ```bash
-node C:/Users/paulb/Claude/frontier-habitat/tools/serve.mjs 5791
+node tools/serve.mjs 5791
 ```
 
 Then open `http://localhost:5791/`. The build in `build/web/` is a plain static site:
@@ -104,7 +104,7 @@ the same commands a player submits. The colonists build it under the normal rule
 
 ```bash
 # Models: writes assets/models/*.glb and preview PNGs
-"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python tools/blender/rooms_build.py
+"/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python tools/blender/rooms_build.py
 # exteriors, ship, crops, colonists, props: see tools/blender/ext_report.md
 
 # Tests: 40 headless tests, about six minutes (add "!long_" to skip the long runs)
@@ -115,7 +115,7 @@ FH_ORCHESTRATOR=1 node tools/godot.mjs export build/web
 ```
 
 The web export templates are installed in
-`C:\Users\paulb\AppData\Roaming\Godot\export_templates\4.4.1.stable`. Only the two web
+`..\AppData\Roaming\Godot\export_templates\4.4.1.stable`. Only the two web
 templates were downloaded (20 MB of the 1.2 GB archive) by `tools/fetch_web_templates.mjs`.
 
 ---
