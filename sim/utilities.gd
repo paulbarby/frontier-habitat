@@ -172,7 +172,10 @@ var _off_key := ""
 
 func _off_grid_ids() -> Array:
 	var blds: Dictionary = sim.state["buildings"]
-	var key: String = "%d:%d:%d" % [blds.size(), int(sim.state["next_id"]), _pplan.size()]
+	# The list changes only with the power graph (every rebuild empties _pplan) or the set
+	# of structures. next_id was in the key and changed every tick (tasks), so the list was
+	# made again every tick.
+	var key: String = "%d:%d" % [blds.size(), _pplan.size()]
 	if key == _off_key and not _pplan.is_empty():
 		return _off_grid
 	_off_key = key
@@ -192,7 +195,8 @@ func power_tick() -> void:
 	var sun: float = float(env["sun"])
 	var wind: float = float(env["wind"])
 	var solar_mult: float = float(sim.planet["solar_mult"]) * float(env.get("solar_mult", 1.0)) * (1.0 + sim.research.bonus("solar_mult"))
-	var wind_mult: float = 1.0 + sim.research.bonus("wind_mult")
+	# Wind storms drive the turbines harder (V3 hazards: env.wind_mult).
+	var wind_mult: float = (1.0 + sim.research.bonus("wind_mult")) * float(env.get("wind_mult", 1.0))
 	var batt_mult: float = 1.0 + sim.research.bonus("battery_mult")
 	for id in _off_grid_ids():
 		var b0: Dictionary = blds.get(id, {})
@@ -200,10 +204,43 @@ func power_tick() -> void:
 			b0["powered"] = false
 	for comp in topo.power_members:
 		var gen := 0
-		var consumers: Array = []
-		var batteries: Array = []
 		var plan: Dictionary = _power_plan(comp)
 		var has_source: bool = plan["has_source"]
+		# A lone solar array or turbine on no network: the same numbers as the full path
+		# below, without its lists (large colonies have many of them).
+		var ents: Array = plan["entries"]
+		if ents.size() == 1 and (int(ents[0][PE_F]) & (PF_BATT | PF_CONS | PF_FUSION)) == 0 and (int(ents[0][PE_F]) & (PF_SOLAR | PF_WIND)) != 0:
+			var e0: Array = ents[0]
+			var b1: Dictionary = e0[PE_B]
+			if b1["state"] != "active":
+				b1["powered"] = false
+			else:
+				var f1: int = e0[PE_F]
+				if f1 & PF_SOLAR:
+					gen += rt(float(e0[PE_SOLAR]) * sun * solar_mult * float(b1["out_rate"]) * (0.5 if bool(b1.get("dust", false)) else 1.0))
+				if f1 & PF_WIND:
+					gen += rt(float(e0[PE_WIND]) * wind * wind_mult * float(b1["out_rate"]))
+				b1["powered"] = true
+			power_stats[comp] = {"gen": gen, "demand": 0, "served": 0, "critical": 0,
+				"stored": 0, "cap": 0, "shed": [], "has_source": has_source, "rate": 0}
+			continue
+		# A lone battery on no network: nothing charges or draws it (the full path gives the
+		# same numbers: no generation, no demand, the charge stays).
+		if ents.size() == 1 and int(ents[0][PE_F]) == PF_BATT:
+			var eb: Array = ents[0]
+			var bb1: Dictionary = eb[PE_B]
+			if bb1["state"] != "active":
+				bb1["powered"] = false
+				power_stats[comp] = {"gen": 0, "demand": 0, "served": 0, "critical": 0,
+					"stored": 0, "cap": 0, "shed": [], "has_source": has_source, "rate": 0}
+			else:
+				bb1["powered"] = true
+				power_stats[comp] = {"gen": 0, "demand": 0, "served": 0, "critical": 0,
+					"stored": int(bb1["energy"]), "cap": int(float(eb[PE_CAP]) * batt_mult * _fp), "shed": [],
+					"has_source": has_source, "rate": int(eb[PE_RATE])}
+			continue
+		var consumers: Array = []
+		var batteries: Array = []
 		for e in plan["entries"]:
 			var b: Dictionary = e[PE_B]
 			if b["state"] != "active":
@@ -212,7 +249,8 @@ func power_tick() -> void:
 			var f: int = e[PE_F]
 			if f & (PF_SOLAR | PF_WIND | PF_FUSION):
 				if f & PF_SOLAR:
-					gen += rt(float(e[PE_SOLAR]) * sun * solar_mult * float(b["out_rate"]))
+					# Dust from a dust devil halves a panel's output until it is cleaned.
+					gen += rt(float(e[PE_SOLAR]) * sun * solar_mult * float(b["out_rate"]) * (0.5 if bool(b.get("dust", false)) else 1.0))
 				if f & PF_WIND:
 					gen += rt(float(e[PE_WIND]) * wind * wind_mult * float(b["out_rate"]))
 				if f & PF_FUSION:
@@ -220,9 +258,10 @@ func power_tick() -> void:
 			if f & PF_BATT:
 				batteries.append(e)
 			if f & PF_CONS:
-				if bool(b["enabled"]):
+				if bool(b["enabled"]) and not bool(b.get("trip", false)):
 					consumers.append(e)
 				else:
+					# Switched off, or tripped by a solar flare: it takes no power.
 					b["powered"] = false
 			else:
 				b["powered"] = true
@@ -634,6 +673,8 @@ func atmo_tick() -> void:
 			supplied = false
 		else:
 			supplied = stock > 0
+		# Cracked corridors of this group leak too (V3 hazards).
+		breaches += sim.hazards.link_breaches(comp) if not (sim.state.get("hazards", {}).get("breached", []) as Array).is_empty() else 0
 		if breaches > 0:
 			stock = maxi(0, stock - breaches * rt(float(sim.bal["breach_drain_per_day"])))
 		_spread_air(ap, stock)

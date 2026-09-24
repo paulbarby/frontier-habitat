@@ -7,6 +7,7 @@ const Kit = preload("res://ui/kit.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 const BuildCard = preload("res://ui/widgets/build_card.gd")
 const LineChart = preload("res://ui/charts/line_chart.gd")
+const FocusPicker = preload("res://ui/widgets/focus_picker.gd")
 
 const BLOCK_TEXT := {
 	"": "Working.", "no_power": "Stopped: no power.", "no_water": "Stopped: no water on its network.",
@@ -48,9 +49,13 @@ func signature(kind: String, rec: Dictionary, tab: String) -> String:
 	var trays := ""
 	for t in b.get("trays", []):
 		trays += String(t.get("crop", "")) + ","
-	return "b:%d:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%s:%s:%s:%s" % [b["id"], b["state"], b["def"], tab, b.get("demolish", false), b.get("enabled", true),
+	# Version 3: wear known, fault, breach, lab focus, the cargo choice change the layout too.
+	var wv: Dictionary = _d().wear_of(b)
+	var v3: String = "%s:%s:%s:%s:%s" % [wv.get("known", false), wv.get("broken", false), _d().breach_of(b).is_empty(),
+		b.get("focus", _d().lab_info(int(b["id"])).get("focus", "") if bool(_def(b).get("research_lab", false)) else ""), insp.hud.get("cargo_choice")]
+	return "b:%d:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%s:%s:%s:%s:%s" % [b["id"], b["state"], b["def"], tab, b.get("demolish", false), b.get("enabled", true),
 		_sim().prod.has_batch(b), b.get("door_open", true), int(b.get("level", 1)), int(b.get("size", 1)), up.get("state", ""), trays,
-		str(b.get("menu_off", {}).keys()), b.get("recipe_sel", ""), b.get("crop", ""), str(_sim().state.get("ship", {}).get("stage", -1))]
+		str(b.get("menu_off", {}).keys()), b.get("recipe_sel", ""), b.get("crop", ""), str(_sim().state.get("ship", {}).get("stage", -1)), v3]
 
 # ---------------------------------------------------------------- helpers
 func _def(b: Dictionary) -> Dictionary:
@@ -251,6 +256,8 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 			body.add_child(Kit.wrap(desc, 13, P.TEXT_2))
 		if bool(b.get("demolish", false)):
 			body.add_child(Kit.wrap("Marked for removal.", 13, P.RED))
+		_wear_breach(b, def)
+		_turret(b, def)
 		var status := Kit.wrap("", 13, P.TEXT)
 		body.add_child(status)
 		insp.bind(func():
@@ -265,6 +272,96 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 	var g: GridContainer = _grid()
 	body.add_child(g)
 	_network_facts(g, b, def)
+
+## Version 3 (V3_DESIGN §4): wear and the time to failure, the fault of a broken machine, a
+## hull breach. Numbers update in place.
+func _wear_breach(b: Dictionary, def: Dictionary) -> void:
+	var d = _d()
+	var s = _sim()
+	var id: int = b["id"]
+	var body: VBoxContainer = insp.body()
+	var w0: Dictionary = d.wear_of(b)
+	var fault: String = String(w0.get("fault", b.get("fault", "")))
+	if String(b["state"]) == "broken" and fault != "" and bool(w0.get("broken", true)):
+		var item: String = String(w0.get("item", d.FAULT_ITEM.get(fault, "spare_parts")))
+		if item == "":
+			item = String(d.FAULT_ITEM.get(fault, "spare_parts"))
+		var fl: Label = Kit.wrap("Fault: %s. A technician repairs it with 1 %s." % [String(d.FAULT_NAME.get(fault, fault)).get_slice(" (", 0).to_lower(), d.item_name(item).to_lower()], 13, P.RED)
+		body.add_child(fl)
+	var br: Dictionary = d.breach_of(b)
+	if not br.is_empty():
+		var bl: HBoxContainer = Kit.hbox(6)
+		bl.add_child(Kit.icon("breach", 16, P.RED))
+		bl.add_child(Kit.wrap("Hull breach: air leaks out. A technician repairs it with 1 hull plate (or 2 steel).", 13, P.RED))
+		body.add_child(bl)
+	if not bool(w0.get("known", false)):
+		return
+	var row: HBoxContainer = Kit.bar_row("Wear", 0.0, "", P.AMBER, 70.0)
+	body.add_child(row)
+	var eta: Label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
+	body.add_child(eta)
+	insp.bind(func():
+		var bb: Dictionary = s.state["buildings"].get(id, {})
+		if bb.is_empty():
+			return
+		var ww: Dictionary = d.wear_of(bb)
+		var wear: float = float(ww.get("wear", 0.0))
+		var fa: float = maxf(1.0, float(ww.get("fail_at", 100.0)))
+		var bar = row.get_child(1)
+		bar.value = clampf(wear / 100.0, 0.0, 1.0)
+		bar.target = fa / 100.0
+		bar.color = P.RED if wear / fa >= 0.9 else (P.AMBER if wear / fa >= 0.75 else P.GREEN)
+		(row.get_child(2) as Label).text = "%d%%" % int(wear)
+		var e: float = float(ww.get("eta_s", -1.0))
+		var ft: String = String(ww.get("fault", ""))
+		if e >= 0.0:
+			eta.text = "Fails at %d%% wear, in about %s at this rate%s. Maintain it before then." % [int(fa), Kit.clock(e), (" (%s)" % String(d.FAULT_NAME.get(ft, ft)).to_lower()) if ft != "" else ""]
+			eta.add_theme_color_override("font_color", P.AMBER)
+		else:
+			eta.text = "Fails at %d%% wear. Not near failure now." % int(fa)
+			eta.add_theme_color_override("font_color", P.TEXT_2))
+
+## Version 3: a Meteor Defense turret: charge, shots and the area it covers.
+func _turret(b: Dictionary, def: Dictionary) -> void:
+	var def_id: String = String(b["def"])
+	if not (bool(def.get("turret", false)) or def_id.contains("turret") or def.has("turret_range")):
+		return
+	var s = _sim()
+	var id: int = b["id"]
+	var sec: VBoxContainer = _section("Meteor defense", "turret", P.CYAN)
+	var cover: float = float(def.get("turret_range", def.get("intercept_range", def.get("range", 70.0))))
+	if _d().has_helper("hazards", "turret_range"):
+		cover = float(s.hazards.turret_range(b))
+	var cap: float = float(def.get("charge_cap", def.get("charge_max", 0.0)))
+	var per_shot: float = float(def.get("shot_cost", def.get("charge_per_shot", 0.0)))
+	var per_day: float = float(def.get("charge_per_day", 0.0))
+	var g: GridContainer = _grid()
+	sec.add_child(g)
+	_fact(g, "Covers", func():
+		var n := 0
+		var bb: Dictionary = s.state["buildings"].get(id, {})
+		if bb.is_empty():
+			return "-"
+		for oid in s.state["buildings"]:
+			var o: Dictionary = s.state["buildings"][oid]
+			if oid != id and String(o.get("kind", "")) != "link" and (o["pos"] as Vector2).distance_to(bb["pos"]) <= cover:
+				n += 1
+		return "%d m radius, %s" % [int(cover), Kit.plural(n, "structure")])
+	_fact(g, "Charge", func():
+		var c: float = float(s.state["buildings"].get(id, {}).get("charge", -1.0))
+		if c < 0.0:
+			return "-"
+		return ("%s / %s" % [Kit.fmt(c), Kit.fmt(cap)]) if cap > 0.0 else Kit.fmt(c), P.CYAN)
+	if per_day > 0.0:
+		_fact(g, "Recharge", func(): return "%s per day (needs power)" % Kit.fmt(per_day))
+	if per_shot > 0.0:
+		_fact(g, "Shots ready", func():
+			var c: float = float(s.state["buildings"].get(id, {}).get("charge", 0.0))
+			return "%d" % int(floor(c / per_shot)))
+	var st_i: Dictionary = s.state["buildings"].get(id, {}).get("stats", {})
+	if st_i.has("intercepts"):
+		_fact(g, "Meteors stopped", func(): return "%d" % int(s.state["buildings"].get(id, {}).get("stats", {}).get("intercepts", 0)), P.GREEN)
+	sec.add_child(Kit.label("It stops a meteor inside its radius while it has charge for a shot.", "SmallLabel", 12, P.TEXT_2))
 
 func _network_facts(g: GridContainer, b: Dictionary, def: Dictionary) -> void:
 	var s = _sim()
@@ -333,6 +430,7 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 			var a: String = String(d.research().get("active", ""))
 			return d.tech_name(a) if a != "" else "none: pick one in Research (T)", P.VIOLET)
 		_fact(g, "Colony research", func(): return "%s RP/day" % Kit.fmt(d.rp_rate()))
+		_lab_facts(sec, b)
 		sec.add_child(Kit.button("Open research", func(): insp.hud.open_screen("research"), "The tech tree. Key T.", "", "research", 16))
 	var recipes: Array = def.get("recipes", [])
 	if recipes.size() > 1:
@@ -346,11 +444,17 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 			var r: Dictionary = d.recipes().get(String(rid), {})
 			var out: String = String(r.get("outputs", {}).keys()[0]) if not r.get("outputs", {}).is_empty() else ""
 			var rr: String = String(rid)
-			var bt: Button = Kit.button(String(r.get("name", rid)), func(): insp.hud.main.submit("set_recipe", {"id": id, "recipe": rr}), "Make %s." % d.item_name(out).to_lower(), "ChipButton", Icons.item(out) if out != "" else "", 14)
+			# A recipe that needs research is shown locked, with the tech in the tooltip.
+			var lock_tech: String = recipe_tech(rr)
+			var locked: bool = lock_tech != "" and not d.tech_done(lock_tech)
+			var tip: String = "Make %s from %s." % [d.item_name(out).to_lower(), insp.hud.cost_text(r.get("inputs", {}))]
+			if locked:
+				tip = "Locked. Research %s first." % d.tech_name(lock_tech)
+			var bt: Button = Kit.button(String(r.get("name", rid)), func(): insp.hud.main.submit("set_recipe", {"id": id, "recipe": rr}), tip, "ChipButton", "lock" if locked else (Icons.item(out) if out != "" else ""), 14)
 			bt.toggle_mode = true
 			bt.set_pressed_no_signal(rr == cur)
 			bt.custom_minimum_size.y = 28
-			bt.disabled = not can
+			bt.disabled = not can or locked
 			row.add_child(bt)
 		if not can:
 			sec2.add_child(Kit.label("Recipe choice is not available yet.", "SmallLabel", 12, P.TEXT_3))
@@ -358,10 +462,21 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 		var sec3: VBoxContainer = _section("Recipe", "build")
 		var line: HBoxContainer = Kit.hbox(8)
 		sec3.add_child(line)
-		line.add_child(_items_row(rec.get("inputs", {})) if not rec.get("inputs", {}).is_empty() else Kit.label("from the ground", "SmallLabel", 12, P.TEXT_2))
+		if not rec.get("inputs", {}).is_empty():
+			line.add_child(_items_row(rec.get("inputs", {})))
+		if int(rec.get("water_net", 0)) > 0:
+			line.add_child(Kit.chip("water", "%d" % int(rec["water_net"]), Color("3AA0D8"), "Water from the network, %d per batch." % int(rec["water_net"]), true, 16))
+		if rec.get("inputs", {}).is_empty() and int(rec.get("water_net", 0)) <= 0:
+			line.add_child(Kit.label("from the ground", "SmallLabel", 12, P.TEXT_2))
 		line.add_child(Kit.icon("arrow_right", 16, P.CYAN))
 		line.add_child(_items_row(rec.get("outputs", {})))
-		sec3.add_child(Kit.label("%d work by a %s." % [int(rec.get("work", 0)), String(s.bal["role_names"].get(rec.get("role", ""), rec.get("role", ""))).to_lower()], "SmallLabel", 12, P.TEXT_2))
+		if bool(def.get("automatic", false)) or String(rec.get("role", "")) == "":
+			# Automatic machines (research assembler, harvesters): no worker, a time per batch.
+			var secs: float = float(rec.get("time", rec.get("seconds", rec.get("work", 0))))
+			sec3.add_child(Kit.label("Automatic: no worker.%s%s" % [(" %s s per batch." % Kit.fmt(secs)) if secs > 0.0 else "",
+				(" Uses %s P while it works." % Kit.fmt(float(def.get("power", 0.0)))) if float(def.get("power", 0.0)) > 0.0 else ""], "SmallLabel", 12, P.TEXT_2))
+		else:
+			sec3.add_child(Kit.label("%d work by a %s." % [int(rec.get("work", 0)), String(s.bal["role_names"].get(rec.get("role", ""), rec.get("role", ""))).to_lower()], "SmallLabel", 12, P.TEXT_2))
 		var bar = Kit.bar(0.0, P.CYAN, 8.0)
 		sec3.add_child(bar)
 		var lab: Label = Kit.num("", 12, P.TEXT_2)
@@ -384,6 +499,42 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 			var title: String = {"in": "Input buffer", "out": "Output buffer", "store": "Stored"}.get(inv.get("role", ""), "Stock")
 			var sec4: VBoxContainer = _section("%s  %d / %d" % [title, s.inv.total(b[key]), int(inv.get("cap", 0))], "inventory")
 			sec4.add_child(_items_row(inv.get("items", {})))
+
+## The tech that unlocks recipe `rid` ("" = none): content research unlocks.recipes.
+func recipe_tech(rid: String) -> String:
+	var d = _d()
+	for t in d.techs():
+		if (d.techs()[t].get("unlocks", {}).get("recipes", []) as Array).has(rid):
+			return String(t)
+	return ""
+
+## A research lab (version 3, V3_DESIGN §5): its rate without and with packs, the packs it
+## holds, and its focus branch.
+func _lab_facts(sec: VBoxContainer, b: Dictionary) -> void:
+	var d = _d()
+	var id: int = b["id"]
+	var g: GridContainer = _grid()
+	sec.add_child(g)
+	var li: Dictionary = d.lab_info(id)
+	_fact(g, "Output now", func():
+		var x: Dictionary = d.lab_info(id)
+		var t: String = ("%s RP/day, " % Kit.fmt(float(x["rate"]))) if x.has("rate") else ""
+		return "%sx%s%s" % [t, Kit.fmt(float(x.get("mult_boosted", x.get("mult", 1.0)))), "  BOOSTED" if bool(x.get("boosted", false)) else ""], P.VIOLET)
+	_fact(g, "Without packs", func(): return "x%s" % Kit.fmt(float(d.lab_info(id).get("mult", 1.0))))
+	if bool(li.get("known", false)):
+		_fact(g, "Works on the project", func(): return "yes" if bool(d.lab_info(id).get("can_work", true)) else "no: it needs packs")
+	_fact(g, "Scientists here", func(): return "%d" % int(d.lab_info(id).get("scientists", 0)))
+	if d.packs_available() or not (li.get("packs", {}) as Dictionary).is_empty():
+		_fact(g, "Packs held", func():
+			var pk: Dictionary = d.lab_info(id).get("packs", {})
+			if pk.is_empty():
+				return "none"
+			var parts: Array = []
+			for it in pk:
+				parts.append("%d %s" % [int(pk[it]), d.item_name(String(it)).to_lower()])
+			return ", ".join(parts))
+		sec.add_child(Kit.label("A lab that holds the pack type of its project works x%s." % Kit.fmt(float(li.get("boost", 2.0))), "SmallLabel", 12, P.TEXT_2))
+	sec.add_child(FocusPicker.make(insp.hud, id))
 
 func _rates(b: Dictionary, def: Dictionary) -> void:
 	var s = _sim()
@@ -750,11 +901,40 @@ func _ship(b: Dictionary) -> void:
 		_fact(g, "Supply runs", func(): return "%d" % int(d.ship().get("runs", 0)))
 		_fact(g, "Away", func(): return "yes" if bool(d.ship().get("away", false)) else "no")
 	var prog: String = String(info.get("program", "auto"))
+	# Supply-run cargo (V3_DESIGN §5.1): science brings research packs.
+	var cargo: String = String(insp.hud.cargo_choice)
+	if cargo == "":
+		cargo = _d().cargo_current() if _d().cargo_current() != "" else "science"
+		insp.hud.cargo_choice = cargo
+	var csec: VBoxContainer = _section("Supply run cargo", "crate", P.CATEGORY["space"])
+	var crow: HBoxContainer = Kit.hbox(6)
+	csec.add_child(crow)
+	for kind in _d().CARGO:
+		var k: String = String(kind)
+		var cb: Button = Kit.button(k.capitalize(), func():
+			insp.hud.cargo_choice = k
+			insp.refresh(), "%s cargo\nThe next supply run brings this." % k.capitalize(), "ChipButton", {"science": "icat_science", "medical": "icat_medical", "industrial": "icat_component"}[k], 14)
+		cb.toggle_mode = true
+		cb.set_pressed_no_signal(k == cargo)
+		cb.custom_minimum_size.y = 28
+		crow.add_child(cb)
+	var brings: Dictionary = _d().cargo_items(cargo)
+	if brings.is_empty():
+		csec.add_child(Kit.label("The contents of this cargo are set by the ship.", "SmallLabel", 12, P.TEXT_2))
+	else:
+		csec.add_child(Kit.label("This cargo brings:", "SmallLabel", 12, P.TEXT_2))
+		csec.add_child(_items_row(brings))
+		if _d().cargo_current() != "" and cargo != _d().cargo_current():
+			csec.add_child(Kit.label("The next automatic run still brings %s cargo. Press Supply run to use this one." % _d().cargo_current(), "SmallLabel", 11, P.AMBER))
 	var row: HBoxContainer = Kit.hbox(6)
 	body.add_child(row)
-	for spec in [["survey", "Repair", "Colonists work on the ship when the Meridian chapter is open."], ["hold", "Hold", "Stop ship work. Materials stay in the ship."], ["supply_run", "Supply run", "Fly a supply run now (needs research Orbital Logistics and readiness)."]]:
+	for spec in [["survey", "Repair", "Colonists work on the ship when the Meridian chapter is open."], ["hold", "Hold", "Stop ship work. Materials stay in the ship."], ["supply_run", "Supply run", "Fly a supply run now with the chosen cargo (needs research Orbital Logistics and readiness)."]]:
 		var act: String = spec[0]
-		var bt: Button = Kit.button(spec[1], func(): insp.hud.main.submit("ship", {"action": act}), "%s\n%s" % [spec[1], spec[2]], "ChipButton")
+		var bt: Button = Kit.button(spec[1], func():
+			var pl: Dictionary = {"action": act}
+			if act == "supply_run":
+				pl["cargo"] = String(insp.hud.cargo_choice)
+			insp.hud.main.submit("ship", pl), "%s\n%s" % [spec[1], spec[2]], "ChipButton")
 		bt.custom_minimum_size.y = 28
 		bt.toggle_mode = true
 		bt.set_pressed_no_signal((act == "hold" and prog == "hold") or (act == "survey" and prog != "hold"))
@@ -780,6 +960,11 @@ func _footer_building(b: Dictionary, base: Dictionary) -> void:
 		if b["def"] == "corridor":
 			var open: bool = bool(b.get("door_open", true))
 			f.add_child(Kit.button("Close door" if open else "Open door", func(): m.submit("set_door", {"id": id, "open": not bool(m.sim.state["buildings"][id].get("door_open", true))}), "Isolation door\nA closed door separates the air of the two sides.", "", "door", 14))
+		if bool(_d().wear_of(b).get("known", false)) and state == "active":
+			f.add_child(Kit.button("Maintain now", func():
+				m.submit("maintain", {"id": id})
+				insp.hud.toast("Maintenance of %s is the next technician job." % String(b.get("name", "")), "info", "wrench"),
+				"Maintain now\nA technician does this job first: wear goes back to 0 and a new failure point is set. It uses 1 part of the fault's item.", "", "wrench", 14))
 		if bool(b.get("demolish", false)):
 			f.add_child(Kit.button("Keep it", func(): m.submit("undo_demolish", {"id": id}), "Stop the removal.", "", "check", 14))
 		elif b["def"] != "lander":

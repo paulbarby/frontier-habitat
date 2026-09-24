@@ -61,6 +61,8 @@ static func load_all() -> Dictionary:
 		var t: Dictionary = c["techs"][id]
 		t["id"] = id
 		t["items"] = _int_dict(t.get("items", {}))
+		t["packs"] = _int_dict(t.get("packs", {}))
+		t["boost"] = _int_dict(t.get("boost", {}))
 		t["cost"] = float(t.get("cost", 0))
 	for ch in c["chapters"]:
 		for g in ch["goals"]:
@@ -88,6 +90,9 @@ static func load_all() -> Dictionary:
 		ship["maintenance"]["items"] = _int_dict(ship["maintenance"].get("items", {}))
 	if ship.has("supply_run"):
 		ship["supply_run"]["cargo"] = _int_dict(ship["supply_run"].get("cargo", {}))
+		var cg: Dictionary = ship["supply_run"].get("cargos", {})
+		for k in cg:
+			cg[k] = _int_dict(cg[k])
 	return c
 
 static func _strip(d: Dictionary) -> Dictionary:

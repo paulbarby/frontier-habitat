@@ -21,9 +21,17 @@ const PATH_CACHE_MAX := 4000
 func _init(s) -> void:
 	sim = s
 
-func rebuild() -> void:
-	_paths = {}
-	var world = sim.world
+## The terrain part of the grid (map edge, steep ground, rocks) is built once per world;
+## a rebuild only clears the cells structures made solid and marks the new ones. That
+## keeps a rebuild cheap on the 810 m map. `_bcells` holds the cells a structure made
+## solid that the terrain left open, as y * size + x. The result is the same set of solid
+## cells as a full build, so a loaded game walks exactly like the saved one.
+var _base_world = null
+var _bcells := PackedInt32Array()
+var base_msec: int = 0          # time the last terrain build took (for the budget report)
+
+func _build_base(world) -> void:
+	var t0: int = Time.get_ticks_msec()
 	size = world.size
 	grid = AStarGrid2D.new()
 	grid.region = Rect2i(0, 0, size, size)
@@ -32,20 +40,44 @@ func rebuild() -> void:
 	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	# Jump point search was measured on the 810 m map (tests/dev/path_probe.gd, seed 1001,
+	# 20 trips of about 300 m): mean 0.5 to 1 ms but 178 ms for one trip round a canyon,
+	# against 4 ms mean and 20 ms worst for the plain search. The plain search stays: it
+	# is predictable, and every path is cached per pair of cells until the map changes.
+	grid.jumping_enabled = false
 	grid.update()
-	var m: int = int(sim.bal["map_margin"])
+	var m: int = int(world.margin)
 	grid.fill_solid_region(Rect2i(0, 0, size, m), true)
 	grid.fill_solid_region(Rect2i(0, size - m, size, m), true)
 	grid.fill_solid_region(Rect2i(0, 0, m, size), true)
 	grid.fill_solid_region(Rect2i(size - m, 0, m, size), true)
 	var qn: int = world.hn - 1
 	var step: int = int(world.hstep)
+	var st: PackedByteArray = world.steep
 	for qy in qn:
+		var row: int = qy * qn
 		for qx in qn:
-			if world.steep[qy * qn + qx] == 1:
+			if st[row + qx] == 1:
 				grid.fill_solid_region(Rect2i(qx * step, qy * step, step, step), true)
+	_bcells = PackedInt32Array()
 	for r in world.rocks:
 		_solid_disc(Vector2(r["x"], r["y"]), float(r["r"]))
+	_bcells = PackedInt32Array()
+	_base_world = world
+	base_msec = Time.get_ticks_msec() - t0
+
+func rebuild() -> void:
+	var old_paths: Dictionary = _paths
+	var old_cells: PackedInt32Array = _bcells
+	_paths = {}
+	var world = sim.world
+	var fresh: bool = grid == null or _base_world != world
+	if fresh:
+		_build_base(world)
+	else:
+		for k in _bcells:
+			grid.set_point_solid(Vector2i(k % size, k / size), false)
+	_bcells = PackedInt32Array()
 	var blds: Dictionary = sim.state["buildings"]
 	for id in blds:
 		var b: Dictionary = blds[id]
@@ -61,6 +93,10 @@ func rebuild() -> void:
 		else:
 			_solid_disc(b["pos"], float(b["radius"]) - 0.2)
 
+	# The same blocked cells as before (a cable, a repair, a room joined): the outdoor paths
+	# found so far are still the paths, so the cache stays.
+	if not fresh and _bcells == old_cells:
+		_paths = old_paths
 	rooms = AStar2D.new()
 	for id in blds:
 		var b: Dictionary = blds[id]
@@ -72,6 +108,18 @@ func rebuild() -> void:
 			if rooms.has_point(l["a"]) and rooms.has_point(l["b"]):
 				rooms.connect_points(l["a"], l["b"], true)
 
+## A hash of what walking depends on: the cells structures block and the room graph.
+func signature() -> int:
+	var parts: Array = [Array(_bcells).hash()]
+	var ids: PackedInt64Array = rooms.get_point_ids()
+	for id in ids:
+		parts.append(int(id))
+		var con: PackedInt64Array = rooms.get_point_connections(id)
+		var cl: Array = Array(con)
+		cl.sort()
+		parts.append(cl.hash())
+	return parts.hash()
+
 func _solid_disc(c: Vector2, r: float) -> void:
 	var x0: int = maxi(0, int(floor(c.x - r)))
 	var x1: int = mini(size - 1, int(floor(c.x + r)))
@@ -80,7 +128,13 @@ func _solid_disc(c: Vector2, r: float) -> void:
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			if Vector2(x + 0.5, y + 0.5).distance_to(c) <= r:
-				grid.set_point_solid(Vector2i(x, y), true)
+				_mark(x, y)
+
+func _mark(x: int, y: int) -> void:
+	var p := Vector2i(x, y)
+	if not grid.is_point_solid(p):
+		grid.set_point_solid(p, true)
+		_bcells.append(y * size + x)
 
 func _solid_capsule(p0: Vector2, p1: Vector2, r: float) -> void:
 	var x0: int = maxi(0, int(floor(minf(p0.x, p1.x) - r)))
@@ -91,7 +145,7 @@ func _solid_capsule(p0: Vector2, p1: Vector2, r: float) -> void:
 		for x in range(x0, x1 + 1):
 			var c := Vector2(x + 0.5, y + 0.5)
 			if c.distance_to(Geometry2D.get_closest_point_to_segment(c, p0, p1)) <= r:
-				grid.set_point_solid(Vector2i(x, y), true)
+				_mark(x, y)
 
 # ---------------------------------------------------------------- outdoor
 func cell_of(p: Vector2) -> Vector2i:
@@ -362,7 +416,13 @@ func nearest_supplied_lock(from_p: Vector2) -> Dictionary:
 		if tried >= 2:
 			break
 		tried += 1
-		var r: Dictionary = path_out(from_p, door_pos(blds[lid]))
+		var door: Vector2 = door_pos(blds[lid])
+		# A walk is never shorter than the straight line (less the snap to walkable cells,
+		# at most about 6 m): a door that far cannot beat the path already found, so its
+		# search is skipped. The answer is the same.
+		if bool(best["ok"]) and from_p.distance_to(door) - 6.0 > float(best["seconds"]) * sim.util.out_speed():
+			continue
+		var r: Dictionary = path_out(from_p, door)
 		if r["ok"]:
 			var secs: float = float(r["len"]) / sim.util.out_speed()
 			if secs < float(best["seconds"]):

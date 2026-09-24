@@ -59,8 +59,11 @@ def verify(spec):
     want = sorted(spec["objects"])
     if sorted(meshes) != want:
         out["flags"].append("objects %s != %s" % (sorted(meshes), want))
-    if empties != sorted(spec.get("anchors", [])):
-        out["flags"].append("anchors %s != %s" % (empties, sorted(spec.get("anchors", []))))
+    want_a = list(spec.get("anchors", []))
+    if spec.get("kind") == "exterior" and spec.get("service", True) and "Anchor_Service" not in want_a:
+        want_a.append("Anchor_Service")          # 3.0: every exterior machine has a kneel point
+    if empties != sorted(want_a):
+        out["flags"].append("anchors %s != %s" % (empties, sorted(want_a)))
     tris = 0
     rmax, rfree, zmin, zmax = 0.0, 0.0, 1e9, -1e9
     free = spec.get("free", {})

@@ -41,17 +41,28 @@ for _m in _MODULES:
 ORDER = ["habitat", "greenhouse", "kitchen", "storehouse", "oxygen_plant", "research_lab", "mine", "refinery",
          "polymer_plant", "workshop", "medical", "lounge", "airlock", "junction", "corridor",
          "glassworks", "electronics_fab", "fabricator", "fungus_farm", "algae_bioreactor", "water_recycler",
-         "atmo_processor", "bio_lab", "cantina", "cold_storage"]
+         "atmo_processor", "bio_lab", "cantina", "cold_storage", "research_assembler"]
 FAMILY = {
     "habitat": "habitat", "lounge": "habitat", "cantina": "habitat", "medical": "habitat", "bio_lab": "habitat",
     "storehouse": "habitat", "cold_storage": "habitat",
     "greenhouse": "agri", "fungus_farm": "agri", "algae_bioreactor": "agri", "kitchen": "agri",
     "oxygen_plant": "life", "water_recycler": "life", "atmo_processor": "life",
-    "research_lab": "science",
+    "research_lab": "science", "research_assembler": "science",
     "mine": "industry", "refinery": "industry", "polymer_plant": "industry", "workshop": "industry",
     "glassworks": "industry", "electronics_fab": "industry", "fabricator": "industry",
     "airlock": "links", "junction": "links", "corridor": "links",
 }
+# 3.0 (docs/V3_DESIGN.md section 7): builders with the detailed interiors and wall segments.  A v3 builder may
+# raise NotImplementedError for a size it does not make yet; that size then uses the v2 builder.
+V3_BUILDERS = {}
+for _m in ("interior_rooms",):
+    try:
+        V3_BUILDERS.update(getattr(__import__(_m), "V3_BUILDERS", {}))
+    except ModuleNotFoundError as exc:
+        if exc.name != _m:
+            raise
+V3_BUDGET = (10000, 15000, 22000, 30000)
+V3_MAX_MATERIALS = 14            # per object (Interior; each Wall_k); see docs/progress/ART-HAB.md
 ROOM_MESHES = ["Base", "Roof", "Interior", "L2", "L3", "L4", "L5"]
 ALLOWED = set(K.MATERIALS) | set(K.PER_FILE)
 TRAY_TYPES = ("greenhouse", "fungus_farm")
@@ -64,6 +75,8 @@ def jobs(buildings, only=None, sizes=None):
             continue
         if tid not in BUILDERS:
             continue
+        if tid == "corridor" and "--v2" not in sys.argv:
+            continue            # 3.0: tools/blender/interior_links.py builds corridor.glb (+ doorway, rib, patch)
         bdef = buildings.get(tid, {})
         radii = bdef.get("sizes", {}).get("radius")
         if radii and tid not in ("airlock", "junction", "corridor"):
@@ -88,19 +101,49 @@ def expected_trays(job):
     return [tuple(o) for o in bdef.get("tray_offsets", [])]
 
 
+DOOR_BLOCKED = os.path.join(K.ROOT, "docs", "requests", "ART-HAB-door_blocked.json")
+
+
+def write_door_blocked(rows):
+    """docs/requests/ART-HAB-door_blocked.json: per room file, the model angles (deg, see the RENDER request P3)
+    where a doorway would have less than 1.2 m of free floor in front of it (critic round 4)."""
+    old = {}
+    if os.path.exists(DOOR_BLOCKED):
+        try:
+            old = json.load(open(DOOR_BLOCKED, encoding="utf-8")).get("rooms", {})
+        except Exception:
+            old = {}
+    for r in rows:
+        v = r.get("v3") or {}
+        if "door_blocked" in v:
+            old[r["id"]] = dict(blocked=v["door_blocked"], free_deg=v["door_free_deg"], min_clear_m=v["door_clear_min"])
+    with open(DOOR_BLOCKED, "w", encoding="utf-8") as fh:
+        json.dump(dict(generator="tools/blender/rooms_build.py", clear_m=1.2,
+                       angles="model angle in degrees, 0 = model +X, counter-clockwise seen from above "
+                              "(docs/requests/ART-HAB-to-RENDER.md P3)", rooms=old), fh, indent=1, sort_keys=True)
+
+
 def build_one(job):
     t0 = time.time()
     bdef = job["bdef"]
     cat = bdef.get("category", "logistics")
     rm = K.Room(job["tid"], job["size"], job["R"], cat, bdef, single=job["single"])
-    BUILDERS[job["tid"]](rm)
+    built_v3 = False
+    if job["tid"] in V3_BUILDERS and "--v2" not in sys.argv:
+        try:
+            V3_BUILDERS[job["tid"]](rm)
+            built_v3 = True
+        except NotImplementedError:
+            rm = K.Room(job["tid"], job["size"], job["R"], cat, bdef, single=job["single"])
+    if not built_v3:
+        BUILDERS[job["tid"]](rm)
     path = os.path.join(K.MODEL_DIR, job["file"] + ".glb")
     also = [os.path.join(K.MODEL_DIR, a + ".glb") for a in job["also"]]
     objs, rays, secs = K.build_file(rm, path, also=also)
     flags = []
     stats = {p.name: K.part_stats(p) for p in rm.parts() if p.faces}
     tris = sum(s["tris"] for s in stats.values())
-    budget = K.BUDGET[job["size"]]
+    budget = (V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]]
     if job["tid"] == "corridor":
         budget = 1200
     if tris > budget:
@@ -119,6 +162,26 @@ def build_one(job):
         want = ["Base", "Roof"]
     if rm.lights.faces:
         want.append("Lights")
+    want += [w.name for w in rm.walls if w.faces]
+    want += [q.name for q in getattr(rm, "extra_parts", []) if q.faces]
+    if rm.v3:
+        import interior_kit as IK
+        dh = getattr(rm, "door_half_v3", 0.0)
+        empty = [k for k, w in enumerate(rm.walls) if not w.faces]
+        bad = [k for k in empty if not (dh > 0 and min(abs(k * IK.SEG_DEG), abs(360 - (k + 1) * IK.SEG_DEG)) < dh)]
+        if len(rm.walls) != IK.NSEG or bad:
+            flags.append("v3: wall segments without geometry outside the door: %s" % bad)
+        flags += IK.check_walls(rm)
+        flags += IK.check_anchors(rm)
+        flags += IK.check_furniture(rm)
+        flags += IK.check_standpoints(rm)
+        for oname, mats in info["mats_by"].items():
+            if len(mats) > V3_MAX_MATERIALS:
+                flags.append("%s has %d materials > %d" % (oname, len(mats), V3_MAX_MATERIALS))
+            if (oname == "Interior" or oname.startswith("Tall_")) and len(mats) > K.MAX_SURFACES:
+                flags.append("%s has %d surfaces > %d (draw-call budget)" % (oname, len(mats), K.MAX_SURFACES))
+        if len(info["materials"]) > IK.MAX_MATS_FILE:
+            flags.append("file has %d materials > %d" % (len(info["materials"]), IK.MAX_MATS_FILE))
     if sorted(info["mesh_nodes"]) != sorted(want):
         flags.append("mesh objects %s != %s" % (sorted(info["mesh_nodes"]), sorted(want)))
     bad_e = [e for e in info["empties"] if not e.startswith("Anchor_")]
@@ -150,8 +213,31 @@ def build_one(job):
                anchors=[a[0] for a in rm.anchors], materials=info["materials"], file_size=os.path.getsize(path),
                color0=all(info["color0"].values()), also=job["also"], flags=flags,
                seconds=round(time.time() - t0, 1), ao_rays=rays, trays=[list(t) for t in rm.trays])
-    print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s" % (job["file"], tris, budget, radius, job["R"],
-                                                            row["seconds"], "; ".join(flags) or "ok"))
+    if rm.v3:
+        import interior_kit as IK
+        walls_t = sum(stats[w.name]["tris"] for w in rm.walls if w.name in stats)
+        row["v3"] = dict(anchor_counts=IK.anchor_counts(rm), wall_tris=walls_t,
+                         interior_materials=info["mats_by"].get("Interior", []),
+                         wall_materials=sorted({m for o, ms in info["mats_by"].items() if o.startswith("Wall_") for m in ms}),
+                         file_materials=len(info["materials"]), info=getattr(rm, "info", {}),
+                         anchors=[dict(name=a[0], pos=[round(c, 3) for c in a[1]], yaw=round(a[2] if len(a) > 2 else 0.0, 2))
+                                  for a in rm.anchors])
+        talls_t = sum(t for n, t in row["tris_by_object"].items() if n.startswith("Tall_"))
+        row["tris_by_object"] = {n: t for n, t in row["tris_by_object"].items()
+                                 if not n.startswith(("Wall_", "Tall_"))}
+        row["tris_by_object"]["Wall_00..31"] = walls_t
+        if talls_t:
+            row["tris_by_object"]["Tall_*"] = talls_t
+        row["v3"]["tall_parts"] = len([q for q in getattr(rm, "extra_parts", []) if q.faces])
+        row["v3"]["surfaces"] = {k: list(v) for k, v in getattr(rm, "surfaces", {}).items()}
+        if getattr(rm, "plan", None) is not None and rm.tid != "junction":
+            spans, worst = IK.door_blocked(rm.plan)
+            row["v3"]["door_blocked"] = spans
+            row["v3"]["door_clear_min"] = worst
+            row["v3"]["door_free_deg"] = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
+    print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s%s" % (job["file"], tris, budget, radius, job["R"],
+                                                              row["seconds"], "; ".join(flags) or "ok",
+                                                              "  [v3]" if rm.v3 else ""))
     return row
 
 
@@ -180,7 +266,8 @@ def verify_file(job):
         if not o.name.startswith("Anchor_"):
             problems.append("empty %s is not Anchor_*" % o.name)
     for o in meshes:
-        if o.location.length > 1e-5 or any(abs(a) > 1e-5 for a in o.rotation_euler) or \
+        loc_ok = o.location.length <= 1e-5 or o.name.startswith("Tall_")     # Tall_* keep their floor origin
+        if not loc_ok or any(abs(a) > 1e-5 for a in o.rotation_euler) or \
                 any(abs(s - 1) > 1e-5 for s in o.scale):
             problems.append("%s transform is not identity" % o.name)
         if not o.data.color_attributes:
@@ -284,8 +371,9 @@ def write_reports(rows):
              "--python tools/blender/rooms_build.py -- [--only id1,id2] [--sizes s,m,l,xl] [--no-thumbs] [--review]",
              "```", "",
              "Blender coordinates (Z up). `max r` = largest horizontal distance of any vertex from the origin; "
-             "`margin` = footprint radius - max r (must be >= 0.10). Budgets: S 3000, M 4500, L 6500, XL 9000 "
-             "triangles (all objects, L2..L5 included). `verify` = re-import test in an empty Blender scene "
+             "`margin` = footprint radius - max r (must be >= 0.10). Budgets: v2 files S 3000, M 4500, L 6500, XL 9000; "
+             "3.0 files (interior + Wall_00..31, flagged [v3]) S 10000, M 15000, L 22000, XL 30000 "
+             "triangles (all objects, L2..L5 included); 3.0 files: at most 14 materials per object. `verify` = re-import test in an empty Blender scene "
              "(objects, materials, COLOR_0, radius, trays).", "",
              "| file | tris / budget | per object | size X x Y x Z (m) | max r | footprint | margin | AO min..max | anchors | bytes | flags |",
              "|---|---:|---|---|---:|---:|---:|---|---|---:|---|"]
@@ -341,6 +429,7 @@ def main():
                                                         info["ao_max"],
                                                         ("  tray err %.4f" % info["tray_err"]) if info["tray_err"] is not None else ""))
     write_reports(rows)
+    write_door_blocked(rows)
     if "--no-thumbs" not in argv or "--review" in argv:
         import rooms_render
         done = [j for j in todo if any(r["id"] == j["file"] for r in rows)]

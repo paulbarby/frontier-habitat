@@ -31,6 +31,15 @@ def spread(n, skip=None, phase=0.5, gap=12.0):
 
 
 def wall_portholes(rm, n, r=0.17, z=0.62, phase=0.5):
+    if getattr(rm, "v3", False):
+        # 3.0: portholes at wall-segment centres, inside their segment (they hide with it)
+        import interior_kit as IK
+        ks = sorted({IK.seg_of(360.0 * (k + phase) / n) for k in range(n)})
+        for k in ks:
+            a = IK.seg_mid(k)
+            porthole(rm.walls[k], Vector(polar(rm.Rw + 0.005, a, z)), Vector(polar(1.0, a, 0.0)), r, rim=0.06,
+                     depth=0.05)
+        return
     for a in spread(n, (0.0, rm.door_half), phase=phase, gap=8.0):
         porthole(rm.base, Vector(polar(rm.Rw + 0.005, a, z)), Vector(polar(1.0, a, 0.0)), r, rim=0.06, depth=0.05)
 
@@ -650,8 +659,8 @@ def build_storehouse(rm):
     D = (2.7, 2.9, 3.1, 3.3)[s]
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.6, parapet=0.14)
     ro = rm.roof
-    # roller shutter look on the door
-    for k in range(6):
+    # roller shutter look on the door (v2 only: 3.0 rooms have no fake door)
+    for k in range(6 if hasattr(rm, "door_x") else 0):
         rm.base.box((rm.Rw + 0.075, 0, 0.25 + 0.18 * k), (0.012, 1.7, 0.025), "Frame", mats={"-x": None})
     # big square cargo hatch
     hs = (1.8, 2.4, 2.8, 3.0)[s]
@@ -727,11 +736,12 @@ def build_cold_storage(rm):
     rm.build_base(lamps=(160.0, 200.0), bolts=s >= 2, door_w=1.6, floor_mat="Frost", accent_floor=True)
     # insulated door: frost padding and heavy hinges over the standard slab
     b = rm.base
-    x1 = rm.door_x[1]
-    b.box((x1 - 0.02, 0, 0.72), (0.06, 1.46, 1.16), "Frost", mats={"-x": None})
-    for sy in (-1, 1):
-        for zz in (0.45, 1.05):
-            b.box((x1 + 0.01, sy * 0.66, zz), (0.08, 0.10, 0.16), "Metal", mats={"-x": None})
+    if hasattr(rm, "door_x"):
+        x1 = rm.door_x[1]
+        b.box((x1 - 0.02, 0, 0.72), (0.06, 1.46, 1.16), "Frost", mats={"-x": None})
+        for sy in (-1, 1):
+            for zz in (0.45, 1.05):
+                b.box((x1 + 0.01, sy * 0.66, zz), (0.08, 0.10, 0.16), "Metal", mats={"-x": None})
     D = (2.5, 2.7, 3.0, 3.2)[s]
     rm.build_podium(D, wall="Frost", ribs=(10, 12, 16, 18)[s], rib_mat="Trim", band="Accent", band_z=D - 0.55,
                     parapet=0.12, deck="HullDark")

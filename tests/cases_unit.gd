@@ -166,15 +166,16 @@ func unit_placement_reasons(t) -> void:
 	r = _place(g, "battery", Vector2(1.0, 1.0))
 	t.eq(r["code"], "outside_map", "battery at the map corner")
 	seen.append(r["code"])
-	r = _place(g, "battery", Vector2(300.0, 128.0))
+	r = _place(g, "battery", Vector2(float(sim.world.size) + 44.0, c.y))
 	t.eq(r["code"], "outside_map", "battery beyond the east edge")
 
 	# Slope: search the terrain of this seed for a place that is too steep for a habitat.
 	var steep_at = null
 	var y := 12.0
-	while y < 244.0 and steep_at == null:
+	var far: float = float(sim.world.size) - 12.0
+	while y < far and steep_at == null:
 		var x := 12.0
-		while x < 244.0:
+		while x < far:
 			if sim.place.check_building("habitat", Vector2(x, y), 0.0) == "slope":
 				steep_at = Vector2(x, y)
 				break

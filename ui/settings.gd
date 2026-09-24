@@ -5,7 +5,7 @@ const PATH := "user://settings.json"
 const DEFAULTS := {
 	"quality": 2, "ui_scale": 1.0, "glass": true, "edge_pan": false, "camera_speed": 1.0,
 	"vol_master": 0.8, "vol_music": 0.5, "vol_sfx": 0.8, "vol_ui": 0.7, "vol_ambience": 0.6,
-	"tutorial_tips": true,
+	"tutorial_tips": true, "camera_shake": true,
 }
 
 static var values := {}

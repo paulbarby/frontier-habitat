@@ -1,0 +1,140 @@
+{
+  "round": 4,
+  "date": "2026-09-24",
+  "scope": "every interior family, doorways, lighting target and hazard props, from Blender renders (art/interiors, 147 files) and preview sheets; no in-game rating this round",
+  "pass_mark": 0.65,
+  "subjects": {
+    "interior_habitat": {
+      "consistency": 0.78, "appeal": 0.76, "style": 0.76, "score": 0.77, "pass": true,
+      "fixes": [
+        "Privacy screens read as terracotta signboards or easels on legs. Make them 1.6 m fabric panels in a Frame border, Cushion or a muted Fabric (not the blanket terracotta), on a floor rail with no visible legs; 5 cm thick.",
+        "M is a 4-fold pinwheel. It reads designed, not lived in. Rotate one bay 15-20 deg and put a different item (reading chair, locker pair) in one of the four gaps between bays.",
+        "Bedding variety landed but reads mainly as colour at the game camera. Add a turned-down white sheet band 20 cm on half of the beds and a rumpled pillow on some, so they differ in shape, not only colour.",
+        "XL centre: the back-to-back pod is good; the two small table groups float. Put them on rugs and add a planter between them."
+      ]
+    },
+    "interior_comfort": {
+      "consistency": 0.76, "appeal": 0.70, "style": 0.72, "score": 0.73, "pass": true,
+      "fixes": [
+        "Cantina has no mood inside: the neon sign is on the roof deck, not in the cutaway. Put a neon strip (Neon, comfort pink) along the bar front and a back-bar shelf with lit bottles behind the counter; warm pendant pools over each bistro table.",
+        "Cantina floor is a plain grid with 40-60% empty floor on S, L and XL. Add a raised or different-colour zone (FloorDark or Wood inlay) under the tables, booth seating on one wall arc, and a rug or plants to fill the gaps.",
+        "Lounge M/S: the second sofa island is missing; the room is one sofa block and two big planters. Add an armchair pair with a side table and a reading lamp.",
+        "Lounge floor lamps (white columns) read as bollards. Give them a shade or an up-light head."
+      ]
+    },
+    "interior_medical": {
+      "consistency": 0.76, "appeal": 0.70, "style": 0.74, "score": 0.73, "pass": true,
+      "fixes": [
+        "Bio-lab reads as empty benches on a big floor (S, M). Put equipment on the benches: microscopes, sample racks, a centrifuge, 2 monitors; add an overhead service spine (Frame beam with lights) along each bench row.",
+        "Pink tool carts in bio-lab L/XL are scattered at random; put them against the bench ends.",
+        "Medical L/XL: the lower half of the room is empty floor with a lone ottoman and planter. Add a waiting area (3-4 seats, a screen) or a second treatment bay.",
+        "The pink floor line runs through nothing in S/M. Make it lead from the door zone to the beds, or remove it."
+      ]
+    },
+    "interior_food": {
+      "consistency": 0.74, "appeal": 0.68, "style": 0.72, "score": 0.71, "pass": true,
+      "fixes": [
+        "Fungus farm is the weakest room in the set: brown slab racks with small white diamonds do not read as mushrooms, and the floor is dark. Give the racks visible mushroom clusters (3-5 caps per tray, 6-10 cm, pale cream/tan), dim violet grow light under each shelf, and a lighter floor (FloorDark at 60% not the current near-black). Fix the crop/rack overlap.",
+        "Greenhouse and fungus: trays and racks sit in the walking ring near the wall (greenhouse L lower-left, fungus S/M top). SIM owns the offsets; ask SIM to move them in, or shorten the outer trays so 0.65 m clear floor remains.",
+        "Algae bioreactor: the chevron-striped green columns read as barber poles or candy canes, and XL is a forest of 30 identical columns. Make the tubes clear glass with a glowing green fluid (one colour, bubble streaks), group them in rows of 4-6 on shared pipe manifolds with walkways between rows.",
+        "Kitchen M: one mess table on a big floor. Add a second table or a serving counter; move the table towards the cook line."
+      ]
+    },
+    "interior_industry": {
+      "consistency": 0.74, "appeal": 0.66, "style": 0.76, "score": 0.72, "pass": true,
+      "fixes": [
+        "XL (and L) are padded with the same generic grey cube machine repeated 3-5 times on a big empty floor. The main machine must grow with the size: a larger variant or a second main machine on L/XL, joined by conveyors or pipe runs; remove most of the filler cubes.",
+        "Add cable trays or overhead pipe runs from the machine to the wall (V3 7.1 asks for them); now the machine stands alone on the pad.",
+        "Floor: the dark grey floor plus dark wall ring makes M rooms read heavy. Lighten the floor 15% or add a lit edge strip round the hazard pad.",
+        "Give each type one colour cue from its product (glass: amber glow in the furnace mouth; electronics: cyan clean-room light; polymer: coloured tank bands) so the 7 types differ at a glance."
+      ]
+    },
+    "interior_science": {
+      "consistency": 0.74, "appeal": 0.66, "style": 0.72, "score": 0.71, "pass": true,
+      "fixes": [
+        "Research lab S/M are nearly empty: a holo table and one desk pod on a big radial floor. Add a second desk pod, a sample rack wall section and a whiteboard or screen wall; M should look busy.",
+        "Assembler glass reads as grey panels (maker's point, confirmed). Make the clean-room partitions Glass at 25% alpha with a light cyan tint and a Frame edge, so the robot cell is visible through them.",
+        "Assembler line reads as furniture, not a production line: add pack racks with coloured packs (basic/applied/exotic colours), a moving-belt texture strip and a warning light on the robot cell."
+      ]
+    },
+    "interior_life": {
+      "consistency": 0.70, "appeal": 0.60, "style": 0.68, "score": 0.66, "pass": true,
+      "fixes": [
+        "Atmo processor is the emptiest family: small units on a dark floor, XL almost bare. Build a central processing column (compressor stack 2.5 m, pipes up to the wall top) and pipe runs to 3-4 filter units round it; lighter floor.",
+        "Water recycler L/XL: 5 tanks spread across the room joined by thin lines read as a molecule diagram. Cluster the tanks round the unit on a plinth, thicker pipes (8 cm, Metal with a cyan band), and add a filter bank on the wall arc.",
+        "Oxygen plant L/XL: the electrolysis stacks stand in one diagonal line on an empty floor. Double the stack row on L/XL and add a gas manifold with valves.",
+        "All three: the machine does not grow with the size (maker's point, confirmed). XL needs more plant, not more floor."
+      ]
+    },
+    "interior_logistics": {
+      "consistency": 0.76, "appeal": 0.70, "style": 0.76, "score": 0.74, "pass": true,
+      "fixes": [
+        "Cold storage S/M: a loose white box on the floor and one rack. Replace the box with a chest freezer row against a rack; add frost-white floor near the freezers and cold-blue light strips on the racks.",
+        "Storehouse floor is very dark; lighten it 15% or add aisle floor markings with a lit strip so the aisles read at night.",
+        "Storehouse XL: loose crates in the open area look dropped. Add a pallet jack or a loading zone marking to explain them."
+      ]
+    },
+    "interior_links": {
+      "consistency": 0.66, "appeal": 0.58, "style": 0.70, "score": 0.65, "pass": false,
+      "note": "score 0.647 rounds to 0.65 but is below the pass mark; FAIL",
+      "fixes": [
+        "Junction with 4-6 links: the doorway pocket housings overlap into a jagged pile of plates (art/critic/r4_junction_crop.png, from junction_doorways.png). A junction exists to join many corridors, so this is its normal case. Give the junction its own door kit: a narrower frame (1.6 m, no side pockets, a door that slides up or a plain open arch) or a polygonal junction wall with one flat facet per link slot so frames never overlap. Test 3, 4, 5 and 6 links at the smallest allowed spacing.",
+        "Airlock: good (grate, bench, suit racks, console, lockers). Keep.",
+        "Corridor: good (glass tube, ribs, floor light line, handrails). Keep.",
+        "Junction solo (no links) is good: floor medallion, arrows, info post."
+      ]
+    },
+    "doorways": {
+      "consistency": 0.74, "appeal": 0.68, "style": 0.76, "score": 0.73, "pass": true, "provisional": true,
+      "fixes": [
+        "Junction overlap: see interior_links fix 1.",
+        "S rooms: the header collar top sits out from the dome as a flat shelf and the pocket box shows outside the skin (art/critic/r4_cantina_s_roof_crop.png). Use a curved header that follows the dome for S, or shrink the pockets on S; nothing may stand more than 1 cm proud of the skin.",
+        "Door clearance 0.83-0.98 m (maker's number; the close-inside render shows a privacy screen next to the frame). Target 1.2 m. Hide Tall_* within 1.3 m AND move low furniture that the aisle graph reaches first; if not possible, mark those link angles as blocked for the build tool.",
+        "Round-2 fixes landed: one jamb profile with a pocket housing, chamfered header with Frame trim and accent stripe, band continues to the frame. Keep.",
+        "Still provisional: no in-game doorway evidence."
+      ]
+    },
+    "interior_lighting": {
+      "consistency": 0.72, "appeal": 0.66, "style": 0.70, "score": 0.69, "pass": true, "provisional": true,
+      "fixes": [
+        "The night targets keep floors bright (fixed from round 2) but read as dimmed day: little contrast, few visible pools. Add distinct warm pools under lamps and ceiling lights (floor 30% brighter inside the pool than outside), and let the room edges fall off by 25%.",
+        "Each family needs its accent light at night: cantina neon, greenhouse violet-pink grow light, medical cool white over the beds, industry amber hazard glow at the pad, research cyan holo glow. Only research_lab_l shows one.",
+        "Screens should read as light sources at night (a faint cyan spill 30 cm in front of each).",
+        "RENDER matches these targets in game; the in-game rating follows."
+      ]
+    },
+    "hazard_props": {
+      "consistency": 0.70, "appeal": 0.64, "style": 0.68, "score": 0.67, "pass": true,
+      "fixes": [
+        "Crater: the orange dashed ring on the crater floor reads as a helipad or a target marking, not a crater. Remove it from the permanent crater (a forecast ring is RENDER's decal). The rays are thin star spikes and read as a cartoon splat: make them 3-5 broad, soft, tapering ejecta streaks at 40% opacity, and fix the rim/ray radius mismatch (rays to about 2x the rim, agreed with SIM/RENDER).",
+        "Meteor rock: flat facets with glowing yellow triangles, some floating outside the silhouette. Put the glow in cracks inside the silhouette (emissive lines, not loose triangles), and give the rock rounded ablation and a charred dark-to-brown gradient.",
+        "Fragments: good read (exotic violet crystals on rock). Reduce the rock facet size by half so it matches the v2 rock detail.",
+        "Meteor turret: good, on style (dish, twin barrels, cyan ring, category panels). Keep.",
+        "Research assembler exterior: only a low-resolution thumbnail was available. It is a flat box on a disc with bands; give it the clean-room silhouette the contract asks for (a glazed hall roof with a visible arm, a water line to the tank) and supply a beauty render."
+      ]
+    }
+  },
+  "round_2_fixes_checked": {
+    "bed bays with privacy screens": "landed (M/L/XL bays of 2, S cabin layout, XL central pod); screens read as signboards",
+    "bedding variety": "landed for colour and bedding style; shape variety small at game camera",
+    "less wood": "landed; wood only in inserts and tables",
+    "cabinet ring broken up": "landed; open segments with vents, panels and plants",
+    "doorway jamb, header and band": "landed",
+    "layout language per family": "landed for every family; the distinct layouts read at a glance"
+  },
+  "maker_weaknesses_checked": {
+    "junction pockets overlap at 4-6 links": "true, and severe: FAIL for interior_links",
+    "S rooms: leaves/pockets a few cm outside the dome": "true; the header also reads as a shelf",
+    "door clearance 0.83-0.98 m": "not measured by me; consistent with close_inside render",
+    "greenhouse/fungus trays in the walking ring; fungus crops overlap racks": "true",
+    "some XL industry/life/storage rooms look empty": "true for industry, life support (worst: atmo processor); storage is acceptable",
+    "research assembler glass reads grey": "true",
+    "crater rim and ray radius mismatch": "true; the bigger issue is the dashed orange ring"
+  },
+  "notes": [
+    "One FAIL: interior_links (0.647), caused by the junction doorway overlap. Everything else passes; nothing reaches 0.80. The weakest passes are interior_life (0.66) and hazard_props (0.67).",
+    "Consistency across the families is good: same wall kit, bands in the category colours, same palette and detail density. The common weakness is emptiness on L/XL.",
+    "No in-game rating this round. Doorways, lighting and every interior are re-rated on in-game cutaways.",
+    "Evidence I built: art/critic/r4_<type>.png (S/M/L/XL grids), r4_ind_m.png, r4_ind_xl.png, r4_life.png, r4_logi.png, r4_sci.png, r4_links.png, r4_doors.png, r4_doors_roof.png, r4_night.png, r4_haz.png, crops r4_junction_crop.png, r4_cantina_s_roof_crop.png. r4_haz.png includes art/critic_input/render/16_meteor_crater_after.png (not mine; RENDER's in-game shot, looked at for context only)."
+  ]
+}

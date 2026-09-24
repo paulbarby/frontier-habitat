@@ -1,0 +1,83 @@
+{
+  "round": 7,
+  "date": "2026-09-25",
+  "scope": "interiors re-rated after ART-HAB's round-4 rework, Blender renders only (art/interiors, 172 files)",
+  "pass_mark": 0.65,
+  "subjects": {
+    "interior_habitat": {"consistency": 0.80, "appeal": 0.78, "style": 0.80, "score": 0.79, "pass": true,
+      "fixes": [
+        "M is still a 4-fold pinwheel from above (bays at 12/98/178/262 deg are close to even). Make one bay a single bed with a reading chair, or shift two bays by 25 deg so the room loses its symmetry.",
+        "The reading corner in M/L does not read in the renders. Give it a floor lamp and a rug so it shows from the game camera.",
+        "The three bed shapes differ at close range only; at the game camera they differ by blanket colour. Acceptable; no action before the in-game round."]},
+    "interior_comfort": {"consistency": 0.76, "appeal": 0.74, "style": 0.76, "score": 0.75, "pass": true,
+      "fixes": [
+        "Cantina S/M: the booth stands on a large flat grey band that reads as a shadow or a stain. Put the neon rim on its whole edge and use a darker, slightly glossy floor, or shrink it to the booth footprint + 0.3 m.",
+        "Cantina M-XL: 40-50% of the floor is still empty tile. Add high tables along the empty arc and a small stage or jukebox at the wall.",
+        "Lounge S/M unchanged since round 4 (one sofa block and planters). Add the armchair pair with a side table that L/XL now have."]},
+    "interior_medical": {"consistency": 0.76, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true,
+      "fixes": [
+        "Bio-lab S/M: one or two benches on a large empty floor; the microscope and centrifuge are too small to see from above. Make the bench equipment 30% larger and add a sample fridge and a glove box on the wall arc near the bench.",
+        "Medical L has no scanner (maker's point, confirmed). Put a compact scanner arch at the end of the bed row."]},
+    "interior_food": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true,
+      "fixes": [
+        "Algae: fixed (clear glowing tubes in rows on skids). Keep.",
+        "Fungus: much better (caps on the racks, violet strips, lighter floor). The racks still read brown-heavy; make the caps 20% larger and paler so they read as mushrooms, not brown boxes.",
+        "Kitchen M: still one mess table on a big floor. Add a second table or a serving counter."]},
+    "interior_industry": {"consistency": 0.78, "appeal": 0.72, "style": 0.78, "score": 0.76, "pass": true,
+      "fixes": [
+        "The machines now scale, the stock is type-specific and the trenches reach the wall. XL still has a wide empty dark ring between the machine pad and the wall. Put stock zones (pallet racks, drums) on that ring in 2-3 places and lighten the floor 10%.",
+        "Mine, refinery and glassworks L/XL have no second unit (maker's point, confirmed). Add a smaller auxiliary unit (crusher, furnace preheater, annealing lehr) instead of a second main machine."]},
+    "interior_science": {"consistency": 0.76, "appeal": 0.68, "style": 0.74, "score": 0.73, "pass": true,
+      "fixes": [
+        "Research lab S/M still read empty: S shows one desk pod and M two, round a holo table on a large radial floor. Add a sample-rack section and a wall of screens on one arc, and a specimen case on M.",
+        "Assembler: the clean-room partitions read as frames; the glass does not show in the beauty renders. Make the glass tint visible (cyan 15%)."]},
+    "interior_life": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true,
+      "fixes": [
+        "Big improvement: the atmo column, the water plinth and the oxygen plinth give each room a clear centre. Atmo XL still has much empty dark floor; add the coolers and a second compressor pair on the far side.",
+        "Water recycler: the entry hood rises above the setback deck (maker's point). Lower the deck edge there or give the hood a flat top at deck height."]},
+    "interior_logistics": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true,
+      "fixes": [
+        "Cold storage S/M: the freezer row and the frost floor now read. The loose white box in M is still there; attach it to the rack as a freezer unit.",
+        "Storehouse floor is still dark; lighten it 10-15%."]},
+    "interior_links": {"consistency": 0.72, "appeal": 0.66, "style": 0.74, "score": 0.71, "pass": true,
+      "fixes": [
+        "Round-4 FAIL fixed at the hub: open spans with posts and sills, no pocket housings, clean with 3/4/5/6 links when spread (junction_links_4even, _6even). Keep.",
+        "At 28 deg the corridor tubes still cross each other outside the hub as a wedge of overlapping walls and floors (junction_links_4, _5, _6). Two 2.36 m tubes at angle t stop overlapping at 2.36 / sin(t) from the centre: 5.0 m at 28 deg, 3.3 m at 45 deg, 2.7 m at 60 deg. SIM: minimum 55 deg between links at a junction, or a hub radius that meets that distance. Until then the 28 deg case looks broken in game."]},
+    "doorways": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "provisional": true,
+      "fixes": [
+        "The hood works: from outside the corridor profile carries into the room wall and the old header box is gone (doorway_close_roof). Keep.",
+        "On S domes the hood and tube stand out from the dome as a collar (cantina_s, oxygen_plant_s roof views). It reads as a tube joint; acceptable.",
+        "S/M blocked door angles: the build tool must stop the player linking at a blocked angle, or the room hides the furniture. Show the result in game (UI/RENDER).",
+        "RENDER hides DoorLTop/DoorRTop while open (maker's note); verify in game."]},
+    "interior_lighting": {"consistency": 0.72, "appeal": 0.68, "style": 0.72, "score": 0.71, "pass": true, "provisional": true,
+      "fixes": [
+        "The family accents show only faintly (algae green, fungus violet); the cantina neon and the research holo glow do not read at night. Double the accent strength and give each a visible floor spill.",
+        "The 0.6 R floor pools brighten the centre, but the rooms still read as dimmed day. Let the wall ring fall off 25% more and add small warm pools under lamps.",
+        "RENDER matches the target in game; rated then."]},
+    "hazard_props": {"consistency": 0.72, "appeal": 0.66, "style": 0.72, "score": 0.70, "pass": true,
+      "fixes": [
+        "Crater: the ring and the spikes are gone, but it is now one flat brown splat with lobes and no rim light. Raise the rim 15 cm with a lighter top edge, darken the bowl centre, and fade the ejecta lobes to transparent at the ends instead of hard edges.",
+        "Meteor rock: the glow sits in the cracks now (fixed). Make it hot orange (#FF8A3D, emissive 3) instead of pale yellow so it reads as heat.",
+        "Research assembler exterior: supplied. The glazed roof reads as a solar-panel grid (opaque white squares). Use Glass for the panes so the arm shows through."]}
+  },
+  "maker_claims_checked": {
+    "junction own door kit, 3-6 links": "true; the hub is clean",
+    "corridor tubes overlap at 28 deg": "true; needs a SIM spacing rule",
+    "industry machines scale, second unit, trenches, stock": "true; no second unit in mine, refinery, glassworks",
+    "life support centres": "true",
+    "fungus caps, violet canopy, lighter floor": "true",
+    "algae clear tubes": "true",
+    "cantina neon, back bar, booths": "partly; the booth floor band reads as a stain",
+    "crater, meteor rock, assembler exterior": "true",
+    "door hood": "true",
+    "night accents": "present but faint",
+    "habitat curtains, bed shapes, reading corner": "curtains and shapes yes; the reading corner does not read",
+    "bio-lab bench equipment, research lab S/M desks": "present but too small or too few to read",
+    "L/XL floors emptier near the wall": "true for industry XL and atmo XL"
+  },
+  "notes": [
+    "No FAIL. interior_links passes (0.71, was 0.647) because the hub is fixed; the 28 deg corridor overlap needs a spacing rule from SIM.",
+    "Nothing reaches 0.80; interior_habitat is closest (0.79).",
+    "Evidence I built: art/critic/r7_junction.png, r7_habitat.png, r7_comfort.png, r7_medical.png, r7_food.png, r7_ind_l.png, r7_ind_xl.png, r7_life.png, r7_sci_logi.png, r7_doors.png, r7_night.png, r7_haz.png."
+  ]
+}

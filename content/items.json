@@ -7,7 +7,8 @@
     "medical": {"name": "Medical", "order": 4},
     "water": {"name": "Water", "order": 5},
     "crop": {"name": "Crops", "order": 6},
-    "dish": {"name": "Dishes", "order": 7}
+    "dish": {"name": "Dishes", "order": 7},
+    "science": {"name": "Science", "order": 8}
   },
   "items": {
     "ore":          {"name": "Iron ore",        "category": "raw",       "color": "#8A5A44", "value": 1,  "desc": "Mined from mineral deposits. A refinery turns 2 ore into 1 steel."},
@@ -43,6 +44,9 @@
     "mushroom_risotto": {"name": "Mushroom risotto", "category": "dish", "color": "#CDB891", "value": 5, "shelf_days": 3, "desc": "Creamy and rich."},
     "tofu_stirfry":     {"name": "Tofu stir-fry",    "category": "dish", "color": "#E0B24A", "value": 5, "plural": "Tofu stir-fries", "shelf_days": 3, "desc": "Protein-rich and full of flavour."},
     "veggie_pizza":     {"name": "Veggie pizza",     "category": "dish", "color": "#E07A3A", "value": 7, "plural": "Veggie pizzas", "shelf_days": 3, "desc": "Everybody's favourite."},
-    "colony_feast":     {"name": "Colony feast",     "category": "dish", "color": "#FFD166", "value": 10, "plural": "Colony feasts", "shelf_days": 2, "desc": "A celebration of everything the colony grows."}
+    "colony_feast":     {"name": "Colony feast",     "category": "dish", "color": "#FFD166", "value": 10, "plural": "Colony feasts", "shelf_days": 2, "desc": "A celebration of everything the colony grows."},
+    "pack_basic":       {"name": "Basic research pack",   "category": "science", "color": "#7C8CFF", "value": 4,  "plural": "Basic research packs", "desc": "Made from water and power in a research assembler. Tier 2 and 3 research needs it. A lab that has the packs of its project works twice as fast."},
+    "pack_applied":     {"name": "Applied research pack", "category": "science", "color": "#3EE0FF", "value": 12, "plural": "Applied research packs", "desc": "Made from glass, electronics and water. Tier 3 and 4 research needs it."},
+    "pack_exotic":      {"name": "Exotic research pack",  "category": "science", "color": "#B06CFF", "value": 40, "plural": "Exotic research packs", "desc": "Made from exotic crystal, composite and electronics. Special research (tier 5) needs it. Meteor fragments sometimes hold one."}
   }
 }

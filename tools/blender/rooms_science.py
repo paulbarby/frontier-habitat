@@ -116,6 +116,69 @@ def build_research_lab(rm):
             cabinet(n, w=1.6, d=0.6, h=1.8, stripe="Accent")
 
 
+# --------------------------------------------------------------------------------------
+# RESEARCH ASSEMBLER (3.0): clean-room hall on the round base, ducts and filter units, a water tank, a pack hatch
+# --------------------------------------------------------------------------------------
+def build_research_assembler(rm):
+    s = rm.size
+    Rw, Ri = rm.Rw, rm.Ri
+    rm.build_base(windows=(0.50, 0.84) if s else None, win_seams=(10, 12, 16, 20)[s], win_mat="Plasma",
+                  lamps=(160.0, 200.0), bolts=s >= 2)
+    D = 2.4
+    rm.build_podium(D, ribs=(8, 12, 14, 16)[s], band="Accent", band_z=D - 0.5, parapet=0.14)
+    ro = rm.roof
+    # the clean-room hall: flat roof, blue window band, filter units and fans on top
+    # (critic round 4) a white clean-room block: a tall hall with a lit band, a roof covered in fan-filter units,
+    # an air-handling unit with a big duct into the roof, and an airlock vestibule with a cyan door stripe
+    cx, cy, a, b = -0.08 * Rw, 0.10 * Rw, 0.48 * Rw, 0.34 * Rw
+    eave = D + (1.6, 1.9, 2.2, 2.5)[s]
+    top = K.hall(ro, cx, cy, a, b, D + 0.02, eave, roof="flat", wall="Hull", roof_mat="HullDark", band="Plasma",
+                 windows=True, win_mat="Plasma", ribs=True, rib_mat="Frame")
+    rm.rooms_hi.append((lambda x, y, cx=cx, cy=cy, a=a, b=b: abs(x - cx) < a - 0.1 and abs(y - cy) < b - 0.1,
+                        eave - 0.1))
+    obst = [(cx + a * (2 * k + 1) / 3 - a, cy, max(a / 3, b) + 0.1) for k in range(3)]
+    # fan-filter units: a grid of square filter panels in frames on the roof
+    nfx, nfy = max(2, int(2 * a / 0.85)), max(2, int(2 * b / 0.85))
+    for i in range(nfx):
+        for j in range(nfy):
+            fx = cx - a + (2 * a) * (i + 0.5) / nfx
+            fy = cy - b + (2 * b) * (j + 0.5) / nfy
+            # a glazed skylight: frame, a lit light-bar under clear glass
+            ro.box0(fx, fy, top, 2 * a / nfx - 0.10, 2 * b / nfy - 0.10, 0.10, "Frame", mats={"-z": None})
+            ro.box0(fx, fy, top + 0.10, 2 * a / nfx - 0.30, 0.06, 0.012, "L3Band", mats={"-z": None})
+            ro.box0(fx, fy, top + 0.16, 2 * a / nfx - 0.20, 2 * b / nfy - 0.20, 0.012, "Glass", mats={"-z": None})
+    # air-handling unit on the podium (-X side) and its duct over the parapet into the roof
+    ax, ay = cx - a - 0.55, cy - b * 0.35
+    ro.box0(ax, ay, D, 0.8, 1.2, 1.05 + 0.1 * s, "HullDark", bevel=0.03, mats={"-z": None})
+    K.fan_unit(ro, ax, ay - 0.25, D + 1.05 + 0.1 * s, 0.26)
+    ro.box0(ax, ay + 0.35, D + 1.05 + 0.1 * s, 0.34, 0.34, 0.05, "Frame", mats={"-z": None})
+    ro.beam((ax, ay + 0.35, D + 1.10 + 0.1 * s), (ax, ay + 0.35, top + 0.35), 0.34, 0.34, "Metal")
+    ro.beam((ax, ay + 0.35, top + 0.35), (cx - a + 0.35, ay + 0.35, top + 0.35), 0.34, 0.34, "Metal")
+    obst.append((ax, ay, 0.8))
+    # airlock vestibule on the +Y face with a cyan door stripe
+    vx, vy = cx + a * 0.35, cy + b + 0.35
+    ro.box0(vx, vy, D, 1.0, 0.70, 2.05, "Hull", bevel=0.04, mats={"-z": None})
+    ro.box0(vx, vy + 0.352, D + 0.10, 0.62, 0.004, 1.70, "Glass")
+    ro.box0(vx, vy + 0.356, D + 1.84, 0.80, 0.004, 0.10, "L3Band")
+    ro.box0(vx, vy, D + 2.05, 1.08, 0.78, 0.06, "Frame", mats={"-z": None})
+    obst.append((vx, vy, 0.7))
+    # a water tank with a blue band and a feed pipe into the hall
+    tx, ty = 0.52 * Rw, -0.42 * Rw
+    tt = K.tank_v(ro, tx, ty, D, 1.0 + 0.2 * s, 0.42 + 0.05 * s, mat="Hull", band="WaterBlue", cap="dome", seg=10)
+    K.pipe(ro, [(tx, ty, D + 0.8), (tx - 0.6, ty + 0.2, D + 0.8), (cx + a, cy - b * 0.5, D + 0.8)], r=0.06,
+           mat="WaterBlue", seg=6, fillet=0.2)
+    obst.append((tx, ty, 0.6 + 0.05 * s))
+    # the pack hatch: a square hatch with violet / cyan / blue pack colours in its frame
+    hx, hy = 0.50 * Rw, 0.45 * Rw
+    ro.box0(hx, hy, D, 0.9, 0.9, 0.16, "Frame", mats={"-z": None})
+    for k, m in enumerate(("L4Band", "L3Band", "Accent")):
+        ro.box0(hx - 0.28 + 0.28 * k, hy, D + 0.16, 0.22, 0.7, 0.04, m, mats={"-z": None})
+    obst.append((hx, hy, 0.7))
+    rm.top_z = max(rm.top_z, top + 0.5, tt)
+    K.levels_podium(rm, K.auto_sites(rm, obst, D))
+
+
 BUILDERS = {
     "research_lab": build_research_lab,
+    "research_assembler": build_research_assembler,
 }

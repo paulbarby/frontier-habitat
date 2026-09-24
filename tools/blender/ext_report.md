@@ -48,54 +48,54 @@ for s in meridian colonists crops energy life industry singles props; do
 
 | file | triangles | budget | per object | radius / footprint | z min .. max | KB | flags |
 |---|---:|---:|---|---|---|---:|---|
-| `solar_array_s.glb` | 1586 | 3000 | Base 408, L2 408, L3 136, L4 156, L5 478 | 2.11 / 2.2 | 0.00 .. 1.99 | 118 | ok |
-| `solar_array_m.glb` (+ `solar_array.glb`) | 2098 | 4500 | Base 920, L2 408, L3 136, L4 156, L5 478 | 3.11 / 3.2 | 0.00 .. 2.34 | 152 | ok |
-| `solar_array_l.glb` | 2990 | 6500 | Base 1812, L2 408, L3 136, L4 156, L5 478 | 4.31 / 4.4 | 0.00 .. 2.79 | 213 | ok |
-| `solar_array_xl.glb` | 3698 | 9000 | Base 2224, L2 408, L3 248, L4 340, L5 478 | 5.51 / 5.6 | -0.02 .. 3.74 | 247 | ok |
-| `wind_turbine_s.glb` | 2498 | 3000 | Base 848, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 1.08 / 1.2 (rotor 1.87) | -0.05 .. 8.28 | 158 | ok |
-| `wind_turbine_m.glb` (+ `wind_turbine.glb`) | 2618 | 4500 | Base 968, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 1.51 / 1.6 (rotor 2.23) | -0.05 .. 11.77 | 168 | ok |
-| `wind_turbine_l.glb` | 2954 | 6500 | Base 1304, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 2.00 / 2.2 (rotor 2.75) | -0.05 .. 16.47 | 190 | ok |
-| `wind_turbine_xl.glb` | 2954 | 9000 | Base 1304, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 2.49 / 2.8 (rotor 3.27) | -0.05 .. 22.16 | 190 | ok |
-| `battery_s.glb` | 1786 | 3000 | Base 608, L2 408, L3 136, L4 156, L5 478 | 1.25 / 1.3 | 0.00 .. 2.48 | 125 | ok |
-| `battery_m.glb` (+ `battery.glb`) | 2140 | 4500 | Base 962, L2 408, L3 136, L4 156, L5 478 | 1.76 / 1.8 | 0.00 .. 2.76 | 149 | ok |
-| `battery_l.glb` | 2674 | 6500 | Base 1496, L2 408, L3 136, L4 156, L5 478 | 2.45 / 2.5 | 0.00 .. 2.91 | 185 | ok |
-| `battery_xl.glb` | 3118 | 9000 | Base 1940, L2 408, L3 136, L4 156, L5 478 | 3.16 / 3.2 | 0.00 .. 3.08 | 219 | ok |
+| `solar_array_s.glb` | 1586 | 3000 | Base 408, L2 408, L3 136, L4 156, L5 478 | 2.11 / 2.2 | 0.00 .. 1.99 | 118 | ok anchors: Anchor_Service |
+| `solar_array_m.glb` (+ `solar_array.glb`) | 2098 | 4500 | Base 920, L2 408, L3 136, L4 156, L5 478 | 3.11 / 3.2 | 0.00 .. 2.34 | 152 | ok anchors: Anchor_Service |
+| `solar_array_l.glb` | 2990 | 6500 | Base 1812, L2 408, L3 136, L4 156, L5 478 | 4.31 / 4.4 | 0.00 .. 2.79 | 213 | ok anchors: Anchor_Service |
+| `solar_array_xl.glb` | 3698 | 9000 | Base 2224, L2 408, L3 248, L4 340, L5 478 | 5.51 / 5.6 | -0.02 .. 3.74 | 248 | ok anchors: Anchor_Service |
+| `wind_turbine_s.glb` | 2498 | 3000 | Base 848, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 1.08 / 1.2 (rotor 1.87) | -0.05 .. 8.28 | 158 | ok anchors: Anchor_Service |
+| `wind_turbine_m.glb` (+ `wind_turbine.glb`) | 2618 | 4500 | Base 968, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 1.51 / 1.6 (rotor 2.23) | -0.05 .. 11.77 | 168 | ok anchors: Anchor_Service |
+| `wind_turbine_l.glb` | 2954 | 6500 | Base 1304, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 2.00 / 2.2 (rotor 2.75) | -0.05 .. 16.47 | 190 | ok anchors: Anchor_Service |
+| `wind_turbine_xl.glb` | 2954 | 9000 | Base 1304, L2 408, L3 248, L4 268, L5 478, Rotor 248 | 2.49 / 2.8 (rotor 3.27) | -0.05 .. 22.16 | 190 | ok anchors: Anchor_Service |
+| `battery_s.glb` | 1786 | 3000 | Base 608, L2 408, L3 136, L4 156, L5 478 | 1.25 / 1.3 | 0.00 .. 2.48 | 125 | ok anchors: Anchor_Service |
+| `battery_m.glb` (+ `battery.glb`) | 2140 | 4500 | Base 962, L2 408, L3 136, L4 156, L5 478 | 1.76 / 1.8 | 0.00 .. 2.76 | 149 | ok anchors: Anchor_Service |
+| `battery_l.glb` | 2674 | 6500 | Base 1496, L2 408, L3 136, L4 156, L5 478 | 2.45 / 2.5 | 0.00 .. 2.91 | 185 | ok anchors: Anchor_Service |
+| `battery_xl.glb` | 3118 | 9000 | Base 1940, L2 408, L3 136, L4 156, L5 478 | 3.16 / 3.2 | 0.00 .. 3.08 | 219 | ok anchors: Anchor_Service |
 
 ## Life support (sized) (`tools/blender/ext_life.py`)
 
 | file | triangles | budget | per object | radius / footprint | z min .. max | KB | flags |
 |---|---:|---:|---|---|---|---:|---|
-| `water_extractor_s.glb` | 2266 | 3000 | Base 864, L2 408, L3 248, L4 268, L5 478 | 1.83 / 1.9 | 0.00 .. 4.36 | 148 | ok |
-| `water_extractor_m.glb` (+ `water_extractor.glb`) | 2828 | 4500 | Base 1426, L2 408, L3 248, L4 268, L5 478 | 2.53 / 2.6 | 0.00 .. 5.66 | 169 | ok |
-| `water_extractor_l.glb` | 3320 | 6500 | Base 1918, L2 408, L3 248, L4 268, L5 478 | 3.33 / 3.4 | 0.00 .. 7.16 | 203 | ok |
-| `water_extractor_xl.glb` | 3800 | 9000 | Base 2398, L2 408, L3 248, L4 268, L5 478 | 4.13 / 4.2 | 0.00 .. 6.16 | 222 | ok |
-| `reservoir_s.glb` | 2074 | 3000 | Base 672, L2 408, L3 248, L4 268, L5 478 | 2.13 / 2.2 | 0.00 .. 2.93 | 124 | ok |
-| `reservoir_m.glb` (+ `reservoir.glb`) | 2586 | 4500 | Base 1184, L2 408, L3 248, L4 268, L5 478 | 2.93 / 3.0 | 0.00 .. 4.28 | 148 | ok |
-| `reservoir_l.glb` | 3166 | 6500 | Base 1764, L2 408, L3 248, L4 268, L5 478 | 3.93 / 4.0 | 0.00 .. 4.06 | 174 | ok |
-| `reservoir_xl.glb` | 2886 | 9000 | Base 1484, L2 408, L3 248, L4 268, L5 478 | 4.93 / 5.0 | -0.01 .. 7.08 | 174 | ok |
+| `water_extractor_s.glb` | 2266 | 3000 | Base 864, L2 408, L3 248, L4 268, L5 478 | 1.83 / 1.9 | 0.00 .. 4.36 | 148 | ok anchors: Anchor_Service |
+| `water_extractor_m.glb` (+ `water_extractor.glb`) | 2828 | 4500 | Base 1426, L2 408, L3 248, L4 268, L5 478 | 2.53 / 2.6 | 0.00 .. 5.66 | 170 | ok anchors: Anchor_Service |
+| `water_extractor_l.glb` | 3320 | 6500 | Base 1918, L2 408, L3 248, L4 268, L5 478 | 3.33 / 3.4 | 0.00 .. 7.16 | 203 | ok anchors: Anchor_Service |
+| `water_extractor_xl.glb` | 3800 | 9000 | Base 2398, L2 408, L3 248, L4 268, L5 478 | 4.13 / 4.2 | 0.00 .. 6.16 | 222 | ok anchors: Anchor_Service |
+| `reservoir_s.glb` | 2074 | 3000 | Base 672, L2 408, L3 248, L4 268, L5 478 | 2.13 / 2.2 | 0.00 .. 2.93 | 124 | ok anchors: Anchor_Service |
+| `reservoir_m.glb` (+ `reservoir.glb`) | 2586 | 4500 | Base 1184, L2 408, L3 248, L4 268, L5 478 | 2.93 / 3.0 | 0.00 .. 4.28 | 148 | ok anchors: Anchor_Service |
+| `reservoir_l.glb` | 3166 | 6500 | Base 1764, L2 408, L3 248, L4 268, L5 478 | 3.93 / 4.0 | 0.00 .. 4.06 | 174 | ok anchors: Anchor_Service |
+| `reservoir_xl.glb` | 2886 | 9000 | Base 1484, L2 408, L3 248, L4 268, L5 478 | 4.93 / 5.0 | -0.01 .. 7.08 | 174 | ok anchors: Anchor_Service |
 
 ## Industry (sized) (`tools/blender/ext_industry.py`)
 
 | file | triangles | budget | per object | radius / footprint | z min .. max | KB | flags |
 |---|---:|---:|---|---|---|---:|---|
-| `regolith_harvester_s.glb` | 2102 | 3000 | Base 924, L2 408, L3 136, L4 156, L5 478 | 2.13 / 2.2 | -0.00 .. 3.07 | 147 | ok |
-| `regolith_harvester_m.glb` (+ `regolith_harvester.glb`) | 2686 | 4500 | Base 1508, L2 408, L3 136, L4 156, L5 478 | 2.93 / 3.0 | -0.00 .. 3.25 | 184 | ok |
-| `regolith_harvester_l.glb` | 3174 | 6500 | Base 1996, L2 408, L3 136, L4 156, L5 478 | 3.73 / 3.8 | -0.00 .. 3.55 | 214 | ok |
-| `regolith_harvester_xl.glb` | 3720 | 9000 | Base 2318, L2 408, L3 248, L4 268, L5 478 | 4.60 / 4.6 | -0.02 .. 4.73 | 241 | ok |
-| `fuel_refinery_s.glb` | 2854 | 3000 | Base 1452, L2 408, L3 248, L4 268, L5 478 | 2.53 / 2.6 | -0.00 .. 4.73 | 174 | ok |
-| `fuel_refinery_m.glb` (+ `fuel_refinery.glb`) | 3710 | 4500 | Base 2308, L2 408, L3 248, L4 268, L5 478 | 3.43 / 3.5 | -0.00 .. 6.61 | 219 | ok |
-| `fuel_refinery_l.glb` | 4424 | 6500 | Base 3022, L2 408, L3 248, L4 268, L5 478 | 4.33 / 4.4 | -0.00 .. 7.68 | 253 | ok |
-| `fuel_refinery_xl.glb` | 6400 | 9000 | Base 4998, L2 408, L3 248, L4 268, L5 478 | 5.33 / 5.4 | -0.00 .. 8.75 | 359 | ok |
+| `regolith_harvester_s.glb` | 2102 | 3000 | Base 924, L2 408, L3 136, L4 156, L5 478 | 2.13 / 2.2 | -0.00 .. 3.07 | 147 | ok anchors: Anchor_Service |
+| `regolith_harvester_m.glb` (+ `regolith_harvester.glb`) | 2686 | 4500 | Base 1508, L2 408, L3 136, L4 156, L5 478 | 2.93 / 3.0 | -0.00 .. 3.25 | 184 | ok anchors: Anchor_Service |
+| `regolith_harvester_l.glb` | 3174 | 6500 | Base 1996, L2 408, L3 136, L4 156, L5 478 | 3.73 / 3.8 | -0.00 .. 3.55 | 214 | ok anchors: Anchor_Service |
+| `regolith_harvester_xl.glb` | 3720 | 9000 | Base 2318, L2 408, L3 248, L4 268, L5 478 | 4.60 / 4.6 | -0.02 .. 4.73 | 242 | ok anchors: Anchor_Service |
+| `fuel_refinery_s.glb` | 2854 | 3000 | Base 1452, L2 408, L3 248, L4 268, L5 478 | 2.53 / 2.6 | -0.00 .. 4.73 | 174 | ok anchors: Anchor_Service |
+| `fuel_refinery_m.glb` (+ `fuel_refinery.glb`) | 3710 | 4500 | Base 2308, L2 408, L3 248, L4 268, L5 478 | 3.43 / 3.5 | -0.00 .. 6.61 | 219 | ok anchors: Anchor_Service |
+| `fuel_refinery_l.glb` | 4424 | 6500 | Base 3022, L2 408, L3 248, L4 268, L5 478 | 4.33 / 4.4 | -0.00 .. 7.68 | 253 | ok anchors: Anchor_Service |
+| `fuel_refinery_xl.glb` | 6400 | 9000 | Base 4998, L2 408, L3 248, L4 268, L5 478 | 5.33 / 5.4 | -0.00 .. 8.75 | 359 | ok anchors: Anchor_Service |
 
 ## Single-size structures (`tools/blender/ext_singles.py`)
 
 | file | triangles | budget | per object | radius / footprint | z min .. max | KB | flags |
 |---|---:|---:|---|---|---|---:|---|
-| `fusion_reactor.glb` | 7338 | 9000 | Base 5132, L2 408, L3 248, L4 416, L5 478, Plasma 656 | 6.22 / 6.5 | -0.05 .. 4.86 | 366 | ok |
-| `deep_drill.glb` | 4088 | 6500 | Base 2650, L2 408, L3 248, L4 268, L5 478, Lights 36 | 3.44 / 3.5 | -0.04 .. 15.23 | 271 | ok |
-| `comms_tower.glb` | 2440 | 4500 | Base 2248, Lights 192 | 2.35 / 2.5 | -0.05 .. 24.35 | 160 | ok |
+| `fusion_reactor.glb` | 7338 | 9000 | Base 5132, L2 408, L3 248, L4 416, L5 478, Plasma 656 | 6.22 / 6.5 | -0.05 .. 4.86 | 366 | ok anchors: Anchor_Service |
+| `deep_drill.glb` | 4088 | 6500 | Base 2650, L2 408, L3 248, L4 268, L5 478, Lights 36 | 3.44 / 3.5 | -0.04 .. 15.23 | 271 | ok anchors: Anchor_Service |
+| `comms_tower.glb` | 2440 | 4500 | Base 2248, Lights 192 | 2.35 / 2.5 | -0.05 .. 24.35 | 160 | ok anchors: Anchor_Service |
 | `lander.glb` | 4076 | 6500 | Base 3904, Lights 172 | 5.96 / 5.5 | -0.03 .. 8.18 | 203 | ok anchors: Anchor_Engine, Anchor_Ramp |
-| `landing_pad.glb` | 3052 | 9000 | Base 2470, Lights 582 | 8.90 / 9.0 | 0.00 .. 4.68 | 157 | ok |
+| `landing_pad.glb` | 3052 | 9000 | Base 2470, Lights 582 | 8.90 / 9.0 | 0.00 .. 4.68 | 158 | ok anchors: Anchor_Service |
 
 ## Props (`tools/blender/ext_props.py`)
 

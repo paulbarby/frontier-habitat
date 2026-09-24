@@ -98,7 +98,15 @@ MATERIALS = {
     "L5Gold":     dict(color="#ffd166", metal=0.90, rough=0.30, emit="#ffd166", emit_strength=0.6),
     "Frost":      dict(color="#ddefff", rough=0.50),
     "Glow":       dict(color="#9cffb0", rough=0.40, emit="#9cffb0", emit_strength=3.0),
+    "Ember":      dict(color="#ff5a0a", rough=0.40, emit="#ff4a00", emit_strength=1.6),
     "Plasma":     dict(color="#8fd8ff", rough=0.30, emit="#8fd8ff", emit_strength=5.0),
+    # 3.0 (docs/V3_DESIGN.md section 7.3), the same values as build_assets.MATERIALS
+    "LightStrip": dict(color="#eaf6ff", rough=0.30, emit="#eaf6ff", emit_strength=2.5),
+    "Screen":     dict(color="#123c4c", rough=0.25, emit="#2fb8d8", emit_strength=0.45),
+    "Wood":       dict(color="#b08560", rough=0.55),
+    "Cushion":    dict(color="#3c4a5e", rough=0.90),
+    "Floor":      dict(color="#d9d4cb", rough=0.65),
+    "FloorDark":  dict(color="#6b6f76", rough=0.70),
     # ART-B additions (documented in ext_report.md and docs/requests/ART-B-to-RENDER.md)
     "Skin":       dict(color="#d9a47e", rough=0.75),
     "Hair":       dict(color="#4a3326", rough=0.85),
@@ -954,6 +962,16 @@ def part_stats(part):
 LEVEL_PARTS = ("L2", "L3", "L4", "L5")
 
 
+def service_anchor(parts):
+    """Kneel point in front of the +X face of the Base (the service panel is 0.45 m ahead at 0.40 m)."""
+    base = [p for p in parts if p.name in ("Base", "Turret")]
+    for (zlo, zhi, yw) in ((0.15, 0.90, 0.35), (0.10, 1.40, 0.80), (0.0, 3.0, 1.60)):
+        xs = [v.x for p in base for v in p.verts if zlo <= v.z <= zhi and abs(v.y) <= yw]
+        if xs:
+            return Anchor("Service", (max(xs) + 0.45, 0.0, 0.0), forward=(-1, 0, 0))
+    return None
+
+
 def build_model(spec, builder):
     """spec keys: id, kind, footprint (m or None), accent (category or None), produce (hex or None),
     objects (expected top-level mesh names), anchors (expected empty names), budget (triangles),
@@ -964,6 +982,14 @@ def build_model(spec, builder):
     out = builder(spec)
     parts = [p for p in out if isinstance(p, Part)]
     anchors = [a for a in out if isinstance(a, Anchor)]
+    # 3.0 (docs/V3_DESIGN.md section 6): every exterior machine has Anchor_Service, a kneel point 0.45 m in front of
+    # its front (+X) face at panel height (0.40); the person faces the machine (-X).
+    if spec.get("kind") == "exterior" and spec.get("service", True) and not any(a.name == "Service" for a in anchors):
+        sa = service_anchor(parts)
+        if sa is not None:
+            anchors.append(sa)
+            spec = dict(spec)
+            spec["anchors"] = list(spec.get("anchors", [])) + ["Anchor_Service"]
     mset = MaterialSet(ACCENTS.get(spec.get("accent")) if spec.get("accent") else None, spec.get("produce"))
     objs = {}
     for part in parts:

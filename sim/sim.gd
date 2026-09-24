@@ -42,6 +42,7 @@ const Goals = preload("res://sim/goals.gd")
 const Awards = preload("res://sim/awards.gd")
 const Ship = preload("res://sim/ship.gd")
 const Events = preload("res://sim/events.gd")
+const Hazards = preload("res://sim/hazards.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -72,6 +73,7 @@ var goals
 var awards
 var ship
 var events
+var hazards
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -103,11 +105,12 @@ func _init() -> void:
 	awards = Awards.new(self)
 	ship = Ship.new(self)
 	events = Events.new(self)
+	hazards = Hazards.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -115,7 +118,9 @@ func dispose() -> void:
 	nav = null
 
 # ---------------------------------------------------------------- start / load
-## options: {planet: "dry"|"cold"|"airless", difficulty: "relaxed"|"standard"|"hard"}.
+## options: {planet: "dry"|"cold"|"airless", difficulty: "relaxed"|"standard"|"hard",
+##           hazards: "off"|"mild"|"normal"|"hard" (default normal), storms: bool,
+##           debug: bool (allows the hazard_now command; boot param debug=1)}.
 ## Without options the scenario's planet and the standard difficulty are used.
 func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictionary = {}) -> void:
 	var sc: Dictionary = content["scenarios"][scenario_id]
@@ -145,14 +150,17 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 		"flags": {"base_air": false},
 		"rev": {"walk": 0, "power": 0, "atmo": 0},
 		"lander_id": -1, "names_used": 0,
-		"options": {"planet": planet_id, "difficulty": diff, "spoilage": spoil, "storms": bool(options.get("storms", true))},
+		"options": {"planet": planet_id, "difficulty": diff, "spoilage": spoil, "storms": bool(options.get("storms", true)),
+			"hazards": _hazard_setting(options), "debug": bool(options.get("debug", false))},
+		"hazards": Hazards.fresh_state(),
 		"research": Research.fresh_state(),
 		"goals": Goals.fresh_state(),
 		"awards": {}, "award_track": {},
 		"ship": Ship.fresh_state(),
 		"stats": fresh_stats(),
 	}
-	world = WorldGen.get_world(seed_value, planet, bal, int(sc["map_size"]))
+	state["map_size"] = int(sc["map_size"])
+	world = WorldGen.get_world(seed_value, planet, bal, int(state["map_size"]))
 	for d in world.deposit_sites:
 		var dep: Dictionary = d.duplicate()
 		dep["id"] = new_id()
@@ -175,6 +183,10 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 	goals.tick_second()
 	log_event("landed", "The lander is down. %s, shelter for %s." % [Text.n(i, "colonist"), Text.n(int(bdef("lander")["shelter_days"]), "day")], [lander["id"]], 1)
 
+func _hazard_setting(options: Dictionary) -> String:
+	var hs: String = String(options.get("hazards", "normal"))
+	return hs if bal["hazards"]["settings"].has(hs) else "normal"
+
 static func fresh_stats() -> Dictionary:
 	return {"produced": {}, "consumed": {}, "spoiled": {}, "cooked": {}, "eaten": {}, "spoiled_today": {},
 		"cooked_total": 0, "harvests": 0, "heals": 0, "techs": 0, "upgrades": 0, "ship_stages": 0,
@@ -185,11 +197,18 @@ func default_immigration() -> Dictionary:
 
 ## Installs a decoded save. Derived data is rebuilt without touching revision numbers,
 ## so a loaded game continues exactly like the game that was saved.
-func load_state(s: Dictionary) -> void:
+## opts: {debug: true} turns on state.options.debug (the hazard_now command) for a loaded
+## save (boot params load= and debug=1). It is written into the state, so it is saved.
+func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	state = s
+	if bool(opts.get("debug", false)):
+		if not state.has("options"):
+			state["options"] = {}
+		state["options"]["debug"] = true
 	var sc: Dictionary = content["scenarios"][state["scenario"]]
 	planet = content["planets"][state["planet"]]
-	world = WorldGen.get_world(int(state["seed"]), planet, bal, int(sc["map_size"]))
+	# A version-2 save keeps its 256 m map (the migration writes map_size 256).
+	world = WorldGen.get_world(int(state["seed"]), planet, bal, int(state.get("map_size", 256)))
 	pending = []
 	# A version-1 save has no Meridian yet: it lands on the first free site (migration).
 	if int(state["ship"].get("id", -1)) == -1:
@@ -316,7 +335,7 @@ func step() -> void:
 	cmds.apply_pending()
 	util.env_tick()
 	if second:
-		events.tick_second()
+		hazards.tick_second()
 	if bool(state["topo_dirty"]):
 		topo.rebuild(true)
 	util.power_tick()

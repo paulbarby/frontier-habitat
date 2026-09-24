@@ -1,0 +1,141 @@
+{
+ "generator": "interior_links.py",
+ "models": [
+  {
+   "id": "doorway",
+   "tris": 1024,
+   "budget": 1600,
+   "tris_by_object": {
+    "DoorL": 56,
+    "DoorLTop": 52,
+    "DoorR": 56,
+    "DoorRTop": 52,
+    "Frame": 454,
+    "FrameTop": 300,
+    "Lights": 8,
+    "Sign": 46
+   },
+   "materials": [
+    "Accent",
+    "FloorDark",
+    "Frame",
+    "Glow",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "LightStrip",
+    "Rubber",
+    "Screen",
+    "Trim",
+    "Visor"
+   ],
+   "empties": [
+    "Anchor_Corridor",
+    "Anchor_Room"
+   ],
+   "flags": [],
+   "file_size": 96228,
+   "seconds": 0.6
+  },
+  {
+   "id": "wall_patch",
+   "tris": 58,
+   "budget": 120,
+   "tris_by_object": {
+    "Base": 58
+   },
+   "materials": [
+    "Accent",
+    "FloorDark",
+    "Frame",
+    "Hull",
+    "HullDark",
+    "LightStrip",
+    "Metal"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 10692,
+   "seconds": 0.0
+  },
+  {
+   "id": "corridor",
+   "tris": 94,
+   "budget": 400,
+   "tris_by_object": {
+    "Base": 62,
+    "Roof": 32
+   },
+   "materials": [
+    "Accent",
+    "Floor",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Hull",
+    "HullDark",
+    "LightStrip",
+    "Metal"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 15700,
+   "seconds": 0.1
+  },
+  {
+   "id": "corridor_rib",
+   "tris": 198,
+   "budget": 400,
+   "tris_by_object": {
+    "Base": 88,
+    "Roof": 110
+   },
+   "materials": [
+    "Frame",
+    "LightStrip",
+    "Metal"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 18620,
+   "seconds": 0.1
+  },
+  {
+   "id": "junction_post",
+   "tris": 144,
+   "budget": 300,
+   "tris_by_object": {
+    "Base": 140,
+    "Lights": 4
+   },
+   "materials": [
+    "Accent",
+    "Frame",
+    "Glow",
+    "Hull",
+    "HullDark"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 15652,
+   "seconds": 0.1
+  },
+  {
+   "id": "junction_sill",
+   "tris": 10,
+   "budget": 60,
+   "tris_by_object": {
+    "Base": 10
+   },
+   "materials": [
+    "Accent",
+    "FloorDark",
+    "Frame"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 3500,
+   "seconds": 0.0
+  }
+ ]
+}

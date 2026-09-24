@@ -31,7 +31,7 @@ func attach(b: Dictionary) -> void:
 	bid = b["id"]
 	var tpl: Dictionary = Models.prop(["meridian"], 7.0, "special", "space")
 	node = Node3D.new()
-	body = Models.node_from(tpl)
+	body = Models.node_from(tpl, true)
 	node.add_child(body)
 	add_child(node)
 	_base = Transform3D(Basis(Vector3.UP, -float(b["rot"])), view.to3(b["pos"], 0.0))

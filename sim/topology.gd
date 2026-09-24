@@ -84,14 +84,21 @@ func rebuild(bump: bool = true) -> void:
 	for lid in corridor_len_by_link:
 		var r: int = atmo_comp[blds[lid]["a"]]
 		atmo_corridor_len[r] = float(atmo_corridor_len.get(r, 0.0)) + float(corridor_len_by_link[lid])
+	sim.util.invalidate()
+	sim.nav.rebuild()
 	if bump:
 		sim.state["topo_dirty"] = false
 		var rev: Dictionary = sim.state["rev"]
 		rev["power"] = int(rev["power"]) + 1
 		rev["atmo"] = int(rev["atmo"]) + 1
-		rev["walk"] = int(rev["walk"]) + 1
-	sim.util.invalidate()
-	sim.nav.rebuild()
+		# The walk revision (which drops every kept route) only moves when the walking map
+		# really changed: the cells structures block and the room graph (v3: a cable, a
+		# repair or a breakdown no longer makes every walker plan again on the 810 m map).
+		# The last signature is saved, so a loaded game moves it exactly like the original.
+		var sig: int = sim.nav.signature()
+		if sig != int(sim.state.get("walk_sig", -1)) or not sim.state.has("walk_sig"):
+			rev["walk"] = int(rev["walk"]) + 1
+			sim.state["walk_sig"] = sig
 
 # Union by smallest id keeps the component key stable and deterministic.
 func _find(p: Dictionary, x: int) -> int:

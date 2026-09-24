@@ -122,6 +122,30 @@ static func _snap(v: float) -> float:
 static func _snap_fine(v: float) -> float:
 	return snappedf(v, 0.05)
 
+## Furniture anchors of a room size (V3_DESIGN section 6), from buildings.json
+## "furniture": {beds, seats, work_slots, stands, work_pose}. ART-HAB builds exactly this
+## many Anchor_Bed_<i>, Anchor_Seat_<i>, Anchor_Work_<i> and Anchor_Stand_<i> empties.
+## A structure without a furniture block has none (all 0, work_pose "stand").
+var _furn := {}
+
+func furniture(def_id: String, size: int) -> Dictionary:
+	var key: String = "%s:%d" % [def_id, size]
+	var got = _furn.get(key)
+	if got != null:
+		return got
+	var base: Dictionary = sim.content["buildings"].get(def_id, {})
+	var f: Dictionary = base.get("furniture", {})
+	var si: int = clampi(size, 0, 3) if base.has("sizes") else 1
+	var out := {"beds": 0, "seats": 0, "work_slots": 0, "stands": 0, "work_pose": String(f.get("work_pose", "stand"))}
+	for k in ["beds", "seats", "work_slots", "stands"]:
+		var v = f.get(k, 0)
+		if typeof(v) == TYPE_ARRAY:
+			out[k] = int((v as Array)[si]) if si < (v as Array).size() else 0
+		else:
+			out[k] = int(v)
+	_furn[key] = out
+	return out
+
 ## Can the player place this size now? {ok, code, research}. code: ok | unknown |
 ## no_size (this structure has one size) | locked_research (research names the tech).
 func allowed(def_id: String, size: int) -> Dictionary:

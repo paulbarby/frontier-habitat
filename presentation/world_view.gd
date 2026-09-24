@@ -27,6 +27,10 @@ const Ghost = preload("res://presentation/fx_ghost.gd")
 const Overlay = preload("res://presentation/fx_overlay.gd")
 const Icons = preload("res://presentation/fx_icons.gd")
 const Ship = preload("res://presentation/fx_ship.gd")
+const Npc = preload("res://presentation/fx_npc.gd")
+const Doors = preload("res://presentation/fx_doors.gd")
+const Interior = preload("res://presentation/fx_interior.gd")
+const Hazards = preload("res://presentation/fx_hazards.gd")
 const Rng = preload("res://sim/rng.gd")
 const CONSTRUCT_SHADER = preload("res://shaders/construct.gdshader")
 const HOLO_SHADER = preload("res://shaders/hologram.gdshader")
@@ -44,6 +48,11 @@ var ghost
 var overlays
 var icons
 var ship
+var npc                    # fx_npc: skinned astronauts (falls back to the v2 rigid colonists)
+var npc_fixture := false   # test only: the procedural rig instead of the GLBs
+var doors                  # fx_doors: doorways, wall cuts, corridor ribs
+var interior               # fx_interior: interior lights and light pools
+var hazards                # fx_hazards: meteors, storms, quakes, flares, dust devils, breaches
 var inst                   # fx_instancer shared by structures, figures, crops, crates, rocks
 var bmeta := {}            # building id -> visual record
 var ameta := {}            # agent id -> visual record
@@ -85,6 +94,8 @@ var _debug_node := -1
 var _frozen := false
 var _focus_now := Vector3.ZERO
 var _frame := 0
+var game_rate := 1.0       # game seconds per real second, smoothed (0 while paused)
+var shake_enabled := true  # settings "Camera shake" (UI sets it); quake and impact shakes respect it
 
 # ---------------------------------------------------------------- setup
 func setup(s) -> void:
@@ -102,6 +113,7 @@ func setup(s) -> void:
 	_outline_sig = ""
 	_rev_sig = ""
 	_sim_seconds = -1.0
+	_range_set = -1
 	inst = Instancer.new()
 	inst.name = "Instances"
 	add_child(inst)
@@ -137,6 +149,22 @@ func setup(s) -> void:
 	ship.name = "Ship"
 	add_child(ship)
 	ship.setup(self)
+	npc = Npc.new()
+	npc.name = "Astronauts"
+	add_child(npc)
+	npc.setup(self, npc_fixture)
+	doors = Doors.new()
+	doors.name = "Doorways"
+	add_child(doors)
+	doors.setup(self)
+	interior = Interior.new()
+	interior.name = "InteriorLights"
+	add_child(interior)
+	interior.setup(self)
+	hazards = Hazards.new()
+	hazards.name = "Hazards"
+	add_child(hazards)
+	hazards.setup(self)
 	_sel_ring = decal_ring(1.0, 0.86, 96, Color(0.35, 0.92, 1.0, 1.0), 0)
 	_sel_ring.visible = false
 	add_child(_sel_ring)
@@ -164,21 +192,47 @@ func rig():
 
 func _build_heightmap() -> void:
 	var w = sim.world
-	var img := Image.create(w.hn, w.hn, false, Image.FORMAT_RF)
-	for j in w.hn:
-		for i in w.hn:
-			img.set_pixel(i, j, Color(w.heights[j * w.hn + i], 0, 0))
+	var img := Image.create_from_data(w.hn, w.hn, false, Image.FORMAT_RF, (w.heights as PackedFloat32Array).to_byte_array())
 	img.convert(Image.FORMAT_RH)
 	heightmap = ImageTexture.create_from_image(img)
 
 ## Ore deposits: a dashed amber ring on the ground; the word only close up.
 func _build_deposit_labels() -> void:
-	for d in sim.state["deposits"]:
-		var ring: MeshInstance3D = decal_ring(float(d["r"]) + 1.2, 0.96, 96, Color(1.0, 0.7, 0.35, 0.55), 1, 40.0, 0.0)
-		ring.position = Vector3(float(d["x"]), 0, float(d["y"]))
-		ring.name = "DepositRing"
+	# All rings are one mesh in world space (one draw call, not one per deposit). The decal
+	# shader reads only UV, so the dash pattern is the same as with separate rings.
+	var src: Array = ring_mesh(0.96, 96).surface_get_arrays(0)
+	var sv: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
+	var suv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
+	var av := PackedVector3Array()
+	var auv := PackedVector2Array()
+	var an := PackedVector3Array()
+	var deps: Array = sim.state["deposits"]
+	for d in deps:
+		var r: float = float(d["r"]) + 1.2
+		var o := Vector3(float(d["x"]), 0, float(d["y"]))
+		for v in sv:
+			av.append(o + v * r)
+			an.append(Vector3.UP)
+		auv.append_array(suv)
+	if not av.is_empty() and suv.size() == sv.size():
+		var arrays: Array = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = av
+		arrays[Mesh.ARRAY_NORMAL] = an
+		arrays[Mesh.ARRAY_TEX_UV] = auv
+		var am := ArrayMesh.new()
+		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		var ring := MeshInstance3D.new()
+		ring.mesh = am
+		ring.material_override = decal_material(Color(1.0, 0.7, 0.35, 0.55), 1, 40.0, 0.0)
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ring.extra_cull_margin = 16.0
+		ring.name = "DepositRings"
+		ring.set_instance_shader_parameter("icolor", Color(1, 1, 1, 1))
+		ring.set_instance_shader_parameter("ipulse", 0.0)
 		add_child(ring)
 		_dep_rings.append(ring)
+	for d in deps:
 		var lab := Label3D.new()
 		lab.text = "ORE"
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -202,6 +256,10 @@ func decal_ring(radius: float, inner: float, segments: int, color: Color, mode: 
 	mi.scale = Vector3(radius, 1.0, radius)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.extra_cull_margin = 16.0
+	# Instance uniforms are not reliably initialised to their defaults in the Compatibility
+	# renderer: an unset icolor read as 0 and the decal vanished (2026-09-25). Set them.
+	mi.set_instance_shader_parameter("icolor", Color(1, 1, 1, 1))
+	mi.set_instance_shader_parameter("ipulse", 0.0)
 	return mi
 
 func decal_material(color: Color, mode: int, dashes: float = 48.0, speed: float = 0.0, lift: float = 0.12) -> ShaderMaterial:
@@ -278,6 +336,9 @@ func holo_material(color: Color, strength: float = 1.0) -> ShaderMaterial:
 func _construct_material(src: Material, state: String) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = CONSTRUCT_SHADER
+	# Interior and wall-cut materials keep their library source in meta "src".
+	if src is ShaderMaterial and src.has_meta("src"):
+		src = src.get_meta("src")
 	if src is BaseMaterial3D:
 		var b: BaseMaterial3D = src
 		m.set_shader_parameter("albedo", b.albedo_color)
@@ -299,6 +360,10 @@ func sync(delta: float) -> void:
 	var secs: float = sim.seconds()
 	var sim_dt: float = 0.0 if _sim_seconds < 0.0 else clampf(secs - _sim_seconds, 0.0, 30.0)
 	_sim_seconds = secs
+	if delta > 0.0:
+		# A time average of sim seconds per view second. The ratio is NOT clamped low: the sim
+		# steps in 0.1 s ticks, so one frame in many carries a large ratio (slow motion).
+		game_rate = lerpf(game_rate, clampf(sim_dt / delta, 0.0, 1000.0), 1.0 - exp(-delta * 1.5))
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	var focus: Vector3 = _focus()
 	_focus_now = focus
@@ -316,12 +381,24 @@ func sync(delta: float) -> void:
 	Models.set_night(sky.night)
 	Models.animate(_time)
 	tp = _prof("sky", tp)
+	_camera_range()
+	terrain.update_lod(delta, cam)
 	terrain.update_paths(sim_dt)
 	tp = _prof("paths", tp)
 	_sync_buildings(delta)
 	tp = _prof("buildings", tp)
-	_sync_agents(delta)
+	if npc.sync(delta):
+		if not ameta.is_empty():
+			for id in ameta.keys():
+				_drop_agent(id)
+	else:
+		_sync_agents(delta)
 	tp = _prof("agents", tp)
+	doors.sync(delta, _body_points())
+	interior.sync(delta, focus, sky.night)
+	tp = _prof("doors", tp)
+	hazards.sync(delta, focus)
+	tp = _prof("hazards", tp)
 	_sync_piles()
 	ship.sync(delta, sim_dt)
 	_sync_selection(delta)
@@ -423,6 +500,8 @@ func _bxf(b: Dictionary) -> Transform3D:
 		return Transform3D(basis * Basis.from_scale(Vector3(length, 1, 1)), Vector3(b["pos"].x, (y0 + y1) * 0.5 + 0.05, b["pos"].y))
 	return Transform3D(Basis(Vector3.UP, -float(b["rot"])), to3(b["pos"], 0.02))
 
+var _mode_flips := {}
+var _no_cutaway := false   # test only (__fhr "cutaway 0"): roofs stay on near the camera
 func _sync_buildings(delta: float) -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	for id in bmeta.keys():
@@ -436,16 +515,37 @@ func _sync_buildings(delta: float) -> void:
 			_make_building(b, mode)
 			changed = true
 		elif bmeta[id]["mode"] != mode:
+			_mode_flips[id] = "%s>%s" % [bmeta[id]["mode"], mode]
 			_drop_building(id)
 			_make_building(b, mode)
 			changed = true
 		# Slow work (level parts, crops, smoke) runs for each structure every 6th frame.
 		_update_building(b, delta, (int(id) + _frame) % 6 == 0)
+	if changed:
+		doors.mark_dirty()
 	var sig := "%d:%d" % [blds.size(), int(sim.state["rev"].get("walk", 0))]
 	if changed or sig != _rev_sig:
 		_rev_sig = sig
 		terrain.update_contact(blds)
 		terrain.hide_pebbles_under(blds)
+		terrain.set_pads(_pads_of(blds))
+
+## Terrain pads (critic round 6): the terrain mesh stays under every structure base and every
+## corridor floor, so the ground never shows through a floor.
+func _pads_of(blds: Dictionary) -> Array:
+	var out: Array = []
+	var ids: Array = blds.keys()
+	ids.sort()
+	for id in ids:
+		var b: Dictionary = blds[id]
+		if b["kind"] == "link":
+			var p0: Vector2 = b["p0"]
+			var p1: Vector2 = b["p1"]
+			out.append({"p0": p0, "p1": p1, "r": 1.4, "y0": h(p0.x, p0.y) + 0.05, "y1": h(p1.x, p1.y) + 0.05})
+		else:
+			var pos: Vector2 = b["pos"]
+			out.append({"c": pos, "r": float(b["radius"]) + 0.3, "y": h(pos.x, pos.y) + 0.02})
+	return out
 
 func _make_building(b: Dictionary, mode: String) -> void:
 	var id: int = b["id"]
@@ -480,6 +580,8 @@ func _make_building(b: Dictionary, mode: String) -> void:
 	if mode == "inst":
 		meta["h"] = inst.add(tpl, xf)
 		inst.set_hidden(meta["h"], "Interior", not bool(meta["glass_roof"]))
+		inst.set_hidden(meta["h"], "Tall", not bool(meta["glass_roof"]))
+		inst.set_hidden(meta["h"], "WallsIn", not bool(meta["glass_roof"]))
 		inst.set_hidden(meta["h"], "Lights", true)
 		inst.set_hidden(meta["h"], "Scaffold", true)
 		_apply_level(b, meta)
@@ -589,6 +691,8 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 				inst.set_extra(hnd, g, xf)
 	if not bool(meta["glass_roof"]):
 		inst.set_hidden(hnd, "Interior", o <= 0.0)
+		inst.set_hidden(hnd, "Tall", o <= 0.0)
+		inst.set_hidden(hnd, "WallsIn", o <= 0.0)
 
 func _has_trays(b: Dictionary) -> bool:
 	return (b.get("trays", []) as Array).size() > 0
@@ -605,7 +709,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			_apply_level(b, meta)
 		# Roof cutaway: nearby roofs open when the camera is close; the selected one always.
 		if b["kind"] != "link" or b["def"] == "corridor":
-			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0
+			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0 and not _no_cutaway
 			var want: float = 1.0 if (near or (selected_kind == "building" and selected_id == id)) else 0.0
 			var o: float = float(meta["open"])
 			if o != want:
@@ -614,7 +718,9 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 		# Rotor spins with the real wind.
 		if (meta["tpl"]["groups"] as Dictionary).has("Rotor"):
 			var w: float = float(sim.state["env"].get("wind", 3.0))
-			meta["rotor"] = fmod(float(meta["rotor"]) + delta * (0.3 + w * 0.55) * (1.0 if b["state"] == "active" else 0.0), TAU)
+			# A wind storm spins the rotors up (state.env.wind_mult, V3 §4.5).
+			var wm: float = float(sim.state["env"].get("wind_mult", 1.0))
+			meta["rotor"] = fmod(float(meta["rotor"]) + delta * (0.3 + w * 0.55) * wm * (1.0 if b["state"] == "active" else 0.0), TAU)
 			inst.set_extra(hnd, "Rotor", Transform3D(Basis(meta["tpl"]["rotor_axis"], float(meta["rotor"])), Vector3.ZERO))
 		# Lamps switch on one by one at dusk; comms-tower beacons blink.
 		var lit: bool = sky.night > float(meta["light_th"]) and b["state"] == "active"
@@ -777,6 +883,61 @@ func _make_cable(b: Dictionary, meta: Dictionary, mode: String) -> void:
 		for hh in meta["handles"]:
 			inst.set_custom(hh, Color(0.4, 0.8, 1.0))
 
+## Meteor fragments: ART-HAB's prop when it exists, else a procedural cluster.
+func _fragment_tpl() -> Dictionary:
+	for mid in ["meteor_fragments", "fragment_pile", "fragments", "meteor_fragment"]:
+		if Models.has_model(mid):
+			return Models.prop([mid], 1.2, "exterior", "space")
+	if _cable_tpl_cache.has("frag"):
+		return _cable_tpl_cache["frag"]
+	var root := Node3D.new()
+	var rock := StandardMaterial3D.new()
+	rock.resource_name = "HullDark"
+	rock.albedo_color = Color("2a2522")
+	rock.roughness = 0.35
+	rock.metallic = 0.45
+	var glow := StandardMaterial3D.new()
+	glow.resource_name = "Glow"
+	glow.albedo_color = Color("b58cff")
+	glow.emission_enabled = true
+	glow.emission = Color("a070ff")
+	glow.emission_energy_multiplier = 2.2
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4040
+	for i in 7:
+		var mi := MeshInstance3D.new()
+		mi.name = "Base_%d" % i
+		var sm := SphereMesh.new()
+		sm.radius = rng.randf_range(0.25, 0.55)
+		sm.height = sm.radius * rng.randf_range(1.0, 1.5)
+		sm.radial_segments = 7
+		sm.rings = 4
+		sm.material = rock
+		mi.mesh = sm
+		var a: float = TAU * i / 7.0
+		mi.position = Vector3(cos(a) * rng.randf_range(0.3, 1.1), sm.height * 0.3, sin(a) * rng.randf_range(0.3, 1.1))
+		mi.rotation = Vector3(rng.randf() * 0.6, rng.randf() * TAU, rng.randf() * 0.6)
+		root.add_child(mi)
+	for i in 5:
+		var cr := MeshInstance3D.new()
+		cr.name = "Base_crystal_%d" % i
+		var pm := CylinderMesh.new()
+		pm.top_radius = 0.0
+		pm.bottom_radius = rng.randf_range(0.08, 0.16)
+		pm.height = rng.randf_range(0.5, 1.1)
+		pm.radial_segments = 5
+		pm.rings = 1
+		pm.material = glow
+		cr.mesh = pm
+		var a2: float = rng.randf() * TAU
+		cr.position = Vector3(cos(a2) * rng.randf_range(0.1, 0.8), pm.height * 0.4, sin(a2) * rng.randf_range(0.1, 0.8))
+		cr.rotation = Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
+		root.add_child(cr)
+	var tpl: Dictionary = Models._parse(root, "proc:fragments")
+	root.free()
+	_cable_tpl_cache["frag"] = tpl
+	return tpl
+
 var _cable_tpl_cache := {}
 func _cable_tpl() -> Dictionary:
 	if _cable_tpl_cache.has("seg"):
@@ -849,7 +1010,7 @@ func _cable_post_tpl() -> Dictionary:
 
 # ---------------------------------------------------------------- status: icons and the few labels that matter
 const ICON := {"no_power": 0, "no_water": 1, "no_air": 2, "broken": 3, "output_blocked": 4, "deposit_empty": 5, "materials": 6,
-	"suit_range": 7, "off": 8, "building": 9, "unreachable": 7, "no_reservoir": 1, "demolish": 11, "alert": 10}
+	"suit_range": 7, "off": 8, "building": 9, "unreachable": 7, "no_reservoir": 1, "demolish": 11, "alert": 10, "wear": 3}
 const ICON_COLOR := {"no_power": Color("ffb547"), "no_water": Color("3ee0ff"), "no_air": Color("ff5a5f"), "broken": Color("ff5a5f"),
 	"output_blocked": Color("ffb547"), "deposit_empty": Color("ffb547"), "materials": Color("3ee0ff"), "suit_range": Color("ff5a5f"),
 	"off": Color("9aa3ad"), "building": Color("ffd166"), "unreachable": Color("ff5a5f"), "no_reservoir": Color("ffb547"), "demolish": Color("ff5a5f"), "alert": Color("ffb547")}
@@ -872,6 +1033,11 @@ func _status(b: Dictionary) -> Dictionary:
 	if state == "building":
 		return {"code": "building", "progress": clampf(float(b["progress"]) / maxf(1.0, float(b["work_total"])), 0.0, 1.0)}
 	if state == "broken":
+		# V3 breakdowns: the fault type (hazards wear record) names what the repair needs.
+		var wr: Dictionary = _wear_of(int(b["id"]))
+		if not wr.is_empty() and bool(wr.get("broken", false)):
+			var fault: String = String(wr.get("fault", "mechanical"))
+			return {"code": "broken", "text": "BROKEN: " + fault.to_upper(), "color": FAULT_COLOR.get(fault, Color("ff5a5f"))}
 		return {"code": "broken", "text": "BROKEN"}
 	if state != "active" or b["kind"] == "link" or b["def"] == "meridian":
 		return {}
@@ -887,7 +1053,25 @@ func _status(b: Dictionary) -> Dictionary:
 		"deposit_empty": return {"code": "deposit_empty"}
 	if b["kind"] == "room" and not sim.util.building_supplied(b["id"]):
 		return {"code": "no_air"}
+	if bool(b.get("breach", false)):
+		return {"code": "no_air", "text": "HULL BREACH"}
+	# Worn machines above the forecast share of their failure threshold (V3 §4.3).
+	var w2: Dictionary = _wear_of(int(b["id"]))
+	if not w2.is_empty() and float(w2.get("fail_at", 100.0)) > 0.0 and float(w2.get("w", 0.0)) >= float(w2.get("fail_at", 100.0)) * 0.75:
+		return {"code": "wear", "text": "WORN %d%%" % int(round(100.0 * float(w2["w"]) / float(w2["fail_at"]))), "color": Color("ffb547")}
 	return {}
+
+const FAULT_COLOR := {"mechanical": Color("ff9f1c"), "electrical": Color("3ee0ff"), "seal": Color("a78bfa")}
+
+func _wear_of(bid: int) -> Dictionary:
+	var hz = sim.state.get("hazards", {})
+	if not (hz is Dictionary):
+		return {}
+	var wear = (hz as Dictionary).get("wear", {})
+	if not (wear is Dictionary):
+		return {}
+	var rec = (wear as Dictionary).get(bid, (wear as Dictionary).get(str(bid), {}))
+	return rec if rec is Dictionary else {}
 
 func _sync_status() -> void:
 	var blds: Dictionary = sim.state["buildings"]
@@ -906,7 +1090,12 @@ func _sync_status() -> void:
 		if b["def"] == "cable":
 			pos = to3(b["pos"], 1.4)
 		var urgent: bool = code in ["no_air", "broken", "suit_range", "no_power"]
-		list.append({"pos": pos, "icon": ICON.get(code, 10), "color": ICON_COLOR.get(code, Color("ffb547")), "progress": float(st.get("progress", 0.0)), "pulse": 1.0 if urgent else 0.0})
+		# Zoomed far out over the big map the badges would hide the colony: only urgent
+		# ones up to 320 m, none beyond (the alert list still has every one).
+		if camera_distance > 320.0 or (camera_distance > 180.0 and (not urgent or code == "no_power")):
+			continue
+		var icol: Color = st.get("color", ICON_COLOR.get(code, Color("ffb547")))
+		list.append({"pos": pos, "icon": ICON.get(code, 10), "color": icol, "progress": float(st.get("progress", 0.0)), "pulse": 1.0 if urgent else 0.0})
 		var text: String = String(st.get("text", ""))
 		var show_text: bool = text != "" and (camera_distance < 75.0 or (selected_kind == "building" and selected_id == id)) and code != "materials" or (code == "materials" and text != "" and camera_distance < 45.0)
 		if show_text:
@@ -925,7 +1114,7 @@ func _sync_status() -> void:
 				add_child(lab)
 				_labels[id] = lab
 			lab.text = text
-			lab.modulate = (ICON_COLOR.get(code, Color("ffb547")) as Color).lerp(Color.WHITE, 0.45)
+			lab.modulate = (st.get("color", ICON_COLOR.get(code, Color("ffb547"))) as Color).lerp(Color.WHITE, 0.45)
 			lab.position = pos + Vector3(0, -0.2, 0)
 			lab.offset = Vector2(0, -26)
 	for id in _labels.keys():
@@ -1077,7 +1266,18 @@ func _drop_agent(id: int) -> void:
 		inst.remove(meta["crate"])
 	ameta.erase(id)
 
+## Where every colonist body is now (doors open for them).
+func _body_points() -> Array:
+	if npc != null and npc.any_active():
+		return npc.body_points()
+	var out: Array = []
+	for id in ameta:
+		out.append(ameta[id]["pos"])
+	return out
+
 func agent_world_pos(id: int):
+	if npc != null and npc.any_active():
+		return npc.body_pos(id)
 	if ameta.has(id):
 		return ameta[id]["pos"]
 	return null
@@ -1097,7 +1297,11 @@ func _sync_piles() -> void:
 		var p: Vector2 = iv["pos"]
 		var base: Vector3 = to3(p, 0.0)
 		var handles: Array = []
-		if bool(iv.get("pod", false)):
+		if bool(iv.get("fragment", false)):
+			# A meteor fragment site (V3 §4.3): dark glassy stones with glowing exotic shards.
+			var yawf: float = Rng.hash2(id, 5, 1) * TAU
+			handles.append(inst.add(_fragment_tpl(), Transform3D(Basis(Vector3.UP, yawf), base)))
+		elif bool(iv.get("pod", false)):
 			var pod_tpl: Dictionary = Models.prop(["supply_pod", "pod"], 1.0, "exterior", "logistics")
 			var yaw: float = Rng.hash2(id, 5, 1) * TAU
 			handles.append(inst.add(pod_tpl, Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3(1, 0, 0), 0.12), base)))
@@ -1163,8 +1367,12 @@ func _make_outline(id: int) -> Node3D:
 	var m := ShaderMaterial.new()
 	m.shader = OUTLINE_SHADER
 	for p in tpl["parts"]:
+		if bool(p.get("shadow_only", false)):
+			continue
 		var g: String = p["group"]
-		if g in ["Interior", "Lights", "Rotor", "Scaffold", "EngineGlow", "Plasma"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))):
+		# Wall segments are left out: the outline shader does not know the doorway mask, so
+		# hidden segments would show as cyan shells (critic round 2).
+		if g in ["Interior", "Lights", "Rotor", "Scaffold", "EngineGlow", "Plasma", "Walls", "WallsIn", "Tall"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))):
 			continue
 		if g.length() == 2 and g[0] == "L" and int(g[1]) > lvl:
 			continue
@@ -1231,7 +1439,40 @@ func pick(p: Vector2, include_agents: bool = true) -> Dictionary:
 func set_overlay(name: String) -> void:
 	overlay = name
 	terrain.set_walk_overlay(name == "walk")
-	overlays.set_mode(name if name != "walk" else "")
+	var hz_ok: bool = terrain.set_hazard_overlay(name == "hazard", _hazard_fn())
+	if name == "hazard" and not hz_ok:
+		_log_once("hazard_overlay", "RENDER: hazard overlay needs sim.world.hazard_at(pos) or sim.hazards.zone_at(pos); not there yet")
+	overlays.set_mode(name if name in ["power", "water", "air"] else "")
+
+## The hazard zone field of V3 §1: sim.world.hazard_at(pos) (or sim.hazards.zone_at).
+func _hazard_fn() -> Callable:
+	if sim.world != null and sim.world.has_method("hazard_at"):
+		return Callable(sim.world, "hazard_at")
+	var hz = sim.get("hazards")
+	if hz != null and hz is Object and (hz as Object).has_method("zone_at"):
+		return Callable(hz, "zone_at")
+	return Callable()
+
+var _logged := {}
+func _log_once(key: String, text: String) -> void:
+	if _logged.has(key):
+		return
+	_logged[key] = true
+	print(text)
+
+## The camera may zoom out to see the whole map (about 450 m on the 810 m map, V3 §1).
+var _range_set := -1
+func _camera_range() -> void:
+	var gn: int = int(sim.world.size)
+	if _range_set == gn:
+		return
+	var r = rig()
+	if r == null:
+		return
+	_range_set = gn
+	r.max_distance = clampf(gn * 0.56, 200.0, 460.0)
+	if r.camera != null:
+		r.camera.far = maxf(1400.0, gn * 1.6 + 1300.0)
 
 # ---------------------------------------------------------------- placement ghost (§12)
 ## A holographic ghost of `def_id` at sim position `pos`, rotation `rot` (sim radians).
@@ -1257,6 +1498,8 @@ func set_quality(level: int) -> void:
 		terrain.set_quality(quality)
 	if fx != null:
 		fx.set_quality(quality)
+	if interior != null:
+		interior.set_quality(quality)
 	if inst != null:
 		inst.set_shadows(quality >= 1)
 	if post != null:
@@ -1271,6 +1514,22 @@ func set_quality(level: int) -> void:
 func set_time_override(sec: float) -> void:
 	time_override = sec
 
+## Interior view of a room (UI "interior <id>", V3 §8): select it (the roof opens) and frame
+## it from a medium angle; the room stays open while selected.
+func open_interior(id: int) -> void:
+	if not sim.state["buildings"].has(id):
+		return
+	var b: Dictionary = sim.state["buildings"][id]
+	select("building", id)
+	var r = rig()
+	if r != null:
+		r.jump_to(to3(b["pos"]))
+		r.target_distance = clampf(float(b["radius"]) * 2.8 + 8.0, 14.0, 45.0)
+		r.pitch = deg_to_rad(58.0)
+	if bmeta.has(id) and bmeta[id]["mode"] == "inst" and b["kind"] != "link":
+		bmeta[id]["open"] = 1.0
+		_apply_roof(b, bmeta[id])
+
 ## Camera shake and a short flash for big moments (optional hook).
 func focus_event(kind: String, id: int = -1) -> void:
 	match kind:
@@ -1280,8 +1539,10 @@ func focus_event(kind: String, id: int = -1) -> void:
 			post.flash(0.12)
 		"breach", "death":
 			_shake = 0.5
+	if not shake_enabled:
+		_shake = 0.0
 	var r = rig()
-	if r != null and r.has_method("shake"):
+	if r != null and r.has_method("shake") and shake_enabled:
 		r.shake(_shake)
 
 # ---------------------------------------------------------------- measurement and the debug hook
@@ -1308,6 +1569,11 @@ func stats() -> Dictionary:
 		"setup_ms": snappedf(_setup_ms, 0.1),
 		"terrain": terrain.timings if terrain != null else {},
 		"prof": _prof_snapshot(),
+		"npc": npc.stats() if npc != null else {},
+		"doors": doors.stats if doors != null else {},
+		"interior": interior.stats if interior != null else {},
+		"hazards": hazards.stats if hazards != null else {},
+		"lod": terrain.lod_counts if terrain != null else [],
 	}
 
 func _prof_snapshot() -> Dictionary:
@@ -1404,23 +1670,320 @@ func debug_cmd(text: String) -> String:
 			focus_event("liftoff")
 		"stats":
 			return JSON.stringify(stats())
+		"npc":
+			# npc fixture | glb : the procedural test rig or the real GLBs (test only).
+			npc_fixture = w.size() > 1 and w[1] == "fixture"
+			npc.setup(self, npc_fixture)
+			for id in ameta.keys():
+				_drop_agent(id)
+			return JSON.stringify(npc.stats())
+		"use":
+			# Test staging (view only): use <agent id> <kind> <building> <i> <pose> <act> | use clear
+			#   | use fill <building>: every colonist inside that room takes a bed, seat, work or stand anchor.
+			if w.size() > 1 and w[1] == "clear":
+				npc.forced_use = {}
+				return "ok"
+			if w.size() > 2 and (w[1] == "nth" or w[1] == "clearone" or w[1] == "nthout"):
+				# use nth <n> <kind> <b> <i> <pose> <act> | use clearone <n>: the n-th living colonist by id.
+				var ids3: Array = []
+				for aid3 in sim.state["agents"]:
+					if sim.state["agents"][aid3]["state"] == "alive" and (w[1] != "nthout" or sim.state["agents"][aid3]["where"] == "out"):
+						ids3.append(aid3)
+				ids3.sort()
+				var nn: int = int(w[2])
+				if nn >= ids3.size():
+					return "none"
+				if w[1] == "clearone":
+					npc.forced_use.erase(int(ids3[nn]))
+					return "cleared %d" % int(ids3[nn])
+				npc.forced_use[int(ids3[nn])] = {"kind": w[3], "b": int(w[4]), "i": int(w[5]), "pose": w[6], "act": w[7]}
+				return "agent %d" % int(ids3[nn])
+			if w.size() > 2 and w[1] == "fill":
+				var bid: int = int(w[2])
+				var kinds := [["bed", "lie", "sleep"], ["bed", "lie", "sleep"], ["seat", "sit", "eat"], ["seat", "sit", "relax"], ["work", "stand", "work"], ["stand", "stand", "talk"], ["bed", "lie", "sleep"], ["seat", "sit", "eat"]]
+				var n := 0
+				var used := {}
+				var ids: Array = sim.state["agents"].keys()
+				ids.sort()
+				for aid in ids:
+					var ag: Dictionary = sim.state["agents"][aid]
+					if ag["state"] != "alive" or n >= kinds.size():
+						continue
+					var k: Array = kinds[n]
+					var i: int = int(used.get(k[0], 0))
+					used[k[0]] = i + 1
+					npc.forced_use[int(aid)] = {"kind": k[0], "b": bid, "i": i, "pose": k[1], "act": k[2]}
+					n += 1
+				return "%d staged" % n
+			if w.size() >= 7:
+				npc.forced_use[int(w[1])] = {"kind": w[2], "b": int(w[3]), "i": int(w[4]), "pose": w[5], "act": w[6]}
+				return "ok"
+			return "use <agent> <kind> <b> <i> <pose> <act> | use fill <b> | use clear"
+		"find":
+			# find <def> [n]: id and position of the n-th structure of a type (tests and shots).
+			# find <id>: id and position of that structure.
+			if w[1].is_valid_int() and sim.state["buildings"].has(int(w[1])):
+				var bq: Dictionary = sim.state["buildings"][int(w[1])]
+				return "%d %.1f %.1f" % [int(w[1]), bq["pos"].x, bq["pos"].y]
+			var n2: int = int(w[2]) if w.size() > 2 else 0
+			var ids2: Array = sim.state["buildings"].keys()
+			ids2.sort()
+			for bid in ids2:
+				var bb: Dictionary = sim.state["buildings"][bid]
+				if bb["def"] == w[1]:
+					if n2 > 0:
+						n2 -= 1
+						continue
+					return "%d %.1f %.1f" % [bid, bb["pos"].x, bb["pos"].y]
+			return "none"
+		"defs":
+			# defs: structure types in the colony with their count (tests and shots).
+			var cnt := {}
+			for bid in sim.state["buildings"]:
+				var dn: String = sim.state["buildings"][bid]["def"]
+				cnt[dn] = int(cnt.get(dn, 0)) + 1
+			return str(cnt)
+		"craters":
+			# craters: sim craters with the distance to the nearest structure centre (tests).
+			var o2: Array = []
+			if hazards != null and hazards._hz != null:
+				for c in hazards._hz.craters():
+					var cp := Vector2(float(c["x"]), float(c["y"]))
+					var best := 1e9
+					for bid in sim.state["buildings"]:
+						best = minf(best, cp.distance_to(sim.state["buildings"][bid]["pos"]))
+					o2.append("%.0f,%.0f r%.1f near%.1f" % [cp.x, cp.y, float(c["r"]), best])
+			return str(o2)
+		"doors":
+			# doors <room id> 1|0: hold that room's doors open (tests and shots; view only).
+			if w.size() > 2 and w[2] == "1":
+				doors.force_open[int(w[1])] = true
+			else:
+				doors.force_open.erase(int(w[1]))
+			var dl: Array = []
+			for d in doors.doors:
+				if int(d["room"]) == int(w[1]) or int(d["link"]) == int(w[1]):
+					dl.append("r%d l%d o%.2f" % [int(d["room"]), int(d["link"]), float(d["open"])])
+			return str(dl) + " rebuilds " + str(doors.stats.get("rebuilds", 0)) + " flips " + str(_mode_flips)
+		"hzdebug":
+			return JSON.stringify(hazards._cached_events.map(func(e): return {"id": e["id"], "kind": e["kind"], "phase": e["phase"], "eta": e["eta_s"]}))
+		"drawlist":
+			# Measurement: estimated draw calls by owner (visible surfaces; x2 for shadow casters).
+			var acc := {}
+			var stack: Array = [self]
+			while not stack.is_empty():
+				var nd: Node = stack.pop_back()
+				for ch in nd.get_children():
+					stack.append(ch)
+				if not (nd is GeometryInstance3D) or not (nd as Node3D).is_visible_in_tree():
+					continue
+				var mesh: Mesh = null
+				if nd is MeshInstance3D:
+					mesh = (nd as MeshInstance3D).mesh
+				elif nd is MultiMeshInstance3D and (nd as MultiMeshInstance3D).multimesh != null:
+					var mmx: MultiMesh = (nd as MultiMeshInstance3D).multimesh
+					if mmx.instance_count == 0 or mmx.visible_instance_count == 0:
+						continue
+					mesh = mmx.mesh
+				if mesh == null:
+					continue
+				var gi: GeometryInstance3D = nd
+				var sc: int = mesh.get_surface_count()
+				var d: int = (0 if gi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY else sc) + (sc if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF else 0)
+				var key: String = String(nd.name).get_slice("_", 0) if nd.get_parent() == inst else String(nd.get_parent().name)
+				if nd.get_parent() == inst:
+					var nm: String = String(nd.name)
+					key = "inst:" + (nm.substr(nm.rfind("_") + 1) if not nm.ends_with("_shadow") else "shadowproxy")
+				if w.size() > 1 and key == w[1]:
+					key = "%s/%s" % [key, nd.name]
+				acc[key] = int(acc.get(key, 0)) + d
+			var arr: Array = []
+			for k in acc:
+				arr.append([acc[k], k])
+			arr.sort_custom(func(x, y): return x[0] > y[0])
+			var total := 0
+			for e in arr:
+				total += int(e[0])
+			if w.size() > 1:
+				arr = arr.filter(func(e): return String(e[1]).begins_with(w[1] + "/"))
+				for e in arr:
+					e[1] = String(e[1]).substr(w[1].length() + 1)
+			return "total %d | %s" % [total, str(arr.slice(0, 80))]
+		"probe_mesh":
+			# Measurement only: can this platform read mesh data back? (V3 walls, astronauts)
+			var ps = load("res://assets/models/%s.glb" % (w[1] if w.size() > 1 else "habitat_m"))
+			if ps == null:
+				return "no model"
+			var root: Node = (ps as PackedScene).instantiate()
+			var out2 := []
+			for mi in Models.meshes(root):
+				var m3: MeshInstance3D = mi
+				if m3.mesh == null or out2.size() > 3:
+					continue
+				var arr: Array = m3.mesh.surface_get_arrays(0)
+				var sd: Dictionary = RenderingServer.mesh_get_surface(m3.mesh.get_rid(), 0)
+				out2.append("%s: arrays %d verts, faces %d, rs vertex_data %d bytes, format %d, compressed %s" % [m3.name, (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() if arr.size() > 0 and arr[0] != null else -1,
+					m3.mesh.get_faces().size(), (sd.get("vertex_data", PackedByteArray()) as PackedByteArray).size(), int(sd.get("format", 0)), str((int(sd.get("format", 0)) & Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES) != 0)])
+			var st2 := SurfaceTool.new()
+			st2.begin(Mesh.PRIMITIVE_TRIANGLES)
+			for q in [Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0)]:
+				st2.add_vertex(q)
+			var am: ArrayMesh = st2.commit()
+			out2.append("surfacetool mesh: %d verts back" % (am.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size())
+			root.free()
+			return " | ".join(out2)
+		"bigmap":
+			# Test aid until SIM stores map_size (V3 1): a new game on a bigger map.
+			var main = get_parent()
+			var sz: int = int(w[1]) if w.size() > 1 else 810
+			for sc in sim.content["scenarios"]:
+				sim.content["scenarios"][sc]["map_size"] = sz
+			sim.new_game(int(sim.state.get("seed", 1001)))
+			if main != null and main.has_method("_after_world_change"):
+				main._after_world_change()
+			return "map %d" % int(sim.world.size)
 		"agent":
 			# Follow the n-th living colonist (outside first if w[2] == "out").
-			var want_out: bool = w.size() > 2 and w[2] == "out"
+			var want_out: bool = w.size() > 2 and (w[2] == "out" or w[2] == "carrier")
+			var want_cargo: bool = w.size() > 2 and w[2] == "carrier"
 			var n: int = int(w[1])
 			for aid in sim.state["agents"]:
 				var a: Dictionary = sim.state["agents"][aid]
 				if a["state"] != "alive" or (want_out and a["where"] != "out"):
 					continue
+				if want_cargo and (int(a.get("inv", -1)) == -1 or (sim.inv.get_inv(a["inv"]).get("items", {}) as Dictionary).is_empty()):
+					continue
+				# agent <n> corridor | fast: in a corridor, or moving at run pace (body speed).
+				if w.size() > 2 and w[2] == "corridor":
+					var cb: int = int(a.get("bld", -1))
+					if a["where"] != "in" or not sim.state["buildings"].has(cb) or sim.state["buildings"][cb]["kind"] != "link":
+						continue
+				if w.size() > 2 and w[2] == "fastout" and a["where"] != "out":
+					continue
+				if w.size() > 3 and w[3] == "corr":
+					var cb2: int = int(a.get("bld", -1))
+					if not sim.state["buildings"].has(cb2) or sim.state["buildings"][cb2]["kind"] != "link":
+						continue
+				if w.size() > 2 and (w[2] == "fast" or w[2] == "fastout"):
+					var br = npc.agents.get(aid) if npc != null else null
+					if br == null or float(br["speed"]) < 2.8 or int(br["crate"]) != -1:
+						continue
 				if n > 0:
 					n -= 1
 					continue
 				var r5 = rig()
-				if r5 != null and ameta.has(aid):
+				if r5 != null and (ameta.has(aid) or (npc != null and npc.agents.has(aid))):
 					var captured: int = aid
 					r5.follow_fn = func(): return agent_world_pos(captured)
-				return "%s %s %s" % [a["name"], a["role"], a["where"]]
+					var jp = agent_world_pos(captured)
+					if jp != null:
+						r5.jump_to(jp)
+				return "%s %s %s id%d" % [a["name"], a["role"], a["where"], int(aid)]
 			return "none"
+		"npcpose":
+			# npcpose <agent id>: the body record (tests).
+			if npc == null or not npc.agents.has(int(w[1])):
+				return "none"
+			var nr: Dictionary = npc.agents[int(w[1])]
+			var rp: Vector3 = nr["pos"]
+			var rr: int = npc._room_at(Vector2(rp.x, rp.z))
+			if w.size() > 2 and w[2] == "room":
+				if rr < 0:
+					return "no room"
+				var rm2 = bmeta.get(rr)
+				return "room %d %s aisles %d slots %d" % [rr, sim.state["buildings"][rr]["def"], npc._aisles_of(rm2).size() if rm2 != null else -1, npc._slots_of(rm2).size() if rm2 != null else -1]
+			return "var=%s mode=%s speed=%.2f pos=%s off=%s pose=%s gr=%.3f" % [nr["var"], nr["mode"], float(nr["speed"]), str(nr["pos"]), str(nr.get("off", Vector3.ZERO)), str(nr["sm"].pose()), npc.game_rate]
+		"npccpu":
+			npc.force_cpu = w.size() > 1 and w[1] == "1"
+			return "ok"
+		"runto":
+			# runto <agent id> <x> <y> <m/s> | runto clear: test staging, the body goes straight there.
+			if w[1] == "clear":
+				npc.forced_goto = {}
+			else:
+				npc.forced_goto[int(w[1])] = [Vector2(float(w[2]), float(w[3])), float(w[4]) if w.size() > 4 else 3.4]
+			return "ok"
+		"doorpos":
+			# doorpos <room id>: world x z of each doorway of that room and its open value (tests).
+			var dp: Array = []
+			for d in doors.doors:
+				if int(d["room"]) == int(w[1]):
+					dp.append("%.2f %.2f %.2f" % [(d["pos"] as Vector3).x, (d["pos"] as Vector3).z, float(d["open"])])
+			return ",".join(dp)
+		"cutaway":
+			# cutaway 0|1: 0 keeps every roof on at close zoom (roof-on shots); 1 is normal.
+			_no_cutaway = w.size() > 1 and w[1] == "0"
+			return "ok"
+		"ilights":
+			interior.lights_off = w.size() > 1 and w[1] == "0"
+			return "ok"
+		"npcput":
+			# npcput <agent id> <x> <z>: test staging, puts the drawn body there (it then walks).
+			if npc == null or not npc.agents.has(int(w[1])):
+				return "none"
+			var pr: Dictionary = npc.agents[int(w[1])]
+			var pp := Vector2(float(w[2]), float(w[3]))
+			var prr: int = npc._room_at(pp)
+			pr["pos"] = Vector3(pp.x, npc._floor_y(sim.state["buildings"][prr]) if prr >= 0 else h(pp.x, pp.y), pp.y)
+			pr["mode"] = "follow"
+			pr["path"] = []
+			pr["route"] = []
+			pr.erase("route_to")
+			return "ok"
+		"hazeprio":
+			hazards.haze_prio = int(w[1])
+			return "ok"
+		"hznodes":
+			var hl: Array = []
+			for ch in hazards.get_children():
+				if ch is MeshInstance3D:
+					var mm0 = (ch as MeshInstance3D).material_override
+					hl.append("%s vis%s pos%s sc%s prio%s glow%s" % [ch.name, str((ch as Node3D).is_visible_in_tree()), str((ch as Node3D).global_position.snappedf(0.1)), str((ch as Node3D).scale.snappedf(0.1)), str(mm0.render_priority if mm0 != null else -999), str(mm0.get_shader_parameter("glow") if mm0 is ShaderMaterial else "")])
+			return str(hl)
+		"testring":
+			# testring x z mode [prio]: a decal ring for render tests.
+			var tr := decal_ring(6.0, 0.0 if int(w[3]) != 0 else 0.8, 96, Color(1.0, 0.3, 0.22, 0.95), int(w[3]))
+			if not (w.size() > 6 and w[6] == "nodup"):
+				tr.material_override = (tr.material_override as ShaderMaterial).duplicate()
+			if w.size() > 4 and not (w.size() > 6 and w[6] == "nodup"):
+				(tr.material_override as ShaderMaterial).render_priority = int(w[4])
+			if w.size() > 5 and not (w.size() > 6 and w[6] == "nodup"):
+				(tr.material_override as ShaderMaterial).set_shader_parameter("glow", float(w[5]))
+			var hm0 = (tr.material_override as ShaderMaterial).get_shader_parameter("heightmap")
+			tr.set_meta("dbg", "hm %s hn %s hs %s" % [str(hm0), str((tr.material_override as ShaderMaterial).get_shader_parameter("hn")), str((tr.material_override as ShaderMaterial).get_shader_parameter("hstep"))])
+			tr.position = Vector3(float(w[1]), 0, float(w[2]))
+			add_child(tr)
+			return tr.get_meta("dbg")
+		"decalinfo":
+			var dl2: Array = []
+			for ch in get_children():
+				if ch is MeshInstance3D and (ch as MeshInstance3D).material_override is ShaderMaterial and ((ch as MeshInstance3D).material_override as ShaderMaterial).shader == DECAL_SHADER:
+					var mi5: MeshInstance3D = ch
+					dl2.append("%s vis%s gp%s sc%s aabb%s prio%d col%s icol%s layers%d" % [mi5.name, str(mi5.is_visible_in_tree()), str(mi5.global_position.snappedf(0.1)), str(mi5.scale.snappedf(0.1)), str(mi5.get_aabb()), mi5.material_override.render_priority, str(mi5.material_override.get_shader_parameter("color")), str(mi5.get_instance_shader_parameter("icolor")), mi5.layers])
+			return str(dl2)
+		"followid":
+			# followid <agent id>: the camera follows that body (tests and shots).
+			var r6 = rig()
+			var fa: int = int(w[1])
+			if r6 != null:
+				r6.follow_fn = func(): return agent_world_pos(fa)
+				var jp2 = agent_world_pos(fa)
+				if jp2 != null:
+					r6.jump_to(jp2)
+			return "ok"
+		"timescale":
+			# timescale <x>: Engine.time_scale (frame strips: 0.1 = 10x slower, game and view).
+			Engine.time_scale = clampf(float(w[1]), 0.01, 4.0)
+			return "ok"
+		"vtime":
+			# vtime: view time in game seconds, and the followed body speed (frame strips).
+			var rv = rig()
+			var fo: String = ""
+			if rv != null:
+				fo = " focus %s follow %s" % [str(rv.focus.snappedf(0.1)), str(rv.follow_fn.is_valid())]
+				if rv.follow_fn.is_valid():
+					fo += " body %s" % str(rv.follow_fn.call())
+			return "%.4f sim %.4f gr %.3f%s" % [_time, sim.seconds(), game_rate, fo]
 		"findstate":
 			# Focus the camera on the first structure in a state (blueprint, building, ...).
 			for id in sim.state["buildings"]:
@@ -1431,6 +1994,58 @@ func debug_cmd(text: String) -> String:
 						r4.jump_to(to3(b["pos"]))
 					return "%s %d mode=%s" % [b["def"], id, bmeta[id]["mode"] if bmeta.has(id) else "-"]
 			return "none"
+		"shipinfo":
+			# shipinfo: per ship group, its meshes as surfaces:cast_shadow (tests).
+			if ship == null or ship.body == null:
+				return "no ship"
+			if w.size() > 1:
+				# shipinfo orig|proxy|none: which meshes cast the ship shadow (A/B test).
+				for g in ship.body.get_children():
+					for mi in g.get_children():
+						if mi is MeshInstance3D:
+							var gi3: MeshInstance3D = mi
+							var is_px: bool = gi3.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY or gi3.has_meta("px")
+							if is_px:
+								gi3.set_meta("px", true)
+								gi3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if w[1] == "proxy" else (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if w[1] == "show" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
+								gi3.visible = w[1] == "proxy" or w[1] == "show"
+								if w[1] == "proxy" and w.size() > 2:
+									var pmx := StandardMaterial3D.new()
+									pmx.cull_mode = BaseMaterial3D.CULL_DISABLED if w[2] == "two" else BaseMaterial3D.CULL_FRONT
+									gi3.material_override = pmx
+							else:
+								gi3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if w[1] == "orig" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+								gi3.visible = w[1] != "show"
+			var so := ""
+			var hull_g = ship.body.get_node_or_null("Hull")
+			if hull_g != null:
+				for mi in hull_g.get_children():
+					var mh: Mesh = (mi as MeshInstance3D).mesh
+					for si in mh.get_surface_count():
+						var smm: Material = mh.surface_get_material(si)
+						var cls: String = smm.get_class() if smm != null else "null"
+						var cull := -1
+						if smm is BaseMaterial3D:
+							cull = (smm as BaseMaterial3D).cull_mode
+						var srcm = smm.get_meta("src") if smm != null and smm.has_meta("src") else null
+						so += "[%s %s cull%d src=%s n=%d] " % [smm.resource_name if smm != null else "", cls, cull, str(srcm.get_class() if srcm != null else ""), mh.surface_get_array_len(si)]
+				so += " || "
+			for g in ship.body.get_children():
+				so += "%s(%s):" % [g.name, str((g as Node3D).is_visible_in_tree())]
+				for mi in g.get_children():
+					if mi is MeshInstance3D:
+						var mm3: Mesh = (mi as MeshInstance3D).mesh
+						var vc := 0
+						var tr := ""
+						for si in mm3.get_surface_count():
+							vc += mm3.surface_get_array_len(si)
+							var sm: Material = mm3.surface_get_material(si)
+							var sm_src = sm.get_meta("src") if sm != null and sm.has_meta("src") else sm
+							if sm_src is BaseMaterial3D and (sm_src as BaseMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+								tr += "T"
+						so += "%d/%d/v%d%s/%s/%s," % [mm3.get_surface_count(), (mi as MeshInstance3D).cast_shadow, vc, tr, str(mm3.get_aabb().size.snappedf(0.01)), str(mm3.surface_get_format(0) & Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES != 0)]
+				so += " "
+			return so
 		"nodeinfo":
 			var nid: int = int(w[1])
 			if not bmeta.has(nid) or bmeta[nid]["node"] == null:

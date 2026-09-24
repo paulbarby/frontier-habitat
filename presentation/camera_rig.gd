@@ -18,10 +18,12 @@ var bounds := Rect2(0, 0, 256, 256)
 var height_fn: Callable
 var edge_pan := false
 var follow_fn: Callable      # returns Vector3 or null
+var _mouse_seen := false     # a real mouse motion arrived (edge pan waits for it)
 var ui_blocks_mouse := false
 var min_distance := 9.0
 var max_distance := 200.0
 var pan_speed := 1.0         # settings: multiplies keyboard / edge pan and Q/E turn speed
+var shake_enabled := true    # settings "Camera shake" (UI): false = quakes and impacts do not move the camera
 
 var _orbiting := false
 var _yaw_t := yaw
@@ -76,9 +78,14 @@ func stop_photo() -> void:
 	_photo = false
 
 func shake(amount: float) -> void:
+	if not shake_enabled:
+		_shake = 0.0
+		return
 	_shake = maxf(_shake, amount)
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and (event as InputEventMouseMotion).relative.length() > 0.5:
+		_mouse_seen = true
 	if _intro >= 0.0 and ((event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed)):
 		_intro = -1.0
 
@@ -124,7 +131,9 @@ func _process(delta: float) -> void:
 			_yaw_t += delta * 1.4 * pan_speed
 		if Input.is_physical_key_pressed(KEY_E):
 			_yaw_t -= delta * 1.4 * pan_speed
-	if edge_pan and not ui_blocks_mouse and get_window().has_focus():
+	# Edge pan only after the mouse has really moved over the window: a pointer parked at
+	# (0, 0) (headless browser, a fresh tab) panned the view and cancelled follow (critic round 6).
+	if edge_pan and _mouse_seen and not ui_blocks_mouse and get_window().has_focus():
 		var mp: Vector2 = get_viewport().get_mouse_position()
 		var size: Vector2 = get_viewport().get_visible_rect().size
 		if mp.x >= 0 and mp.y >= 0 and mp.x <= size.x and mp.y <= size.y:
@@ -183,6 +192,8 @@ func _process(delta: float) -> void:
 	if height_fn.is_valid():
 		var gy: float = height_fn.call(clampf(eye.x, bounds.position.x, bounds.end.x), clampf(eye.z, bounds.position.y, bounds.end.y))
 		eye.y = maxf(eye.y, gy + 1.6)
+	if not shake_enabled:
+		_shake = 0.0
 	if _shake > 0.0:
 		_shake = move_toward(_shake, 0.0, delta * 1.5)
 		eye += Vector3(sin(_t * 31.0), sin(_t * 27.0 + 1.3), cos(_t * 29.0)) * _shake * 0.25 * clampf(distance / 60.0, 0.4, 2.0)

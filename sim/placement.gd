@@ -75,7 +75,7 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 		return String(allowed["code"])
 	var def: Dictionary = sim.sizes.def_for(def_id, size)
 	var r: float = float(def["radius"])
-	if not sim.world.in_map(pos, float(bal["map_margin"]) + r):
+	if not sim.world.in_map(pos, float(sim.world.margin) + r):
 		return "outside_map"
 	var blds: Dictionary = sim.state["buildings"]
 	for id in blds:
@@ -124,14 +124,14 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 			if b["kind"] != "link" and _hits_strip(probe, b["pos"], float(b["radius"])):
 				return "blocked_entrance"
 		var door: Vector2 = pos + Vector2(cos(rot), sin(rot)) * (r + 1.3)
-		if not sim.world.in_map(door, float(bal["map_margin"])) or _terrain_blocked(door):
+		if not sim.world.in_map(door, float(sim.world.margin)) or _terrain_blocked(door):
 			return "blocked_entrance"
 	# At least one outdoor access point must be open ground, or nobody can build it.
 	var open := 0
 	for k in 8:
 		var a: float = rot + k * TAU / 8.0 + 0.39
 		var p: Vector2 = pos + Vector2(cos(a), sin(a)) * (r + 1.1)
-		if sim.world.in_map(p, float(bal["map_margin"])) and not _terrain_blocked(p) and _free_of_structures(p, ignore_id):
+		if sim.world.in_map(p, float(sim.world.margin)) and not _terrain_blocked(p) and _free_of_structures(p, ignore_id):
 			open += 1
 	if open == 0:
 		return "blocked_entrance"
@@ -224,8 +224,9 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 		var used: Array = _corridor_dirs(room["id"])
 		if used.size() >= int(def.get("max_links", 4)):
 			return {"code": "ports_full"}
+		var min_angle: float = link_min_angle(room)
 		for d in used:
-			if rad_to_deg(absf((d as Vector2).angle_to(dirv))) < float(bal["link_min_angle_deg"]):
+			if rad_to_deg(absf((d as Vector2).angle_to(dirv))) < min_angle:
 				return {"code": "ports_full"}
 		if bool(def.get("airlock", false)):
 			var door := Vector2(cos(room["rot"]), sin(room["rot"]))
@@ -262,6 +263,13 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 		return {"code": "slope"}
 	var n10: int = maxi(1, int(ceil(length / 10.0)))
 	return {"code": "ok", "p0": p0, "p1": p1, "length": length, "cost": _scaled(bal["corridor_cost_per_10m"], n10)}
+
+## Smallest angle in degrees between two corridors on one room: the general
+## link_min_angle_deg (28), or the room's own "link_min_angle_deg" (junction 55, so two
+## corridor tubes of 2.36 m do not overlap outside its hub; V3, CRITIC measure). Only new
+## links are checked, so saves with closer corridors still load and work.
+func link_min_angle(room: Dictionary) -> float:
+	return float(sim.bd(room).get("link_min_angle_deg", sim.bal["link_min_angle_deg"]))
 
 func _shares_room(link: Dictionary, a_id: int, b_id: int) -> bool:
 	return link["a"] == a_id or link["b"] == a_id or link["a"] == b_id or link["b"] == b_id

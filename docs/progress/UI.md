@@ -103,3 +103,104 @@ Ambience follows day and night. Volumes per bus in Settings. Not listened to by 
 
 - Structures without a thumbnail show a glyph on a hexagon plate; thumbnails appear as ART lands them.
 - Medal pop-ups sit over open screens for their 4 s.
+
+## 2026-09-24 — version 3, milestone 1: alert toasts, hazards, research packs, maintenance
+
+Contract: `docs/V3_DESIGN.md` §2 and §8. SIM's hazard module (`sim.hazards`) did not exist
+during this work; everything reads the contract names with `has_method` / `.get()` and falls
+back safely. Research packs, lab focus and supply-run cargo use SIM's real code.
+
+| item | files | state |
+|---|---|---|
+| Alert toasts (§2) | `ui/hud/alert_gate.gd`, `ui/hud/watchers.gd`, `ui/hud/alerts_panel.gd` | done, tested |
+| Hazard panel + banner + Shelter (§8) | `ui/hud/hazard_panel.gd`, `ui/hud/hazard_banner.gd`, `ui/data.gd` | done; real data needs `sim.hazards` |
+| Research: packs, labs, focus, lock reasons | `ui/screens/research_screen.gd`, `ui/widgets/tech_node.gd`, `ui/widgets/focus_picker.gd` | done on SIM's real API |
+| Maintenance view | dashboard tab Hazards (`open hazards` / `open maintenance`), inspector wear row, Maintain now | done; real data needs `sim.hazards.at_risk` |
+| Inspector parts | assembler recipes (locks, water, automatic), turret, wear/fault/breach, Meridian cargo | done |
+| New colony hazards, camera shake | `ui/screens/newcolony_screen.gd`, `ui/settings.gd`, `settings_screen.gd`, `presentation/main.gd` | done |
+| Minimap 810 m | `ui/hud/minimap.gd` | done: image ≤ 360 px, Zoom (colony), hazard rings, hazard-zone overlay |
+| `__fh.cmd` | `presentation/main.gd` | `hazard`, `follow`, `goto`, `interior`, `uimock`, `alerts`, `shake`; boot `debug=1`, `hazards=` |
+| Icons | `tools/ui/make_icons.mjs` | +14: meteor, dust, quake, flare, dust_devil, wrench, shelter, turret, breach, pack_basic/applied/exotic, icat_science, hazard |
+
+### Alert toast rule (UI side)
+
+`ui/hud/alert_gate.gd`: a toast only for a new key at warning or critical; the same key never
+toasts again for 180 s after it cleared; notices never toast; only roots toast; `blocked:<id>`
+keys are one alert `output_blocked`. The alert cards use the same gate: stable order, and a key
+that cleared and came back stays as one card ("CLEARED", dimmed) until it has been clear 180 s.
+SIM's `live: false` (waiting `clear_after`) shows as "CLEARING". The "broken" log toast is gone
+(the alert toasts once instead).
+
+Test `node tools/godot.mjs script res://tools/ui/test_alert_gate.gd`: 17 of 17 pass.
+Part A (made-up streams): the v2 defect (blocked 3 s on, 1 s off, 300 s) gives 0 toasts as a
+notice and 1 toast as a warning, and the card never disappears; two harvesters blocked in turn
+= 1 toast; changing numbers in the text = 1 toast; back after 100 s = 1 toast, after 200 s =
+2; consequence promoted to root = no new toast; alert present at load = 0 toasts. Part B (real
+simulation, 300 s from each showcase save): no alert toasted twice, no card went and came back
+more than once.
+
+### Mock data
+
+`uimock hazards|maintenance|labs|all|off` (only with `debug=1`) fills the hazard, at-risk and
+lab rows with made-up values (places relative to the lander, real machines). The shots of the
+hazard panel, banner, Hazards page and the wear row use it. Never in play.
+
+### Screenshots (1600 x 900, `docs/shots/`)
+
+`ui3_hazard_panel.png` (panel + banner, mock), `ui3_hazards_page.png` (mock),
+`ui3_insp_wear.png` (wear row, Maintain now, banner above the build bar, mock),
+`ui3_insp_lab.png`, `ui3_insp_meridian.png`, `ui3_research_tree.png`, `ui3_research_labs.png`,
+`ui3_newcolony.png`, `ui3_settings.png` (real data).
+
+### Requests
+
+`docs/requests/UI-to-SIM.md` (hazard names to confirm; per-lab RP rate; set cargo without a
+flight; debug on a loaded save), `docs/requests/UI-to-RENDER.md` (`shake_enabled`,
+`open_interior`, overlay `hazard`).
+## 2026-09-24 — version 3, milestone 2: on SIM's real hazard code, measured
+
+SIM's `sim/hazards.gd` landed during this work. The UI now reads it directly:
+`forecast()` / `active()` (`eta_s`, `end_s`, `whole_map`, `countered`, `advice`), `info(bid)` (wear,
+fail_at, fault, item, eta_s, at_risk, breach, turret charge), `at_risk()`, `sheltered()`,
+`zone_at()`, `turret_range(b)`, and `load_state(state, {debug: true})` for `load=` + `debug=1`.
+Log toasts (once each): `hazard_detected`, `hazard_start`, `hazard_impact`, `hazard_intercepted`,
+`hazard_end`, `breach_sealed`, `shelter`, `survey`. Warnings, breaches and breakdowns come as
+SIM alerts and toast once through the gate.
+
+Checked in the web build (new colony, seed 1001, 810 m map, `debug=1`, commands
+`hazard meteor 470 380 2 45`, `hazard solar_flare ...`, `hazard quake ...`, `hazard wind_storm ...`):
+cards with real countdowns and advice, the banner under 30 s, Shelter → "End shelter" (SIM state),
+the impact toast "A meteor hit near Lander.", quake and meteor rings on the minimap, zone overlay,
+colony zoom. Shots: `ui3_hazard_real.png`, `ui3_banner_real.png`, `ui3_after_impact.png`,
+`ui3_minimap_810_hazard.png`, `ui3_minimap_810_zoom.png`, `ui3_hazards_page_real.png`,
+`ui3_cmd_interior.png`, `ui3_cmd_follow.png`.
+
+Automation: `idof <def>` / `idof agent [n]` return ids for `interior` and `follow`; `shelter on|off`;
+`minimap zoom|whole`. Tested: `interior 38` (habitat, roof open), `follow 16`, `goto 300 300`,
+`hazard meteor` without debug → "refused: start with debug=1".
+
+### HUD cost (showcase_late, 1600 x 900, paused, real GPU, capped at 60 fps)
+
+| build | HUD off | HUD on | HUD adds |
+|---|---|---|---|
+| v2 (`build/web`) | 890 draws | 1134 | +244 |
+| v3 (`build/web_ui`), no hazard | 877 | 1124 | +247 |
+| v3, hazard panel + banner + minimap rings (mock) | 877 | 1192 | +315 |
+
+Process time: 9.1–9.8 ms HUD on in both builds (noise). The hazard panel and banner are hidden,
+with no draw calls, when nothing is detected.
+
+### Not done / not tested
+
+- Per-lab RP per day: SIM's `lab_info` gives multipliers only; the Labs page shows "x1.6" (now and
+  without packs). Asked SIM for `rate` (UI-to-SIM C1).
+- Cargo choice is kept in the UI until "Supply run" is pressed; asked SIM for `ship {action: "cargo"}` (C2).
+- Camera shake off: works by zeroing the rig's private `_shake` each frame until RENDER adds
+  `shake_enabled` (UI-to-RENDER 2). Not checked by eye during a real quake.
+- Hazard toasts in the first 30 s after a load or new game are silent (the v2 grace rule).
+- The alert list can overlap the minimap header for a moment when many cards arrive (v2 behaviour: it
+  drops one card per frame until it fits).
+- One web export crashed at start on the 810 m map ("memory access out of bounds") while other agents
+  were changing files; the next two exports and the ART-HAB and RENDER builds did not. Not reproduced.
+- Not tested: 1280 x 720 layout of the new panels; the OptionButton popup style of the focus selector;
+  a real turret, breach and meteor fragment site in the inspector (none existed in the test colonies).

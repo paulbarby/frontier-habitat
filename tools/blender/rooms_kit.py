@@ -433,6 +433,9 @@ class Room:
         self.door_top = WALL_TOP
         self.top_z = WALL_TOP
         self.sc = min(1.0, max(0.62, R / 6.0))     # detail scale for level parts
+        # 3.0 (docs/V3_DESIGN.md section 7): the round wall as 32 objects Wall_00..Wall_31 (interior_kit.py)
+        self.v3 = False
+        self.walls = []                   # [P("Wall_00"), ...] when v3
 
     # ---- output --------------------------------------------------------------------------
     def parts(self):
@@ -441,15 +444,40 @@ class Room:
             out += [self.L[n] for n in (2, 3, 4, 5)]
         if self.lights.faces:
             out.append(self.lights)
+        out += [w for w in self.walls if w.faces]
+        out += [q for q in getattr(self, "extra_parts", []) if q.faces]
         return out
 
-    def anchor(self, name, pos):
-        self.anchors.append(("Anchor_" + name, tuple(pos)))
+    def anchor(self, name, pos, yaw=0.0):
+        """Empty Anchor_<name>.  yaw (degrees, about +Z): local +X = the direction a person at the anchor faces."""
+        self.anchors.append(("Anchor_" + name, tuple(pos), float(yaw)))
 
     # ---- the round base -----------------------------------------------------------------
     def build_base(self, wall="Hull", kick="HullDark", band="Accent", band_proud=None, windows=None, win_seams=16,
                    win_mat="Window", pilasters=0, pil_mat="Frame", door=True, door_w=1.30, lamps=(), bolts=None,
                    floor="plain", inner="Hull", floor_mat="HullDark", accent_floor=True, floor_rings=None):
+        if getattr(self, "v3_mode", False):
+            # 3.0: foundation + 32 wall segments; the interior builder makes the floor; no fake +X door
+            import interior_kit as IK
+            b = self.base
+            b.lathe_a([(self.Rf, -0.20), (self.Rf, 0.05), (self.Rw + 0.02, 0.09)], reg_angles(self.seg), "Frame")
+            if bolts is None:
+                bolts = self.size >= 2
+            keep = bool(door and getattr(self, "keep_door", False))
+            dh = degrees(asin(min(0.95, (door_w / 2 + 0.3) / self.Rw))) if keep else 0.0
+            if bolts:
+                nb = max(8, self.seg // 3)
+                bolts_ring(b, (self.Rf + self.Rw) / 2 + 0.01, 0.07, nb, size=0.08, h=0.03, mat="Metal",
+                           a0=180.0 / nb, skip=[(0.0, dh)] if keep else None)
+            if band_proud is None:
+                band_proud = self.size >= 1
+            IK.build_walls_v3(self, band=band or None, band_proud=band_proud, wall=wall, kick=kick, windows=windows,
+                              win_mat=win_mat, win_seams=win_seams, pilasters=pilasters, pil_mat=pil_mat,
+                              door_half=dh + 1.0 if keep else 0.0)
+            self.door_half = dh
+            if keep:
+                self.build_door(door_w)
+            return
         b = self.base
         Rf, Rw, Ri, seg = self.Rf, self.Rw, self.Ri, self.seg
         # ---- foundation ring: the largest radius of the model -------------------------------------
@@ -589,6 +617,8 @@ class Room:
 
     def door_hood(self, depth=1.1):
         """Box that joins the door lintel to a dome (in Roof)."""
+        if getattr(self, "v3_mode", False) and not hasattr(self, "door_x"):
+            return
         Rw = self.Rw
         w = getattr(self, "door_w", 1.3)
         x0 = Rw - depth
@@ -1480,11 +1510,13 @@ def reset_scene():
             coll.remove(item)
 
 
-def anchor_object(name, pos):
+def anchor_object(name, pos, yaw=0.0):
     ob = bpy.data.objects.new(name, None)
     ob.empty_display_type = "ARROWS"
     ob.empty_display_size = 0.4
     ob.location = pos
+    if yaw:
+        ob.rotation_euler = (0.0, 0.0, radians(yaw))
     bpy.context.scene.collection.objects.link(ob)
     return ob
 
@@ -1500,6 +1532,23 @@ AO_SETS = {
     "L4": ("Base", "Roof", "L2", "L3", "L4"),
     "L5": ("Base", "Roof", "L2", "L3", "L4", "L5"),
 }
+
+
+def ao_sets_for(objs):
+    """AO_SETS plus the 3.0 wall segments: every Wall_* shades and is shaded like Base (the game hides a segment
+    only where a doorway replaces it)."""
+    walls = tuple(sorted(n for n in objs if n.startswith("Wall_")))
+    talls = tuple(sorted(n for n in objs if n.startswith("Tall_")))
+    if not walls and not talls:
+        return AO_SETS
+    out = {}
+    for k, v in AO_SETS.items():
+        out[k] = tuple(v) + (walls if ("Base" in v and k != "Lights") else ()) + (talls if "Interior" in v else ())
+    for w in walls:
+        out[w] = ("Base", "Interior") + walls + talls
+    for t in talls:
+        out[t] = ("Base", "Interior") + walls + talls
+    return out
 
 
 def _hemisphere(n):
@@ -1736,6 +1785,101 @@ def check_interior(rm):
     return flags
 
 
+# --------------------------------------------------------------------------------------
+# Draw-call budget: at most MAX_SURFACES materials on the Interior (and on each Tall_* part)
+# --------------------------------------------------------------------------------------
+MAX_SURFACES = 8
+PALETTE_KEEP = ("Accent", "Neon", "Screen", "Glass", "Soil", "Palette", "PaletteMetal")   # named: the game uses them
+
+
+def _spec_of(mset, name):
+    try:
+        return mset.spec(name)
+    except KeyError:
+        return {}
+
+
+WALL_SHELL = ("Hull", "HullDark", "Accent", "Frame", "Trim", "Window", "Glass", "Metal", "Rubber")   # models.gd
+
+
+def palette_target(mset, name, keep=()):
+    """Where a material goes: 'Palette' (plain), 'PaletteMetal' (metal), or itself (named or emissive)."""
+    if name in PALETTE_KEEP or name in keep:
+        return name
+    sp = _spec_of(mset, name)
+    if sp.get("emit") or sp.get("alpha", 1.0) < 1.0:
+        return "LightStrip" if name == "Light" else name
+    return "PaletteMetal" if sp.get("metal", 0.0) >= 0.3 else "Palette"
+
+
+def palette_merge(o, mset, max_surfaces=MAX_SURFACES, keep=()):
+    """Merge the plain materials of object `o` into the palette materials (the face colour goes into the corner
+    colour attribute, multiplied with the baked AO); then, while the object still has more than `max_surfaces`
+    materials, fold the least used coloured emissive into the nearest emissive colour, then PaletteMetal into
+    Palette.  Returns (before, after) material counts."""
+    me = o.data
+    names = [m.name.split(".")[0] if m else "" for m in me.materials]
+    before = len(set(names))
+    attr = me.color_attributes.active_color or (me.color_attributes[0] if me.color_attributes else None)
+    target = {nm: palette_target(mset, nm, keep) for nm in set(names)}
+    use = {}
+    for p in me.polygons:
+        t = target[names[p.material_index]]
+        use[t] = use.get(t, 0) + 1
+
+    def lin(nm):
+        sp = _spec_of(mset, nm)
+        h = sp.get("color", "#ffffff")
+        return BA.hex_to_linear(h)
+
+    def emit_col(nm):
+        sp = _spec_of(mset, nm)
+        return BA.hex_to_linear(sp.get("emit", sp.get("color", "#ffffff")))
+    fixed = ("LightStrip", "Screen", "Neon", "Accent", "Glass", "Soil", "Palette", "PaletteMetal")
+    while len(use) > max_surfaces:
+        em = [k for k in use if k not in fixed]
+        k = min(em, key=lambda q: use[q]) if em else None
+        others = [q for q in use if q != k and q not in ("Accent", "Glass", "Soil", "Palette", "PaletteMetal", "Screen")]
+        if em and others:
+            ck = emit_col(k)
+            dst = min(others, key=lambda q: sum((a - b) ** 2 for a, b in zip(ck, emit_col(q))))
+        elif "PaletteMetal" in use:
+            k, dst = "PaletteMetal", "Palette"
+        elif "Soil" in use:
+            k, dst = "Soil", "Palette"
+        else:
+            break
+        for nm, t in list(target.items()):
+            if t == k:
+                target[nm] = dst
+        use[dst] = use.get(dst, 0) + use.pop(k)
+    # rewrite: the new material slots, the corner colours of the palette faces
+    order = sorted(set(target.values()))
+    slot = {}
+    orig = [p.material_index for p in me.polygons]          # clear() resets the indices
+    me.materials.clear()
+    for nm in order:
+        me.materials.append(mset.get(nm))
+        slot[nm] = len(me.materials) - 1
+    cols = [0.0] * (len(attr.data) * 4) if attr is not None else None
+    if attr is not None:
+        attr.data.foreach_get("color", cols)
+    for p in me.polygons:
+        src = names[orig[p.index]]
+        t = target[src]
+        if attr is not None and t in ("Palette", "PaletteMetal") and src not in ("Palette", "PaletteMetal"):
+            r, g, b = lin(src)
+            for li in p.loop_indices:
+                cols[li * 4] *= r
+                cols[li * 4 + 1] *= g
+                cols[li * 4 + 2] *= b
+        p.material_index = slot[t]
+    if attr is not None:
+        attr.data.foreach_set("color", cols)
+    me.update()
+    return before, len(order)
+
+
 def build_file(rm, path, also=(), ao=None):
     """Turn a finished Room into objects, bake AO, export atomically.  Returns (objs, rays, seconds)."""
     t0 = time.time()
@@ -1746,12 +1890,21 @@ def build_file(rm, path, also=(), ao=None):
         if not part.faces:
             continue
         objs[part.name] = BA.part_to_object(part, mset)
-    for name, pos in rm.anchors:
-        anchor_object(name, pos)
+    for a in rm.anchors:
+        anchor_object(a[0], a[1], a[2] if len(a) > 2 else 0.0)
     bpy.context.view_layer.update()
     kw = dict(AO_DEFAULT)
     kw.update(ao or {})
+    kw["sets"] = ao_sets_for(objs)
     rays, secs = bake_ao(objs, **kw)
+    if getattr(rm, "v3", False):
+        rm.surfaces = {}
+        for nm, o in objs.items():
+            if nm == "Interior" or nm.startswith("Tall_"):
+                rm.surfaces[nm] = palette_merge(o, mset)
+            elif nm.startswith("Wall_"):
+                # wall-side items: their plain materials join the palette; the wall shell keeps its names
+                palette_merge(o, mset, max_surfaces=99, keep=WALL_SHELL)
     export_glb_atomic(path)
     for extra in also:
         copy_atomic(path, extra)

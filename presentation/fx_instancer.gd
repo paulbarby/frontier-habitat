@@ -32,7 +32,7 @@ func add(tpl: Dictionary, xf: Transform3D, custom: Color = Color(1, 1, 1, 1)) ->
 	_next += 1
 	var s: float = float(tpl.get("scale", 1.0))
 	handles[h] = {"key": key, "slot": slot, "xf": Transform3D(xf.basis * Basis.from_scale(Vector3(s, s, s)), xf.origin) if absf(s - 1.0) > 0.001 else xf,
-		"hidden": {}, "extra": {}, "custom": custom, "scale": s}
+		"hidden": {}, "extra": {}, "custom": custom, "scale": s, "gcustom": {}}
 	(bt.get("slots") as Dictionary)[slot] = h
 	for g in bt["vis"]:
 		_vis_delta(bt, g, 1)
@@ -121,13 +121,40 @@ func set_custom(h: int, c: Color) -> void:
 	for p in bt["parts"]:
 		var mm: MultiMesh = p["mm"]
 		if mm.use_custom_data:
-			mm.set_instance_custom_data(int(e["slot"]), c)
+			mm.set_instance_custom_data(int(e["slot"]), _custom_of(e, p["part"]))
+
+## Custom data of ONE group of a copy (the wall segment mask of a room, V3 §7.2).
+func set_group_custom(h: int, group: String, c: Color) -> void:
+	if not handles.has(h):
+		return
+	var e: Dictionary = handles[h]
+	if (e["gcustom"] as Dictionary).get(group) == c:
+		return
+	e["gcustom"][group] = c
+	var bt: Dictionary = batches[e["key"]]
+	for p in bt["parts"]:
+		if p["part"]["group"] == group and (p["mm"] as MultiMesh).use_custom_data:
+			(p["mm"] as MultiMesh).set_instance_custom_data(int(e["slot"]), c)
+
+func _custom_of(e: Dictionary, part: Dictionary) -> Color:
+	var g: String = part["group"]
+	if (e["gcustom"] as Dictionary).has(g):
+		return e["gcustom"][g]
+	if bool(part.get("mask", false)):
+		return Color(0, 0, 0, 0)
+	return e["custom"]
 
 func set_shadows(on: bool) -> void:
 	shadows = on
 	for key in batches:
 		for p in batches[key]["parts"]:
-			(p["mmi"] as MultiMeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if (on and bool(p["part"]["shadow"])) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			(p["mmi"] as MultiMeshInstance3D).cast_shadow = _cast_of(p["part"])
+
+## Shadow proxies (models.gd) are drawn only into the shadow map.
+func _cast_of(part: Dictionary) -> int:
+	if bool(part.get("shadow_only", false)):
+		return GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return GeometryInstance3D.SHADOW_CASTING_SETTING_ON if (shadows and bool(part["shadow"])) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 ## World transform of a group pivot for a handle (effects anchor on it).
 func world_xf(h: int) -> Transform3D:
@@ -147,6 +174,9 @@ func draw_parts() -> int:
 # ---------------------------------------------------------------- internals
 func _new_batch(tpl: Dictionary) -> void:
 	var parts: Array = []
+	var room_r := 0.0
+	for part in tpl["parts"]:
+		room_r = maxf(room_r, float(part.get("wall_r", 0.0)))
 	for part in tpl["parts"]:
 		var mesh: Mesh = part["mesh"]
 		var tint := false
@@ -156,20 +186,24 @@ func _new_batch(tpl: Dictionary) -> void:
 				tint = true
 		if tint:
 			mesh = _tinted(mesh)
+		var custom: bool = tint or bool(part.get("mask", false)) or bool(part.get("custom", false))
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_custom_data = tint
+		mm.use_custom_data = custom
 		# Compatibility renderer: custom data without instance colours reads COLOR as zero,
 		# which blackens vertex-coloured (AO) albedo. Tinted parts carry white colours.
-		mm.use_colors = tint
+		mm.use_colors = custom
 		mm.mesh = mesh
 		mm.instance_count = 8
 		mm.visible_instance_count = 0
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if (shadows and bool(part["shadow"])) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mmi.name = "%s_%s" % [String(tpl["key"]).get_file().get_basename(), part["group"]]
+		mmi.cast_shadow = _cast_of(part)
+		mmi.name = "%s_%s%s" % [String(tpl["key"]).get_file().get_basename(), part["group"], "_shadow" if bool(part.get("shadow_only", false)) else ""]
 		add_child(mmi)
+		# ART-HAB J4 wall fall-off: interior surfaces dim towards the wall ring (interior.gdshader).
+		if room_r > 0.0 and _has_interior_mat(mesh) and not OS.get_cmdline_args().has("--no-room-r") and not JavaScriptBridge.eval("location.search.indexOf('noroomr')>=0", true):
+			mmi.set_instance_shader_parameter("room_r", room_r)
 		parts.append({"mm": mm, "mmi": mmi, "part": part})
 	var vis := {}
 	for p in parts:
@@ -177,6 +211,13 @@ func _new_batch(tpl: Dictionary) -> void:
 	batches[tpl["key"]] = {"tpl": tpl, "parts": parts, "cap": 8, "used": 0, "free": [], "slots": {}, "vis": vis}
 	for p in parts:
 		(p["mmi"] as MultiMeshInstance3D).visible = false
+
+static func _has_interior_mat(mesh: Mesh) -> bool:
+	for s in mesh.get_surface_count():
+		var m: Material = mesh.surface_get_material(s)
+		if m is ShaderMaterial and (m as ShaderMaterial).shader != null and (m as ShaderMaterial).shader.resource_path.ends_with("interior.gdshader"):
+			return true
+	return false
 
 func _tinted(mesh: Mesh) -> Mesh:
 	var id: int = mesh.get_instance_id()
@@ -234,7 +275,7 @@ func _write(h: int) -> void:
 		var mm: MultiMesh = p["mm"]
 		mm.set_instance_transform(slot, _part_xf(e, p["part"]))
 		if mm.use_custom_data:
-			mm.set_instance_custom_data(slot, e["custom"])
+			mm.set_instance_custom_data(slot, _custom_of(e, p["part"]))
 			mm.set_instance_color(slot, Color(1, 1, 1, 1))
 
 ## Transforms only (custom colours do not change every frame).

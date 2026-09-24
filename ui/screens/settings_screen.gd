@@ -56,6 +56,7 @@ func build() -> void:
 	left.add_child(card_panel(cam))
 	cam.add_child(_toggle("Pan when the mouse touches the screen edge", "edge_pan", ""))
 	cam.add_child(_slider("Camera speed", "camera_speed", 0.5, 2.0, 0.1, func(v): return "%d%%" % int(roundf(v * 100.0))))
+	cam.add_child(_toggle("Camera shake", "camera_shake", "The camera shakes for quakes, impacts and landings. Off: it stays still."))
 	# Audio
 	var au: VBoxContainer = card("Sound", "volume", P.CYAN)
 	right.add_child(card_panel(au))

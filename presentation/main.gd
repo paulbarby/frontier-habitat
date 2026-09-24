@@ -18,6 +18,7 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const Audio = preload("res://ui/audio.gd")
 const Sfx = preload("res://ui/sfx.gd")
 const Profile = preload("res://ui/profile.gd")
+const UiMock = preload("res://ui/mock.gd")
 
 const TICK := 0.1
 const MAX_STEPS_PER_FRAME := 10
@@ -61,6 +62,7 @@ var _fps := 0.0
 var _fps_clock := 0.0
 var _quiet := false
 var _proc_avg := 0.0
+var _shake_on := true
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1024, 600)
@@ -107,7 +109,15 @@ func _options_from_boot() -> Dictionary:
 		o["planet"] = String(boot["planet"])
 	if boot.has("difficulty"):
 		o["difficulty"] = String(boot["difficulty"])
+	if boot.has("hazards"):
+		o["hazards"] = String(boot["hazards"])
+	if debug_mode():
+		o["debug"] = true
 	return o
+
+## Boot parameter debug=1: test-only commands (hazard_now, uimock) are accepted.
+func debug_mode() -> bool:
+	return Boot.has(boot, "debug")
 
 ## Runs the simulation now, without drawing, so a screenshot can show a later day.
 func _fast_forward(secs: float) -> void:
@@ -247,6 +257,91 @@ func _on_cmd(text: String) -> String:
 			return "unknown module"
 		"screen":
 			return hud.screen_name()
+		# ---- version 3 (docs/V3_DESIGN.md §8)
+		"hazard":
+			# hazard <kind> [x y] [severity] [in_seconds]: a hazard now (or in N s, so the
+			# forecast shows it), for tests and screenshots. A recorded command, so replays stay
+			# deterministic. Needs the boot parameter debug=1.
+			if not debug_mode():
+				return "refused: start with debug=1"
+			if w.size() < 2:
+				return "hazard <kind> [x y] [severity]"
+			var hp: Dictionary = {"kind": w[1], "severity": 1}
+			if w.size() >= 4:
+				var at := Vector2(float(w[2]), float(w[3]))
+				hp["x"] = at.x
+				hp["y"] = at.y
+				hp["pos"] = at
+				if w.size() >= 5:
+					hp["severity"] = clampi(int(w[4]), 1, 3)
+				if w.size() >= 6:
+					hp["in"] = maxf(1.0, float(w[5]))
+			elif w.size() == 3:
+				hp["severity"] = clampi(int(w[2]), 1, 3)
+			submit("hazard_now", hp)
+			return "submitted"
+		"follow":
+			# follow <agent id>: select the colonist and the camera follows it.
+			var fid: int = int(w[1]) if w.size() > 1 else -1
+			if not sim.state["agents"].has(fid):
+				return "not found"
+			select("agent", fid)
+			focus_on(sim.state["agents"][fid]["pos"])
+			follow_selected()
+		"goto":
+			if w.size() < 3:
+				return "goto <x> <y>"
+			focus_on(Vector2(float(w[1]), float(w[2])))
+		"interior":
+			# interior <building id>: camera close over a room; the view opens the roof of the
+			# selected room (RENDER's cutaway).
+			var bid: int = int(w[1]) if w.size() > 1 else -1
+			if not sim.state["buildings"].has(bid):
+				return "not found"
+			var ib: Dictionary = sim.state["buildings"][bid]
+			select("building", bid)
+			focus_on(ib["pos"])
+			rig.target_distance = clampf(float(ib.get("radius", 5.0)) * 2.8 + 8.0, 14.0, 45.0)
+			rig.pitch = deg_to_rad(58.0)
+			if view.has_method("open_interior"):
+				view.open_interior(bid)
+		"uimock":
+			# uimock hazards|maintenance|labs|all|off: made-up rows for layout checks (debug=1 only).
+			if not debug_mode():
+				return "refused: start with debug=1"
+			hud.data.mock = {} if w.size() < 2 or w[1] == "off" else UiMock.build(sim, w[1])
+			hud.hazard.rebuild()
+		"alerts":
+			# The toast rule counters (V3_DESIGN §2).
+			var g = hud.watchers.gate
+			return "live=%d held=%d toasts=%d" % [g.live_count(), g.held_count(), g.toasts_sent]
+		"shake":
+			Settings.set_value("camera_shake", w.size() < 2 or w[1] != "off")
+			apply_settings()
+		"shelter":
+			# shelter on|off: the Shelter button of the hazard panel.
+			if hud.data.shelter_on() != (w.size() < 2 or w[1] != "off"):
+				hud.hazard.toggle_shelter(hud)
+			return "on" if hud.data.mock.get("shelter", hud.data.shelter_on()) else "sent"
+		"idof":
+			# idof <def> | idof agent [n]: the id of the first structure of a def, or of the n-th
+			# living colonist (for follow and interior).
+			if w.size() > 1 and w[1] == "agent":
+				var want: int = int(w[2]) if w.size() > 2 else 0
+				var k := 0
+				for aid in sim.state["agents"]:
+					if sim.state["agents"][aid]["state"] == "alive":
+						if k == want:
+							return str(aid)
+						k += 1
+				return "not found"
+			for bid2 in sim.state["buildings"]:
+				if w.size() > 1 and sim.state["buildings"][bid2]["def"] == w[1]:
+					return str(bid2)
+			return "not found"
+		"minimap":
+			# minimap zoom|whole
+			hud.minimap.set_zoomed(w.size() > 1 and w[1] == "zoom")
 		_:
 			return "unknown command"
 	return "ok"
@@ -264,6 +359,9 @@ func _new_world(seed_value: int, options: Dictionary) -> void:
 	if sim != null:
 		sim.dispose()
 	sim = Sim.new()
+	if debug_mode() and not options.has("debug"):
+		options = options.duplicate()
+		options["debug"] = true
 	if options.is_empty() or hud.data.arg_count(sim, "new_game") < 3:
 		sim.new_game(seed_value)
 	else:
@@ -373,6 +471,12 @@ func apply_settings() -> void:
 	Glass.set_enabled(bool(Settings.get_value("glass")))
 	rig.edge_pan = bool(Settings.get_value("edge_pan"))
 	rig.pan_speed = float(Settings.get_value("camera_speed"))
+	# Camera shake (quakes, landings, impacts). RENDER's rig and view read `shake_enabled`
+	# when they have it; until then _process stops the rig's shake itself.
+	_shake_on = bool(Settings.get_value("camera_shake"))
+	for o in [rig, view]:
+		if o != null and "shake_enabled" in o:
+			o.set("shake_enabled", _shake_on)
 	if audio != null:
 		audio.apply_volumes()
 
@@ -421,6 +525,10 @@ func _process(delta: float) -> void:
 		audio.ambience(sim.util.is_night(), on_title)
 	Boot.set_state(_hook, _boot_frames == 0, int(sim.state["tick"]), sim.util.day_number())
 	Boot.set_extra(_hook, _fps, "title" if on_title and hud.screen_name() == "title" else hud.screen_name())
+	# Camera shake off (Settings) while the rig has no `shake_enabled` flag of its own: the
+	# rig runs after this node, so a zero here means no shake this frame.
+	if not _shake_on and not ("shake_enabled" in rig) and "_shake" in rig:
+		rig.set("_shake", 0.0)
 
 func _demo_drive() -> void:
 	if _demo == null:
@@ -734,7 +842,11 @@ func _install(state: Dictionary, message: String) -> void:
 	if sim != null:
 		sim.dispose()
 	sim = Sim.new()
-	sim.load_state(state)
+	# debug=1 with a loaded save: SIM turns on options.debug (hazard_now) when asked.
+	if debug_mode() and hud.data.arg_count(sim, "load_state") >= 2:
+		sim.load_state(state, {"debug": true})
+	else:
+		sim.load_state(state)
 	_after_world_change()
 	if not _quiet:
 		hud.toast(message, "save")

@@ -13,6 +13,7 @@ var _count := {}       # "kind:bld[:tray]" -> number of tasks
 var _by_bld := {}      # building id -> [tasks]
 var _cold := {}        # inventory id -> true for cold stores (this second)
 var _src_index := {}   # item -> [inventory ids that held it when the board was indexed]
+var _far_piles := {}   # fragment pile inventory ids beyond suit range (this second)
 
 func _init(s) -> void:
 	sim = s
@@ -24,17 +25,22 @@ func tick_second() -> void:
 	# Machines take their inputs before plans reserve the rest: a factory that waits for
 	# steel while every unit is promised to construction sites makes no more steel.
 	_gen_machine_inputs()
+	# V3: repairs, breach seals and maintenance take their parts before construction plans
+	# reserve the rest (a cracked corridor must not wait for a new solar array).
+	_gen_repair()
+	_gen_hazard_work()
 	_gen_research()
 	_gen_medical()
+	# V3: the Meridian's parts are reserved before ordinary construction and upgrades
+	# (with repairs, maintenance and research packs there are more users of steel).
+	_gen_ship()
 	_gen_construction()
 	_gen_upgrades()
-	_gen_ship()
 	_gen_dining()
 	_gen_water_fill()
 	_gen_clearing()
 	_gen_operate()
 	_gen_tend()
-	_gen_repair()
 	_gen_demolish()
 	if int(sim.state["tick"]) % (10 * int(sim.bal["tick_hz"])) == 0:
 		_clean_piles()
@@ -70,12 +76,21 @@ func _index() -> void:
 		if b["state"] == "active" and int(b["inv_out"]) != -1 and bool(sim.bdef(b["def"]).get("cold", false)):
 			_cold[int(b["inv_out"])] = true
 	_src_index = {}
+	_far_piles = {}
 	var invs: Dictionary = sim.state["inventories"]
+	var reach := -1.0
 	for inv_id in invs:
 		var inv: Dictionary = invs[inv_id]
 		var role: String = inv["role"]
 		if role != "pile" and role != "out" and role != "store":
 			continue
+		# Meteor fragments beyond suit range are nobody's source until an airlock is near.
+		if role == "pile" and bool(inv.get("fragment", false)):
+			if reach < 0.0:
+				reach = sim.agents.suit_reach_metres()
+			if sim.agents.nearest_air_metres(inv["pos"]) > reach:
+				_far_piles[inv_id] = true
+				continue
 		for r in inv["items"]:
 			if not _src_index.has(r):
 				_src_index[r] = []
@@ -350,6 +365,9 @@ func _gen_machine_inputs() -> void:
 				food_days = float(sim.metrics.forecast()["meal_days"])
 			_fill(b["inv_in"], wants, rec["category"], id, 3 if food_days < 1.0 else 1, b["pos"], 4)
 			continue
+		# A machine whose output stock is full does not hoard inputs (V3: steel for the ship).
+		if sim.prod._output_stock_full(rec):
+			continue
 		for res in rec["inputs"]:
 			wants[res] = int(rec["inputs"][res]) * batches
 		# A machine that stands idle for want of input gets its goods first.
@@ -373,6 +391,9 @@ func _gen_research() -> void:
 			_fill(first["inv_in"], need, "industry", first["id"], 0, first["pos"], 3)
 	var role: String = "scientist" if bool(sim.bal["research"].get("scientist_only", true)) else ""
 	var workable: bool = sim.research.workable()
+	# Research packs (v3): every lab keeps a few of each pack its project uses.
+	var pk: Dictionary = sim.research.lab_packs()
+	var stock: int = int(sim.bal["research"].get("lab_pack_stock", 4))
 	for b in labs:
 		if String(sim.state["research"]["active"]) == "":
 			b["block"] = "no_project"
@@ -380,11 +401,20 @@ func _gen_research() -> void:
 		if not workable:
 			b["block"] = "waiting_items"
 			continue
+		if not pk.is_empty() and int(b["inv_in"]) != -1 and not _parked(b) and bool(b["enabled"]):
+			var wants := {}
+			var cap_each: int = maxi(1, int(sim.bd(b).get("input_cap", 12)) / maxi(1, pk.size()))
+			for item in pk:
+				wants[item] = mini(stock, cap_each)
+			_fill(b["inv_in"], wants, "industry", b["id"], 0, b["pos"], 3)
 		if not bool(b["enabled"]):
 			b["block"] = "disabled"
 			continue
 		if not bool(b["powered"]):
 			b["block"] = "no_power"
+			continue
+		if not sim.research.lab_can_work(b):
+			b["block"] = "no_packs"
 			continue
 		b["block"] = ""
 		if _parked(b):
@@ -523,6 +553,8 @@ func _gen_clearing() -> void:
 					continue
 		elif role != "pile":
 			continue
+		elif _far_piles.has(inv_id):
+			continue
 		for res in inv["items"].keys():
 			if res == "water":
 				continue
@@ -587,7 +619,7 @@ func _gen_operate() -> void:
 		if b["state"] != "active" or bool(b["demolish"]) or _parked(b):
 			continue
 		var rec: Dictionary = sim.prod.recipe_of(b)
-		if rec.is_empty():
+		if rec.is_empty() or sim.prod.is_auto_recipe(b):
 			continue
 		var block: String = sim.prod.machine_block(b)
 		b["block"] = block
@@ -634,7 +666,9 @@ func _gen_repair() -> void:
 			continue
 		if int(_count.get("repair:%d" % id, 0)) > 0:
 			continue
-		var src: int = find_source("spare_parts", b["pos"])
+		# A wear breakdown needs the item of its fault (V3): spare parts, electronics or polymer.
+		var item: String = sim.hazards.repair_item(b)
+		var src: int = find_source(item, b["pos"])
 		if src == -1:
 			if b["state"] == "broken":
 				b["block"] = "no_spares"
@@ -642,12 +676,70 @@ func _gen_repair() -> void:
 		var urgent := 0
 		if b["state"] == "broken":
 			urgent = 8 if sim.bdef(b["def"]).get("category", "") == "life_support" else 3
-		var t: Dictionary = _new_task("repair", "repair", id, {"role": "technician", "src": src, "res": "spare_parts", "qty": 1, "emergency": urgent})
-		var ho: int = sim.inv.hold_out(src, "spare_parts", 1, t["id"])
+		var t: Dictionary = _new_task("repair", "repair", id, {"role": "technician", "src": src, "res": item, "qty": 1, "emergency": urgent})
+		var ho: int = sim.inv.hold_out(src, item, 1, t["id"])
 		if ho == -1:
 			sim.state["tasks"].erase(t["id"])
 		else:
 			t["hold_out"] = ho
+
+## Version 3 hazards: maintenance of machines at risk, sealing hull breaches, cleaning
+## dusty solar panels, and surveying meteor fragment sites (V3_DESIGN sections 4 and 5).
+func _gen_hazard_work() -> void:
+	var hz = sim.hazards
+	var hc: Dictionary = sim.bal["hazards"]
+	var blds: Dictionary = sim.state["buildings"]
+	# Only machines that have run have a wear record: look there, not at every structure.
+	var wear: Dictionary = hz.hs()["wear"]
+	for id in wear:
+		var mb: Dictionary = blds.get(id, {})
+		if mb.is_empty() or bool(mb["demolish"]) or _parked(mb):
+			continue
+		if int(_count.get("maintain:%d" % id, 0)) == 0 and hz.wants_maintenance(mb):
+			var item: String = hz.fault_item(String(wear[id]["fault"]))
+			_item_task("maintain", id, item, 1, 6 if bool(mb.get("maint_first", false)) else 1)
+	for id in blds:
+		var b: Dictionary = blds[id]
+		if not (bool(b.get("breach", false)) or bool(b.get("dust", false))) or bool(b["demolish"]) or _parked(b):
+			continue
+		if bool(b.get("breach", false)) and (b["state"] == "active" or b["state"] == "broken") and int(_count.get("patch:%d" % id, 0)) == 0:
+			var bc: Dictionary = hc["breach"]
+			if not _item_task("patch", id, String(bc["item"]), 1, 5):
+				_item_task("patch", id, String(bc["alt_item"]), int(bc["alt_qty"]), 5)
+		if bool(b.get("dust", false)) and b["state"] == "active" and int(_count.get("clean:%d" % id, 0)) == 0:
+			_new_task("clean", "repair", id, {})
+	var sites: Dictionary = hz.hs()["sites"]
+	if sites.is_empty():
+		return
+	var open := {}
+	for tid in sim.state["tasks"]:
+		var t: Dictionary = sim.state["tasks"][tid]
+		if t["kind"] == "survey":
+			open[int(t["site"])] = true
+	var reach: float = sim.agents.suit_reach_metres()
+	for sid in sites:
+		var st: Dictionary = sites[sid]
+		if bool(st["surveyed"]) or open.has(int(sid)):
+			continue
+		# A site out of suit range waits for an order or a nearer airlock.
+		if not bool(st.get("order", false)) and sim.agents.nearest_air_metres(st["pos"]) > reach:
+			continue
+		_new_task("survey", "industry", -1, {"role": "scientist", "site": int(sid), "emergency": 1 if bool(st.get("order", false)) else 0})
+
+## A task that fetches `qty` of `item` and brings it to structure `bid` (maintenance and
+## breach repair). Returns false when no unit is free anywhere.
+func _item_task(kind: String, bid: int, item: String, qty: int, emergency: int) -> bool:
+	var b: Dictionary = sim.state["buildings"][bid]
+	var src: int = find_source(item, b["pos"])
+	if src == -1 or sim.inv.available(src, item) < qty:
+		return false
+	var t: Dictionary = _new_task(kind, "repair", bid, {"role": "technician", "src": src, "res": item, "qty": qty, "emergency": emergency})
+	var ho: int = sim.inv.hold_out(src, item, qty, t["id"])
+	if ho == -1:
+		sim.state["tasks"].erase(t["id"])
+		return false
+	t["hold_out"] = ho
+	return true
 
 func _gen_demolish() -> void:
 	var blds: Dictionary = sim.state["buildings"]
@@ -703,7 +795,7 @@ func _expire() -> void:
 			if not holds.has(t["hold_in"]):
 				fail(tid, "destination_gone")
 				continue
-		elif t["kind"] == "repair":
+		elif t["kind"] == "repair" or t["kind"] == "maintain" or t["kind"] == "patch":
 			if not bool(t["picked"]) and not holds.has(t["hold_out"]):
 				fail(tid, "source_gone")
 				continue
@@ -722,7 +814,20 @@ func _expire() -> void:
 					if b["state"] != "building":
 						fail(tid, "done")
 				"repair":
-					if float(b["health"]) >= 100.0:
+					if float(b["health"]) >= 100.0 and b["state"] != "broken":
+						fail(tid, "done")
+				"maintain":
+					if not sim.hazards.wants_maintenance(b):
+						fail(tid, "done")
+				"patch":
+					if not bool(b.get("breach", false)):
+						fail(tid, "done")
+				"clean":
+					if not bool(b.get("dust", false)) or b["state"] != "active":
+						fail(tid, "done")
+				"survey":
+					var site: Dictionary = sim.hazards.hs()["sites"].get(int(t.get("site", -1)), {})
+					if site.is_empty() or bool(site["surveyed"]):
 						fail(tid, "done")
 				"demolish":
 					if not bool(b["demolish"]):
@@ -732,7 +837,7 @@ func _expire() -> void:
 					if u.is_empty() or u["state"] != "work":
 						fail(tid, "done")
 				"research":
-					if not sim.research.workable() or b["state"] != "active" or not bool(b["powered"]) or not bool(b["enabled"]):
+					if not sim.research.lab_can_work(b) or b["state"] != "active" or not bool(b["powered"]) or not bool(b["enabled"]):
 						fail(tid, "no_project")
 				"shipwork":
 					if sim.ship.work_kind() == "" or bool(sim.state["ship"].get("away", false)):
@@ -857,12 +962,14 @@ func score(t: Dictionary, agent: Dictionary) -> float:
 		return -1e9
 	var blds: Dictionary = sim.state["buildings"]
 	var target: Vector2 = agent["pos"]
-	if t["kind"] == "haul" or t["kind"] == "repair":
+	if t["kind"] == "haul" or t["kind"] == "repair" or t["kind"] == "maintain" or t["kind"] == "patch":
 		target = sim.inv.position_of(t["src"]) if not bool(t["picked"]) else sim.inv.position_of(t["dst"])
+	elif t["kind"] == "survey":
+		target = sim.hazards.hs()["sites"].get(int(t["site"]), {}).get("pos", target)
 	if blds.has(t["bld"]):
 		var b: Dictionary = blds[t["bld"]]
 		prio = clampi(prio + int(b["priority"]) - 1, 1, 3)
-		if t["kind"] != "haul" and t["kind"] != "repair":
+		if t["kind"] != "haul" and t["kind"] != "repair" and t["kind"] != "maintain" and t["kind"] != "patch":
 			target = b["pos"]
 	var waiting: float = float(int(sim.state["tick"]) - int(t["created"])) / float(sim.bal["tick_hz"])
 	var travel: float = (agent["pos"] as Vector2).distance_to(target) / float(sim.bal["speed_outdoor"]) * 1.3

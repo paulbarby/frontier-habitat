@@ -1,0 +1,1277 @@
+{
+ "date": "2026-09-24 22:55",
+ "blender": "5.2.1 LTS",
+ "scope": "full",
+ "passed": 236,
+ "failed": 0,
+ "pending": 0,
+ "info": 12,
+ "tris": {
+  "suit": 6839,
+  "indoor": 5964
+ },
+ "tris_by_object": {
+  "suit": {
+   "Body": 6839
+  },
+  "indoor": {
+   "Body": 3356,
+   "Head_0": 588,
+   "Head_1": 676,
+   "Head_2": 636,
+   "Head_3": 708
+  }
+ },
+ "sheets": [
+  "art\\npc\\turnaround_suit.png",
+  "art\\npc\\clips_suit.png",
+  "art\\npc\\deform_suit.png",
+  "art\\npc\\turnaround_indoor.png",
+  "art\\npc\\clips_indoor.png",
+  "art\\npc\\deform_indoor.png",
+  "art\\npc\\transitions.png"
+ ],
+ "checks": [
+  {
+   "check": "file astronaut_suit.glb",
+   "status": "pass",
+   "detail": "1120156 bytes"
+  },
+  {
+   "check": "suit: skinned mesh objects ['Body']",
+   "status": "pass",
+   "detail": "skins 1, skinned mesh nodes ['Body']"
+  },
+  {
+   "check": "suit: skeleton names and parents (section 3.2)",
+   "status": "pass",
+   "detail": "24 joints"
+  },
+  {
+   "check": "file astronaut_indoor.glb",
+   "status": "pass",
+   "detail": "1065020 bytes"
+  },
+  {
+   "check": "indoor: skinned mesh objects ['Body', 'Head_0', 'Head_1', 'Head_2', 'Head_3']",
+   "status": "pass",
+   "detail": "skins 1, skinned mesh nodes ['Body', 'Head_0', 'Head_1', 'Head_2', 'Head_3']"
+  },
+  {
+   "check": "indoor: skeleton names and parents (section 3.2)",
+   "status": "pass",
+   "detail": "24 joints"
+  },
+  {
+   "check": "skeleton identical in both files (names, parents, rest pose, lengths)",
+   "status": "pass",
+   "detail": "max rest difference 0.000000"
+  },
+  {
+   "check": "clips identical in length in both files",
+   "status": "pass",
+   "detail": "RENDER reuses the suit's baked clips for indoor"
+  },
+  {
+   "check": "suit: triangles <= 7000",
+   "status": "pass",
+   "detail": "6839 triangles"
+  },
+  {
+   "check": "suit: contract materials present",
+   "status": "pass",
+   "detail": "has ['Frame', 'Light', 'LightAmber', 'LightGreen', 'LightStrip', 'Pack', 'Rubber', 'Screen', 'SuitAccent', 'SuitHard', 'SuitMain', 'Trim', 'Visor']"
+  },
+  {
+   "check": "suit: COLOR_0 (baked AO) on every primitive",
+   "status": "pass",
+   "detail": "True"
+  },
+  {
+   "check": "suit: weights <= 4 per vertex",
+   "status": "pass",
+   "detail": "max influences 3"
+  },
+  {
+   "check": "suit: weights normalised",
+   "status": "pass",
+   "detail": "max |sum - 1| = 0.00000"
+  },
+  {
+   "check": "suit: all 24 clips present (section 3.3)",
+   "status": "pass",
+   "detail": "24 of 24"
+  },
+  {
+   "check": "suit: no bone scale keys",
+   "status": "pass",
+   "detail": "no scale channels"
+  },
+  {
+   "check": "suit: root never moves (no root motion)",
+   "status": "pass",
+   "detail": "root constant"
+  },
+  {
+   "check": "suit: only hips and prop bones translate",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "suit: durations match astronaut_anims.json (30 fps)",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "indoor: triangles <= 6000 (whole file)",
+   "status": "pass",
+   "detail": "5964 in the file = Body 3356 + heads [588, 676, 636, 708]; one colonist shows Body + one head = 4064"
+  },
+  {
+   "check": "indoor: contract materials present",
+   "status": "pass",
+   "detail": "has ['Frame', 'Hair', 'Jumpsuit', 'Rubber', 'Screen', 'Skin', 'SuitAccent', 'Trim']"
+  },
+  {
+   "check": "indoor: COLOR_0 (baked AO) on every primitive",
+   "status": "pass",
+   "detail": "True"
+  },
+  {
+   "check": "indoor: weights <= 4 per vertex",
+   "status": "pass",
+   "detail": "max influences 3"
+  },
+  {
+   "check": "indoor: weights normalised",
+   "status": "pass",
+   "detail": "max |sum - 1| = 0.00000"
+  },
+  {
+   "check": "indoor: all 24 clips present (section 3.3)",
+   "status": "pass",
+   "detail": "24 of 24"
+  },
+  {
+   "check": "indoor: no bone scale keys",
+   "status": "pass",
+   "detail": "no scale channels"
+  },
+  {
+   "check": "indoor: root never moves (no root motion)",
+   "status": "pass",
+   "detail": "root constant"
+  },
+  {
+   "check": "indoor: only hips and prop bones translate",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "indoor: durations match astronaut_anims.json (30 fps)",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "suit: idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: idle_look loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: run loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: carry_walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: carry_idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: work_console loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: work_bench loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: talk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: repair_kneel loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_eat loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_type loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sleep loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: injured_walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: dead loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: kneel_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: kneel_enter end on the kneel rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.409 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: kneel_exit start on the kneel rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.409 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: kneel_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_enter end on the sit rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_exit start on the sit rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: sit_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: lie_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: lie_enter end on the lie rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: lie_exit start on the lie rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: lie_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: collapse start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: collapse end on the dead rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: cheer start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: cheer end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.35 deg (hand.L world, frame 77)"
+  },
+  {
+   "check": "suit: idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: idle_look bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "5.62 deg (head world, frame 71)"
+  },
+  {
+   "check": "suit: idle_look mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "17.27 deg (shin.R local, frame 15) at 1x"
+  },
+  {
+   "check": "suit: walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "suit: run largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "22.12 deg (shin.L local, frame 7) at 1x"
+  },
+  {
+   "check": "suit: run mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0006 m"
+  },
+  {
+   "check": "suit: carry_walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "17.54 deg (shin.R local, frame 15) at 1x"
+  },
+  {
+   "check": "suit: carry_walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "suit: carry_idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.75 deg (forearm.L local, frame 25)"
+  },
+  {
+   "check": "suit: carry_idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: work_console bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "1.36 deg (forearm.L world, frame 54)"
+  },
+  {
+   "check": "suit: work_console mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: work_bench bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.95 deg (forearm.L world, frame 61)"
+  },
+  {
+   "check": "suit: work_bench mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: talk bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.35 deg (forearm.L world, frame 44)"
+  },
+  {
+   "check": "suit: talk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: kneel_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "10.66 deg (hand.L world, frame 40)"
+  },
+  {
+   "check": "suit: kneel_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0095 m"
+  },
+  {
+   "check": "suit: repair_kneel bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "5.41 deg (hand.R world, frame 1)"
+  },
+  {
+   "check": "suit: repair_kneel mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0024 m"
+  },
+  {
+   "check": "suit: kneel_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.35 deg (forearm.L world, frame 37)"
+  },
+  {
+   "check": "suit: kneel_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0055 m"
+  },
+  {
+   "check": "suit: sit_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "11.15 deg (hand.L world, frame 37)"
+  },
+  {
+   "check": "suit: sit_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: sit_idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "2.01 deg (forearm.R local, frame 80)"
+  },
+  {
+   "check": "suit: sit_idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: sit_eat bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.14 deg (hand.R world, frame 60)"
+  },
+  {
+   "check": "suit: sit_eat mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: sit_type bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "2.94 deg (forearm.L local, frame 57)"
+  },
+  {
+   "check": "suit: sit_type mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: sit_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.58 deg (hand.L world, frame 31)"
+  },
+  {
+   "check": "suit: sit_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: lie_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.03 deg (shin.L world, frame 76)"
+  },
+  {
+   "check": "suit: lie_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: sleep bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.07 deg (upper_arm.L local, frame 1)"
+  },
+  {
+   "check": "suit: sleep mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.5227 m"
+  },
+  {
+   "check": "suit: lie_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.85 deg (forearm.R local, frame 27)"
+  },
+  {
+   "check": "suit: lie_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: injured_walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "12.81 deg (shin.L local, frame 38) at 1x"
+  },
+  {
+   "check": "suit: injured_walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "suit: collapse largest bone step per frame (a fall: no fixed limit)",
+   "status": "info",
+   "detail": "22.05 deg (forearm.R local, frame 34) at 1x"
+  },
+  {
+   "check": "suit: collapse mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0045 m"
+  },
+  {
+   "check": "suit: dead bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.00 deg (None , frame 0)"
+  },
+  {
+   "check": "suit: dead mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0020 m"
+  },
+  {
+   "check": "suit: cheer bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.29 deg (upper_arm.L world, frame 19)"
+  },
+  {
+   "check": "suit: cheer mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: carry_walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0094 m over 192 contact runs"
+  },
+  {
+   "check": "suit: carry_walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 1.120 m, speed 1.050 m/s"
+  },
+  {
+   "check": "suit: injured_walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0148 m over 192 contact runs"
+  },
+  {
+   "check": "suit: injured_walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 0.900 m, speed 0.675 m/s"
+  },
+  {
+   "check": "suit: run foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0100 m over 219 contact runs"
+  },
+  {
+   "check": "suit: run stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 2.270 m, speed 3.405 m/s"
+  },
+  {
+   "check": "suit: walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0094 m over 192 contact runs"
+  },
+  {
+   "check": "suit: walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 1.120 m, speed 1.050 m/s"
+  },
+  {
+   "check": "suit: run is the travel pace (3.2-3.6 m/s) with a flight phase",
+   "status": "pass",
+   "detail": "3.40 m/s, 6 of 20 frames in flight, hips bob 0.035 m"
+  },
+  {
+   "check": "suit: walk knee bend with the heel down 8-18 deg (critic: 10-15)",
+   "status": "pass",
+   "detail": "planted knee 6.3..14.8 deg, hips bob 0.027 m"
+  },
+  {
+   "check": "suit: stand height 1.80 m, top <= 1.88 m",
+   "status": "pass",
+   "detail": "top 1.848 m"
+  },
+  {
+   "check": "suit: faces +X",
+   "status": "pass",
+   "detail": "foot->toe (0.131, 0.016, -0.065)"
+  },
+  {
+   "check": "suit: idle reads at game size (weight shift >= 6 cm, turn >= 15 deg)",
+   "status": "pass",
+   "detail": "hips 0.064 m, chest yaw 16.9 deg"
+  },
+  {
+   "check": "suit: stand arm line 7-11 deg from the body",
+   "status": "pass",
+   "detail": "9.3 deg"
+  },
+  {
+   "check": "suit: sit rests on the seat (top 0.46 m, +/- 1.5 cm)",
+   "status": "pass",
+   "detail": "lowest body point over the seat 0.462 m"
+  },
+  {
+   "check": "suit: nothing behind x -0.40 m within 2 cm of the seat top (pack clearance)",
+   "status": "pass",
+   "detail": "lowest point there 0.618 m"
+  },
+  {
+   "check": "suit: no body more than 2 cm into the seat, front 3 cm edge soft (sit clips)",
+   "status": "pass",
+   "detail": "0 vertices at worst"
+  },
+  {
+   "check": "suit: sleep on the mattress (suits do not sleep in beds; for information)",
+   "status": "info",
+   "detail": "lowest 0.524 m (the thicker suit sinks 2.6 cm)"
+  },
+  {
+   "check": "suit: lie_enter / lie_exit and the bed (suits never use beds; for information)",
+   "status": "info",
+   "detail": "68 vertices inside the bed box at worst"
+  },
+  {
+   "check": "suit: dead lies on the ground (lowest point -0.01..0.05 m)",
+   "status": "pass",
+   "detail": "-0.002 m"
+  },
+  {
+   "check": "suit: repair_kneel hands at the panel (0.45 m ahead, 0.40 m high)",
+   "status": "pass",
+   "detail": "hands reach x 0.450 m, mean height 0.461 m"
+  },
+  {
+   "check": "suit: repair_kneel visor front at least 6 cm from the panel (x <= 0.39 m)",
+   "status": "pass",
+   "detail": "visor front at x 0.351 m, 9.9 cm from the panel"
+  },
+  {
+   "check": "suit: repair_kneel head at least 8 cm from the machine face (x <= 0.37 m)",
+   "status": "pass",
+   "detail": "head / helmet front at x 0.357 m"
+  },
+  {
+   "check": "suit: kneeling knee on the ground (-0.01..0.03 m)",
+   "status": "pass",
+   "detail": "0.016 m"
+  },
+  {
+   "check": "suit: work_console hands on a 1.00 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 0.996 m, 100% of frames within 3.5 cm, hands reach x 0.54 m"
+  },
+  {
+   "check": "suit: work_bench hands on a 0.90 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 0.894 m, 100% of frames within 3.5 cm, hands reach x 0.50 m"
+  },
+  {
+   "check": "suit: sit_type hands on a 0.74 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 0.729 m, 100% of frames within 3.5 cm, hands reach x 0.43 m"
+  },
+  {
+   "check": "suit: carry_idle crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
+   "status": "pass",
+   "detail": "torso vertices inside 0, hands inside up to 0.018 m, crate tilt up to 1.1 deg"
+  },
+  {
+   "check": "suit: carry_walk crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
+   "status": "pass",
+   "detail": "torso vertices inside 0, hands inside up to 0.019 m, crate tilt up to 3.2 deg"
+  },
+  {
+   "check": "indoor: idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: idle_look loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: run loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: carry_walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: carry_idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: work_console loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: work_bench loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: talk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: repair_kneel loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_idle loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_eat loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_type loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sleep loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: injured_walk loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: dead loop seam <= 1 deg",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: kneel_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: kneel_enter end on the kneel rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.409 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: kneel_exit start on the kneel rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.409 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: kneel_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_enter end on the sit rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_exit start on the sit rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: sit_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: lie_enter start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: lie_enter end on the lie rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: lie_exit start on the lie rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: lie_exit end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: collapse start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: collapse end on the dead rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: cheer start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: cheer end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.35 deg (hand.L world, frame 77)"
+  },
+  {
+   "check": "indoor: idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: idle_look bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "5.62 deg (head world, frame 71)"
+  },
+  {
+   "check": "indoor: idle_look mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "17.27 deg (shin.R local, frame 15) at 1x"
+  },
+  {
+   "check": "indoor: walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "indoor: run largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "22.12 deg (shin.L local, frame 7) at 1x"
+  },
+  {
+   "check": "indoor: run mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0006 m"
+  },
+  {
+   "check": "indoor: carry_walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "17.54 deg (shin.R local, frame 15) at 1x"
+  },
+  {
+   "check": "indoor: carry_walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "indoor: carry_idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.75 deg (forearm.L local, frame 25)"
+  },
+  {
+   "check": "indoor: carry_idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: work_console bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "1.36 deg (forearm.L world, frame 54)"
+  },
+  {
+   "check": "indoor: work_console mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: work_bench bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.95 deg (forearm.L world, frame 61)"
+  },
+  {
+   "check": "indoor: work_bench mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: talk bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.35 deg (forearm.L world, frame 44)"
+  },
+  {
+   "check": "indoor: talk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: kneel_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "10.66 deg (hand.L world, frame 40)"
+  },
+  {
+   "check": "indoor: kneel_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0095 m"
+  },
+  {
+   "check": "indoor: repair_kneel bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "5.41 deg (hand.R world, frame 1)"
+  },
+  {
+   "check": "indoor: repair_kneel mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0024 m"
+  },
+  {
+   "check": "indoor: kneel_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.35 deg (forearm.L world, frame 37)"
+  },
+  {
+   "check": "indoor: kneel_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0055 m"
+  },
+  {
+   "check": "indoor: sit_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "11.15 deg (hand.L world, frame 37)"
+  },
+  {
+   "check": "indoor: sit_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: sit_idle bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "2.01 deg (forearm.R local, frame 80)"
+  },
+  {
+   "check": "indoor: sit_idle mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: sit_eat bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.14 deg (hand.R world, frame 60)"
+  },
+  {
+   "check": "indoor: sit_eat mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: sit_type bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "2.94 deg (forearm.L local, frame 57)"
+  },
+  {
+   "check": "indoor: sit_type mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: sit_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.58 deg (hand.L world, frame 31)"
+  },
+  {
+   "check": "indoor: sit_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: lie_enter bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.03 deg (shin.L world, frame 76)"
+  },
+  {
+   "check": "indoor: lie_enter mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: sleep bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.07 deg (upper_arm.L local, frame 1)"
+  },
+  {
+   "check": "indoor: sleep mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.5402 m"
+  },
+  {
+   "check": "indoor: lie_exit bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "13.85 deg (forearm.R local, frame 27)"
+  },
+  {
+   "check": "indoor: lie_exit mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: injured_walk largest bone step per frame (locomotion: no fixed limit)",
+   "status": "info",
+   "detail": "12.81 deg (shin.L local, frame 38) at 1x"
+  },
+  {
+   "check": "indoor: injured_walk mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0014 m"
+  },
+  {
+   "check": "indoor: collapse largest bone step per frame (a fall: no fixed limit)",
+   "status": "info",
+   "detail": "22.05 deg (forearm.R local, frame 34) at 1x"
+  },
+  {
+   "check": "indoor: collapse mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0045 m"
+  },
+  {
+   "check": "indoor: dead bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "0.00 deg (None , frame 0)"
+  },
+  {
+   "check": "indoor: dead mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0202 m"
+  },
+  {
+   "check": "indoor: cheer bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.29 deg (upper_arm.L world, frame 19)"
+  },
+  {
+   "check": "indoor: cheer mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: carry_walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0094 m over 192 contact runs"
+  },
+  {
+   "check": "indoor: carry_walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 1.120 m, speed 1.050 m/s"
+  },
+  {
+   "check": "indoor: injured_walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0148 m over 192 contact runs"
+  },
+  {
+   "check": "indoor: injured_walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 0.900 m, speed 0.675 m/s"
+  },
+  {
+   "check": "indoor: run foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0100 m over 219 contact runs"
+  },
+  {
+   "check": "indoor: run stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 2.270 m, speed 3.405 m/s"
+  },
+  {
+   "check": "indoor: walk foot slide during contact <= 2 cm",
+   "status": "pass",
+   "detail": "worst 0.0094 m over 192 contact runs"
+  },
+  {
+   "check": "indoor: walk stride = speed x duration",
+   "status": "pass",
+   "detail": "stride 1.120 m, speed 1.050 m/s"
+  },
+  {
+   "check": "indoor: run is the travel pace (3.2-3.6 m/s) with a flight phase",
+   "status": "pass",
+   "detail": "3.40 m/s, 6 of 20 frames in flight, hips bob 0.035 m"
+  },
+  {
+   "check": "indoor: walk knee bend with the heel down 8-18 deg (critic: 10-15)",
+   "status": "pass",
+   "detail": "planted knee 6.3..14.8 deg, hips bob 0.027 m"
+  },
+  {
+   "check": "indoor: stand height 1.80 m, top <= 1.88 m",
+   "status": "pass",
+   "detail": "top 1.862 m"
+  },
+  {
+   "check": "indoor: faces +X",
+   "status": "pass",
+   "detail": "foot->toe (0.131, 0.016, -0.065)"
+  },
+  {
+   "check": "indoor: idle reads at game size (weight shift >= 6 cm, turn >= 15 deg)",
+   "status": "pass",
+   "detail": "hips 0.064 m, chest yaw 16.9 deg"
+  },
+  {
+   "check": "indoor: stand arm line 7-11 deg from the body",
+   "status": "pass",
+   "detail": "9.3 deg"
+  },
+  {
+   "check": "indoor: sit rests on the seat (top 0.46 m, +/- 1.5 cm)",
+   "status": "pass",
+   "detail": "lowest body point over the seat 0.468 m"
+  },
+  {
+   "check": "indoor: nothing behind x -0.40 m within 2 cm of the seat top (pack clearance)",
+   "status": "pass",
+   "detail": "lowest point there 1.135 m"
+  },
+  {
+   "check": "indoor: no body more than 2 cm into the seat, front 3 cm edge soft (sit clips)",
+   "status": "pass",
+   "detail": "0 vertices at worst"
+  },
+  {
+   "check": "indoor: sleep rests on the mattress (top 0.55 m, -1.2/+2 cm), head to +Y",
+   "status": "pass",
+   "detail": "lowest 0.540 m, head 0.54 m towards +Y"
+  },
+  {
+   "check": "indoor: lie_enter / lie_exit do not pass through the bed (front 5 cm of the mattress soft)",
+   "status": "pass",
+   "detail": "0 vertices inside the bed box at worst"
+  },
+  {
+   "check": "indoor: dead lies on the ground (lowest point -0.01..0.05 m)",
+   "status": "pass",
+   "detail": "0.020 m"
+  },
+  {
+   "check": "indoor: repair_kneel hands at the panel (0.45 m ahead, 0.40 m high)",
+   "status": "pass",
+   "detail": "hands reach x 0.428 m, mean height 0.461 m"
+  },
+  {
+   "check": "indoor: repair_kneel head at least 8 cm from the machine face (x <= 0.37 m)",
+   "status": "pass",
+   "detail": "head / helmet front at x 0.283 m"
+  },
+  {
+   "check": "indoor: kneeling knee on the ground (-0.01..0.03 m)",
+   "status": "pass",
+   "detail": "0.023 m"
+  },
+  {
+   "check": "indoor: work_console hands on a 1.00 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 1.009 m, 100% of frames within 3.5 cm, hands reach x 0.51 m"
+  },
+  {
+   "check": "indoor: work_bench hands on a 0.90 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 0.911 m, 100% of frames within 3.5 cm, hands reach x 0.48 m"
+  },
+  {
+   "check": "indoor: sit_type hands on a 0.74 m surface",
+   "status": "pass",
+   "detail": "lowest hand point 0.745 m, 100% of frames within 3.5 cm, hands reach x 0.41 m"
+  },
+  {
+   "check": "indoor: carry_idle crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
+   "status": "pass",
+   "detail": "torso vertices inside 0, hands inside up to 0.009 m, crate tilt up to 1.1 deg"
+  },
+  {
+   "check": "indoor: carry_walk crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
+   "status": "pass",
+   "detail": "torso vertices inside 0, hands inside up to 0.009 m, crate tilt up to 3.2 deg"
+  },
+  {
+   "check": "astronaut_anims.json furniture numbers",
+   "status": "pass",
+   "detail": "{'seat_z': 0.46, 'seat_back': 0.3, 'bed_z': 0.55, 'bed_back': 0.55, 'console_z': 1.0, 'console_ahead': 0.45, 'bench_z': 0.9, 'panel_ahead': 0.45, 'panel_z': 0.4}"
+  },
+  {
+   "check": "astronaut_anims.json lists every clip",
+   "status": "pass",
+   "detail": "24 clips"
+  },
+  {
+   "check": "astronaut_anims.json fps 30",
+   "status": "pass",
+   "detail": "30"
+  }
+ ],
+ "seconds": 75.2
+}

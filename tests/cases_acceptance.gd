@@ -64,6 +64,8 @@ func u01_far_site(t) -> void:
 	var b: Dictionary = g.sim.state["buildings"][site]
 	g.run_until(func(): return String(b["block"]) == "suit_range", 6000)
 	t.eq(String(b["block"]), "suit_range", "the plan shows why nobody works on it")
+	# V3 alert rule: a warning shows after its condition held for 5 s (V3_DESIGN section 2).
+	g.run_until(func(): return not H.issues_with_code(g.sim, "suit_range").is_empty(), 100)
 	var issues: Array = H.issues_with_code(g.sim, "suit_range")
 	t.check(not issues.is_empty(), "an alert names the cause")
 	if not issues.is_empty():

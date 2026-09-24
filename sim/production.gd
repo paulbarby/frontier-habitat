@@ -86,7 +86,14 @@ func machine_block(b: Dictionary) -> String:
 		if int(rec.get("from_deposit", 0)) > 0:
 			return "deposit_empty"
 		return "no_input"
+	var wn: int = int(recipe_of(b).get("water_net", 0))
+	if wn > 0 and not sim.util.water_available(b["id"], 2):
+		return "no_water"
 	return ""
+
+## An automatic recipe machine (research assembler): no staff, its batch runs by itself.
+func is_auto_recipe(b: Dictionary) -> bool:
+	return bool(sim.bdef(b["def"]).get("auto_recipe", false))
 
 ## Reserve output room and consume the inputs in one step (spec 7: atomic).
 func start_batch(b: Dictionary) -> bool:
@@ -100,6 +107,11 @@ func start_batch(b: Dictionary) -> bool:
 		n += int(rec["outputs"][res])
 	var hold: int = sim.inv.hold_in(b["inv_out"], "_batch", n, -int(b["id"]) - 1000000)
 	if hold == -1:
+		return false
+	var wn: int = int(rec.get("water_net", 0))
+	if wn > 0 and not sim.util.draw_water(b["id"], wn * sim.util.fp(), 2):
+		sim.inv.release(hold)
+		b["block"] = "no_water"
 		return false
 	for res in rec["inputs"]:
 		sim.inv.consume(b["inv_in"], res, int(rec["inputs"][res]), "batch_input")
@@ -502,6 +514,9 @@ func auto_second() -> void:
 		if b["state"] != "active" or int(b["inv_out"]) == -1:
 			continue
 		var d: Dictionary = sim.bd(b)
+		if bool(d.get("auto_recipe", false)):
+			_auto_recipe_second(b, d)
+			continue
 		var item := ""
 		var rate := 0.0
 		var water := 0.0
@@ -544,6 +559,26 @@ func auto_second() -> void:
 			sim.count_produced(item, 1)
 			v -= fp
 		acc[item] = mini(v, fp)
+
+## One second of an automatic recipe machine: start a batch when it can, then work it at
+## auto_speed (size) work points per second; level and research act through speed().
+func _auto_recipe_second(b: Dictionary, d: Dictionary) -> void:
+	if bool(b.get("trip", false)):
+		b["block"] = "flare"
+		return
+	if not has_batch(b):
+		var block: String = machine_block(b)
+		b["block"] = block
+		if block != "" or not start_batch(b):
+			return
+	if not bool(b["enabled"]):
+		b["block"] = "disabled"
+		return
+	if not bool(b["powered"]):
+		b["block"] = "no_power"
+		return
+	b["block"] = ""
+	work_batch(b, float(d.get("auto_speed", 1.0)))
 
 # ---------------------------------------------------------------- spoilage
 ## Once per second (design section 3). Every inventory keeps an exact integer accumulator
@@ -601,11 +636,16 @@ func wear_second() -> void:
 		return
 	var per_second: float = float(sim.bal["wear_per_day"]) / float(sim.bal["day_length"]) * sim.difficulty("wear_mult")
 	var blds: Dictionary = sim.state["buildings"]
+	# Version 3: with hazards on, machines wear by the v3 rule (sim/hazards.gd: wear,
+	# maintenance, breakdowns with a fault). The v2 health loss stays for the rest.
+	var v3_wear: bool = sim.hazards.level() > 0.0 and bool(sim.bal["hazards"]["wear"].get("enabled", true))
 	for id in blds:
 		var b: Dictionary = blds[id]
 		if b["state"] != "active" or b["kind"] == "link" or b["kind"] == "special":
 			continue
 		if not bool(b["enabled"]):
+			continue
+		if v3_wear and sim.hazards.is_machine(b):
 			continue
 		b["health"] = maxf(0.0, float(b["health"]) - per_second * float(sim.bd(b).get("wear_mult", 1.0)))
 		b["out_rate"] = float(sim.bal["degraded_output"]) if float(b["health"]) < float(sim.bal["health_degraded"]) else 1.0

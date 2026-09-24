@@ -22,6 +22,7 @@ uniform vec3 field_center = vec3(0.0);
 uniform vec3 field_size = vec3(60.0, 14.0, 60.0);
 uniform float field_amount = 1.0;
 uniform float radial = 0.0;       // outward speed from the emitter centre (dust rings)
+uniform int yaw_dir = 0;          // 1: INSTANCE_CUSTOM.w turns `dir` about +Y (per-emitter direction)
 
 varying vec4 v_col;
 varying vec2 v_uv;
@@ -53,7 +54,13 @@ void particle_vertex(inout vec3 vtx, vec2 uv, mat4 model, vec4 custom, mat4 view
 		float ang = r3.x * 6.2831;
 		float rr = spawn == 1 ? rad : rad * sqrt(r3.y);
 		vec3 off = vec3(cos(ang) * rr, 0.0, sin(ang) * rr);
-		vec3 d = normalize(dir + (r3 - 0.5) * 2.0 * spread);
+		vec3 bd = dir;
+		if (yaw_dir == 1) {
+			float cy = cos(custom.w);
+			float sy = sin(custom.w);
+			bd = vec3(dir.x * cy + dir.z * sy, dir.y, -dir.x * sy + dir.z * cy);
+		}
+		vec3 d = normalize(bd + (r3 - 0.5) * 2.0 * spread);
 		float sp = mix(speed_min, speed_max, r3.z);
 		vec3 vel = d * sp + (rr > 0.001 ? normalize(off) : vec3(0.0)) * radial * (0.6 + 0.4 * r3.z);
 		p = origin + off + vel * t + 0.5 * gravity * t * t + wind * t * (0.4 + r3.y * 0.6);
@@ -64,7 +71,11 @@ void particle_vertex(inout vec3 vtx, vec2 uv, mat4 model, vec4 custom, mat4 view
 	vec3 vp = (view_m * vec4(p, 1.0)).xyz;
 	vec2 corner = (uv - 0.5) * 2.0;
 	if (stretch > 0.0) {
-		vec3 vel_v = (view_m * vec4(field > 0.5 ? wind : (dir * mix(speed_min, speed_max, r3.z) + gravity * t), 0.0)).xyz;
+		vec3 sdir = dir;
+		if (yaw_dir == 1) {
+			sdir = vec3(dir.x * cos(custom.w) + dir.z * sin(custom.w), dir.y, -dir.x * sin(custom.w) + dir.z * cos(custom.w));
+		}
+		vec3 vel_v = (view_m * vec4(field > 0.5 ? wind : (sdir * mix(speed_min, speed_max, r3.z) + gravity * t), 0.0)).xyz;
 		vec2 sd = vel_v.xy;
 		float l = length(sd);
 		vec2 ax = l > 0.001 ? sd / l : vec2(0.0, 1.0);

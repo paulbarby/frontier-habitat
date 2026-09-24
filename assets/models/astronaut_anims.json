@@ -1,0 +1,299 @@
+{
+ "fps": 30,
+ "height": 1.8,
+ "frames_note": "frames = index of the last frame; the clip lasts frames / fps seconds. Loops: the last frame equals the first. Locomotion: playback scale = ground speed / speed_mps; stride_m = ground distance of one loop.",
+ "skeleton": [
+  "root",
+  "hips",
+  "spine",
+  "chest",
+  "neck",
+  "head",
+  "shoulder.L",
+  "upper_arm.L",
+  "forearm.L",
+  "hand.L",
+  "prop.L",
+  "thigh.L",
+  "shin.L",
+  "foot.L",
+  "toe.L",
+  "shoulder.R",
+  "upper_arm.R",
+  "forearm.R",
+  "hand.R",
+  "prop.R",
+  "thigh.R",
+  "shin.R",
+  "foot.R",
+  "toe.R"
+ ],
+ "clips": {
+  "idle": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true
+  },
+  "walk": {
+   "frames": 32,
+   "duration_s": 1.0667,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true,
+   "speed_mps": 1.05,
+   "stride_m": 1.12
+  },
+  "sit_enter": {
+   "frames": 58,
+   "duration_s": 1.9333,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "sit",
+   "loop": false
+  },
+  "sit_idle": {
+   "frames": 150,
+   "duration_s": 5.0,
+   "kind": "loop",
+   "pose_from": "sit",
+   "pose_to": "sit",
+   "loop": true
+  },
+  "sit_exit": {
+   "frames": 53,
+   "duration_s": 1.7667,
+   "kind": "exit",
+   "pose_from": "sit",
+   "pose_to": "stand",
+   "loop": false
+  },
+  "idle_look": {
+   "frames": 180,
+   "duration_s": 6.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true
+  },
+  "run": {
+   "frames": 20,
+   "duration_s": 0.6667,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true,
+   "speed_mps": 3.405,
+   "stride_m": 2.27
+  },
+  "carry_walk": {
+   "frames": 32,
+   "duration_s": 1.0667,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true,
+   "speed_mps": 1.05,
+   "stride_m": 1.12,
+   "carry": true
+  },
+  "carry_idle": {
+   "frames": 90,
+   "duration_s": 3.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true,
+   "carry": true
+  },
+  "work_console": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true
+  },
+  "work_bench": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true
+  },
+  "talk": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true
+  },
+  "kneel_enter": {
+   "frames": 53,
+   "duration_s": 1.7667,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "kneel",
+   "loop": false
+  },
+  "repair_kneel": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "kneel",
+   "pose_to": "kneel",
+   "loop": true
+  },
+  "kneel_exit": {
+   "frames": 65,
+   "duration_s": 2.1667,
+   "kind": "exit",
+   "pose_from": "kneel",
+   "pose_to": "stand",
+   "loop": false
+  },
+  "sit_eat": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "sit",
+   "pose_to": "sit",
+   "loop": true
+  },
+  "sit_type": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "sit",
+   "pose_to": "sit",
+   "loop": true
+  },
+  "lie_enter": {
+   "frames": 112,
+   "duration_s": 3.7333,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "lie",
+   "loop": false
+  },
+  "sleep": {
+   "frames": 180,
+   "duration_s": 6.0,
+   "kind": "loop",
+   "pose_from": "lie",
+   "pose_to": "lie",
+   "loop": true
+  },
+  "lie_exit": {
+   "frames": 95,
+   "duration_s": 3.1667,
+   "kind": "exit",
+   "pose_from": "lie",
+   "pose_to": "stand",
+   "loop": false
+  },
+  "injured_walk": {
+   "frames": 40,
+   "duration_s": 1.3333,
+   "kind": "loop",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": true,
+   "speed_mps": 0.675,
+   "stride_m": 0.9
+  },
+  "collapse": {
+   "frames": 69,
+   "duration_s": 2.3,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "lie",
+   "loop": false,
+   "ends_on": "dead"
+  },
+  "dead": {
+   "frames": 30,
+   "duration_s": 1.0,
+   "kind": "hold",
+   "pose_from": "lie",
+   "pose_to": "lie",
+   "loop": true
+  },
+  "cheer": {
+   "frames": 90,
+   "duration_s": 3.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false
+  }
+ },
+ "furniture": {
+  "seat_z": 0.46,
+  "seat_back": 0.3,
+  "bed_z": 0.55,
+  "bed_back": 0.55,
+  "console_z": 1.0,
+  "console_ahead": 0.45,
+  "bench_z": 0.9,
+  "panel_ahead": 0.45,
+  "panel_z": 0.4
+ },
+ "pose_rest": {
+  "stand": {
+   "clip": "idle",
+   "frame": 0
+  },
+  "sit": {
+   "clip": "sit_idle",
+   "frame": 0
+  },
+  "lie": {
+   "clip": "sleep",
+   "frame": 0
+  },
+  "kneel": {
+   "clip": "repair_kneel",
+   "frame": 0
+  }
+ },
+ "carry": {
+  "bone": "prop.R",
+  "origin": "crate bottom centre",
+  "size": 0.4,
+  "prop_R_offset": {
+   "origin": [
+    -0.22004,
+    0.02502,
+    0.18988
+   ],
+   "basis_x": [
+    0.01857,
+    0.99958,
+    0.0223
+   ],
+   "basis_y": [
+    0.99252,
+    -0.02112,
+    0.12021
+   ],
+   "basis_z": [
+    0.12063,
+    0.0199,
+    -0.9925
+   ]
+  },
+  "crate_bottom_centre_frame0_blender": [
+   0.41843,
+   0.0,
+   0.80187
+  ],
+  "note": "prop.R has no keys in any clip (it keeps its place in the right hand). Attach the crate to prop.R with the fixed local Transform3D prop_R_offset (Godot bone space: Basis(basis_x, basis_y, basis_z) columns, origin); its origin is the crate's bottom centre. The crate rides the right hand in carry_idle and carry_walk."
+ },
+ "collapse_ends_on": "dead frame 0 (on the ground); dead is the lie-state loop after collapse"
+}

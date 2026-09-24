@@ -117,3 +117,201 @@ RENDER script 2.5 ms). The HUD cost is reported in `RENDER-to-UI.md` §5.
 3. Greenhouse glass reads grey from above (ART-A's roof mixes opaque panels with 38 % glass).
 4. No depth texture in Compatibility: particles have no soft edges (they fade by age).
 5. Status badge glyphs are shader-drawn; the inspector does not reuse them (offered to UI).
+
+## 2026-09-24 — v3 milestone 1: big map, astronauts, doorways, interior light
+
+State: `node tools/godot.mjs check` green. Web build `build/web_render/` (exported from a private
+mirror by `tools/render_export.mjs`, so another agent's half-saved file cannot break my build).
+
+| item (V3 §11.4) | state | files |
+|---|---|---|
+| 1. 810 m map | **done, tested in web.** Terrain in 128 m chunks, 4 levels (2/4/8/16 m) with skirts, fine levels built lazily (one mesh per frame), pebbles per chunk shown only on the finest level, far ring as 4 strips. Splat 1 px/m on big maps. Camera zooms to 454 m on 810 m (`max_distance` = 0.56 x map), far plane scales, fog and shadow distance scale with zoom. 256 m saves: 2 x 2 chunks, all built at once (as v2). `hazard` overlay: terrain shader tints meteor / wind / quake zones (8 m texels from `sim.world.hazard_at`) with contour lines at x1.25 and x1.5. Headless build time 810 m: 569 ms (desktop). | `fx_terrain.gd`, `terrain.gdshader`, `camera_rig.gd` (via view), `fx_sky.gd` |
+| 2. Characters | **working with ART-NPC's pilot suit.** GPU skinning of the imported mesh itself (BONE_INDICES/BONE_WEIGHTS read in the shader, bind→slot table), all clip frames baked into one RGBA32F texture, every colonist of a variant one MultiMesh instance: 1 draw call per material for all colonists. Pose state machine (`fx_npc_pose.gd`): stand/sit/lie/kneel, enter/exit clips always, 0.25 s cross-fades, walk↔run blend with one phase, rate = speed/stride (no cap, per orchestrator), carry layer re-parented at the chest, animation in game time (pause freezes, 2x plays 2x). Role colour on SuitAccent, head variant and 6 skin tones per colonist (indoor file not delivered yet). Missing file/clips: v2 rigid colonist or nearest clip; missing pose → stand at the anchor. | `fx_npc.gd`, `fx_npc_pose.gd`, `shaders/npc_skin.gdshader`, `fx_npc_fixture.gd` (procedural test rig, never shown unless asked) |
+| 3. Doorways | **working with habitat_m + doorway.glb.** Wall_00..31 merged into ONE mesh (segment id in UV2) with a wall-cut shader; each room hides the segments touching the 1.5 m opening via a 32-bit instance mask; doorway.glb at the link angle on the wall ring, widened when the hole is wider than 2.2 m; leaves slide 0.75 m when a body is within 2 m; *Top parts hide in the cutaway. Corridor ribs every 2.4 m. Tested: habitat rotated 17° with corridors at 17/101/199/290°, habitats with 1 and 2 corridors. | `fx_doors.gd`, `models.gd`, `fx_instancer.gd`, `shaders/wall_cut*.gdshader*` |
+| 4. Furniture use | **working** with SIM's `agent.use`: body walks through Anchor_Aisle points to the anchor, turns, then enter/loop/exit; `i = -1` (no free anchor) → ring position; missing anchor → ring position, logged once. Test staging `__fhr.cmd("use fill <id>")` (view only). | `fx_npc.gd` |
+| 5. Interior light | **first pass.** Interior surfaces + inward wall faces get a warm AO-modulated fill (0.05 day / 0.30 night), warm floor light pools under every Anchor_Light (1 MultiMesh), up to 2/4/6 real OmniLights at the lamps of the open rooms nearest the focus (the sky keeps that many fewer night lamps: ≤ 8 per object). Screens get a subtle animated UI pattern. New materials known: LightStrip, Screen, Wood, Cushion, Floor, FloorDark, Fabric (interior-only), Jumpsuit, Skin. | `fx_interior.gd`, `shaders/interior.gdshader`, `shaders/light_pool.gdshader`, `models.gd` |
+| 7. npc_check | **done.** Runs the game's baker and state machine on both GLBs: every pose→pose, loop→loop, locomotion ramp to 3.6 m/s, carry on/off, walk→pose→walk, one-shots. Rule per orchestrator 2026-09-24 (pops: > 15° and > 1.25 x the in-clip step at playback rate; root ≤ 0.1 m). Pilot suit: all transitions pass (0 pop frames, root 0.0 m); 19 clips reported missing (not in the pilot). | `tools/npc_check.gd` → `art/npc/godot_check.json` |
+
+Found and fixed on the way (tested, not guessed):
+- **Packed arrays taken out of a Dictionary are copies** in GDScript 4: `(d["v"] as PackedVector3Array).append(...)` changes nothing. Cost an hour; now "take out, grow, put back".
+- Mesh read-back (`surface_get_arrays`) DOES work in the web build (probe command `probe_mesh`).
+- SIM's speeds (3.2 m/s out, 3.6 m/s in at 1x) vs the pilot walk (1.05 m/s): reported to ART-NPC; orchestrator decided `run` = normal pace.
+
+Not done yet: hazard visuals (6), performance on the late colony with 70 colonists (8), critic shots.
+Not tested: the indoor astronaut (file missing), lie/kneel/work clips with the real GLB (clips missing; the fixture
+covers them), rooms other than habitat_m (their v3 models are not delivered; old rooms show no doorway).
+## 2026-09-24 — v3 milestone 2: critic round 2 fixes, hazards, performance
+
+State: `node tools/godot.mjs check` green (141 scripts). Web build `build/web_render/`.
+
+**Critic round 2 (all addressed; shots in `art/critic_input/render/` with index.md):**
+- Night interiors: warm AO-modulated fill (floors x1.9), floor light pools, real lights at `Anchor_Light_i` of the
+  nearest open rooms. Measured floor night/day on identical frames: 58–113 % (display luminance,
+  `tools/render_measure.ps1`).
+- Cyan fragments: the selection outline was drawn from the full wall mesh (no doorway mask): walls left out of the
+  outline. Screen material toned to ART-HAB's dark teal with thin moving lines.
+- Doorways: ART-HAB's reference rule (hide segments under the whole frame, doorway at `Rw = R − 0.32`, `wall_patch`
+  pieces fill the rest, unions for close doors); `Sign` hides in the cutaway; ribs at 2.5 m. Ready for
+  `Headboard_<i>` objects (hidden within 1.3 m of a doorway centre, same mask method).
+- Colonists: inside rooms they walk the `Anchor_Aisle` graph and stand on the aisle nearest their sim position, never
+  on the centre table; anchor heights used as delivered. Service anchors: several people side by side; survey
+  (`b = -1`) kneels in place.
+- `shake_enabled` on rig and view; `open_interior(id)`; badges thin out when zoomed far out.
+
+**Hazard visuals (item 6), `fx_hazards.gd`, tested with SIM's real events (`debug=1`):**
+- Meteor: forecast ring + countdown (cyan when covered), streak, impact flash/light/fire/debris/dust, shockwave ring,
+  fading scorch, crater stamped into the terrain (loaded games get all craters at once), smoke.
+- Turret: tracer and air burst (code path written; NOT seen: no turret model or intercept in my tests).
+- Meteor shower (strikes), quake (shake, dust on structures, smooth crack decal), solar flare (sky aurora, violet-green
+  grade), wind storm (fast pale dust sheets, rotors x `env.wind_mult`), dust devil (turning column moving along its
+  path, path shown while forecast), breach (white air jets), breakdown (fault in the badge text, coloured by fault;
+  WORN n % badge above 75 % of the threshold), fragment piles (procedural stones + violet shards until ART-HAB's prop).
+
+**Performance (item 8)** — headless Chrome, RTX 3060, 1600 x 900, quality 2, frame cap OFF (`tools/render_perf.mjs`,
+results appended to `build/web_render/perf_v3.json`):
+
+| scene | fps mean / min | draw calls |
+|---|---:|---:|
+| stress save, 810 m, 172 structures, **70 colonists**, overview 110 m, HUD on (before shadow proxies) | 87.5 / 76 | 1 672 |
+| same, after shadow proxies (final) | 94.9 / 77 | 1 258 |
+| same, HUD hidden | 127 / 125 | 936 |
+| same, 35 m | 110 / 91 | 1 005 |
+| `showcase_late.fhsave` (v2 save, 256 m, 89 structures, 20 colonists), overview, HUD on | 107 / 85 | 943 |
+
+Shadow proxies (models.gd): each casting group with several opaque surfaces gets a one-surface twin drawn
+shadows-only (it follows hidden groups, roof lift and the doorway mask). This cut about 500 shadow draw calls.
+RENDER script per frame at 70 colonists: 2.8 ms (bodies 1.4 ms).
+
+`npc_check` (pilot suit): 11 tests, 0 pop frames, root 0.0 m; the only failures are the 19 clips outside the pilot.
+
+Not done / not tested: indoor astronaut and non-pilot clips (not delivered; lie/kneel/work fall back to standing);
+turret intercept visuals not seen; only habitat M is a v3 room (other rooms have no doorways yet); dust on solar
+panels (`b.dust`) not drawn; the quality-0/1 look of the new effects not checked.
+
+## 2026-09-24 — v3 milestone 3: full astronaut set, ART-HAB production, budget met on showcase_v3_late
+
+State: `node tools/godot.mjs check` green (141 scripts). `npc_check`: PASS, 140 tests, 0 failures
+(`art/npc/godot_check.json`; suit 6 839 tris, indoor 5 932, 4 heads, 24 clips, shared bake).
+
+**Character system (item 2), per the orchestrator's V3 §3.4 decision:**
+- Blends: per-bone LOCAL rotations with quaternion slerp on the CPU (dynamic texture rows); never a basis lerp.
+- Loop cross-fade = max(0.25 s, largest bone change / 300°/s), capped at 0.6 s. Walk and run share one phase;
+  `run_latch` hysteresis; at `run_w` >= 0.999 the run clip plays alone (no CPU blend).
+- Far bodies take the dominant pose; per-frame pose cache. Agents cost 2.6–3.2 ms per frame at 66 colonists.
+- Indoor variant: head variant (4) and skin tone (6) per colonist, hair tint (4), role colour on `SuitAccent`.
+  Suit outside, indoor inside. A suited colonist never lies in a bed and never plays `sit_eat` (critic round 3).
+- Clips in use: lie/sleep on beds, kneel/repair_kneel at `Anchor_Service` and breaches (no service anchor: kneel in
+  place), work_console/work_bench/sit_type per work pose, sit_eat, talk, carry layer, injured_walk, collapse/dead,
+  cheer. Helmet lamp halo at night.
+- Crate: ART-NPC round 3 rule. The crate hangs from `prop.R` by `carry.prop_R_offset` from
+  `astronaut_anims.json`. `tools/render_crate_check.gd`: carry_idle frame 0 gives (0.418, 0.802, 0.000), 0.0°, both
+  variants.
+- Critic round 5: skin tone 5 = linear (0.91, 0.60, 0.42); hair colour 1 = (0.10, 0.05, 0.025).
+
+**ART-HAB production (items 3–6):** `Tall_<nn>` merged with a segment mask, hidden within 2.2 m of a doorway;
+`wall_patch` and doorway `Accent` tinted by category; `Anchor_Lamp_*` warm pools; turret muzzle rotated with the
+turret; crater.glb scaled so the rim matches the sim radius. Doorways checked on showcase_v3_late for the junction
+(2), airlock (2), habitat, kitchen, greenhouse, oxygen plant, atmo processor XL, research lab, medical, lounge,
+workshop, storehouse, fungus farm: frames sit in the wall, no cyan fragments, no frame overlap
+(`art/critic_input/render/31–34`).
+
+**Draw-call work on showcase_v3_late (66 colonists, 141 structures):**
+- Wall shell / inside split (inside hidden with the roof closed); doorway, patch and rib cast no shadow.
+- Astronauts: one merged shadow proxy per body variant; heads cast no shadow (−32).
+- Deposit rings: one mesh for all deposits (−17).
+- Shadow-proxy material is now two-sided. With back-face culling a SHADOWS_ONLY proxy of an open shell cast NO
+  shadow: the Meridian hull lost its shadow when proxies came in. Found and fixed in this milestone
+  (`art/critic_input/render/36`). `node_from(tpl, true)` gives the ship its proxies; ghosts and construction nodes
+  keep per-surface shadows.
+
+| scene (`tools/render_perf.mjs`, RTX 3060, 1600 x 900, quality 2, no frame cap) | fps mean / min | draw calls mean / max |
+|---|---:|---:|
+| showcase_v3_late, overview 110 m, HUD on | 75.4 / 67 | 1 384 / 1 387 |
+| showcase_v3_late, overview 110 m, HUD hidden | 82.8 / 69 | 1 087 / 1 090 |
+| showcase_v3_late, 35 m, HUD on | 81.0 / 76 | 1 140 / 1 144 |
+| showcase_v3_late, 450 m (max zoom), HUD on | 86.5 / 83 | 1 396 / 1 399 |
+| stress save, 70 colonists, 172 structures, overview, HUD on | 87.5 / 84 | 1 251 |
+
+The HUD adds about 297 draw calls (UI's canvas). The 3D view alone is 1 087. At 450 m the margin to 1 400 is 1–4.
+
+Not done / not tested: turret tracer and air burst still not seen in a real intercept; Tall hiding and lamp pools
+checked only in passing, not per room type; dust on solar panels not drawn; quality 0/1 look of the new effects not
+checked; carry strip shows walk pace, not a clean run-pace sequence (the save gave no carrier at run speed in view).
+
+## 2026-09-25 — v3 milestone 4: critic round 6
+
+State: `node tools/godot.mjs check` green (143 scripts). `npc_check` PASS 140/0. `tools/render_crate_check.gd` PASS.
+New tool: `tools/render_pose_nan.gd` (96 blended poses, 0 bad).
+
+| round-6 item | done | evidence |
+|---|---|---|
+| Terrain through floors / over corridors | crater model skipped within 1.6 r of structures, height scale ≤ 2; terrain-mesh pads under every structure and corridor (`fx_terrain.set_pads`, fed by `world_view._pads_of`) | 48 |
+| Bodies stacking | exclusive anchors (`_claims`), room standing slots (`_assign_slots`), 0.45 m screen separation (`_separate`) | 46, stats `npc.slots` |
+| Two bodies at one bed | exclusive anchors; sleeper without a bed stands on an aisle point | 46 |
+| Carriers through furniture | room from position, not `a.bld` | — (not shot) |
+| Tilted white panel | not reproduced on this build with the critic's own steps | 46 |
+| Lamp pool < 15 m | half size and brightness | 45 |
+| `follow` | edge pan waits for a real mouse move; debug follow fixed for skinned bodies; camera jumps to the body | 47 |
+| Evidence | walk and run 10 frames at 33 ms (41, 42), door open/close (43), skin and hair (44) | 41–44 |
+
+**Bug found and fixed:** MultiMesh custom data is half float in the Compatibility renderer. Row indices
+1 000 000+ (CPU-blended poses) overflowed: bodies in a cross-fade or walk/run mix were not drawn at all. Rows above
+1024 lost their fraction and rows above 2048 were rounded to even numbers. Pose data now goes through a 1 x 1024
+RGBAF texture (`bdata`); custom data keeps the body index and look. Also: `game_rate` was averaged with an upper
+clamp of 16, which read slow motion as a slowed game; the clamp is now 1000 and the average slower.
+
+Performance (`tools/render_perf.mjs`, RTX 3060, 1600 x 900, quality 2, no frame cap):
+
+| scene | fps mean / min | draw calls mean / max | agents ms |
+|---|---:|---:|---:|
+| showcase_v3_late 110 m, HUD on | 59.4 / 55 | 1 412 / 1 417 | 4.4 |
+| showcase_v3_late 110 m, HUD hidden | 67.1 / 62 | 1 116 / 1 120 | 4.5 |
+| showcase_v3_late 35 m | 58.7 / 53 | 1 143 / 1 149 | 4.3 |
+| showcase_v3_late 450 m | 64.1 / 58 | 1 426 / 1 429 | 2.3 |
+| stress save, 70 colonists | 64.7 / 62 | 1 254 | 4.1 |
+
+Draw calls are 12–29 over 1 400 again. Cause: the 02:55–02:57 exports of `habitat_*` and `lounge_*` (Interior
+14 surfaces on `lounge_m`, `habitat_xl`). Request sent to ART-HAB. Frame time also grew: `process_ms` is 28–32
+(was 21–23); RENDER's share is +1.8 ms (slots, separation, aisle routing for more bodies); the rest is outside
+RENDER's timers.
+
+## 2026-09-25 — v3 milestone 5: ART-HAB J1–J6 in the game, final evidence
+
+| item | in the game | where |
+|---|---|---|
+| J1 junction kit | `fx_doors._junction`: mouths `asin(1.20/Rw)`, merge < 8°, full circle ≥ 352°, posts at span ends and bisectors ≥ 58°, sills ≤ 0.45 m chord, patches, Accent tint, no leaves | shot 56; `doors.stats` junctions 2, posts 7 |
+| J2 door hood | `DoorLTop`/`DoorRTop` hidden while a door is open (any amount) and with the roof; `FrameTop`, `Sign` with the roof | `fx_doors.sync` |
+| J3 Tall near doors | 2.2 m rule, per room type counted in `doors.stats.tall` (scene_final: habitat M 1 of 11, cantina S 1 of 1, airlock 1 of 4, medical S/M 0, bio_lab 0) | shots 57–61 |
+| J4 lights | lamp pools (0.8 m, 3 100 K); family accent: coloured OmniLight at the nearest `Anchor_Accent_*` of each open room (80/90 of a ceiling light, range 3.0 m) + coloured floor spill per anchor; ceiling lights 3.2 m; interior fill falls off 25 % towards the wall (`interior.gdshader`, `room_r` per model) | shot 62 |
+| J5 crater | `crater.glb` scaled by the sim r (rim crest), height ≤ 2 x; skipped within 1.6 r of structures; hazard props kept out of the interior fill (the rim is `Wood`) | `fx_hazards._crater_model`, `models.gd` |
+| J6 Ember | emissive, no night boost (`models._night_k`) | meteor_rock |
+
+Also: the window band of the 3.0 rooms bloomed white at night (Window night boost 1.55 on a continuous band);
+now 0.75.
+
+Performance after ART-HAB's 8-surface cut (`tools/render_perf.mjs`, same method as before):
+
+| scene | fps mean / min | draw calls mean / max |
+|---|---:|---:|
+| showcase_v3_late 110 m, HUD on | 61.1 / 55 | 1 325 / 1 330 |
+| showcase_v3_late 110 m, HUD hidden | 71.0 / 66 | 1 030 / 1 033 |
+| showcase_v3_late 35 m | 68.2 / 62 | 1 003 / 1 008 |
+| showcase_v3_late 450 m | 68.8 / 57 | 1 339 / 1 342 |
+| stress save, 70 colonists | 64.1 / 60 | 1 199 |
+
+## 2026-09-25 — v3 milestone 6: critic round 8 polish
+
+1. Room overflow: free points inside, then corridor queue points 0.8 m apart, then two rings outside the wall
+   (suits). Walks between rooms go through doorways (`_route_rooms`); the airlock's outer door counts. Display
+   separation keeps bodies 0.6 m inside the wall. Measured on scene_final: 17 queued, min gap 0.45 m, 0 close pairs.
+2. Interior `Glass`: `shaders/glass.gdshader` (alpha 0.3, cyan, fresnel); wall-ring Glass through `wall_cut_alpha`.
+3. Hazards: decals get `glow` = 1 + 2.2 x haze (thicker, more opaque, capped colour); wind storm = screen streaks +
+   pale grade in `post_grade` (plus the existing sheets and rotor spin-up); flare = aurora curtains in `post_grade`;
+   intercept = larger burst at 24 m, glow sprites (`flash_sprite.gdshader`), muzzle flash.
+4. Window band night boost 1.55 → 0.26 (x base); kitchen cook-line warm pool at `Anchor_Work_*`.
+5. Door centre line: see 1.
+6. Hair: auburn (0.34, 0.075, 0.018), dark blonde (0.58, 0.40, 0.17) linear.
+7. Crops at mid growth in `tools/render_final_save.gd`.
+
+Perf (showcase_v3_late): 110 m HUD on 56.5–60.0 / 48–56 fps, 1 325 draw calls; HUD off 70.7 / 67; 35 m 68.6 / 62;
+450 m 75.3 / 71; stress 68.3 / 60, 1 199. npc_check PASS 140/0.

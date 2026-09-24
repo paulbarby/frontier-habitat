@@ -16,6 +16,9 @@ uniform sampler2D nrm_b : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D macro : filter_linear_mipmap, repeat_enable;
 uniform sampler2D splat : filter_linear, repeat_disable;
 uniform sampler2D ground : filter_linear, repeat_disable;
+uniform sampler2D hazard : filter_linear, repeat_disable;
+uniform float hazard_on = 0.0;
+uniform float splat_texel = 0.001953125;
 
 uniform vec2 map_size = vec2(256.0, 256.0);
 uniform float tile_a = 5.0;      // sand + gravel
@@ -97,7 +100,7 @@ void fragment() {
 	alb *= 1.0 + (sp.b - 0.5) * 0.5;
 
 	// Craters: dark bowls, bright ejecta rims, and bent normals.
-	float tx = 1.0 / 512.0;
+	float tx = splat_texel;
 	float cxh = texture(splat, clamp(suv + vec2(tx, 0.0), vec2(0.0), vec2(1.0))).a;
 	float czh = texture(splat, clamp(suv + vec2(0.0, tx), vec2(0.0), vec2(1.0))).a;
 	vec2 cgrad = vec2(cxh - sp.a, czh - sp.a) * inside;
@@ -125,6 +128,22 @@ void fragment() {
 		float oa = ov > 0.75 ? 0.55 : (ov > 0.25 ? 0.22 + grid * 0.35 : 0.0);
 		alb = mix(alb, oc, oa * overlay);
 		EMISSION = oc * oa * overlay * 0.25;
+	}
+
+	// Hazard zones (V3 1): meteor red, wind cyan, quake violet; only above-average risk
+	// is coloured, with contour lines at x1.25 and x1.5.
+	if (hazard_on > 0.5 && inside > 0.5) {
+		vec3 hz = texture(hazard, cuv).rgb * 1.5 + 0.5;
+		vec3 risk = clamp((hz - 1.0) / 0.8, 0.0, 1.0);
+		vec3 hc = vec3(1.0, 0.36, 0.22) * risk.r + vec3(0.25, 0.85, 1.0) * risk.g + vec3(0.7, 0.45, 1.0) * risk.b;
+		float ha = clamp(max(max(risk.r, risk.g), risk.b), 0.0, 1.0);
+		hc /= max(risk.r + risk.g + risk.b, 1e-3);
+		float mh = max(max(hz.r, hz.g), hz.b);
+		float fw = fwidth(mh) * 1.5 + 1e-4;
+		float line = (1.0 - smoothstep(0.0, fw, abs(mh - 1.25))) + (1.0 - smoothstep(0.0, fw, abs(mh - 1.5)));
+		alb = mix(alb * 0.72, hc, ha * 0.62);
+		alb = mix(alb, vec3(1.0), clamp(line, 0.0, 1.0) * 0.5);
+		EMISSION = hc * (ha * 0.18 + line * 0.25);
 	}
 
 	vec3 t = normalize(vec3(1.0, 0.0, 0.0) - n * n.x);

@@ -1,0 +1,48 @@
+{
+  "round": 6,
+  "date": "2026-09-24",
+  "scope": "first in-game round: npc_interaction, npc_ingame, doorways in game. Evidence: art/critic_input/render/20-40 (RENDER) and my own shots from build/web_render (23:25) with showcase_v3_late.fhsave, simulation running, no staging",
+  "pass_mark": 0.65,
+  "subjects": {
+    "npc_interaction": {
+      "consistency": 0.62, "appeal": 0.60, "style": 0.68, "score": 0.63, "pass": false,
+      "fixes": [
+        {"owner": "RENDER", "fix": "Two bodies on one spot. In unstaged play colonists stack into each other: 3-4 in the airlock (art/critic/r6_crop_airlock_stack.png), 2 suits merged at the crate pile (r6/airlock49_z8.png, r6/ag_50.png), 2 at one lab desk (r6/lab_z9.png), 2 overlapping at the kitchen table (r6/kitchen_z9.png). Give every body a view-side slot: when more colonists share a building than it has anchors, put the extras on Anchor_Stand_* then on a ring of free points 0.6 m apart; never two bodies within 0.45 m."},
+        {"owner": "RENDER", "fix": "Two colonists at one bed, one kneeling on it and the other standing inside the neighbouring bed (r6_crop_bedstand.png, habitat 51 at night). Never give one bed anchor to two bodies; a colonist that waits for a bed waits on an aisle point."},
+        {"owner": "ART-HAB", "fix": "Check every Anchor_Bed stand point in the bay layout: in a bay of 2 side-by-side beds the stand point must be on free floor with >= 0.35 m clearance to the neighbour bed and its bedside unit. Add this to the build check. The shot above suggests the inner bed's stand point sits against or on the neighbour bed."},
+        {"owner": "RENDER", "fix": "A colonist carrying a medical crate walks through the research-lab holo table (r6/lab_z9.png). Carriers inside rooms must follow the Anchor_Aisle graph too, not the straight line to the building centre; hold the drop-off on an aisle point."},
+        {"owner": "RENDER", "fix": "A white panel floats tilted near the holo table in the research lab (r6/lab_z9.png, right of centre). Find what it is (dropped prop, crate lid, divider) and fix its transform."},
+        {"owner": "RENDER", "fix": "Keep what works: sitting at tables and at the cantina bar (r6/cantina_z9.png, 22), sleeping in beds (r6/hab1821_z9.png, 23), kneel repair (26), crate carry (27), facing the furniture. The sit and lie strips in 22/23 are smooth at 0.5 s steps."}
+      ]
+    },
+    "npc_ingame": {
+      "consistency": 0.74, "appeal": 0.70, "style": 0.76, "score": 0.73, "pass": true,
+      "fixes": [
+        {"owner": "RENDER", "fix": "Overlapping bodies (see npc_interaction fix 1) are the main thing that makes the crowd look broken at the game camera."},
+        {"owner": "RENDER", "fix": "Night halos work: suited colonists are findable at 28 m (r6/night_suit_z28.png, 29, 30). The ground pool at close range is too big and too bright (29: the pool is larger than the colonist and washes the doorway). Halve the pool radius and intensity under 15 m zoom."},
+        {"owner": "RENDER", "fix": "Feet at run speed: I could not verify foot slide from frames (the capture step was about 0.5 s, not 0.1 s). Supply a 30 fps strip (10 consecutive frames, zoom 6) of a colonist at run pace and at walk pace for the next round."},
+        {"owner": "ART-NPC", "fix": "Hair: at the game camera the indoor heads read as mostly dark hair on similar heads (20, 21, 22). Check that the new hair colours from round 5 show in game (shots 20-26 were before the change)."},
+        {"owner": "RENDER", "fix": "follow <id> centres on the simulation position, not the body; at zoom 11 the followed colonist is often off screen (r6_agents_grid.png). Centre on the view body for follow."}
+      ]
+    },
+    "doorways": {
+      "consistency": 0.74, "appeal": 0.70, "style": 0.74, "score": 0.73, "pass": true,
+      "fixes": [
+        {"owner": "RENDER", "fix": "Round-2 in-game faults are gone: no cyan fragments, frames sit on the wall, patches close the gap on every room type seen (31-34, r6/*). Keep."},
+        {"owner": "ART-HAB", "fix": "Junction with 4-6 links (round-4 FAIL) was not in this save: both junctions have 2 links in line. Deliver the junction rework and a save or scene with 4 and 6 links for the next round."},
+        {"owner": "ART-HAB", "fix": "S rooms were not in the evidence; show the S-room doorway fix in game in the next round."},
+        {"owner": "RENDER", "fix": "Door leaves: I did not see a door open for a colonist in a frame. Include one open-close strip."}
+      ]
+    }
+  },
+  "blocker_for_next_rounds": {
+    "owner": "RENDER",
+    "issue": "Terrain shows through room floors and covers corridors in showcase_v3_late: flat brown terrain slabs at or above the corridor wall height around the kitchen (r6/kitchen_a.png, r6/kitchen_z9.png), inside habitat 1821 over half the floor (r6/hab1821_z9.png), inside habitat 51 on the right floor half at night (r6/night_hab51_z9.png), inside habitat ag_15 (r6/ag_15.png), next to junction 3831 (r6/junction3831.png). The ground under every structure and corridor must be flattened (or the structure raised) on the 810 m map. This will fail interior_habitat, interior_lighting and doorways in the next in-game round if it stays. Ask SIM if the heightfield under structures is not flat."
+  },
+  "notes": [
+    "npc_interaction FAILS (0.63). The animation and the anchors work when staged, but in unstaged play bodies overlap, share a bed, stand in a neighbour bed and walk through a holo table. These are the exact checks the contract names.",
+    "No suited colonist in a bed or eating was seen in my shots. Shot 05 (older round) shows suits inside a habitat standing; that is allowed.",
+    "Shots 20-26 predate the skin/hair colour change; hair colour variety is not rated yet.",
+    "My evidence: art/critic/r6/*.png (22 interiors and junction/airlock shots, 14 follow shots, 10-frame strip, 5 night shots), grids r6_agents_grid.png, r6_run_grid.png, crops r6_crop20.png, r6_seq23_a.png, r6_seq23_b.png, r6_crop_bedstand.png, r6_crop_airlock_stack.png."
+  ]
+}

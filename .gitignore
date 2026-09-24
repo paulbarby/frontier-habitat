@@ -6,6 +6,10 @@ build/web_*/
 # regenerable Blender review renders (curated copies live in art/)
 tools/blender/previews/
 tools/blender/previews_ext/
+# critic working files and scratch renders (the verdicts live in docs/critic/)
+art/critic/
+art/critic_input/
+art/npc/_tmp/
 __pycache__/
 *.tmp.glb
 *.tmp

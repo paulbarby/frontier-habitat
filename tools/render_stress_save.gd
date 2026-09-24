@@ -1,5 +1,5 @@
 extends SceneTree
-## RENDER performance test data: a colony with about 150 structures and 60 colonists, for
+## RENDER performance test data: a colony with about 150 structures and 70 colonists (V3 budget), for
 ## frame-rate measurement only (not a playable save). Writes
 ## build/web_render/perf_stress.fhsave (outside the game package; the web build loads it
 ## through the RENDER debug hook: window.__fhr.cmd("loadurl perf_stress.fhsave")).
@@ -66,7 +66,7 @@ func _init() -> void:
 			habs.append(id)
 	var n_agents: int = sim.state["agents"].size()
 	var guard := 0
-	while n_agents < 60 and guard < 2000:
+	while n_agents < 70 and guard < 3000:
 		guard += 1
 		var p := c + Vector2(rng.randf_range(-80, 80), rng.randf_range(-80, 80))
 		var inside: bool = rng.randf() < 0.5 and not habs.is_empty()

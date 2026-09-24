@@ -649,8 +649,9 @@
    "max_radius": 4.31,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 218368,
+   "file_size": 218476,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -703,8 +704,9 @@
    "max_radius": 3.11,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 155932,
+   "file_size": 156040,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -727,7 +729,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.5,
+   "seconds": 0.3,
    "also": [
     "solar_array"
    ]
@@ -759,8 +761,9 @@
    "max_radius": 2.11,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 120892,
+   "file_size": 121000,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -813,8 +816,9 @@
    "max_radius": 5.51,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 253864,
+   "file_size": 253972,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -837,7 +841,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.6,
+   "seconds": 0.4,
    "also": []
   },
   {
@@ -870,8 +874,9 @@
    "max_radius_free": {
     "Rotor": 2.749
    },
-   "file_size": 194728,
+   "file_size": 194836,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -928,8 +933,9 @@
    "max_radius_free": {
     "Rotor": 2.227
    },
-   "file_size": 172032,
+   "file_size": 172140,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -987,8 +993,9 @@
    "max_radius_free": {
     "Rotor": 1.872
    },
-   "file_size": 162144,
+   "file_size": 162256,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1010,7 +1017,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.2,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -1043,8 +1050,9 @@
    "max_radius_free": {
     "Rotor": 3.273
    },
-   "file_size": 194708,
+   "file_size": 194816,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1068,7 +1076,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -1098,8 +1106,9 @@
    "max_radius": 2.45,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 189552,
+   "file_size": 189660,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1150,8 +1159,9 @@
    "max_radius": 1.763,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 153256,
+   "file_size": 153364,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1205,8 +1215,9 @@
    "max_radius": 1.25,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 128304,
+   "file_size": 128412,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1257,8 +1268,9 @@
    "max_radius": 3.158,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 225056,
+   "file_size": 225164,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1310,8 +1322,9 @@
    "max_radius": 3.33,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 207980,
+   "file_size": 208072,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1365,8 +1378,9 @@
    "max_radius": 2.53,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 174016,
+   "file_size": 174124,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1421,8 +1435,9 @@
    "max_radius": 1.83,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 151788,
+   "file_size": 151896,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1475,8 +1490,9 @@
    "max_radius": 4.13,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 227548,
+   "file_size": 227640,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1499,7 +1515,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.8,
+   "seconds": 0.5,
    "also": []
   },
   {
@@ -1529,8 +1545,9 @@
    "max_radius": 3.93,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 178936,
+   "file_size": 179044,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1553,7 +1570,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.5,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -1583,8 +1600,9 @@
    "max_radius": 2.93,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 151840,
+   "file_size": 151948,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1607,7 +1625,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.3,
    "also": [
     "reservoir"
    ]
@@ -1639,8 +1657,9 @@
    "max_radius": 2.13,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 127888,
+   "file_size": 127996,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1662,7 +1681,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -1692,8 +1711,9 @@
    "max_radius": 4.93,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 178260,
+   "file_size": 178368,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1717,7 +1737,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -1747,8 +1767,9 @@
    "max_radius": 3.73,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 219648,
+   "file_size": 219756,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1802,8 +1823,9 @@
    "max_radius": 2.93,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 188788,
+   "file_size": 188896,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1859,8 +1881,9 @@
    "max_radius": 2.13,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 150624,
+   "file_size": 150732,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1914,8 +1937,9 @@
    "max_radius": 4.597,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 247760,
+   "file_size": 247864,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1939,7 +1963,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.5,
    "also": []
   },
   {
@@ -1969,8 +1993,9 @@
    "max_radius": 4.33,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 259936,
+   "file_size": 260044,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -1994,7 +2019,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.4,
+   "seconds": 0.5,
    "also": []
   },
   {
@@ -2024,8 +2049,9 @@
    "max_radius": 3.43,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 224732,
+   "file_size": 224840,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -2080,8 +2106,9 @@
    "max_radius": 2.53,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 178176,
+   "file_size": 178288,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -2134,8 +2161,9 @@
    "max_radius": 5.33,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 368080,
+   "file_size": 368188,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -2190,8 +2218,9 @@
    "max_radius": 6.22,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 375216,
+   "file_size": 375324,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -2249,8 +2278,9 @@
    "max_radius": 3.441,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 278412,
+   "file_size": 278520,
    "objects": [
+    "Anchor_Service",
     "Base",
     "L2",
     "L3",
@@ -2277,7 +2307,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.8,
+   "seconds": 0.6,
    "also": []
   },
   {
@@ -2304,8 +2334,9 @@
    "max_radius": 2.353,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 164448,
+   "file_size": 164556,
    "objects": [
+    "Anchor_Service",
     "Base",
     "Lights"
    ],
@@ -2398,8 +2429,9 @@
    "max_radius": 8.9,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 161784,
+   "file_size": 161892,
    "objects": [
+    "Anchor_Service",
     "Base",
     "Lights"
    ],
@@ -2418,7 +2450,7 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.2,
+   "seconds": 0.3,
    "also": []
   },
   {
@@ -2907,6 +2939,170 @@
    "color0": true,
    "flags": [],
    "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "crater",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 650,
+   "tris_base": 650,
+   "budget": 900,
+   "tris_by_object": {
+    "Base": 650
+   },
+   "bbox_min": [
+    -1.725,
+    -1.467,
+    0.0
+   ],
+   "bbox_max": [
+    1.941,
+    1.578,
+    0.11
+   ],
+   "max_radius": 1.942,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 30228,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Ore",
+    "Soil",
+    "Wood"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "fragments",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 438,
+   "tris_base": 438,
+   "budget": 1500,
+   "tris_by_object": {
+    "Base": 222,
+    "Lights": 216
+   },
+   "bbox_min": [
+    -0.696,
+    -0.578,
+    0.0
+   ],
+   "bbox_max": [
+    0.712,
+    0.536,
+    0.689
+   ],
+   "max_radius": 0.861,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 34720,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "L4Band",
+    "Ore"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "meteor_rock",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 550,
+   "tris_base": 550,
+   "budget": 600,
+   "tris_by_object": {
+    "Base": 550
+   },
+   "bbox_min": [
+    -0.476,
+    -0.359,
+    0.142
+   ],
+   "bbox_max": [
+    0.492,
+    0.386,
+    0.808
+   ],
+   "max_radius": 0.493,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 51664,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Ember",
+    "Ore"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "meteor_turret",
+   "kind": "exterior",
+   "footprint": 2.2,
+   "tris": 1008,
+   "tris_base": 1008,
+   "budget": 4500,
+   "tris_by_object": {
+    "Base": 498,
+    "Turret": 398,
+    "Lights": 112
+   },
+   "bbox_min": [
+    -1.949,
+    -1.617,
+    0.0
+   ],
+   "bbox_max": [
+    1.617,
+    1.617,
+    2.88
+   ],
+   "max_radius": 1.977,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {
+    "Turret": 1.534
+   },
+   "file_size": 64460,
+   "objects": [
+    "Anchor_Muzzle",
+    "Anchor_Service",
+    "Base",
+    "Lights",
+    "Turret"
+   ],
+   "materials": [
+    "Accent",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "L3Band",
+    "Light",
+    "Metal",
+    "Rubber",
+    "Screen",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
    "also": []
   }
  ]

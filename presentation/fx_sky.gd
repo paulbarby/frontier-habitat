@@ -22,6 +22,9 @@ var _sites: Array = []               # [{pos, color, energy, range}]
 var _site_clock := 0.0
 var _time := 0.0
 var _sky_clock := 0.0
+var _cam_dist := 60.0
+var reserved := 0                    # real lights taken by interiors (fx_interior)
+var aurora := 0.0                    # solar flare 0..1 (fx_hazards)
 
 ## Sun elevation keyframes (degrees) -> palette. Colours are sRGB.
 const KEYS := [
@@ -121,6 +124,7 @@ func set_sites(sites: Array) -> void:
 ## camera target; `cam_dist` its distance.
 func update(t: float, day_len: float, daylight: float, delta: float, focus: Vector3, cam_dist: float, wind: float) -> void:
 	_time += delta
+	_cam_dist = cam_dist
 	# --- sun path -------------------------------------------------------------
 	var az_off := deg_to_rad(-40.0)
 	var h_ang: float
@@ -182,6 +186,7 @@ func _set_sky(k: Dictionary, zen: Color, hor: Color, st: float) -> void:
 	sky_mat.set_shader_parameter("storm", st)
 	sky_mat.set_shader_parameter("time", _time)
 	sky_mat.set_shader_parameter("sun_disc", 1.0 - st)
+	sky_mat.set_shader_parameter("aurora", aurora)
 
 func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void:
 	var sun_e: float = float(k["se"]) * (1.0 - st * 0.75)
@@ -203,7 +208,7 @@ func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void
 	key.light_color = col
 	key.light_energy = energy
 	key.visible = energy > 0.01
-	key.directional_shadow_max_distance = clampf(cam_dist * (2.0 if quality < 3 else 2.4), 45.0, 240.0)
+	key.directional_shadow_max_distance = clampf(cam_dist * (2.0 if quality < 3 else 2.4), 45.0, 520.0)
 
 func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) -> void:
 	env.ambient_light_color = k["amb"] if st <= 0.0 else (k["amb"] as Color).lerp(Color("c08a5e"), st * 0.6)
@@ -211,7 +216,8 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 	env.fog_light_color = hor.lerp(zen, 0.18).darkened(0.05)
 	var fog_d: float = lerpf(0.0026, 0.0019, night)
 	# 0.009 at full storm: about half fog at a normal camera distance, so the base stays readable.
-	env.fog_density = lerpf(fog_d, 0.009, st)
+	# Zoomed far out over the big map the haze thins, so the whole map stays readable.
+	env.fog_density = lerpf(fog_d, 0.009, st) * clampf(120.0 / maxf(_cam_dist, 120.0), 0.22, 1.0)
 	env.fog_sun_scatter = lerpf(0.28, 0.0, night)
 	env.glow_intensity = lerpf(0.4, 0.95, night)
 	env.tonemap_exposure = lerpf(1.0, 1.25, night)
@@ -248,7 +254,7 @@ func _palette(e_deg: float) -> Dictionary:
 	return out
 
 func _update_lamps(delta: float, focus: Vector3, cam_dist: float) -> void:
-	var n: int = [0, 4, 6, 8][clampi(quality, 0, 3)]
+	var n: int = maxi(0, [0, 4, 6, 8][clampi(quality, 0, 3)] - reserved)
 	if night < 0.05 or n == 0 or _sites.is_empty():
 		for l in _lamps:
 			(l as OmniLight3D).visible = false

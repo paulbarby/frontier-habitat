@@ -8,6 +8,16 @@ var _seed: LineEdit
 var _cards := {}
 var _diffs := {}
 var _summary: Label
+var _hazards := "normal"
+var _hazard_btns := {}
+
+const HAZARD_TEXT := {
+	"off": "No hazard events.",
+	"mild": "Fewer hazard events.",
+	"normal": "The designed rate. Events come more often as the colony grows.",
+	"hard": "More hazard events.",
+}
+const HAZARD_COL := {"off": Color("5EE07A"), "mild": Color("3EE0FF"), "normal": Color("FFB547"), "hard": Color("FF5A5F")}
 
 func _init() -> void:
 	pauses = true
@@ -83,6 +93,35 @@ func build() -> void:
 		v2.add_child(Kit.label(", ".join(lines) + ".", "SmallLabel", 12, P.TEXT_2))
 		drow.add_child(b2)
 		_diffs[did] = b2
+	# Hazards (V3_DESIGN §4.2): options.hazards = off | mild | normal | hard.
+	content.add_child(Kit.head("Hazards: meteors, storms, quakes, solar flares, breakdowns", P.TEXT_2, 12))
+	var hrow: HBoxContainer = Kit.hbox(12)
+	content.add_child(hrow)
+	var hz_cfg = hud.main.sim.bal.get("hazards", {}).get("settings", {})
+	for hid in HAZARD_TEXT:
+		var hh: String = String(hid)
+		var lines: String = String(HAZARD_TEXT[hh])
+		if typeof(hz_cfg) == TYPE_DICTIONARY and hz_cfg.has(hh) and typeof(hz_cfg[hh]) == TYPE_DICTIONARY and hz_cfg[hh].has("rate_mult"):
+			lines += " Events x%s." % Kit.fmt(float(hz_cfg[hh]["rate_mult"]))
+		var b3: Button = Kit.button("", func(): _pick_hazards(hh), "", "CardButton")
+		b3.toggle_mode = true
+		b3.custom_minimum_size = Vector2(0, 66)
+		b3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var v3: VBoxContainer = Kit.vbox(2)
+		v3.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		v3.offset_left = 16
+		v3.offset_top = 9
+		v3.offset_right = -10
+		b3.add_child(v3)
+		var t3: HBoxContainer = Kit.hbox(6)
+		t3.add_child(Kit.icon("hazard" if hh != "off" else "sev_ok", 15, HAZARD_COL[hh]))
+		t3.add_child(Kit.label(hh.to_upper(), "TitleLabel", 15, P.TEXT))
+		v3.add_child(t3)
+		var l3: Label = Kit.label(lines, "SmallLabel", 12, P.TEXT_2)
+		l3.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v3.add_child(l3)
+		hrow.add_child(b3)
+		_hazard_btns[hh] = b3
 	var srow: HBoxContainer = Kit.hbox(10)
 	content.add_child(srow)
 	srow.add_child(Kit.head("Seed", P.TEXT_2, 12))
@@ -103,6 +142,7 @@ func build() -> void:
 		content.add_child(Kit.label("The planet and difficulty choice is not available yet: the dry world and standard rules are used.", "SmallLabel", 12, P.AMBER))
 	_pick_planet(_planet)
 	_pick_diff(_diff)
+	_pick_hazards(_hazards)
 
 func _stat(g: GridContainer, icon_name: String, name: String, value: String, col: Color) -> void:
 	var h: HBoxContainer = Kit.hbox(6)
@@ -133,14 +173,20 @@ func _pick_diff(id: String) -> void:
 		(_diffs[k] as Button).set_pressed_no_signal(k == id)
 	_update_summary()
 
+func _pick_hazards(id: String) -> void:
+	_hazards = id
+	for k in _hazard_btns:
+		(_hazard_btns[k] as Button).set_pressed_no_signal(k == id)
+	_update_summary()
+
 func _update_summary() -> void:
 	if _summary == null:
 		return
-	_summary.text = "%s, %s." % [String(hud.data.planets().get(_planet, {}).get("name", _planet)), String(hud.data.difficulties().get(_diff, {}).get("name", _diff)).to_lower()]
+	_summary.text = "%s, %s, hazards %s." % [String(hud.data.planets().get(_planet, {}).get("name", _planet)), String(hud.data.difficulties().get(_diff, {}).get("name", _diff)).to_lower(), _hazards]
 
 func _start() -> void:
 	var seed_value: int = int(_seed.text) if _seed.text.is_valid_int() else 1001
-	var go := func(): hud.main.start_new(seed_value, {"planet": _planet, "difficulty": _diff})
+	var go := func(): hud.main.start_new(seed_value, {"planet": _planet, "difficulty": _diff, "hazards": _hazards})
 	if hud.main.on_title:
 		go.call()
 	else:

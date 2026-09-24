@@ -31,11 +31,19 @@ const RES_COLOR := {
 const SIZE_SUFFIX := ["s", "m", "l", "xl"]
 ## Top-level object names of the asset contract. Anything else is static geometry ("Base").
 const GROUPS := ["Interior", "Roof", "Rotor", "Lights", "Scaffold", "EngineGlow", "Plasma", "Damage1", "Damage2", "Damage3",
-	"Stage1", "Stage2", "Stage3", "Body", "ArmL", "ArmR", "LegL", "LegR", "L2", "L3", "L4", "L5", "Hull", "Base"]
+	"Stage1", "Stage2", "Stage3", "Body", "ArmL", "ArmR", "LegL", "LegR", "L2", "L3", "L4", "L5", "Hull",
+	"DoorLTop", "DoorRTop", "DoorL", "DoorR", "FrameTop", "Sign", "Turret", "Base"]
+## V3 §7.2: Wall_00..Wall_31 are merged into one "Walls" group (segment id in UV2.x).
+const WALL_SEGMENTS := 32
 ## Materials that the instancer recolours per instance (INSTANCE_CUSTOM.rgb).
 const TINTABLE := ["SuitAccent", "Cargo", "Skin", "Hair"]
 ## Groups that never cast a shadow (inside a closed room, or light sources).
-const NO_SHADOW := ["Interior", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3"]
+const NO_SHADOW := ["Interior", "Tall", "WallsIn", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3"]
+## Materials used only inside rooms (V3 §7.3): they get the interior fill light anywhere.
+const INTERIOR_ONLY := ["Floor", "FloorDark", "Wood", "Cushion", "Fabric", "Screen"]
+## Night fill of interiors (emission = albedo x AO x fill): day, night.
+const FILL_DAY := 0.05
+const FILL_NIGHT := 0.36
 
 static var _scenes := {}         # path -> PackedScene or null
 static var _templates := {}      # key -> template Dictionary
@@ -43,6 +51,10 @@ static var _lib := {}            # material key -> Material
 static var _mats := {}           # flat/ghost material cache (v1 helpers)
 static var _prepared := {}       # mesh instance id -> true
 static var _night: Array = []    # [{mat, base, name}]
+static var _night_sm: Array = [] # wall-cut ShaderMaterials with emission: [{mat, base, name}]
+static var _fill_mats: Array = [] # interior and wall ShaderMaterials with a "fill" parameter
+static var _int_mats := {}        # source material id -> interior ShaderMaterial
+static var _int_shader: Shader
 static var _night_f := -1.0
 static var _tint_mats := {}      # source material id -> ShaderMaterial
 static var _tint_shader: Shader
@@ -126,6 +138,11 @@ static func _template_from_file(path: String) -> Dictionary:
 	return _templates[path]
 
 static func group_of(n: String) -> String:
+	if n.begins_with("Wall_") and n.length() >= 7 and n.substr(5, 2).is_valid_int():
+		return "Walls"
+	# Tall furniture (ART-HAB P5): hidden when a doorway is close; cut away with the Interior.
+	if n.begins_with("Tall_") and n.substr(5).is_valid_int():
+		return "Tall"
 	for g in GROUPS:
 		if n.begins_with(g):
 			if (g == "L2" or g == "L3" or g == "L4" or g == "L5") and n.length() > 2 and n[2].is_valid_int():
@@ -160,8 +177,13 @@ static func _parse(root: Node3D, key: String) -> Dictionary:
 				var mesh: Mesh = (n as MeshInstance3D).mesh
 				_prepare_mesh(mesh)
 				var xf: Transform3D = pivot * rel
-				parts.append({"group": group, "mesh": mesh, "xf": xf, "pivot": pivot, "local": rel,
-					"shadow": not (group in NO_SHADOW)})
+				var part := {"group": group, "mesh": mesh, "xf": xf, "pivot": pivot, "local": rel,
+					"shadow": not (group in NO_SHADOW)}
+				if group == "Walls":
+					part["seg"] = int(tname.substr(5, 2))
+				elif group == "Tall":
+					part["seg"] = int(tname.substr(5))
+				parts.append(part)
 				var ab: AABB = xf * mesh.get_aabb()
 				aabb = ab if first else aabb.merge(ab)
 				first = false
@@ -182,6 +204,10 @@ static func _parse(root: Node3D, key: String) -> Dictionary:
 		for p in parts:
 			p["shadow"] = false
 	parts = _merge_groups(parts)
+	# Outdoor hazard props reuse room material names (crater rim = Wood): no interior fill.
+	if not (fname.begins_with("crater") or fname.begins_with("meteor_rock") or fname.begins_with("fragments")):
+		_interior_materials(parts)
+	parts = _shadow_proxies(parts)
 	var groups := {}
 	for p in parts:
 		groups[p["group"]] = true
@@ -201,6 +227,23 @@ static func _merge_groups(parts: Array) -> Array:
 	var out: Array = []
 	for g in order:
 		var list: Array = by_group[g]
+		if g == "Walls":
+			# The wall shell (seen from outside, always drawn) and the wall-side furniture
+			# (drawn only with the roof open, like the Interior): fewer draw calls per room type.
+			var shell: Array = _merge_walls(list, true)
+			var inside: Array = _merge_walls(list, false)
+			for mw in shell:
+				mw["group"] = "Walls"
+				out.append(mw)
+			for mw in inside:
+				mw["group"] = "WallsIn"
+				out.append(mw)
+			continue
+		if g == "Tall":
+			for mw in _merge_walls(list, null):
+				mw["group"] = g
+				out.append(mw)
+			continue
 		if list.size() == 1 or g in ["Rotor", "Body", "ArmL", "ArmR", "LegL", "LegR"]:
 			out.append_array(list)
 			continue
@@ -229,12 +272,368 @@ static func _merge_groups(parts: Array) -> Array:
 		out.append({"group": g, "mesh": merged, "xf": Transform3D.IDENTITY, "pivot": Transform3D.IDENTITY, "local": Transform3D.IDENTITY, "shadow": shadow})
 	return out
 
+## Shadow proxies (draw-call budget, V3 §0.2): the shadow pass costs one draw call per
+## SURFACE of every casting part, and a room has 10+ materials. Each casting part with more
+## than one opaque surface gets a twin in the same group (so it follows hidden groups, roof
+## lift, rotor spin and the wall doorway mask) that is ONE surface drawn shadows-only; the
+## part itself stops casting. Transparent surfaces never cast (as before).
+static var _proxy_mat: StandardMaterial3D
+static func _shadow_proxies(parts: Array) -> Array:
+	var out: Array = []
+	for p in parts:
+		out.append(p)
+		if not bool(p["shadow"]) or bool(p.get("shadow_only", false)):
+			continue
+		var mesh: Mesh = p["mesh"]
+		if mesh.get_surface_count() < 2:
+			continue
+		var walls: bool = p["group"] == "Walls" or p["group"] == "WallsIn" or p["group"] == "Tall"
+		var av := PackedVector3Array()
+		var an := PackedVector3Array()
+		var a2 := PackedVector2Array()
+		var ai := PackedInt32Array()
+		for si in mesh.get_surface_count():
+			var m: Material = mesh.surface_get_material(si)
+			var src = m.get_meta("src") if m != null and m.has_meta("src") else m
+			if src is BaseMaterial3D and ((src as BaseMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or (src as BaseMaterial3D).resource_name == "Glass"):
+				continue
+			var arr: Array = mesh.surface_get_arrays(si)
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			if v.is_empty():
+				continue
+			var base: int = av.size()
+			av.append_array(v)
+			var nrm = arr[Mesh.ARRAY_NORMAL]
+			if nrm is PackedVector3Array and (nrm as PackedVector3Array).size() == v.size():
+				an.append_array(nrm)
+			else:
+				var up := PackedVector3Array()
+				up.resize(v.size())
+				up.fill(Vector3.UP)
+				an.append_array(up)
+			if walls:
+				var uv2 = arr[Mesh.ARRAY_TEX_UV2]
+				if uv2 is PackedVector2Array and (uv2 as PackedVector2Array).size() == v.size():
+					a2.append_array(uv2)
+				else:
+					var z := PackedVector2Array()
+					z.resize(v.size())
+					a2.append_array(z)
+			var idx = arr[Mesh.ARRAY_INDEX]
+			if idx is PackedInt32Array and (idx as PackedInt32Array).size() > 0:
+				var src_i: PackedInt32Array = idx
+				var at: int = ai.size()
+				ai.resize(at + src_i.size())
+				for k in src_i.size():
+					ai[at + k] = src_i[k] + base
+			else:
+				var at2: int = ai.size()
+				ai.resize(at2 + v.size())
+				for k in v.size():
+					ai[at2 + k] = base + k
+		if av.is_empty():
+			continue
+		var arrays: Array = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = av
+		arrays[Mesh.ARRAY_NORMAL] = an
+		if walls:
+			arrays[Mesh.ARRAY_TEX_UV2] = a2
+		arrays[Mesh.ARRAY_INDEX] = ai
+		var pm := ArrayMesh.new()
+		pm.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		if walls:
+			pm.surface_set_material(0, wall_material(null))
+		else:
+			# Two-sided: a SHADOWS_ONLY instance with back-face culling casts no shadow from
+			# an open shell (the Meridian hull cast none, tested 2026-09-24 in the browser).
+			if _proxy_mat == null:
+				_proxy_mat = StandardMaterial3D.new()
+				_proxy_mat.resource_name = "ShadowProxy"
+				_proxy_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			pm.surface_set_material(0, _proxy_mat)
+		var q: Dictionary = p.duplicate()
+		q["mesh"] = pm
+		q["shadow_only"] = true
+		out.append(q)
+		p["shadow"] = false
+	return out
+
+## Interior parts (and interior-only materials in any part) use the interior material:
+## the library material plus the night fill (V3 §7.3). Screens get the UI pattern.
+static func _interior_materials(parts: Array) -> void:
+	for p in parts:
+		if p["group"] == "Walls":
+			continue
+		var mesh: Mesh = p["mesh"]
+		if not (mesh is ArrayMesh):
+			continue
+		var all: bool = p["group"] == "Interior"
+		for si in mesh.get_surface_count():
+			var m: Material = mesh.surface_get_material(si)
+			if m == null or not (m is BaseMaterial3D):
+				continue
+			if all or m.resource_name in INTERIOR_ONLY:
+				(mesh as ArrayMesh).surface_set_material(si, interior_material(m))
+
+static func interior_material(src: Material) -> Material:
+	var id: int = src.get_instance_id()
+	if _int_mats.has(id):
+		return _int_mats[id]
+	# Critic round 8: interior Glass is transparent (the library material arrives opaque).
+	if src.resource_name == "Glass":
+		var g := ShaderMaterial.new()
+		g.shader = load("res://shaders/glass.gdshader")
+		g.resource_name = "Glass"
+		g.set_meta("src", src)
+		_int_mats[id] = g
+		return g
+	if _int_shader == null:
+		_int_shader = load("res://shaders/interior.gdshader")
+	var b: BaseMaterial3D = src
+	var m := ShaderMaterial.new()
+	m.shader = _int_shader
+	m.resource_name = b.resource_name
+	m.set_meta("src", b)
+	m.set_shader_parameter("albedo", b.albedo_color)
+	m.set_shader_parameter("roughness", b.roughness)
+	m.set_shader_parameter("metallic", b.metallic)
+	m.set_shader_parameter("specular", b.metallic_specular)
+	m.set_shader_parameter("use_vc", b.vertex_color_use_as_albedo)
+	if b.albedo_texture != null:
+		m.set_shader_parameter("albedo_tex", b.albedo_texture)
+		m.set_shader_parameter("use_tex", true)
+	if b.emission_enabled:
+		m.set_shader_parameter("emission", b.emission)
+		m.set_shader_parameter("emission_energy", b.emission_energy_multiplier)
+		_night_sm.append({"mat": m, "base": maxf(0.2, b.emission_energy_multiplier), "name": b.resource_name})
+	m.set_shader_parameter("mode", 1 if b.resource_name == "Screen" else 0)
+	m.set_shader_parameter("fill_gain", 1.9 if b.resource_name.begins_with("Floor") else 1.0)
+	m.set_shader_parameter("fill", lerpf(FILL_DAY, FILL_NIGHT, maxf(_night_f, 0.0)))
+	_fill_mats.append(m)
+	_int_mats[id] = m
+	return m
+
+## The 32 wall segments as ONE mesh, one surface per material, UV2.x = segment + 1, with
+## wall-cut materials (shaders/wall_cut.gdshader) that hide the segments an instance masks.
+## part["wall_r"] = the outer radius of the wall ring (doorways stand on it).
+## Materials of the wall shell itself (outer face, band, trim, portholes).
+const SHELL_MATS := ["Hull", "HullDark", "Accent", "Frame", "Trim", "Window", "Glass", "Metal", "Rubber"]
+
+static func _merge_walls(list: Array, shell = null) -> Array:
+	var by_mat := {}
+	var keys: Array = []
+	var rmax := 0.0
+	var seg_pos := {}
+	for p in list:
+		var mesh: Mesh = p["mesh"]
+		var xf: Transform3D = p["xf"]
+		var seg: int = int(p.get("seg", 0))
+		# The object's own origin (Tall parts: on the floor at the item, ART-HAB P5).
+		seg_pos[seg] = (p["pivot"] as Transform3D).origin
+		var nb: Basis = xf.basis.inverse().transposed()
+		for si in mesh.get_surface_count():
+			var arr: Array = mesh.surface_get_arrays(si)
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			if v.is_empty():
+				continue
+			var m: Material = mesh.surface_get_material(si)
+			if shell != null:
+				var is_shell: bool = m != null and m.resource_name in SHELL_MATS
+				if is_shell != bool(shell):
+					continue
+			var mk: int = m.get_instance_id() if m != null else 0
+			if not by_mat.has(mk):
+				by_mat[mk] = {"mat": m, "v": PackedVector3Array(), "n": PackedVector3Array(), "c": PackedColorArray(), "uv": PackedVector2Array(), "uv2": PackedVector2Array(), "i": PackedInt32Array()}
+				keys.append(mk)
+			# Packed arrays are values: take each one out, grow it, put it back.
+			var acc: Dictionary = by_mat[mk]
+			var av: PackedVector3Array = acc["v"]
+			var an: PackedVector3Array = acc["n"]
+			var ac: PackedColorArray = acc["c"]
+			var au: PackedVector2Array = acc["uv"]
+			var a2: PackedVector2Array = acc["uv2"]
+			var ai: PackedInt32Array = acc["i"]
+			var base: int = av.size()
+			var n: int = v.size()
+			var vt: PackedVector3Array = xf * v
+			av.append_array(vt)
+			for q in vt:
+				rmax = maxf(rmax, Vector2(q.x, q.z).length())
+			var nrm = arr[Mesh.ARRAY_NORMAL]
+			if nrm is PackedVector3Array and (nrm as PackedVector3Array).size() == n:
+				an.append_array(Transform3D(nb, Vector3.ZERO) * (nrm as PackedVector3Array))
+			else:
+				var up := PackedVector3Array()
+				up.resize(n)
+				up.fill(Vector3.UP)
+				an.append_array(up)
+			var col = arr[Mesh.ARRAY_COLOR]
+			if col is PackedColorArray and (col as PackedColorArray).size() == n:
+				ac.append_array(col)
+			else:
+				var wc := PackedColorArray()
+				wc.resize(n)
+				wc.fill(Color(1, 1, 1, 1))
+				ac.append_array(wc)
+			var uv = arr[Mesh.ARRAY_TEX_UV]
+			if uv is PackedVector2Array and (uv as PackedVector2Array).size() == n:
+				au.append_array(uv)
+			else:
+				var z := PackedVector2Array()
+				z.resize(n)
+				au.append_array(z)
+			var s2 := PackedVector2Array()
+			s2.resize(n)
+			s2.fill(Vector2(seg + 1, 0))
+			a2.append_array(s2)
+			var idx = arr[Mesh.ARRAY_INDEX]
+			if idx is PackedInt32Array and (idx as PackedInt32Array).size() > 0:
+				var src: PackedInt32Array = idx
+				var at: int = ai.size()
+				ai.resize(at + src.size())
+				for k in src.size():
+					ai[at + k] = src[k] + base
+			else:
+				var at2: int = ai.size()
+				ai.resize(at2 + n)
+				for k in n:
+					ai[at2 + k] = base + k
+			acc["v"] = av
+			acc["n"] = an
+			acc["c"] = ac
+			acc["uv"] = au
+			acc["uv2"] = a2
+			acc["i"] = ai
+	var merged := ArrayMesh.new()
+	for mk in keys:
+		var acc: Dictionary = by_mat[mk]
+		var arrays: Array = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = acc["v"]
+		arrays[Mesh.ARRAY_NORMAL] = acc["n"]
+		arrays[Mesh.ARRAY_COLOR] = acc["c"]
+		arrays[Mesh.ARRAY_TEX_UV] = acc["uv"]
+		arrays[Mesh.ARRAY_TEX_UV2] = acc["uv2"]
+		arrays[Mesh.ARRAY_INDEX] = acc["i"]
+		merged.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		merged.surface_set_material(merged.get_surface_count() - 1, wall_material(acc["mat"]))
+	if merged.get_surface_count() == 0:
+		return []
+	return [{"group": "Walls", "mesh": merged, "xf": Transform3D.IDENTITY, "pivot": Transform3D.IDENTITY, "local": Transform3D.IDENTITY,
+		"shadow": true, "mask": true, "wall_r": rmax, "segments": list.size(), "seg_pos": seg_pos}]
+
+static var _wall_mats := {}
+static var _wall_shader: Shader
+static var _wall_shader_a: Shader
+## The wall-cut copy of a library material (cached).
+static func wall_material(src: Material) -> Material:
+	var id: int = src.get_instance_id() if src != null else 0
+	if _wall_mats.has(id):
+		return _wall_mats[id]
+	if _wall_shader == null:
+		_wall_shader = load("res://shaders/wall_cut.gdshader")
+		_wall_shader_a = load("res://shaders/wall_cut_alpha.gdshader")
+	var m := ShaderMaterial.new()
+	var alpha := false
+	if src is BaseMaterial3D:
+		var b: BaseMaterial3D = src
+		# Critic round 8: Glass in the wall ring is see-through too (clean-room partitions).
+		alpha = b.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or b.resource_name == "Glass"
+		m.resource_name = b.resource_name
+		m.set_meta("src", b)
+		m.set_shader_parameter("mode", 1 if b.resource_name == "Screen" else 0)
+		m.set_shader_parameter("fill", lerpf(FILL_DAY, FILL_NIGHT, maxf(_night_f, 0.0)))
+		_fill_mats.append(m)
+		m.set_shader_parameter("albedo", b.albedo_color if b.resource_name != "Glass" else Color(0.62, 0.86, 0.95, 0.3))
+		m.set_shader_parameter("roughness", b.roughness)
+		m.set_shader_parameter("metallic", b.metallic)
+		m.set_shader_parameter("specular", b.metallic_specular)
+		m.set_shader_parameter("use_vc", b.vertex_color_use_as_albedo)
+		if b.albedo_texture != null:
+			m.set_shader_parameter("albedo_tex", b.albedo_texture)
+			m.set_shader_parameter("use_tex", true)
+		if b.emission_enabled:
+			m.set_shader_parameter("emission", b.emission)
+			m.set_shader_parameter("emission_energy", b.emission_energy_multiplier)
+			_night_sm.append({"mat": m, "base": maxf(0.2, b.emission_energy_multiplier), "name": b.resource_name})
+	m.shader = _wall_shader_a if alpha else _wall_shader
+	_wall_mats[id] = m
+	return m
+
+## A copy of a template that casts no shadow (small parts on the wall line: doorways, patches,
+## corridor ribs) — draw-call budget.
+static func no_shadow(tpl: Dictionary) -> Dictionary:
+	var key: String = String(tpl["key"]) + ":ns"
+	if _templates.has(key):
+		return _templates[key]
+	var out: Dictionary = tpl.duplicate()
+	out["key"] = key
+	var parts: Array = []
+	for p in tpl["parts"]:
+		if bool(p.get("shadow_only", false)):
+			continue
+		var q: Dictionary = p.duplicate()
+		q["shadow"] = false
+		parts.append(q)
+	out["parts"] = parts
+	_templates[key] = out
+	return out
+
+## A copy of a template whose `Accent` surfaces take the per-instance colour (INSTANCE_CUSTOM):
+## doorways and wall patches carry the room's category band (ART-HAB P4).
+static func accent_tinted(tpl: Dictionary) -> Dictionary:
+	var key: String = String(tpl["key"]) + ":accent"
+	if _templates.has(key):
+		return _templates[key]
+	if _tint_shader == null:
+		_tint_shader = load("res://shaders/tint.gdshader")
+	var out: Dictionary = tpl.duplicate()
+	out["key"] = key
+	var parts: Array = []
+	for p in tpl["parts"]:
+		var q: Dictionary = p.duplicate()
+		var mesh: Mesh = p["mesh"]
+		var has := false
+		for si in mesh.get_surface_count():
+			var m: Material = mesh.surface_get_material(si)
+			if m != null and m.resource_name == "Accent":
+				has = true
+		if has and mesh is ArrayMesh and not bool(p.get("shadow_only", false)):
+			var copy: ArrayMesh = (mesh as ArrayMesh).duplicate()
+			for si in copy.get_surface_count():
+				var m2: Material = copy.surface_get_material(si)
+				if m2 != null and m2.resource_name == "Accent" and m2 is BaseMaterial3D:
+					var tm := ShaderMaterial.new()
+					tm.shader = _tint_shader
+					tm.resource_name = "AccentTint"
+					tm.set_shader_parameter("albedo", Color(1, 1, 1))
+					tm.set_shader_parameter("roughness", (m2 as BaseMaterial3D).roughness)
+					tm.set_shader_parameter("metallic", (m2 as BaseMaterial3D).metallic)
+					tm.set_shader_parameter("use_vc", (m2 as BaseMaterial3D).vertex_color_use_as_albedo)
+					copy.surface_set_material(si, tm)
+			q["mesh"] = copy
+			q["custom"] = true
+		parts.append(q)
+	out["parts"] = parts
+	_templates[key] = out
+	return out
+
 ## A plain node tree built from a template (for one-off nodes: ghosts, construction sites).
 ## Children are named after their group; each group is its own Node3D.
-static func node_from(tpl: Dictionary) -> Node3D:
+## `proxies`: shadow proxies (one-surface SHADOWS_ONLY twins) are added and the proxied part
+## casts no shadow. Without it the proxied part casts its own shadow again (ghosts and
+## construction nodes replace the materials of every mesh, so they get no proxies).
+static func node_from(tpl: Dictionary, proxies: bool = false) -> Node3D:
 	var root := Node3D.new()
 	var groups := {}
-	for p in tpl["parts"]:
+	var plist: Array = tpl["parts"]
+	for pi in plist.size():
+		var p: Dictionary = plist[pi]
+		var so: bool = bool(p.get("shadow_only", false))
+		if so and not proxies:
+			continue
+		var proxied: bool = pi + 1 < plist.size() and bool(plist[pi + 1].get("shadow_only", false))
 		var g: String = p["group"]
 		if not groups.has(g):
 			var gn := Node3D.new()
@@ -246,7 +645,12 @@ static func node_from(tpl: Dictionary) -> Node3D:
 		var mi := MeshInstance3D.new()
 		mi.mesh = p["mesh"]
 		mi.transform = p["local"] if g == "Rotor" else p["xf"]
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if bool(p["shadow"]) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if so:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		elif proxied and not proxies:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		else:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if bool(p["shadow"]) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		(groups[g] as Node3D).add_child(mi)
 	var s: float = float(tpl.get("scale", 1.0))
 	if absf(s - 1.0) > 0.001:
@@ -310,16 +714,34 @@ static func set_night(f: float) -> void:
 		return
 	_night_f = f
 	for e in _night:
-		var k := 1.0
 		if String(e["name"]) == "Glow" or String(e["name"]) == "Plasma":
 			continue
-		match String(e["name"]):
-			"Window": k = lerpf(0.18, 1.55, f)
-			"Light": k = lerpf(0.45, 2.1, f)
-			"Neon": k = lerpf(0.9, 1.7, f)
-			"L3Band", "L4Band", "L5Gold": k = lerpf(0.8, 1.6, f)
-			_: k = lerpf(0.7, 1.6, f)
-		(e["mat"] as StandardMaterial3D).emission_energy_multiplier = float(e["base"]) * k
+		var k: float = _night_k(String(e["name"]), f)
+		var m = e["mat"]
+		if m is StandardMaterial3D:
+			(m as StandardMaterial3D).emission_energy_multiplier = float(e["base"]) * k
+		elif m is ShaderMaterial:
+			(m as ShaderMaterial).set_shader_parameter(String(e.get("param", "emission_energy")), float(e["base"]) * k)
+	for e in _night_sm:
+		(e["mat"] as ShaderMaterial).set_shader_parameter("emission_energy", float(e["base"]) * _night_k(String(e["name"]), f))
+	var fill: float = lerpf(FILL_DAY, FILL_NIGHT, f)
+	for m in _fill_mats:
+		(m as ShaderMaterial).set_shader_parameter("fill", fill)
+
+## Emission multiplier of a material family by night amount f (0 day .. 1 night).
+## Interior strips and screens (V3 §7.3) are on day and night, a little brighter at night.
+static func _night_k(n: String, f: float) -> float:
+	match n:
+		# The 3.0 rooms carry a continuous window band round the lower wall: at 1.55 it
+		# bloomed to a white ring at night (2026-09-25). 0.75 keeps it warm and readable.
+		"Window": return lerpf(0.18, 0.26, f)   # critic round 8: the band is no longer a white ring
+		"Ember": return 1.0
+		"Light": return lerpf(0.45, 2.1, f)
+		"Neon": return lerpf(0.9, 1.7, f)
+		"L3Band", "L4Band", "L5Gold": return lerpf(0.8, 1.6, f)
+		# ART-HAB P8: no night boost for strips and screens (screens blew out).
+		"LightStrip", "Screen", "LightGreen", "LightAmber": return 1.0
+	return lerpf(0.7, 1.6, f)
 
 ## A ShaderMaterial copy of `src` whose albedo is multiplied by INSTANCE_CUSTOM.rgb.
 static func tint_material(src: Material) -> Material:

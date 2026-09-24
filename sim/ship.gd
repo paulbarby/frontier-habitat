@@ -31,7 +31,7 @@ func work_slots() -> int:
 static func fresh_state() -> Dictionary:
 	return {"id": -1, "stage": 0, "phase": "work", "progress": 0.0, "readiness": 0.0, "runs": 0,
 		"next_run_tick": -1, "away": false, "return_tick": -1, "program": "auto", "auto_runs": true,
-		"flight_t": -1.0, "maint": 0.0}
+		"flight_t": -1.0, "maint": 0.0, "cargo": ""}
 
 func sh() -> Dictionary:
 	return sim.state["ship"]
@@ -251,12 +251,39 @@ func run_block() -> String:
 	return ""
 
 # ---------------------------------------------------------------- commands
-## Command "ship": {action: "survey" | "supply_run" | "hold"}.
-func command(action: String) -> Dictionary:
+## The cargo the next supply run brings (V3_DESIGN section 5.1): "science" |
+## "medical" | "industrial".
+func cargo_choice() -> String:
+	var c: String = String(sh().get("cargo", ""))
+	var list: Dictionary = cfg()["supply_run"].get("cargos", {})
+	if list.has(c):
+		return c
+	return String(cfg()["supply_run"].get("default_cargo", ""))
+
+## The units a supply run brings back with the current choice.
+func cargo_items() -> Dictionary:
+	var list: Dictionary = cfg()["supply_run"].get("cargos", {})
+	var c: String = cargo_choice()
+	if list.has(c):
+		return list[c]
+	return cfg()["supply_run"]["cargo"]
+
+## Command "ship": {action: "survey" | "supply_run" | "hold", cargo?}. "cargo" (science,
+## medical, industrial) is kept for every later run until it is changed. A supply_run
+## command with a cargo that cannot leave now still keeps the choice.
+func command(action: String, p: Dictionary = {}) -> Dictionary:
+	if p.has("cargo"):
+		var want: String = String(p["cargo"])
+		if not cfg()["supply_run"].get("cargos", {}).has(want):
+			return {"ok": false, "code": "invalid"}
+		sh()["cargo"] = want
 	var s: Dictionary = sh()
 	if record().is_empty():
 		return {"ok": false, "code": "no_ship"}
 	match action:
+		"cargo":
+			# Only the choice (the Meridian panel): no flight.
+			return {"ok": true, "code": "ok"} if p.has("cargo") else {"ok": false, "code": "invalid"}
 		"survey":
 			s["program"] = "on"
 			sim.log_event("ship", "Work on the Meridian starts: %s." % stage_name(int(s["stage"])).to_lower(), [s["id"]], 0)
@@ -385,7 +412,7 @@ func _return() -> void:
 	s["away"] = false
 	s["runs"] = int(s["runs"]) + 1
 	sim.stat_add("ship_runs", "", 1)
-	sim.goals.drop_pod(sr["cargo"], "supply_run")
+	sim.goals.drop_pod(cargo_items(), "supply_run")
 	var n: int = sim.cmds.immigrants(int(sr.get("settlers", 0)))
 	var text: String = "The Meridian is back from its supply run. A supply pod landed next to the lander."
 	if n > 0:
@@ -418,4 +445,5 @@ func info() -> Dictionary:
 		"readiness": float(s["readiness"]), "runs": int(s["runs"]), "away": bool(s["away"]),
 		"flight_t": float(s["flight_t"]), "program": s["program"], "repairing": repairing(),
 		"deliver": deliver, "delivered": delivered, "missing": missing(), "run_block": rb,
-		"next_run_in": next_in, "can_run": rb == ""}
+		"next_run_in": next_in, "can_run": rb == "", "cargo": cargo_choice(), "cargo_items": cargo_items(),
+		"cargos": cfg()["supply_run"].get("cargos", {})}

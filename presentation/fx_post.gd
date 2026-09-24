@@ -9,6 +9,9 @@ var rect: ColorRect
 var mat: ShaderMaterial
 var _time := 0.0
 var _flash := 0.0
+var _flash_col := Color(1, 1, 1)
+var flare := 0.0                # solar flare grade 0..1 (fx_hazards)
+var wind := 0.0                 # wind storm 0..1 (fx_hazards): screen streaks
 
 func _init() -> void:
 	layer = -5
@@ -23,7 +26,9 @@ func _init() -> void:
 func set_enabled(on: bool) -> void:
 	visible = on
 
-func flash(amount: float) -> void:
+func flash(amount: float, col: Color = Color(1, 1, 1)) -> void:
+	if amount >= _flash:
+		_flash_col = col
 	_flash = maxf(_flash, amount)
 
 func apply(g: Dictionary, delta: float) -> void:
@@ -42,3 +47,7 @@ func apply(g: Dictionary, delta: float) -> void:
 	mat.set_shader_parameter("storm", g.get("storm", 0.0))
 	mat.set_shader_parameter("time", _time)
 	mat.set_shader_parameter("flash", _flash)
+	mat.set_shader_parameter("flash_col", Vector3(_flash_col.r, _flash_col.g, _flash_col.b))
+	mat.set_shader_parameter("flare", flare)
+	mat.set_shader_parameter("aurora", flare)
+	mat.set_shader_parameter("wind", wind)

@@ -1,7 +1,8 @@
 # SIM progress
 
 Owner: SIM agent. Files: `sim/**`, `content/**`, `tests/**`.
-Contract: `docs/AAA_DESIGN.md` sections 2 to 10.
+Contract: `docs/AAA_DESIGN.md` sections 2 to 10; version 3: `docs/V3_DESIGN.md`.
+The v3 sections are at the END of this file.
 
 ## 2026-09-23, milestone 1: schema 2 and the new systems in place
 
@@ -287,3 +288,202 @@ Alerts: `low_nutrient` (keys `low_protein` etc.), `food_variety`, `spoilage`, `r
 - Refusal code `gone` for a link whose end no longer exists (v1 said `same`).
 - A colonist outside re-plans the walk back to air every 10 s or 6 m, not every second; in
   between the estimate is the kept path plus the straight distance walked (never shorter).
+
+---
+
+# Version 3 (docs/V3_DESIGN.md)
+
+## 2026-09-24, v3 milestone 1: alerts, 810 m map, furniture use, research packs, hazards
+
+All five work items have code, content and tests. `node tools/godot.mjs check` is clean.
+Save schema is **3**. New test file `tests/cases_v3.gd` (`node tools/godot.mjs test v3_`).
+
+### 1. Alerts (§2)
+- Hysteresis in `sim/alerts.gd` `_merge()`: raise after `balance.alerts.raise_after` by severity
+  (notice 20 s, warning 5 s, critical 0 s); clear after `clear_after` 30 s false; short gaps do
+  not reset the wait; a kept alert keeps its `first_tick`. `state.alert_track = {key: {since, last}}`.
+- Each issue has `live` (false while it waits to clear).
+- The per-machine `blocked:<id>` alerts are gone: one alert, key `output_blocked`, lists the
+  machines in `entities` and in the text. The key never holds a number.
+- Test `v3_alert_output_blocked_300s`: a harvester emptied by a "carrier" every 5 s for 300 s
+  (120 block changes) raises `output_blocked` once and never clears it.
+
+### 2. Map 810 (§1)
+- `state.map_size` (new games 810, `content/scenarios.json`); v2 saves migrate to 256 and keep the
+  v2 generator bit for bit. `sim.world.version` 2 or 3, `sim.world.margin` (8 new, 4 old;
+  `balance.map_margin` 8, `map_margin_v2` 4). Code reads `world.margin`, never the balance key.
+- World generation v3 (`sim/world_gen.gd _generate_v3`): broad swell + detail octaves, impact
+  basin, fault line (low scarp), 2-3 rock ridges, 1-2 canyons, 3 crater fields, 3-5 silicate
+  flats, start deposit 33-44 m, two ore fields 75-150 m, the rest to the edge, 3 exotic fields
+  at least 220 m out (`deposits[i].exotic`), about 190 rocks (scattered, ridges, crater rims, rock
+  fields), a flat plateau of radius 125 m (blend to 175 m). The Meridian keeps 55-75 m.
+- Feature lists for the view: `world.ridges, canyons, craters, flats, basin, fault`.
+- Hazard zones: `sim.world.hazard_at(pos)` / `sim.hazards.zone_at(pos)` -> `{meteor, wind, quake}`
+  0.5..2.0 (basin meteor-prone, fault quake-prone, high ground and ridges windy). Grids
+  `world.hz_meteor/hz_wind/hz_quake`, `hz_n` x `hz_n`, `hz_step` 16 m.
+- Nav (`sim/nav.gd`): the terrain grid is built once per world; a map change only clears and
+  marks structure cells (`_bcells`). Jump point search was measured and rejected (worst 178 ms
+  for one trip round a canyon; plain A* worst 20 ms); paths stay cached per cell pair.
+- Suits: `sim.agents.suit_cap()` = 90 s x (1 + bonus `suit_air_mult`): suit_1 135 s, suit_2 198 s;
+  reach 85 m -> 206 m. Every suit read uses it.
+- Tests use offsets from the lander (`unit_placement_reasons` no longer uses absolute x = 300).
+
+### 3. Furniture use (§6)
+- `agent.use = {kind, b, i, pose, act}` or `{}`; `sim.agents.use_of(id)`. Set when a plan step
+  starts or ends. `i` = lowest free anchor; **-1 = all anchors of that kind taken** (fallback:
+  eat/talk standing). Greenhouse/fungus work index = tray index. Service (outside) has no cap.
+- Content: `buildings.json` `"furniture": {beds, seats, work_slots, stands, work_pose}` per room
+  type and size; `sim.sizes.furniture(def_id, size)`. Table: `docs/requests/SIM-to-ART-HAB.md`.
+
+### 4. Research packs (§5)
+- Items `pack_basic`, `pack_applied`, `pack_exotic` (category `science`); recipes with the same
+  ids (`auto`, `water_net` 1). Building `research_assembler` (room, automatic recipe machine,
+  sizes S-XL, levels, family science, research `sci_packs_1`; `auto_speed` per size).
+- Techs: 45 (was 29). Branches `science`, `haz`, `suit` added; `sci` renamed "Survey and medicine".
+  Tier 1: `boost` packs (x2 when held); tier 2 basic; tier 3 basic + applied; tier 4 applied;
+  tier 5 exotic packs (replaces the crystal delivery; `research.packs_paid` migrates v2 `paid`).
+- A lab uses packs as whole units, spread over the RP (credit per lab in `acc["rp:<item>"]`):
+  a tech uses exactly its pack count. Without packs tier 2+ does not move; with packs x2.
+  Goal-reward RP still count without packs (they are not lab work).
+- `sim.research.packs_of(t)`, `boost_of(t)`, `lab_packs()`, `lab_can_work(lab)`, `lab_boosted(lab)`,
+  `lab_info(lab)` (incl. `rate`, `base_rate`), `pack_stock()`, `lock_reason(t)`, `focus_mult`,
+  `network_bonus`. Command `set_focus {id, branch}` (+25 % / -10 %). Lab automation (30 % without
+  a scientist), data network (+10 % per extra joined lab, max 30 %). Lab block `no_packs`.
+- Supply-run cargo: `ship {action: "supply_run"|"cargo", cargo: science|medical|industrial}`;
+  `sim.ship.cargo_choice()`, `cargo_items()`, `info().cargo/cargos`. Science = 12 basic + 4 applied.
+- Goal pods now include packs (8 goals). Field samples: fragment sites (`sim.hazards.sites()`),
+  survey task (scientist, 30 work): 40 RP, +1 exotic, +2 ore, sometimes an exotic pack;
+  command `survey_site {id}`.
+- `meteor_turret` def (exterior, research `haz_turret_1`, range 70 m, charge 100, shot 50).
+
+### 5. Hazards (§4) - `sim/hazards.gd`
+- `state.hazards = {next_id, queue, active, done_count, wear, next_at, seen, shelter, sites,
+  craters, breached, start_tick, done}`. Queue planned every 60 s at least `horizon_days` 2 ahead
+  from the `hazard` stream; impact-time variation uses hashes (no stream draw); machine failure
+  thresholds are a hash of the building id and repair count. Whole-map weather never overlaps.
+- Kinds: meteor, meteor_shower, wind_storm, dust_storm (the v2 storm, kept with its v2 timing),
+  quake, solar_flare, dust_devil; breakdowns by wear. Rates, leads, warnings, damages in
+  `balance.hazards`. `options.hazards` off/mild/normal/hard (`sim.new_game(..., {hazards, debug})`).
+- Effects: craters (`sim.hazards.craters()`), fragment piles (`inv.fragment`), room/corridor
+  `breach` (air leak `breach_drain_per_day` 4 each), health damage (v2 repair rule), turret
+  intercepts, env multipliers (`env.solar_mult`, `speed_mult`, `wind_mult`), flare trip
+  (`b.trip`), radiation, dust on panels (`b.dust`, cleaning task).
+- Wear: machines (`sim.hazards.is_machine`) wear 4/day x level x difficulty x wind zone
+  (exteriors) x storms; maintenance at 75 % of the threshold (62.5 % with Predictive
+  Maintenance), technician, 20 work, 1 fault item; breakdown with a fault (mechanical -> spare
+  part, electrical -> electronics, seal -> polymer). With hazards on, machines no longer lose v2
+  health over time (the v3 wear replaces it); other structures keep the v2 rule.
+- Commands: `shelter {on}` (ends by itself when no flare or shower is near), `maintain {id}`,
+  `hazard_now {kind, x, y | pos, severity, in, duration, radius, length, dir}` (only with
+  `state.options.debug`; `sim.load_state(state, {debug: true})` for a loaded save), `survey_site {id}`.
+- API (§4.4): `forecast()`, `active()`, `at_risk()`, `zone_at(pos)`, `info(id)`, `event(id)`,
+  `sites()`, `craters()`, `sheltered()`, `setting()`, `queue_all()` (tests only).
+- Colonists: a shelter order (or a flare while hurt below 70 health) keeps them inside.
+  Corridor breaches are sealed from inside, at the corridor mouth.
+- Log codes: hazard_detected, hazard_warning (storm_warning for the dust storm), hazard_start,
+  storm, hazard_impact, hazard_end, storm_end, hazard_intercepted, breach, breach_sealed, fault,
+  maintained, survey, shelter. Alert keys: `hazard:<id>`, `breach`, `maintenance`, `solar_dust`,
+  `shelter`, `broken:<id>` (names the fault and item).
+- `sim.events` keeps the v2 read API (storm(), active(), seconds_to_storm()); the mirror
+  `state.events.storm` is kept in the v2 shape.
+
+### Job order and economy changes made for v3
+- Repairs, breach seals and maintenance reserve their parts before construction; the Meridian's
+  parts before construction and upgrades; a machine whose output stock is full no longer holds
+  inputs (it held 4 steel in the electronics fab while at 40 electronics).
+- Reference layout (`content/reference_layout.json`): research assembler RA (basic) and RA2
+  (applied), research queue with the pack techs, an L wind turbine and an L battery, and 6 more
+  settlers (4 technicians, 2 operators) once the L habitat stands.
+- Balance found by playing the campaign with hazards on (seed 1001, 30 days): the first tuning
+  killed the colony twice (7 cracked corridors at once; later breaches that waited for steel
+  behind construction plans). Now: crack chance 0.2 and at most 3 per quake, breach drain 4/day,
+  wind storm damage 2/min, repairs and seals first. 30 days: 26 alive, 0 deaths, hull day 24.5,
+  systems day 26.5, 21 techs.
+
+### Save schema 3 and migration
+- `persistence.gd` SCHEMA 3; `_v2_to_v3`: map_size 256, options.hazards normal (debug false),
+  hazards start one day after the load, the v2 storm -> a dust_storm event, research.packs_paid,
+  agent.use {}, ship.cargo, alert_track from the shown issues, env.wind_mult.
+
+### What was NOT tested
+- In the web build only a boot of a new 810 m game and a demo at day 5 (both run;
+  `build/web_sim`). No hazard was watched in the web build. World generation and nav times were
+  measured on desktop only.
+- The UI and RENDER sides of any v3 API.
+
+## 2026-09-24, v3 milestone 2: all tests pass, perf, fixes after the pause
+
+Full suite: **57 of 57 pass** (507 s, `node tools/godot.mjs test`). `check` clean.
+
+Fixed after ART-HAB reported 3 failing sim tests:
+- `unit_rng_streams`: the hazard planner now draws nothing until its 2-day horizon reaches the
+  scenario's first disaster day, so the hazard stream is untouched in the first days (as in v2).
+- `v2_migration_v1_save`: the v2->v3 migration no longer copies shown issues into the alert
+  hysteresis (a stale "no water" alert survived the load for 30 s).
+- `long_campaign_chapters_seed_1001`: the campaign now builds a second refinery (F2, next to the
+  mine) and applied packs stop at 12 in stock (`recipes.pack_applied.stock_max`). Hull day 25.7
+  (limit 27), 0 deaths, 26 alive. This test stays close to its limit with hazards on.
+
+Perf: `beds_used()` counted every colonist for every habitat on each bed search (0.2 ms a tick at
+70 colonists); it is now counted once per tick (kept exact on bed changes, deaths, spawns and
+removals). Measured on this PC (i7-14700K, desktop, not web):
+- tick at 70 colonists / 150 structures, hazards normal: 1.87 ms (`long_v3_perf_70_colonists`;
+  1.61 ms in `tests/dev/think_prof.gd`, 2.1 ms before the fix). Budget 2.0 ms: met, small margin.
+- world generation 810 m: 177-256 ms; nav terrain build 18-27 ms; graph rebuild after a map
+  change under 1 ms; 24 paths of 250 m 73-128 ms total, worst 12-26 ms.
+- buildable share for a room of radius 5: 86.3-87.9 % (seeds 1001-1005).
+
+UI requests C1 (`lab_info().rate`, `base_rate`) and C2 (`ship {action: "cargo"}`) are done;
+see `docs/requests/SIM-to-UI.md`.
+
+Next / not done: showcase saves are still the v2 ones (256 m map); no v3 save with an 810 m
+colony exists for RENDER perf shots. Web-build timings not measured.
+
+## 2026-09-24, v3 milestone 3: 810 m showcase saves, tick margin
+
+- `tests/make_showcase_saves.gd` now writes `content/saves/showcase_v3_mid.fhsave` (day 13.1,
+  26 colonists) and `showcase_v3_late.fhsave` (day 25.0, 66 colonists, every room type, turret,
+  forward airlock at the Meridian, fragment sites, a worn refinery, a breached corridor). Hazards
+  "normal". The late colony is partly set-up (see the script header). The v2 saves stay.
+  Test `v3_showcase_saves_load_and_run`. Names and notes in SIM-to-RENDER.md and SIM-to-UI.md.
+- Tick: a lone solar array or turbine on no network now skips the general power path (same
+  numbers). Measured 1.76-1.97 ms per tick at 70 colonists across runs while other agents used
+  the PC (last full run 1.83 ms). The 1.7 ms target is NOT reliably met; the cheap remaining
+  win (re-plan the walk back every 12 m, not 6 m) changes colonist behaviour and was not made.
+- Full suite: 58 of 58 pass (510 s).
+
+## 2026-09-24, CRITIC round 6 follow-up
+- Test `long_v3_use_slots_unique` (72,000 ticks: 10-day hard-hazard campaign + both v3 showcase
+  saves): no two living colonists share `(b, kind, i >= 0)`. Passes; no sim fix needed.
+- Ground: the sim never flattens for structures (v2 or v3); on the 810 m map every structure of both
+  showcase saves stands on exactly flat ground (0.000 m range, plateau height 0.637 m). Answer and
+  view-side causes in `docs/requests/SIM-to-RENDER.md`. Dev tools: `tests/dev/ground_check.gd`,
+  `tests/dev/uses_in.gd`.
+
+## 2026-09-25, ART-HAB round 4 answers
+- Junction: `link_min_angle_deg` 55 and `max_links` 6 (buildings.json); other rooms keep 28.
+  `sim.place.link_min_angle(room)`. New links only; saves with closer corridors load unchanged.
+  Test `v3_junction_min_link_angle_55`.
+- Tray offsets moved inward (greenhouse L/XL, fungus S/M/L/XL; counts unchanged). Numbers in
+  `docs/requests/SIM-to-ART-HAB.md`. Crater `r` = rim crest. Door clearance: no placement change.
+- `long_v3_perf_70_colonists` now checks the median of three 1000-tick windows.
+- Suite: 59 of 60 pass. `long_v3_perf_70_colonists` fails at 2.54 ms (median) while the PC is
+  loaded by other agents: the same unchanged tick code measured 1.61-1.87 ms earlier today and
+  2.14 ms now (`tests/dev/think_prof.gd`); a15 on the small colony went from 0.71 to 0.87 ms.
+
+## 2026-09-25, tick budget work (70 colonists, `long_v3_perf_70_colonists`)
+Median of three 1000-tick windows: **2.24 ms -> 1.78 ms** (windows 1.97 / 1.78 / 1.75); dev profile
+(`tests/dev/profile.gd 1001 12 1000 big`) 2.26 -> 1.58 ms. Changes (determinism kept; same answers
+unless noted):
+- Walk revision (`state.rev.walk`) moves only when the walking map changes (`nav.signature()`:
+  blocked cells + room graph; last value saved as `state.walk_sig`). Before, every cable, repair or
+  breakdown made every walker plan its route again. Behaviour change: fewer re-plans.
+- The outdoor path cache survives a rebuild when the blocked cells are unchanged.
+- `nav.nearest_supplied_lock`: the second airlock's search is skipped when its straight distance
+  already exceeds the path found (same answer).
+- Walk back to air kept 20 s / 12 m (was 10 s / 6 m); the estimate stays on the safe side.
+- Beds: room list cached per graph; the search stops for the tick once every bed is taken.
+- `needs_tick`: breathable() inlined. Power: the off-grid list no longer rebuilds every tick (its
+  key held `next_id`); lone solar arrays, turbines and batteries skip the general path.
+- Reference driver `_resolve`: structures indexed by type once per call.
+Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 0 deaths.

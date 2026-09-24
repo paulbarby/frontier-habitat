@@ -1,0 +1,400 @@
+{
+ "indoor": {
+  "bones": [
+   "root",
+   "hips",
+   "spine",
+   "chest",
+   "neck",
+   "head",
+   "shoulder.L",
+   "upper_arm.L",
+   "forearm.L",
+   "hand.L",
+   "prop.L",
+   "shoulder.R",
+   "upper_arm.R",
+   "forearm.R",
+   "hand.R",
+   "prop.R",
+   "thigh.L",
+   "shin.L",
+   "foot.L",
+   "toe.L",
+   "thigh.R",
+   "shin.R",
+   "foot.R",
+   "toe.R"
+  ],
+  "carry_prop_R": {
+   "basis_angle_from_identity_deg": 175.97,
+   "basis_x": [
+    0.02,
+    0.99,
+    0.12
+   ],
+   "basis_y": [
+    1.0,
+    -0.02,
+    0.02
+   ],
+   "basis_z": [
+    0.02,
+    0.12,
+    -0.99
+   ],
+   "origin": [
+    0.393,
+    0.998,
+    0.214
+   ]
+  },
+  "clips": {
+   "carry_idle": {
+    "length": 3.0,
+    "tracks": 22
+   },
+   "carry_walk": {
+    "length": 1.0667,
+    "tracks": 22
+   },
+   "cheer": {
+    "length": 3.0,
+    "tracks": 22
+   },
+   "collapse": {
+    "length": 2.3,
+    "tracks": 22
+   },
+   "dead": {
+    "length": 1.0,
+    "tracks": 22
+   },
+   "idle": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "idle_look": {
+    "length": 6.0,
+    "tracks": 22
+   },
+   "injured_walk": {
+    "length": 1.3333,
+    "tracks": 22
+   },
+   "kneel_enter": {
+    "length": 1.7667,
+    "tracks": 22
+   },
+   "kneel_exit": {
+    "length": 2.1667,
+    "tracks": 22
+   },
+   "lie_enter": {
+    "length": 3.7333,
+    "tracks": 22
+   },
+   "lie_exit": {
+    "length": 3.1667,
+    "tracks": 22
+   },
+   "repair_kneel": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "run": {
+    "length": 0.6667,
+    "tracks": 22
+   },
+   "sit_eat": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "sit_enter": {
+    "length": 1.9333,
+    "tracks": 22
+   },
+   "sit_exit": {
+    "length": 1.7667,
+    "tracks": 22
+   },
+   "sit_idle": {
+    "length": 5.0,
+    "tracks": 22
+   },
+   "sit_type": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "sleep": {
+    "length": 6.0,
+    "tracks": 22
+   },
+   "talk": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "walk": {
+    "length": 1.0667,
+    "tracks": 22
+   },
+   "work_bench": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "work_console": {
+    "length": 4.0,
+    "tracks": 22
+   }
+  },
+  "crate": {
+   "basis_angle_from_identity_deg": 0.0,
+   "origin": [
+    0.418,
+    0.802,
+    0.0
+   ]
+  },
+  "meshes": [
+   {
+    "materials": [
+     "Jumpsuit",
+     "Frame",
+     "SuitAccent",
+     "Trim",
+     "Skin",
+     "Screen",
+     "Rubber"
+    ],
+    "name": "Body",
+    "skinned": true,
+    "surfaces": 7
+   },
+   {
+    "materials": [
+     "Skin",
+     "Frame",
+     "Hair"
+    ],
+    "name": "Head_0",
+    "skinned": true,
+    "surfaces": 3
+   },
+   {
+    "materials": [
+     "Skin",
+     "Frame",
+     "Hair",
+     "SuitAccent"
+    ],
+    "name": "Head_1",
+    "skinned": true,
+    "surfaces": 4
+   },
+   {
+    "materials": [
+     "Skin",
+     "Frame",
+     "Hair"
+    ],
+    "name": "Head_2",
+    "skinned": true,
+    "surfaces": 3
+   },
+   {
+    "materials": [
+     "Skin",
+     "Frame",
+     "Hair",
+     "Trim"
+    ],
+    "name": "Head_3",
+    "skinned": true,
+    "surfaces": 4
+   }
+  ],
+  "skeletons": 1,
+  "triangles_from_arrays": 5964
+ },
+ "suit": {
+  "bones": [
+   "root",
+   "hips",
+   "spine",
+   "chest",
+   "neck",
+   "head",
+   "shoulder.L",
+   "upper_arm.L",
+   "forearm.L",
+   "hand.L",
+   "prop.L",
+   "shoulder.R",
+   "upper_arm.R",
+   "forearm.R",
+   "hand.R",
+   "prop.R",
+   "thigh.L",
+   "shin.L",
+   "foot.L",
+   "toe.L",
+   "thigh.R",
+   "shin.R",
+   "foot.R",
+   "toe.R"
+  ],
+  "carry_prop_R": {
+   "basis_angle_from_identity_deg": 175.97,
+   "basis_x": [
+    0.02,
+    0.99,
+    0.12
+   ],
+   "basis_y": [
+    1.0,
+    -0.02,
+    0.02
+   ],
+   "basis_z": [
+    0.02,
+    0.12,
+    -0.99
+   ],
+   "origin": [
+    0.393,
+    0.998,
+    0.214
+   ]
+  },
+  "clips": {
+   "carry_idle": {
+    "length": 3.0,
+    "tracks": 22
+   },
+   "carry_walk": {
+    "length": 1.0667,
+    "tracks": 22
+   },
+   "cheer": {
+    "length": 3.0,
+    "tracks": 22
+   },
+   "collapse": {
+    "length": 2.3,
+    "tracks": 22
+   },
+   "dead": {
+    "length": 1.0,
+    "tracks": 22
+   },
+   "idle": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "idle_look": {
+    "length": 6.0,
+    "tracks": 22
+   },
+   "injured_walk": {
+    "length": 1.3333,
+    "tracks": 22
+   },
+   "kneel_enter": {
+    "length": 1.7667,
+    "tracks": 22
+   },
+   "kneel_exit": {
+    "length": 2.1667,
+    "tracks": 22
+   },
+   "lie_enter": {
+    "length": 3.7333,
+    "tracks": 22
+   },
+   "lie_exit": {
+    "length": 3.1667,
+    "tracks": 22
+   },
+   "repair_kneel": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "run": {
+    "length": 0.6667,
+    "tracks": 22
+   },
+   "sit_eat": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "sit_enter": {
+    "length": 1.9333,
+    "tracks": 22
+   },
+   "sit_exit": {
+    "length": 1.7667,
+    "tracks": 22
+   },
+   "sit_idle": {
+    "length": 5.0,
+    "tracks": 22
+   },
+   "sit_type": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "sleep": {
+    "length": 6.0,
+    "tracks": 22
+   },
+   "talk": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "walk": {
+    "length": 1.0667,
+    "tracks": 22
+   },
+   "work_bench": {
+    "length": 4.0,
+    "tracks": 22
+   },
+   "work_console": {
+    "length": 4.0,
+    "tracks": 22
+   }
+  },
+  "crate": {
+   "basis_angle_from_identity_deg": 0.0,
+   "origin": [
+    0.418,
+    0.802,
+    0.0
+   ]
+  },
+  "meshes": [
+   {
+    "materials": [
+     "SuitMain",
+     "Trim",
+     "Frame",
+     "SuitHard",
+     "Pack",
+     "Screen",
+     "LightStrip",
+     "SuitAccent",
+     "LightGreen",
+     "LightAmber",
+     "Visor",
+     "Light",
+     "Rubber"
+    ],
+    "name": "Body",
+    "skinned": true,
+    "surfaces": 13
+   }
+  ],
+  "skeletons": 1,
+  "triangles_from_arrays": 6839
+ }
+}

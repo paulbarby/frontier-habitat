@@ -1,7 +1,7 @@
 extends "res://ui/screens/screen.gd"
 ## Colony dashboard: charts from state.metrics.series (sampled every 10 s) and
 ## metrics.daily (one row per day). Pages: Overview, Life support, Food and nutrition,
-## Industry, Population, Research. Charts update every two seconds; hover any chart for
+## Industry, Population, Research, Hazards (hazard events, hull breaches, maintenance). Charts update every two seconds; hover any chart for
 ## exact values.
 
 const LineChart = preload("res://ui/charts/line_chart.gd")
@@ -17,8 +17,9 @@ var _tpd := 6000.0
 func _init() -> void:
 	icon = "dashboard"
 	title = "Colony dashboard"
-	tabs = [["overview", "Overview", "grid"], ["life", "Life support", "cat_life_support"], ["food", "Food and nutrition", "cat_food"],
-		["industry", "Industry", "cat_industry"], ["population", "Population", "people"], ["research", "Research", "research"]]
+	tabs = [["overview", "Overview", "grid"], ["life", "Life", "cat_life_support"], ["food", "Food", "cat_food"],
+		["industry", "Industry", "cat_industry"], ["population", "People", "people"], ["research", "Research", "research"],
+		["hazards", "Hazards", "hazard"]]
 
 func _ready() -> void:
 	_tpd = float(hud.main.sim.bal["day_length"]) * float(hud.main.sim.bal["tick_hz"])
@@ -38,7 +39,7 @@ func refresh() -> void:
 func build_tab(id: String, box: VBoxContainer) -> void:
 	_updaters = []
 	var s = hud.main.sim
-	set_subtitle("Day %d  ·  %s  ·  samples every 10 s, the last 2 hours of game time" % [s.util.day_number(), Kit.plural(s.alive_count(), "colonist")])
+	set_subtitle("Day %d  ·  %s  ·  a sample every 10 s" % [s.util.day_number(), Kit.plural(s.alive_count(), "colonist")])
 	var body: VBoxContainer = Kit.vbox(12)
 	box.add_child(Kit.scroll(body))
 	match id:
@@ -47,6 +48,7 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 		"industry": _industry(body)
 		"population": _population(body)
 		"research": _research(body)
+		"hazards": _hazards(body)
 		_: _overview(body)
 	for u in _updaters:
 		(u as Callable).call()
@@ -491,3 +493,182 @@ func _research(body: VBoxContainer) -> void:
 		bb.categories = cats
 		bb.target = total
 		bb.series = [{"name": "Done", "color": P.VIOLET, "values": done}])
+
+# ---------------------------------------------------------------- hazards and maintenance (version 3)
+## V3_DESIGN §4 and §8: every detected event, the machines near failure with Maintain now,
+## and hull breaches. Lists rebuild when their rows change; times update every 2 s.
+func _hazards(body: VBoxContainer) -> void:
+	var d = hud.data
+	var s = hud.main.sim
+	var top: HBoxContainer = _row(body)
+	# Events
+	var ev: VBoxContainer = card("Hazard events", "hazard", P.AMBER)
+	var evp: PanelContainer = card_panel(ev)
+	evp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	evp.size_flags_stretch_ratio = 1.3
+	top.add_child(evp)
+	var hz_opt: String = String(s.state.get("options", {}).get("hazards", "normal"))
+	var info: Label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
+	ev.add_child(info)
+	var ev_list: VBoxContainer = Kit.vbox(4)
+	ev.add_child(ev_list)
+	var ev_sig := ["-"]   # "-": build on the first update, also when the list is empty
+	var ev_rows: Array = []
+	_updaters.append(func():
+		var rows: Array = hud.hazard.rows()
+		var done: Dictionary = s.state.get("hazards", {}).get("done_count", {}) if typeof(s.state.get("hazards", {})) == TYPE_DICTIONARY else {}
+		var parts: Array = []
+		for k in done:
+			parts.append("%s %d" % [d.hazard_name(String(k)).to_lower(), int(done[k])])
+		info.text = "Hazard setting: %s.  Events so far: %s." % [hz_opt, ", ".join(parts) if not parts.is_empty() else "none"]
+		var sig := ""
+		for r in rows:
+			sig += "%s:%s:%s|" % [r["id"], r["active"], r["countered"]]
+		if sig != ev_sig[0]:
+			ev_sig[0] = sig
+			Kit.clear(ev_list)
+			ev_rows.clear()
+			if rows.is_empty():
+				ev_list.add_child(Kit.label("No event is detected now. A Comms Tower and Deep-space radar research detect meteors earlier.", "", 13, P.GREEN))
+			for r in rows:
+				ev_rows.append(_event_row(ev_list, r))
+		for k in mini(rows.size(), ev_rows.size()):
+			var r2: Dictionary = rows[k]
+			(ev_rows[k] as Label).text = (("NOW  " + Kit.clock(r2["left_s"])) if float(r2["left_s"]) >= 0.0 else "NOW") if bool(r2["active"]) else Kit.clock(r2["eta_s"]))
+	# Breaches
+	var br: VBoxContainer = card("Hull breaches", "breach", P.RED)
+	var brp: PanelContainer = card_panel(br)
+	brp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(brp)
+	var br_list: VBoxContainer = Kit.vbox(4)
+	br.add_child(br_list)
+	var br_sig := [""]
+	_updaters.append(func():
+		var ids: Array = []
+		for id in s.state["buildings"]:
+			if not d.breach_of(s.state["buildings"][id]).is_empty():
+				ids.append(id)
+		if str(ids) == br_sig[0]:
+			return
+		br_sig[0] = str(ids)
+		Kit.clear(br_list)
+		if ids.is_empty():
+			br_list.add_child(Kit.label("No breach. Air stays in.", "", 13, P.GREEN))
+			return
+		for id in ids:
+			var b: Dictionary = s.state["buildings"][id]
+			var row: HBoxContainer = Kit.hbox(8)
+			row.add_child(Kit.icon("breach", 16, P.RED))
+			row.add_child(_goto_button(String(b.get("name", "")), int(id)))
+			row.add_child(Kit.label("Air leaks. A technician repairs it with 1 hull plate (or 2 steel).", "SmallLabel", 12, P.TEXT_2))
+			br_list.add_child(row))
+	# Maintenance
+	var mt: VBoxContainer = card("Maintenance: machines near failure", "wrench", P.CYAN)
+	body.add_child(card_panel(mt))
+	mt.add_child(Kit.wrap("Every machine wears while it works. It breaks when its wear reaches its failure point. Maintenance by a technician (1 part of the fault's item) sets wear to 0. Maintain now puts the job first.", 13, P.TEXT_2))
+	var grid: GridContainer = Kit.grid(7, 14, 6)
+	mt.add_child(grid)
+	var mt_sig := ["-"]
+	var mt_binds: Array = []
+	_updaters.append(func():
+		var risk: Array = d.at_risk()
+		var sig := ""
+		for r in risk:
+			sig += "%d|" % int(r.get("id", -1))
+		if sig != mt_sig[0]:
+			mt_sig[0] = sig
+			Kit.clear(grid)
+			mt_binds.clear()
+			for h in ["Machine", "Wear", "", "Fails in", "Fault", "Uses (stock)", ""]:
+				grid.add_child(Kit.head(h, P.TEXT_3, 11))
+			if risk.is_empty():
+				grid.add_child(Kit.label("No machine is near failure." if d.has_helper("hazards", "at_risk") or d.mock.has("at_risk") else "Wear data is not available in this version.", "", 13, P.GREEN))
+			for r in risk:
+				mt_binds.append(_risk_row(grid, r))
+		for k in mini(risk.size(), mt_binds.size()):
+			(mt_binds[k] as Callable).call(risk[k]))
+
+## One event row; returns the time label (updated by the caller).
+func _event_row(parent: VBoxContainer, r: Dictionary) -> Label:
+	var d = hud.data
+	var col: Color = hud.hazard._col(r)
+	var row: HBoxContainer = Kit.hbox(10)
+	parent.add_child(row)
+	row.add_child(Kit.icon(d.hazard_icon(String(r["kind"])), 18, col))
+	var nm: Label = Kit.head(String(r["name"]), P.TEXT, 12)
+	nm.custom_minimum_size.x = 130
+	row.add_child(nm)
+	var t: Label = Kit.num("", 13, col, true)
+	t.custom_minimum_size.x = 86
+	row.add_child(t)
+	var sev: Label = Kit.label("Severity %d" % int(r["severity"]), "SmallLabel", 12, P.sev(int(r["severity"])))
+	sev.custom_minimum_size.x = 70
+	row.add_child(sev)
+	var cov: bool = bool(r["countered"])
+	var bd: Control = Kit.badge("COVERED" if cov else "NOT COVERED", P.GREEN if cov else P.AMBER)
+	bd.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(bd)
+	if r["pos"] != null:
+		var p: Vector2 = r["pos"]
+		var b: Button = Kit.button(d.place_text(p), func():
+			host.close(self)
+			hud.main.focus_on(p), "Show\nThe camera goes to the place.", "ListButton", "target", 13)
+		b.custom_minimum_size.y = 26
+		b.add_theme_font_size_override("font_size", 12)
+		row.add_child(b)
+	else:
+		row.add_child(Kit.label("Whole map", "SmallLabel", 12, P.TEXT_2))
+	if String(r["kind"]) == "solar_flare":
+		row.add_child(hud.hazard.shelter_button(hud))
+	var adv: Label = Kit.wrap(String(r["advice"]), 12, P.TEXT_2)
+	adv.custom_minimum_size.x = 220
+	row.add_child(adv)
+	return t
+
+func _goto_button(text: String, id: int) -> Button:
+	var b: Button = Kit.button(text, func():
+		host.close(self)
+		var bb: Dictionary = hud.main.sim.state["buildings"].get(id, {})
+		if not bb.is_empty():
+			hud.main.focus_on(bb["pos"])
+			hud.main.select("building", id), "Show\nThe camera goes to it and selects it.", "ListButton", "target", 13)
+	b.custom_minimum_size.y = 26
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return b
+
+## One maintenance row in the 7-column grid; returns a Callable(row) that updates it.
+func _risk_row(grid: GridContainer, r: Dictionary) -> Callable:
+	var d = hud.data
+	var s = hud.main.sim
+	var id: int = int(r.get("id", -1))
+	var b: Dictionary = s.state["buildings"].get(id, {})
+	grid.add_child(_goto_button(String(b.get("name", "Structure %d" % id)), id))
+	var bar = Kit.bar(0.0, P.AMBER, 8.0)
+	bar.custom_minimum_size.x = 120
+	grid.add_child(bar)
+	var pct: Label = Kit.num("", 13, P.TEXT)
+	grid.add_child(pct)
+	var eta: Label = Kit.num("", 13, P.AMBER, true)
+	grid.add_child(eta)
+	var fault: String = String(r.get("fault", ""))
+	grid.add_child(Kit.label(String(d.FAULT_NAME.get(fault, fault.capitalize() if fault != "" else "-")), "", 13, P.TEXT))
+	var item: String = String(d.FAULT_ITEM.get(fault, ""))
+	if item != "":
+		var have: int = d.total_of(item)
+		grid.add_child(Kit.chip(Icons.item(item), "1 of %d" % have, d.item_color(item), "Maintenance uses 1 %s. %d in the colony." % [d.item_name(item).to_lower(), have], have >= 1, 16))
+	else:
+		grid.add_child(Kit.label("-", "", 13, P.TEXT_3))
+	var mb: Button = Kit.button("Maintain now", func():
+		hud.main.submit("maintain", {"id": id})
+		hud.toast("Maintenance of %s is the next technician job." % String(b.get("name", "")), "info", "wrench"),
+		"Maintain now\nA technician does this job first. Wear goes back to 0.", "PrimaryButton", "wrench", 14)
+	mb.custom_minimum_size.y = 28
+	grid.add_child(mb)
+	return func(rr: Dictionary):
+		var w: float = float(rr.get("wear", 0.0))
+		var fa: float = maxf(1.0, float(rr.get("fail_at", 100.0)))
+		bar.value = clampf(w / fa, 0.0, 1.0)
+		bar.color = P.RED if w / fa >= 0.9 else P.AMBER
+		pct.text = "%d%% of %d%%" % [int(w), int(fa)]
+		var e: float = float(rr.get("eta_s", -1.0))
+		eta.text = Kit.clock(e) if e >= 0.0 else "-"

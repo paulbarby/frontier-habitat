@@ -89,6 +89,20 @@ MATERIALS = {
     "Frost":      dict(color="#ddefff", rough=0.50),
     "Glow":       dict(color="#9cffb0", rough=0.40, emit="#9cffb0", emit_strength=3.0),
     "Plasma":     dict(color="#8fd8ff", rough=0.30, emit="#8fd8ff", emit_strength=5.0),
+    # 3.0 (docs/V3_DESIGN.md section 7.3): bright modern interiors
+    # 3.0 draw-call budget (RENDER): the Interior merges its plain materials into two palette materials; the
+    # colour of every face is in its vertex colour (COLOR_0 = colour x baked AO).  Base colour white.
+    "Palette":    dict(color="#ffffff", rough=0.70),
+    # lounge seating (critic round 8): lighter than Cushion so it reads at the game camera; they merge into Palette
+    "CushionLight": dict(color="#7d93b4", rough=0.90),
+    "RugLight":   dict(color="#b4bfcc", rough=0.95),
+    "PaletteMetal": dict(color="#ffffff", metal=0.60, rough=0.45),
+    "LightStrip": dict(color="#eaf6ff", rough=0.30, emit="#eaf6ff", emit_strength=2.5),
+    "Screen":     dict(color="#123c4c", rough=0.25, emit="#2fb8d8", emit_strength=0.45),
+    "Wood":       dict(color="#b08560", rough=0.55),
+    "Cushion":    dict(color="#3c4a5e", rough=0.90),
+    "Floor":      dict(color="#d9d4cb", rough=0.65),
+    "FloorDark":  dict(color="#6b6f76", rough=0.70),
 }
 
 SHARP_ANGLE = 50.0   # degrees; edges sharper than this get split normals on smooth faces

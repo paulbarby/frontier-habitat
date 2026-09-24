@@ -6,6 +6,7 @@ extends RefCounted
 ## Each issue answers: what is failing, why, how long is left, what can the player do.
 
 const Text = preload("res://sim/text.gd")
+const Hazards = preload("res://sim/hazards.gd")
 
 var sim
 
@@ -22,28 +23,62 @@ func tick_second() -> void:
 	_supply_issues(found)
 	_nutrition_issues(found)
 	_progress_issues(found)
+	_hazard_issues(found)
 	_merge(found)
 
 func _add(found: Dictionary, key: String, code: String, severity: int, text: String, action: String, entities: Array, cause: String = "", forecast: float = -1.0, count: int = 1) -> void:
 	found[key] = {"key": key, "code": code, "severity": severity, "text": text, "action": action,
 		"entities": entities, "cause": cause, "forecast": forecast, "count": count}
 
+## Hysteresis (docs/V3_DESIGN.md section 2). A condition must be true for raise_after
+## seconds (by severity: notice 20, warning 5, critical 0) before its alert shows, and
+## false for clear_after (30) seconds before the alert goes. Short gaps do not reset the
+## wait. A kept alert keeps its first tick. state.alert_track = {key: {since, last}}:
+## since = first tick of the current run of the condition, last = last tick it was true.
+## Each shown issue has "live": false while its condition is off but not yet cleared.
 func _merge(found: Dictionary) -> void:
 	var issues: Dictionary = sim.state["issues"]
+	if not sim.state.has("alert_track"):
+		sim.state["alert_track"] = {}
+	var track: Dictionary = sim.state["alert_track"]
 	var tick: int = int(sim.state["tick"])
-	for key in issues.keys():
-		if not found.has(key):
+	var hz: int = int(sim.bal["tick_hz"])
+	var cfg: Dictionary = sim.bal.get("alerts", {})
+	var clear_ticks: int = int(float(cfg.get("clear_after", 30)) * hz)
+	var raise_after: Array = cfg.get("raise_after", [20, 20, 5, 0])
+	for key in found:
+		var tr = track.get(key)
+		if tr == null:
+			track[key] = {"since": tick, "last": tick}
+		else:
+			tr["last"] = tick
+	for key in track.keys():
+		if found.has(key):
+			continue
+		if tick - int(track[key]["last"]) >= clear_ticks:
+			track.erase(key)
 			issues.erase(key)
+	for key in issues.keys():
+		if not track.has(key):
+			issues.erase(key)
+		elif not found.has(key):
+			issues[key]["live"] = false
 	for key in found:
 		var f: Dictionary = found[key]
+		f["live"] = true
 		if issues.has(key):
 			f["first_tick"] = issues[key]["first_tick"]
 			f["ack"] = issues[key]["ack"]
-		else:
-			f["first_tick"] = tick
-			f["ack"] = false
-			if int(f["severity"]) >= 2 and (f["cause"] == "" or not found.has(f["cause"])):
-				sim.log_event("alert", f["text"], f["entities"], int(f["severity"]))
+			issues[key] = f
+			continue
+		var sev: int = clampi(int(f["severity"]), 0, raise_after.size() - 1)
+		var since: int = int(track[key]["since"])
+		if tick - since < int(float(raise_after[sev]) * hz):
+			continue
+		f["first_tick"] = since
+		f["ack"] = false
+		if int(f["severity"]) >= 2 and (f["cause"] == "" or not found.has(f["cause"])):
+			sim.log_event("alert", f["text"], f["entities"], int(f["severity"]))
 		issues[key] = f
 
 func _bname(b: Dictionary) -> String:
@@ -207,11 +242,12 @@ func _building_issues(found: Dictionary) -> void:
 			_add(found, "unreachable:%d" % id, "unreachable", 2, "%s cannot be reached on foot within suit range." % b["name"],
 				"Build closer to an airlock, or clear the route.", [id])
 		elif b["state"] == "broken":
+			var item: String = sim.hazards.repair_item(b)
+			var wr: Dictionary = sim.hazards.hs()["wear"].get(int(id), {})
+			var why: String = " (%s fault)" % wr["fault"] if bool(wr.get("broken", false)) else ""
 			_add(found, "broken:%d" % id, "broken", 3 if sim.bdef(b["def"]).get("category", "") == "life_support" else 2,
-				"%s is broken." % _bname(b), "A technician repairs it with one spare part." if block != "no_spares" else "No spare parts are left. Make or buy some.", [id])
-		elif b["state"] == "active" and block == "output_blocked":
-			_add(found, "blocked:%d" % id, "output_blocked", 1, "%s: output blocked. Its output buffer is full." % _bname(b),
-				"Build a storehouse or free some carriers.", [id])
+				"%s is broken%s." % [_bname(b), why],
+				("A technician repairs it with %s." % sim.items.amount(item, 1)) if block != "no_spares" else ("No %s is free. Make or buy some." % sim.items.name_of(item).to_lower()), [id])
 		if b["state"] == "active" and not (b["trays"] as Array).is_empty() and (block == "no_power" or block == "no_water"):
 			var secs: float = sim.prod.crop_risk_seconds(b)
 			if secs >= 0.0:
@@ -240,6 +276,11 @@ func _range_and_storage(found: Dictionary, far: Array, full: Array) -> void:
 			"Build an airlock nearer to them (within about %d m on foot), joined by corridors to rooms with air. The lander hatch stops counting when its air ends." % reach,
 			far, "", -1.0, far.size())
 	if not full.is_empty():
+		# One alert for every machine whose output buffer is full (V3_DESIGN section 2).
+		# The key does not change when machines join or leave the list.
+		_add(found, "output_blocked", "output_blocked", 1,
+			"Output blocked at %s: %s. %s output %s full." % [Text.n(full.size(), "machine"), _names(full), "Its" if full.size() == 1 else "Their", "buffer is" if full.size() == 1 else "buffers are"],
+			"Build a storehouse or free some carriers.", full.duplicate(), "", -1.0, full.size())
 		var free := 0
 		var stores := 0
 		for inv_id in sim.state["inventories"]:
@@ -446,6 +487,60 @@ func _progress_issues(found: Dictionary) -> void:
 	if int(s.get("stage", 0)) >= 5 and float(s.get("readiness", 0.0)) < 50.0:
 		_add(found, "ship_readiness", "ship_readiness", 2, "The Meridian's readiness is %d%%." % int(s["readiness"]),
 			"Maintenance needs a technician, rocket fuel and spare parts at the ship.", [int(s["id"])])
+
+# ---------------------------------------------------------------- hazards (v3)
+func _hazard_issues(found: Dictionary) -> void:
+	var hz = sim.hazards
+	# Events under warning that the colony does not cover.
+	for ev in hz.hs()["queue"]:
+		if String(ev["phase"]) != "warning" or bool(ev["countered"]):
+			continue
+		var eta: int = maxi(0, int(ceil(float(int(ev["at"]) - int(sim.state["tick"])) / float(sim.bal["tick_hz"]))))
+		var sev: int = 2
+		if ev["kind"] == "solar_flare" and not hz.sheltered():
+			sev = 3
+		var place: String = "" if Hazards.WHOLE_MAP.has(String(ev["kind"])) else " near %s" % hz._place_name(ev["pos"])
+		_add(found, "hazard:%d" % int(ev["id"]), "hazard", sev, "%s in %s%s." % [Hazards.NAMES[ev["kind"]], Text.n(eta, "second"), place],
+			hz.advice(ev), [], "", float(eta))
+	for ev in hz.hs()["active"]:
+		if ev["kind"] == "solar_flare" and not hz.sheltered() and hz._people_outside() > 0:
+			_add(found, "hazard:%d" % int(ev["id"]), "hazard", 3, "Solar flare: %s outside take radiation." % Text.n(hz._people_outside(), "colonist"),
+				"Order Shelter: everyone goes inside.", [], "", float(int(ev["end"]) - int(sim.state["tick"])) / float(sim.bal["tick_hz"]))
+	# Hull breaches: one alert for all of them.
+	var blds: Dictionary = sim.state["buildings"]
+	var breached: Array = []
+	var inside := 0
+	for id in blds:
+		var b: Dictionary = blds[id]
+		if bool(b.get("breach", false)) and b["state"] != "blueprint":
+			breached.append(id)
+	if not breached.is_empty():
+		for aid in sim.state["agents"]:
+			var a: Dictionary = sim.state["agents"][aid]
+			if a["state"] == "alive" and a["where"] == "in" and breached.has(int(a["bld"])):
+				inside += 1
+		_add(found, "breach", "breach", 3 if inside > 0 else 2,
+			"Hull breach in %s: %s. Air leaks." % [Text.n(breached.size(), "structure"), _names(breached)],
+			"A technician seals a breach with 1 hull plate or 2 steel.", breached, "", -1.0, breached.size())
+	# Machines near their breakdown.
+	var risk: Array = hz.at_risk()
+	if not risk.is_empty():
+		var ids: Array = []
+		for r in risk:
+			ids.append(int(r["id"]))
+		_add(found, "maintenance", "maintenance", 1,
+			"%s %s maintenance soon: %s." % [Text.n(ids.size(), "machine"), "needs" if ids.size() == 1 else "need", _names(ids)],
+			"Technicians do it with spare parts, electronics or polymer. Use Maintain now to put one first.", ids, "", float(risk[0]["eta_s"]), ids.size())
+	# Dust on solar panels.
+	var dusty: Array = []
+	for id in blds:
+		if bool(blds[id].get("dust", false)) and blds[id]["state"] == "active":
+			dusty.append(id)
+	if not dusty.is_empty():
+		_add(found, "solar_dust", "solar_dust", 1, "Dust covers %s: half power until cleaned." % Text.n(dusty.size(), "solar array"),
+			"A colonist cleans each panel. It takes a few seconds outside.", dusty, "", -1.0, dusty.size())
+	if hz.sheltered():
+		_add(found, "shelter", "shelter", 1, "Shelter order: everyone stays inside.", "The order ends when no flare or meteor shower is near.", [])
 
 static func _clock(seconds: float) -> String:
 	var s: int = int(maxf(0.0, seconds))

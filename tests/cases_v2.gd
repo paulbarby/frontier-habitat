@@ -56,7 +56,7 @@ func v2_content(t) -> void:
 	var g = H.empty_game(1001)
 	var sim = g.sim
 	var c: Dictionary = sim.content
-	t.eq(c["items"].size(), 34, "item types")
+	t.eq(c["items"].size(), 37, "item types (34 of v2 + 3 research packs of v3)")
 	for id in c["items"]:
 		var info: Dictionary = sim.items.info(id)
 		t.check(String(info["name"]).length() > 1 and c["item_categories"].has(info["category"]), "item %s has a name and a known category" % id)
@@ -85,7 +85,7 @@ func v2_content(t) -> void:
 			t.check(c["recipes"].has(rid), "building %s recipe %s exists" % [id, rid])
 		if bool(d.get("levels", false)) and String(d.get("family", "")) != "":
 			t.check(sim.research.level_tech(id, 5) != "__none__" and c["techs"].has(sim.research.level_tech(id, 5)), "building %s has a level-5 tech" % id)
-	t.eq(c["techs"].size(), 29, "techs")
+	t.eq(c["techs"].size(), 45, "techs (29 of v2 + 16 of v3)")
 	for id in c["techs"]:
 		for req in c["techs"][id].get("requires", []):
 			t.check(c["techs"].has(req), "tech %s requires known %s" % [id, req])
@@ -281,21 +281,23 @@ func v2_research(t) -> void:
 	t.check(sim.research.rp_rate() > 0.0, "the RP rate is positive (%.1f per day)" % sim.research.rp_rate())
 	t.check(not H.log_entries(sim, "research").is_empty(), "the log names the finished project")
 	var t_agri1: float = sim.seconds()
-	# Special research: RP only count after the crystals are at a lab.
+	# Special research (v3): RP only count while a lab holds exotic research packs
+	# (V3_DESIGN section 5.1; the v2 exotic-crystal delivery is gone).
 	_grant(sim, ["agri_2", "agri_3", "agri_4", "eng_1", "eng_2", "ind_1", "ind_2", "eng_3"])
+	# Test set-up: no goal rewards from here (their RP count without packs).
+	sim.state["goals"]["chapter"] = (sim.content["chapters"] as Array).size()
 	r = g.cmd("research", {"tech": "s_agri"})
 	t.check(bool(r["ok"]), "s_agri ordered")
 	t.eq(String(sim.state["research"]["active"]), "s_agri", "s_agri is active")
-	t.eq(sim.research.items_needed(), {"exotic": 8}, "it waits for 8 exotic crystals")
+	t.eq(sim.research.items_needed(), {}, "no crystal delivery in version 3")
+	t.eq(sim.research.packs_of("s_agri"), {"pack_exotic": 8}, "it needs 8 exotic research packs")
 	g.run_seconds(60.0)
-	t.eq(float(sim.state["research"]["progress"].get("s_agri", 0.0)), 0.0, "no progress without the crystals")
+	t.eq(float(sim.state["research"]["progress"].get("s_agri", 0.0)), 0.0, "no progress without the packs")
 	var lander_store: int = sim.state["buildings"][sim.state["lander_id"]]["inv_out"]
-	sim.inv.add_new_forced(lander_store, "exotic", 8, "test")      # test set-up: crystals in the lander
-	var paid: bool = g.run_until(func(): return sim.research.is_paid("s_agri"), 6000)
-	t.check(paid, "carriers brought the crystals and the project is paid")
-	t.eq(int(H.ledger_of(sim, "exotic")["consumed"]), 8, "the crystals were used up")
-	g.run_seconds(120.0)
-	t.check(float(sim.state["research"]["progress"].get("s_agri", 0.0)) > 0.0, "progress after payment")
+	sim.inv.add_new_forced(lander_store, "pack_exotic", 8, "test")      # test set-up: packs in the lander
+	var moving: bool = g.run_until(func(): return float(sim.state["research"]["progress"].get("s_agri", 0.0)) > 0.0, 6000)
+	t.check(moving, "carriers brought the packs to the lab and the project moves")
+	t.check(int(H.ledger_of(sim, "pack_exotic")["consumed"]) >= 1, "packs were used")
 	t.eq(sim.inv.audit(), {}, "ledger")
 	t.note("agri_1 done at %.0f s" % t_agri1)
 	g.dispose()
@@ -708,7 +710,8 @@ func v2_migration(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 2, "migrated to schema 2")
+	t.eq(int(s["schema"]), 3, "migrated to schema 3 (through 2)")
+	t.eq(int(s["map_size"]), 256, "an old save keeps its 256 m map")
 	var raw_left := 0
 	for iid in s["inventories"]:
 		raw_left += int(s["inventories"][iid]["items"].get("raw_food", 0))

@@ -30,7 +30,181 @@ func _init(s) -> void:
 			_family_tech[String(f)] = id
 
 static func fresh_state() -> Dictionary:
-	return {"active": "", "queue": [], "progress": {}, "done": {}, "paid": {}, "rp_total": 0.0, "bank": 0.0, "rate": 0.0, "sec": 0.0}
+	return {"active": "", "queue": [], "progress": {}, "done": {}, "paid": {}, "rp_total": 0.0, "bank": 0.0, "rate": 0.0, "sec": 0.0,
+		"packs_paid": {}}
+
+# ---------------------------------------------------------------- research packs (v3)
+## Version 3 (docs/V3_DESIGN.md section 5). Every tech above tier 1 has "packs" {item: n}:
+## a lab only advances it while it holds those packs, and uses them evenly over the RP
+## (one pack of an item per cost / n RP). A lab that works with packs works x pack_boost
+## (2). A tier-1 tech needs no packs; with the "boost" packs it also works x2.
+## Each lab keeps its own pack credit: acc["rp:<item>"] = RP still covered by packs it
+## has already used. Packs are used as whole units, so the ledger stays exact.
+## state.research.packs_paid{tech: true}: a v2 save that had paid a special tech with
+## exotic crystals needs no packs for it (migration).
+
+func cfg() -> Dictionary:
+	return sim.bal["research"]
+
+## Packs a tech needs ({} for tier 1, for a migrated paid tech, or an unknown id).
+func packs_of(tech: String) -> Dictionary:
+	if not techs().has(tech) or st().get("packs_paid", {}).has(tech):
+		return {}
+	return techs()[tech].get("packs", {})
+
+## Packs a tier-1 tech may use for the x2 boost.
+func boost_of(tech: String) -> Dictionary:
+	if not techs().has(tech):
+		return {}
+	return techs()[tech].get("boost", {})
+
+## The packs a lab wants for the active project: the needed ones, else the boost ones.
+func lab_packs() -> Dictionary:
+	var a: String = st()["active"]
+	if a == "":
+		return {}
+	var need: Dictionary = packs_of(a)
+	return need if not need.is_empty() else boost_of(a)
+
+func _credit(lab: Dictionary, item: String) -> float:
+	return float(lab.get("acc", {}).get("rp:" + item, 0.0))
+
+## True when this lab can advance the active project now (it has what the project needs).
+func lab_can_work(lab: Dictionary) -> bool:
+	var a: String = st()["active"]
+	if a == "" or not is_paid(a):
+		return false
+	var need: Dictionary = packs_of(a)
+	for item in need:
+		if _credit(lab, item) <= 0.0001 and sim.inv.available(int(lab.get("inv_in", -1)), item) < 1:
+			return false
+	return true
+
+## True when this lab holds the packs of its project (x2).
+func lab_boosted(lab: Dictionary) -> bool:
+	var pk: Dictionary = lab_packs()
+	if pk.is_empty():
+		return false
+	for item in pk:
+		if _credit(lab, item) <= 0.0001 and sim.inv.available(int(lab.get("inv_in", -1)), item) < 1:
+			return false
+	return true
+
+## RP that `rp_base` of lab work gives, after packs: uses the packs it needs.
+func _lab_rp(lab: Dictionary, rp_base: float) -> float:
+	var a: String = st()["active"]
+	if a == "" or rp_base <= 0.0:
+		return 0.0
+	var need: Dictionary = packs_of(a)
+	var pk: Dictionary = need if not need.is_empty() else boost_of(a)
+	if pk.is_empty():
+		return rp_base
+	var cost: float = float(techs()[a]["cost"])
+	var want: float = minf(rp_base * float(cfg().get("pack_boost", 2.0)), remaining(a))
+	if want <= 0.0:
+		return 0.0
+	var inv_in: int = int(lab.get("inv_in", -1))
+	var keys: Array = pk.keys()
+	keys.sort()
+	var ok := true
+	for item in keys:
+		var per: float = cost / maxf(1.0, float(pk[item]))
+		var short: float = want - _credit(lab, item)
+		if short > 0.000001 and sim.inv.available(inv_in, item) < int(ceil(short / per - 0.000001)):
+			ok = false
+	if not ok:
+		return 0.0 if not need.is_empty() else rp_base
+	if not lab.has("acc"):
+		lab["acc"] = {}
+	for item in keys:
+		var per: float = cost / maxf(1.0, float(pk[item]))
+		var credit: float = _credit(lab, item)
+		while credit < want - 0.000001:
+			sim.inv.consume(inv_in, item, 1, "research")
+			sim.stat_add("consumed", item, 1)
+			sim.stat_add("packs_used", item, 1)
+			credit += per
+		lab["acc"]["rp:" + item] = credit - want
+	return want
+
+## Research multiplier of a lab's focus for a tech: +25 % in its branch, -10 % outside.
+func focus_mult(lab: Dictionary, tech: String) -> float:
+	var f: String = String(lab.get("focus", ""))
+	if f == "" or not techs().has(tech):
+		return 1.0
+	if String(techs()[tech].get("branch", "")) == f:
+		return 1.0 + float(cfg().get("focus_bonus", 0.25))
+	return 1.0 - float(cfg().get("focus_malus", 0.1))
+
+## Data network: +10 % for each other working lab joined by corridors, at most +30 %.
+func network_bonus(lab: Dictionary) -> float:
+	if bonus("data_network") <= 0.0:
+		return 0.0
+	var comp = sim.topo.atmo_comp.get(int(lab["id"]))
+	if comp == null:
+		return 0.0
+	var n := 0
+	for bid in sim.topo.atmo_members.get(comp, []):
+		var b: Dictionary = sim.state["buildings"][bid]
+		if int(bid) != int(lab["id"]) and b["state"] == "active" and bool(sim.bdef(b["def"]).get("research_lab", false)) and bool(b["powered"]):
+			n += 1
+	return minf(float(cfg().get("network_max", 0.3)), float(n) * float(cfg().get("network_step", 0.1)))
+
+## Command "set_focus" {id, branch}: "" clears the focus.
+func cmd_focus(lab: Dictionary, branch: String) -> Dictionary:
+	if not bool(sim.bdef(lab["def"]).get("research_lab", false)):
+		return {"ok": false, "code": "invalid"}
+	if branch != "" and not sim.content["research_branches"].has(branch):
+		return {"ok": false, "code": "invalid"}
+	lab["focus"] = branch
+	return {"ok": true, "code": "ok"}
+
+## For the research screen: one lab's numbers.
+## {focus, mult, boosted, can_work, packs {item: units held}, credit {item: RP}, automation}
+func lab_info(lab: Dictionary) -> Dictionary:
+	var a: String = st()["active"]
+	var held := {}
+	var credit := {}
+	for item in ["pack_basic", "pack_applied", "pack_exotic"]:
+		held[item] = sim.inv.count(int(lab.get("inv_in", -1)), item)
+		credit[item] = _credit(lab, item)
+	var boosted: bool = lab_boosted(lab)
+	var m: float = lab_mult(lab)
+	return {"focus": String(lab.get("focus", "")), "mult": m, "mult_boosted": m * (float(cfg().get("pack_boost", 2.0)) if boosted else 1.0),
+		"boosted": boosted, "can_work": lab_can_work(lab), "packs": held, "credit": credit,
+		"automation": bonus("lab_automation"), "tech": a,
+		"rate": float(lab.get("acc", {}).get("rate", 0.0)), "base_rate": float(lab.get("acc", {}).get("base_rate", 0.0))}
+
+## Colony stock of each research pack: {item: units}.
+func pack_stock() -> Dictionary:
+	var t: Dictionary = sim.inv.totals()
+	var out := {}
+	for item in ["pack_basic", "pack_applied", "pack_exotic"]:
+		out[item] = int(t.get(item, {}).get("total", 0))
+	return out
+
+## Plain words for why a tech cannot run now ("" when it can): locked, packs, items.
+func lock_reason(tech: String) -> String:
+	if not techs().has(tech):
+		return "Unknown research."
+	if is_done(tech):
+		return ""
+	var missing: Array = []
+	for r in techs()[tech].get("requires", []):
+		if not is_done(String(r)):
+			missing.append(String(techs()[r]["name"]))
+	if not missing.is_empty():
+		return "Research %s first." % " and ".join(missing)
+	var need: Dictionary = packs_of(tech)
+	if not need.is_empty():
+		var have: Dictionary = pack_stock()
+		var short: Array = []
+		for item in need:
+			if int(have.get(item, 0)) <= 0:
+				short.append(String(sim.items.info(item)["plural"]).to_lower())
+		if not short.is_empty():
+			return "Needs %s. A research assembler makes them." % " and ".join(short)
+	return ""
 
 func st() -> Dictionary:
 	return sim.state["research"]
@@ -148,8 +322,8 @@ func level_tech(def_id: String, level: int) -> String:
 func lab_mult(lab: Dictionary) -> float:
 	var d: Dictionary = sim.bd(lab)
 	var m: float = float(d.get("level_mult", 1.0))
-	var add: float = bonus("research_mult") + comms_bonus()
-	return m * (1.0 + add) * sim.difficulty("research_mult")
+	var add: float = bonus("research_mult") + comms_bonus() + network_bonus(lab)
+	return m * (1.0 + add) * sim.difficulty("research_mult") * focus_mult(lab, String(st()["active"]))
 
 ## +10 % while a comms tower works (not more than one counts). The towers are found
 ## again only when the set of buildings changes (count or next id); their power is read
@@ -185,9 +359,34 @@ func comms_bonus() -> float:
 func add_work(lab: Dictionary, work_points: float) -> float:
 	if not workable():
 		return 0.0
-	var rp: float = work_points * float(sim.bal["research"]["rp_per_work"]) * lab_mult(lab)
+	var base: float = work_points * float(sim.bal["research"]["rp_per_work"]) * lab_mult(lab)
+	var rp: float = _lab_rp(lab, base)
+	if rp <= 0.0:
+		return 0.0
+	# Per-lab rate for the research screen (one-minute average, see _lab_rates).
+	if not lab.has("acc"):
+		lab["acc"] = {}
+	lab["acc"]["rp_sec"] = float(lab["acc"].get("rp_sec", 0.0)) + rp
+	lab["acc"]["base_sec"] = float(lab["acc"].get("base_sec", 0.0)) + base
 	_add(rp)
 	return rp
+
+## Once per second: each lab's RP per day (with packs) and its base rate (without the
+## pack boost), one-minute moving averages like rp_rate().
+func _lab_rates() -> void:
+	var day: float = float(sim.bal["day_length"])
+	var blds: Dictionary = sim.state["buildings"]
+	for id in blds:
+		var b: Dictionary = blds[id]
+		if b["state"] != "active" or not bool(sim.bdef(b["def"]).get("research_lab", false)):
+			continue
+		if not b.has("acc"):
+			b["acc"] = {}
+		var acc: Dictionary = b["acc"]
+		for pair in [["rp_sec", "rate"], ["base_sec", "base_rate"]]:
+			var per_day: float = float(acc.get(pair[0], 0.0)) * day
+			acc[pair[1]] = float(acc.get(pair[1], 0.0)) + (per_day - float(acc.get(pair[1], 0.0))) / 60.0
+			acc[pair[0]] = 0.0
 
 ## RP from a goal reward. Banked while no project is active.
 func add_rp(rp: float) -> void:
@@ -316,3 +515,26 @@ func tick_second() -> void:
 	r["sec"] = 0.0
 	if String(r["active"]) == "":
 		_start_next()
+	_automation_second()
+	_lab_rates()
+
+## Lab automation (research sci_auto): a working lab with no scientist in it adds
+## lab_automation (0.3) work points per second by itself.
+func _automation_second() -> void:
+	var auto: float = bonus("lab_automation")
+	if auto <= 0.0 or not workable():
+		return
+	var busy := {}
+	var tasks: Dictionary = sim.state["tasks"]
+	for tid in tasks:
+		var t: Dictionary = tasks[tid]
+		if t["kind"] == "research" and t["state"] == "working":
+			busy[int(t["bld"])] = true
+	var blds: Dictionary = sim.state["buildings"]
+	for id in blds:
+		var b: Dictionary = blds[id]
+		if b["state"] != "active" or busy.has(id) or not bool(sim.bdef(b["def"]).get("research_lab", false)):
+			continue
+		if not bool(b["powered"]) or not bool(b["enabled"]) or bool(b.get("trip", false)):
+			continue
+		add_work(b, auto)

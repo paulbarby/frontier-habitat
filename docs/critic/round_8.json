@@ -1,0 +1,81 @@
+{
+  "round": 8,
+  "date": "2026-09-25",
+  "scope": "final in-game round. RENDER shots art/critic_input/render/13-17, 20-26 (re-shot), 41-63; my own unstaged shots from build/web_render (index.pck 03:56) with scene_final.fhsave (loadurl) and showcase_v3_late.fhsave (sim running, debug=1 for hazards)",
+  "pass_mark": 0.65,
+  "subjects": {
+    "npc_interaction": {"consistency": 0.72, "appeal": 0.68, "style": 0.74, "score": 0.71, "pass": true, "was": 0.63,
+      "fixes": [
+        {"owner": "RENDER", "fix": "Airlock crowd: in scene_final about 25 indoor colonists stand packed in airlock 141, shoulder to shoulder, and the outer ones stand past the wall line on the selection ring (art/critic/r8_airlock_crop.png, also 59 fam_airlock_day). When a room holds more bodies than its free points, queue the extra bodies in the corridor on points 0.8 m apart, or let them wait outside the airlock in suits; never beyond the wall."},
+        {"owner": "RENDER", "fix": "A colonist passing a doorway clips the door jamb (art/critic/r8_kitchen_door.png). Walk bodies through Anchor_Corridor -> Anchor_Room on the door centre line."},
+        {"owner": "RENDER / ART-HAB", "fix": "The research-lab holo table cone renders as an opaque white lampshade (62 acc_research_lab, r8/lab101_day.png). Interior Glass is drawn opaque, as ART-HAB suspects; draw it transparent (alpha 0.25-0.35, cyan tint, emissive edge). The round-6 floating white panel was not seen again."},
+        {"owner": "none", "fix": "Landed and verified: one body per anchor, no body in a neighbour bed, sit and lie sequences show the body through every blend (50, 51), kneel repair at a battery (52), carriers at doors (43), no terrain through floors (48 and my shots), no suited colonist in a bed or eating (all shots)."}
+      ]},
+    "npc_ingame": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "was": 0.73,
+      "fixes": [
+        {"owner": "none", "fix": "Verified: run at 3.4 m/s with planted feet and the crate held (42), walk (41), helmet halos findable at night (54, 55), lamp pool halved close up (45), skin tones and hair shapes vary in a crowd (44: buns, ponytails, bobs, crops; 5 tones)."},
+        {"owner": "ART-NPC / RENDER", "fix": "Hair colour reads mostly dark brown in the crowd (44, r8_airlock_crop.png); only a few light-brown heads. Make the 4 hair colours more distinct (one clearly auburn, one clearly dark blonde) so a crowd of 20 shows them."}
+      ]},
+    "doorways": {"consistency": 0.80, "appeal": 0.76, "style": 0.80, "score": 0.79, "pass": true, "was": 0.73,
+      "fixes": [
+        {"owner": "none", "fix": "Verified in game: junction kit clean with 4 links at 60 deg and 3 at 56 deg (56); S habitat, cantina and oxygen plant: the entry hood meets the dome cleanly, roof on and cutaway (57); doors open when a colonist comes near and close after (43); no cyan fragments, no terrain in corridors."},
+        {"owner": "RENDER", "fix": "Jamb clipping, see npc_interaction fix 2."}
+      ]},
+    "interior_lighting": {"consistency": 0.76, "appeal": 0.74, "style": 0.76, "score": 0.75, "pass": true, "provisional": false, "was": 0.71,
+      "fixes": [
+        {"owner": "RENDER", "fix": "Night interiors are bright and readable; the accents read (cantina pink spill, lab cyan holo pool, greenhouse pink grow light) (60, 61, 62, my r8/*_night.png). The outer lower wall band glows as a solid white ring at night (60, 62) and outshines the interior; halve the emissive of the exterior LightStrip band or make it a thin line."},
+        {"owner": "RENDER", "fix": "Kitchen and bio-lab have no visible accent at night (62 acc_kitchen). Give the kitchen a warm pool over the cook line."}
+      ]},
+    "interior_ingame": {"consistency": 0.78, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true,
+      "families_below_065_alone": [
+        {"family": "fungus_farm (and greenhouse) in scene_final", "estimate": 0.63, "why": "the grow beds are empty in this save, so at the game camera the room is black frames over brown slabs (r8/fungus88_day.png, r8/green84_day.png, 58). With crops planted they should pass; I have no in-game shot with crops. RENDER: supply one."}
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "Supply in-game cutaways of the fungus farm and the greenhouse with crops at mid growth, day and night."},
+        {"owner": "RENDER / ART-HAB", "fix": "Holo glass opaque, see npc_interaction fix 3."},
+        {"owner": "ART-HAB", "fix": "Lounge reads as a brown block at the game camera (58 fam_lounge_day): lighten the rug and the sofa island so the seating reads."}
+      ]},
+    "hazard_visuals": {"consistency": 0.72, "appeal": 0.66, "style": 0.72, "score": 0.70, "pass": true,
+      "fixes": [
+        {"owner": "RENDER", "fix": "In a dust storm the meteor forecast ring does not show; only a small label does (my r8/hz_meteor_ring.png under the v3_late weather). Draw the ring over the haze (no fog on the decal) and pulse it."},
+        {"owner": "RENDER", "fix": "Quake cracks and dust do not show at 50 m zoom under the storm haze (r8/hz_quake_a/b.png); in clear weather they read (17). Draw crack decals without fog and add a camera shake cue in the frame."},
+        {"owner": "RENDER", "fix": "Wind storm: no visible change from the dust storm already running (r8/hz_wind.png). Add fast dust sheets and turbine spin-up that differ from the dust storm."},
+        {"owner": "RENDER", "fix": "Solar flare: the colony gets a yellow-green grade (r8/hz_flare.png) but no aurora was in frame. Show the aurora also as a sky tint visible from the normal top-down camera."},
+        {"owner": "RENDER", "fix": "Turret intercept (63): the tracer and the air burst are visible but tiny at that distance; add a 1 s flash on the turret muzzle and a larger burst so it reads at the colony camera."},
+        {"owner": "none", "fix": "Verified: red forecast ring, burning streak, fireball + shockwave, scorched crater with smoke and air jets from breached rooms (13-16, clear weather); dust devil column (my r8/hz_devil_a.png, faint)."}
+      ]}
+  },
+  "checks_asked": {
+    "lab holo table / white panel": "white panel not seen; holo cone is opaque white (Glass drawn opaque)",
+    "no suited colonist in a bed or eating": "none seen in any shot",
+    "spacing between bodies": "held in rooms; fails in the scene_final airlock crowd",
+    "carriers through furniture": "none seen; one door-jamb clip",
+    "terrain through floors": "fixed; none seen"
+  },
+  "notes": [
+    "No FAIL this round. npc_interaction passes (0.71, was 0.63).",
+    "My weather caveat: showcase_v3_late runs a dust storm, which washes the hazard shots; RENDER's 13-17 are in clear weather.",
+    "My evidence: art/critic/r8/*.png, grids r8_rooms_grid.png, r8_v3_grid.png, r8_hz_grid.png, r8_hz_render.png, crops r8_airlock_crop.png, r8_hab40_crop.png, r8_kitchen_door.png, r8_lab_holo.png, r8_lie_a.png, r8_lie_b.png, r8_sit_a.png, r8_skin_a.png, r8_skin_b.png, r8_fungus_fam.png, r8_airlock_fam.png."
+  ],
+  "final_summary": {
+    "npc_suit":           {"score": 0.82, "round": 5, "pass": true},
+    "npc_indoor":         {"score": 0.72, "round": 5, "pass": true},
+    "npc_animation":      {"score": 0.78, "round": 5, "pass": true},
+    "npc_interaction":    {"score": 0.71, "round": 8, "pass": true},
+    "npc_ingame":         {"score": 0.77, "round": 8, "pass": true},
+    "interior_habitat":   {"score": 0.79, "round": 7, "pass": true},
+    "interior_comfort":   {"score": 0.75, "round": 7, "pass": true},
+    "interior_medical":   {"score": 0.75, "round": 7, "pass": true},
+    "interior_food":      {"score": 0.76, "round": 7, "pass": true},
+    "interior_industry":  {"score": 0.76, "round": 7, "pass": true},
+    "interior_science":   {"score": 0.73, "round": 7, "pass": true},
+    "interior_life":      {"score": 0.77, "round": 7, "pass": true},
+    "interior_logistics": {"score": 0.77, "round": 7, "pass": true},
+    "interior_links":     {"score": 0.71, "round": 7, "pass": true},
+    "interior_ingame":    {"score": 0.75, "round": 8, "pass": true},
+    "doorways":           {"score": 0.79, "round": 8, "pass": true},
+    "interior_lighting":  {"score": 0.75, "round": 8, "pass": true},
+    "hazard_props":       {"score": 0.70, "round": 7, "pass": true},
+    "hazard_visuals":     {"score": 0.70, "round": 8, "pass": true}
+  }
+}

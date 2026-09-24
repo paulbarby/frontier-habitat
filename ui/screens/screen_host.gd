@@ -25,7 +25,8 @@ const SCREENS := {
 	"confirm": "res://ui/screens/confirm_dialog.gd",
 }
 const ALIASES := {"colony": ["dashboard", "overview"], "nutrition": ["dashboard", "food"], "load": ["saveload", "load"],
-	"save": ["saveload", "save"], "tech": ["research", null], "keys": ["help", "keys"], "pause": ["menu", null]}
+	"save": ["saveload", "save"], "tech": ["research", null], "keys": ["help", "keys"], "pause": ["menu", null],
+	"hazards": ["dashboard", "hazards"], "maintenance": ["dashboard", "hazards"], "labs": ["research", "labs"]}
 
 const OVER_TITLE := ["settings", "newcolony", "saveload", "awards", "help"]
 

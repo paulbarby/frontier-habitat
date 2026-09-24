@@ -7,11 +7,15 @@ extends RefCounted
 ## bytes_to_var never decodes objects, so an imported file cannot run code.
 
 const MAGIC := "FHSAVE1\n"
-const SCHEMA := 2
+const SCHEMA := 3
 const REQUIRED := ["schema", "seed", "tick", "rng", "buildings", "inventories", "agents", "tasks", "holds", "policies", "ledger"]
 const Research = preload("res://sim/research.gd")
 const Goals = preload("res://sim/goals.gd")
 const Ship = preload("res://sim/ship.gd")
+const Hazards = preload("res://sim/hazards.gd")
+const Rng = preload("res://sim/rng.gd")
+## Ticks in a day of every schema so far (600 s at 10 Hz).
+const DAY_TICKS := 6000
 const ROLES := ["technician", "grower", "operator", "medic", "scientist"]
 
 static func encode(state: Dictionary) -> PackedByteArray:
@@ -57,6 +61,9 @@ static func migrate(state: Dictionary) -> Dictionary:
 	if v < 2:
 		_v1_to_v2(state)
 		v = 2
+	if v < 3:
+		_v2_to_v3(state)
+		v = 3
 	state["schema"] = v
 	return state
 
@@ -152,6 +159,57 @@ static func _v1_to_v2(s: Dictionary) -> void:
 	var pol: Dictionary = s["policies"]
 	if not pol.has("immigration"):
 		pol["immigration"] = {"open": true, "roles": ROLES.duplicate(), "cap": int(pol.get("pop_cap", 100))}
+
+## Version 3 (docs/V3_DESIGN.md): the map keeps its 256 m; hazards start (other than the
+## dust storm) no earlier than one day after the load; the v2 storm record becomes a
+## dust_storm event; special research already paid with exotic crystals needs no packs;
+## colonists get an empty furniture use; the alert hysteresis starts from the shown alerts.
+static func _v2_to_v3(s: Dictionary) -> void:
+	var tick: int = int(s["tick"])
+	s["map_size"] = int(s.get("map_size", 256))
+	var opt: Dictionary = s["options"]
+	if not opt.has("hazards"):
+		opt["hazards"] = "normal"
+	if not opt.has("debug"):
+		opt["debug"] = false
+	if not s.has("hazards"):
+		var h: Dictionary = Hazards.fresh_state()
+		h["start_tick"] = tick + DAY_TICKS
+		var st: Dictionary = s.get("events", {}).get("storm", {})
+		if not st.is_empty():
+			var count: int = int(st.get("count", 0))
+			h["done_count"]["dust_storm"] = count
+			h["seen"]["dust_storm"] = count
+			if bool(st.get("scheduled", false)):
+				var phase: String = String(st.get("phase", "none"))
+				var ev := {"id": 1, "kind": "dust_storm", "at": int(st["at"]), "end": int(st["end"]), "pos": Vector2(128, 128),
+					"radius": 0.0, "severity": 1, "detected_tick": tick if phase != "none" else -1,
+					"phase": "active" if phase == "active" else ("warning" if phase == "warning" else "scheduled"),
+					"countered": false, "hits": [], "result": {}}
+				h["next_id"] = 2
+				if phase == "active":
+					h["active"].append(ev)
+				else:
+					h["queue"].append(ev)
+				var gap: float = Rng.range_float(s["rng"], "hazard", 3.0, 5.0)
+				var nxt: int = int(st["end"]) + int(gap * float(DAY_TICKS))
+				h["next_at"]["dust_storm"] = nxt - nxt % 10
+		s["hazards"] = h
+	var r: Dictionary = s["research"]
+	if not r.has("packs_paid"):
+		r["packs_paid"] = {}
+	for tech in r.get("paid", {}):
+		r["packs_paid"][tech] = true
+	for aid in s["agents"]:
+		if not s["agents"][aid].has("use"):
+			s["agents"][aid]["use"] = {}
+	if not s["ship"].has("cargo"):
+		s["ship"]["cargo"] = ""
+	# No alert_track: the first check after the load drops the old issues that are no longer
+	# true and raises the true ones again (critical at once), as version 2 did.
+	var env: Dictionary = s.get("env", {})
+	if not env.has("wind_mult"):
+		env["wind_mult"] = 1.0
 
 static func _rename_key(d: Dictionary, from: String, to: String) -> void:
 	if not d.has(from):

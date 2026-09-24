@@ -6,7 +6,8 @@ extends CanvasLayer
 ##
 ## Layout (logical 1600 x 900, anchored, so it holds from 1280 x 720 up):
 ##   top-left KPI bar · top-right time panel · right nav rail · left goals + alerts ·
-##   bottom-left minimap · bottom build bar · right inspector · top-right toasts.
+##   bottom-left minimap · bottom build bar · right inspector · top-right toasts ·
+##   hazard forecast right of the goals · hazard banner top centre (version 3).
 ## Screens (research, goals, dashboard, ...) open over the HUD from ui/screens/.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -25,8 +26,10 @@ const Toasts = preload("res://ui/hud/toasts.gd")
 const PlaceHint = preload("res://ui/hud/place_hint.gd")
 const ScreenHost = preload("res://ui/screens/screen_host.gd")
 const Watchers = preload("res://ui/hud/watchers.gd")
+const HazardPanel = preload("res://ui/hud/hazard_panel.gd")
+const HazardBanner = preload("res://ui/hud/hazard_banner.gd")
 
-const OVERLAYS := ["", "power", "water", "air", "walk"]
+const OVERLAYS := ["", "power", "water", "air", "walk", "hazard"]
 
 var main
 var data
@@ -44,6 +47,9 @@ var toasts
 var hint
 var screens
 var watchers
+var hazard
+var hazard_banner
+var cargo_choice := ""   # supply-run cargo picked in the Meridian panel ("" = the ship's kept choice)
 var kpi := {}
 var _clock := 0.0
 var _beat := 0
@@ -69,6 +75,8 @@ func _ready() -> void:
 	hint = _add(PlaceHint.new())
 	goals = _add(GoalsTracker.new())
 	alerts = _add(AlertsPanel.new())
+	hazard = _add(HazardPanel.new())
+	hazard_banner = _add(HazardBanner.new())
 	inspector = _add(Inspector.new())
 	top_bar = _add(TopBar.new())
 	time_panel = _add(TimePanel.new())
@@ -102,6 +110,8 @@ func _process(delta: float) -> void:
 		top_bar.refresh()
 		time_panel.refresh()
 		inspector.refresh()
+		hazard.refresh()
+		hazard_banner.refresh()
 		if _beat % 2 == 0:
 			goals.refresh()
 			alerts.refresh()
@@ -116,7 +126,7 @@ func _process(delta: float) -> void:
 func rebuild_all() -> void:
 	kpi = data.kpis() if main != null and main.sim != null else {}
 	screens.close_all()
-	for m in [top_bar, time_panel, nav, goals, alerts, build_bar, inspector, minimap]:
+	for m in [top_bar, time_panel, nav, goals, alerts, build_bar, inspector, minimap, hazard]:
 		m.rebuild()
 	watchers.reset()
 

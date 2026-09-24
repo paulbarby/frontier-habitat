@@ -48,8 +48,19 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 				return sim.prod.set_dish(blds[int(p["id"])], String(p.get("dish", "")), bool(p.get("on", true)))
 		"set_immigration":
 			return _set_immigration(p)
+		"set_focus":
+			if blds.has(int(p.get("id", -1))):
+				return sim.research.cmd_focus(blds[int(p["id"])], String(p.get("branch", "")))
+		"maintain":
+			return sim.hazards.cmd_maintain(int(p.get("id", -1)))
+		"shelter":
+			return sim.hazards.cmd_shelter(bool(p.get("on", true)))
+		"hazard_now":
+			return sim.hazards.cmd_hazard_now(p)
+		"survey_site":
+			return sim.hazards.cmd_survey(int(p.get("id", -1)))
 		"ship":
-			return sim.ship.command(String(p.get("action", "")))
+			return sim.ship.command(String(p.get("action", "")), p)
 		"place_link":
 			return sim.build.place_link(p["def"], int(p["a"]), int(p["b"]))
 		"cancel":

@@ -14,6 +14,7 @@ var data
 var icon_name := "research"
 var branch_color := Color("A78BFA")
 var compact := false
+var lock_text: Array = []     # why it cannot run, plain words (set by the research screen)
 var _state := "locked"
 var _selected := false
 var _hover := false
@@ -115,16 +116,33 @@ func _draw() -> void:
 	var mf: Font = Fonts.get_font("mono")
 	var cost: float = float(t.get("cost", 0))
 	var ctext: String = ("%d RP" % int(cost)) if _state != "active" else ("%d/%d" % [int(_progress * cost), int(cost)])
-	if special and not compact:
+	var tc2: Color = P.TEXT_2 if _state != "locked" else P.TEXT_3
+	var by: float = size.y - 9.0
+	draw_string(mf, Vector2(0, by), ctext, HORIZONTAL_ALIGNMENT_RIGHT, size.x - 8.0, 10, tc2)
+	# Items and research packs it needs, right to left before the RP: [icon]n (version 3).
+	if not compact:
+		var x: float = size.x - 8.0 - mf.get_string_size(ctext, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x - 6.0
+		var needs: Array = []
 		var items: Dictionary = t.get("items", {})
 		for it in items:
-			ctext += "  +%d" % int(items[it])
-	draw_string(mf, Vector2(0, size.y - 9), ctext, HORIZONTAL_ALIGNMENT_RIGHT, size.x - 8.0, 10, P.TEXT_2 if _state != "locked" else P.TEXT_3)
-	if special and not compact:
-		var items2: Dictionary = t.get("items", {})
-		if not items2.is_empty():
-			var k: String = String(items2.keys()[0])
-			draw_texture_rect(Icons.tex(Icons.item(k), 12), Rect2(Vector2(size.x - 8.0 - mf.get_string_size(ctext, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x - 14.0, size.y - 19.0), Vector2(12, 12)), false, data.item_color(k))
+			needs.append([String(it), int(items[it])])
+		var packs: Dictionary = data.tech_packs(tech)
+		for it in packs:
+			needs.append([String(it), int(packs[it])])
+		needs.reverse()
+		var word_w: float = Fonts.get_font("head").get_string_size("QUEUED 9", HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x + 14.0
+		for nd in needs:
+			var nt: String = "%d" % int(nd[1])
+			var w: float = mf.get_string_size(nt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+			if x - w - 13.0 < word_w:
+				break
+			draw_string(mf, Vector2(x - w, by), nt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, tc2)
+			x -= w + 13.0
+			var ic: Color = data.item_color(String(nd[0]))
+			if _state == "locked":
+				ic = Color(ic.r, ic.g, ic.b, 0.5)
+			draw_texture_rect(Icons.tex(Icons.item(String(nd[0])), 12), Rect2(Vector2(x, by - 10.0), Vector2(12, 12)), false, ic)
+			x -= 5.0
 	# Progress ring (not in compact nodes)
 	if not compact:
 		var c := Vector2(size.x - 16, 18)
@@ -149,7 +167,16 @@ func _make_custom_tooltip(_for_text: String) -> Object:
 	h.add_theme_color_override("font_color", P.GOLD if _special() else P.VIOLET)
 	v.add_child(h)
 	var l := Label.new()
-	l.text = "%s\n%d RP. %s. Click to see it, double click to research it." % [String(t.get("desc", "")), int(t.get("cost", 0)), _state.capitalize()]
+	var extra := ""
+	var packs: Dictionary = data.tech_packs(tech)
+	if not packs.is_empty():
+		var parts: Array = []
+		for it in packs:
+			parts.append("%d %s" % [int(packs[it]), data.item_name(String(it)).to_lower()])
+		extra += "\nPacks: " + ", ".join(parts) + "."
+	for w in lock_text:
+		extra += "\n" + String(w)
+	l.text = "%s\n%d RP. %s.%s\nClick to see it, double click to research it." % [String(t.get("desc", "")), int(t.get("cost", 0)), _state.capitalize(), extra]
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size.x = 280
 	l.add_theme_font_size_override("font_size", 13)

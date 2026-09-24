@@ -71,16 +71,22 @@ func rebuild() -> void:
 	refresh()
 
 func refresh() -> void:
-	var inc: Array = hud.main.sim.alerts.incidents()
+	# The gate (ui/hud/alert_gate.gd) gives a steady list: a stable order, and an alert that
+	# clears stays a short time as "cleared", so a key that goes on and off is one card.
+	var inc: Array = hud.watchers.gate.display(hud.main.sim.alerts.incidents()) if hud.watchers != null else hud.main.sim.alerts.incidents()
+	var live: Array = []
+	for i in inc:
+		if not bool(i.get("cleared", false)):
+			live.append(i)
 	var crit := 0
 	var warn := 0
-	for i in inc:
+	for i in live:
 		var sv: int = int(i["issue"]["severity"])
 		if sv >= 3:
 			crit += 1
 		elif sv == 2:
 			warn += 1
-	if inc.is_empty():
+	if live.is_empty():
 		_summary.text = "ALL SYSTEMS NORMAL"
 		_summary.add_theme_color_override("font_color", P.GREEN)
 		Kit.set_icon(_icon, "sev_ok", 18, P.GREEN)
@@ -90,7 +96,7 @@ func refresh() -> void:
 			parts.append("%d critical" % crit)
 		if warn > 0:
 			parts.append(Kit.plural(warn, "warning"))
-		var notes: int = inc.size() - crit - warn
+		var notes: int = live.size() - crit - warn
 		if notes > 0:
 			parts.append(Kit.plural(notes, "notice"))
 		_summary.text = "  ·  ".join(parts).to_upper()
@@ -174,9 +180,16 @@ func _make_card(i: Dictionary) -> Dictionary:
 
 func _update_card(c: Dictionary, i: Dictionary) -> void:
 	var issue: Dictionary = i["issue"]
-	var f: float = float(issue["forecast"])
-	(c["left"] as Label).text = (Kit.clock(f) + " left") if f >= 0.0 else ""
+	var f: float = float(issue.get("forecast", -1.0))
+	# cleared: held by the interface gate; live false: the simulation waits 30 s before it
+	# removes an alert whose condition has ended (V3_DESIGN §2).
+	var cleared: bool = bool(i.get("cleared", false)) or not bool(issue.get("live", true))
+	if cleared:
+		(c["left"] as Label).text = "CLEARED" if bool(i.get("cleared", false)) else "CLEARING"
+	else:
+		(c["left"] as Label).text = (Kit.clock(f) + " left") if f >= 0.0 else ""
 	(c["text"] as Label).text = String(issue["text"])
+	(c["root"] as Control).modulate.a = 0.5 if cleared else 1.0
 
 func _toggle(key: String) -> void:
 	if _open.has(key):

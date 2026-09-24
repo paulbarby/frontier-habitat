@@ -21,6 +21,7 @@ uniform float night = 0.0;
 uniform float haze = 0.6;
 uniform float storm = 0.0;
 uniform float time = 0.0;
+uniform float aurora = 0.0;     // solar flare (V3 4.5): green-violet curtains
 
 float hash13(vec3 p) {
 	p = fract(p * 0.1031);
@@ -142,6 +143,17 @@ void sky() {
 				col += planet_col * 0.08 * exp(-(sqrt(r2) - 1.0) * 9.0) * planet_vis;
 				col = mix(col, ring_col, ring * planet_vis * 0.75);
 			}
+		}
+
+		// Solar flare aurora: moving green-violet curtains over the whole sky.
+		if (aurora > 0.001 && up > -0.05) {
+			float a = atan(d.x, d.z);
+			float cur = fbm(vec3(a * 3.0, time * 0.12, 1.3)) ;
+			float fold = sin(a * 7.0 + cur * 6.0 + time * 0.35) * 0.5 + 0.5;
+			float height = smoothstep(0.02, 0.18, up) * smoothstep(0.85, 0.35, up + cur * 0.25);
+			float rays = 0.55 + 0.45 * sin(a * 90.0 + cur * 20.0);
+			vec3 ac = mix(vec3(0.25, 1.0, 0.55), vec3(0.62, 0.35, 1.0), smoothstep(0.1, 0.55, up + cur * 0.2));
+			col += ac * fold * height * rays * aurora * (0.35 + 0.65 * night) * 0.9;
 		}
 
 		// Sun disc.

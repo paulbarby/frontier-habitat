@@ -612,6 +612,13 @@ func _place_point(st: Dictionary):
 func _resolve() -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	var taken: Array = alias.values()
+	# Structures by type, made once per call (the same ids in the same order as a scan).
+	var by_def := {}
+	for id in blds:
+		var d: String = blds[id]["def"]
+		if not by_def.has(d):
+			by_def[d] = []
+		by_def[d].append(id)
 	for i in steps.size():
 		var st: Dictionary = steps[i]
 		if not st.has("place") or alias.has(st["as"]):
@@ -629,9 +636,9 @@ func _resolve() -> void:
 			# A mine goes to whichever deposit fits, which can be far from the layout
 			# point: any mine that no alias owns is this one.
 			best_d = 1e9
-		for id in blds:
+		for id in by_def.get(String(st["place"]), []):
 			var b: Dictionary = blds[id]
-			if b["def"] != st["place"] or taken.has(id):
+			if taken.has(id):
 				continue
 			if sim.bdef(b["def"]).has("sizes") and int(b.get("size", 1)) != int(st.get("size", 1)):
 				continue

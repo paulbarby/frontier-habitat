@@ -548,6 +548,288 @@ func meridian_id() -> int:
 			return id
 	return -1
 
+# ---------------------------------------------------------------- hazards (version 3)
+## V3_DESIGN §4. Everything reads sim.hazards.* when SIM has it. Before that, the version-2
+## dust storm (sim.events) is shown as a hazard, so the panel works with an older simulation.
+## `mock` (automation command `uimock`, only with the boot parameter debug=1) replaces the
+## hazard, maintenance and lab data with made-up rows, to check the layout. Never in play.
+
+const HAZARD := {
+	"meteor": {"name": "Meteor strike", "icon": "meteor", "advice": "Keep people inside. A Meteor Defense turret in range stops it."},
+	"meteor_shower": {"name": "Meteor shower", "icon": "meteor", "advice": "Keep people inside. Turrets need charge for each strike."},
+	"wind_storm": {"name": "Wind storm", "icon": "wind", "advice": "Exterior structures wear fast. Wind turbines make more power but take damage."},
+	"dust_storm": {"name": "Dust storm", "icon": "dust", "advice": "Solar output falls. Charge the batteries before it starts."},
+	"quake": {"name": "Quake", "icon": "quake", "advice": "Corridors near it can crack. Keep spare hull plates for repairs."},
+	"solar_flare": {"name": "Solar flare", "icon": "flare", "advice": "Order Shelter: radiation hurts people outside. Some machines trip off."},
+	"dust_devil": {"name": "Dust devil", "icon": "dust_devil", "advice": "Solar panels on its path lose output until they are cleaned."},
+	"breakdown": {"name": "Breakdown", "icon": "wrench", "advice": "Maintain the machine before it fails."},
+}
+const FAULT_NAME := {"mechanical": "Mechanical (spare parts)", "electrical": "Electrical (electronics)", "seal": "Seal (polymer)"}
+const FAULT_ITEM := {"mechanical": "spare_parts", "electrical": "electronics", "seal": "polymer"}
+const HAZARD_SETTINGS := ["off", "mild", "normal", "hard"]
+
+var mock := {}
+
+func hazards_available() -> bool:
+	return has_helper("hazards", "forecast")
+
+static func hazard_name(kind: String) -> String:
+	return String(HAZARD.get(kind, {}).get("name", kind.replace("_", " ").capitalize()))
+
+static func hazard_icon(kind: String) -> String:
+	return String(HAZARD.get(kind, {}).get("icon", "sev_warning"))
+
+## Detected events, soonest first: [{id, kind, name, eta_s, pos (Vector2 or null), radius,
+## severity 1..3, countered, advice, active: false}].
+func hazard_forecast() -> Array:
+	if mock.has("forecast"):
+		return _mock_eta(mock["forecast"])
+	var out: Array = []
+	if hazards_available():
+		var r = main.sim.hazards.forecast()
+		if typeof(r) == TYPE_ARRAY:
+			for e in r:
+				if typeof(e) == TYPE_DICTIONARY:
+					out.append(_norm_event(e, false))
+	elif has_helper("events", "storm"):
+		var s = main.sim.events.storm()
+		if typeof(s) == TYPE_DICTIONARY and String(s.get("phase", "none")) == "warning":
+			var hz: float = float(bal()["tick_hz"])
+			out.append(_norm_event({"id": "storm", "kind": "dust_storm", "eta_s": (float(s.get("at", 0)) - float(st()["tick"])) / hz,
+				"severity": 1, "countered": false}, false))
+	out.sort_custom(func(a, b): return float(a["eta_s"]) < float(b["eta_s"]))
+	return out
+
+## Events going on now: as the forecast rows, with active true and left_s (seconds left, -1
+## when unknown).
+func hazard_active() -> Array:
+	if mock.has("active"):
+		return _mock_eta(mock["active"])
+	var out: Array = []
+	var hz: float = float(bal()["tick_hz"])
+	if has_helper("hazards", "active"):
+		var r = main.sim.hazards.active()
+		if typeof(r) == TYPE_ARRAY:
+			for e in r:
+				if typeof(e) == TYPE_DICTIONARY:
+					var n: Dictionary = _norm_event(e, true)
+					if not e.has("left_s") and e.has("end"):
+						n["left_s"] = maxf(0.0, (float(e["end"]) - float(st()["tick"])) / hz)
+					out.append(n)
+	elif has_helper("events", "storm"):
+		var s = main.sim.events.storm()
+		if typeof(s) == TYPE_DICTIONARY and String(s.get("phase", "none")) == "active":
+			var n2: Dictionary = _norm_event({"id": "storm", "kind": "dust_storm", "severity": 1, "countered": false}, true)
+			n2["left_s"] = maxf(0.0, (float(s.get("end", 0)) - float(st()["tick"])) / hz)
+			out.append(n2)
+	return out
+
+func _norm_event(e: Dictionary, active: bool) -> Dictionary:
+	var kind: String = String(e.get("kind", ""))
+	var pos = e.get("pos", null)
+	if typeof(pos) == TYPE_ARRAY and (pos as Array).size() >= 2:
+		pos = Vector2(float(pos[0]), float(pos[1]))
+	if typeof(pos) != TYPE_VECTOR2 or bool(e.get("whole_map", false)):
+		pos = null
+	var adv: String = String(e.get("advice", ""))
+	return {"id": e.get("id", -1), "kind": kind, "name": String(e.get("name", hazard_name(kind))), "eta_s": float(e.get("eta_s", 0.0)),
+		"pos": pos, "radius": float(e.get("radius", 0.0)), "severity": clampi(int(e.get("severity", 1)), 1, 3),
+		"countered": bool(e.get("countered", false)), "advice": adv if adv != "" else String(HAZARD.get(kind, {}).get("advice", "")),
+		"active": active, "left_s": float(e.get("left_s", e.get("end_s", -1.0))) if active else -1.0, "phase": String(e.get("phase", "active" if active else "forecast"))}
+
+## Mock rows count down in real time from when the mock was set.
+func _mock_eta(rows: Array) -> Array:
+	var el: float = float(Time.get_ticks_msec() - int(mock.get("t0", 0))) / 1000.0
+	var out: Array = []
+	for r in rows:
+		var n: Dictionary = _norm_event(r, bool(r.get("active", false)))
+		n["eta_s"] = maxf(0.0, n["eta_s"] - el)
+		if float(n["left_s"]) >= 0.0:
+			n["left_s"] = maxf(0.0, n["left_s"] - el)
+		out.append(n)
+	return out
+
+## Machines near failure: [{id, wear, fail_at, eta_s, fault}] (V3_DESIGN §4.4), worst first.
+func at_risk() -> Array:
+	if mock.has("at_risk"):
+		return mock["at_risk"]
+	var out: Array = []
+	if has_helper("hazards", "at_risk"):
+		var r = main.sim.hazards.at_risk()
+		if typeof(r) == TYPE_ARRAY:
+			for e in r:
+				if typeof(e) == TYPE_DICTIONARY:
+					out.append(e)
+	out.sort_custom(func(a, b): return float(a.get("eta_s", 1e9)) < float(b.get("eta_s", 1e9)))
+	return out
+
+## Wear of one structure: {wear 0..100, fail_at, eta_s (-1 = not wearing now), fault, item,
+## risk, broken (broken by wear), first (Maintain now ordered), known}. From
+## sim.hazards.info(bid) (version 3), else from the at-risk rows.
+func wear_of(b: Dictionary) -> Dictionary:
+	var id: int = int(b.get("id", -1))
+	if not mock.has("at_risk") and has_helper("hazards", "info"):
+		var r = main.sim.hazards.info(id)
+		if typeof(r) == TYPE_DICTIONARY and (r as Dictionary).has("wear"):
+			return {"wear": float(r["wear"]), "fail_at": float(r.get("fail_at", 100.0)), "eta_s": float(r.get("eta_s", -1.0)),
+				"fault": String(r.get("fault", "")), "item": String(r.get("item", "")), "risk": bool(r.get("at_risk", false)),
+				"broken": bool(r.get("broken_by_wear", false)), "first": bool(r.get("maint_first", false)), "known": true}
+		return {"known": false}
+	for r in at_risk():
+		if int(r.get("id", -2)) == id:
+			return {"wear": float(r.get("wear", 0.0)), "fail_at": float(r.get("fail_at", 100.0)), "eta_s": float(r.get("eta_s", -1.0)),
+				"fault": String(r.get("fault", "")), "known": true, "risk": true}
+	if b.has("wear"):
+		return {"wear": float(b.get("wear", 0.0)), "fail_at": float(b.get("fail_at", 100.0)), "eta_s": -1.0,
+			"fault": String(b.get("fault", "")), "known": true, "risk": false}
+	return {"known": false}
+
+## Hull breach of a room or corridor: {} when none.
+func breach_of(b: Dictionary) -> Dictionary:
+	var br = b.get("breach", null)
+	if typeof(br) == TYPE_DICTIONARY:
+		return br
+	if typeof(br) == TYPE_BOOL and br:
+		return {"on": true}
+	return {}
+
+## True when the colony has the Shelter order on.
+func shelter_on() -> bool:
+	if mock.has("shelter"):
+		return bool(mock["shelter"])
+	if has_helper("hazards", "sheltered"):
+		return bool(main.sim.hazards.sheltered())
+	var hz = st().get("hazards", {})
+	if typeof(hz) == TYPE_DICTIONARY and hz.has("shelter"):
+		var s = hz["shelter"]
+		return bool(s) if typeof(s) != TYPE_DICTIONARY else bool((s as Dictionary).get("on", false))
+	return bool(st().get("policies", {}).get("shelter", false))
+
+## The colony centre for place texts: the lander, else the world centre.
+func colony_center() -> Vector2:
+	var lid: int = int(st().get("lander_id", -1))
+	if st()["buildings"].has(lid):
+		return st()["buildings"][lid]["pos"]
+	return main.sim.world.center
+
+## "North-east, 140 m from the lander" (whole-map events: "Whole map").
+func place_text(pos) -> String:
+	if pos == null:
+		return "Whole map"
+	var d: Vector2 = (pos as Vector2) - colony_center()
+	var dist: int = int(roundf(d.length()))
+	if dist < 15:
+		return "At the lander"
+	# Screen north is -y in the content plane.
+	var names := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
+	var i: int = int(roundf(fposmod(d.angle(), TAU) / (TAU / 8.0))) % 8
+	return "%s, %d m from the lander" % [String(names[i]).capitalize(), dist]
+
+# ---------------------------------------------------------------- research packs and labs (version 3)
+func pack_ids() -> Array:
+	var out: Array = []
+	for id in items():
+		if item_cat(String(id)) == "science" or String(id).begins_with("pack_"):
+			out.append(String(id))
+	if out.is_empty():
+		out = ["pack_basic", "pack_applied", "pack_exotic"]
+	out.sort_custom(func(a, b): return ["pack_basic", "pack_applied", "pack_exotic"].find(a) < ["pack_basic", "pack_applied", "pack_exotic"].find(b))
+	return out
+
+func packs_available() -> bool:
+	for id in items():
+		if String(id).begins_with("pack_"):
+			return true
+	return false
+
+## Packs a tech needs: {item: n}.
+func tech_packs(tech: String) -> Dictionary:
+	var p = techs().get(tech, {}).get("packs", {})
+	return p if typeof(p) == TYPE_DICTIONARY else {}
+
+## Units of an item made in the last full day (metrics.daily), else -1.
+func made_yesterday(item_id: String) -> int:
+	var dl: Array = daily()
+	if dl.is_empty():
+		return -1
+	return int(dl[dl.size() - 1].get("produced", {}).get(item_id, 0))
+
+## Structures that make an item now (their recipe outputs it).
+func makers_of(item_id: String) -> Array:
+	var out: Array = []
+	for id in st()["buildings"]:
+		var b: Dictionary = st()["buildings"][id]
+		if String(b.get("state", "")) != "active":
+			continue
+		var rec: Dictionary = main.sim.prod.recipe_of(b) if has_helper("prod", "recipe_of") else {}
+		if rec.get("outputs", {}).has(item_id):
+			out.append(id)
+	return out
+
+func labs() -> Array:
+	var out: Array = []
+	for id in st()["buildings"]:
+		var b: Dictionary = st()["buildings"][id]
+		if bool(bdef(String(b["def"])).get("research_lab", false)):
+			out.append(id)
+	return out
+
+## One lab: {focus, mult (without packs), mult_boosted (now), boosted, boost, can_work,
+## packs {item: n held}, scientists, rate (RP/day, only when SIM gives it), known}.
+## sim.research.lab_info(lab: Dictionary) gives the multipliers (version 3); `known` false:
+## an older simulation, only the base multiplier and the staff are real.
+func lab_info(id: int) -> Dictionary:
+	if mock.has("labs") and (mock["labs"] as Dictionary).has(id):
+		return mock["labs"][id]
+	var b: Dictionary = st()["buildings"].get(id, {})
+	if b.is_empty():
+		return {}
+	var boost: float = float(bal().get("research", {}).get("pack_boost", 2.0))
+	var out := {"known": false, "focus": String(b.get("focus", "")), "packs": {}, "scientists": 0, "boost": boost,
+		"mult": float(main.sim.research.lab_mult(b)) if has_helper("research", "lab_mult") else 1.0, "boosted": false, "can_work": true}
+	if has_helper("research", "lab_info"):
+		var r = main.sim.research.lab_info(b)
+		if typeof(r) == TYPE_DICTIONARY and not (r as Dictionary).is_empty():
+			for k in r:
+				out[k] = r[k]
+			out["known"] = true
+	if not bool(out["known"]):
+		var inv_id: int = int(b.get("inv_in", -1))
+		if inv_id != -1 and main.sim.inv.exists(inv_id):
+			for it in main.sim.inv.get_inv(inv_id).get("items", {}):
+				if String(it).begins_with("pack_"):
+					out["packs"][it] = int(main.sim.inv.get_inv(inv_id)["items"][it])
+	# Only the packs it holds.
+	var held := {}
+	for it in out.get("packs", {}):
+		if int(out["packs"][it]) > 0:
+			held[it] = int(out["packs"][it])
+	out["packs"] = held
+	if not out.has("mult_boosted"):
+		out["mult_boosted"] = float(out["mult"]) * (boost if bool(out["boosted"]) else 1.0)
+	if has_helper("build", "occupants"):
+		for aid in main.sim.build.occupants(id):
+			if String(st()["agents"].get(aid, {}).get("role", "")) == "scientist":
+				out["scientists"] = int(out["scientists"]) + 1
+	return out
+
+# ---------------------------------------------------------------- the Meridian cargo (version 3)
+const CARGO := ["science", "medical", "industrial"]
+
+## What a supply run with this cargo brings: {item: n} from sim.ship.info().cargos
+## (version 3), else the contract numbers for science.
+func cargo_items(kind: String) -> Dictionary:
+	var cs = ship().get("cargos", {})
+	if typeof(cs) == TYPE_DICTIONARY and cs.has(kind) and typeof(cs[kind]) == TYPE_DICTIONARY:
+		return cs[kind]
+	if kind == "science":
+		return {"pack_basic": 12, "pack_applied": 4}
+	return {}
+
+## The cargo the simulation keeps for the next runs ("" before version 3).
+func cargo_current() -> String:
+	return String(ship().get("cargo", ""))
+
 # ---------------------------------------------------------------- inventory
 ## {item: {total, reserved, carried}} from the sim.
 func totals() -> Dictionary:

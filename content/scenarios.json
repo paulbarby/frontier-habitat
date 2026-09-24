@@ -50,7 +50,7 @@
     "tutorial": {
       "name": "First landing",
       "planet": "dry",
-      "map_size": 256,
+      "map_size": 810,
       "colonists": [
         "technician",
         "technician",

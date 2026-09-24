@@ -1,8 +1,28 @@
-# Frontier Habitat 2.0
+# Frontier Habitat 3.0
 
 ![Frontier Habitat key art](art/key_art.png)
 
 **Play in the browser:** https://paulbarby.github.io/frontier-habitat/
+
+**Version 3.0** adds rigged and animated astronauts (a suit and an indoor variant, 24 clips,
+smooth pose transitions) who sleep in beds, sit at tables and work at consoles; detailed
+interiors for every room and size; real doorways where corridors meet rooms; modern interior
+lighting; an 810 m map (10× the area); seven deterministic hazards (meteors, meteor showers,
+wind and dust storms, quakes, solar flares, dust devils) plus wear-based breakdowns, hull
+breaches and a meteor turret; research packs, a Research Assembler and a 45-tech tree. Every
+visual subject passed a separate critic agent (0–1 rating, pass ≥ 0.65; `docs/critic/`).
+Contract: `docs/V3_DESIGN.md`. Status: `docs/IMPLEMENTED.md`.
+
+| | |
+|---|---|
+| ![Late colony](art/screenshots/v3_01_late_colony_810m.png) | ![Habitat cutaway](art/screenshots/v3_02_habitat_cutaway.png) |
+| ![Room families by night](art/screenshots/v3_04_room_families_night.png) | ![Sleep sequence](art/screenshots/v3_06_sleep_sequence.png) |
+| ![Meteor and quake](art/screenshots/v3_09_meteor_quake.png) | ![Solar flare](art/screenshots/v3_10_solar_flare.png) |
+
+Astronaut sheets: `art/npc/`. Interior renders: `art/interiors/`. v3 showcase saves:
+`showcase_v3_mid`, `showcase_v3_late` (810 m map, 66 colonists).
+
+---
 
 
 A single-player 3D colony management game on a dusty orange world. You plan the base; the
@@ -107,7 +127,7 @@ the same commands a player submits. The colonists build it under the normal rule
 "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python tools/blender/rooms_build.py
 # exteriors, ship, crops, colonists, props: see tools/blender/ext_report.md
 
-# Tests: 40 headless tests, about six minutes (add "!long_" to skip the long runs)
+# Tests: 60 headless tests, about eleven minutes (add "!long_" to skip the long runs)
 node tools/godot.mjs test
 
 # Web build

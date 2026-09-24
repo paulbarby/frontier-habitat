@@ -320,6 +320,8 @@ func _remove_record(b: Dictionary) -> void:
 		var a: Dictionary = sim.state["agents"][aid]
 		if int(a["bed"]) == bid:
 			a["bed"] = -1
+			sim.agents._beds_tick = -1
+			sim.agents._full_tick = -1
 	blds.erase(bid)
 	# Rebuild at once: later systems in this same tick must not see the removed structure.
 	sim.topo.rebuild(true)

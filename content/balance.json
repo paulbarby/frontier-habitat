@@ -19,7 +19,7 @@
   "oxygen_per_colonist": 1,
   "oxygen_per_occupant_capacity": 0.5,
   "oxygen_per_corridor_10m": 0.1,
-  "breach_drain_per_day": 2,
+  "breach_drain_per_day": 4,
   "need_trigger": 60,
   "need_critical": 85,
   "hunger_per_day": 100,
@@ -97,7 +97,13 @@
   "max_slope_rooms": 0.22,
   "max_slope_exterior": 0.3,
   "max_walk_slope": 0.6,
-  "map_margin": 4,
+  "map_margin": 8,
+  "map_margin_v2": 4,
+  "alerts": {
+    "_note": "V3_DESIGN section 2. raise_after: seconds a condition must be true before its alert shows, by severity index 0..3 (notice = 1, warning = 2, critical = 3). clear_after: seconds a condition must be false before its alert goes.",
+    "raise_after": [20, 20, 5, 0],
+    "clear_after": 30
+  },
   "task_backoff_seconds": 12,
   "task_max_path_fails": 3,
   "haul_outstanding_per_destination": 6,
@@ -334,7 +340,14 @@
   "research": {
     "rp_per_work": 0.1,
     "scientist_only": true,
-    "comms_bonus": 0.1
+    "comms_bonus": 0.1,
+    "_note_v3": "V3_DESIGN section 5. pack_boost: a lab that works with the packs of its project makes this many times the RP. focus: +bonus for techs of the focus branch, -malus for others. network: +step per extra working lab joined by corridors (research sci_net), at most max. lab_pack_stock: packs of each needed type a lab keeps in its input.",
+    "pack_boost": 2.0,
+    "focus_bonus": 0.25,
+    "focus_malus": 0.1,
+    "network_step": 0.1,
+    "network_max": 0.3,
+    "lab_pack_stock": 4
   },
   "nutrition": {
     "start": 50,
@@ -440,6 +453,13 @@
         "medicine": 6,
         "electronics": 6
       },
+      "_note_cargo": "V3: the player picks the cargo of a supply run (ship {action: supply_run, cargo}). 'cargo' above is the version-2 load, used when no choice was made in an old save.",
+      "cargos": {
+        "science": {"pack_basic": 12, "pack_applied": 4},
+        "medical": {"medicine": 12, "meals": 12},
+        "industrial": {"exotic": 4, "electronics": 6, "spare_parts": 6}
+      },
+      "default_cargo": "industrial",
       "settlers": 4
     }
   },
@@ -481,6 +501,44 @@
     "max_points": 720,
     "item_sample_seconds": 60
   },
+  "hazards": {
+    "_note": "V3_DESIGN section 4. settings: rate multiplier per game option (off, mild, normal, hard). severity_cap: highest severity per option. Rates are events per day at full ramp; local kinds also scale with sqrt(structures / colony_ref), clamped. ramp: the rate rises from ramp_min to 1 over ramp_days after the scenario's no_disaster_days. near_p: chance that a local event lands within near_m of a structure. lead_s: seconds the event is known (forecast); warn_s: seconds of warning (a banner). comms_lead_s: extra meteor lead while a comms tower works.",
+    "horizon_days": 2.0,
+    "plan_every_s": 60,
+    "settings": {"off": 0.0, "mild": 0.5, "normal": 1.0, "hard": 1.6},
+    "severity_cap": {"off": 1, "mild": 2, "normal": 3, "hard": 3},
+    "ramp_days": 10.0,
+    "ramp_min": 0.3,
+    "colony_ref": 20,
+    "colony_min": 0.5,
+    "colony_max": 2.0,
+    "near_p": 0.4,
+    "near_m": 150.0,
+    "comms_lead_s": 90,
+    "craters_max": 80,
+    "kinds": {
+      "meteor": {"per_day": 0.35, "local": true, "lead_s": 45, "warn_s": 30, "radius": [4, 12]},
+      "meteor_shower": {"per_day": 0.08, "local": true, "lead_s": 45, "warn_s": 30, "strikes": [3, 6], "zone_m": 60, "span_s": 60, "radius": [3, 6]},
+      "wind_storm": {"per_day": 0.25, "lead_s": 180, "warn_s": 90, "duration_s": [120, 300], "solar_mult": 0.7, "speed_mult": 0.6, "turbine_mult": 1.8, "damage_per_min": 2.0, "wear_mult": 1.0},
+      "quake": {"per_day": 0.15, "local": true, "lead_s": 20, "radius": [60, 150], "damage": [5, 25], "crack_p": 0.2, "max_cracks": 3, "shake_s": 6},
+      "solar_flare": {"per_day": 0.15, "lead_s": 120, "warn_s": 120, "duration_s": [60, 150], "rad_per_s": 0.4, "retreat_health": 70},
+      "dust_devil": {"per_day": 0.3, "local": true, "lead_s": 30, "warn_s": 30, "length": [80, 200], "duration_s": [60, 120], "width": 6.0, "damage": [3, 10], "flat_p": 0.6}
+    },
+    "wear": {
+      "_note": "Machines wear while they run: per_day x level wear_mult x difficulty x zone. A machine breaks when wear reaches its threshold (fail_at, from a hash of its id and repair count). risk_frac: share of the threshold where the forecast shows it and a technician does maintenance (maint_work work points, 1 unit of the fault's item).",
+      "enabled": true,
+      "start_day": 1.0,
+      "per_day": 4.0,
+      "fail_at": [60, 100],
+      "risk_frac": 0.75,
+      "maint_work": 20,
+      "faults": {"mechanical": "spare_parts", "electrical": "electronics", "seal": "polymer"}
+    },
+    "breach": {"work": 30, "item": "hull_plate", "alt_item": "metal", "alt_qty": 2},
+    "survey": {"work": 30, "rp": 40, "exotic": 1, "ore": 2},
+    "clean": {"work": 10},
+    "fragment": {"ore": [2, 6], "exotic": [1, 2], "pack_p": 0.25}
+  },
   "storm": {
     "_note": "Dust storm (spec 11). Never before the scenario's no_disaster_days. interval_days: days between storms (hazard random stream). duration_seconds: [min, max].",
     "enabled": true,
@@ -494,6 +552,7 @@
       180
     ],
     "solar_mult": 0.2,
-    "speed_mult": 0.5
+    "speed_mult": 0.5,
+    "forecast_seconds": 300
   }
 }

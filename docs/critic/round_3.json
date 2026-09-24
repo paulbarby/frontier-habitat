@@ -1,0 +1,89 @@
+{
+  "round": 3,
+  "date": "2026-09-24",
+  "scope": "full astronaut delivery: suit and indoor variants, 24 clips, rated from zero",
+  "pass_mark": 0.65,
+  "subjects": {
+    "npc_suit": {
+      "consistency": 0.82,
+      "appeal": 0.77,
+      "style": 0.82,
+      "score": 0.80,
+      "pass": true,
+      "provisional": false,
+      "fixes_optional": [
+        "Leg and pelvis shading: better than round 1 but grey AO smudges remain on the front of the thighs and the lower torso (art/critic/r3_side_by_side.png). Clamp AO on SuitMain to >= 0.65 or blur the bake 2 more passes.",
+        "Gloves: still a block with a thumb. Split the index finger from the other three (8-sided, rounded tip); the carry grip and the console pose read better with it.",
+        "Shoulder plates (SuitHard): 1 cm bevel on the outer edges; now they read as flat boxes in the 3/4 views.",
+        "Pack lights at game size: the amber light does not show at 55 px (turnaround 55 px view); make both lenses 3 cm and emissive 4.",
+        "repair_kneel: the visor comes within a few cm of the machine face (clips_suit.png, repair_kneel 0-90). Lean the chest back 6-8 deg and extend the forearms so the helmet keeps >= 8 cm clear."
+      ]
+    },
+    "npc_indoor": {
+      "consistency": 0.70,
+      "appeal": 0.60,
+      "style": 0.68,
+      "score": 0.66,
+      "pass": true,
+      "provisional": false,
+      "fixes": [
+        "Face: the nose is not small; it is a large wedge that projects about as far as the brow and reads as a beak in every 3/4 view (art/critic/r3_in_face.png). Reduce its projection by 40%, round the tip, widen the nostril base 10%. Add a mouth (a 3 cm soft line, lip colour 10% darker than Skin) and a slightly rounder jaw. Eyes: one step larger with an upper-lid line; lower the brow lines 3 mm and curve them so the face reads calm, not stern.",
+        "Head and neck: widen the skull 6-8% and shorten the visible neck by 3 cm, thicken it 15%. Now the head sits on a long thin post (r3_side_by_side.png).",
+        "Hair variants at game size: at 55 px all four heads look the same (art/critic/r3_in_55.png), not only crop and bob. Give each a different silhouette: crop tight to the skull; bob to the jaw with +2 cm volume at the sides; bun +35% and set higher; ponytail longer (to the collar) and swinging out 3 cm. If the game allows it, tint hair per colonist from 4 colours (black, dark brown, auburn, dark blonde): colour does more at 55 px than shape.",
+        "Body mass: the limbs are thin next to the suit and the figure reads as a mannequin. Upper arms and thighs +12-15% girth, forearms and calves +8%. Raise the crotch 4 cm; the jumpsuit seat hangs low in the front view.",
+        "Shoulder panels: round the outer corners with a 1.5 cm bevel and let the panel follow the shoulder curve; they read as flat plates.",
+        "Hands: the open hand is a mitten with a thumb that sticks out (deform_indoor.png 'hand'). Separate the index finger, curl the rest 20 deg in the relaxed pose, bring the thumb in 15 deg.",
+        "Detail density: the suit has many parts; the jumpsuit has a zip line, two pocket flaps and a belt. Add a name patch with the role accent on the chest, a sleeve patch, seam lines on the sides of the legs, and a small wrist unit (Screen material) so it matches the suit's level of detail.",
+        "Evidence: show the 6 skin tones in turnaround_indoor.png (one row, 55 px and close). Nothing shows them now."
+      ]
+    },
+    "npc_animation": {
+      "consistency": 0.78,
+      "appeal": 0.72,
+      "style": 0.76,
+      "score": 0.75,
+      "pass": true,
+      "provisional": true,
+      "fixes": [
+        "Contract gate (V3 3.5): godot_check.json is ok false with 28 failures (14 per variant). The pass is provisional until it is ok true. The failures: every stand loop <-> work_console / work_bench / talk change pops hand.L or hand.R 29-46 deg at blend frame 5; carry on/off pops prop.R 80.5 deg; idle -> walk -> run -> stop pops shin.L 39.5 deg (limit 36.5). A 0.25 s cross-fade of a 45 deg difference is about 6 deg per frame, so a 35-46 deg step means the blend is not applied to the hand bones at that frame: RENDER. ART-NPC can help: bring the hand rest orientation of work_console and work_bench within 20 deg of idle so a blend never has to cover 45 deg.",
+        "carry on/off: prop.R should not rotate 80 deg. Keep prop.R at the same local rotation in idle, walk, carry_idle and carry_walk; move the crate with the hand bone, not by turning prop.R.",
+        "repair_kneel: helmet clearance to the machine face (see npc_suit optional fix 5). The same clip on the indoor variant has the head 15 cm closer to the panel than is natural; lean back 6-8 deg.",
+        "sit_eat on the suit variant brings the glove to the closed visor. RENDER must show eating only on the indoor variant (the suit variant uses sit_idle or sit_type in a mess hall).",
+        "talk: the gestures are small at game size (talk 0-90 in both sheets). Raise the gesturing forearm 15 deg higher at the peak and add a 10 deg head nod.",
+        "carry_walk: the arms are locked straight for the whole loop. Add 5 deg of elbow give on each foot strike.",
+        "Suited sleepers: the suit sinks 3.2 cm into the mattress in sleep (npc_report info line). Suited colonists do not use beds, so RENDER must never play lie_enter / sleep / lie_exit on the suit variant; put that rule in the RENDER state machine and its check."
+      ]
+    }
+  },
+  "round_1_fixes_checked": {
+    "run as the normal pace": "landed: 3.40 m/s, 6 of 20 frames in flight, hips bob 3.5 cm, foot slide 1.0 cm; clips sheet shows knee lift and bent arms",
+    "walk knee bend 10-15 deg": "landed: planted knee 6.3-14.8 deg (report); walk frames show straight stance legs",
+    "a visible idle": "landed: hips 6.4 cm, chest yaw 16.9 deg; idle 60 shows a look at the wrist panel",
+    "arms about 9 deg from the body": "landed: 9.3 deg; turnaround front view confirms",
+    "flush helmet lamps": "landed: small housings on the helmet sides; no floating dots",
+    "green and amber pack lights": "landed: green and amber lenses on the pack top; amber does not read at 55 px",
+    "lit chest screen with a hose": "landed: cyan screen with 2 amber buttons; dark hose from the pack under the arm to the chest box (az 90 view)",
+    "smoother leg shading": "partly: facets gone and ribs added; grey AO smudges remain on the thighs and lower torso",
+    "night read in game": "not verifiable: no in-game shots this round"
+  },
+  "maker_weaknesses_checked": {
+    "simple low-poly faces with a small round nose": "partly true: the face is simple, but the nose is large and wedge-shaped, not small; it is the main fault of npc_indoor",
+    "mitten-like hands": "true for both variants",
+    "slightly boxy shoulder panels": "true for both variants",
+    "crop and bob differ only a little at 55 px": "worse: all four heads look the same at 55 px",
+    "suit helmet close to the machine top when kneeling": "true: within a few cm of the machine face in repair_kneel",
+    "suited sleeper sinks 3 cm": "true (report); acceptable only if RENDER never puts a suit in a bed"
+  },
+  "notes": [
+    "npc_suit is good (0.80): all round-1 fixes landed or partly landed. It reads at 30, 55 and 80 px as a white astronaut with a gold visor and a role stripe, and close up it is clean and detailed.",
+    "npc_indoor is a marginal pass (0.66). The jumpsuit palette and the accent panels match the suit and the rooms. The face, the long thin neck, the thin limbs and the four identical-looking heads hold it down. At the game camera the body works; close up in a room (where Paul will look at people in beds and at tables) the face lets it down.",
+    "npc_animation is 0.75 on the clips (24 of 24, both files, npc_verify 234 pass, all seams and rest poses within 1 deg, contacts measured on furniture). It is provisional: V3 3.5 says a failed check is a failed delivery, and godot_check.json still has 28 failures.",
+    "Evidence gap: no in-game NPC shots this round (RENDER has not integrated the indoor variant and the new clips). Night read, speed-matched playback, crowd variety and body-through-furniture are rated in the npc_interaction round.",
+    "My own evidence: art/critic/r3_side_by_side.png (Blender, rest pose, suit and indoor Head_1), crops r3_in_face.png, r3_in_55.png, r3_suit_packtop.png, r3_suit_helmet.png, r3_clips_*_{a,b,c}.png, r3_trans_{a,b,c}.png."
+  ],
+  "full_delivery_must": [
+    "godot_check.json ok true for both variants (every pose and loop change, carry on/off, locomotion).",
+    "npc_indoor fixes 1-3 (face, head and neck, hair variants that differ at 55 px) at least, and the 6 skin tones shown.",
+    "In-game shots for the npc_interaction round: suit outside by day and by night (findable at 25-30 m zoom); indoor colonists in beds, on seats, at consoles; kneel repair at a real machine; a crowd of 8+ indoor colonists at 55 px where heads and skin tones differ; no suited colonist in a bed; no body through furniture or walls."
+  ]
+}

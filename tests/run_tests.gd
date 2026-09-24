@@ -22,6 +22,7 @@ const SUITES := [
 	"res://tests/cases_v2.gd",
 	"res://tests/cases_acceptance.gd",
 	"res://tests/cases_soak.gd",
+	"res://tests/cases_v3.gd",
 ]
 
 var _err_mutex := Mutex.new()

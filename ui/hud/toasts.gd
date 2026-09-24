@@ -40,6 +40,9 @@ func _process(_delta: float) -> void:
 	var pop: Rect2 = hud.screens.popup_rect()
 	if pop.size.x > 0.0:
 		top = maxf(top, pop.end.y + 10.0)
+	var ban = hud.get("hazard_banner")
+	if ban != null and (ban as Control).visible:
+		top = maxf(top, (ban as Control).get_global_rect().end.y + 10.0)
 	_box.offset_top = top
 
 func push(text: String, kind: String = "info", icon: String = "") -> void:

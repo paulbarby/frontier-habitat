@@ -59,8 +59,11 @@ func _grow(sim) -> void:
 					sim.build.spawn_active(def_id, pos, 0.0)
 			x += 9
 		y += 9
-	for i in 4:
-		sim.submit("admit_settlers", {"count": 12})
+	var guard := 0
+	while sim.alive_count() < 70 and guard < 30:
+		guard += 1
+		sim.submit("admit_settlers", {"count": mini(6, 70 - sim.alive_count())})
+		sim.run_seconds(45.0)
 	print("grown: %d alive, %d buildings" % [sim.alive_count(), sim.state["buildings"].size()])
 	sim.run_seconds(60.0)
 	print("settled")
@@ -77,7 +80,7 @@ func _step(sim) -> void:
 	_time("cmds", func(): sim.cmds.apply_pending())
 	_time("env", func(): sim.util.env_tick())
 	if second:
-		_time("events", func(): sim.events.tick_second())
+		_time("hazards", func(): sim.hazards.tick_second())
 	if bool(sim.state["topo_dirty"]):
 		_time("topo.rebuild", func(): sim.topo.rebuild(true))
 	_time("power", func(): sim.util.power_tick())
@@ -90,7 +93,7 @@ func _step(sim) -> void:
 		_time("ship.second", func(): sim.ship.tick_second())
 		# jobs.tick_second() part by part, in its own order.
 		var j = sim.jobs
-		for part in ["_expire", "_index", "_gen_machine_inputs", "_gen_research", "_gen_medical", "_gen_construction", "_gen_upgrades", "_gen_ship", "_gen_dining", "_gen_water_fill", "_gen_clearing", "_gen_operate", "_gen_tend", "_gen_repair", "_gen_demolish"]:
+		for part in ["_expire", "_index", "_gen_machine_inputs", "_gen_repair", "_gen_hazard_work", "_gen_research", "_gen_medical", "_gen_ship", "_gen_construction", "_gen_upgrades", "_gen_dining", "_gen_water_fill", "_gen_clearing", "_gen_operate", "_gen_tend", "_gen_demolish"]:
 			_time("jobs." + part, func(): j.call(part))
 		if int(sim.state["tick"]) % (10 * int(sim.bal["tick_hz"])) == 0:
 			_time("jobs._clean_piles", func(): j._clean_piles())
@@ -107,7 +110,7 @@ func _step(sim) -> void:
 		_time("research", func(): sim.research.tick_second())
 		var al = sim.alerts
 		var found := {}
-		for part in ["_power_issues", "_water_issues", "_air_issues", "_building_issues", "_people_issues", "_supply_issues", "_nutrition_issues", "_progress_issues"]:
+		for part in ["_power_issues", "_water_issues", "_air_issues", "_building_issues", "_people_issues", "_supply_issues", "_nutrition_issues", "_progress_issues", "_hazard_issues"]:
 			_time("alerts." + part, func(): al.call(part, found))
 		_time("alerts._merge", func(): al._merge(found))
 		_time("metrics", func(): sim.metrics.tick_second())

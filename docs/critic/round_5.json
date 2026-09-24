@@ -1,0 +1,51 @@
+{
+  "round": 5,
+  "date": "2026-09-24",
+  "scope": "astronauts re-rated after the round-3 fixes (sheets 22:47-22:48, models 22:44-22:46)",
+  "pass_mark": 0.65,
+  "subjects": {
+    "npc_suit": {
+      "consistency": 0.83, "appeal": 0.79, "style": 0.83, "score": 0.82, "pass": true,
+      "fixes_optional": [
+        "repair_kneel: in the sheet the visor still looks within a few cm of the machine face (clips_suit.png, repair_kneel 0-90), although the report measures 0.357 m to the helmet centre. Check the visor front, not the helmet centre: keep >= 6 cm between visor and panel."
+      ]
+    },
+    "npc_indoor": {
+      "consistency": 0.76, "appeal": 0.68, "style": 0.72, "score": 0.72, "pass": true,
+      "fixes": [
+        "Heads at 55 px: the bun now reads, and the bob a little; the crop and the ponytail still look the same (art/critic/r5_55px.png). The ponytail must show from behind and the side at 55 px: 30% thicker, 4 cm further out, and a lighter tie band. Give the crop a visible hairline edge.",
+        "Hair colour: RENDER's four-colour rule is named but not shown; in the skin-tone row every head has near-black hair. Show the 4 hair colours in the sheet (black, dark brown, auburn, dark blonde) so the variety can be judged.",
+        "Face in 3/4 view: the nose is smaller but still a pointed wedge (r5_heads.png). Round the bridge and lower the tip 5 mm; it is the first thing the eye reads.",
+        "Skin tone 5 renders grey-white with near-black hair and reads as a mannequin. Warm it (more red/yellow, less grey) and brighten tone 4 slightly so the lightest two differ.",
+        "Hands: better (index apart). The fingers are still square blocks close up; bevel the finger edges."
+      ]
+    },
+    "npc_animation": {
+      "consistency": 0.82, "appeal": 0.74, "style": 0.78, "score": 0.78, "pass": true, "provisional": false,
+      "fixes": [
+        "Contract gate closed: godot_check.json ok true, 140 tests, 0 failures; stand-loop <-> work/talk blends now peak at 10 deg (forearm), was 29-46 deg. No action.",
+        "talk: gestures are higher but still read small at game size (talk 30/90). Raise the peak hand to chest height and add a second hand that answers.",
+        "repair_kneel on the suit: see npc_suit.",
+        "RENDER rules still owed and to be shown in npc_interaction: no suited colonist plays lie_enter/sleep/lie_exit (68 vertices inside the bed box, 2.6 cm sink) and no suited colonist plays sit_eat (glove to closed visor)."
+      ]
+    }
+  },
+  "maker_claims_checked": {
+    "face: nose -40%, mouth, rounder jaw, bigger eyes, curved brows": "mostly landed; nose still wedge-shaped in 3/4",
+    "neck 3 cm shorter, 15% thicker; skull 7% wider": "landed (r5_side_by_side.png)",
+    "hair silhouettes": "bun and bob landed; crop vs ponytail still alike at 55 px",
+    "hair tinted in 4 colours by RENDER": "not shown in the evidence",
+    "body mass, crotch, shoulder roll, patches, wrist unit": "landed",
+    "hands: index finger apart, curl, thumb in": "landed on both variants",
+    "six skin tones shown": "landed; tone 5 reads grey",
+    "repair_kneel 8 deg more upright": "landed for indoor; suit visor still looks close in the sheet",
+    "talk higher with nod, carry_walk elbow give, prop.R without keys": "landed",
+    "suit AO floor 0.65 and blur, 3 cm pack lenses": "landed; thigh smudges gone"
+  },
+  "notes": [
+    "All three subjects pass. npc_suit is good (0.82). npc_animation is no longer provisional because RENDER's check is ok.",
+    "npc_indoor rises from 0.66 to 0.72. It is shippable; the remaining work is variety at game size (hair shape and colour) and the nose.",
+    "Gap: no in-game NPC shots. Night read, crowd variety, speed-matched playback and furniture use are rated in npc_interaction.",
+    "My evidence: art/critic/r5_side_by_side.png (Blender, rest pose), crops r5_heads.png, r5_55px.png, r5_tones.png, r5_suit_rows.png, r5_in_rows.png."
+  ]
+}

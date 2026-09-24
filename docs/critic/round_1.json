@@ -1,0 +1,57 @@
+{
+  "round": 1,
+  "date": "2026-09-24",
+  "scope": "pilot: astronaut suit model and the 5 pilot clips (idle, walk, sit_enter, sit_idle, sit_exit)",
+  "pass_mark": 0.65,
+  "subjects": {
+    "npc_suit": {
+      "consistency": 0.78,
+      "appeal": 0.70,
+      "style": 0.76,
+      "score": 0.75,
+      "pass": true,
+      "provisional": false,
+      "fixes": [
+        "Night read: replace the white helmet-lamp spheres at the visor corners (they read as floating white dots at 30-80 px) with two small lamp housings 4 x 3 x 3 cm flush on the helmet sides; emissive only on a forward lens (warm white #FFF4E0, strength 4). Make the two pack status lights 2 cm lenses, one green #5EE07A and one amber #FFB547 (both are plain white Light today). RENDER: add an additive halo on the helmet lamps at night so an outside colonist can be found at 25-30 m zoom (r1_night_z28.png: not findable).",
+        "Chest control box: replace the blank white label with the Screen material (cyan UI pattern, emissive 1.0) and two accent buttons. Add an umbilical hose, about 2.5 cm diameter, from the pack lower right to the chest box.",
+        "Shading on the soft limbs and pelvis: remove the facets and the grey AO speckles (deform_suit.png 'sit hand on thigh', 'sit_enter elbows'). Weighted normals or auto-smooth 40 deg; re-bake AO with more samples plus a blur; clamp AO to >= 0.55 on SuitMain so the white does not go dirty grey.",
+        "Pelvis: reduce the front and side volume of the crotch and hip by 2-3 cm; in the 3/4 and side views it reads as a nappy bulge.",
+        "Arm rest line: arms hang about 20 deg out from the body (mannequin A-pose). In idle and walk bring the upper arms to 8-10 deg from the body with 12-15 deg elbow bend and the hands turned in. Keep the bind pose if skinning needs it; fix it in the clips.",
+        "Bellows rings at knees and elbows are only thin lines: make 3 ribs each, 0.8-1.0 cm proud, Trim material. Give the hard upper torso a seam line and roughness 0.45 (limbs stay 0.68) so hard and soft parts read differently.",
+        "Gloves: fingers are 6-sided tubes. Use 8 sides, rounded tips, fingers grouped 2 + 2 with a separate thumb, palm in Rubber. Take the triangles from hidden pack faces (budget 7,000; now 6,781).",
+        "Pack: chamfer every box edge 1 cm and split the white back panel into two panels with a recessed seam, so it reads less like an appliance.",
+        "Seated depth: the pack reaches 0.69 m behind the stand point when seated; any chair back at 0.30 m will cut through it. Contract note: suited colonists sit only on backless seats (indoors use the indoor variant). In sit the pack bottom touches the stool top (deform_suit.png 'sit from the back'): keep >= 2 cm clearance."
+      ]
+    },
+    "npc_animation": {
+      "consistency": 0.76,
+      "appeal": 0.58,
+      "style": 0.65,
+      "score": 0.66,
+      "pass": true,
+      "provisional": true,
+      "fixes": [
+        "run: build it before anything else. It is the normal travel pace (3.4 m/s). Without it RENDER plays walk at about 3.2x (3.4 / 1.05) and colonists scurry (r1_seq_walk_b.png). Light suited jog: short flight phase, knee lift about 70 deg, arms bent 60-70 deg at the elbow, 3-4 cm vertical bob.",
+        "walk: the knees never straighten. Measured shin flex is 28-30 deg through the whole stance phase and peaks at 70 deg in swing. Bring stance to 10-15 deg (heel strike and mid-stance), keep swing at 60-70 deg. Keep the suit weight with the existing 3 cm hip bob and a 5 deg forward torso lean.",
+        "idle: the motion is real but under the game camera's resolution (hips 4.8 cm side shift, head 7.8 deg, chest 2.9 deg in 4 s). At 30-80 px it reads as frozen. Add one readable action per loop: a head and upper-body turn of 15-20 deg and back, weight shift 6-8 cm, and one small hand move (for example a look at the wrist panel). Keep the loop seam at 0 deg.",
+        "sit_idle: the gloves press into the thighs (deform_suit.png 'sit hand on thigh'); lift the hands 1 cm. Add one small action per 10 s loop (head turn is present at 13.6 deg: keep it).",
+        "sit_enter / sit_exit: good. No change needed apart from the pack clearance above the seat (see npc_suit fix 9)."
+      ]
+    }
+  },
+  "notes": [
+    "npc_suit passes (0.75). The model is recognisable as a near-future astronaut at 30-80 px, matches the v2 palette (off-white hull, graphite, one accent) and the building detail density. It is below 0.80 because of the night read, the blank chest label, the shading close up and the stiff arm line.",
+    "npc_animation is a provisional, marginal pass (0.66) for the 5 pilot clips only. The technical work is excellent: loop seams 0.000 deg, enter/exit on the rest poses 0.000 deg, foot slide 0.94 cm, Godot transitions without pops. The two clips a player sees most (idle, walk) are the weak ones. It will be re-rated on the full clip set; the pilot score does not carry over.",
+    "In-game evidence: build/web_render (built 16:51), save showcase_day9, shots in art/critic/r1_*.png. The indoor variant does not exist yet, so colonists wear the suit inside rooms.",
+    "Seen in passing, for later rounds (not scored now): colonists stand inside beds in the habitat (r1_crop_a4.png, r1_seq_walk_a.png, r1_ingame_day2_z9.png); one colonist passes through a room wall (r1_seq_walk_b.png frame 5); the habitat round wall is not drawn in some close shots (r1_ingame_day2_z9.png; may be the cutaway). These belong to npc_interaction, doorways and RENDER.",
+    "Tooling: godot_check.json reports triangles 0 for the suit (the probe does not count them); npc_report.md reports 6,781. Critic PNGs taken before art/critic/.gdignore was added got import cache entries in .godot/imported; they are harmless."
+  ],
+  "full_delivery_must": [
+    "astronaut_indoor.glb: the same skeleton (names, rest pose, lengths) as the suit; navy #243247 jumpsuit with SuitAccent shoulder panels and collar; a calm face with no uncanny detail; 4 hair variants Head_0..Head_3 that differ at 55 px (silhouette, not only colour); Skin tintable to 6 tones; <= 6,000 triangles; the same palette and detail density as the suit; turnaround_indoor.png with the 30/55/80 px views.",
+    "All 24 clips in both GLBs; clips_suit.png and clips_indoor.png (4 frames each); npc_report.md with 0 failed and 0 pending; godot_check.json ok true with no failures and the real triangle count.",
+    "run at about 3.4 m/s with foot slide <= 2 cm at speed-matched playback; carry_walk and carry_idle hold the crate at prop.R without the crate cutting the chest or pack; work_console and work_bench put the hands on a 1.0 m and a 0.9 m surface; repair_kneel puts the hands on a panel 0.45 m ahead at 0.4 m; sleep lies on a 0.55 m mattress, head to local +Y; collapse and dead lie on the ground with the suit pack not cutting into the ground.",
+    "The fixes listed above for idle and walk, and npc_suit fixes 1-3 at least.",
+    "In-game sequences as V3_DESIGN section 9 asks: walk -> sit -> eat -> stand; walk -> lie -> sleep -> get up; kneel repair; close shots by day and by night. Outside colonists findable at night at 25-30 m zoom.",
+    "No body through beds, chairs or walls in the in-game shots."
+  ]
+}

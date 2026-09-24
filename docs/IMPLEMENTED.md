@@ -84,13 +84,40 @@ ledger `{}`, no deaths, no false starving alert).
 | Showcase saves early / mid / late | Done | `tests/make_showcase_saves.gd` writes them; each audit `{}` |
 | Tick under about 1 ms with 60 colonists and 150 structures | **Not met** | `long_perf_60_colonists_150_structures`: 1.35 to 1.63 ms on an i7-14700K |
 
+## Version 3 (`docs/V3_DESIGN.md`, 24–25 September 2026)
+
+| Area | What is built | Evidence |
+|---|---|---|
+| Astronauts | `astronaut_suit.glb` (6,839 tris) and `astronaut_indoor.glb` (5,964 tris, 4 heads), one skinned mesh each on a shared 24-bone skeleton, 24 clips at 30 fps, no root motion | `tools/blender/npc_verify.py` 236 pass / 0 fail; `tools/npc_check.gd` 140 tests / 0 fail (`art/npc/`) |
+| Transitions | Pose states stand, sit, lie, kneel with enter/exit clips; quaternion cross-fade max(0.25 s, angle ÷ 300°/s) ≤ 0.6 s; phase-synchronised walk ↔ run; speed-matched playback (foot slide ≤ 1 cm) | `art/npc/godot_check.json` |
+| Furniture use | `agent.use` {kind, b, i, pose, act}; beds, seats, work stations, stand points, exterior service points; one body per anchor, 0.45 m spacing, overflow queues in corridors | test `long_v3_use_slots_unique` (72,000 ticks) |
+| Interiors | 94 room files (every room type, S–XL): family layouts, anchors per `furniture` content, ≤ 8 interior surfaces; `art/interiors/` has 174 renders | `tools/blender/rooms_build.py` 94 / 0 flags |
+| Doorways | Wall as 32 segments; `doorway.glb` with sliding doors at each corridor; junction kit (posts, sills); tall items near a door hidden | critic round 8: 0.79 |
+| Interior light | Real lights for the rooms nearest the camera, lamp pools, family accent lights with floor spill; night floor 58–113% of day | critic round 8: 0.75 |
+| Map | 810 m (10× the v2 area), 125 m start plateau, exotic fields ≥ 220 m out, hazard zone fields; 86–88% buildable; chunked LOD terrain; v2 saves keep 256 m | tests `v3_map_810_*`, `v3_buildable_area_all_seeds` |
+| Hazards | Meteor, meteor shower, wind storm, dust storm, quake, solar flare, dust devil; wear-based breakdowns with faults; hull breaches; meteor turret; shelter and maintain commands; deterministic 2-day queue with detection lead | tests `v3_hazard_*`, `long_v3_hazards_determinism_and_ledger` |
+| Research | 45 techs; basic / applied / exotic research packs; Research Assembler; ×2 lab boost with packs; lab focus; data network; supply-run cargo choice; fragment surveys | tests `v3_research_packs_*`, `v3_lab_focus_and_supply_cargo` |
+| Alerts | Hysteresis (raise after 20/5/0 s, clear after 30 s), one `output_blocked` alert, toast gate (one toast per key, 180 s quiet time, notices never toast) | test `v3_alert_output_blocked_300s`; `tools/ui/test_alert_gate.gd` 17/17 |
+| Interface | Hazard panel with countdowns and banner, Shelter button, maintenance tab, research pack tabs, lab focus, cargo choice, hazard setting, camera-shake toggle, 810 m minimap | `docs/shots/ui3_*.png` |
+
+**Critic gate** (`docs/critic/round_1.md` … `round_8.md`): 19 subjects, 3 scores each
+(consistency, appeal, style), pass ≥ 0.65. Two subjects failed and were redone:
+`interior_links` 0.647 → 0.71 and `npc_interaction` 0.63 → 0.71. Final: all 19 pass, mean 0.75,
+range 0.70 (hazard props, hazard visuals) to 0.82 (suit). The last RENDER polish (round-8
+fixes) was not re-rated.
+
+**Measured** (i7-14700K, RTX 3060, headless Chrome with GPU, 1600 × 900):
+tick 1.78 ms median at 70 colonists and 150 structures (budget 2.0 ms); late 810 m colony
+(66 colonists) 56–71 fps mean, minimum 48–56 fps in the HUD-on overview, draw calls ≤ 1,342;
+world generation 207 ms; web pck 62.3 MB (v2: 32.4 MB). Tests: 60 / 60.
+
 ## Deferred (named in the spec, not built)
 
 | Item | Note |
 |---|---|
-| Trade and landing-pad ships | The landing pad can be built; no ship arrives. |
+| Trade and landing-pad ships | The landing pad can be built; no ship arrives. Research packs can be "bought" only as Meridian supply-run cargo. |
 | Robots | Cargo and maintenance robots are not built. |
-| Disasters | The dust storm is built (version 2). Meteor, radiation and equipment fault are not built. |
+| Disasters | Built in version 3 (seven hazard kinds and breakdowns). |
 | Medicine production | Built in version 2 (recipe `medicine`, medic). |
 | Cold and airless planets | Built: the New colony screen offers all three planets. |
 | Audio | Built in version 2: 20 clips (ElevenLabs), five buses, volume settings. |
@@ -99,7 +126,11 @@ ledger `{}`, no deaths, no false starving alert).
 
 ## Known weak points
 
-- Performance beyond 70 colonists is untested; at 68 colonists a tick is 1.35 to 1.63 ms.
+- Performance beyond 70 colonists is untested. v3: 1.78 ms per tick at 70 colonists, with one
+  1000-tick window at 1.97 ms; the HUD-on overview dipped to 48 fps in one of three runs.
+- The long reference campaign finishes the hull on day 25.2 against a limit of day 27.
+- The v2 showcase saves (256 m) can no longer be regenerated; they still load.
+- Hazard visuals are hard to read inside a dust storm; the late showcase save starts in one.
 - The reference campaign is tuned on seed 1001. On seed 1004 the survey does not happen by
   day 27: the forward airlocks wait for steel that the factories take first.
 - The 3D view does not fade a roof progressively; it lifts it at a fixed camera distance.

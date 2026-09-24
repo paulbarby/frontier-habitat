@@ -14,10 +14,19 @@ extends RefCounted
 const Profile = preload("res://ui/profile.gd")
 const Sfx = preload("res://ui/sfx.gd")
 const Kit = preload("res://ui/kit.gd")
+const AlertGate = preload("res://ui/hud/alert_gate.gd")
 
 const GRACE_SECONDS := 30.0
+## Log codes that toast (sim/hazards.gd, version 3). SIM's alerts already cover an event
+## in its warning phase, hull breaches and broken machines; the alert gate toasts those once.
+## These are the one-off moments. Not here: "breach" and "fault" (the alert toasts them),
+## "maintained" (routine), "hazard_warning" (the alert).
+const HAZARD_LOG := {"hazard_detected": ["info", "hazard"], "hazard_start": ["warn", "hazard"], "hazard_impact": ["warn", "meteor"],
+	"hazard_intercepted": ["good", "turret"], "hazard_end": ["good", "sev_ok"], "breach_sealed": ["good", "wrench"],
+	"shelter": ["info", "shelter"], "survey": ["research", "exotic"]}
 
 var hud
+var gate = AlertGate.new()   # alert toasts and the steady alert list (V3_DESIGN §2)
 var _awards := {}
 var _goals_done := {}
 var _chapter := -1
@@ -58,6 +67,9 @@ func reset() -> void:
 	_grace_tick = int(st["tick"]) + int(GRACE_SECONDS * float(hud.main.sim.bal["tick_hz"]))
 	_grace_silent = 0
 	_grace_open = true
+	# What is wrong when a colony is loaded is shown in the list, not toasted.
+	gate.reset()
+	gate.update(hud.main.sim.alerts.incidents(), hud.main.sim.seconds(), true)
 	if not _title():
 		for id in _awards:
 			Profile.record_award(String(id), int(_awards[id]), int(st.get("seed", 0)), false)
@@ -138,6 +150,11 @@ func check() -> void:
 		if stage < stages.size() and not quiet:
 			hud.toast("New stage: %s." % stages[stage]["name"], "good", "star")
 	_airlocks(st)
+	# Alerts: one toast per new key (warnings and critical only), never again for 180 s
+	# after it cleared. The alert cards read the same gate.
+	for issue in gate.update(hud.main.sim.alerts.incidents(), hud.main.sim.seconds(), quiet):
+		var sv: int = int(issue.get("severity", 2))
+		hud.toast(String(issue.get("text", "")), "bad" if sv >= 3 else "warn", "sev_critical" if sv >= 3 else "sev_warning")
 	# Log: finished structures, settlers, pods, upgrades, deaths
 	var log: Array = st.get("log", [])
 	if not quiet:
@@ -160,12 +177,17 @@ func check() -> void:
 					hud.toast(String(e["text"]), "warn", "wind")
 				"storm_end":
 					hud.toast(String(e["text"]), "good", "wind")
-				"broken", "crop_lost":
+				"crop_lost":
+					# "broken" is not here: the alert gate toasts the broken:<id> alert once.
 					hud.toast(String(e["text"]), "warn", "sev_warning")
 				"research_paid":
 					hud.toast(String(e["text"]), "research", "exotic")
 				"death":
 					hud.toast(String(e["text"]), "bad", "sev_critical")
+				var code:
+					if HAZARD_LOG.has(String(code)):
+						var spec: Array = HAZARD_LOG[String(code)]
+						hud.toast(String(e["text"]), spec[0], spec[1])
 	if not log.is_empty():
 		_log_tick = maxi(_log_tick, int(log[log.size() - 1]["tick"]))
 
