@@ -1,4 +1,5 @@
 extends Control
+const PG = preload("res://ui/poly_guard.gd")
 ## Title screen: the showcase colony at dusk behind the menu (presentation/main.gd loads
 ## it and orbits the camera). Logo, menu, the newest save, and the device profile.
 
@@ -28,11 +29,14 @@ class Vignette extends Control:
 		var h: float = size.y
 		var dark := Color(0.02, 0.03, 0.06, 0.88)
 		var clear := Color(0.02, 0.03, 0.06, 0.0)
-		draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w * 0.62, 0), Vector2(w * 0.62, h), Vector2(0, h)]),
+		if PG.ok(PackedVector2Array([Vector2(0, 0), Vector2(w * 0.62, 0), Vector2(w * 0.62, h), Vector2(0, h)]), "title_screen.gd:31"):
+			draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w * 0.62, 0), Vector2(w * 0.62, h), Vector2(0, h)]),
 			PackedColorArray([dark, clear, clear, dark]))
-		draw_polygon(PackedVector2Array([Vector2(0, h * 0.72), Vector2(w, h * 0.72), Vector2(w, h), Vector2(0, h)]),
+		if PG.ok(PackedVector2Array([Vector2(0, h * 0.72), Vector2(w, h * 0.72), Vector2(w, h), Vector2(0, h)]), "title_screen.gd:33"):
+			draw_polygon(PackedVector2Array([Vector2(0, h * 0.72), Vector2(w, h * 0.72), Vector2(w, h), Vector2(0, h)]),
 			PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0), Color(0.02, 0.03, 0.06, 0.6), Color(0.02, 0.03, 0.06, 0.6)]))
-		draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h * 0.16), Vector2(0, h * 0.16)]),
+		if PG.ok(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h * 0.16), Vector2(0, h * 0.16)]), "title_screen.gd:35"):
+			draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h * 0.16), Vector2(0, h * 0.16)]),
 			PackedColorArray([Color(0.02, 0.03, 0.06, 0.45), Color(0.02, 0.03, 0.06, 0.45), Color(0, 0, 0, 0), Color(0, 0, 0, 0)]))
 
 class Logo extends Control:

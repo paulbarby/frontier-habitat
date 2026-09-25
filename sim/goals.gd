@@ -146,7 +146,7 @@ func drop_pod(items: Dictionary, reason: String) -> int:
 	var q = sim.nav.nearest_walkable(p, 8)
 	if q != null:
 		p = q
-	var pile: int = sim.inv.create_inv("g", 0, "pile", 100000, p)
+	var pile: int = sim.inv.create_inv("g", 0, "pile", 100000, sim.place.clear_of_porches(p))
 	sim.inv.get_inv(pile)["pod"] = true
 	var keys: Array = items.keys()
 	keys.sort()
@@ -383,7 +383,7 @@ func _fact_housing() -> Dictionary:
 	var housed := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive":
+		if a["state"] != "alive" or a["kind"] == "visitor":
 			continue
 		pop += 1
 		var bed: Dictionary = blds.get(int(a["bed"]), {})

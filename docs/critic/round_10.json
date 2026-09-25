@@ -1,0 +1,49 @@
+{
+  "round": 10,
+  "date": "2026-09-25",
+  "scope": "v3.1 pilot: doors, doorway_decals, airlock (V3_1_DESIGN 3, 5.1). Blender renders only: art/interiors/door31_*, habitat_m_doorways*, airlock_*",
+  "pass_mark": 0.65,
+  "subjects": {
+    "doors": {"consistency": 0.76, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true, "provisional": true,
+      "what_works": [
+        "No longer half done: full-height opaque leaves with a window strip and a seal line, closed / half / open all read as a real sliding door (door31_*_inside.png).",
+        "Open leaves stay inside the pocket housing; nothing is hidden. The cutaway caps are solid (door31_closed/half/open.png).",
+        "The corridor collar meets the housing face; no gap seen."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "The housing is a 3.4 m wide, 2.56 m tall flat slab. From inside it reads as a wardrobe wall across the round room (door31_*_inside.png); from outside, roof on, it is a flat plate stuck on the dome with a dark cap (door31_*_roof.png, habitat_m_doorways_roof.png). Curve the housing's room face to the wall radius, chamfer its outer corners 8 cm, and on the outside let the dome skin run over the housing top (or give the housing a curved hood that follows the dome) so it reads as part of the room, not an add-on."},
+        {"owner": "ART-HAB", "fix": "Status light: a pale mint bar reads as a lamp, not a status light. Make it a strip with a clear green emissive (#5EE07A, strength 3) and give RENDER the amber/red states on the same material (V3_1 3.1)."},
+        {"owner": "ART-HAB", "fix": "Leaves: add a 3 cm darker kick plate at the bottom and a hazard chevron strip at the meeting edge so closed doors read at game distance (now two grey slabs with two dark slots)."},
+        {"owner": "RENDER", "fix": "Provisional until the in-game check: door opens within 1.6 m, closes 0.8 s after, 0.6 s ease, no z-fighting at the collar."}
+      ]},
+    "doorway_decals": {"consistency": 0.80, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "provisional": true,
+      "what_works": [
+        "habitat M with 2 doorways: the room band, the L-level band and the portholes stop before each door housing; no decal on an opening, roof on or cutaway (habitat_m_doorways*.png).",
+        "Airlock: the yellow band stops at the chamber block; the corridor stripe stops at the housing."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Where a band stops, it stops as a raw cut. End each band 5 cm short of the housing with a small end cap (Frame colour) so the stop looks designed."},
+        {"owner": "RENDER", "fix": "The acceptance test is in game on every room type (zero decal pixels in any opening, 0.4 m margin). Only habitat M and the airlock were split; the other rooms are not rebuilt yet. Re-rate when all rooms are done."}
+      ]},
+    "airlock": {"consistency": 0.76, "appeal": 0.74, "style": 0.78, "score": 0.76, "pass": true, "provisional": true,
+      "what_works": [
+        "Reads as suit room -> chamber -> porch from above: suit racks and lockers round the dome, a central grated chamber with hazard stripes, vents and gauge panel, inner and outer door kits, a porch with a dust mat and floodlight (airlock_closed/half/open.png, airlock_anchors.png).",
+        "Exterior reads as an airlock at game distance: bulky chamber block on the dome, hazard stripes round the outer door, pumps on the roof, beacon (airlock_exterior.png, airlock_*_roof.png).",
+        "Consistent with the v3 rooms: same wall kit, accent bands, floor and door kit."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Cutaway: the chamber walls and both door housings stand at full height (~2.5 m) while the outer wall is cut at 1.40 m (airlock_closed.png). From the game camera they hide the suit room and half the chamber. Cut the chamber walls to 1.40 m with solid caps like every room wall (V3_1 3.2), and keep only the door headers' caps."},
+        {"owner": "ART-HAB", "fix": "Chamber 1.6 m long for 2 people (maker's point, confirmed: the grated floor is about square). Lengthen it to 2.4 m (two bodies 0.8 m apart plus door clearance), taking the space from the porch side of the dome."},
+        {"owner": "ART-HAB", "fix": "Beacon: a white ball. Make it an amber rotating-beacon housing (#FFB547 lens) that RENDER can drive amber/red/green with the cycle phase; add a 3-light pressure indicator above the inner door visible from the suit room."},
+        {"owner": "ART-HAB", "fix": "The dome meets the chamber block with a step at the sides (maker's point, confirmed in airlock_exterior.png). Add a curved fairing from the dome skin to the block side, or wrap the block's side walls round to the dome radius."},
+        {"owner": "ART-HAB", "fix": "The porch mat's black bars read as stairs going down into the ground. Make it a flat grate with a ramp edge (hazard stripe on the lip) and 2 short bollards so it reads as a ramp onto sand."},
+        {"owner": "SIM / RENDER", "fix": "The porch is outside the footprint: the build tool must keep a 2.5 m clear zone in front of the outer door (show it in the placement ghost) and outside paths must not cross it."},
+        {"owner": "ART-HAB", "fix": "Only one size: V3_1 5.1 says every airlock size. If content keeps one size, record that decision in the contract; otherwise build S/M/L with airlock_slots anchors each."}
+      ]}
+  },
+  "notes": [
+    "All three pass as provisional pilots; none reaches 0.80. The in-game round decides (door motion, decals on every room type, the cycle with phases and riders).",
+    "Paul's points answered: doors are no longer half done; no decal on an opening was found in the renders; the airlock now has a middle chamber with a clear suit room and porch.",
+    "My grids: art/critic/r10_doors.png, r10_airlock.png, r10_airlock2.png, r10_hab.png."
+  ]
+}

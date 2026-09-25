@@ -28,6 +28,7 @@ func _ready() -> void:
 		["water", "water", Color("3AA0D8"), 84], ["power", "power", P.GOLD, 98],
 		["energy", "energy", P.CATEGORY["utilities"], 88], ["food", "food", P.CATEGORY["food"], 96],
 		["morale", "morale", P.CATEGORY["comfort"], 80], ["research", "research", P.VIOLET, 92],
+		["credits", "credits", P.GOLD, 78],
 	]
 	for s in specs:
 		var k = Kpi.new()
@@ -53,7 +54,7 @@ func _fit() -> void:
 	# Narrow screens (or a large interface scale) drop the materials group.
 	var w: float = get_viewport_rect().size.x
 	if _mat_box != null:
-		_mat_box.visible = w >= 1540.0
+		_mat_box.visible = w >= 1640.0   # 1540 before the credits field (version 3.1)
 
 func _on_kpi(key: String) -> void:
 	var page := "overview"
@@ -62,6 +63,15 @@ func _on_kpi(key: String) -> void:
 		"food": page = "food"
 		"pop", "morale": page = "population"
 		"research": page = "research"
+		"credits":
+			# Credits: the trade screen when a ship to trade with is landed.
+			for r in hud.data.traffic_ships():
+				var o: Dictionary = r.get("offer", {})
+				if String(r.get("phase", "")) == "landed" and (o.has("sells") or o.has("buys")):
+					hud.open_screen("trade", int(r["id"]))
+					return
+			hud.toast("No ship to trade with is on a pad. Traders and science ships buy and sell.", "info", "credits")
+			return
 	if key.begins_with("item:"):
 		hud.open_screen("inventory")
 		return
@@ -179,6 +189,18 @@ func refresh() -> void:
 			kr.tip_lines.append(["Time left", Kit.clock(eta) if eta >= 0.0 else "no research now"])
 		kr.tip_note = "A research lab with a scientist makes research points." if active != "" else "No active project. Open Research (T) and pick one."
 		kr.series_key = "rp_rate"
+	# Credits (version 3.1): earned from trade, fees and meals; spent at traders.
+	var kc = _k["credits"]
+	kc.visible = d.traffic_available()
+	if kc.visible:
+		var cs: Dictionary = d.credits_state()
+		kc.set_value("%d" % d.credits(), "credits", 0, 99)
+		kc.tip_title = "Credits"
+		kc.tip_lines = [["Balance", "%d" % d.credits(), P.GOLD], ["Earned", "%d" % int(cs.get("earned", 0)), P.GREEN], ["Spent", "%d" % int(cs.get("spent", 0)), P.AMBER]]
+		var by: Dictionary = cs.get("by", {})
+		for key in by:
+			kc.tip_lines.append(["  " + String(key).capitalize(), "%d" % int(by[key])])
+		kc.tip_note = "Visitors pay fees and meals. Traders buy and sell. Click: trade with a landed ship."
 	# Materials
 	var totals: Dictionary = k["totals"]
 	for id in MATERIALS:

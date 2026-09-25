@@ -27,7 +27,7 @@ const SLOT := {
 ## Power, water, oxygen plant and airlock of the reference layout, in the same order.
 const CORE_STEPS := [
 	{"place": "solar_array", "as": "A1"}, {"place": "battery", "as": "B1"}, {"link": "cable", "a": "A1", "b": "B1"},
-	{"place": "water_extractor", "as": "W1"}, {"place": "reservoir", "as": "R1"}, {"place": "oxygen_plant", "as": "O1"},
+	{"place": "water_extractor", "as": "W1"}, {"place": "reservoir", "as": "R1"}, {"place": "oxygen_plant", "as": "O1", "rot": PI},
 	{"link": "cable", "a": "W1", "b": "R1"}, {"link": "cable", "a": "W1", "b": "O1"}, {"link": "cable", "a": "A1", "b": "O1"},
 	{"place": "airlock", "as": "L1", "rot": PI}, {"link": "corridor", "a": "L1", "b": "O1"},
 ]

@@ -487,3 +487,99 @@ unless noted):
   key held `next_id`); lone solar arrays, turbines and batteries skip the general path.
 - Reference driver `_resolve`: structures indexed by type once per call.
 Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 0 deaths.
+
+## 2026-09-25, v3.1 (docs/V3_1_DESIGN.md sections 4.2, 5.2, 6.1, 7; critic round 10)
+- **5.2 airlock phases:** `lock.cyc.phase` (enter, seal, pump, open, exit) and `pt`, shares
+  `balance.airlock_phases`; cycle length unchanged. `sim.agents.lock_info(id)`. Test `v31_airlock_phases`.
+- **4.2 outside paths:** solid = footprint / tube / wreck + 0.3 m (`nav.BODY_R`); the next 0.6 m
+  (`nav_clearance`) and the airlock porch are walking weights (8 and 12), not walls. Solid + 0.6 m and
+  solid + 0.71 m were built first and failed (gaps closed at the 0.6 m placement spacing; a13 fell to 8
+  colonists, one variant killed 5 colonists and the campaign colony). Construction waits up to 60 s
+  (`site_clear_wait_s`) while a body outside stands on the footprint; a closed-in colonist moves up to
+  15 m to an open cell with a way back (`closed_in_moves`). Test `v31_outside_paths_clear`.
+- **6.1 ships and visitors:** `sim/traffic.gd`, `content/ships.json`, `content/trade.json`; six kinds;
+  hash schedule forecast one day ahead; grant/deny; orbit hold in hazards; visitors as agents; credits
+  with `credits_audit()`; trade with carried goods; commands `traffic_answer`, `trade`, `traffic_now`
+  (debug). Tests `v31_traffic_schedule_deterministic`, `v31_trader_trade_and_credits`,
+  `v31_liner_visitors_beds_and_fees`, `v31_orbit_hold_deny_and_shuttle`, `v31_medical_science_inspector_visits`.
+- **7 saves:** schema 4 (migration v1 → v2 → v3 → v4); `content/saves/showcase_v31.fhsave`. Tests
+  `v31_save_mid_visit_and_schema_4`, `v31_showcase_save`; v2/v3 migration tests now expect 4.
+- **Airlock sizes (critic round 10):** M 3.4 m / 2 riders, L 4.0 m / 4 riders (`size_list` [1, 2],
+  `sizes.airlock_slots`), L after `eng_1`; old airlocks keep 2.8 m. `sim.agents.lock_slots(b)`. Landing
+  pad 11.5 m for new pads. Test `v31_airlock_sizes`.
+- **Porch zone:** placement also refuses a new airlock whose door strip covers a corridor; UI data
+  `sim.place.door_strip_for(...)`, `sim.place.door_strips()`. Old saves keep what is there. Test
+  `v31_porch_zone`.
+- Reference layout: airlock L2 and its corridor at 620 s (was 1240 s). With the 3.4 m airlock the H1–L2
+  corridor got its metal only after the mine corridor closed the north way round; its site was then out
+  of suit range for good (96 m walk) and the colony stayed at 8.
+- Full suite: 70 of 70 pass (741.6 s), then `v31_showcase_save` added and passed. a13: 26 colonists.
+  Campaign: hull day 25.5 (limit 27), 26 alive, 0 deaths. `long_v3_perf_70_colonists`: median 1.840 ms
+  (1.840 / 1.640 / 2.116), limit 2.0.
+- Dev tools: `tests/dev/inside_dbg.gd`, `site_reach.gd`, `grid_map.gd`, `build_log.gd`, `site_watch.gd`,
+  `ref_status.gd`, `goal_changes.gd`.
+
+## 2026-09-25, v3.1 follow-ups (coordinator)
+- `showcase_v31.fhsave`: 600 credits (maker books them as start credits). Test `v31_showcase_purchase`:
+  4 composite for 92 credits, pile at the pad, all stored after about 1000 s, both ledgers {}.
+- `traffic_answer {accept_idx | accept_ids: [i]}`: exactly those settlers (indexes into offer.roles);
+  `accept: n` still works. Orbit `t_s` = seconds before the ship leaves. Test
+  `v31_settlers_by_person_and_orbit_time`.
+- Tick: traffic costs 0.004 ms/tick at 70 colonists (profile). Landing pads are now found from a cached
+  id list (not a scan of every structure each second); the boarding list is not reallocated each tick.
+- Bug fixed: `_choose` tie-break used `String(int)` (script error on inspector tours); now `str()`.
+- Full suite 73 of 73 (645 s; one window 2.190 ms, median 1.970); after the `_choose` fix: v31 tests
+  13 of 13, perf windows 1.366 / 1.491 / 1.667 ms.
+
+## 2026-09-25, door clearance (ART-HAB data, coordinator decision)
+- `content/door_blocked.json` (copy of `docs/requests/ART-HAB-door_blocked.json`, key `<def>_<size>`).
+  New corridors may not leave a room at a blocked model angle (`beta = rot − world angle`); code
+  `door_blocked`, "The door would open onto equipment. Choose another side of the room." On airlocks it
+  is checked before the old 55° rule. Old corridors stay. UI: `sim.place.link_sectors_for(def, size, rot)`,
+  `link_sectors(b)`, `link_angle_ok_for(...)`, `link_angle_ok(b, a)`.
+- Reference driver turns a room (15° steps, smallest first) so the corridor to the room it joins leaves
+  a free side; `door_blocked` joins the nearest accepting room like `ports_full`. Layout: O1 turned to
+  180° (reference and `tests/helpers.gd` CORE_STEPS).
+- Trays moved inward: greenhouse M/L/XL, fungus L/XL (numbers in SIM-to-ART-HAB). Fungus M cannot be
+  freed. ART-HAB must rebuild and regenerate the door file; the copy keeps today's numbers until then.
+- Test `v31_door_clearance` (33 checks). Full suite 74 of 74 (719.6 s). a13: 26 colonists. Campaign:
+  hull day 25.5, 26 alive, 0 deaths. Perf 70 colonists: 1.366 / 1.418 / 1.506 ms (median 1.418).
+
+## 2026-09-25, indoor path fix and critic round 13
+- Indoor walk across open ground (RENDER report, colonist 3749 in showcase_v3_late): `agent.bld` named
+  the destination during an indoor walk, so a new plan made mid-walk started inside the destination.
+  Now `bld` = room of the last waypoint reached, `agent.at` = [room, position, next room]; a plan from a
+  corridor starts from the shorter end; `path_in` walks along the corridor to the wall first and clamps a
+  target outside its room. Test `v31_indoor_walks_stay_indoors` (4 days reference + 6000 ticks of
+  showcase_v3_late, every tick; fails without the fix).
+- Airlock phases in seconds (`airlock_phase_seconds`): enter 2.0, seal 1.0, open 1.0, exit 1.5, pump the
+  rest; seal ≥ door 0.6 s + margin. Checks in `v31_airlock_phases`.
+- Piles and drop points off porches (`pile_porch_clear` 2.5 m, off the door strip): `place.in_porch`,
+  `place.clear_of_porches`. Test `v31_piles_clear_of_porches`.
+- `nutrition.any_deficient` (no list per worker per tick).
+- Full suite 76 of 76 (794.9 s). a13 26 colonists. Campaign hull day 24.9, 26 alive, 0 deaths. Perf 70
+  colonists 1.805 / 1.874 / 1.698 ms (median 1.805); single runs today ranged 1.59–2.02 ms.
+
+## 2026-09-25, tick budget after the path fix (target median ≤ 1.6 ms at 70 colonists)
+- Measured first: the new corridor-first planning costs 0.03 ms/tick in total (nav.plan + path_out, 572
+  calls in 3000 ticks), so route caching would not help. The cost was spread over per-tick loops.
+- Changes (the game is identical: digest of the reference campaign at day 6 and day 13 unchanged):
+  1. power: lone solar arrays / batteries fill a kept power_stats row (no new dictionary per tick);
+  2. water_tick: only networks with a water structure (cached with the water plans);
+  3. locks_tick: only structures with an airlock door (cached by structure count and rev.power);
+  4. act: a body that only waits in an airlock queue with a valid route is skipped;
+  5. bed counts kept across ticks (recount on add, death, leave, load);
+  6. morale_second: constants read once; nutrition.morale_delta without copying the diet.
+- Dev: `tests/dev/profile.gd <seed> <days> <ticks> v3perf` (the long_v3_perf set-up),
+  `tests/dev/digest_run.gd <days>`.
+- Perf test 3 runs: 1.385 / 1.452 / 1.489 ms median; full suite 76 of 76 (763 s), perf 1.613 there.
+  Campaign hull day 24.9; a13 26 colonists.
+
+## 2026-09-25, visitors are not the colony (integration bug)
+- showcase_v31 showed a constant CRITICAL lander-air alert for the liner's 6 tourists (bed -1). Colony
+  alerts, goals, charts and morale averages now count colonists only; food, water and air use in
+  `metrics.forecast()` count visitors too (`forecast().visitors`, `sim.visitor_count()`). Traffic
+  notice `sim.traffic.notices()` ("3 tourists have no bed. The fee drops."). Airlock congestion: queue
+  length counts everyone, the air margin colonists only.
+- Test `v31_visitors_raise_no_colony_alerts` (fails on the old lander rule). Full suite 77 of 77
+  (799.8 s); perf 1.673 ms median in the suite run; campaign hull day 24.9; a13 26 colonists.

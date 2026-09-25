@@ -1,8 +1,8 @@
 {
- "date": "2026-09-24 22:55",
+ "date": "2026-09-25 13:28",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 236,
+ "passed": 281,
  "failed": 0,
  "pending": 0,
  "info": 12,
@@ -29,13 +29,15 @@
   "art\\npc\\turnaround_indoor.png",
   "art\\npc\\clips_indoor.png",
   "art\\npc\\deform_indoor.png",
-  "art\\npc\\transitions.png"
+  "art\\npc\\transitions.png",
+  "art\\npc\\visitors_lineup.png",
+  "art\\npc\\visitors_turnaround.png"
  ],
  "checks": [
   {
    "check": "file astronaut_suit.glb",
    "status": "pass",
-   "detail": "1120156 bytes"
+   "detail": "1136572 bytes"
   },
   {
    "check": "suit: skinned mesh objects ['Body']",
@@ -50,7 +52,7 @@
   {
    "check": "file astronaut_indoor.glb",
    "status": "pass",
-   "detail": "1065020 bytes"
+   "detail": "1081436 bytes"
   },
   {
    "check": "indoor: skinned mesh objects ['Body', 'Head_0', 'Head_1', 'Head_2', 'Head_3']",
@@ -98,9 +100,9 @@
    "detail": "max |sum - 1| = 0.00000"
   },
   {
-   "check": "suit: all 24 clips present (section 3.3)",
+   "check": "suit: all 25 clips present (V3 3.3 + V3_1 5.4)",
    "status": "pass",
-   "detail": "24 of 24"
+   "detail": "25 of 25"
   },
   {
    "check": "suit: no bone scale keys",
@@ -148,9 +150,9 @@
    "detail": "max |sum - 1| = 0.00000"
   },
   {
-   "check": "indoor: all 24 clips present (section 3.3)",
+   "check": "indoor: all 25 clips present (V3 3.3 + V3_1 5.4)",
    "status": "pass",
-   "detail": "24 of 24"
+   "detail": "25 of 25"
   },
   {
    "check": "indoor: no bone scale keys",
@@ -171,6 +173,56 @@
    "check": "indoor: durations match astronaut_anims.json (30 fps)",
    "status": "pass",
    "detail": "ok"
+  },
+  {
+   "check": "suit: Vis_trader stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0099 m (lie_exit frame 12)"
+  },
+  {
+   "check": "suit: Vis_trader never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0044 m (collapse frame 66)"
+  },
+  {
+   "check": "suit: Vis_tourist stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0000 m (sit_idle frame 144)"
+  },
+  {
+   "check": "suit: Vis_tourist never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.1441 m (collapse frame 66)"
+  },
+  {
+   "check": "suit: Vis_medical stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0085 m (repair_kneel frame 51)"
+  },
+  {
+   "check": "suit: Vis_medical never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.2044 m (collapse frame 63)"
+  },
+  {
+   "check": "suit: Vis_science stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0000 m (collapse frame 51)"
+  },
+  {
+   "check": "suit: Vis_science never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.1743 m (collapse frame 66)"
+  },
+  {
+   "check": "suit: Vis_inspector stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0111 m (lie_exit frame 36)"
+  },
+  {
+   "check": "suit: Vis_inspector never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0223 m (collapse frame 66)"
   },
   {
    "check": "suit: idle loop seam <= 1 deg",
@@ -333,9 +385,19 @@
    "detail": "worst 0.000 deg, hips 0.0000 m"
   },
   {
+   "check": "suit: suit_swap start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "suit: suit_swap end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
    "check": "suit: idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.35 deg (hand.L world, frame 77)"
+   "detail": "12.25 deg (hand.L world, frame 40)"
   },
   {
    "check": "suit: idle mesh never below z -0.01",
@@ -415,7 +477,7 @@
   {
    "check": "suit: talk bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.35 deg (forearm.L world, frame 44)"
+   "detail": "13.38 deg (forearm.L world, frame 45)"
   },
   {
    "check": "suit: talk mesh never below z -0.01",
@@ -425,7 +487,7 @@
   {
    "check": "suit: kneel_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.66 deg (hand.L world, frame 40)"
+   "detail": "10.68 deg (prop.L world, frame 40)"
   },
   {
    "check": "suit: kneel_enter mesh never below z -0.01",
@@ -445,17 +507,17 @@
   {
    "check": "suit: kneel_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.35 deg (forearm.L world, frame 37)"
+   "detail": "14.48 deg (forearm.L world, frame 38)"
   },
   {
    "check": "suit: kneel_exit mesh never below z -0.01",
    "status": "pass",
-   "detail": "z min -0.0055 m"
+   "detail": "z min -0.0056 m"
   },
   {
    "check": "suit: sit_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.15 deg (hand.L world, frame 37)"
+   "detail": "10.96 deg (hand.L world, frame 37)"
   },
   {
    "check": "suit: sit_enter mesh never below z -0.01",
@@ -475,7 +537,7 @@
   {
    "check": "suit: sit_eat bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.14 deg (hand.R world, frame 60)"
+   "detail": "12.61 deg (hand.R world, frame 7)"
   },
   {
    "check": "suit: sit_eat mesh never below z -0.01",
@@ -495,7 +557,7 @@
   {
    "check": "suit: sit_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.58 deg (hand.L world, frame 31)"
+   "detail": "13.85 deg (hand.L world, frame 31)"
   },
   {
    "check": "suit: sit_exit mesh never below z -0.01",
@@ -525,7 +587,7 @@
   {
    "check": "suit: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.85 deg (forearm.R local, frame 27)"
+   "detail": "13.94 deg (forearm.R local, frame 27)"
   },
   {
    "check": "suit: lie_exit mesh never below z -0.01",
@@ -545,7 +607,7 @@
   {
    "check": "suit: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "22.05 deg (forearm.R local, frame 34) at 1x"
+   "detail": "22.28 deg (forearm.R local, frame 34) at 1x"
   },
   {
    "check": "suit: collapse mesh never below z -0.01",
@@ -569,6 +631,16 @@
   },
   {
    "check": "suit: cheer mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "suit: suit_swap bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.24 deg (forearm.L world, frame 12)"
+  },
+  {
+   "check": "suit: suit_swap mesh never below z -0.01",
    "status": "pass",
    "detail": "z min -0.0000 m"
   },
@@ -716,6 +788,66 @@
    "check": "suit: carry_walk crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
    "status": "pass",
    "detail": "torso vertices inside 0, hands inside up to 0.019 m, crate tilt up to 3.2 deg"
+  },
+  {
+   "check": "indoor: Vis_trader stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0172 m (lie_exit frame 12)"
+  },
+  {
+   "check": "indoor: Vis_trader never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0611 m (collapse frame 66)"
+  },
+  {
+   "check": "indoor: Vis_tourist stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0190 m (lie_enter frame 69)"
+  },
+  {
+   "check": "indoor: Vis_tourist never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0359 m (kneel_enter frame 15)"
+  },
+  {
+   "check": "indoor: Vis_medical stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0007 m (cheer frame 27)"
+  },
+  {
+   "check": "indoor: Vis_medical never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0733 m (collapse frame 66)"
+  },
+  {
+   "check": "indoor: Vis_science stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0122 m (suit_swap frame 42)"
+  },
+  {
+   "check": "indoor: Vis_science never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.0411 m (collapse frame 66)"
+  },
+  {
+   "check": "indoor: Vis_inspector_h023 stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0033 m (cheer frame 27)"
+  },
+  {
+   "check": "indoor: Vis_inspector_h023 never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.1683 m (collapse frame 66)"
+  },
+  {
+   "check": "indoor: Vis_inspector_h1 stays on the body in every clip (<= 2 cm drift)",
+   "status": "pass",
+   "detail": "worst 0.0033 m (cheer frame 27)"
+  },
+  {
+   "check": "indoor: Vis_inspector_h1 never below z -0.01",
+   "status": "pass",
+   "detail": "z min 0.1683 m (collapse frame 66)"
   },
   {
    "check": "indoor: idle loop seam <= 1 deg",
@@ -878,9 +1010,19 @@
    "detail": "worst 0.000 deg, hips 0.0000 m"
   },
   {
+   "check": "indoor: suit_swap start on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
+   "check": "indoor: suit_swap end on the stand rest pose (<= 1 deg)",
+   "status": "pass",
+   "detail": "worst 0.000 deg, hips 0.0000 m"
+  },
+  {
    "check": "indoor: idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.35 deg (hand.L world, frame 77)"
+   "detail": "12.25 deg (hand.L world, frame 40)"
   },
   {
    "check": "indoor: idle mesh never below z -0.01",
@@ -960,7 +1102,7 @@
   {
    "check": "indoor: talk bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.35 deg (forearm.L world, frame 44)"
+   "detail": "13.38 deg (forearm.L world, frame 45)"
   },
   {
    "check": "indoor: talk mesh never below z -0.01",
@@ -970,7 +1112,7 @@
   {
    "check": "indoor: kneel_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.66 deg (hand.L world, frame 40)"
+   "detail": "10.68 deg (prop.L world, frame 40)"
   },
   {
    "check": "indoor: kneel_enter mesh never below z -0.01",
@@ -990,17 +1132,17 @@
   {
    "check": "indoor: kneel_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.35 deg (forearm.L world, frame 37)"
+   "detail": "14.48 deg (forearm.L world, frame 38)"
   },
   {
    "check": "indoor: kneel_exit mesh never below z -0.01",
    "status": "pass",
-   "detail": "z min -0.0055 m"
+   "detail": "z min -0.0056 m"
   },
   {
    "check": "indoor: sit_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.15 deg (hand.L world, frame 37)"
+   "detail": "10.96 deg (hand.L world, frame 37)"
   },
   {
    "check": "indoor: sit_enter mesh never below z -0.01",
@@ -1020,7 +1162,7 @@
   {
    "check": "indoor: sit_eat bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.14 deg (hand.R world, frame 60)"
+   "detail": "12.61 deg (hand.R world, frame 7)"
   },
   {
    "check": "indoor: sit_eat mesh never below z -0.01",
@@ -1040,7 +1182,7 @@
   {
    "check": "indoor: sit_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.58 deg (hand.L world, frame 31)"
+   "detail": "13.85 deg (hand.L world, frame 31)"
   },
   {
    "check": "indoor: sit_exit mesh never below z -0.01",
@@ -1070,7 +1212,7 @@
   {
    "check": "indoor: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.85 deg (forearm.R local, frame 27)"
+   "detail": "13.94 deg (forearm.R local, frame 27)"
   },
   {
    "check": "indoor: lie_exit mesh never below z -0.01",
@@ -1090,7 +1232,7 @@
   {
    "check": "indoor: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "22.05 deg (forearm.R local, frame 34) at 1x"
+   "detail": "22.28 deg (forearm.R local, frame 34) at 1x"
   },
   {
    "check": "indoor: collapse mesh never below z -0.01",
@@ -1114,6 +1256,16 @@
   },
   {
    "check": "indoor: cheer mesh never below z -0.01",
+   "status": "pass",
+   "detail": "z min -0.0000 m"
+  },
+  {
+   "check": "indoor: suit_swap bone step per frame < 15 deg",
+   "status": "pass",
+   "detail": "14.24 deg (forearm.L world, frame 12)"
+  },
+  {
+   "check": "indoor: suit_swap mesh never below z -0.01",
    "status": "pass",
    "detail": "z min -0.0000 m"
   },
@@ -1258,6 +1410,81 @@
    "detail": "torso vertices inside 0, hands inside up to 0.009 m, crate tilt up to 3.2 deg"
   },
   {
+   "check": "suit_swap: cut frame 30 pose identical in both files",
+   "status": "pass",
+   "detail": "worst 0.0000 deg, hips 0.00000 m"
+  },
+  {
+   "check": "suit_swap: the pose is still around the cut frame (frames 29..31)",
+   "status": "pass",
+   "detail": "0.262 deg between frames 29 and 31"
+  },
+  {
+   "check": "suit_swap: hands at the helmet sides at the cut (wrists above 1.5 m, 0.15-0.30 m out)",
+   "status": "pass",
+   "detail": "wrists L (0.06, 0.225, 1.62) R (0.06, -0.225, 1.62)"
+  },
+  {
+   "check": "file astronaut_visitor_suit.glb",
+   "status": "pass",
+   "detail": "63432 bytes, no clips (0)"
+  },
+  {
+   "check": "suit visitors: skinned meshes ['Vis_trader', 'Vis_tourist', 'Vis_medical', 'Vis_science', 'Vis_inspector']",
+   "status": "pass",
+   "detail": "skinned mesh nodes ['Vis_inspector', 'Vis_medical', 'Vis_science', 'Vis_tourist', 'Vis_trader']"
+  },
+  {
+   "check": "suit visitors: same skeleton and joint order as astronaut_suit.glb",
+   "status": "pass",
+   "detail": "24 joints"
+  },
+  {
+   "check": "suit visitors: COLOR_0, <= 4 weights, normalised",
+   "status": "pass",
+   "detail": "color0 True, max influences 2, max |sum - 1| 0.00000"
+  },
+  {
+   "check": "suit: one visitor on screen (Body + largest Vis_) <= 7000 triangles",
+   "status": "pass",
+   "detail": "6839 + 150 = 6989; Vis_ {'trader': 112, 'tourist': 66, 'medical': 80, 'science': 98, 'inspector': 150}"
+  },
+  {
+   "check": "file astronaut_visitor_indoor.glb",
+   "status": "pass",
+   "detail": "198856 bytes, no clips (0)"
+  },
+  {
+   "check": "indoor visitors: skinned meshes ['Vis_trader', 'Vis_tourist', 'Vis_medical', 'Vis_science', 'Vis_inspector_h023', 'Vis_inspector_h1']",
+   "status": "pass",
+   "detail": "skinned mesh nodes ['Vis_inspector_h1', 'Vis_inspector_h023', 'Vis_medical', 'Vis_science', 'Vis_tourist', 'Vis_trader']"
+  },
+  {
+   "check": "indoor visitors: same skeleton and joint order as astronaut_indoor.glb",
+   "status": "pass",
+   "detail": "24 joints"
+  },
+  {
+   "check": "indoor visitors: COLOR_0, <= 4 weights, normalised",
+   "status": "pass",
+   "detail": "color0 True, max influences 3, max |sum - 1| 0.00000"
+  },
+  {
+   "check": "indoor: one visitor on screen (Body + largest head + largest Vis_) <= 6000 triangles",
+   "status": "pass",
+   "detail": "4064 + 878 = 4942; Vis_ {'trader': 442, 'tourist': 878, 'medical': 192, 'science': 566, 'inspector_h023': 314, 'inspector_h1': 356}"
+  },
+  {
+   "check": "astronaut_anims.json visitors: 5 kinds, tourist 3 sets, colour groups and mesh per look",
+   "status": "pass",
+   "detail": "7 looks, kinds ['inspector', 'medical', 'science', 'tourist', 'trader'], tourist sets [0, 1, 2]"
+  },
+  {
+   "check": "visitor suits differ from each other and from the colonist suit in a large part (>= 0.25 sRGB)",
+   "status": "pass",
+   "detail": "closest pair 0.58 (tourist 1 / tourist 2); closest to the colonist 0.44"
+  },
+  {
    "check": "astronaut_anims.json furniture numbers",
    "status": "pass",
    "detail": "{'seat_z': 0.46, 'seat_back': 0.3, 'bed_z': 0.55, 'bed_back': 0.55, 'console_z': 1.0, 'console_ahead': 0.45, 'bench_z': 0.9, 'panel_ahead': 0.45, 'panel_z': 0.4}"
@@ -1265,7 +1492,7 @@
   {
    "check": "astronaut_anims.json lists every clip",
    "status": "pass",
-   "detail": "24 clips"
+   "detail": "25 clips"
   },
   {
    "check": "astronaut_anims.json fps 30",
@@ -1273,5 +1500,5 @@
    "detail": "30"
   }
  ],
- "seconds": 75.2
+ "seconds": 97.0
 }

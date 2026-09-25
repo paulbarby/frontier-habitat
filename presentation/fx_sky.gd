@@ -84,12 +84,26 @@ func build() -> void:
 		var l := OmniLight3D.new()
 		l.omni_range = 9.0
 		l.omni_attenuation = 1.4
-		l.light_energy = 0.0
-		l.visible = false
 		l.shadow_enabled = false
 		add_child(l)
+		park(l)
 		_lamps.append(l)
 	set_quality(quality)
+
+## V3.1 stall trace: a light that turns visible for the first time costs a 100-150 ms frame in
+## the web build (the sunset lamps). Lights are never hidden: an unused one is "parked" (no
+## energy, no range, far below the ground).
+static func park(l: Light3D) -> void:
+	l.light_energy = 0.0
+	if l is OmniLight3D:
+		(l as OmniLight3D).omni_range = 0.001
+	elif l is SpotLight3D:
+		(l as SpotLight3D).spot_range = 0.001
+	l.position = Vector3(0, -500, 0)
+	l.visible = true
+
+static func parked(l: Light3D) -> bool:
+	return l.position.y < -400.0
 
 func set_planet(name: String) -> void:
 	planet_name = name
@@ -114,7 +128,7 @@ func set_quality(q: int) -> void:
 	var n: int = [0, 4, 6, 8][clampi(q, 0, 3)]
 	for i in _lamps.size():
 		if i >= n:
-			(_lamps[i] as OmniLight3D).visible = false
+			park(_lamps[i])
 
 ## Lamp positions near which real OmniLights may be placed at night.
 func set_sites(sites: Array) -> void:
@@ -207,7 +221,11 @@ func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void
 	key.look_at_from_position(Vector3.ZERO, -dir, Vector3.UP if absf(dir.y) < 0.98 else Vector3.FORWARD)
 	key.light_color = col
 	key.light_energy = energy
-	key.visible = energy > 0.01
+	# Never hidden (V3.1 stall trace): a frame with no directional light is another shader
+	# variant for every material; at the sunset dip (energy about 0) that was one 108-150 ms
+	# compile frame. The light stays on with (almost) no energy instead.
+	key.visible = true
+	key.light_energy = maxf(energy, 0.002)
 	key.directional_shadow_max_distance = clampf(cam_dist * (2.0 if quality < 3 else 2.4), 45.0, 520.0)
 
 func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) -> void:
@@ -255,9 +273,12 @@ func _palette(e_deg: float) -> Dictionary:
 
 func _update_lamps(delta: float, focus: Vector3, cam_dist: float) -> void:
 	var n: int = maxi(0, [0, 4, 6, 8][clampi(quality, 0, 3)] - reserved)
-	if night < 0.05 or n == 0 or _sites.is_empty():
+	# (lit by day too, at almost no energy: a lamp that comes into use at dusk costs a 140 ms
+	# frame in the web build, V3.1 stall trace)
+	if n == 0 or _sites.is_empty():
 		for l in _lamps:
-			(l as OmniLight3D).visible = false
+			if not parked(l):
+				park(l)
 		return
 	_site_clock -= delta
 	if _site_clock <= 0.0:
@@ -275,15 +296,17 @@ func _update_lamps(delta: float, focus: Vector3, cam_dist: float) -> void:
 				var s: Dictionary = cand[i][1]
 				var fade: float = 1.0 - smoothstep(reach * 0.6, reach, float(cand[i][0]))
 				l.visible = true
+				if parked(l):
+					l.light_energy = 0.0
 				l.position = s["pos"]
 				l.light_color = s["color"]
 				l.omni_range = float(s.get("range", 8.0))
 				l.set_meta("target", float(s.get("energy", 1.2)) * fade)
 			else:
-				l.visible = false
+				park(l)
 				l.set_meta("target", 0.0)
 	for i in n:
 		var l: OmniLight3D = _lamps[i]
-		if l.visible:
-			var tgt: float = float(l.get_meta("target", 0.0)) * night
+		if not parked(l):
+			var tgt: float = maxf(float(l.get_meta("target", 0.0)) * night, 0.0005)
 			l.light_energy = lerpf(l.light_energy, tgt, 1.0 - exp(-delta * 6.0))

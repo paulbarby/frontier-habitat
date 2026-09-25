@@ -1,0 +1,57 @@
+{
+  "round": 11,
+  "date": "2026-09-25",
+  "scope": "ships subject, all six ships (trader, shuttle, liner, medical, science, courier), Blender renders in art/ships/ (turnaround, on_pad, on_pad_rear, flight, night per ship; fleet_lineup, fleet_top). No in-game evidence.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "ships": {
+      "consistency": 0.78, "appeal": 0.72, "style": 0.74, "score": 0.75, "pass": true, "provisional": true,
+      "per_ship": {
+        "trader":  {"score": 0.76, "note": "round-9 fixes landed; the most detailed ship; cargo reads"},
+        "shuttle": {"score": 0.70, "note": "reads from the side (graphite, window rows, airstair); from the top it is a plain white capsule, the same plan as medical and science"},
+        "liner":   {"score": 0.72, "note": "long with fins, pink band, blister; not a dart: the same capsule body and bridge as the others; the pink does not show from the top"},
+        "medical": {"score": 0.74, "note": "the red roof cross reads at any distance; body identical to the shuttle"},
+        "science": {"score": 0.74, "note": "the 13 m dish mast is a unique silhouette; blue deck reads from the top"},
+        "courier": {"score": 0.74, "note": "black-gold wedge, clearly the smallest and different"}
+      },
+      "no_ship_below_065": true,
+      "round_9_fixes_checked": {
+        "1 faceted bridge, dark glass by day, lit at night": "landed",
+        "2 hazard frames, flank insets, spine rails, ladder, TR-07": "landed",
+        "3 legs 40% thicker, ram, 1.0 m foot": "landed",
+        "4 engine bells with bronze rim and glowing cone": "landed",
+        "5 nav lights, strobe, lit panes; belly floods": "nav lights, strobe and panes landed; belly floods not visible in any night render (ramp side not in view)",
+        "6 ribbed containers on the spine": "landed",
+        "7 ramp clear of the engines": "partly: engines raised 0.5 m, but the ramp still comes down between the two bells at the tail centre (trader_turnaround az 180)",
+        "8 file names swapped": "landed"
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Top-down distinctness (the colony camera looks down): shuttle, medical, science, trader and liner share one capsule plan with two engines (fleet_top.png; art/critic/r11_top_gamedist.png at 25%). Shuttle is the weakest: from the top it is a plain white capsule. Paint the shuttle roof graphite with the yellow stripe crossing it, and give it a raised passenger deck (a 0.6 m step along the rear two thirds) so its plan and roof differ."},
+        {"owner": "ART-B", "fix": "Liner: make it the dart the table asks for: a 2.5 m tapered nose cone instead of the shared bridge block, a narrower plan (0.8 x the trader width), swept fins visible from the top, and the pink band running along the roof spine so it shows from above."},
+        {"owner": "ART-B", "fix": "Bridges: all six carry the same faceted bridge block, so at night six identical yellow windscreens are the brightest thing on each ship (r11_night.png). Keep the frame language but vary the cockpit: shuttle a tall flat bus windscreen, liner a wraparound panoramic band, courier a canopy, medical and science the current block, trader the current block."},
+        {"owner": "ART-B", "fix": "Night windows are flat saturated yellow at full strength and read as stickers. Use a warm #FFD9A0, emissive about 60% of now, with the mullions dark, and let passenger windows (shuttle, liner) be dimmer than the bridge."},
+        {"owner": "ART-B", "fix": "Show the belly floods and the ramp at night: one night render per ship from the ramp side."},
+        {"owner": "ART-B", "fix": "Trader ramp: it still comes down between the two engine bells. Move it to one side of the tail (as on the shuttle and liner, which use side ramps)."},
+        {"owner": "ART-B", "fix": "Flight renders: the ships hover off the pad centre and the shuttle and science ship intersect the kiosk (r11_flight.png). Render the flight pose centred over the pad."},
+        {"owner": "ART-B", "fix": "Family with the colony: the hulls are smooth capsules; the Meridian and rooms use flat panels and hard edges. Add 2-3 flat panel insets per flank on shuttle, medical and science (the trader has them) so the fleet matches the colony detail density."}
+      ],
+      "what_works": [
+        "One fleet: shared legs, engines, bridge frames, rails, hazard frames, registration codes and palette; they sit well with the colony whites and graphite.",
+        "From the side at game distance each ship has one dominant colour (orange, graphite, pink, red cross, blue, black-gold) and one cue (pods, window rows, fins, cross, dish mast, wedge) (fleet_lineup.png).",
+        "Night: bridges, nav lights and liner fin lights make every ship findable (r11_night.png)."
+      ]
+    }
+  },
+  "pad_note": {
+    "not_scored": true,
+    "owner": "ART-HAB",
+    "notes": [
+      "Still the old pad. The kiosk stands 1-2 m from the nose of every ship at the render yaw (r11_pad.png) and the ramps of the shuttle and liner land beside it; place the kiosk outside every ship's footprint + ramp lane (use the largest: trader radius and liner length).",
+      "The pink edge-light dots repeat the liner's pink; use amber or white edge lights as asked in round 9."
+    ]
+  },
+  "notes": [
+    "PASS 0.75, provisional until the in-game landing and take-off strips (V3_1 8).",
+    "My evidence: art/critic/r11_night.png, r11_pad.png, r11_flight.png, r11_top_gamedist.png, r11_lineup_gamedist.png."
+  ]
+}

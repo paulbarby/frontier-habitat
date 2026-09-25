@@ -29,6 +29,9 @@ var content: VBoxContainer
 var frame: PanelContainer
 var _tab_buttons := {}
 var _subtitle_label: Label
+var _scroll: ScrollContainer     # holds `content`: a screen larger than the view scrolls
+var _hdr: Control
+var _last_vp := Vector2.ZERO
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -56,11 +59,22 @@ func _ready() -> void:
 	add_child(frame)
 	var outer: VBoxContainer = Kit.vbox(0)
 	frame.add_child(outer)
-	outer.add_child(_header())
-	var m: MarginContainer = Kit.margin(Kit.vbox(10), 22, 16, 22, 18)
+	_hdr = _hdrer()
+	outer.add_child(_hdr)
+	# Window bounds (Paul, 2026-09-25): the content sits in a scroll area, so a screen never
+	# needs more room than the view has. ui/hud/bounds_keeper.gd calls fit_view() each frame.
+	content = Kit.vbox(10)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	_scroll.add_child(content)
+	var m: MarginContainer = Kit.margin(_scroll, 22, 16, 22, 18)
 	m.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.add_child(m)
-	content = m.get_child(0)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.mouse_filter = Control.MOUSE_FILTER_PASS
 	if not tabs.is_empty() and tab == "":
@@ -68,15 +82,39 @@ func _ready() -> void:
 	build()
 	if not tabs.is_empty():
 		_build_tab_content()
-	# Enter: fade and a small rise.
+	fit_view(get_viewport_rect().size)
+	# Enter: a fade only. (A slide moved the frame with a tween; with the bounds keeper that
+	# would fight the clamp, and a compact dialog could keep a stale position.)
 	modulate.a = 0.0
-	frame.pivot_offset = frame.size * 0.5
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(self, "modulate:a", 1.0, 0.18)
-	frame.position.y += 14.0
-	tw.tween_property(frame, "position:y", frame.position.y - 14.0, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
 
-func _header() -> Control:
+## Window bounds: sizes this screen for a view of `vp` (each frame, from
+## ui/hud/bounds_keeper.gd). Compact dialogs: at most the view width minus 16 px; the content
+## area as tall as the content but no taller than the view allows (then it scrolls); centred.
+## Full screens: the frame keeps its margins but never less than 8 px from the edge.
+func fit_view(vp: Vector2) -> void:
+	if frame == null or _scroll == null:
+		return
+	if compact:
+		frame.custom_minimum_size = Vector2(minf(compact_size.x, vp.x - 16.0), 0.0)
+		_scroll.custom_minimum_size.y = content.get_combined_minimum_size().y
+		var excess: float = frame.get_combined_minimum_size().y - (vp.y - 16.0)
+		if excess > 0.0:
+			_scroll.custom_minimum_size.y = maxf(40.0, _scroll.custom_minimum_size.y - excess)
+		var sz: Vector2 = frame.get_combined_minimum_size()
+		if not frame.size.is_equal_approx(sz) or vp != _last_vp:
+			frame.size = sz
+			frame.position = ((vp - sz) * 0.5).floor()
+	elif vp != _last_vp:
+		var mx: float = minf(margins.x, maxf(8.0, vp.x * 0.02))
+		var my: float = minf(margins.y, maxf(8.0, vp.y * 0.02))
+		frame.offset_left = mx
+		frame.offset_right = -mx
+		frame.offset_top = my
+		frame.offset_bottom = -my
+	_last_vp = vp
+
+func _hdrer() -> Control:
 	var hp := PanelContainer.new()
 	var st = load("res://ui/theme/ui_theme.gd").panel_style("header")
 	st.chamfer = PackedFloat32Array([18, 0, 0, 0])
@@ -90,8 +128,19 @@ func _header() -> Control:
 	st.content_margin_bottom = 10
 	hp.add_theme_stylebox_override("panel", st)
 	hp.mouse_filter = Control.MOUSE_FILTER_PASS
+	# Window bounds: the title, tabs and extras sit in a sideways clip area, so a narrow view
+	# never makes the frame wider than the view; the close button stays outside it.
+	var bar: HBoxContainer = Kit.hbox(6)
+	hp.add_child(bar)
+	var hsc := ScrollContainer.new()
+	hsc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	hsc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	hsc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hsc.mouse_filter = Control.MOUSE_FILTER_PASS
+	bar.add_child(hsc)
 	var row: HBoxContainer = Kit.hbox(14)
-	hp.add_child(row)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hsc.add_child(row)
 	if icon != "":
 		var ic: TextureRect = Kit.icon(icon, 30, accent)
 		row.add_child(ic)
@@ -118,7 +167,7 @@ func _header() -> Control:
 	header_extra(row)
 	if closable:
 		var close: Button = Kit.icon_button("close", func(): host.close(self), "Close\nEsc.", "GhostButton", 18, 38)
-		row.add_child(close)
+		bar.add_child(close)
 	var v: VBoxContainer = Kit.vbox(0)
 	v.add_child(hp)
 	var line := ColorRect.new()

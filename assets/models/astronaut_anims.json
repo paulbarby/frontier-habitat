@@ -150,8 +150,8 @@
    "loop": true
   },
   "kneel_exit": {
-   "frames": 65,
-   "duration_s": 2.1667,
+   "frames": 68,
+   "duration_s": 2.2667,
    "kind": "exit",
    "pose_from": "kneel",
    "pose_to": "stand",
@@ -231,6 +231,15 @@
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false
+  },
+  "suit_swap": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false,
+   "cut_frame": 30
   }
  },
  "furniture": {
@@ -295,5 +304,389 @@
   ],
   "note": "prop.R has no keys in any clip (it keeps its place in the right hand). Attach the crate to prop.R with the fixed local Transform3D prop_R_offset (Godot bone space: Basis(basis_x, basis_y, basis_z) columns, origin); its origin is the crate's bottom centre. The crate rides the right hand in carry_idle and carry_walk."
  },
- "collapse_ends_on": "dead frame 0 (on the ground); dead is the lie-state loop after collapse"
+ "collapse_ends_on": "dead frame 0 (on the ground); dead is the lie-state loop after collapse",
+ "visitors": {
+  "kinds": [
+   "trader",
+   "tourist",
+   "medical",
+   "science",
+   "inspector"
+  ],
+  "looks": [
+   {
+    "index": 0,
+    "kind": "trader",
+    "set": 0,
+    "mesh": "Vis_trader",
+    "suit": {
+     "SuitMain": "#D9702B",
+     "SuitHard": "#7B828C",
+     "Pack": "#5B626C",
+     "SuitAccent": "#3E434A"
+    },
+    "indoor": {
+     "Jumpsuit": "#D9702B",
+     "SuitAccent": "#5B626C"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.6939,
+      0.162,
+      0.0242
+     ],
+     "SuitHard": [
+      0.1981,
+      0.2232,
+      0.2623
+     ],
+     "Pack": [
+      0.1046,
+      0.1221,
+      0.15
+     ],
+     "SuitAccent": [
+      0.0482,
+      0.0561,
+      0.0685
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.6939,
+      0.162,
+      0.0242
+     ],
+     "SuitAccent": [
+      0.1046,
+      0.1221,
+      0.15
+     ]
+    }
+   },
+   {
+    "index": 1,
+    "kind": "tourist",
+    "set": 0,
+    "mesh": "Vis_tourist",
+    "suit": {
+     "SuitMain": "#F3F1EA",
+     "SuitHard": "#19C3DE",
+     "Pack": "#F3F1EA",
+     "SuitAccent": "#19C3DE"
+    },
+    "indoor": {
+     "Jumpsuit": "#F1EFE8",
+     "SuitAccent": "#19C3DE"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitHard": [
+      0.0097,
+      0.5457,
+      0.7305
+     ],
+     "Pack": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitAccent": [
+      0.0097,
+      0.5457,
+      0.7305
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.8796,
+      0.8632,
+      0.807
+     ],
+     "SuitAccent": [
+      0.0097,
+      0.5457,
+      0.7305
+     ]
+    }
+   },
+   {
+    "index": 2,
+    "kind": "tourist",
+    "set": 1,
+    "mesh": "Vis_tourist",
+    "suit": {
+     "SuitMain": "#F3F1EA",
+     "SuitHard": "#9BD62B",
+     "Pack": "#F3F1EA",
+     "SuitAccent": "#9BD62B"
+    },
+    "indoor": {
+     "Jumpsuit": "#F1EFE8",
+     "SuitAccent": "#9BD62B"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitHard": [
+      0.3278,
+      0.6724,
+      0.0242
+     ],
+     "Pack": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitAccent": [
+      0.3278,
+      0.6724,
+      0.0242
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.8796,
+      0.8632,
+      0.807
+     ],
+     "SuitAccent": [
+      0.3278,
+      0.6724,
+      0.0242
+     ]
+    }
+   },
+   {
+    "index": 3,
+    "kind": "tourist",
+    "set": 2,
+    "mesh": "Vis_tourist",
+    "suit": {
+     "SuitMain": "#F3F1EA",
+     "SuitHard": "#F0428C",
+     "Pack": "#F3F1EA",
+     "SuitAccent": "#F0428C"
+    },
+    "indoor": {
+     "Jumpsuit": "#F1EFE8",
+     "SuitAccent": "#F0428C"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitHard": [
+      0.8714,
+      0.0545,
+      0.2623
+     ],
+     "Pack": [
+      0.8963,
+      0.8796,
+      0.8228
+     ],
+     "SuitAccent": [
+      0.8714,
+      0.0545,
+      0.2623
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.8796,
+      0.8632,
+      0.807
+     ],
+     "SuitAccent": [
+      0.8714,
+      0.0545,
+      0.2623
+     ]
+    }
+   },
+   {
+    "index": 4,
+    "kind": "medical",
+    "set": 0,
+    "mesh": "Vis_medical",
+    "suit": {
+     "SuitMain": "#F4F5F7",
+     "SuitHard": "#F4F5F7",
+     "Pack": "#C62434",
+     "SuitAccent": "#D7263D"
+    },
+    "indoor": {
+     "Jumpsuit": "#EEF0F3",
+     "SuitAccent": "#D7263D"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.9047,
+      0.9131,
+      0.9301
+     ],
+     "SuitHard": [
+      0.9047,
+      0.9131,
+      0.9301
+     ],
+     "Pack": [
+      0.5647,
+      0.0176,
+      0.0343
+     ],
+     "SuitAccent": [
+      0.6795,
+      0.0194,
+      0.0467
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.855,
+      0.8714,
+      0.8963
+     ],
+     "SuitAccent": [
+      0.6795,
+      0.0194,
+      0.0467
+     ]
+    }
+   },
+   {
+    "index": 5,
+    "kind": "science",
+    "set": 0,
+    "mesh": "Vis_science",
+    "suit": {
+     "SuitMain": "#2F6BD0",
+     "SuitHard": "#EEF1F5",
+     "Pack": "#EEF1F5",
+     "SuitAccent": "#EEF1F5"
+    },
+    "indoor": {
+     "Jumpsuit": "#2F6BD0",
+     "SuitAccent": "#EEF1F5"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.0284,
+      0.147,
+      0.6308
+     ],
+     "SuitHard": [
+      0.855,
+      0.8796,
+      0.9131
+     ],
+     "Pack": [
+      0.855,
+      0.8796,
+      0.9131
+     ],
+     "SuitAccent": [
+      0.855,
+      0.8796,
+      0.9131
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.0284,
+      0.147,
+      0.6308
+     ],
+     "SuitAccent": [
+      0.855,
+      0.8796,
+      0.9131
+     ]
+    }
+   },
+   {
+    "index": 6,
+    "kind": "inspector",
+    "set": 0,
+    "mesh": "Vis_inspector",
+    "suit": {
+     "SuitMain": "#2A2C31",
+     "SuitHard": "#2A2C31",
+     "Pack": "#1D1F23",
+     "SuitAccent": "#D9A93A"
+    },
+    "indoor": {
+     "Jumpsuit": "#1F2125",
+     "SuitAccent": "#D9A93A"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.0232,
+      0.0252,
+      0.0307
+     ],
+     "SuitHard": [
+      0.0232,
+      0.0252,
+      0.0307
+     ],
+     "Pack": [
+      0.0123,
+      0.0137,
+      0.0168
+     ],
+     "SuitAccent": [
+      0.6939,
+      0.3968,
+      0.0423
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.0137,
+      0.0152,
+      0.0185
+     ],
+     "SuitAccent": [
+      0.6939,
+      0.3968,
+      0.0423
+     ]
+    }
+   }
+  ],
+  "look_code": "look code = (8 + v) * 64 + head * 8 + tone for a visitor with look v (index into looks); colonists keep role * 64 + head * 8 + tone with role 0..7.  So look / 64 >= 8 means a visitor, v = look / 64 - 8.  Colour groups: replace the albedo of every surface whose material name is a key of looks[v].suit (suit model) or looks[v].indoor (indoor model) with that colour (linear values given), as the shader already does for SuitAccent (mode 1) and Skin (mode 2); colonists (role < 8) are unchanged.  Attachments: assets/models/astronaut_visitor_<variant>.glb holds skinned meshes Vis_<kind> on the same skeleton; draw Vis_<kind> only for visitors whose looks[v].kind is that kind (like Head_N).  A name that ends in _h<digits> (Vis_inspector_h023, Vis_inspector_h1) is also limited to those head numbers. Vis materials (VisRed, VisGold, VisGrey, VisWhite, VisDark and the shared names) are plain except SuitAccent, which takes the visitor's accent colour.",
+  "files": {
+   "suit": "astronaut_visitor_suit.glb",
+   "indoor": "astronaut_visitor_indoor.glb"
+  },
+  "meshes": {
+   "suit": [
+    "Vis_trader",
+    "Vis_tourist",
+    "Vis_medical",
+    "Vis_science",
+    "Vis_inspector"
+   ],
+   "indoor": [
+    "Vis_trader",
+    "Vis_tourist",
+    "Vis_medical",
+    "Vis_science",
+    "Vis_inspector_h023",
+    "Vis_inspector_h1"
+   ]
+  },
+  "note": "Colonists keep their looks.  Tourists: pick the set (0..2) from a hash of the visitor id.  Every head can be used for every visitor."
+ }
 }

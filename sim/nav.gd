@@ -17,6 +17,14 @@ var _paths := {}
 
 const Ship = preload("res://sim/ship.gd")
 const PATH_CACHE_MAX := 4000
+## Radius of a corridor tube (the models' tube is 2.36 m wide).
+const CORRIDOR_R := 1.2
+## A cell is solid when its centre is within a footprint + BODY_R (V3.1). A body walks on
+## cell centres and straight lines between open cells, so it stays at least about 0.2 m
+## outside every footprint. (Footprint + half a cell diagonal, 0.71, was tried: with the
+## 0.6 m gap placement allows it closed the ways between structures; sites became
+## unreachable and a13 stopped growing.)
+const BODY_R := 0.3
 
 func _init(s) -> void:
 	sim = s
@@ -28,6 +36,8 @@ func _init(s) -> void:
 ## cells as a full build, so a loaded game walks exactly like the saved one.
 var _base_world = null
 var _bcells := PackedInt32Array()
+## Cells with a walking weight > 1 (clearance bands and porches), as y * size + x.
+var _wcells := PackedInt32Array()
 var base_msec: int = 0          # time the last terrain build took (for the budget report)
 
 func _build_base(world) -> void:
@@ -69,6 +79,7 @@ func _build_base(world) -> void:
 func rebuild() -> void:
 	var old_paths: Dictionary = _paths
 	var old_cells: PackedInt32Array = _bcells
+	var old_w: PackedInt32Array = _wcells
 	_paths = {}
 	var world = sim.world
 	var fresh: bool = grid == null or _base_world != world
@@ -78,7 +89,14 @@ func rebuild() -> void:
 		for k in _bcells:
 			grid.set_point_solid(Vector2i(k % size, k / size), false)
 	_bcells = PackedInt32Array()
+	for k in _wcells:
+		grid.set_point_weight_scale(Vector2i(k % size, k / size), 1.0)
+	_wcells = PackedInt32Array()
+	var clear: float = float(sim.bal.get("nav_clearance", 0.6))
+	var cw: float = float(sim.bal.get("nav_clearance_weight", 8.0))
+	var pw: float = float(sim.bal.get("porch_weight", 12.0))
 	var blds: Dictionary = sim.state["buildings"]
+	# Pass 1: footprints, corridor tubes and the wreck are solid, grown by BODY_R.
 	for id in blds:
 		var b: Dictionary = blds[id]
 		# A plan that is not started yet is only marked on the ground: people walk over it.
@@ -86,16 +104,39 @@ func rebuild() -> void:
 			continue
 		if b["kind"] == "link":
 			if b["def"] == "corridor":
-				_solid_capsule(b["p0"], b["p1"], 1.3)
+				_solid_capsule(b["p0"], b["p1"], CORRIDOR_R + BODY_R)
 		elif b["def"] == "meridian":
 			var seg: Array = Ship.segment_of(b)
-			_solid_capsule(seg[0], seg[1], float(b["radius"]) - 0.2)
+			_solid_capsule(seg[0], seg[1], float(b["radius"]) + BODY_R)
 		else:
-			_solid_disc(b["pos"], float(b["radius"]) - 0.2)
+			_solid_disc(b["pos"], float(b["radius"]) + BODY_R)
+	# Pass 2 (V3.1, V3_1_DESIGN 4.2 and the porch rule): a band of nav_clearance (0.6 m)
+	# round every footprint and tube costs nav_clearance_weight (8) per metre, and the porch
+	# in front of an airlock's outer door costs porch_weight (12): paths keep clear of walls
+	# and porches wherever the ground allows, but a narrow gap or the way to a door is never
+	# closed. (Solid clearance was tried first: it closed gaps between structures and left
+	# colonists outside with no way back; 5 died in a13, the whole campaign colony died.)
+	for id in blds:
+		var b: Dictionary = blds[id]
+		if b["state"] == "blueprint":
+			continue
+		if b["kind"] == "link":
+			if b["def"] == "corridor":
+				_weight_capsule(b["p0"], b["p1"], CORRIDOR_R + BODY_R + clear, cw)
+		elif b["def"] == "meridian":
+			var seg2: Array = Ship.segment_of(b)
+			_weight_capsule(seg2[0], seg2[1], float(b["radius"]) + BODY_R + clear, cw)
+		else:
+			_weight_disc(b["pos"], float(b["radius"]) + BODY_R + clear, cw)
+			if bool(sim.bdef(b["def"]).get("airlock", false)):
+				var dirv := Vector2(cos(float(b["rot"])), sin(float(b["rot"])))
+				var s0: Vector2 = (b["pos"] as Vector2) + dirv * float(b["radius"])
+				var s1: Vector2 = s0 + dirv * float(sim.bal.get("porch_length", 2.5))
+				_weight_capsule(s0, s1, float(sim.bal.get("porch_half_width", 1.6)), pw)
 
 	# The same blocked cells as before (a cable, a repair, a room joined): the outdoor paths
 	# found so far are still the paths, so the cache stays.
-	if not fresh and _bcells == old_cells:
+	if not fresh and _bcells == old_cells and _wcells == old_w:
 		_paths = old_paths
 	rooms = AStar2D.new()
 	for id in blds:
@@ -110,7 +151,7 @@ func rebuild() -> void:
 
 ## A hash of what walking depends on: the cells structures block and the room graph.
 func signature() -> int:
-	var parts: Array = [Array(_bcells).hash()]
+	var parts: Array = [Array(_bcells).hash(), Array(_wcells).hash()]
 	var ids: PackedInt64Array = rooms.get_point_ids()
 	for id in ids:
 		parts.append(int(id))
@@ -129,6 +170,42 @@ func _solid_disc(c: Vector2, r: float) -> void:
 		for x in range(x0, x1 + 1):
 			if Vector2(x + 0.5, y + 0.5).distance_to(c) <= r:
 				_mark(x, y)
+
+func _weight_disc(c: Vector2, r: float, w: float) -> void:
+	var x0: int = maxi(0, int(floor(c.x - r)))
+	var x1: int = mini(size - 1, int(floor(c.x + r)))
+	var y0: int = maxi(0, int(floor(c.y - r)))
+	var y1: int = mini(size - 1, int(floor(c.y + r)))
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			if Vector2(x + 0.5, y + 0.5).distance_to(c) <= r:
+				_markw(x, y, w)
+
+func _weight_capsule(p0: Vector2, p1: Vector2, r: float, w: float) -> void:
+	var x0: int = maxi(0, int(floor(minf(p0.x, p1.x) - r)))
+	var x1: int = mini(size - 1, int(floor(maxf(p0.x, p1.x) + r)))
+	var y0: int = maxi(0, int(floor(minf(p0.y, p1.y) - r)))
+	var y1: int = mini(size - 1, int(floor(maxf(p0.y, p1.y) + r)))
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			var c := Vector2(x + 0.5, y + 0.5)
+			if c.distance_to(Geometry2D.get_closest_point_to_segment(c, p0, p1)) <= r:
+				_markw(x, y, w)
+
+func _markw(x: int, y: int, w: float) -> void:
+	var p := Vector2i(x, y)
+	if grid.is_point_solid(p):
+		return
+	var cur: float = grid.get_point_weight_scale(p)
+	if cur >= w:
+		return
+	if cur <= 1.0:
+		_wcells.append(y * size + x)
+	grid.set_point_weight_scale(p, w)
+
+## True when a cell costs more than open ground (clearance band or porch).
+func is_weighted(p: Vector2) -> bool:
+	return grid.get_point_weight_scale(cell_of(p)) > 1.0
 
 func _mark(x: int, y: int) -> void:
 	var p := Vector2i(x, y)
@@ -222,7 +299,23 @@ func _clear_line(a: Vector2, b: Vector2) -> bool:
 		var p: Vector2 = a.lerp(b, float(s) / steps)
 		if grid.is_point_solid(cell_of(p)) or grid.is_point_solid(cell_of(p + side)) or grid.is_point_solid(cell_of(p - side)):
 			return false
+		var cp: Vector2i = cell_of(p)
+		if grid.get_point_weight_scale(cp) > 1.0:
+			# A shortcut leaves the clearance band alone unless it starts or ends there.
+			if not (grid.get_point_weight_scale(cell_of(a)) > 1.0 or grid.get_point_weight_scale(cell_of(b)) > 1.0):
+				return false
+			# Next to a solid cell a point of an open cell can lie inside the footprint:
+			# the shortcut must not pass there (V3.1 4.2).
+			if _solid_near(cp):
+				return false
 	return true
+
+func _solid_near(c: Vector2i) -> bool:
+	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var q: Vector2i = c + d
+		if q.x < 0 or q.y < 0 or q.x >= size or q.y >= size or grid.is_point_solid(q):
+			return true
+	return false
 
 static func _length(pts: Array) -> float:
 	var l := 0.0
@@ -233,7 +326,11 @@ static func _length(pts: Array) -> float:
 # ---------------------------------------------------------------- places
 func door_pos(b: Dictionary) -> Vector2:
 	var dirv := Vector2(cos(b["rot"]), sin(b["rot"]))
-	return b["pos"] + dirv * (float(b["radius"]) + 1.3)
+	return b["pos"] + dirv * (float(b["radius"]) + maxf(1.3, _clear() + 1.0))
+
+## Metres a body outside keeps from structures (the walking grid; V3.1).
+func _clear() -> float:
+	return float(sim.bal.get("nav_clearance", 0.6))
 
 ## Interior standing place number `slot` of a room: a ring at 0.6 of the radius.
 func slot_pos(b: Dictionary, slot: int) -> Vector2:
@@ -248,7 +345,7 @@ func access_points(b: Dictionary) -> Array:
 	if b["kind"] == "link":
 		var mid: Vector2 = (b["p0"] + b["p1"]) * 0.5
 		var n: Vector2 = (b["p1"] - b["p0"]).normalized().orthogonal()
-		var off: float = 2.4 if b["def"] == "corridor" else 1.0
+		var off: float = (CORRIDOR_R + _clear() + 1.0) if b["def"] == "corridor" else 1.0
 		for s in [1.0, -1.0]:
 			var p: Vector2 = mid + n * off * s
 			if is_walkable(p):
@@ -264,7 +361,7 @@ func access_points(b: Dictionary) -> Array:
 			if is_walkable(p):
 				out.append(p)
 		return out
-	var r: float = float(b["radius"]) + 1.1
+	var r: float = float(b["radius"]) + _clear() + 1.0
 	for k in 8:
 		var a: float = float(b["rot"]) + k * TAU / 8.0 + 0.39
 		var p: Vector2 = b["pos"] + Vector2(cos(a), sin(a)) * r
@@ -283,25 +380,48 @@ func best_access(b: Dictionary, from: Vector2):
 	return best
 
 # ---------------------------------------------------------------- indoor
+## Indoor walk along the room graph. pts: waypoints; rooms: the room each waypoint belongs to
+## (the agent code keeps the room of the last waypoint reached, so a new plan made in a
+## corridor starts from the right room). A start point outside from_b's footprint (a body
+## standing in a corridor) first walks along the corridor to that room's wall (the room is
+## round, so the straight line on from one wall point to another stays inside it): no leg
+## cuts across open ground (V3.1, RENDER-to-SIM 2026-09-25).
 func path_in(from_b: int, from_p: Vector2, to_b: int, to_p: Vector2) -> Dictionary:
 	if not rooms.has_point(from_b) or not rooms.has_point(to_b):
 		return {"ok": false}
+	var blds: Dictionary = sim.state["buildings"]
 	var pts: Array = [from_p]
+	var rm: Array = [from_b]
+	var fb: Dictionary = blds[from_b]
+	var fr: float = float(fb["radius"])
+	var off: Vector2 = from_p - (fb["pos"] as Vector2)
+	if off.length() > fr + 0.01:
+		pts.append((fb["pos"] as Vector2) + off.normalized() * fr)
+		rm.append(from_b)
 	if from_b != to_b:
 		var ids: PackedInt64Array = rooms.get_id_path(from_b, to_b)
 		if ids.is_empty():
 			return {"ok": false}
-		var blds: Dictionary = sim.state["buildings"]
 		for i in range(ids.size() - 1):
 			var a: Dictionary = blds[ids[i]]
 			var b: Dictionary = blds[ids[i + 1]]
 			var u: Vector2 = (b["pos"] - a["pos"]).normalized()
 			pts.append(a["pos"] + u * float(a["radius"]))
+			rm.append(int(ids[i]))
 			pts.append(b["pos"] - u * float(b["radius"]))
+			rm.append(int(ids[i + 1]))
 			if i + 1 < ids.size() - 1:
 				pts.append(b["pos"])
+				rm.append(int(ids[i + 1]))
+	# A target point outside its room (an old save's pile put down by a walker whose room was
+	# the destination) is walked to inside the room instead, never across open ground.
+	var tbd: Dictionary = blds[to_b]
+	var toff: Vector2 = to_p - (tbd["pos"] as Vector2)
+	if toff.length() > float(tbd["radius"]) + 0.01:
+		to_p = (tbd["pos"] as Vector2) + toff.normalized() * maxf(0.0, float(tbd["radius"]) - 0.5)
 	pts.append(to_p)
-	return {"ok": true, "pts": pts, "len": _length(pts)}
+	rm.append(to_b)
+	return {"ok": true, "pts": pts, "rooms": rm, "len": _length(pts)}
 
 # ---------------------------------------------------------------- full route
 ## loc = {"b": building id or -1 for outdoors, "p": position}
@@ -314,11 +434,22 @@ func plan(from: Dictionary, to: Dictionary) -> Dictionary:
 		if not r["ok"]:
 			return {"ok": false, "reason": "no_path"}
 		return _route([{"m": "out", "pts": r["pts"], "len": r["len"]}])
+	# A body in a corridor (loc "b2" = the room at the corridor's other end) starts from the
+	# end that gives the shorter walk.
+	var fb2: int = int(from.get("b2", -1))
+	if fb2 != -1 and fb2 != fb and fb != -1 and topo.same_atmo(fb, fb2):
+		var via_b: Dictionary = plan({"b": fb, "p": from["p"]}, to)
+		var via_b2: Dictionary = plan({"b": fb2, "p": from["p"]}, to)
+		if not via_b2["ok"]:
+			return via_b
+		if not via_b["ok"] or float(via_b2["len"]) < float(via_b["len"]):
+			return via_b2
+		return via_b
 	if fb != -1 and tb != -1 and topo.same_atmo(fb, tb):
 		var r: Dictionary = path_in(fb, from["p"], tb, to["p"])
 		if not r["ok"]:
 			return {"ok": false, "reason": "no_path"}
-		return _route([{"m": "in", "pts": r["pts"], "len": r["len"], "b": tb}])
+		return _route([{"m": "in", "pts": r["pts"], "rooms": r["rooms"], "len": r["len"], "b": tb}])
 	if fb != -1 and not topo.atmo_comp.has(fb):
 		return {"ok": false, "reason": "no_path"}
 	if tb != -1 and not topo.atmo_comp.has(tb):
@@ -341,7 +472,7 @@ func plan(from: Dictionary, to: Dictionary) -> Dictionary:
 				if not r1["ok"]:
 					continue
 				if r1["len"] > 0.01:
-					legs.append({"m": "in", "pts": r1["pts"], "len": r1["len"], "b": ex})
+					legs.append({"m": "in", "pts": r1["pts"], "rooms": r1["rooms"], "len": r1["len"], "b": ex})
 				legs.append({"m": "lock", "b": ex, "dir": "out"})
 				start_out = door_pos(lb)
 			var end_out: Vector2 = to["p"]
@@ -358,7 +489,7 @@ func plan(from: Dictionary, to: Dictionary) -> Dictionary:
 				if not r2["ok"]:
 					ok = false
 				elif r2["len"] > 0.01:
-					legs.append({"m": "in", "pts": r2["pts"], "len": r2["len"], "b": tb})
+					legs.append({"m": "in", "pts": r2["pts"], "rooms": r2["rooms"], "len": r2["len"], "b": tb})
 			if not ok:
 				continue
 			var route: Dictionary = _route(legs)

@@ -7,12 +7,13 @@ extends RefCounted
 ## bytes_to_var never decodes objects, so an imported file cannot run code.
 
 const MAGIC := "FHSAVE1\n"
-const SCHEMA := 3
+const SCHEMA := 4
 const REQUIRED := ["schema", "seed", "tick", "rng", "buildings", "inventories", "agents", "tasks", "holds", "policies", "ledger"]
 const Research = preload("res://sim/research.gd")
 const Goals = preload("res://sim/goals.gd")
 const Ship = preload("res://sim/ship.gd")
 const Hazards = preload("res://sim/hazards.gd")
+const Traffic = preload("res://sim/traffic.gd")
 const Rng = preload("res://sim/rng.gd")
 ## Ticks in a day of every schema so far (600 s at 10 Hz).
 const DAY_TICKS := 6000
@@ -64,6 +65,9 @@ static func migrate(state: Dictionary) -> Dictionary:
 	if v < 3:
 		_v2_to_v3(state)
 		v = 3
+	if v < 4:
+		_v3_to_v4(state)
+		v = 4
 	state["schema"] = v
 	return state
 
@@ -210,6 +214,31 @@ static func _v2_to_v3(s: Dictionary) -> void:
 	var env: Dictionary = s.get("env", {})
 	if not env.has("wind_mult"):
 		env["wind_mult"] = 1.0
+
+## Version 4 (docs/V3_1_DESIGN.md section 7): an empty traffic schedule (ships come once a
+## powered pad exists), credits 0, and the phase of an airlock cycle in progress (shares
+## as balance.airlock_phases).
+static func _v3_to_v4(s: Dictionary) -> void:
+	if not s.has("traffic"):
+		s["traffic"] = Traffic.fresh_state()
+	if not s.has("credits"):
+		s["credits"] = Traffic.fresh_credits(0)
+	var shares: Array = [0.15, 0.1, 0.5, 0.1, 0.15]
+	var names: Array = ["enter", "seal", "pump", "open", "exit"]
+	for id in s["buildings"]:
+		var lock: Dictionary = s["buildings"][id].get("lock", {})
+		if lock.is_empty() or (lock.get("cyc", {}) as Dictionary).is_empty():
+			continue
+		var cyc: Dictionary = lock["cyc"]
+		var total: float = float(cyc.get("total", 10.0))
+		var done: float = total - maxf(0.0, float(cyc["t"]))
+		var edge := 0.0
+		for i in names.size():
+			edge += shares[i] * total
+			if done < edge - 0.000001 or i == names.size() - 1:
+				cyc["phase"] = names[i]
+				cyc["pt"] = snappedf(maxf(0.0, edge - done), 0.01)
+				break
 
 static func _rename_key(d: Dictionary, from: String, to: String) -> void:
 	if not d.has(from):

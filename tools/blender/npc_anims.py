@@ -135,6 +135,19 @@ def fill_arm_targets(P, sides=("L", "R")):
     return P
 
 
+def ik_to_fk(P, sides=("L", "R")):
+    """The same pose with the arms as FK angles (ik = 0): a key after which the clip can move in FK with no
+    FK/IK mismatch (the IK solution's local rotations become the FK parameters)."""
+    Q = Pose(P)
+    _, L, _, _ = solver().solve(P)
+    for s in sides:
+        for b in ("upper_arm", "forearm", "hand"):
+            e = L["%s.%s" % (b, s)].to_euler("XYZ")
+            Q["%s.%s.rx" % (b, s)], Q["%s.%s.ry" % (b, s)], Q["%s.%s.rz" % (b, s)] = degrees(e.x), degrees(e.y), degrees(e.z)
+        Q["arm.%s.ik" % s] = 0.0
+    return fill_arm_targets(Q, sides)
+
+
 def fk(P):
     return fill_arm_targets(Pose(P))
 
@@ -292,23 +305,22 @@ def keyed_clip(keys, loop=False, length=None, lags=None):
 
 
 def euler_compat(keys):
-    """Re-express each key's hand orientation (hand.S.wx/wy/wz) as the Euler triple nearest to the previous key's,
-    so the spline does not spin the wrist through an equivalent angle (the same rotation, a shorter path)."""
+    """Re-express each key's rotation triples (IK hand targets hand.S.wx/wy/wz and FK arm angles) as the Euler triple
+    nearest to the previous key's, so the spline does not spin a joint through an equivalent angle."""
     out = []
     prev = {}
     for k in keys:
         t, P = k[0], Pose(k[1])
         for s in ("L", "R"):
-            ks = ["hand.%s.w%s" % (s, c) for c in "xyz"]
-            if not all(x in P for x in ks):
-                continue
-            q = qeuler(P[ks[0]], P[ks[1]], P[ks[2]])
-            if s in prev:
-                e = q.to_euler("XYZ", prev[s])
-            else:
-                e = q.to_euler("XYZ")
-            P[ks[0]], P[ks[1]], P[ks[2]] = degrees(e.x), degrees(e.y), degrees(e.z)
-            prev[s] = e
+            triples = [(("w", s), ["hand.%s.w%s" % (s, c) for c in "xyz"])]
+            triples += [((bn, s), ["%s.%s.r%s" % (bn, s, c) for c in "xyz"]) for bn in ("upper_arm", "forearm", "hand")]
+            for key, kk in triples:
+                if not any(x in P for x in kk):
+                    continue
+                q = qeuler(P.g(kk[0]), P.g(kk[1]), P.g(kk[2]))
+                e = q.to_euler("XYZ", prev[key]) if key in prev else q.to_euler("XYZ")
+                P[kk[0]], P[kk[1]], P[kk[2]] = degrees(e.x), degrees(e.y), degrees(e.z)
+                prev[key] = e
         out.append((t, P) + tuple(k[2:]))
     return out
 
@@ -956,8 +968,8 @@ def kneel_exit_keys():
     K4 = add(Pose(STAND), hips__y=0.020, hips__z=-0.012)
     set_foot(K4, "R", (ANK.x - 0.02, 0.115, ANK.z + 0.035), pitch=6.0, yaw=7.0, knee_out=3.0)
     K4 = fill_arm_targets(K4)
-    return [(0.0, Pose(KNEEL), {"hold": True}), (0.36, K1), (0.94, K2), (1.52, K3), (1.78, K4),
-            (2.02, Pose(STAND), {"hold": True})]
+    return [(0.0, Pose(KNEEL), {"hold": True}), (0.36, K1), (0.94, K2), (1.62, K3), (1.88, K4),
+            (2.12, Pose(STAND), {"hold": True})]
 
 
 def lie_enter_keys():
@@ -1100,6 +1112,54 @@ def collapse_keys():
             (2.15, Pose(DEAD), {"hold": True})]
 
 
+SWAP_CUT_FRAME = 30
+
+
+def suit_swap_keys():
+    """V3_1 section 5.4: suit up / suit off, 2.0 s.  Hands to the chest seals, then to the helmet sides and a hold
+    across the middle: RENDER cuts between the suit and indoor models at frame 30 (1.0 s), where the pose is still
+    and identical in both files (the clip data is shared)."""
+    S0 = Pose(STAND)
+    K1 = add(S0, neck__ry=12.0, head__ry=10.0, spine__ry=3.0, chest__ry=2.0)
+    set_arm_ik(K1, "L", (0.215, 0.080, 1.245), (0.2, -1.0, 0.3), (-1.0, 0.0, 0.2), w=1.0, pole=-10.0)
+    set_arm_ik(K1, "R", (0.215, 0.090, 1.220), (0.2, -1.0, 0.1), (-1.0, 0.0, 0.2), w=1.0, pole=-10.0)
+    # both hands at the helmet sides (palms in), elbows out; the same pose serves the bare head
+    K2 = add(S0, neck__ry=-2.0, head__ry=-3.0, spine__ry=-1.0, chest__ry=-2.0)
+    for s in ("L", "R"):
+        set_arm_ik(K2, s, (0.060, 0.225, 1.620), (0.15, -0.25, 1.0), (0.0, -1.0, 0.0), w=1.0, pole=-40.0)
+    K3 = Pose(K2)
+    K4 = add(S0, neck__ry=-2.0, head__ry=-3.0, spine__ry=-1.0, chest__ry=-2.0)   # torso and head as at the cut: nothing moves early
+    for s in ("L", "R"):          # hands on the upper chest seals, elbows still out (close to the helmet pose)
+        set_arm_ik(K4, s, (0.180, 0.145, 1.410), (0.28, -1.0, 0.1), (-1.0, 0.0, 0.2), w=1.0, pole=0.0)
+        elbow_to(K4, s, (-0.15, 1.0 if s == "L" else -1.0, 0.15), 1.0)
+    # the stand arms reached by IK (targets = the stand wrists), then the plain stand pose: a soft IK -> FK hand-over
+    K4b = fill_arm_targets(Pose(STAND))
+    for s in ("L", "R"):
+        K4b["arm.%s.ik" % s] = 1.0
+    # waypoints with the hands out in front, so the wrist never passes close to the shoulder (a folded arm)
+    def front(P0, z):
+        Q = Pose(P0)
+        for s in ("L", "R"):
+            set_arm_ik(Q, s, (0.300, 0.205, z), (0.4, -0.6, 0.6), (-0.4, -1.0, 0.0), w=1.0, pole=-25.0)
+        return Q
+    K1b = front(add(S0, neck__ry=4.0), 1.44)
+    K3b = front(add(S0, neck__ry=2.0), 1.32)
+    # hands lowering past the belt, elbows back and slightly out: splits the long drop from the chest to the stand
+    K5 = add(S0, neck__ry=3.0, head__ry=2.0, spine__ry=1.0)
+    for s in ("L", "R"):
+        set_arm_ik(K5, s, (0.190, 0.130, 0.990), (0.3, -0.6, -0.7), (-0.8, -0.5, 0.1), w=1.0, pole=0.0)
+        elbow_to(K5, s, (-0.25, 0.8 if s == "L" else -0.8, -0.8), 1.0)
+        K5["arm.%s.stiff" % s] = 1.0      # straight wrist on the way down: only the arm swings to the stand
+    # the way down is FK: the helmet pose, the front waypoint and the chest pose as FK angles, then the stand pose
+    # every key as FK angles converted from its IK design: no IK weight changes anywhere in the clip, so the
+    # hold across the cut frame is exactly still and no FK/IK blend can pop
+    K1, K1b, K2, K3b, K4, K5 = (ik_to_fk(k) for k in (K1, K1b, K2, K3b, K4, K5))
+    K3 = Pose(K2)
+    # up: stand -> hands out in front -> helmet sides (hold across the cut); down: helmet -> chest seals -> stand
+    return [(0.0, S0, {"hold": True}), (0.47, K1b), (0.80, K2, {"hold": True}), (0.95, K3, {"hold": True}),
+            (1.30, K4), (1.595, K5), (1.88, Pose(STAND), {"hold": True})]
+
+
 def cheer_keys():
     S0 = Pose(STAND)
     C0 = add(S0, hips__z=-0.05, hips__ry=6.0, spine__ry=6.0, chest__ry=4.0, head__ry=4.0)
@@ -1183,4 +1243,6 @@ def all_clips():
     out.append(("dead", "hold", "lie", "lie", True, 30, lambda f: Pose(DEAD), {}))
     fn, n = keyed_clip(cheer_keys())
     out.append(("cheer", "oneshot", "stand", "stand", False, n, fn, {}))
+    fn, n = keyed_clip(suit_swap_keys())
+    out.append(("suit_swap", "oneshot", "stand", "stand", False, n, fn, dict(cut_frame=SWAP_CUT_FRAME)))
     return out

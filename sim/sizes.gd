@@ -32,11 +32,18 @@ func _init(s) -> void:
 static func size_name(size: int) -> String:
 	return SIZE_NAMES[clampi(size, 0, 3)]
 
-## The sizes a structure can have: [0, 1, 2, 3] with a "sizes" block, else [1].
+## The sizes a structure can have: [0, 1, 2, 3] with a "sizes" block, else [1]. A
+## "size_list" limits them (V3.1: the airlock has M and L only).
 func sizes_of(def_id: String) -> Array:
 	if not sim.content["buildings"].has(def_id):
 		return []
-	return [0, 1, 2, 3] if sim.content["buildings"][def_id].has("sizes") else [1]
+	var base: Dictionary = sim.content["buildings"][def_id]
+	if base.has("size_list"):
+		var out: Array = []
+		for v in base["size_list"]:
+			out.append(int(v))
+		return out
+	return [0, 1, 2, 3] if base.has("sizes") else [1]
 
 ## Effective definition of a size at level 1.
 func def_for(def_id: String, size: int) -> Dictionary:
@@ -75,7 +82,7 @@ func _build(def_id: String, size: int, level: int) -> Dictionary:
 				d[key] = arr[size]
 	# Integer fields that JSON delivered as floats.
 	for key in ["trays", "beds", "occupants", "slots", "work_slots", "storage", "input_cap", "output_cap",
-			"treatment_beds", "recreation", "fill_port", "max_links", "build_slots"]:
+			"treatment_beds", "recreation", "fill_port", "max_links", "build_slots", "airlock_slots"]:
 		if d.has(key):
 			d[key] = int(d[key])
 	if size != 1:

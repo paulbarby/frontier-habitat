@@ -95,3 +95,85 @@ facts), `ART-B-to-ART-A.md` item 3 (v1 names overwritten by `build_assets.py` wi
 Fixed on ART-A's report: my previews applied AO twice; thumbnails re-rendered.
 
 **Not done / not tested**: nothing was run in Godot by ART-B.
+
+## 2026-09-25 — v3.1: ship models (§6.2), pilot `ship_trader`
+
+**Landed**
+
+- `assets/models/ship_trader.glb`: a boxy freighter with four orange cargo pods, a crane arm on the spine,
+  two aft engines, four belly hover thrusters, a rear cargo ramp and a gull-wing side hatch. 8 160 triangles,
+  6 materials (Palette, PaletteMetal, Accent, Window, Light, Plasma), plan radius 7.44 m, height 6.0 m,
+  COLOR_0 on every mesh. Godot import done; `check` 149 scripts, 0 failed. A headless Godot probe
+  confirms the node names and the `extras.stow_deg` metadata.
+- Nodes: `Hull`, `Leg_FL/FR/RL/RR`, `Ramp`, `Door_Side`, `Thruster_Hover_FL/FR/RL/RR`, `Thruster_Main_L/R`,
+  `Anchor_Ramp`, `Anchor_Cargo`. Motion rule and values in `docs/requests/ART-B-to-RENDER.md` item 2.
+- Scripts: `tools/blender/ship_common.py` (contract, lofted hull, legs, ramp, palette, export with extras,
+  checks), `tools/blender/ship_trader.py`, `tools/blender/ship_render.py`. `ext_common.py` and
+  `ext_render.py` (now ART-HAB's) are imported read-only, not edited.
+- Renders `art/ships/`: `trader_turnaround.png` (8 views), `trader_on_pad.png`, `trader_on_pad_rear.png`
+  (landed on the current pad, ramp open), `trader_flight.png` (legs folded, ramp and hatch closed, 4 m up),
+  `trader_night.png`. Report `art/ships/ship_report.json`.
+- Requests: `ART-B-to-ART-HAB.md` item 1 (pad footprint, `Anchor_Ship`, ramp lane), `ART-B-to-RENDER.md` item 2.
+
+**Found:** on the current pad the kiosk stands at −X, where the ramp lands at yaw 0. The renders use yaw 180°
+until the pad has `Anchor_Ship`.
+
+**Next:** pilot critic → the other five ships (shuttle, liner, medical, science, courier).
+
+**Not tested:** anything in the running game (landing, leg and ramp motion, night).
+
+## 2026-09-25 — v3.1: critic round 9 fixes and the other five ships
+
+**Trader fixes (round 9, 1–8):** faceted chamfered bridge with frame mullions, dark glass by day and lit panes
+in `Lights` at night; hazard frames at the ramp opening and the hatch; flank panel insets; spine rails; a
+flank ladder; registration `TR-07` on the front pods; legs 40 % thicker with a hydraulic ram and a 1.0 m foot;
+engine bells with a bronze rim and a glowing inner cone (`Plasma`); red/green nav lights on the pod noses, a
+crane strobe, belly floods over the ramp, a lit hold; two ribbed containers on the spine; engines raised 0.5 m
+(clear of the ramp); pad render names swapped. 10 290 triangles, 8 materials.
+
+**Five new ships** (`tools/blender/ship_fleet.py`), same language, critic table outlines and colours:
+
+| ship | look | tris | radius / height |
+|---|---|---:|---|
+| shuttle | short and tall, graphite + white, two continuous window rows, side airstair, yellow stripe | 8 266 | 6.51 / 7.60 |
+| liner | the longest, a dart, pink band, panoramic window band, observation blister, three fins, three engines | 8 768 | 7.42 / 6.12 |
+| medical | compact and wide, white + red, crosses on the roof and flanks, 2.8 m rear ramp, stretcher hatch | 6 984 | 6.16 / 5.60 |
+| science | medium, #7C8CFF deck, 13 m dish mast (the tall one), antenna array, belly instrument pods | 8 460 | 6.83 / 13.25 |
+| courier | the smallest wedge (~4.5 m), black + gold chevrons, one engine | 5 448 | 4.52 / 3.47 |
+
+All: 8 materials, COLOR_0, registration codes (SH-12, LN-03, MD-21, SC-09, CR-01), nav lights, Lights node.
+Godot import done, `check` 150 scripts 0 failed. `art/ships/.gdignore` added (renders are not game assets).
+
+**Renders** (`art/ships/`): per ship `<kind>_turnaround.png`, `_on_pad.png`, `_on_pad_rear.png`, `_flight.png`,
+`_night.png`; `fleet_lineup.png`, `fleet_top.png`. Requests updated: `ART-B-to-RENDER.md` item 2 (all six
+tables), `ART-B-to-ART-HAB.md` item 2.
+
+**Not tested:** anything in the running game.
+
+## 2026-09-25 — v3.1: critic round 11 fixes 1–8
+
+| fix | change |
+|---|---|
+| 1 shuttle top | graphite roof, yellow centre stripe, raised passenger deck (0.6–0.75 m, rear two thirds) with its own window strip and a yellow stripe |
+| 2 liner dart | 2.5 m tapered nose (no bridge block), swept delta wings with pink leading edges and winglets (plan span 6.6 m), pink band on the roof spine |
+| 3 cockpits | bus windscreen (shuttle), wraparound band (liner), bubble canopy (courier); trader, medical and science keep the faceted bridge |
+| 4 night windows | `Window` #FFD9A0 emissive 0.9 (bridge), new `CabinWindow` #FFD9A0 emissive 0.5 (passenger windows, lit doorways); mullions dark. `PaletteMetal` merged into `Palette` to stay at 8 materials |
+| 5 night renders | `<kind>_night_ramp.png` from the ramp side for every ship (the belly and door floods are in view) |
+| 6 trader ramp | a cargo ramp on the −Y side of the tail (stands in the doorway when stowed); rear legs 0.5 m forward; rear hover thrusters moved |
+| 7 flight renders | near top-down camera (80°), ship centred over the pad (the parallax made it look off-centre) |
+| 8 insets | 3 flank panel insets per side on shuttle, medical and science |
+
+Triangles: trader 10 192, shuttle 8 654, liner 9 448, medical 7 044, science 8 520, courier 5 650; all 8 materials,
+radius ≤ 7.46 m, height ≤ 13.25 m. Godot import done; `check` 151 scripts, 0 failed. The RENDER table in
+`docs/requests/ART-B-to-RENDER.md` item 2 was regenerated from the GLB files (the trader ramp, thrusters and
+materials changed). ART-HAB note: item 3. Not tested in the running game.
+
+## 2026-09-25 — v3.1: critic round 12 (floodlights)
+
+- Every ship: a large lit lens (r 0.18 m, `Light` in `Lights`) under the belly next to the ramp hinge, aimed at the
+  ramp and the deck at its foot (steeper for the rear ramps of medical and science).
+- Every flood is now an empty `Flood_<i>` (`extras.role = "flood"`, local +X = aim): 3–5 per ship. Positions and
+  aims for all six ships: `docs/requests/ART-B-to-RENDER.md` item 3.
+- Blender night renders place a warm 1 300 W spot on every `Flood_*`; `<kind>_night_ramp.png` re-rendered for all six.
+- Triangles now: trader 10 296, shuttle 8 758, liner 9 552, medical 7 156, science 8 632, courier 5 746; 8 materials.
+  Godot import done; `check` 157 scripts, 0 failed. Not tested in the running game.

@@ -1,8 +1,23 @@
-# Frontier Habitat 3.0
+# Frontier Habitat 3.1
 
 ![Frontier Habitat key art](art/key_art.png)
 
 **Play in the browser:** https://paulbarby.github.io/frontier-habitat/
+
+**Version 3.1** adds visiting ships and visitors: six ship kinds land on an upgraded pad
+(traders with a trade screen and credits, immigrant shuttles where you choose each settler,
+tourist liners, medical, science and inspector ships), with a one-day arrival forecast and
+Grant / Deny. Airlocks now cycle through a real pressure chamber (suit room, inner door,
+chamber, outer door, porch) in two sizes. Doors are solid, wall decals clear every doorway, and
+colonists walk smooth paths through doorways and around furniture — never through walls.
+Sound works in the browser, with six mood-music tracks and positional world sounds. Every
+window stays inside the view. Status: `docs/IMPLEMENTED.md`; contract: `docs/V3_1_DESIGN.md`.
+
+| | |
+|---|---|
+| ![Ship landing](art/screenshots/v31_02_landing.png) | ![Ships at night](art/screenshots/v31_03_ships_night.png) |
+| ![Fleet](art/screenshots/v31_06_fleet.png) | ![Airlock cutaway](art/screenshots/v31_05_airlock.png) |
+| ![Traffic panel](art/screenshots/v31_01_traffic_panel.png) | ![Door states](art/screenshots/v31_04_door_states.png) |
 
 **Version 3.0** adds rigged and animated astronauts (a suit and an indoor variant, 24 clips,
 smooth pose transitions) who sleep in beds, sit at tables and work at consoles; detailed
@@ -127,7 +142,7 @@ the same commands a player submits. The colonists build it under the normal rule
 "/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python tools/blender/rooms_build.py
 # exteriors, ship, crops, colonists, props: see tools/blender/ext_report.md
 
-# Tests: 60 headless tests, about eleven minutes (add "!long_" to skip the long runs)
+# Tests: 76 headless tests, about thirteen minutes (add "!long_" to skip the long runs)
 node tools/godot.mjs test
 
 # Web build

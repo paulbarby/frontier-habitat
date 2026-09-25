@@ -80,13 +80,17 @@ func _forecast() -> Dictionary:
 	var day_len: float = float(bal["day_length"])
 	var night: float = day_len - float(sim.planet["daylight_seconds"])
 	var night_need: float = maxf(0.0, critical_p - wind_p) * night / day_len
-	var per_day_food: float = maxf(1.0, float(pop))
-	var per_day_water: float = maxf(1.0, float(pop) * float(bal["drink_units"]))
+	# Visitors (V3.1) eat, drink and breathe here: they count in food, water and air use,
+	# never in "pop".
+	var eaters: int = pop + sim.visitor_count()
+	var per_day_food: float = maxf(1.0, float(eaters))
+	var per_day_water: float = maxf(1.0, float(eaters) * float(bal["drink_units"]))
 	var f := {
 		"pop": pop, "meals": meals, "meal_days": float(meals) / per_day_food,
 		"dishes": meals - rations, "rations": rations,
 		"water": water_units, "water_days": water_units / per_day_water,
-		"beds": beds, "o2_make": o2_make, "o2_need": float(pop) * float(bal["oxygen_per_colonist"]),
+		"beds": beds, "o2_make": o2_make, "o2_need": float(eaters) * float(bal["oxygen_per_colonist"]),
+		"visitors": eaters - pop,
 		"energy": energy, "energy_cap": energy_cap, "night_need": night_need, "critical_p": critical_p,
 	}
 	f["need_meals"] = pop
@@ -99,7 +103,7 @@ func avg_morale() -> float:
 	var n := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "alive":
+		if a["state"] == "alive" and a["kind"] != "visitor":
 			s += float(a["morale"])
 			n += 1
 	return s / n if n > 0 else 0.0
@@ -226,7 +230,7 @@ func _tutorial(pr: Dictionary, f: Dictionary) -> void:
 			done = int(f["pop"]) > 0
 			for aid in sim.state["agents"]:
 				var ag: Dictionary = sim.state["agents"][aid]
-				if ag["state"] == "alive":
+				if ag["state"] == "alive" and ag["kind"] != "visitor":
 					var bed: Dictionary = blds.get(ag["bed"], {})
 					if bed.is_empty() or bed["def"] == "lander":
 						done = false
@@ -398,6 +402,6 @@ func failure_report() -> Dictionary:
 	var causes := {}
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "dead":
+		if a["state"] == "dead" and a["kind"] != "visitor":
 			causes[a["cause"]] = int(causes.get(a["cause"], 0)) + 1
 	return {"day": sim.util.day_number(), "causes": causes, "events": lines}

@@ -117,13 +117,18 @@ def build_water_recycler(rm):
     R, Rw, Ri = rm.R, rm.Rw, rm.Ri
     rm.build_base(lamps=(160.0, 200.0) if s else (), bolts=s >= 2, floor="grate")
     rd = min(Rw - 0.85 - 0.12 * s, max(0.6 * R + 0.15, Rw * 0.62))
+    # round 12: the deck ring Rw - 0.62 .. Rw is the doorway housing's zone (door kit 3.1, HX -0.56): the filter
+    # columns stand between the drum and that ring, so no hood can meet a column at any door angle
+    KEEP = Rw - 0.62
+    rd = min(rd, KEEP - 2 * (0.24, 0.30, 0.36, 0.42)[s] - 0.06)
     D = (2.6, 2.8, 3.0, 3.2)[s]
     setback_drum(rm, rd, D, wall="Hull", band="Accent", ribs=(6, 10, 12, 14)[s], band_z=D - 0.55,
                  windows=(1.75, 2.05), win_mat="WaterBlue", win_seams=(6, 10, 12, 14)[s])
     ro = rm.roof
     nc = (6, 8, 10, 12)[s]
-    rc = (Rw + rd) / 2 + 0.02
-    cr = min(0.42, (Rw - rd) / 2 - 0.10, math.pi * rc / nc * 0.62)
+    cr = min(0.42, (KEEP - rd - 0.03) / 2)
+    rc = rd + 0.03 + cr
+    cr = min(cr, math.pi * rc / nc * 0.62)
     hc = (1.6, 1.9, 2.2, 2.5)[s]
     tops = []
     for k in range(nc):

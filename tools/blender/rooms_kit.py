@@ -446,6 +446,7 @@ class Room:
             out.append(self.lights)
         out += [w for w in self.walls if w.faces]
         out += [q for q in getattr(self, "extra_parts", []) if q.faces]
+        out += [q for q in getattr(self, "decals", []) if q.faces]
         return out
 
     def anchor(self, name, pos, yaw=0.0):
@@ -1539,6 +1540,7 @@ def ao_sets_for(objs):
     only where a doorway replaces it)."""
     walls = tuple(sorted(n for n in objs if n.startswith("Wall_")))
     talls = tuple(sorted(n for n in objs if n.startswith("Tall_")))
+    decals = tuple(sorted(n for n in objs if n.startswith(("Decal_", "Upper_")) or n == "NameSign"))
     if not walls and not talls:
         return AO_SETS
     out = {}
@@ -1548,6 +1550,9 @@ def ao_sets_for(objs):
         out[w] = ("Base", "Interior") + walls + talls
     for t in talls:
         out[t] = ("Base", "Interior") + walls + talls
+    for d in decals:
+        src = d.rsplit("_", 1)[-1] if d.startswith("Decal_") else "Roof"
+        out[d] = tuple(AO_SETS.get(src, AO_SETS["Base"])) + walls + (d,)
     return out
 
 
@@ -1802,6 +1807,41 @@ def _spec_of(mset, name):
 WALL_SHELL = ("Hull", "HullDark", "Accent", "Frame", "Trim", "Window", "Glass", "Metal", "Rubber")   # models.gd
 
 
+# Draw-call budget of the shell (RENDER, 2026-09-25): at most MAX_SHELL_SURFACES materials in each game group of
+# the outer shell (Base, Roof, L2..L5).  The game draws INTERIOR_ONLY materials of Base with the interior shader
+# (presentation/models.gd), so they keep their names.
+MAX_SHELL_SURFACES = 6
+INTERIOR_ONLY = ("Floor", "FloorDark", "Wood", "Cushion", "Fabric", "Screen")
+_GAME_GROUPS = ["Interior", "Roof", "Rotor", "Lights", "Scaffold", "EngineGlow", "Plasma", "Damage1", "Damage2",
+                "Damage3", "Stage1", "Stage2", "Stage3", "Body", "ArmL", "ArmR", "LegL", "LegR", "L2", "L3", "L4", "L5",
+                "Hull", "DoorLTop", "DoorRTop", "DoorL", "DoorR", "FrameTop", "Sign", "Turret",
+                "InnerDoorLTop", "InnerDoorRTop", "InnerDoorL", "InnerDoorR", "InnerStatus", "InnerLights",
+                "OuterDoorLTop", "OuterDoorRTop", "OuterDoorL", "OuterDoorR", "OuterFrameTop", "OuterFrame",
+                "OuterStatus", "OuterLights", "ChamberLight", "PressurePlateTop", "PressureLight_0", "PressureLight_1",
+                "PressureLight_2", "Beacon", "Status", "NameSign", "PorchTop", "Base"]   # PorchTop: requested of RENDER
+
+
+def game_group(n):
+    """The group the game merges an object into (presentation/models.gd group_of)."""
+    if (n.startswith("Wall_") and n[5:7].isdigit()) or (n.startswith("Upper_") and n[6:8].isdigit()):
+        return "Walls"
+    if n.startswith("Decal_") and n[6:8].isdigit():
+        src = n[9:]
+        if src.startswith("Roof"):
+            return "DecalR"
+        if len(src) >= 2 and src[0] == "L" and src[1].isdigit():
+            return "DecalL" + src[1]
+        return "DecalB"
+    if n.startswith("Tall_") and n[5:].isdigit():
+        return "Tall"
+    for g in _GAME_GROUPS:
+        if n.startswith(g):
+            if g in ("L2", "L3", "L4", "L5") and len(n) > 2 and n[2].isdigit():
+                continue
+            return g
+    return "Base"
+
+
 def palette_target(mset, name, keep=()):
     """Where a material goes: 'Palette' (plain), 'PaletteMetal' (metal), or itself (named or emissive)."""
     if name in PALETTE_KEEP or name in keep:
@@ -1880,11 +1920,63 @@ def palette_merge(o, mset, max_surfaces=MAX_SURFACES, keep=()):
     return before, len(order)
 
 
+SHELL_FOLD_INTO = "Hull"
+SHELL_FOLD = ("HullDark", "Frame", "Metal", "Rubber", "Trim")     # all darker than Hull on every channel
+
+
+def shell_fold(o, mset, into=SHELL_FOLD_INTO, fold=SHELL_FOLD):
+    """The wall shell keeps names the game knows (presentation/models.gd SHELL_MATS) but uses fewer of them: faces
+    of the darker plain shell materials take the `into` material, their colour ratio (linear) goes into the
+    corner colour with the baked AO.  Returns (before, after) material counts."""
+    me = o.data
+    names = [m.name.split(".")[0] if m else "" for m in me.materials]
+    before = len(set(names))
+    if not any(n in fold for n in names):
+        return before, before
+    attr = me.color_attributes.active_color or (me.color_attributes[0] if me.color_attributes else None)
+    if attr is None:
+        return before, before
+    base = BA.hex_to_linear(_spec_of(mset, into).get("color", "#ffffff"))
+    ratio = {}
+    for n in set(names):
+        if n in fold:
+            c = BA.hex_to_linear(_spec_of(mset, n).get("color", "#ffffff"))
+            ratio[n] = tuple(min(1.0, c[k] / max(1e-4, base[k])) for k in range(3))
+    order = sorted({(into if n in fold else n) for n in names})
+    orig = [p.material_index for p in me.polygons]
+    me.materials.clear()
+    slot = {}
+    for nm in order:
+        me.materials.append(mset.get(nm))
+        slot[nm] = len(me.materials) - 1
+    cols = [0.0] * (len(attr.data) * 4)
+    attr.data.foreach_get("color", cols)
+    for p in me.polygons:
+        src = names[orig[p.index]]
+        if src in ratio:
+            r, g, b = ratio[src]
+            for li in p.loop_indices:
+                cols[li * 4] *= r
+                cols[li * 4 + 1] *= g
+                cols[li * 4 + 2] *= b
+            p.material_index = slot[into]
+        else:
+            p.material_index = slot[src]
+    attr.data.foreach_set("color", cols)
+    me.update()
+    return before, len(order)
+
+
 def build_file(rm, path, also=(), ao=None):
     """Turn a finished Room into objects, bake AO, export atomically.  Returns (objs, rays, seconds)."""
     t0 = time.time()
     reset_scene()
     mset = MatSet(ACCENTS[rm.cat])
+    if getattr(rm, "v3", False) and not getattr(rm, "decals_done", False):
+        import interior_kit as IK
+        rm.decal_info = IK.split_decals(rm)
+        IK.name_sign(rm)
+        rm.decals_done = True
     objs = {}
     for part in rm.parts():
         if not part.faces:
@@ -1905,6 +1997,15 @@ def build_file(rm, path, also=(), ao=None):
             elif nm.startswith("Wall_"):
                 # wall-side items: their plain materials join the palette; the wall shell keeps its names
                 palette_merge(o, mset, max_surfaces=99, keep=WALL_SHELL)
+                shell_fold(o, mset)                 # and uses fewer of them (RENDER 2026-09-25)
+            elif nm.startswith("Upper_"):
+                shell_fold(o, mset)
+            elif game_group(nm) in ("Base", "Roof", "L2", "L3", "L4", "L5"):
+                # the outer shell (RENDER 2026-09-25): plain materials join the palette, <= 6 per game group
+                rm.surfaces[nm] = palette_merge(o, mset, max_surfaces=MAX_SHELL_SURFACES,
+                                                keep=INTERIOR_ONLY if game_group(nm) == "Base" else ())
+            elif game_group(nm).startswith("Decal"):
+                palette_merge(o, mset, max_surfaces=99)
     export_glb_atomic(path)
     for extra in also:
         copy_atomic(path, extra)

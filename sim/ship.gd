@@ -68,7 +68,7 @@ func access_candidates(b: Dictionary) -> Array:
 	var seg: Array = segment_of(b)
 	var dirv: Vector2 = ((seg[1] as Vector2) - seg[0]).normalized() if (seg[1] as Vector2) != seg[0] else Vector2.RIGHT
 	var side: Vector2 = dirv.orthogonal()
-	var off: float = float(b["radius"]) + 1.2
+	var off: float = float(b["radius"]) + float(sim.bal.get("nav_clearance", 0.6)) + 1.0
 	var out: Array = []
 	for f in [0.5, 0.2, 0.8, 0.0, 1.0]:
 		var c: Vector2 = (seg[0] as Vector2).lerp(seg[1], f)

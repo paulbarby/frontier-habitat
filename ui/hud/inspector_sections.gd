@@ -999,6 +999,9 @@ func agent(a: Dictionary) -> void:
 			if float(a.get("nutrition", {}).get(k, 100.0)) < 25.0:
 				low = true
 		insp.add_badge(Kit.badge("DEFICIENT" if low else ("WELL FED" if score >= 70.0 else "FED"), P.RED if low else (P.GREEN if score >= 70.0 else P.AMBER)))
+	if d.is_visitor(a):
+		_visitor(a)
+		return
 	insp.add_tabs([["status", "Status"], ["nutrition", "Nutrition"]] if score >= 0.0 else [["status", "Status"]])
 	if insp.tab == "nutrition" and score >= 0.0:
 		_nutrition(a)
@@ -1006,6 +1009,37 @@ func agent(a: Dictionary) -> void:
 		_needs(a)
 	var f: HFlowContainer = insp.footer()
 	f.add_child(Kit.button("Follow", func(): insp.hud.main.follow_selected(), "Follow\nThe camera follows this colonist. Key F.", "", "follow", 14))
+
+## Visitor card (version 3.1, V3_1_DESIGN §6.5): kind, ship, leaves in, paid, what the visit
+## gave them so far, health. Visitors take no jobs.
+func _visitor(a: Dictionary) -> void:
+	var d = _d()
+	var s = _sim()
+	var id: int = a["id"]
+	var vk: String = String(a.get("vkind", ""))
+	var kname: String = String(d.ship_kind(vk).get("vname", vk.capitalize()))
+	var where: String = "Outside" if a["where"] == "out" else "In " + String(s.state["buildings"].get(a.get("bld", -1), {}).get("name", "a room"))
+	insp.set_header(d.ship_icon(vk), P.GOLD, String(a["name"]), "%s, visitor  ·  %s" % [kname, where])
+	insp.add_badge(Kit.badge("VISITOR", P.GOLD))
+	var sec: VBoxContainer = _section("Visit", "ship", P.GOLD)
+	var g: GridContainer = _grid()
+	sec.add_child(g)
+	var CS = load("res://ui/screens/colonists_screen.gd")
+	_fact(g, "Kind", func(): return kname)
+	_fact(g, "Ship", func(): return String(CS.visitor_info(insp.hud, s.state["agents"].get(id, a))["ship"]))
+	_fact(g, "Leaves in", func(): return String(CS.visitor_info(insp.hud, s.state["agents"].get(id, a))["leaves"]), P.AMBER)
+	_fact(g, "Paid", func(): return "%d credits" % int(s.state["agents"].get(id, a).get("visit", {}).get("paid", 0)), P.GOLD)
+	_fact(g, "Health", func(): return "%d" % int(float(s.state["agents"].get(id, a).get("health", 100.0))))
+	_fact(g, "Doing", func(): return String(s.state["agents"].get(id, a).get("goal", "")), P.CYAN)
+	var visit: Dictionary = a.get("visit", {})
+	var got: Array = []
+	for pair in [["ate", "ate a meal"], ["slept", "slept in a bed"], ["rec", "had recreation"], ["treated", "was treated"], ["toured", "toured rooms"], ["study", "worked in a lab"]]:
+		var v = visit.get(pair[0], null)
+		if v != null and (typeof(v) == TYPE_BOOL and v or (typeof(v) in [TYPE_INT, TYPE_FLOAT] and float(v) > 0.0) or (typeof(v) == TYPE_ARRAY and not (v as Array).is_empty())):
+			got.append(pair[1])
+	sec.add_child(Kit.wrap(("So far: " + ", ".join(got) + ".") if not got.is_empty() else "No service yet. Visitors pay for meals, beds and recreation.", 13, P.TEXT_2))
+	sec.add_child(Kit.label("Visitors breathe and eat like colonists. They take no jobs.", "SmallLabel", 12, P.TEXT_3))
+	insp.footer().add_child(Kit.button("Follow", func(): insp.hud.main.follow_selected(), "Follow\nThe camera follows this visitor. Key F.", "", "follow", 14))
 
 func _needs(a: Dictionary) -> void:
 	var s = _sim()

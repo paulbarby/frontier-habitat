@@ -116,6 +116,16 @@ NPC_MATERIALS = {
     "Jumpsuit":   dict(color="#243247", rough=0.80),
     "Skin":       dict(color="#d9a47e", rough=0.72),
     "Hair":       dict(color="#4a3326", rough=0.85),
+    # visitor attachments (V3_1 section 6.4): fixed colours, not tinted by the game
+    "VisRed":     dict(color="#d7263d", rough=0.50),
+    "VisGold":    dict(color="#d9a93a", metal=0.75, rough=0.32),
+    "VisGrey":    dict(color="#6b7280", rough=0.72),
+    "VisWhite":   dict(color="#f2f3f5", rough=0.62),
+    "VisDark":    dict(color="#1e2024", rough=0.50),
+    "VisGraphite": dict(color="#3a3f47", rough=0.72),
+    # retro-reflective trims: a weak emission keeps them readable at night (critic round 12)
+    "VisHiVis":   dict(color="#e4f218", rough=0.45, emit="#e4f218", emit_strength=0.5),
+    "VisGoldReflect": dict(color="#d9a93a", metal=0.30, rough=0.35, emit="#d9a93a", emit_strength=0.8),
 }
 
 
@@ -796,7 +806,43 @@ class Timeline:
                         lag = lg
                         break
             P[nm] = self.sample_key(nm, t - lag)
+        # hand orientations: slerp between keys (eased), not three Euler splines (no gimbal swings)
+        for s in SIDES:
+            ks = ["hand.%s.w%s" % (s, c) for c in "xyz"]
+            if not all(k in self.names for k in ks):
+                continue
+            lag = 0.0
+            if lags:
+                for prefix, lg in lags.items():
+                    if ks[0].startswith(prefix):
+                        lag = lg
+                        break
+            q = self._slerp_hand(ks, t - lag)
+            e = q.to_euler("XYZ")
+            P[ks[0]], P[ks[1]], P[ks[2]] = degrees(e.x), degrees(e.y), degrees(e.z)
         return P
+
+    def _slerp_hand(self, ks, t):
+        keys = self.keys
+        if self.loop:
+            t = t % self.length
+            times = [k[0] for k in keys] + [keys[0][0] + self.length]
+            poses = [k[1] for k in keys] + [keys[0][1]]
+        else:
+            t = max(keys[0][0], min(keys[-1][0], t))
+            times = [k[0] for k in keys]
+            poses = [k[1] for k in keys]
+        i = 0
+        while i < len(times) - 2 and t > times[i + 1]:
+            i += 1
+        h = times[i + 1] - times[i]
+        u = 0.0 if h <= 0 else max(0.0, min(1.0, (t - times[i]) / h))
+        u = u * u * (3.0 - 2.0 * u)
+        q0 = qeuler(poses[i].g(ks[0]), poses[i].g(ks[1]), poses[i].g(ks[2]))
+        q1 = qeuler(poses[i + 1].g(ks[0]), poses[i + 1].g(ks[1]), poses[i + 1].g(ks[2]))
+        if q0.dot(q1) < 0:
+            q1 = -q1
+        return q0.slerp(q1, u)
 
 
 # --------------------------------------------------------------------------------------
@@ -874,20 +920,26 @@ def reset_pose(rig):
 # --------------------------------------------------------------------------------------
 # Export
 # --------------------------------------------------------------------------------------
-def export_glb_skinned(path):
+def export_glb_skinned(path, animations=True, only=None):
+    """only: objects to export (the rig must be among them); None = the whole scene."""
     tmp = path[:-4] + ".tmp.glb"
     if os.path.exists(tmp):
         os.remove(tmp)
     sc = bpy.context.scene
+    if only is not None:
+        for o in bpy.context.view_layer.objects:
+            o.select_set(False)
+        for o in only:
+            o.select_set(True)
     sc.render.fps = FPS
     sc.render.fps_base = 1.0
     bpy.ops.export_scene.gltf(
         filepath=tmp,
         export_format="GLB",
-        use_selection=False,
+        use_selection=only is not None,
         export_apply=False,
         export_yup=True,
-        export_animations=True,
+        export_animations=animations,
         export_animation_mode="ACTIONS",
         export_force_sampling=True,
         export_frame_step=1,

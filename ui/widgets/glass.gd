@@ -1,4 +1,5 @@
 extends Node2D
+const PG = preload("res://ui/poly_guard.gd")
 ## Frosted glass behind a panel: draws the blurred screen inside the panel outline.
 ## It is a Node2D, so containers do not lay it out, and it inherits the panel's modulate,
 ## so a fading panel fades its blur too. One blur shader for every panel.
@@ -76,4 +77,5 @@ func _draw() -> void:
 	if p == null:
 		return
 	var pts: PackedVector2Array = FhStyle.shape(Rect2(Vector2.ZERO, p.size), chamfer)
-	draw_colored_polygon(pts, Color.WHITE)
+	if PG.ok(pts, "glass.gd:79"):
+		draw_colored_polygon(pts, Color.WHITE)

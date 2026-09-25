@@ -1,4 +1,5 @@
 extends Control
+const PG = preload("res://ui/poly_guard.gd")
 ## Sparkline: a tiny area + line of the last values, with a dot on the newest value.
 ## points: [[x, value], ...]. show_range draws the min and max values.
 
@@ -48,7 +49,8 @@ func _draw() -> void:
 	if line[line.size() - 1] != lp:
 		line.append(lp)
 	for k in line.size() - 1:
-		draw_polygon(PackedVector2Array([line[k], line[k + 1], Vector2(line[k + 1].x, r.end.y), Vector2(line[k].x, r.end.y)]),
+		if PG.ok(PackedVector2Array([line[k], line[k + 1], Vector2(line[k + 1].x, r.end.y), Vector2(line[k].x, r.end.y)]), "sparkline.gd:51"):
+			draw_polygon(PackedVector2Array([line[k], line[k + 1], Vector2(line[k + 1].x, r.end.y), Vector2(line[k].x, r.end.y)]),
 			PackedColorArray([P.with_alpha(color, 0.22), P.with_alpha(color, 0.22), P.with_alpha(color, 0.0), P.with_alpha(color, 0.0)]))
 	draw_polyline(line, color, 1.6, true)
 	draw_circle(lp, 3.0, color)

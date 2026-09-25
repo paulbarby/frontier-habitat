@@ -128,3 +128,54 @@ per the critic. No in-game shots (RENDER).
 - New check: the suit visor front in repair_kneel is 9.9 cm from the panel (need ≥ 6 cm), measured on the `Visor` faces.
 - `npc_verify` 236 passed, 0 failed, 0 pending. `npc_check.gd` PASS (140 tests, 0 failures). Indoor 5,964 triangles
   (Body 3,356 + heads 588 / 676 / 636 / 708), suit 6,839.
+
+## v3.1 — 2026-09-25 — `suit_swap` clip and visitor looks (V3_1 §5.4, §6.4)
+
+- `suit_swap` (both variants): 60 frames, 2.0 s. Hands go out in front, then to the helmet sides and hold across the
+  cut at frame 30. Then the hands go to the chest seals, past the belt, and back to the stand pose. Every key is FK,
+  converted from IK designs (`ik_to_fk`), so no IK weight changes and the hold is exactly still. The torso and head
+  in the chest key are the same as at the cut, so nothing moves early. Largest step 14.24° per frame. Cut frame:
+  identical in both files, 0.26° between frames 29 and 31. `clips.suit_swap.cut_frame = 30`.
+- Visitor looks (`tools/blender/npc_visitors.py`): 7 looks (trader, tourist × 3 sets, medical, science, inspector) as
+  colour groups on the existing materials, plus one skinned attachment per kind in the new files
+  `assets/models/astronaut_visitor_suit.glb` and `astronaut_visitor_indoor.glb` (rig + `Vis_<kind>`, no clips).
+  - suit: trader belt and pouches; tourist camera and pennant; medical red crosses; science sensor mast;
+    inspector gold crest, badge and cuff rings.
+  - indoor: trader grey vest; tourist camera, bag and sunglasses; medical crosses, arm band and stethoscope;
+    science white lab jacket; inspector epaulettes, gold cords, badge and peaked cap.
+  - The peaked cap was added after the first lineup. The first lineup showed the indoor inspector and the navy/orange
+    technician colonist nearly the same at 30 px.
+  - Palette and selection rule: `astronaut_anims.json` → `visitors`. Request to RENDER: 2026-09-25 section.
+- `npc_verify` new checks:
+  - visitor files: meshes, the same skeleton and joint order, COLOR_0, weights;
+  - triangles per visitor on screen;
+  - the palette table: 5 kinds, 3 tourist sets, groups;
+  - the suits differ from each other and from the colonist suit;
+  - each attachment stays within 2 cm of the body under it (same main bone) in every clip;
+  - no attachment point below z −0.01.
+  - The hip pouch was flattened to 2.2 cm; the dead pose had put it 1.4 cm into the ground.
+- Sheets: `art/npc/visitors_lineup.png`, `art/npc/visitors_turnaround.png`; all other sheets re-rendered (the suit swap
+  is on `transitions.png` and both clip sheets).
+
+**Measured:** `npc_verify` 279 passed, 0 failed, 0 pending, 12 info. `npc_check.gd`: PASS, 140 tests, 0 failures
+(no suit_swap tests yet: RENDER's file). `godot.mjs check`: 156 scripts, 0 failed. Triangles per character on screen:
+suit 6,951 max, indoor 4,630 max.
+
+**Not done / not tested:** visitors in the game (RENDER: loader, shader modes, look code). The indoor inspector cap
+does not fit head 1 (the bun), so RENDER must skip that head. Night readability of the black inspector suit is not
+checked. The cut-frame pose is not checked in Godot.
+
+## v3.1 — 2026-09-25 — critic round 12 (visitors 0.76)
+
+1. Indoor tourists: gaiters from below the knee pad over the ankle, and boot covers (the boot upper, 3.5 % larger,
+   with weights taken at the unscaled point), in the tour colour. At 30 px they now differ from the scientist.
+2. Indoor trader: graphite vest with a hi-vis band and hi-vis shoulder straps.
+3. Suit inspector: reflective gold bands on the thighs and shins, and two stripes on the pack (weak emission).
+   Crest cut to 6 segments and cuff rings removed, to stay under 7,000 triangles (6,989).
+4. Inspector cap: second version `Vis_inspector_h1` with a ring crown round the bun. The rule that RENDER skips
+   head 1 is removed. The mesh name suffix `_h<digits>` gives the heads.
+
+`npc_verify` 281 passed, 0 failed. `npc_check.gd` PASS (140 tests, 0 failures). `godot.mjs check` 157 scripts,
+0 failed. Sheets re-rendered.
+
+**Not tested:** night rendering in the game; visitors in the game.

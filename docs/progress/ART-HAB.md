@@ -5,6 +5,98 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-09-25 — critic round 14: cut-wall caps
+
+- FrameCap / InnerFrameCap / OuterFrameCap, collar caps and chamber wall caps: a light Trim plate (8 mm proud)
+  with a Frame-coloured top inset 2.5 cm (`interior_links.cap_plate`, `cap_top`). Links 30 ok, airlocks 0 flags,
+  cutaway probe 0 objects above 1.40 m. Godot re-imported, check green, exported.
+
+## 2026-09-25 — critic round 13 (airlock in game, housing cap, airlock 49)
+
+- Airlock cutaway: 0 objects above 1.40 m in the groups the game shows (probe + build check). Porch pole top →
+  `PorchTop` (RENDER adds the group). Suit racks and refill ports clamped. Rib stubs in all rooms end at 1.40.
+- `FrameCap` / `InnerFrameCap` / `OuterFrameCap`: clean cap plates at 1.40 m; the fighting top and bottom faces
+  were removed; the collar cut is capped.
+- Airlock 49 (r28, 259.5°): no wall item beside the inner door housing ends; bench already a wall item.
+- Build: 96 rooms 0 flags, 30 links 0 flags; Godot check 169 / 0 failed; export pck 79.6 MB.
+
+## 2026-09-25 — minimum free door angle, content door file, airlock bench
+
+- Build check: S ≥ 120°, M/L/XL ≥ 180° free; airlock lanes may be blocked only by the chamber.
+- `content/door_blocked.json` and the docs copy are written by every room build (the same file).
+- Oxygen plant S 0° → 189°, M 78° → 221° (one plinth in the −Y half). Greenhouse, fungus L/XL: 360° with SIM's trays.
+  Fungus M 184° (4 racks; 3 racks is SIM's decision).
+- Airlock bench → wall item. r28 75° free, with no furniture in any lane.
+- Build: 97 rows 0 flags; Godot check 167 scripts / 0 failed; export pck 79.6 MB.
+
+## 2026-09-25 — coordinator decisions: door lanes to SIM, airlock_r28
+
+- `airlock_r28.glb` (R 2.8, old saves): new design, 2 riders, chamber about 1.56 m. RENDER: use it for R < 3.0 (F0).
+- `ART-HAB-door_blocked.json` is written by every room build; a `changes` list records what changed, and the
+  build prints `door_blocked.json CHANGED` so I post it to SIM.
+- Narrowed: habitat S 160° → 360° free (beds 0.12 m in, smaller table), kitchen S 251° → 336°, lounge S 332° → 341°.
+  `Plan.lane_r()` gives layouts the radius that keeps every lane clear.
+- Build: 96 room files 0 flags; links 30 ok; Godot check 165 scripts / 0 failed; export pck 79.5 MB.
+
+## 2026-09-25 — critic round 12 fixes + RENDER paths request (door lanes, shell materials)
+
+- Round 12:
+  1. Airlock cutaway proof: `art/interiors/airlock_{m,l}_cut_side{,_b}.png` (red ring = 1.40 m).
+  2. Water recycler: filter columns inside Rw − 0.62, clear of every door housing. Drum radius
+     `min(old, Rw − 0.62 − 2·cr − 0.06)`.
+  3. Flat lid `doorway_flat_r*` (Frame) for podium, drum and setback rooms.
+  4. `upper_band.glb` strips to the band cap. Upper skin faces are cut at the segment lines. The patch over the
+     housing starts at 2.24 m.
+  5. Pressure lights: 8 cm lamps; the dark plate is `PressurePlateTop`. Picture: `airlock_m_pressure_lights.png`.
+  6. Pad: angled deflector (rail, stripe, scorch), hose reel, fuel stripes, lit kiosk, mast lamp, walkway lanes,
+     six tie-downs; 6 326 tris. Pictures: `pad31_*`, `pad31_close_*`.
+- Airlock files follow content: `airlock_m` (= `airlock.glb`, R 3.4) and `airlock_l` (R 4.0).
+- Door lanes: the check is `door_blocked` (a 0.9 m lane to the aisle ring). M ring 1.00 m. M/L/XL rooms clear at
+  every angle: 59 of 71. The other types are listed for SIM. Kitchen, lounge, medical and habitat M layouts
+  changed. Two footprint bugs fixed (medical supply island, scanner).
+- Shell materials: the wall shell folds into Hull (max 7 → 4). Base, Roof and L parts use the palette (≤ 6 per
+  group, build check). Link parts use the palette too.
+- Build: 95 room files, 0 flags; 30 link files, 0 flags; exteriors 60, 0 flagged. Godot: import done, check
+  163 scripts / 0 failed, export `build/web_art_hab` (pck 79.1 MB).
+
+## 2026-09-25 — v3.1 ROLL-OUT (critic round 10, ART-B round 11)
+
+| item | result |
+|---|---|
+| door kit | 10 radius variants `doorway_r250 .. r925.glb` (+ `doorway.glb` = r550): the room face follows the wall, rounded top corners, 8 cm chamfers, a curved hood; `StatusGreen` (#5EE07A) status strip and reveal lights; kick plates and a chevron strip at the meeting edge. 1 482 tris each. The open-leaf containment check stays. |
+| band end | `wall_patch_plain.glb` (no band) and `band_cap.glb`: the wall band ends 5 cm before the housing (asin(1.77/Rw)) with a cap. |
+| upper wall | `wall_patch_upper.glb` closes the upper wall of podium / drum / setback rooms beside and over a door housing (`Upper_<seg>` objects hide per segment). |
+| decals | every room file split: 8 898 `Decal_<seg>_<source>` objects, 1 630 `Upper_<seg>`, a `NameSign` each. Level parts that were only wall decoration (L3/L4 of 11 files) exist now only as decals (build check adjusted). |
+| airlock | sizes: `airlock.glb` R 2.8 (2 riders, chamber 1.56 m), `airlock_m.glb` R 3.4 (2 riders, chamber 2.4 m), `airlock_l.glb` R 4.0 (4 riders, chamber 3.6 m). Amber `Beacon` object, three `PressureLight_*` over the inner door, faired chamber block (block top meets the dome), a flat porch grate with a striped lip and two bollards. Cut at 1.40 m with solid caps in the cutaway (the upper parts are in Roof / `…Top`). |
+| pad | `landing_pad.glb`: deck r 9.0, apron to r 11.3 (footprint 11.5, asked of SIM), `Anchor_Ship` (yaw 180) and `Anchor_Fuel`, ramp lanes +X ±25° and +Y ±40° clear from 6.5 m, kiosk at −X r 10.55, blast deflector 228–300°, fuel station at 318° with a floor fuel line, two light masts, 20 amber edge lights, one purple ring. 3 522 tris. |
+
+Build: 96 room files, 0 flags; Interior at most 8 surfaces; largest file 22 materials; exteriors 60 files, 0
+flagged; link parts 0 flags. Godot import, check (156 scripts, 0 failed), export `build/web_art_hab` (79.9 MB).
+
+Requests: SIM (airlock radii M 3.4 / L 4.0, pad radius 11.5), ART-B (pad answer), RENDER (R1–R6).
+
+Known weaknesses: about 90 decal objects per room (RENDER must merge them); door variants are nearest-radius
+(up to about 6 cm of curve mismatch on the smallest rooms); airlock M and L and the new pad radius wait for SIM's
+content; four amber edge lights stand in the ramp lanes (0.20 m, beyond the ramp feet); the upper wall patch is
+plain (no band). Not tested: anything in the game.
+
+## 2026-09-25 — v3.1 PILOT (V3_1_DESIGN §3 doors and decals, §5.1 airlock)
+
+| item | result | files |
+|---|---|---|
+| door kit | `doorway.glb` rebuilt: a solid frame housing (x −0.56..0.04, y ±1.72, top 2.56) with the pockets inside it, full-height 6 cm opaque leaves with a window strip and a seal line, a threshold plate, a header status light (`Status`, Glow), solid caps at 1.40 m; an open leaf stays inside the housing (build check); the collar starts on the housing face (no gap). 1 048 tris. The J2 hood rule is gone. | `interior_links.py` |
+| decals | every 3.1 room build splits outer-wall decal faces into `Decal_<seg>_<source>` objects (segment = the wall segment of the face centre), flat-walled shells also get `Upper_<seg>`; a movable `NameSign` plate. habitat M: 56 decal objects (L2 / L4 bands). | `interior_kit.split_decals`, `rooms_kit.build_file` |
+| airlock | new layout: suit room → inner door kit → pressure chamber (grating, vents, pumps, gauge panel, beacon strips, window) → outer door kit (recessed, hazard stripes) → porch (ramp, dust mat, floodlight). Exterior: dome cut over the front, a chamber block with pumps and a beacon. Anchors Chamber 2, Suit 2, Porch 2, Stand 2. 6 740 tris; Interior 6 surfaces. | `interior_airlock.py`, `rooms_links.py` |
+| renders | door kit closed / half / open, cutaway, roof on, inside; habitat M with doorways (decals hidden); airlock closed / half / open, cutaway and roof on, with links, anchors, exterior, night | `art/interiors/door31_*`, `habitat_m*`, `airlock*` |
+
+Build: habitat M and airlock 0 flags (budget, Interior ≤ 8 surfaces, stand points, radius with the porch
+exempt). The other rooms are not rebuilt yet (after the pilot critic).
+
+Known weaknesses: the airlock is one size (content has one); the porch stands outside the footprint (SIM /
+RENDER must keep the ground in front clear); the airlock chamber is 1.6 m long for 2 people; decal objects add
+draw calls unless RENDER merges them; the dome meets the chamber block with a small step on the sides.
+Not tested: anything in the game (RENDER integration).
+
 ## 2026-09-25 — round 8: lounge seating lighter
 
 Lounge island rugs `RugLight` (#B4BFCC) and sofas `CushionLight` (#7D93B4) instead of navy `Cushion`; both merge

@@ -66,6 +66,20 @@ func _init() -> void:
 			report["tests"].append(r)
 			if not bool(r["ok"]):
 				report["failures"].append("%s: %s: %s" % [v, r["name"], r["why"]])
+	# V3_1 §5.4: RENDER cuts suit <-> indoor at suit_swap frame 30; the two poses must match there.
+	if libs.has("suit") and libs.has("in") and (libs["suit"]["clips"] as Dictionary).has("suit_swap") and (libs["in"]["clips"] as Dictionary).has("suit_swap"):
+		var pzc := {"a": "suit_swap", "ta": 1.0, "b": "", "tb": 0.0, "wb": 0.0, "c": "", "tc": 0.0, "wc": 0.0}
+		lib = libs["suit"]
+		var s_a: Dictionary = _sample_pz(pzc)
+		lib = libs["in"]
+		var s_b: Dictionary = _sample_pz(pzc)
+		var worst_c := 0.0
+		for i in (s_a["q"] as Array).size():
+			worst_c = maxf(worst_c, rad_to_deg((s_a["q"][i] as Quaternion).angle_to(s_b["q"][i])))
+		var okc: bool = worst_c < 0.5
+		report["tests"].append({"name": "suit_swap cut (1.0 s): suit vs indoor", "variant": "both", "max_deg": snappedf(worst_c, 0.001), "ok": okc})
+		if not okc:
+			report["failures"].append("suit_swap cut: suit and indoor poses differ by %.2f deg" % worst_c)
 	report["ok"] = (report["failures"] as Array).is_empty()
 	report["summary"] = "%d tests, %d failures" % [(report["tests"] as Array).size(), (report["failures"] as Array).size()]
 	_write(report, fixture)
@@ -139,6 +153,8 @@ func _tests(clips: Dictionary) -> Array:
 	# 6. One-shots.
 	if clips.has("cheer"):
 		out.append({"name": "oneshot cheer", "setup": ["stand", "idle"], "steps": [{"oneshot": "cheer", "goal": ["stand", "idle"], "secs": 2.6}]})
+	if clips.has("suit_swap"):
+		out.append({"name": "idle -> suit_swap -> idle", "setup": ["stand", "idle"], "steps": [{"oneshot": "suit_swap", "goal": ["stand", "idle"], "secs": 2.8}]})
 	if clips.has("collapse"):
 		out.append({"name": "oneshot collapse -> dead", "setup": ["stand", "idle"], "steps": [{"oneshot": "collapse", "goal": ["stand", "idle"], "secs": 3.0}]})
 	return out

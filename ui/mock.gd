@@ -30,6 +30,21 @@ static func build(sim, what: String) -> Dictionary:
 			if risk.size() >= specs.size():
 				break
 		out["at_risk"] = risk
+	if what in ["traffic", "all"]:
+		out["traffic"] = {"credits": 250, "notices": [{"code": "tourists_no_bed", "count": 3, "text": "3 tourists have no bed. The fee drops."}],
+			"ships": [{"id": 9100, "kind": "liner", "name": "Tourist liner", "phase": "landed", "answer": "grant", "t_s": 480.0, "text": "6 tourists want beds, meals and comfort.",
+				"offer": {"people": 6, "fee": 40}, "pad_pos": null}],
+			"forecast": [
+			{"id": 9101, "kind": "trader", "name": "Trader", "phase": "forecast", "answer": "grant", "eta_s": 40.0, "text": "",
+				"offer": {"sells": {"electronics": {"units": 12, "price": 14}, "glass": {"units": 15, "price": 6}, "medicine": {"units": 8, "price": 22},
+					"metal": {"units": 6, "price": 7}, "spare_parts": {"units": 16, "price": 13}, "exotic": {"units": 5, "price": 41}, "polymer": {"units": 9, "price": 5}},
+					"buys": {"biomass": {"units": 6, "price": 1}, "glass": {"units": 4, "price": 4}, "metal": {"units": 5, "price": 5}, "silicate": {"units": 5, "price": 1}}}},
+			{"id": 9102, "kind": "shuttle", "name": "Immigrant shuttle", "phase": "forecast", "answer": "grant", "eta_s": 120.0, "text": "4 settlers want to join the colony.",
+				"offer": {"roles": ["scientist", "technician", "grower", "medic"]}},
+			{"id": 9103, "kind": "liner", "name": "Tourist liner", "phase": "forecast", "answer": "deny", "eta_s": 300.0, "text": "6 tourists want beds, meals and comfort.",
+				"offer": {"people": 6, "fee": 40}},
+			{"id": 9104, "kind": "science", "name": "Science ship", "phase": "forecast", "answer": "grant", "eta_s": 500.0, "text": "2 scientists want to use your labs.",
+				"offer": {"buys": {"pack_basic": {"units": 6, "price": 9}}}}]}
 	if what in ["labs", "all"]:
 		var labs := {}
 		var k := 0

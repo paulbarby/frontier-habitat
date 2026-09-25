@@ -27,8 +27,8 @@ const LOOPS := {
 	"lie": ["sleep", "dead"],
 	"kneel": ["repair_kneel"],
 }
-const WALK_START := 0.28     # m/s: start the walk cycle above this ground speed
-const WALK_STOP := 0.12      # m/s: back to idle below this
+const WALK_START := 0.10     # m/s: start the walk cycle above this ground speed (V3_1: the walker ramps from 0, so the walk starts early and slow, never a slide)
+const WALK_STOP := 0.06      # m/s: back to idle below this
 
 var clips := {}              # name -> {len, loop, speed, stride, pose_from, pose_to, kind}
 var pose_state := "stand"
@@ -104,6 +104,11 @@ func play_oneshot(c: String) -> void:
 		return
 	_start(c, "oneshot")
 	oneshot_next = "hold" if c == "collapse" else ""
+
+## Ends a one-shot now (a body faded out while it played, V3.1 airlock).
+func end_oneshot() -> void:
+	if phase == "oneshot":
+		cur_t = clip_len(cur)
 
 func is_busy() -> bool:
 	return phase == "enter" or phase == "exit" or phase == "oneshot"

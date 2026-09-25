@@ -583,6 +583,57 @@ def oxygen_plant(rm):
     IK.build_floor_v3(rm, "clean", "grid", grid=1.1)
     n = plan.n
     rmax = plan.r_max
+    if s < 2:
+        hx, hy, oy = _oxygen_compact(rm, plan, s)
+    else:
+        hx, hy, oy = _oxygen_large(rm, plan, s)
+    cpos = side_spot(plan, [(hx + 0.75, oy, 180.0), (-hx - 0.75, oy, 0.0), (hx + 0.75, oy + 0.9, 180.0),
+                            (0.0, oy + hy + 0.75, 270.0)] if s >= 2 else
+                     [(hx + 0.55, oy - 0.2, 180.0), (-hx - 0.55, oy - 0.2, 0.0)])
+    if cpos and (s >= 2 or hypot(cpos[0], cpos[1]) + 0.45 <= plan.lane_r() + 0.15):
+        console_at(plan, cpos[0], cpos[1], cpos[2], w=0.8, work=False)
+    _oxygen_finish(rm, plan, s, fu, hx, hy, oy)
+
+
+def _oxygen_compact(rm, plan, s):
+    """S and M (door lanes, 2026-09-25): the stacks and the tanks on ONE plinth in the -Y half, so a corridor can
+    join the whole +Y half (S at least 120 deg, M at least 180 deg of free door angles)."""
+    n = plan.n
+    sr = 0.32 + 0.03 * s
+    tr = 0.40 + 0.05 * s
+    h = 1.7 + 0.12 * s
+    th = 1.15 + 0.1 * s
+    if s == 0:
+        hx, hy, oy = 0.95, 0.65, -0.80
+        stacks, tanks = [(-0.45, 0.0)], [(0.43, 0.0)]
+        ym = 0.0
+    else:
+        hx, hy, oy = 1.35, 1.25, -0.60
+        stacks, tanks = [(-0.575, 0.55), (0.575, 0.55)], [(-0.575, -0.50), (0.575, -0.50)]
+        ym = 0.55
+    with at(n, 0.0, oy, 0.0):
+        plinth(n, hx, hy)
+        for (xx, yy) in stacks:
+            electrolysis_stack(n, xx, yy, h=h, r=sr)
+        for j, (xx, yy) in enumerate(tanks):
+            tank_v(n, xx, yy, F + 0.14, th, tr, mat="Hull", band=("WaterBlue", "Accent")[j % 2], cap="dome", seg=12)
+        # the O2 manifold over the stacks, down to the tank header
+        x0, x1 = min(x for x, _ in stacks) - 0.25, max(x for x, _ in stacks) + 0.25
+        FU.pipe_run(n, [(x0, ym, F + h + 0.20), (x1 + 0.1, ym, F + h + 0.20), (x1 + 0.1, ym, F + 0.35)],
+                    r=0.08, mat="WaterBlue")
+        for (xx, yy) in stacks:
+            FU.pipe_run(n, [(xx, yy, F + h - 0.1), (xx, ym, F + h + 0.20)], r=0.05, mat="Metal")
+        ty_ = tanks[0][1]
+        FU.pipe_run(n, [(min(x for x, _ in tanks), ty_ - tr - 0.08, F + 0.45),
+                        (max(x for x, _ in tanks) + 0.1, ty_ - tr - 0.08, F + 0.45)], r=0.06, mat="Metal")
+        bbox(n, x0 - 0.05, x0 + 0.05, ym - 0.05, ym + 0.05, F + 0.14, F + h + 0.15, "Frame")
+    plan.rect(0.0, oy, hx + 0.15, hy + 0.15, 0.0, tag="machine")
+    return hx, hy, oy
+
+
+def _oxygen_large(rm, plan, s):
+    n = plan.n
+    rmax = plan.r_max
     rows = 1 if s < 2 else 2
     per = (2, 3, 3, 4)[s]
     pitch = 1.10 + 0.05 * s
@@ -627,10 +678,11 @@ def oxygen_plant(rm):
     plan.rect(0.0, ty, thx + 0.1, tr + 0.35, 0.0, tag="tanks")
     FU.pipe_run(n, [(hx - 0.2, oy - hy + 0.1, F + 0.30), (hx - 0.2, ty + tr + 0.2, F + 0.30),
                     (thx - 0.2, ty + tr + 0.2, F + 0.30)], r=0.06, mat="WaterBlue")
-    cpos = side_spot(plan, [(hx + 0.75, oy, 180.0), (-hx - 0.75, oy, 0.0), (hx + 0.75, oy + 0.9, 180.0),
-                            (0.0, oy + hy + 0.75, 270.0)])
-    if cpos:
-        console_at(plan, cpos[0], cpos[1], cpos[2], w=0.8, work=False)
+    return hx, hy, oy
+
+
+def _oxygen_finish(rm, plan, s, fu, hx, hy, oy):
+    n = plan.n
     for a in free_angles(plan, 0.0, oy, (1, 2, 2, 3)[s], start=100.0):
         floor_trench(plan, (hx + 0.1) * cos(radians(a)) if abs(cos(radians(a))) > 0.7 else 0.0,
                      oy + ((hy + 0.1) * sin(radians(a)) if abs(cos(radians(a))) <= 0.7 else 0.0), a,

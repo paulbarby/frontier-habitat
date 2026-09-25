@@ -1,4 +1,5 @@
 extends "res://ui/charts/chart_base.gd"
+const PG = preload("res://ui/poly_guard.gd")
 ## Line, area and stacked-area chart of time series.
 ## series: [{name, color, points: [[tick, value], ...]}]. X is game time (ticks),
 ## labelled in days. mode: "line", "area" or "stacked".
@@ -152,7 +153,8 @@ func _draw_strip(top: PackedVector2Array, low: PackedVector2Array, col: Color, s
 		var q := PackedVector2Array([top[i], top[i + 1], low[i + 1], low[i]])
 		var a_top: float = 0.36 if stacked else 0.24
 		var a_low: float = 0.3 if stacked else 0.03
-		draw_polygon(q, PackedColorArray([Color(col.r, col.g, col.b, a_top), Color(col.r, col.g, col.b, a_top), Color(col.r, col.g, col.b, a_low), Color(col.r, col.g, col.b, a_low)]))
+		if PG.ok(q, "line_chart.gd:155"):
+			draw_polygon(q, PackedColorArray([Color(col.r, col.g, col.b, a_top), Color(col.r, col.g, col.b, a_top), Color(col.r, col.g, col.b, a_low), Color(col.r, col.g, col.b, a_low)]))
 
 func _dashed(a: Vector2, b: Vector2, c: Color) -> void:
 	var d: float = a.distance_to(b)

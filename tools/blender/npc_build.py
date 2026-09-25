@@ -20,6 +20,7 @@ sys.path.insert(0, HERE)
 import ext_common as C          # noqa: E402
 import npc_common as N          # noqa: E402
 import npc_anims as A           # noqa: E402
+import npc_visitors as V        # noqa: E402
 
 ANIMS_JSON = os.path.join(N.MODEL_DIR, "astronaut_anims.json")
 BUDGET = {"suit": 7000, "indoor": 6000}
@@ -39,9 +40,11 @@ def build_variant(variant):
         parts = npc_indoor.build_indoor_parts()
     else:
         raise SystemExit("unknown variant %s" % variant)
+    vparts = V.build_visitor_parts(variant)
     rig = N.build_rig("Rig")
     mset = N.NpcMaterialSet()
-    objs = {part.name: N.build_skinned_mesh(part, rig, mset) for part in parts}
+    objs = {part.name: N.build_skinned_mesh(part, rig, mset) for part in parts + vparts}
+    vis_names = [p.name for p in vparts]
     tris = sum(sum(len(f) - 2 for f in part.faces) for part in parts)
     print("  %s: %d vertices, %d triangles (%s)" % (variant, sum(len(p.verts) for p in parts), tris,
                                                    ", ".join("%s %d" % (p.name, sum(len(f) - 2 for f in p.faces)) for p in parts)))
@@ -51,10 +54,14 @@ def build_variant(variant):
     else:
         occ = {n: [n, "Body"] for n in objs}
         occ["Body"] = ["Body", "Head_0"]
+    for n in vis_names:                  # attachments are shaded by the body; the body never by an attachment
+        occ[n] = [n, "Body"] + (["Head_0"] if variant == "indoor" else [])
     C.bake_ao(objs, occ, dist=0.16, samples=96, min_ao=0.42, strength=1.0)
     for ob in objs.values():
         N.smooth_ao(ob, iterations=4, floor={"SuitMain": 0.65, "SuitHard": 0.62, "Jumpsuit": 0.55, "Skin": 0.62,
-                                             "Hair": 0.55})
+                                             "Hair": 0.55, "VisWhite": 0.62, "VisGrey": 0.55,
+                                             "VisGold": 0.55, "VisRed": 0.55, "VisGraphite": 0.55,
+                                             "VisHiVis": 0.65, "VisGoldReflect": 0.65})
     solver = N.Solver()
     solver.set_rest_from_rig(rig)
     meta = {}
@@ -68,8 +75,10 @@ def build_variant(variant):
         print("    clip %-10s %4d frames" % (name, frames))
     N.reset_pose(rig)
     path = os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % variant)
-    N.export_glb_skinned(path)
-    print("  wrote", path, "%.1f s" % (time.time() - t0))
+    N.export_glb_skinned(path, only=[rig] + [o for n, o in objs.items() if n not in vis_names])
+    vpath = os.path.join(N.MODEL_DIR, "astronaut_visitor_%s.glb" % variant)
+    N.export_glb_skinned(vpath, animations=False, only=[rig] + [objs[n] for n in vis_names])
+    print("  wrote", path, "and", vpath, "%.1f s" % (time.time() - t0))
     return path, meta, tris
 
 
@@ -126,6 +135,7 @@ def write_meta(meta):
                             "rides the right hand in carry_idle and carry_walk.")
     doc["collapse_ends_on"] = "dead frame 0 (on the ground); dead is the lie-state loop after collapse"
     doc["pose_rest"] = {k: {"clip": v[0], "frame": v[1]} for k, v in A.POSE_STATE_REST.items()}
+    doc["visitors"] = V.palette_json()
     tmp = ANIMS_JSON + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=1)

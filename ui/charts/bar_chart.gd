@@ -1,4 +1,5 @@
 extends "res://ui/charts/chart_base.gd"
+const PG = preload("res://ui/poly_guard.gd")
 ## Grouped bar chart. categories: [label, ...]; series: [{name, color, values: [...]}].
 ## horizontal = true draws bars left to right with labels on the left (good for long
 ## names and item lists). `icons` (optional) = [texture, ...] per category.
@@ -57,7 +58,8 @@ func _draw_v(vmax: float) -> void:
 			var h: float = v / vmax * pr.size.y
 			var col: Color = series[si].get("color", P.CYAN)
 			var r := Rect2(gx + bar_w * si, pr.end.y - h, bar_w - 2.0, h)
-			draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
+			if PG.ok(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]), "bar_chart.gd:60"):
+				draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
 				PackedColorArray([col, col, col.darkened(0.45), col.darkened(0.45)]))
 			draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)), col.lightened(0.4), true)
 		var lab: String = String(categories[i])
@@ -97,7 +99,8 @@ func _draw_h(vmax: float) -> void:
 			var w: float = v / vmax * pr.size.x
 			var by: float = y0 + (row_h - bar_h * series.size()) * 0.5 + bar_h * si
 			var r := Rect2(pr.position.x, by, w, bar_h - 2.0)
-			draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
+			if PG.ok(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]), "bar_chart.gd:100"):
+				draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
 				PackedColorArray([col.darkened(0.4), col, col, col.darkened(0.4)]))
 			last = maxf(last, w)
 		if target.size() > i and float(target[i]) > 0.0:

@@ -37,6 +37,7 @@ func tick_second() -> void:
 	_gen_construction()
 	_gen_upgrades()
 	_gen_dining()
+	_gen_trade()
 	_gen_water_fill()
 	_gen_clearing()
 	_gen_operate()
@@ -682,6 +683,14 @@ func _gen_repair() -> void:
 			sim.state["tasks"].erase(t["id"])
 		else:
 			t["hold_out"] = ho
+
+## V3.1 trade: goods the player sold are carried to the ship's hold on the pad.
+func _gen_trade() -> void:
+	for w in sim.traffic.delivery_wants():
+		var b: Dictionary = sim.state["buildings"].get(int(w[2]), {})
+		if b.is_empty():
+			continue
+		_fill(int(w[0]), w[1], "logistics", int(w[2]), 1, b["pos"], 4)
 
 ## Version 3 hazards: maintenance of machines at risk, sealing hull breaches, cleaning
 ## dusty solar panels, and surveying meteor fragment sites (V3_DESIGN sections 4 and 5).

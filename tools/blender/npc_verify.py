@@ -26,7 +26,7 @@ from mathutils import Vector, Matrix, Quaternion   # noqa: E402
 VARIANTS = ["suit", "indoor"]
 ALL_CLIPS = ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
              "kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit",
-             "lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer"]
+             "lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap"]
 LOCOMOTION = {"walk", "run", "carry_walk", "injured_walk"}
 LOOPS = {"idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
          "repair_kneel", "sit_idle", "sit_eat", "sit_type", "sleep", "injured_walk", "dead"}
@@ -35,12 +35,103 @@ REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep", 0), "knee
 ENTER_EXIT = {"kneel_enter": ("stand", "kneel"), "kneel_exit": ("kneel", "stand"),
               "sit_enter": ("stand", "sit"), "sit_exit": ("sit", "stand"),
               "lie_enter": ("stand", "lie"), "lie_exit": ("lie", "stand"),
-              "collapse": ("stand", "dead"), "cheer": ("stand", "stand")}
+              "collapse": ("stand", "dead"), "cheer": ("stand", "stand"), "suit_swap": ("stand", "stand")}
 MATERIALS = {"suit": {"SuitMain", "SuitAccent", "Visor", "Pack", "Light"},
              "indoor": {"Jumpsuit", "SuitAccent", "Skin", "Hair"}}
 BUDGET = {"suit": 7000, "indoor": 6000}
 STEP_LIMIT_DEG = 15.0
 HEADS = ["Head_0", "Head_1", "Head_2", "Head_3"]
+VIS_KINDS = ["trader", "tourist", "medical", "science", "inspector"]
+VIS_MESHES_BY = {"suit": ["Vis_%s" % k for k in VIS_KINDS],
+                 "indoor": ["Vis_%s" % k for k in VIS_KINDS if k != "inspector"] +
+                 ["Vis_inspector_h023", "Vis_inspector_h1"]}
+VIS_MESHES = sorted(set(VIS_MESHES_BY["suit"]) | set(VIS_MESHES_BY["indoor"]))
+VIS_DRIFT_LIMIT = 0.02          # an attachment point may move at most 2 cm relative to the body point under it
+
+
+def visitor_path(v):
+    return os.path.join(N.MODEL_DIR, "astronaut_visitor_%s.glb" % v)
+
+
+def attach_visitors(rig, v):
+    """Import the visitor attachments into the scene of `rig` and bind them to it (the same skeleton)."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=visitor_path(v))
+    new = [o for o in bpy.data.objects if o not in before]
+    vis = [o for o in new if o.type == "MESH" and o.name.split(".")[0] in VIS_MESHES]
+    for o in vis:
+        mw = o.matrix_world.copy()
+        o.parent = rig
+        o.matrix_world = mw
+        for md in o.modifiers:
+            if md.type == "ARMATURE":
+                md.object = rig
+    for o in new:
+        if o not in vis:
+            bpy.data.objects.remove(o)
+    return vis
+
+
+def visitor_drift(rig, bodies, vis, clips_meta, clips, step=3):
+    """Worst change (over every clip, every `step` frames) of the distance from each attachment vertex to the body
+    vertex nearest to it at rest; and the lowest attachment point."""
+    from mathutils import kdtree
+    dg = bpy.context.evaluated_depsgraph_get()
+    ad = rig.animation_data
+    ad.action = None
+    for pb in rig.pose.bones:                 # the bind pose (the bones keep the last frame otherwise)
+        pb.location = (0.0, 0.0, 0.0)
+        pb.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+        pb.rotation_euler = (0.0, 0.0, 0.0)
+        pb.scale = (1.0, 1.0, 1.0)
+    bpy.context.view_layer.update()
+    rest_b = np.concatenate([mesh_world(b, dg) for b in bodies])
+
+    def top_bone(ob):
+        W = group_weights(ob)
+        names = sorted(W)
+        M = np.stack([W[n] for n in names], axis=1)
+        return np.array(names)[M.argmax(axis=1)]
+    tb = np.concatenate([top_bone(b) for b in bodies])
+    trees = {}
+    for bn in set(tb.tolist()):
+        ids = np.where(tb == bn)[0]
+        kd = kdtree.KDTree(len(ids))
+        for i in ids:
+            kd.insert(rest_b[i], int(i))
+        kd.balance()
+        trees[bn] = kd
+    info = {}
+    for o in vis:
+        rv = mesh_world(o, dg)
+        vb = top_bone(o)
+        # the nearest body vertex that follows the same main bone
+        idx = np.array([(trees[b] if b in trees else trees["chest"]).find(q)[1] for q, b in zip(rv, vb)])
+        d0 = np.linalg.norm(rv - rest_b[idx], axis=1)
+        info[o] = (idx, d0)
+    worst = {o.name.split(".")[0]: (0.0, "", 0) for o in vis}
+    zmin = {o.name.split(".")[0]: (9.0, "", 0) for o in vis}
+    for c in clips:
+        act = action_for(c)
+        if act is None or c not in clips_meta:
+            continue
+        ad.action = act
+        if act.slots:
+            ad.action_slot = act.slots[0]
+        for f in range(0, clips_meta[c]["frames"] + 1, step):
+            bpy.context.scene.frame_set(f)
+            cb = np.concatenate([mesh_world(b, dg) for b in bodies])
+            for o in vis:
+                nm = o.name.split(".")[0]
+                co = mesh_world(o, dg)
+                idx, d0 = info[o]
+                d = np.abs(np.linalg.norm(co - cb[idx], axis=1) - d0).max()
+                if d > worst[nm][0]:
+                    worst[nm] = (float(d), c, f)
+                zc = float(co[:, 2].min())
+                if zc < zmin[nm][0]:
+                    zmin[nm] = (zc, c, f)
+    return worst, zmin
 
 
 def model_path(v):
@@ -329,7 +420,8 @@ def run(renders):
               "max influences %d" % F["max_influences"])
         check("%s: weights normalised" % v, F["weight_sum_err"] < 2e-3, "max |sum - 1| = %.5f" % F["weight_sum_err"])
         missing = [c for c in ALL_CLIPS if c not in F["animations"]]
-        check("%s: all 24 clips present (section 3.3)" % v, not missing, "missing %s" % missing if missing else "24 of 24")
+        check("%s: all %d clips present (V3 3.3 + V3_1 5.4)" % (v, len(ALL_CLIPS)), not missing,
+              "missing %s" % missing if missing else "%d of %d" % (len(ALL_CLIPS), len(ALL_CLIPS)))
         scale = {c: a["scale_nodes"] for c, a in F["animations"].items() if a["scale_nodes"]}
         check("%s: no bone scale keys" % v, not scale, str(scale) if scale else "no scale channels")
         roots = {c: a["root_moves"] for c, a in F["animations"].items() if a["root_moves"] > 1e-5}
@@ -366,6 +458,19 @@ def run(renders):
             if c in facts[v]["animations"] and c in clips_meta:
                 ev[c] = eval_clip(rig, body, others, c, clips_meta[c]["frames"])
         evals[v] = ev
+        if os.path.exists(visitor_path(v)):
+            vis = attach_visitors(rig, v)
+            worst, zmin = visitor_drift(rig, [body] + [o for o in others if o.name.startswith("Head_0")], vis, clips_meta, [c for c in ALL_CLIPS if c in ev])
+            for nm in VIS_MESHES_BY[v]:
+                if nm not in worst:
+                    continue
+                d, c, f = worst[nm]
+                check("%s: %s stays on the body in every clip (<= %.0f cm drift)" % (v, nm, VIS_DRIFT_LIMIT * 100),
+                      d <= VIS_DRIFT_LIMIT, "worst %.4f m (%s frame %d)" % (d, c, f))
+                check("%s: %s never below z -0.01" % (v, nm), zmin[nm][0] >= -0.01,
+                      "z min %.4f m (%s frame %d)" % zmin[nm])
+            for o in vis:
+                bpy.data.objects.remove(o)
         for c in ALL_CLIPS:
             if c in ev and c in LOOPS:
                 d, bn, dp = pose_diff(ev[c][0], ev[c][-1])
@@ -548,12 +653,80 @@ def run(renders):
             check("%s: %s crate (%.2f m at prop.R) clear of chest and pack; hands at its sides" % (v, c, size),
                   worst_t == 0 and worst_h <= 0.02, "torso vertices inside %d, hands inside up to %.3f m, crate tilt up to %.1f deg"
                   % (worst_t, worst_h, tilt))
+    # ---- suit_swap: the cut frame is still and identical in both files; hands at the helmet sides ----
+    if "suit" in evals and "indoor" in evals and "suit_swap" in evals["suit"] and "suit_swap" in evals["indoor"]:
+        cf = clips_meta.get("suit_swap", {}).get("cut_frame", 30)
+        a, b = evals["suit"]["suit_swap"][cf], evals["indoor"]["suit_swap"][cf]
+        d, bn, dp = pose_diff(a, b)
+        check("suit_swap: cut frame %d pose identical in both files" % cf, d <= 0.05 and dp <= 0.001,
+              "worst %.4f deg, hips %.5f m" % (d, dp))
+        still, _, _ = pose_diff(evals["suit"]["suit_swap"][cf - 1], evals["suit"]["suit_swap"][cf + 1])
+        check("suit_swap: the pose is still around the cut frame (frames %d..%d)" % (cf - 1, cf + 1), still <= 0.5,
+              "%.3f deg between frames %d and %d" % (still, cf - 1, cf + 1))
+        wl, wr = a["head"]["hand.L"], a["head"]["hand.R"]
+        check("suit_swap: hands at the helmet sides at the cut (wrists above 1.5 m, 0.15-0.30 m out)",
+              min(wl.z, wr.z) >= 1.5 and 0.15 <= abs(wl.y) <= 0.30 and 0.15 <= abs(wr.y) <= 0.30,
+              "wrists L %s R %s" % (tuple(round(x, 3) for x in wl), tuple(round(x, 3) for x in wr)))
+    # ---- visitor looks (V3_1 6.4) ----
+    for v in VARIANTS:
+        if not os.path.exists(visitor_path(v)):
+            check("file astronaut_visitor_%s.glb" % v, False, "missing")
+            continue
+        VF = gltf_facts(visitor_path(v))
+        check("file astronaut_visitor_%s.glb" % v, True, "%d bytes, no clips (%d)" % (os.path.getsize(visitor_path(v)),
+                                                                                   len(VF["animations"])))
+        check("%s visitors: skinned meshes %s" % (v, VIS_MESHES_BY[v]),
+              VF["skins"] == 1 and sorted(VF["skinned_mesh_nodes"]) == sorted(VIS_MESHES_BY[v]),
+              "skinned mesh nodes %s" % VF["skinned_mesh_nodes"])
+        if facts[v]:
+            check("%s visitors: same skeleton and joint order as astronaut_%s.glb" % (v, v),
+                  VF["joints"] == facts[v]["joints"] and all(VF["skeleton"][b] == facts[v]["skeleton"][b]
+                                                             for b in facts[v]["skeleton"]),
+                  "%d joints" % len(VF["joints"]))
+        check("%s visitors: COLOR_0, <= 4 weights, normalised" % v,
+              VF["color0"] and not VF["joints_1"] and VF["max_influences"] <= 4 and VF["weight_sum_err"] < 2e-3,
+              "color0 %s, max influences %d, max |sum - 1| %.5f" % (VF["color0"], VF["max_influences"],
+                                                                     VF["weight_sum_err"]))
+        if facts[v]:
+            tb = facts[v]["tris_by"]
+            body = tb.get("Body", 0) + (max(tb.get(h, 0) for h in HEADS) if v == "indoor" else 0)
+            vmax = max(VF["tris_by"].get(n, 0) for n in VIS_MESHES_BY[v])
+            check("%s: one visitor on screen (Body%s + largest Vis_) <= %d triangles" %
+                  (v, " + largest head" if v == "indoor" else "", BUDGET[v]), body + vmax <= BUDGET[v],
+                  "%d + %d = %d; Vis_ %s" % (body, vmax, body + vmax,
+                                             {n[4:]: VF["tris_by"].get(n) for n in VIS_MESHES_BY[v]}))
+    vm = meta.get("visitors", {})
+    looks = vm.get("looks", [])
+    kinds = sorted(set(L.get("kind") for L in looks))
+    tsets = sorted(L.get("set") for L in looks if L.get("kind") == "tourist")
+    groups_ok = all(set(L.get("suit", {})) == {"SuitMain", "SuitHard", "Pack", "SuitAccent"} and
+                    set(L.get("indoor", {})) == {"Jumpsuit", "SuitAccent"} and
+                    L.get("mesh") == "Vis_%s" % L.get("kind") for L in looks)
+    check("astronaut_anims.json visitors: 5 kinds, tourist 3 sets, colour groups and mesh per look",
+          kinds == sorted(VIS_KINDS) and tsets == [0, 1, 2] and groups_ok and len(looks) == 7 and
+          vm.get("meshes") == {k: VIS_MESHES_BY[k] for k in ("suit", "indoor")},
+          "%d looks, kinds %s, tourist sets %s" % (len(looks), kinds, tsets))
+
+    def lin(h):
+        h = h.lstrip("#")
+        return np.array([int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)])
+    col_suit = {"SuitMain": "#e8eaed", "SuitHard": "#e8eaed", "Pack": "#8b939d"}
+    worst_pair = (9.0, "")
+    for i, A in enumerate(looks):
+        for B in looks[i + 1:]:
+            d = max(np.abs(lin(A["suit"][g]) - lin(B["suit"][g])).max() for g in ("SuitMain", "SuitHard", "Pack"))
+            if d < worst_pair[0]:
+                worst_pair = (d, "%s %s / %s %s" % (A["kind"], A["set"], B["kind"], B["set"]))
+    dcol = min(max(np.abs(lin(L["suit"][g]) - lin(col_suit[g])).max() for g in col_suit) for L in looks)
+    check("visitor suits differ from each other and from the colonist suit in a large part (>= 0.25 sRGB)",
+          worst_pair[0] >= 0.25 and dcol >= 0.25,
+          "closest pair %.2f (%s); closest to the colonist %.2f" % (worst_pair[0], worst_pair[1], dcol))
     # ---- metadata ----
     need_f = dict(seat_z=0.46, seat_back=0.30, bed_z=0.55, bed_back=0.55, console_z=1.0, console_ahead=0.45,
                   bench_z=0.9, panel_ahead=0.45, panel_z=0.4)
     check("astronaut_anims.json furniture numbers", all(abs(fur.get(k, -9) - x) < 1e-6 for k, x in need_f.items()), str(fur))
     bad = [c for c in ALL_CLIPS if c not in clips_meta]
-    check("astronaut_anims.json lists every clip", not bad, "missing %s" % bad if bad else "24 clips")
+    check("astronaut_anims.json lists every clip", not bad, "missing %s" % bad if bad else "%d clips" % len(ALL_CLIPS))
     check("astronaut_anims.json fps 30", meta.get("fps") == 30, str(meta.get("fps")))
 
     sheets = []

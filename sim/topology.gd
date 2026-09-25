@@ -99,6 +99,50 @@ func rebuild(bump: bool = true) -> void:
 		if sig != int(sim.state.get("walk_sig", -1)) or not sim.state.has("walk_sig"):
 			rev["walk"] = int(rev["walk"]) + 1
 			sim.state["walk_sig"] = sig
+			_step_off_new_ground()
+
+## V3.1: a structure that starts on the ground where a colonist stands outside moves that
+## colonist to the nearest open cell. And a colonist outside whom new structures closed in
+## (no walk to any airlock with air is left) moves to the nearest open cell from which there
+## is one, at most 15 m: without this such a colonist died of lack of air (a13, campaign).
+## Both are rare; the view fades the body (V3_1_DESIGN 4.3).
+func _step_off_new_ground() -> void:
+	var any_lock := false
+	for comp in sim.topo.locks_by_comp:
+		if sim.util.comp_supplied(comp) and not (sim.topo.locks_by_comp[comp] as Array).is_empty():
+			any_lock = true
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] != "alive" or a["where"] != "out":
+			continue
+		var p: Vector2 = a["pos"]
+		var ok_here: bool = sim.nav.is_walkable(p)
+		if ok_here and (not any_lock or bool(sim.nav.nearest_supplied_lock(p)["ok"])):
+			continue
+		var best = null
+		if not ok_here:
+			best = sim.nav.nearest_walkable(p, 4)
+			if best != null and (not any_lock or bool(sim.nav.nearest_supplied_lock(best)["ok"])):
+				a["pos"] = best
+				a["ret_c"] = {}
+				continue
+		if not any_lock:
+			if best != null:
+				a["pos"] = best
+			continue
+		var found = null
+		for r in range(1, 16):
+			for k in 16:
+				var q: Vector2 = p + Vector2(float(r), 0).rotated(float(k) * TAU / 16.0)
+				if sim.nav.is_walkable(q) and bool(sim.nav.nearest_supplied_lock(q)["ok"]):
+					found = q
+					break
+			if found != null:
+				break
+		if found != null:
+			a["pos"] = found
+			a["ret_c"] = {}
+			sim.stat_add("closed_in_moves", "", 1)
 
 # Union by smallest id keeps the component key stable and deterministic.
 func _find(p: Dictionary, x: int) -> int:

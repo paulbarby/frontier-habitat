@@ -52,8 +52,20 @@ func hz() -> float:
 func suit_cap() -> float:
 	return float(sim.bal["suit_air_seconds"]) * (1.0 + sim.research.bonus("suit_air_mult"))
 
+## Where a plan starts. While walking indoors a["bld"] is the room of the last waypoint
+## reached (before V3.1 it named the room the walk went to, so a new plan made in a corridor
+## started "inside" the destination and walked straight across open ground: RENDER report).
+## a["at"] = [that room, position, room of the next waypoint], valid only at that exact
+## position: a body in a corridor may start from either end.
 func loc_of(a: Dictionary) -> Dictionary:
-	return {"b": -1 if a["where"] == "out" else int(a["bld"]), "p": a["pos"]}
+	if a["where"] == "out":
+		return {"b": -1, "p": a["pos"]}
+	var at = a.get("at")
+	if at != null and (at as Array)[1] == a["pos"] and sim.state["buildings"].has(int(at[0])):
+		if (at as Array).size() > 2 and int(at[2]) != int(at[0]) and sim.state["buildings"].has(int(at[2])):
+			return {"b": int(at[0]), "p": a["pos"], "b2": int(at[2])}
+		return {"b": int(at[0]), "p": a["pos"]}
+	return {"b": int(a["bld"]), "p": a["pos"]}
 
 func breathable(a: Dictionary) -> bool:
 	if a["where"] == "out":
@@ -172,19 +184,46 @@ func _die(a: Dictionary, cause: String) -> void:
 	a["death_tick"] = int(sim.state["tick"])
 	sim.alive_changed()
 	var pr: Dictionary = sim.state["progress"]
-	pr["deaths"] = int(pr["deaths"]) + 1
-	pr["last_death_tick"] = int(sim.state["tick"])
+	if a["kind"] == "visitor":
+		# A visitor is not a colonist: counted apart, no colony death record.
+		sim.stat_add("visitor_deaths", "", 1)
+	else:
+		pr["deaths"] = int(pr["deaths"]) + 1
+		pr["last_death_tick"] = int(sim.state["tick"])
 	var where_text: String = "outside" if a["where"] == "out" else "in " + String(sim.state["buildings"].get(a["bld"], {}).get("name", "the base"))
 	sim.log_event("death", "%s (%s) died of %s, %s." % [a["name"], sim.bal["role_names"].get(a["role"], a["role"]), cause, where_text], [a["id"]], 3)
 
 # ---------------------------------------------------------------- airlocks (every tick)
+## Ids of the structures with an airlock door (airlocks, the lander hatch), in the order of
+## state.buildings. A door is added at commissioning (which rebuilds the graph: rev.power)
+## and goes with its structure (the count changes). V3.1 budget: locks_tick() looked at
+## every structure every tick.
+var _lock_ids: Array = []
+var _lock_key := ""
+var _lock_state = null
+
+func _locks() -> Array:
+	var blds: Dictionary = sim.state["buildings"]
+	var key: String = "%d:%d" % [blds.size(), int(sim.state["rev"]["power"])]
+	if key == _lock_key and is_same(_lock_state, blds):
+		return _lock_ids
+	_lock_key = key
+	_lock_state = blds
+	_lock_ids = []
+	for id in blds:
+		if not (blds[id]["lock"] as Dictionary).is_empty():
+			_lock_ids.append(id)
+	return _lock_ids
+
 func locks_tick() -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	var agents: Dictionary = sim.state["agents"]
 	var dt: float = 1.0 / hz()
 	var cap: float = suit_cap()
-	for id in blds:
-		var b: Dictionary = blds[id]
+	for id in _locks():
+		var b: Dictionary = blds.get(id, {})
+		if b.is_empty():
+			continue
 		var lock: Dictionary = b["lock"]
 		if lock.is_empty():
 			continue
@@ -192,6 +231,7 @@ func locks_tick() -> void:
 		var supplied: bool = sim.util.building_supplied(id)
 		if not cyc.is_empty():
 			cyc["t"] = float(cyc["t"]) - dt
+			_cycle_phase(cyc)
 			for aid in cyc["agents"]:
 				if agents.has(aid) and supplied and agents[aid]["state"] == "alive":
 					agents[aid]["suit"] = minf(cap, float(agents[aid]["suit"]) + float(sim.bal["suit_refill_per_second"]) * dt)
@@ -233,7 +273,7 @@ func locks_tick() -> void:
 				break
 		var dir: String = queue[head]["dir"]
 		var riders: Array = []
-		var slots: int = int(sim.bal["airlock_slots"])
+		var slots: int = lock_slots(b)
 		var order: Array = [head]
 		for i in queue.size():
 			if i != head:
@@ -251,7 +291,66 @@ func locks_tick() -> void:
 			var a: Dictionary = agents[aid]
 			a["where"] = "lock"
 			a["bld"] = id
-		lock["cyc"] = {"agents": riders, "dir": dir, "t": secs, "total": secs}
+		lock["cyc"] = {"agents": riders, "dir": dir, "t": secs, "total": secs, "phase": "enter", "pt": 0.0}
+		_cycle_phase(lock["cyc"])
+
+## Airlock cycle phases (V3_1_DESIGN section 5.2): enter, seal, pump, open, exit. The cycle
+## length and throughput do not change: the phase is read from the time left. cyc.phase = the
+## phase now, cyc.pt = seconds left in it. Outbound "pump" lets the air out, inbound "pump"
+## fills the chamber. Enter, seal, open and exit last fixed seconds
+## (balance.airlock_phase_seconds); pump is the rest. Seal covers the source-side door
+## closing (airlock_door_seconds 0.6 in the view) with a margin, so pump starts only with
+## both doors shut (critic round 13). An unpowered 20 s cycle pumps longer.
+const PHASES := ["enter", "seal", "pump", "open", "exit"]
+
+func _phase_lengths(total: float) -> Array:
+	var ps: Dictionary = sim.bal.get("airlock_phase_seconds", {"enter": 2.0, "seal": 1.0, "open": 1.0, "exit": 1.5})
+	var e: float = float(ps.get("enter", 2.0))
+	var s: float = float(ps.get("seal", 1.0))
+	var o: float = float(ps.get("open", 1.0))
+	var x: float = float(ps.get("exit", 1.5))
+	var fixed: float = e + s + o + x
+	var k: float = 1.0
+	if fixed > total - 1.0:
+		k = maxf(0.0, total - 1.0) / fixed
+	return [e * k, s * k, total - fixed * k, o * k, x * k]
+
+func _cycle_phase(cyc: Dictionary) -> void:
+	var total: float = float(cyc["total"])
+	var lens: Array = _phase_lengths(total)
+	var done: float = total - maxf(0.0, float(cyc["t"]))
+	var edge := 0.0
+	for i in PHASES.size():
+		edge += float(lens[i])
+		if done < edge - 0.000001 or i == PHASES.size() - 1:
+			cyc["phase"] = PHASES[i]
+			cyc["pt"] = snappedf(maxf(0.0, edge - done), 0.01)
+			return
+
+## For the view and the interface: the airlock or hatch now.
+## {cycling, dir "in"|"out", phase, pt, t, total, riders [ids], waiting_in, waiting_out}
+## (phase "" and riders [] while it stands idle).
+## Riders per cycle of an airlock (V3.1: size M 2, size L 4; the lander hatch 2).
+func lock_slots(b: Dictionary) -> int:
+	return maxi(1, int(sim.bd(b).get("airlock_slots", sim.bal["airlock_slots"])))
+
+func lock_info(bid: int) -> Dictionary:
+	var b: Dictionary = sim.state["buildings"].get(bid, {})
+	var lock: Dictionary = b.get("lock", {})
+	if lock.is_empty():
+		return {}
+	var cyc: Dictionary = lock["cyc"]
+	var win := 0
+	var wout := 0
+	for q in lock["queue"]:
+		if q["dir"] == "in":
+			win += 1
+		else:
+			wout += 1
+	if cyc.is_empty():
+		return {"cycling": false, "dir": "", "phase": "", "pt": 0.0, "t": 0.0, "total": 0.0, "riders": [], "waiting_in": win, "waiting_out": wout}
+	return {"cycling": true, "dir": cyc["dir"], "phase": String(cyc.get("phase", "")), "pt": float(cyc.get("pt", 0.0)),
+		"t": float(cyc["t"]), "total": float(cyc["total"]), "riders": (cyc["agents"] as Array).duplicate(), "waiting_in": win, "waiting_out": wout}
 
 func _enqueue(a: Dictionary, lock_id: int, dir: String) -> void:
 	if int(a["queued"]) == lock_id:
@@ -321,9 +420,13 @@ func _think(a: Dictionary) -> void:
 			return
 		if float(a["hunger"]) >= crit and kind != "eat" and kind != "drink" and _try_eat(a):
 			return
-		if float(a["fatigue"]) >= crit and kind != "sleep" and kind != "eat" and kind != "drink" and _try_sleep(a):
+		if float(a["fatigue"]) >= crit and kind != "sleep" and kind != "eat" and kind != "drink" and _sleep_any(a):
 			return
 	if not (a["plan"] as Array).is_empty():
+		return
+	# Visitors (V3.1) have their own day and never take work.
+	if a["kind"] == "visitor":
+		_visitor_think(a)
 		return
 	# 4. Ordinary needs, before new work is taken.
 	var trig: float = float(bal["need_trigger"])
@@ -355,7 +458,7 @@ func _return_seconds(a: Dictionary) -> float:
 		for q in lock["queue"]:
 			if q["dir"] == "in":
 				ahead += 1
-		var cycles: int = 1 + int(ahead / int(sim.bal["airlock_slots"]))
+		var cycles: int = 1 + int(ahead / lock_slots(sim.state["buildings"][r["lock"]]))
 		return float(r["seconds"]) + float(cycles) * float(sim.bal["airlock_cycle_seconds"]) * 0.8
 	# Inside a room without air: leave through its airlock and walk to supplied air.
 	var target: int = _nearest_supplied_room(a["pos"], -1)
@@ -512,16 +615,22 @@ func _wants_sleep(a: Dictionary) -> bool:
 		return true
 	return sim.util.is_night() and float(a["fatigue"]) >= float(sim.bal["night_sleep_trigger"])
 
-## Colonists assigned to each bed building, counted once per tick and kept up to date
-## when _assign_bed() moves someone (same answers as a full count, without a scan of
-## every colonist for every habitat: that cost 0.2 ms a tick at 70 colonists).
+## Colonists assigned to each bed building, counted when the count is invalid and kept up
+## to date when _set_bed() moves someone (same answers as a full count, without a scan of
+## every colonist for every habitat: that cost 0.2 ms a tick at 70 colonists). The count
+## is made again when a colonist is added, dies or leaves (_beds_tick = -1), when the set
+## of agents changes size, or for another game (a load). V3.1: kept across ticks.
 var _beds_tick := -1
 var _beds := {}
+var _beds_n := -1
+var _beds_state = null
 
 func beds_used(bid: int) -> int:
-	var tick: int = int(sim.state["tick"])
-	if tick != _beds_tick:
-		_beds_tick = tick
+	var agents: Dictionary = sim.state["agents"]
+	if _beds_tick == -1 or agents.size() != _beds_n or not is_same(_beds_state, agents):
+		_beds_tick = 0
+		_beds_n = agents.size()
+		_beds_state = agents
 		_beds = {}
 		for aid in sim.state["agents"]:
 			var x: Dictionary = sim.state["agents"][aid]
@@ -536,7 +645,7 @@ func _set_bed(a: Dictionary, bid: int) -> void:
 	if old == bid:
 		return
 	_full_tick = -1
-	if _beds_tick == int(sim.state["tick"]) and a["state"] == "alive":
+	if _beds_tick != -1 and is_same(_beds_state, sim.state["agents"]) and a["state"] == "alive":
 		_beds[old] = int(_beds.get(old, 0)) - 1
 		_beds[bid] = int(_beds.get(bid, 0)) + 1
 	a["bed"] = bid
@@ -572,7 +681,7 @@ func _assign_bed(a: Dictionary) -> int:
 	var best := -1
 	var best_d := 1e18
 	var tick: int = int(sim.state["tick"])
-	var rooms: Array = [] if _full_tick == tick and _beds_tick == tick else _bed_rooms()
+	var rooms: Array = [] if _full_tick == tick and _beds_tick != -1 else _bed_rooms()
 	var any_free := false
 	for e in rooms:
 		var bid: int = e[0]
@@ -587,7 +696,7 @@ func _assign_bed(a: Dictionary) -> int:
 		if d < best_d:
 			best_d = d
 			best = bid
-	if not any_free and _beds_tick == tick:
+	if not any_free and _beds_tick != -1:
 		# Every room bed is taken: the next colonist this tick need not look again.
 		_full_tick = tick
 	if best != -1:
@@ -1006,6 +1115,7 @@ func _drop_cargo(a: Dictionary) -> void:
 		var q = sim.nav.nearest_walkable(pos, 6)
 		if q != null:
 			pos = q
+		pos = sim.place.clear_of_porches(pos)
 	var pile: int = sim.inv.create_inv("g", oid, "pile", 100000, pos)
 	var inv: Dictionary = sim.inv.get_inv(a["inv"])
 	for res in inv["items"].keys():
@@ -1013,8 +1123,19 @@ func _drop_cargo(a: Dictionary) -> void:
 	sim.log_event("dropped", "%s put cargo down at a safe place." % a["name"], [a["id"]], 0)
 
 # ---------------------------------------------------------------- acting (every tick)
+var _board: Array = []
+
 func act_tick() -> void:
 	var dt: float = 1.0 / hz()
+	_act_all(dt)
+	# Visitors who reached their ship leave the game after the loop (never during it).
+	if not _board.is_empty():
+		for a in _board:
+			_board_ship(a)
+		_board.clear()
+
+func _act_all(dt: float) -> void:
+	var walk_rev: int = int(sim.state["rev"]["walk"])
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive" or a["where"] == "lock":
@@ -1029,6 +1150,16 @@ func act_tick() -> void:
 				_clear_plan(a)
 			continue
 		var step: Dictionary = plan[a["pi"]]
+		# Waiting in an airlock queue with a route still valid: _do_go would only find the
+		# lock leg and return (V3.1 budget: a third of a large colony waits at airlocks).
+		var q: int = int(a["queued"])
+		if q != -1 and step["op"] == "go":
+			var rt: Dictionary = a["route"]
+			if not rt.is_empty() and int(rt.get("rev", -1)) == walk_rev:
+				var lg: Array = rt["legs"]
+				var li: int = int(a["li"])
+				if li < lg.size() and lg[li]["m"] == "lock" and int(lg[li]["b"]) == q:
+					continue
 		match step["op"]:
 			"go": _do_go(a, step, dt)
 			"pickup": _do_pickup(a)
@@ -1039,6 +1170,9 @@ func act_tick() -> void:
 			"sleep": _do_sleep(a)
 			"rec": _do_timed(a, float(sim.bal["recreation_seconds"]), dt, "Relaxing", "rec")
 			"heal": _do_heal(a)
+			"study": _do_study(a, step, dt)
+			"tour": _do_tour(a, step, dt)
+			"board": _board.append(a)
 			"wait": _do_timed(a, float(step["t"]), dt, a["goal"], "")
 
 func _next_step(a: Dictionary) -> void:
@@ -1108,6 +1242,24 @@ func _do_go(a: Dictionary, step: Dictionary, dt: float) -> void:
 			a["pos"] = (a["pos"] as Vector2) + dirv * dist
 			a["facing"] = dirv.angle()
 			dist = 0.0
+	if leg["m"] == "in":
+		var rms = leg.get("rooms")
+		var k: int = clampi(int(a["wi"]) - 1, 0, pts.size() - 1)
+		if rms != null and k < (rms as Array).size():
+			# [room of the last waypoint, position, room of the next waypoint]
+			var nxt: int = int(rms[mini(k + 1, (rms as Array).size() - 1)])
+			# The body is in this room (or the corridor out of it) now: bld follows it, so
+			# air, occupancy and a dropped load belong to the room it is really in.
+			a["bld"] = int(rms[k])
+			var at = a.get("at")
+			if at == null or (at as Array).size() < 3:
+				a["at"] = [int(rms[k]), a["pos"], nxt]
+			else:
+				at[0] = int(rms[k])
+				at[1] = a["pos"]
+				at[2] = nxt
+	elif a.has("at"):
+		a.erase("at")
 	if int(a["wi"]) >= pts.size():
 		a["li"] = int(a["li"]) + 1
 		a["wi"] = 0
@@ -1309,6 +1461,12 @@ func _do_eat(a: Dictionary, step: Dictionary, dt: float) -> void:
 		var b: Dictionary = sim.state["buildings"].get(a["bld"], {})
 		if not b.is_empty() and bool(sim.bdef(b["def"]).get("dining", false)):
 			a["last_dining"] = int(sim.state["tick"])
+		if a["kind"] == "visitor":
+			# A visitor pays for each meal (V3.1).
+			var fee: int = int(sim.content["trade"].get("meal_fee", 0))
+			sim.traffic.earn(fee, "meals")
+			a["visit"]["ate"] = int(a["visit"]["ate"]) + 1
+			a["visit"]["paid"] = int(a["visit"]["paid"]) + fee
 		_clear_plan(a)
 
 func _do_drink(a: Dictionary, step: Dictionary, dt: float) -> void:
@@ -1332,6 +1490,8 @@ func _do_drink(a: Dictionary, step: Dictionary, dt: float) -> void:
 
 func _do_sleep(a: Dictionary) -> void:
 	a["sleeping"] = true
+	if a["kind"] == "visitor":
+		a["visit"]["slept"] = 1
 	a["goal"] = "Sleeping"
 	var done: bool = float(a["fatigue"]) <= 0.5
 	if not sim.util.is_night() and float(a["fatigue"]) < 15.0:
@@ -1348,9 +1508,17 @@ func _do_heal(a: Dictionary) -> void:
 		if bool(a["medicated"]):
 			sim.stat_add("consumed", "medicine", 1)
 	a["goal"] = "Treated in the medical bay" + (" (medicine)" if bool(a.get("medicated", false)) else "")
-	if float(a["health"]) >= 90.0 or b.is_empty() or not bool(b["powered"]):
-		if float(a["health"]) >= 90.0:
+	var healed_at: float = 90.0
+	if a["kind"] == "visitor" and String(a.get("vkind", "")) == "medical":
+		healed_at = float(sim.content["ships"]["kinds"]["medical"].get("treated_health", 80))
+	if float(a["health"]) >= healed_at or b.is_empty() or not bool(b["powered"]):
+		if float(a["health"]) >= healed_at:
 			sim.stat_add("heals", "", 1)
+			if a["kind"] == "visitor" and String(a.get("vkind", "")) == "medical" and not bool(a["visit"]["treated"]):
+				var fee2: int = int(sim.content["ships"]["kinds"]["medical"].get("fee", 0))
+				a["visit"]["treated"] = true
+				a["visit"]["paid"] = int(a["visit"]["paid"]) + fee2
+				sim.traffic.earn(fee2, "fees")
 		a["medicated"] = false
 		_clear_plan(a)
 
@@ -1370,6 +1538,8 @@ func _do_timed(a: Dictionary, seconds: float, dt: float, goal: String, mark: Str
 		a["goal"] = goal
 	a["act_t"] = float(a["act_t"]) - dt
 	if float(a["act_t"]) <= 0.0:
+		if mark == "rec" and a["kind"] == "visitor":
+			a["visit"]["rec"] = int(a["visit"]["rec"]) + 1
 		if mark == "rec":
 			a["last_rec"] = int(sim.state["tick"])
 			# A cantina gives a morale bonus until the next recreation.
@@ -1390,36 +1560,47 @@ func morale_second() -> void:
 	var pop: int = sim.alive_count()
 	var pr: Dictionary = sim.state["progress"]
 	var recent_death: bool = int(pr["last_death_tick"]) >= 0 and float(tick - int(pr["last_death_tick"])) < float(bal["morale_death_memory_days"]) * day_ticks
+	# Constants of this second, read once (the same values as before).
+	var m_base: float = float(bal["morale_base"])
+	var m_dining: float = float(bal["morale_dining_bonus"])
+	var rec_span: float = day_ticks * float(bal["recreation_interval_days"])
+	var m_rec: float = float(bal["morale_recreation_bonus"])
+	var m_norec: float = float(bal["morale_no_recreation_penalty"])
+	var m_crowd: float = float(bal["morale_crowding_penalty"])
+	var crit: float = float(bal["need_critical"])
+	var m_tired: float = float(bal["morale_tired_penalty"])
+	var m_hungry: float = float(bal["morale_hungry_penalty"])
+	var m_death: float = float(bal["morale_death_penalty"])
+	var step: float = float(bal["morale_rate_per_day"]) / float(bal["day_length"])
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive":
 			continue
-		var target: float = float(bal["morale_base"])
+		var target: float = m_base
 		if float(tick - int(a["last_dining"])) < day_ticks:
-			target += float(bal["morale_dining_bonus"])
-		if float(tick - int(a["last_rec"])) < day_ticks * float(bal["recreation_interval_days"]):
-			target += float(bal["morale_recreation_bonus"])
+			target += m_dining
+		if float(tick - int(a["last_rec"])) < rec_span:
+			target += m_rec
 		elif float(tick - int(a["born"])) > day_ticks:
-			target -= float(bal["morale_no_recreation_penalty"])
+			target -= m_norec
 		if beds < pop:
-			target -= float(bal["morale_crowding_penalty"])
-		if float(a["fatigue"]) >= float(bal["need_critical"]):
-			target -= float(bal["morale_tired_penalty"])
-		if float(a["hunger"]) >= float(bal["need_critical"]) or float(a["thirst"]) >= float(bal["need_critical"]):
-			target -= float(bal["morale_hungry_penalty"])
+			target -= m_crowd
+		if float(a["fatigue"]) >= crit:
+			target -= m_tired
+		if float(a["hunger"]) >= crit or float(a["thirst"]) >= crit:
+			target -= m_hungry
 		if recent_death:
-			target -= float(bal["morale_death_penalty"])
+			target -= m_death
 		if a.has("nutrition"):
 			sim.nutrition.decay_second(a)
 			a["starved"] = sim.nutrition.starved(a)
 			target += sim.nutrition.morale_delta(a)
-		if float(a.get("rec_bonus", 0.0)) > 0.0 and float(tick - int(a["last_rec"])) < day_ticks * float(bal["recreation_interval_days"]):
+		if float(a.get("rec_bonus", 0.0)) > 0.0 and float(tick - int(a["last_rec"])) < rec_span:
 			target += float(a["rec_bonus"])
-		var bed: Dictionary = blds.get(int(a["bed"]), {})
-		if not bed.is_empty() and bed["state"] == "active":
+		var bed = blds.get(int(a["bed"]))
+		if bed != null and bed["state"] == "active":
 			target += float(sim.bd(bed).get("comfort", 0.0))
 		target = clampf(target, 0.0, 100.0)
-		var step: float = float(bal["morale_rate_per_day"]) / float(bal["day_length"])
 		a["morale"] = move_toward(float(a["morale"]), target, step)
 
 # ---------------------------------------------------------------- furniture use (v3)
@@ -1545,3 +1726,150 @@ func _sync_use(a: Dictionary) -> void:
 			pose = "stand"
 		i = _free_slot("stand", bid, _slot_cap("stand", bid), int(a["id"]))
 	a["use"] = {"kind": kind, "b": bid, "i": i, "pose": pose, "act": w[3]}
+
+# ---------------------------------------------------------------- visitors (v3.1)
+## Colonists sleep in their bed; visitors in a free bed that no colonist needs.
+func _sleep_any(a: Dictionary) -> bool:
+	return _visitor_sleep(a) if a["kind"] == "visitor" else _try_sleep(a)
+
+## A visitor's day (docs/V3_1_DESIGN.md section 6.1): needs first, then back to the ship
+## when it boards, else what the visitor came for. Never work.
+func _visitor_think(a: Dictionary) -> void:
+	var bal: Dictionary = sim.bal
+	var arr: Dictionary = sim.traffic.ship(int(a.get("ship", -1)))
+	if not arr.is_empty() and sim.traffic.time_to_return(arr):
+		if _go_to_ship(a, arr):
+			return
+	if float(a["thirst"]) >= float(bal["need_trigger"]) and _try_drink(a):
+		return
+	if float(a["hunger"]) >= float(bal["need_trigger"]) and _try_eat(a):
+		return
+	if _wants_sleep(a) and _visitor_sleep(a):
+		return
+	if float(a["health"]) < 55.0 and _try_heal(a):
+		return
+	var vs: Dictionary = a["visit"]
+	match String(a.get("vkind", "")):
+		"science":
+			var lab: int = _nearest_room_with(a, "research_lab")
+			if lab != -1 and _start_personal(a, "study", lab, [{"op": "study", "t": 60.0}], "Visiting the research lab", -1):
+				return
+		"inspector":
+			var tour: Array = vs["tour"]
+			while int(vs["toured"]) < tour.size():
+				var rid: int = int(tour[int(vs["toured"])])
+				var rb: Dictionary = sim.state["buildings"].get(rid, {})
+				if rb.is_empty() or rb["state"] != "active" or not sim.topo.atmo_comp.has(rid):
+					vs["toured"] = int(vs["toured"]) + 1
+					continue
+				if _start_personal(a, "tour", rid, [{"op": "tour", "t": 8.0}], "Inspecting %s" % rb["name"], -1):
+					return
+				break
+		"liner":
+			if _wants_rec_visitor(a) and _try_rec(a):
+				return
+	if breathable(a):
+		a["goal"] = "Visiting"
+		_start_plan(a, "idle", [{"op": "wait", "t": 4.0}], "Visiting")
+	else:
+		_idle(a)
+
+func _wants_rec_visitor(a: Dictionary) -> bool:
+	var gap: float = float(int(sim.state["tick"]) - int(a["last_rec"])) / (hz() * float(sim.bal["day_length"]))
+	return gap > 0.25
+
+func _nearest_room_with(a: Dictionary, def_id: String) -> int:
+	var best := -1
+	var best_d := 1e18
+	var blds: Dictionary = sim.state["buildings"]
+	for bid in sim.topo.atmo_comp:
+		var b: Dictionary = blds[bid]
+		if b["def"] != def_id or b["state"] != "active" or not sim.util.building_supplied(bid):
+			continue
+		var d: float = (b["pos"] as Vector2).distance_to(a["pos"])
+		if d < best_d:
+			best_d = d
+			best = int(bid)
+	return best
+
+## A visitor sleeps only where a bed is free after every colonist who owns one there.
+func _visitor_sleep(a: Dictionary) -> bool:
+	var blds: Dictionary = sim.state["buildings"]
+	var best := -1
+	var best_d := 1e18
+	for e in _bed_rooms():
+		var bid: int = e[0]
+		var b: Dictionary = blds[bid]
+		if b["state"] != "active" or bool(b["demolish"]) or not sim.util.building_supplied(bid):
+			continue
+		if int(e[1]) - beds_used(bid) - _visitors_sleeping(bid, int(a["id"])) <= 0:
+			continue
+		var d: float = (b["pos"] as Vector2).distance_to(a["pos"])
+		if d < best_d:
+			best_d = d
+			best = bid
+	if best == -1:
+		return false
+	return _start_personal(a, "sleep", best, [{"op": "sleep"}], "Going to a guest bed", int(a["id"]))
+
+func _visitors_sleeping(bid: int, skip: int) -> int:
+	var n := 0
+	for aid in sim.state["agents"]:
+		var x: Dictionary = sim.state["agents"][aid]
+		if int(aid) == skip or x["state"] != "alive" or x["kind"] != "visitor" or x["plan_kind"] != "sleep":
+			continue
+		for st in x["plan"]:
+			if st["op"] == "go" and int(st["to"]["b"]) == bid:
+				n += 1
+	return n
+
+## Walk to the pad and board. Returns true when a plan started.
+func _go_to_ship(a: Dictionary, arr: Dictionary) -> bool:
+	var pad: Dictionary = sim.state["buildings"].get(int(arr["pad"]), {})
+	if pad.is_empty():
+		return false
+	var p = sim.nav.best_access(pad, a["pos"])
+	if p == null:
+		return false
+	var to := {"b": -1, "p": p}
+	var route: Dictionary = sim.nav.plan(loc_of(a), to)
+	if not route["ok"]:
+		return false
+	abort_plan(a, "boarding")
+	_start_plan(a, "board", [{"op": "go", "to": to, "route": route, "rev": int(sim.state["rev"]["walk"])}, {"op": "board"}], "Going back to the ship")
+	return true
+
+## At the pad: the visitor boards and leaves the game. If the ship has gone, the visitor
+## waits in the colony for the next ship of its kind.
+func _board_ship(a: Dictionary) -> void:
+	var arr: Dictionary = sim.traffic.ship(int(a.get("ship", -1)))
+	if arr.is_empty() or not ["landed", "boarding"].has(String(arr["phase"])):
+		a["ship"] = -1
+		_clear_plan(a)
+		return
+	sim.traffic.on_board(a, arr)
+	abort_plan(a, "boarded")
+	_drop_cargo(a)
+	sim.inv.release_owner(-int(a["id"]))
+	if int(a["inv"]) != -1:
+		sim.state["inventories"].erase(int(a["inv"]))
+	(arr["visitors"] as Array).erase(int(a["id"]))
+	arr["result"]["boarded"] = int(arr["result"].get("boarded", 0)) + 1
+	sim.state["agents"].erase(int(a["id"]))
+	sim.alive_changed()
+	_beds_tick = -1
+	_full_tick = -1
+
+## A visiting scientist adds research while in a lab (rp_per_s of the science ship kind).
+func _do_study(a: Dictionary, step: Dictionary, dt: float) -> void:
+	var rate: float = float(sim.content["ships"]["kinds"]["science"].get("rp_per_s", 0.4))
+	var b: Dictionary = sim.state["buildings"].get(a["bld"], {})
+	if not b.is_empty() and bool(b["powered"]):
+		sim.research.add_rp(rate * dt)
+		a["visit"]["study"] = float(a["visit"]["study"]) + rate * dt
+	_do_timed(a, float(step["t"]), dt, "Working with your scientists", "")
+
+func _do_tour(a: Dictionary, step: Dictionary, dt: float) -> void:
+	if float(a["act_t"]) >= 0.0 and float(a["act_t"]) - dt <= 0.0:
+		a["visit"]["toured"] = int(a["visit"]["toured"]) + 1
+	_do_timed(a, float(step["t"]), dt, a["goal"], "")

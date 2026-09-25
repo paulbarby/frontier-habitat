@@ -111,11 +111,40 @@ tick 1.78 ms median at 70 colonists and 150 structures (budget 2.0 ms); late 810
 (66 colonists) 56–71 fps mean, minimum 48–56 fps in the HUD-on overview, draw calls ≤ 1,342;
 world generation 207 ms; web pck 62.3 MB (v2: 32.4 MB). Tests: 60 / 60.
 
+## Version 3.1 (`docs/V3_1_DESIGN.md`, 25–26 September 2026)
+
+| Area | What is built | Evidence |
+|---|---|---|
+| Sound | v3.0 web build was silent (Godot 4.4 web "sample" playback). Now Stream playback, static bus layout, output latency 150 ms | `node tools/audio_probe.mjs build/web`: peak −23.7 dBFS (new colony), −10.6 dBFS (`showcase_v31`); v3.0 build: −inf |
+| Music | 6 Eleven Music tracks (title, day ×2, night, tension, arrival), 11.4 MB; director with 4 s crossfades, tension hold 30 s | `tools/ui/test_music.gd` 13/13 |
+| World sounds | 13 new SFX; positional fall-off from the camera focus, silent beyond 120 m | `tools/ui/test_world_audio.gd` 12/12 |
+| Doors | Solid full-height leaves in pockets inside the frame (nothing hidden), status light green/amber/red, capped cut tops, 10 radius variants + flat-roof variant | critic round 14: 0.79 |
+| Decals at doorways | 8,898 decal pieces split per wall segment; hidden within 0.4 m of an opening; merged per room | 0 decals in 176 doorways; critic 0.80 |
+| Paths | Room → doorway → corridor → doorway → room; string-pulled around furniture (0.30 m), rounded corners, speed and turn limits, no teleports; sim indoor walks stay in rooms and corridors | `tools/render_path_check.gd` (≈500k samples): walls 0 (was 198), outside intrusions 0 (was 176), furniture 0.128 % (was 4.67 %), slides 0 (was 9,205), visible jumps 0 (was 1,643); test `v31_indoor_walks_stay_indoors` |
+| Airlocks | Suit room → inner door → pressure chamber → outer door → porch; sizes M (3.4 m, 2 riders) and L (4.0 m, 4 riders, research `eng_1`), old 2.8 m kept; phases enter/seal/pump/open/exit; beacon and pressure lights; suit swap only at suit anchors (`suit_swap` clip) | `tools/render_airlock_check.gd`: 159 cycles, 0 in every category; critic 0.78 |
+| Door clearance | New corridor links refused where a door would open onto equipment; free sides shown as green/red arcs; every room ≥ 120° (S) / ≥ 180° (M+) free | test `v31_door_clearance` |
+| Ships | 6 ship models (trader, shuttle, liner, medical, science, courier), upgraded landing pad (11.5 m), 20 s landing / 15 s take-off with legs, ramp, flames, dust, floodlights | critic 0.80 |
+| Visitors | Traffic schedule (deterministic, forecast 1 day), Grant/Deny, orbit hold in hazards; traders (trade screen, credits), immigrants (choose by person), tourists (fees), medical, science, inspector; 7 visitor looks | tests `v31_*` (SIM), `test_ships_ui.gd` 18/18; critic 0.78 |
+| Windows | Every panel, dialog and popup is clamped inside the view (8 px), shrinks and scrolls when too big | `tools/ui/test_window_bounds.gd` 68/68 at 1920×1080, 1280×720, 800×600 |
+
+**Critic gate:** rounds 9–14. All 26 subjects pass; v3.1 subjects 0.77–0.80.
+
+**Measured** (i7-14700K, RTX 3060, headless Chrome with GPU, 1600 × 900): tick 1.56 ms median at
+70 colonists (limit 2.0); `showcase_v3_late` 64.5 fps mean, `showcase_v31` 63–70 fps, draw calls
+≤ 1,281; web pck 79.7 MB (v3.0: 62.3 MB). Tests: 76/76.
+
+**Known weak points of 3.1**
+- Two colonists meeting in a doorway can still pass through each other (reduced 15 %, not solved).
+- One frame of 131 ms in `showcase_v31` at speed 4, about 73 s after load, cause not found; a few
+  frames of 51–59 ms remain. Audio dropouts measured 0 in 30 s runs.
+- Old-save 2.8 m airlocks with corridors at blocked angles: bodies walk round the inner door housing.
+- Nobody has listened to the music or sounds; a purchase is tested only in the test suite.
+
 ## Deferred (named in the spec, not built)
 
 | Item | Note |
 |---|---|
-| Trade and landing-pad ships | The landing pad can be built; no ship arrives. Research packs can be "bought" only as Meridian supply-run cargo. |
+| Trade and landing-pad ships | Built in version 3.1 (six ship kinds, trade, visitors). |
 | Robots | Cargo and maintenance robots are not built. |
 | Disasters | Built in version 3 (seven hazard kinds and breakdowns). |
 | Medicine production | Built in version 2 (recipe `medicine`, medic). |

@@ -1,7 +1,7 @@
 {
   "clips_shared_bake": true,
   "failures": [],
-  "generated": "2026-09-24T19:03:23",
+  "generated": "2026-09-25T09:53:12",
   "limits": {
     "bone_deg_per_frame": 15.0,
     "fps": 30,
@@ -10,16 +10,16 @@
   "ok": true,
   "skeleton_identical": true,
   "source": "glb",
-  "summary": "140 tests, 0 failures",
+  "summary": "145 tests, 0 failures",
   "tests": [
     {
-      "at_frame": 74,
+      "at_frame": 76,
       "clips": [
         "idle"
       ],
       "frames": 240,
       "max_bone": "forearm.L",
-      "max_deg": 10.39,
+      "max_deg": 9.78,
       "max_hips_m": 0.0035,
       "max_root_m": 0.0,
       "name": "clip idle at 1x",
@@ -139,7 +139,7 @@
       ],
       "frames": 240,
       "max_bone": "forearm.L",
-      "max_deg": 12.56,
+      "max_deg": 12.82,
       "max_hips_m": 0.0016,
       "max_root_m": 0.0,
       "name": "clip talk at 1x",
@@ -148,13 +148,13 @@
       "variant": "suit"
     },
     {
-      "at_frame": 39,
+      "at_frame": 40,
       "clips": [
         "kneel_enter"
       ],
       "frames": 53,
       "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_deg": 9.97,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "clip kneel_enter at 1x",
@@ -178,14 +178,14 @@
       "variant": "suit"
     },
     {
-      "at_frame": 37,
+      "at_frame": 38,
       "clips": [
         "kneel_exit"
       ],
-      "frames": 65,
+      "frames": 68,
       "max_bone": "forearm.L",
-      "max_deg": 12.71,
-      "max_hips_m": 0.0141,
+      "max_deg": 13.02,
+      "max_hips_m": 0.0142,
       "max_root_m": 0.0,
       "name": "clip kneel_exit at 1x",
       "ok": true,
@@ -193,13 +193,13 @@
       "variant": "suit"
     },
     {
-      "at_frame": 37,
+      "at_frame": 38,
       "clips": [
         "sit_enter"
       ],
       "frames": 58,
-      "max_bone": "forearm.R",
-      "max_deg": 6.96,
+      "max_bone": "forearm.L",
+      "max_deg": 7.09,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "clip sit_enter at 1x",
@@ -259,7 +259,7 @@
       ],
       "frames": 53,
       "max_bone": "forearm.L",
-      "max_deg": 9.56,
+      "max_deg": 10.43,
       "max_hips_m": 0.0159,
       "max_root_m": 0.0,
       "name": "clip sit_exit at 1x",
@@ -304,7 +304,7 @@
       ],
       "frames": 95,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "clip lie_exit at 1x",
@@ -334,7 +334,7 @@
       ],
       "frames": 69,
       "max_bone": "forearm.R",
-      "max_deg": 22.05,
+      "max_deg": 22.28,
       "max_hips_m": 0.0311,
       "max_root_m": 0.0,
       "name": "clip collapse at 1x",
@@ -373,7 +373,22 @@
       "variant": "suit"
     },
     {
-      "at_frame": 38,
+      "at_frame": 48,
+      "clips": [
+        "suit_swap"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.07,
+      "max_hips_m": 0.0,
+      "max_root_m": 0.0,
+      "name": "clip suit_swap at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 39,
       "clips": [
         "sit_enter+idle",
         "sit_enter",
@@ -381,8 +396,8 @@
         "sit_idle"
       ],
       "frames": 90,
-      "max_bone": "forearm.R",
-      "max_deg": 6.96,
+      "max_bone": "forearm.L",
+      "max_deg": 7.09,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "pose stand -> sit",
@@ -407,7 +422,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 40,
+      "at_frame": 41,
       "clips": [
         "kneel_enter+idle",
         "kneel_enter",
@@ -416,7 +431,7 @@
       ],
       "frames": 85,
       "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_deg": 9.97,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "pose stand -> kneel",
@@ -433,7 +448,7 @@
       ],
       "frames": 85,
       "max_bone": "forearm.L",
-      "max_deg": 9.56,
+      "max_deg": 10.43,
       "max_hips_m": 0.0159,
       "max_root_m": 0.0,
       "name": "pose sit -> stand",
@@ -460,7 +475,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 93,
+      "at_frame": 31,
       "clips": [
         "sit_exit+sit_idle",
         "sit_exit",
@@ -470,8 +485,8 @@
         "repair_kneel"
       ],
       "frames": 138,
-      "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_bone": "forearm.L",
+      "max_deg": 10.43,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "pose sit -> kneel",
@@ -488,7 +503,7 @@
       ],
       "frames": 128,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> stand",
@@ -507,7 +522,7 @@
       ],
       "frames": 186,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> sit",
@@ -526,7 +541,7 @@
       ],
       "frames": 181,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> kneel",
@@ -534,24 +549,24 @@
       "variant": "suit"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
         "idle+kneel_exit",
         "idle"
       ],
-      "frames": 98,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
-      "max_hips_m": 0.0141,
+      "frames": 100,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
+      "max_hips_m": 0.0142,
       "max_root_m": 0.0,
       "name": "pose kneel -> stand",
       "ok": true,
       "variant": "suit"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
@@ -560,9 +575,9 @@
         "sit_idle+sit_enter",
         "sit_idle"
       ],
-      "frames": 156,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
+      "frames": 158,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "pose kneel -> sit",
@@ -570,7 +585,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
@@ -579,9 +594,9 @@
         "sleep+lie_enter",
         "sleep"
       ],
-      "frames": 211,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
+      "frames": 213,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
       "max_hips_m": 0.0302,
       "max_root_m": 0.0,
       "name": "pose kneel -> lie",
@@ -611,7 +626,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.22,
+      "max_deg": 10.25,
       "max_hips_m": 0.0033,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> work_console",
@@ -625,8 +640,8 @@
         "work_bench"
       ],
       "frames": 42,
-      "max_bone": "forearm.R",
-      "max_deg": 10.13,
+      "max_bone": "forearm.L",
+      "max_deg": 10.17,
       "max_hips_m": 0.0035,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> work_bench",
@@ -641,7 +656,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.48,
+      "max_deg": 10.76,
       "max_hips_m": 0.0058,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> talk",
@@ -656,7 +671,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 9.03,
+      "max_deg": 9.33,
       "max_hips_m": 0.0019,
       "max_root_m": 0.0,
       "name": "loop stand: idle_look -> idle",
@@ -664,7 +679,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 5,
+      "at_frame": 8,
       "clips": [
         "work_console+idle_look",
         "work_console"
@@ -701,7 +716,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.48,
+      "max_deg": 10.76,
       "max_hips_m": 0.0031,
       "max_root_m": 0.0,
       "name": "loop stand: idle_look -> talk",
@@ -761,7 +776,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.92,
+      "max_deg": 13.68,
       "max_hips_m": 0.0016,
       "max_root_m": 0.0,
       "name": "loop stand: work_console -> talk",
@@ -821,7 +836,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 12.8,
+      "max_deg": 14.53,
       "max_hips_m": 0.0021,
       "max_root_m": 0.0,
       "name": "loop stand: work_bench -> talk",
@@ -836,7 +851,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 10.67,
+      "max_deg": 10.66,
       "max_hips_m": 0.0043,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> idle",
@@ -851,7 +866,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 10.68,
+      "max_deg": 10.66,
       "max_hips_m": 0.0021,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> idle_look",
@@ -866,7 +881,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.01,
+      "max_deg": 10.96,
       "max_hips_m": 0.0013,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> work_console",
@@ -881,7 +896,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.07,
+      "max_deg": 11.02,
       "max_hips_m": 0.0017,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> work_bench",
@@ -926,7 +941,7 @@
       ],
       "frames": 42,
       "max_bone": "hand.R",
-      "max_deg": 11.67,
+      "max_deg": 11.93,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_eat -> sit_idle",
@@ -941,7 +956,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 14.92,
+      "max_deg": 13.64,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_eat -> sit_type",
@@ -971,7 +986,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 12.59,
+      "max_deg": 13.57,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_type -> sit_eat",
@@ -979,7 +994,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 88,
+      "at_frame": 87,
       "clips": [
         "idle",
         "walk+idle",
@@ -993,8 +1008,8 @@
       ],
       "frames": 225,
       "max_bone": "shin.R",
-      "max_deg": 27.03,
-      "max_hips_m": 0.0188,
+      "max_deg": 30.64,
+      "max_hips_m": 0.0226,
       "max_root_m": 0.0,
       "name": "locomotion idle -> walk -> run -> stop",
       "ok": true,
@@ -1085,7 +1100,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 215,
+      "at_frame": 217,
       "clips": [
         "idle+walk",
         "idle",
@@ -1101,7 +1116,7 @@
         "walk+idle",
         "walk"
       ],
-      "frames": 221,
+      "frames": 223,
       "max_bone": "shin.L",
       "max_deg": 21.95,
       "max_hips_m": 0.0215,
@@ -1126,6 +1141,23 @@
       "variant": "suit"
     },
     {
+      "at_frame": 48,
+      "clips": [
+        "suit_swap+idle",
+        "suit_swap",
+        "idle+suit_swap",
+        "idle"
+      ],
+      "frames": 84,
+      "max_bone": "forearm.L",
+      "max_deg": 14.07,
+      "max_hips_m": 0.0044,
+      "max_root_m": 0.0,
+      "name": "idle -> suit_swap -> idle",
+      "ok": true,
+      "variant": "suit"
+    },
+    {
       "at_frame": 34,
       "clips": [
         "collapse+idle",
@@ -1135,7 +1167,7 @@
       ],
       "frames": 90,
       "max_bone": "forearm.R",
-      "max_deg": 22.05,
+      "max_deg": 22.28,
       "max_hips_m": 0.0311,
       "max_root_m": 0.0,
       "name": "oneshot collapse -> dead",
@@ -1143,13 +1175,13 @@
       "variant": "suit"
     },
     {
-      "at_frame": 74,
+      "at_frame": 76,
       "clips": [
         "idle"
       ],
       "frames": 240,
       "max_bone": "forearm.L",
-      "max_deg": 10.39,
+      "max_deg": 9.78,
       "max_hips_m": 0.0035,
       "max_root_m": 0.0,
       "name": "clip idle at 1x",
@@ -1269,7 +1301,7 @@
       ],
       "frames": 240,
       "max_bone": "forearm.L",
-      "max_deg": 12.56,
+      "max_deg": 12.82,
       "max_hips_m": 0.0016,
       "max_root_m": 0.0,
       "name": "clip talk at 1x",
@@ -1278,13 +1310,13 @@
       "variant": "in"
     },
     {
-      "at_frame": 39,
+      "at_frame": 40,
       "clips": [
         "kneel_enter"
       ],
       "frames": 53,
       "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_deg": 9.97,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "clip kneel_enter at 1x",
@@ -1308,14 +1340,14 @@
       "variant": "in"
     },
     {
-      "at_frame": 37,
+      "at_frame": 38,
       "clips": [
         "kneel_exit"
       ],
-      "frames": 65,
+      "frames": 68,
       "max_bone": "forearm.L",
-      "max_deg": 12.71,
-      "max_hips_m": 0.0141,
+      "max_deg": 13.02,
+      "max_hips_m": 0.0142,
       "max_root_m": 0.0,
       "name": "clip kneel_exit at 1x",
       "ok": true,
@@ -1323,13 +1355,13 @@
       "variant": "in"
     },
     {
-      "at_frame": 37,
+      "at_frame": 38,
       "clips": [
         "sit_enter"
       ],
       "frames": 58,
-      "max_bone": "forearm.R",
-      "max_deg": 6.96,
+      "max_bone": "forearm.L",
+      "max_deg": 7.09,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "clip sit_enter at 1x",
@@ -1389,7 +1421,7 @@
       ],
       "frames": 53,
       "max_bone": "forearm.L",
-      "max_deg": 9.56,
+      "max_deg": 10.43,
       "max_hips_m": 0.0159,
       "max_root_m": 0.0,
       "name": "clip sit_exit at 1x",
@@ -1434,7 +1466,7 @@
       ],
       "frames": 95,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "clip lie_exit at 1x",
@@ -1464,7 +1496,7 @@
       ],
       "frames": 69,
       "max_bone": "forearm.R",
-      "max_deg": 22.05,
+      "max_deg": 22.28,
       "max_hips_m": 0.0311,
       "max_root_m": 0.0,
       "name": "clip collapse at 1x",
@@ -1503,7 +1535,22 @@
       "variant": "in"
     },
     {
-      "at_frame": 38,
+      "at_frame": 48,
+      "clips": [
+        "suit_swap"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.07,
+      "max_hips_m": 0.0,
+      "max_root_m": 0.0,
+      "name": "clip suit_swap at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 39,
       "clips": [
         "sit_enter+idle",
         "sit_enter",
@@ -1511,8 +1558,8 @@
         "sit_idle"
       ],
       "frames": 90,
-      "max_bone": "forearm.R",
-      "max_deg": 6.96,
+      "max_bone": "forearm.L",
+      "max_deg": 7.09,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "pose stand -> sit",
@@ -1537,7 +1584,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 40,
+      "at_frame": 41,
       "clips": [
         "kneel_enter+idle",
         "kneel_enter",
@@ -1546,7 +1593,7 @@
       ],
       "frames": 85,
       "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_deg": 9.97,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "pose stand -> kneel",
@@ -1563,7 +1610,7 @@
       ],
       "frames": 85,
       "max_bone": "forearm.L",
-      "max_deg": 9.56,
+      "max_deg": 10.43,
       "max_hips_m": 0.0159,
       "max_root_m": 0.0,
       "name": "pose sit -> stand",
@@ -1590,7 +1637,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 93,
+      "at_frame": 31,
       "clips": [
         "sit_exit+sit_idle",
         "sit_exit",
@@ -1600,8 +1647,8 @@
         "repair_kneel"
       ],
       "frames": 138,
-      "max_bone": "hand.R",
-      "max_deg": 10.23,
+      "max_bone": "forearm.L",
+      "max_deg": 10.43,
       "max_hips_m": 0.0215,
       "max_root_m": 0.0,
       "name": "pose sit -> kneel",
@@ -1618,7 +1665,7 @@
       ],
       "frames": 128,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> stand",
@@ -1637,7 +1684,7 @@
       ],
       "frames": 186,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> sit",
@@ -1656,7 +1703,7 @@
       ],
       "frames": 181,
       "max_bone": "forearm.R",
-      "max_deg": 13.85,
+      "max_deg": 13.94,
       "max_hips_m": 0.0255,
       "max_root_m": 0.0,
       "name": "pose lie -> kneel",
@@ -1664,24 +1711,24 @@
       "variant": "in"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
         "idle+kneel_exit",
         "idle"
       ],
-      "frames": 98,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
-      "max_hips_m": 0.0141,
+      "frames": 100,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
+      "max_hips_m": 0.0142,
       "max_root_m": 0.0,
       "name": "pose kneel -> stand",
       "ok": true,
       "variant": "in"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
@@ -1690,9 +1737,9 @@
         "sit_idle+sit_enter",
         "sit_idle"
       ],
-      "frames": 156,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
+      "frames": 158,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
       "max_hips_m": 0.0161,
       "max_root_m": 0.0,
       "name": "pose kneel -> sit",
@@ -1700,7 +1747,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 38,
+      "at_frame": 8,
       "clips": [
         "kneel_exit+repair_kneel",
         "kneel_exit",
@@ -1709,9 +1756,9 @@
         "sleep+lie_enter",
         "sleep"
       ],
-      "frames": 211,
-      "max_bone": "forearm.L",
-      "max_deg": 12.71,
+      "frames": 213,
+      "max_bone": "hand.R",
+      "max_deg": 13.74,
       "max_hips_m": 0.0302,
       "max_root_m": 0.0,
       "name": "pose kneel -> lie",
@@ -1741,7 +1788,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.22,
+      "max_deg": 10.25,
       "max_hips_m": 0.0033,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> work_console",
@@ -1755,8 +1802,8 @@
         "work_bench"
       ],
       "frames": 42,
-      "max_bone": "forearm.R",
-      "max_deg": 10.13,
+      "max_bone": "forearm.L",
+      "max_deg": 10.17,
       "max_hips_m": 0.0035,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> work_bench",
@@ -1771,7 +1818,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.48,
+      "max_deg": 10.76,
       "max_hips_m": 0.0058,
       "max_root_m": 0.0,
       "name": "loop stand: idle -> talk",
@@ -1786,7 +1833,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 9.03,
+      "max_deg": 9.33,
       "max_hips_m": 0.0019,
       "max_root_m": 0.0,
       "name": "loop stand: idle_look -> idle",
@@ -1794,7 +1841,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 5,
+      "at_frame": 8,
       "clips": [
         "work_console+idle_look",
         "work_console"
@@ -1831,7 +1878,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.L",
-      "max_deg": 10.48,
+      "max_deg": 10.76,
       "max_hips_m": 0.0031,
       "max_root_m": 0.0,
       "name": "loop stand: idle_look -> talk",
@@ -1891,7 +1938,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.92,
+      "max_deg": 13.68,
       "max_hips_m": 0.0016,
       "max_root_m": 0.0,
       "name": "loop stand: work_console -> talk",
@@ -1951,7 +1998,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 12.8,
+      "max_deg": 14.53,
       "max_hips_m": 0.0021,
       "max_root_m": 0.0,
       "name": "loop stand: work_bench -> talk",
@@ -1966,7 +2013,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 10.67,
+      "max_deg": 10.66,
       "max_hips_m": 0.0043,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> idle",
@@ -1981,7 +2028,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 10.68,
+      "max_deg": 10.66,
       "max_hips_m": 0.0021,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> idle_look",
@@ -1996,7 +2043,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.01,
+      "max_deg": 10.96,
       "max_hips_m": 0.0013,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> work_console",
@@ -2011,7 +2058,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 11.07,
+      "max_deg": 11.02,
       "max_hips_m": 0.0017,
       "max_root_m": 0.0,
       "name": "loop stand: talk -> work_bench",
@@ -2056,7 +2103,7 @@
       ],
       "frames": 42,
       "max_bone": "hand.R",
-      "max_deg": 11.67,
+      "max_deg": 11.93,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_eat -> sit_idle",
@@ -2071,7 +2118,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 14.92,
+      "max_deg": 13.64,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_eat -> sit_type",
@@ -2101,7 +2148,7 @@
       ],
       "frames": 42,
       "max_bone": "forearm.R",
-      "max_deg": 12.59,
+      "max_deg": 13.57,
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "loop sit: sit_type -> sit_eat",
@@ -2109,7 +2156,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 88,
+      "at_frame": 87,
       "clips": [
         "idle",
         "walk+idle",
@@ -2123,8 +2170,8 @@
       ],
       "frames": 225,
       "max_bone": "shin.R",
-      "max_deg": 27.03,
-      "max_hips_m": 0.0188,
+      "max_deg": 30.64,
+      "max_hips_m": 0.0226,
       "max_root_m": 0.0,
       "name": "locomotion idle -> walk -> run -> stop",
       "ok": true,
@@ -2215,7 +2262,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 215,
+      "at_frame": 217,
       "clips": [
         "idle+walk",
         "idle",
@@ -2231,7 +2278,7 @@
         "walk+idle",
         "walk"
       ],
-      "frames": 221,
+      "frames": 223,
       "max_bone": "shin.L",
       "max_deg": 21.95,
       "max_hips_m": 0.0215,
@@ -2256,6 +2303,23 @@
       "variant": "in"
     },
     {
+      "at_frame": 48,
+      "clips": [
+        "suit_swap+idle",
+        "suit_swap",
+        "idle+suit_swap",
+        "idle"
+      ],
+      "frames": 84,
+      "max_bone": "forearm.L",
+      "max_deg": 14.07,
+      "max_hips_m": 0.0044,
+      "max_root_m": 0.0,
+      "name": "idle -> suit_swap -> idle",
+      "ok": true,
+      "variant": "in"
+    },
+    {
       "at_frame": 34,
       "clips": [
         "collapse+idle",
@@ -2265,17 +2329,23 @@
       ],
       "frames": 90,
       "max_bone": "forearm.R",
-      "max_deg": 22.05,
+      "max_deg": 22.28,
       "max_hips_m": 0.0311,
       "max_root_m": 0.0,
       "name": "oneshot collapse -> dead",
       "ok": true,
       "variant": "in"
+    },
+    {
+      "max_deg": 0.04,
+      "name": "suit_swap cut (1.0 s): suit vs indoor",
+      "ok": true,
+      "variant": "both"
     }
   ],
   "variants": {
     "in": {
-      "bake_ms": 1.0,
+      "bake_ms": 1.4,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",
@@ -2327,7 +2397,8 @@
         "injured_walk",
         "collapse",
         "dead",
-        "cheer"
+        "cheer",
+        "suit_swap"
       ],
       "clips_missing": [],
       "file": "res://assets/models/astronaut_indoor.glb",
@@ -2336,34 +2407,35 @@
         "carry_idle": 0.748604261041589,
         "carry_walk": 17.5420551000665,
         "cheer": 11.9162297713075,
-        "collapse": 22.0525037071732,
+        "collapse": 22.2751217703388,
         "dead": 0.0,
-        "idle": 10.3918433929083,
+        "idle": 9.77728431573173,
         "idle_look": 2.89313238240765,
         "injured_walk": 12.8146258971804,
-        "kneel_enter": 10.2346611033125,
-        "kneel_exit": 12.7118281350772,
+        "kneel_enter": 9.97125315042363,
+        "kneel_exit": 13.022646992316,
         "lie_enter": 12.0085312402038,
-        "lie_exit": 13.8513273773306,
+        "lie_exit": 13.9390133458952,
         "repair_kneel": 4.68165540950274,
         "run": 22.1167962778306,
         "sit_eat": 11.7461990421092,
-        "sit_enter": 6.96491721271219,
-        "sit_exit": 9.56287357862763,
+        "sit_enter": 7.08952803770355,
+        "sit_exit": 10.4323950797843,
         "sit_idle": 2.00935008659419,
         "sit_type": 2.94384034713606,
         "sleep": 0.0791293690406109,
-        "talk": 12.5562833833348,
+        "suit_swap": 14.0716872092018,
+        "talk": 12.8162267227672,
         "walk": 17.2668053067042,
         "work_bench": 0.865019232554903,
         "work_console": 0.924503776923367
       },
       "ok": true,
       "status": "glb",
-      "triangles": 5964
+      "triangles": 8712
     },
     "suit": {
-      "bake_ms": 58.1,
+      "bake_ms": 87.1,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",
@@ -2415,7 +2487,8 @@
         "injured_walk",
         "collapse",
         "dead",
-        "cheer"
+        "cheer",
+        "suit_swap"
       ],
       "clips_missing": [],
       "file": "res://assets/models/astronaut_suit.glb",
@@ -2424,31 +2497,32 @@
         "carry_idle": 0.748604261041589,
         "carry_walk": 17.5420551000665,
         "cheer": 11.9162297713075,
-        "collapse": 22.0525037071732,
+        "collapse": 22.2751217703388,
         "dead": 0.0,
-        "idle": 10.3918433929083,
+        "idle": 9.77728431573173,
         "idle_look": 2.89313238240765,
         "injured_walk": 12.8146258971804,
-        "kneel_enter": 10.2346611033125,
-        "kneel_exit": 12.7118281350772,
+        "kneel_enter": 9.97125315042363,
+        "kneel_exit": 13.022646992316,
         "lie_enter": 12.0085312402038,
-        "lie_exit": 13.8513273773306,
+        "lie_exit": 13.9390133458952,
         "repair_kneel": 4.68165540950274,
         "run": 22.1167962778306,
         "sit_eat": 11.7461990421092,
-        "sit_enter": 6.96491721271219,
-        "sit_exit": 9.56287357862763,
+        "sit_enter": 7.08952803770355,
+        "sit_exit": 10.4323950797843,
         "sit_idle": 2.00935008659419,
         "sit_type": 2.94384034713606,
         "sleep": 0.0791293690406109,
-        "talk": 12.5562833833348,
+        "suit_swap": 14.0716872092018,
+        "talk": 12.8162267227672,
         "walk": 17.2668053067042,
         "work_bench": 0.865019232554903,
         "work_console": 0.924503776923367
       },
       "ok": true,
       "status": "glb",
-      "triangles": 6839
+      "triangles": 7345
     }
   }
 }

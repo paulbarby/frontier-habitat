@@ -63,14 +63,22 @@ var _fps_clock := 0.0
 var _quiet := false
 var _proc_avg := 0.0
 var _shake_on := true
+var _burn_ms := 0.0
+var _t_sim := 0.0
+var _t_view := 0.0
+var _t_aud := 0.0
+var _spikes: Array = []          # frame times over 100 ms since the last `spikes` command
 
 func _ready() -> void:
-	get_window().min_size = Vector2i(1024, 600)
+	# Smallest desktop window. The browser canvas has no limit; the bounds keeper
+	# (ui/hud/bounds_keeper.gd) keeps every window inside any view, tested down to 800 x 600.
+	get_window().min_size = Vector2i(800, 600)
 	view = WorldView.new()
 	add_child(view)
 	rig = CameraRig.new()
 	add_child(rig)
 	audio = Audio.new()
+	audio.main = self
 	add_child(audio)
 	Sfx.audio = audio
 	hud = Hud.new()
@@ -200,7 +208,12 @@ func _on_cmd(text: String) -> String:
 				cancel_tool()
 				return "ok"
 			if w[1] == "corridor" or w[1] == "cable":
+				# tool corridor|cable [from_id [x y]]: the first end already chosen.
 				start_link(w[1])
+				if w.size() > 2 and sim.state["buildings"].has(int(w[2])):
+					link_from = int(w[2])
+				forced_hover = Vector2(float(w[3]), float(w[4])) if w.size() > 4 else null
+				return "ok"
 			elif w[1] == "remove":
 				start_demolish()
 			else:
@@ -326,11 +339,11 @@ func _on_cmd(text: String) -> String:
 		"idof":
 			# idof <def> | idof agent [n]: the id of the first structure of a def, or of the n-th
 			# living colonist (for follow and interior).
-			if w.size() > 1 and w[1] == "agent":
+			if w.size() > 1 and (w[1] == "agent" or w[1] == "visitor"):
 				var want: int = int(w[2]) if w.size() > 2 else 0
 				var k := 0
 				for aid in sim.state["agents"]:
-					if sim.state["agents"][aid]["state"] == "alive":
+					if sim.state["agents"][aid]["state"] == "alive" and (w[1] == "agent" or hud.data.is_visitor(sim.state["agents"][aid])):
 						if k == want:
 							return str(aid)
 						k += 1
@@ -339,6 +352,158 @@ func _on_cmd(text: String) -> String:
 				if w.size() > 1 and sim.state["buildings"][bid2]["def"] == w[1]:
 					return str(bid2)
 			return "not found"
+		# ---- version 3.1 audio (docs/V3_1_DESIGN.md §1, §2)
+		"volume":
+			# volume <master|music|sfx|ui|ambience> <0..1>: the Settings sliders.
+			if w.size() < 3:
+				return "volume <bus> <0..1>"
+			var key: String = "vol_" + w[1].to_lower()
+			if not Settings.DEFAULTS.has(key):
+				return "unknown bus"
+			Settings.set_value(key, clampf(float(w[2]), 0.0, 1.0))
+			apply_settings()
+		"music":
+			return audio.describe()
+		"mus":
+			# mus <title|day|night|tension|auto>: fixes the music state (tests); auto = from the game.
+			audio.music.force = "" if w.size() < 2 or w[1] == "auto" else w[1]
+			return audio.describe()
+		"maxfps":
+			# maxfps <n>: Engine.max_fps (0 = no cap). Web warning (measured 2026-09-25): a cap below
+			# the display rate silences the audio of the web build. Use `burn` to test a slow machine.
+			Engine.max_fps = maxi(0, int(w[1])) if w.size() > 1 else 0
+		"prof":
+			# prof: times the heavier HUD work in this build (ms each).
+			var out: Array = []
+			for spec in [["minimap_paint", func(): hud.minimap._paint()], ["kpis", func(): hud.data.kpis()],
+					["goals", func(): hud.goals.refresh()], ["hazard", func(): hud.hazard.refresh()], ["sim_step", func(): sim.step()]]:
+				var t0: int = Time.get_ticks_usec()
+				(spec[1] as Callable).call()
+				out.append("%s=%.1f" % [spec[0], float(Time.get_ticks_usec() - t0) / 1000.0])
+			return " ".join(out)
+		"simprof":
+			# simprof <n>: runs n simulation ticks now; returns mean, max and the ticks over 50 ms.
+			var n: int = int(w[1]) if w.size() > 1 else 100
+			var mx := 0.0
+			var tot := 0.0
+			var slow: Array = []
+			for i in n:
+				var t0: int = Time.get_ticks_usec()
+				sim.step()
+				var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0
+				tot += ms
+				mx = maxf(mx, ms)
+				if ms > 50.0:
+					slow.append("t%d:%.0f" % [int(sim.state["tick"]), ms])
+			return "mean=%.2f max=%.1f slow=%s" % [tot / maxf(1.0, n), mx, str(slow)]
+		"spikes":
+			# spikes: frames longer than 50 ms since the last call ("time:ms:game seconds"), then resets.
+			var sp: String = "n=%d %s" % [_spikes.size(), str(_spikes)]
+			_spikes = []
+			return sp
+		"burn":
+			# burn <ms>: busy-waits this long every frame, like a slow machine (0 = off). For the
+			# audio latency test (tools/ui/audio_glitch_probe.mjs --burn).
+			_burn_ms = maxf(0.0, float(w[1])) if w.size() > 1 else 0.0
+		"world":
+			# world <name> <x> <y>: a world sound at a content point (tests of V3_1 §2.2).
+			if w.size() < 4:
+				return "world <name> <x> <y>"
+			return str(audio.world(w[1], Vector2(float(w[2]), float(w[3]))))
+		# ---- version 3.1 ships (docs/V3_1_DESIGN.md §6.5)
+		"traffic":
+			# traffic: one line per ship and arrival. traffic <id> grant|deny: answers an arrival.
+			if w.size() >= 3:
+				submit("traffic_answer", {"id": int(w[1]), "grant": w[2] != "deny"})
+				return "sent"
+			var lines: Array = []
+			for r in hud.traffic.rows():
+				lines.append("%d %s %s %s %s pad=%d" % [int(r.get("id", -1)), String(r.get("kind", "")), String(r.get("phase", "")), String(r.get("answer", "")), hud.traffic.when_text(r), int(r.get("pad", -1))])
+			var pads: Array = []
+			for pid in sim.state["buildings"]:
+				var pb: Dictionary = sim.state["buildings"][pid]
+				if String(pb["def"]) == "landing_pad":
+					pads.append("%d:%s:powered=%s:ship=%s" % [pid, pb["state"], str(pb.get("powered", "")), str(pb.get("ship", -1))])
+			return "credits=%d pads=%s | %s" % [hud.data.credits(), str(pads), " | ".join(lines) if not lines.is_empty() else "no ships"]
+		"ship":
+			# ship <kind>: a ship of that kind in 60 s (or ship <kind> <seconds>). Needs debug=1.
+			if not debug_mode():
+				return "refused: start with debug=1"
+			if w.size() < 2:
+				return "ship <trader|shuttle|liner|medical|science|inspector> [seconds]"
+			submit("traffic_now", {"kind": w[1], "in": float(w[2]) if w.size() > 2 else 60.0})
+			return "submitted"
+		"trade":
+			# trade [id]: opens the trade screen (the first landed trader or science ship without an id).
+			# trade <id> buy|sell <item> <n>: sends one trade command.
+			if w.size() >= 5:
+				var tp: Dictionary = {"id": int(w[1]), "buy": {}, "sell": {}}
+				tp["buy" if w[2] == "buy" else "sell"][w[3]] = int(w[4])
+				var tcid = submit("trade", tp)
+				var tres: Dictionary = sim.cmds.results.get(tcid, {})
+				return String(tres.get("code", "sent")) + ((" cost=%d" % int(tres["cost"])) if tres.has("cost") else "")
+			if not hud.open_screen("trade", int(w[1]) if w.size() > 1 else null):
+				return "unknown screen"
+		"cable":
+			# cable <id>: a cable from structure <id> to the nearest structure on a power network
+			# (tests and screenshots). Returns the placement check code.
+			var cid0: int = int(w[1]) if w.size() > 1 else -1
+			if not sim.state["buildings"].has(cid0):
+				return "not found"
+			var from_p: Vector2 = sim.state["buildings"][cid0]["pos"]
+			var best := -1
+			var best_d := 1e9
+			for oid in sim.state["buildings"]:
+				var ob: Dictionary = sim.state["buildings"][oid]
+				if oid == cid0 or String(ob.get("kind", "")) == "link" or ob["state"] != "active" or not sim.topo.power_comp.has(oid):
+					continue
+				var dd: float = (ob["pos"] as Vector2).distance_to(from_p)
+				if dd < best_d and String(sim.place.check_link("cable", cid0, oid)["code"]) == "ok":
+					best_d = dd
+					best = oid
+			if best == -1:
+				return "no powered structure to join"
+			submit("place_link", {"def": "cable", "a": cid0, "b": best})
+			return "cable to %d (%.0f m)" % [best, best_d]
+		"findblocked":
+			# findblocked: two structures a corridor between which SIM refuses with door_blocked
+			# (tests and screenshots): "a b", or "none".
+			var ids: Array = sim.state["buildings"].keys()
+			for ia in ids:
+				var ba: Dictionary = sim.state["buildings"][ia]
+				if String(ba.get("kind", "")) != "room" or ba["state"] != "active":
+					continue
+				for ib in ids:
+					if ib == ia:
+						continue
+					var bb2: Dictionary = sim.state["buildings"][ib]
+					if String(bb2.get("kind", "")) == "link" or (bb2["pos"] as Vector2).distance_to(ba["pos"]) > 40.0:
+						continue
+					if String(sim.place.check_link("corridor", ia, ib).get("code", "")) == "door_blocked":
+						return "%d %d" % [ia, ib]
+			return "none"
+		"posof":
+			# posof <id>: "x y rot_deg radius" of a structure.
+			var pb2: Dictionary = sim.state["buildings"].get(int(w[1]) if w.size() > 1 else -1, {})
+			if pb2.is_empty():
+				return "not found"
+			return "%.1f %.1f %.1f %.1f" % [pb2["pos"].x, pb2["pos"].y, rad_to_deg(float(pb2.get("rot", 0.0))), float(pb2.get("radius", 0.0))]
+		"findspot":
+			# findspot <def> [size] [min_m]: the first valid place on rings round the lander, at least
+			# min_m away (tests and screenshots): "x y", or "none".
+			if w.size() < 2:
+				return "findspot <def> [size] [min_m]"
+			var fsz: int = int(w[2]) if w.size() > 2 else 1
+			var c0: Vector2 = hud.data.colony_center()
+			var r0: float = float(w[3]) if w.size() > 3 else 20.0
+			var rr: float = r0
+			while rr < 260.0:
+				for k in 36:
+					var q: Vector2 = sim.place.snap_pos(c0 + Vector2(rr, 0).rotated(TAU * float(k) / 36.0))
+					if _check_place(w[1], q, 0.0, fsz) == "ok":
+						return "%.1f %.1f" % [q.x, q.y]
+				rr += 6.0
+			return "none"
 		"minimap":
 			# minimap zoom|whole
 			hud.minimap.set_zoomed(w.size() > 1 and w[1] == "zoom")
@@ -471,8 +636,7 @@ func apply_settings() -> void:
 	Glass.set_enabled(bool(Settings.get_value("glass")))
 	rig.edge_pan = bool(Settings.get_value("edge_pan"))
 	rig.pan_speed = float(Settings.get_value("camera_speed"))
-	# Camera shake (quakes, landings, impacts). RENDER's rig and view read `shake_enabled`
-	# when they have it; until then _process stops the rig's shake itself.
+	# Camera shake (quakes, landings, impacts): RENDER's rig and view read `shake_enabled`.
 	_shake_on = bool(Settings.get_value("camera_shake"))
 	for o in [rig, view]:
 		if o != null and "shake_enabled" in o:
@@ -482,11 +646,18 @@ func apply_settings() -> void:
 
 # ---------------------------------------------------------------- main loop
 func _process(delta: float) -> void:
+	if delta > 0.05 and _spikes.size() < 200:
+		# "time:frame ms:game s|sim view hud (ms of the frame before)": the rest of a long frame is
+		# engine work outside scripts (rendering, shader compiles, audio decode).
+		_spikes.append("%.1fs:%dms:g%d|sim%.0f view%.0f hud%.0f aud%.0f" % [float(Time.get_ticks_msec()) / 1000.0, int(delta * 1000.0), int(sim.seconds()) if sim != null else -1,
+			_t_sim, _t_view, hud.last_ms if hud != null else 0.0, _t_aud])
+		_t_aud = 0.0
 	var run_speed: int = 0 if paused_by_menu else speed
 	if run_speed > 0 and not bool(sim.state["progress"]["lost"]):
 		_acc += delta * run_speed
 		var steps := 0
 		var t0: int = Time.get_ticks_usec()
+		_t_sim = 0.0
 		while _acc >= TICK and steps < MAX_STEPS_PER_FRAME:
 			_demo_drive()
 			sim.step()
@@ -494,6 +665,7 @@ func _process(delta: float) -> void:
 			steps += 1
 			if Time.get_ticks_usec() - t0 > 14000:
 				break
+		_t_sim = float(Time.get_ticks_usec() - t0) / 1000.0
 		if steps > 0:
 			_step_ms = lerpf(_step_ms, float(Time.get_ticks_usec() - t0) / 1000.0 / steps, 0.1)
 		# If the simulation cannot keep pace it never skips logical ticks: the backlog is
@@ -510,25 +682,31 @@ func _process(delta: float) -> void:
 				hud.toast("Autosaved." if res["ok"] else "Autosave failed: " + String(res["error"]), "save" if res["ok"] else "warn")
 	_poll_results()
 	view.camera_distance = rig.distance
+	var tv0: int = Time.get_ticks_usec()
 	view.sync(delta)
+	_t_view = float(Time.get_ticks_usec() - tv0) / 1000.0
 	_update_tool()
 	_take_shots()
 	if _boot_frames > 0:
 		_boot_frames -= 1
 	_proc_avg = lerpf(_proc_avg, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, 0.05)
+	if _burn_ms > 0.0:
+		var until: int = Time.get_ticks_usec() + int(_burn_ms * 1000.0)
+		while Time.get_ticks_usec() < until:
+			pass
 	_fps_clock += delta
 	if _fps_clock >= 0.5:
 		_fps_clock = 0.0
 		_fps = Engine.get_frames_per_second()
 		if view.has_method("stats"):
 			_fps = float(view.stats().get("fps", _fps))
+		var ta0: int = Time.get_ticks_usec()
 		audio.ambience(sim.util.is_night(), on_title)
+		# Mood music (V3_1 §2.1): title, day, night or tension.
+		audio.music.update(on_title, sim.util.is_night(), not on_title and hud.tension_now(), 0.5)
+		_t_aud = float(Time.get_ticks_usec() - ta0) / 1000.0
 	Boot.set_state(_hook, _boot_frames == 0, int(sim.state["tick"]), sim.util.day_number())
 	Boot.set_extra(_hook, _fps, "title" if on_title and hud.screen_name() == "title" else hud.screen_name())
-	# Camera shake off (Settings) while the rig has no `shake_enabled` flag of its own: the
-	# rig runs after this node, so a zero here means no shake this frame.
-	if not _shake_on and not ("shake_enabled" in rig) and "_shake" in rig:
-		rig.set("_shake", 0.0)
 
 func _demo_drive() -> void:
 	if _demo == null:
@@ -551,13 +729,17 @@ func set_speed(n: int) -> void:
 		Sfx.play("tick")
 	speed = n
 
-func submit(kind: String, payload: Dictionary) -> void:
-	_sent.append(sim.submit(kind, payload))
+## Returns the command id. While paused the command is applied at once, so the caller can
+## read sim.cmds.results[id] (main still toasts a refusal).
+func submit(kind: String, payload: Dictionary):
+	var cid = sim.submit(kind, payload)
+	_sent.append(cid)
 	if speed == 0 or paused_by_menu:
 		# Paused mode still accepts plans and policy changes (spec 12): apply them now.
 		sim.cmds.apply_pending()
 		if bool(sim.state["topo_dirty"]):
 			sim.topo.rebuild(true)
+	return cid
 
 func _poll_results() -> void:
 	for cid in _sent.duplicate():
@@ -678,6 +860,9 @@ func _update_place() -> void:
 	var away: float = sim.agents.nearest_air_metres(p) * 1.25
 	if tool_ok and away > reach:
 		info["warning"] = "About %d m on foot from the nearest airlock with air. Suit range is about %d m. Build an airlock nearer first." % [int(away), int(reach)]
+	elif tool_ok and String(hud.data.bdef(tool_def).get("kind", "")) == "room" and not hud.data.blocked_sectors(tool_def, tool_size).is_empty():
+		# Door sectors (V3.1): the ring shows them; R turns the room.
+		info["warning"] = "Red on the ring: no corridor can join there (equipment%s). Turn the room with R." % (", chamber and porch" if tool_def == "airlock" else "")
 	tool_info = info
 	tool_message = String(info["reason"])
 	view.set_ghost(tool_def, tool_size, p, tool_rot, tool_ok)

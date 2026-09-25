@@ -49,6 +49,26 @@ func invalidate() -> void:
 	_pplan = {}
 	_wplan = {}
 	_aplan = {}
+	_wcomps_ok = false
+
+## Power networks with a water structure, in the order of topo.power_members (the only ones
+## water_tick() works on). Made again with the water plans (V3.1 budget: a large colony has
+## dozens of lone solar arrays and batteries, each a network of its own).
+var _wcomps: Array = []
+var _wcomps_ok := false
+var _wcomps_graph = null
+
+func _water_comps() -> Array:
+	if _wcomps_ok and is_same(_wcomps_graph, sim.topo.power_members):
+		return _wcomps
+	_wcomps = []
+	for comp in sim.topo.power_members:
+		var wp: Dictionary = _water_plan(comp)
+		if not ((wp["res"] as Array).is_empty() and (wp["prod"] as Array).is_empty() and (wp["recs"] as Array).is_empty()):
+			_wcomps.append(comp)
+	_wcomps_ok = true
+	_wcomps_graph = sim.topo.power_members
+	return _wcomps
 
 # ---------------------------------------------------------------- capacities
 func energy_cap_of(b: Dictionary) -> int:
@@ -161,7 +181,18 @@ func _power_plan(comp: int) -> Dictionary:
 		entries.append([b, f, solar, wind, d, float(d.get("energy_cap", 0.0)), rt(float(d.get("energy_rate", 0.0))),
 			float(d.get("energy_eff", 0.95)), rt(float(d.get("power", 0.0))), order.find(pc), pc == "life_support", int(bid)])
 	entries.sort_custom(func(x, y): return int(x[PE_CLS]) < int(y[PE_CLS]) if int(x[PE_CLS]) != int(y[PE_CLS]) else int(x[PE_ID]) < int(y[PE_ID]))
-	p = {"entries": entries, "has_source": has_source}
+	# lone: 1 = a solar array or turbine alone, 2 = a battery alone (the fast paths of
+	# power_tick). "st" is that component's power_stats row, kept and filled in place each
+	# tick instead of made new (large colonies have dozens of lone structures; V3.1 budget).
+	var lone := 0
+	if entries.size() == 1:
+		var f0: int = int(entries[0][PE_F])
+		if (f0 & (PF_BATT | PF_CONS | PF_FUSION)) == 0 and (f0 & (PF_SOLAR | PF_WIND)) != 0:
+			lone = 1
+		elif f0 == PF_BATT:
+			lone = 2
+	p = {"entries": entries, "has_source": has_source, "lone": lone,
+		"st": {"gen": 0, "demand": 0, "served": 0, "critical": 0, "stored": 0, "cap": 0, "shed": [], "has_source": has_source, "rate": 0}}
 	_pplan[comp] = p
 	return p
 
@@ -209,7 +240,8 @@ func power_tick() -> void:
 		# A lone solar array or turbine on no network: the same numbers as the full path
 		# below, without its lists (large colonies have many of them).
 		var ents: Array = plan["entries"]
-		if ents.size() == 1 and (int(ents[0][PE_F]) & (PF_BATT | PF_CONS | PF_FUSION)) == 0 and (int(ents[0][PE_F]) & (PF_SOLAR | PF_WIND)) != 0:
+		var lone: int = plan["lone"]
+		if lone == 1:
 			var e0: Array = ents[0]
 			var b1: Dictionary = e0[PE_B]
 			if b1["state"] != "active":
@@ -221,23 +253,27 @@ func power_tick() -> void:
 				if f1 & PF_WIND:
 					gen += rt(float(e0[PE_WIND]) * wind * wind_mult * float(b1["out_rate"]))
 				b1["powered"] = true
-			power_stats[comp] = {"gen": gen, "demand": 0, "served": 0, "critical": 0,
-				"stored": 0, "cap": 0, "shed": [], "has_source": has_source, "rate": 0}
+			var st1: Dictionary = plan["st"]
+			st1["gen"] = gen
+			power_stats[comp] = st1
 			continue
 		# A lone battery on no network: nothing charges or draws it (the full path gives the
 		# same numbers: no generation, no demand, the charge stays).
-		if ents.size() == 1 and int(ents[0][PE_F]) == PF_BATT:
+		if lone == 2:
 			var eb: Array = ents[0]
 			var bb1: Dictionary = eb[PE_B]
+			var st2: Dictionary = plan["st"]
 			if bb1["state"] != "active":
 				bb1["powered"] = false
-				power_stats[comp] = {"gen": 0, "demand": 0, "served": 0, "critical": 0,
-					"stored": 0, "cap": 0, "shed": [], "has_source": has_source, "rate": 0}
+				st2["stored"] = 0
+				st2["cap"] = 0
+				st2["rate"] = 0
 			else:
 				bb1["powered"] = true
-				power_stats[comp] = {"gen": 0, "demand": 0, "served": 0, "critical": 0,
-					"stored": int(bb1["energy"]), "cap": int(float(eb[PE_CAP]) * batt_mult * _fp), "shed": [],
-					"has_source": has_source, "rate": int(eb[PE_RATE])}
+				st2["stored"] = int(bb1["energy"])
+				st2["cap"] = int(float(eb[PE_CAP]) * batt_mult * _fp)
+				st2["rate"] = int(eb[PE_RATE])
+			power_stats[comp] = st2
 			continue
 		var consumers: Array = []
 		var batteries: Array = []
@@ -388,11 +424,9 @@ func water_stock(comp: int) -> int:
 func water_tick() -> void:
 	water_stats = {}
 	var rec_frac_mult: float = 1.0 + sim.research.bonus("recycle_mult")
-	for comp in sim.topo.power_members:
+	for comp in _water_comps():
 		var wp: Dictionary = _water_plan(comp)
 		var res: Array = wp["res"]
-		if res.is_empty() and (wp["prod"] as Array).is_empty() and (wp["recs"] as Array).is_empty():
-			continue      # no water structure on this network: no water numbers for it
 		var cap: int = int(wp["cap"])
 		var stock := 0
 		for r in res:

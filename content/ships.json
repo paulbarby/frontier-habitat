@@ -1,0 +1,21 @@
+{
+  "_note": "Visiting ships (docs/V3_1_DESIGN.md section 6.1). return_h: visitors start back to the ship this long before it leaves; boarding_wait_h: the ship waits this long for them. Times in game hours (1 day = 24 h = 600 s, so 1 h = 25 s). weight: how often the kind comes. visitors: [min, max] people who walk into the colony. stay_h: time on the pad. The schedule comes from hashes of the seed and the arrival number, never from a random stream, so building or trading never moves a ship.",
+  "hour_seconds": 25,
+  "first_day": 4,
+  "gap_days": [0.6, 1.4],
+  "forecast_days": 1.0,
+  "orbit_hold_h": 6,
+  "boarding_wait_h": 2,
+  "return_h": 3,
+  "descent_s": 20,
+  "takeoff_s": 15,
+  "hold_kinds": ["dust_storm", "wind_storm", "meteor_shower", "quake"],
+  "kinds": {
+    "trader":    {"name": "Trader",           "vname": "Trader",     "weight": 30, "stay_h": 6,  "visitors": [0, 0], "stock_types": [6, 10], "want_types": [4, 6], "desc": "Sells goods and buys what the colony makes."},
+    "shuttle":   {"name": "Immigrant shuttle", "vname": "Settler",   "weight": 20, "stay_h": 1,  "visitors": [2, 6], "desc": "Brings settlers. You choose who stays."},
+    "liner":     {"name": "Tourist liner",    "vname": "Tourist",    "weight": 18, "stay_h": 24, "visitors": [3, 8], "fee": 40, "fee_min": 0.3, "desc": "Tourists pay for comfort: a cantina or lounge, good food and a bed."},
+    "medical":   {"name": "Medical ship",     "vname": "Patient",    "weight": 12, "stay_h": 24, "visitors": [1, 4], "fee": 60, "health": [45, 54], "treated_health": 80, "desc": "Brings hurt people. Each one treated in a medical bay pays."},
+    "science":   {"name": "Science ship",     "vname": "Researcher", "weight": 12, "stay_h": 24, "visitors": [2, 3], "want_types": [2, 2], "rp_per_s": 0.4, "desc": "Visiting scientists add research in your labs. It buys research packs and exotic crystals."},
+    "inspector": {"name": "Inspector",        "vname": "Inspector",  "weight": 8,  "stay_h": 4,  "visitors": [1, 1], "rooms": [4, 6], "fee": 150, "desc": "One inspector visits rooms and pays for a well-run colony."}
+  }
+}

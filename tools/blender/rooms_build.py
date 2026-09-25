@@ -66,6 +66,9 @@ V3_MAX_MATERIALS = 14            # per object (Interior; each Wall_k); see docs/
 ROOM_MESHES = ["Base", "Roof", "Interior", "L2", "L3", "L4", "L5"]
 ALLOWED = set(K.MATERIALS) | set(K.PER_FILE)
 TRAY_TYPES = ("greenhouse", "fungus_farm")
+AIRLOCK_R_OLD = 2.8                    # airlocks in old saves (RENDER: use airlock_r28.glb when R < 3.0)
+AIRLOCK_RADII = {"m": 3.4, "l": 4.0}   # proposed to SIM (docs/requests/ART-HAB-to-SIM.md)
+OVERHANG_PARTS = ("Porch", "PorchTop")      # 3.1: the airlock porch stands outside the footprint (the entrance itself)
 
 
 def jobs(buildings, only=None, sizes=None):
@@ -85,11 +88,27 @@ def jobs(buildings, only=None, sizes=None):
                     continue
                 out.append(dict(tid=tid, size=s, key=key, R=float(radii[s]), file="%s_%s" % (tid, key),
                                 also=[tid] if s == 1 else [], bdef=bdef, single=False))
+        elif tid == "airlock" and radii:
+            # content has the M / L airlock (SIM, 2026-09-25): airlock_m (+ airlock.glb) and airlock_l
+            for s_, key in ((1, "m"), (2, "l")):
+                if sizes and key not in sizes:
+                    continue
+                out.append(dict(tid=tid, size=s_, key=key, R=float(radii[s_]), file="airlock_" + key,
+                                also=[tid] if key == "m" else [], bdef=bdef, single=True))
+            if not sizes or "m" in sizes:
+                # airlocks of old saves keep R 2.8 (coordinator 2026-09-25): the new design at 2.8 m, 2 riders
+                out.append(dict(tid=tid, size=1, key="r28", R=AIRLOCK_R_OLD, file="airlock_r28", also=[], bdef=bdef,
+                                single=True))
         else:
             if sizes and "m" not in sizes:
                 continue
             out.append(dict(tid=tid, size=1, key="", R=float(bdef.get("radius", 1.2)), file=tid, also=[], bdef=bdef,
                             single=True))
+            if tid == "airlock" and not radii:
+                # 3.1 (decision 2026-09-25): M and L airlocks; radii proposed to SIM until content has them
+                for s_, key, R_ in ((1, "m", AIRLOCK_RADII["m"]), (2, "l", AIRLOCK_RADII["l"])):
+                    out.append(dict(tid=tid, size=s_, key=key, R=R_, file="airlock_" + key, also=[], bdef=bdef,
+                                    single=True))
     return out
 
 
@@ -104,23 +123,56 @@ def expected_trays(job):
 DOOR_BLOCKED = os.path.join(K.ROOT, "docs", "requests", "ART-HAB-door_blocked.json")
 
 
+# Door lanes (RENDER / coordinator 2026-09-25): every M / L / XL room keeps a 0.9 m lane from a doorway at any
+# angle to the aisle ring (interior_kit.door_blocked).  These room types cannot yet; their blocked angles are listed
+# in ART-HAB-door_blocked.json for SIM (docs/requests/ART-HAB-to-SIM.md).  S rooms are always listed.
+LANE_LISTED = {
+    "airlock": "fixed layout: chamber, pumps and bench fill the +X half",
+    "greenhouse": "tray positions come from content (sizes.tray_offsets)",
+    "fungus_farm": "rack rows reach the ring",
+    "oxygen_plant": "electrolysis block and tank plinth reach the ring",
+    "water_recycler": "tank group, UV line and pumps reach the ring",
+}
+
+
+# Minimum free door angle (coordinator 2026-09-25): S >= 120 deg, M and larger >= 180 deg.  Airlocks are the
+# exception (only the suit-room side is free).  SIM refuses new links at the blocked angles.
+AIRLOCK_STRUCTURE = {"chamberfloor", "chamber", "pump", "partition"}     # the chamber side: may block door lanes
+LANE_MIN_FREE = {"s": 120.0, "m": 180.0, "l": 180.0, "xl": 180.0, "": 180.0}
+DOOR_BLOCKED_CONTENT = os.path.join(K.ROOT, "content", "door_blocked.json")   # what the sim reads (authorised)
+
+
 def write_door_blocked(rows):
     """docs/requests/ART-HAB-door_blocked.json: per room file, the model angles (deg, see the RENDER request P3)
     where a doorway would have less than 1.2 m of free floor in front of it (critic round 4)."""
-    old = {}
+    old, prev_changes = {}, []
     if os.path.exists(DOOR_BLOCKED):
         try:
-            old = json.load(open(DOOR_BLOCKED, encoding="utf-8")).get("rooms", {})
+            prev = json.load(open(DOOR_BLOCKED, encoding="utf-8"))
+            old = prev.get("rooms", {})
+            prev_changes = prev.get("changes", [])
         except Exception:
             old = {}
+    before = {k: v.get("blocked") for k, v in old.items()}
     for r in rows:
         v = r.get("v3") or {}
         if "door_blocked" in v:
-            old[r["id"]] = dict(blocked=v["door_blocked"], free_deg=v["door_free_deg"], min_clear_m=v["door_clear_min"])
-    with open(DOOR_BLOCKED, "w", encoding="utf-8") as fh:
-        json.dump(dict(generator="tools/blender/rooms_build.py", clear_m=1.2,
-                       angles="model angle in degrees, 0 = model +X, counter-clockwise seen from above "
-                              "(docs/requests/ART-HAB-to-RENDER.md P3)", rooms=old), fh, indent=1, sort_keys=True)
+            for key in [r["id"]] + list(r.get("also") or []):      # the size-M copy (habitat.glb, airlock.glb ...)
+                old[key] = dict(blocked=[list(x) for x in v["door_blocked"]], free_deg=v["door_free_deg"],
+                                min_lane_m=v["door_clear_min"])
+    changed = sorted(k for k, v in old.items() if before.get(k) != v.get("blocked"))
+    changes = prev_changes
+    if changed:
+        changes = (prev_changes + [dict(at=time.strftime("%Y-%m-%d %H:%M"), rooms=changed)])[-20:]
+        print("door_blocked.json CHANGED for %d files: %s  -> tell SIM (docs/requests/ART-HAB-to-SIM.md)"
+              % (len(changed), ", ".join(changed)))
+    doc = dict(generator="tools/blender/rooms_build.py", lane_m=0.9, changes=changes,
+               rule="a doorway at a blocked angle has no 0.9 m lane from the door housing to the aisle ring",
+               angles="model angle in degrees, 0 = model +X, counter-clockwise seen from above "
+                      "(docs/requests/ART-HAB-to-RENDER.md P3)", rooms=old)
+    for out_path in (DOOR_BLOCKED_CONTENT, DOOR_BLOCKED):       # the sim's copy and the docs copy: never apart
+        with open(out_path, "w", encoding="utf-8") as fh:
+            json.dump(doc, fh, indent=1, sort_keys=True)
 
 
 def build_one(job):
@@ -148,22 +200,35 @@ def build_one(job):
         budget = 1200
     if tris > budget:
         flags.append("over budget %d > %d" % (tris, budget))
-    radius = max(s["radius"] for s in stats.values())
+    radius = max(s["radius"] for n, s in stats.items() if n not in OVERHANG_PARTS)
     limit = job["R"] - K.MARGIN
     if job["tid"] != "corridor" and radius > limit + 1e-3:
         flags.append("radius %.3f > footprint-0.1 = %.2f" % (radius, limit))
+    if job["tid"] == "airlock":
+        # critic round 13: nothing the game's cutaway shows stands above WALL_TOP (world_view.gd _apply_roof hides
+        # Roof, L2..L5, groups ending in Top / Status, PressureLight_*, Beacon, DecalR)
+        def cut_hidden(g):
+            return (g == "Roof" or (len(g) == 2 and g[0] == "L") or g.endswith(("Top", "Status"))
+                    or g.startswith("PressureLight") or g in ("Beacon", "DecalR") or g.startswith("DecalL"))
+        tall = sorted(n for n, s_ in stats.items() if s_["hi"][2] > K.WALL_TOP + 0.015
+                      and not cut_hidden(K.game_group(n)))
+        if tall:
+            flags.append("cutaway: %s stand above %.2f m" % (tall, K.WALL_TOP))
     lo = [min(s["lo"][i] for s in stats.values()) for i in range(3)]
     hi = [max(s["hi"][i] for s in stats.values()) for i in range(3)]
     if job["tid"] != "corridor":
         flags += K.check_interior(rm)
     info = K.inspect_glb(path)
     want = list(ROOM_MESHES) if not job["single"] else ["Base", "Roof", "Interior"]
+    # 3.1: a level part whose faces were all outer-wall decals is now only Decal_<seg>_L<n> objects
+    want = [w for w in want if not (w in ("L2", "L3", "L4", "L5") and not rm.L[int(w[1])].faces)]
     if job["tid"] == "corridor":
         want = ["Base", "Roof"]
     if rm.lights.faces:
         want.append("Lights")
     want += [w.name for w in rm.walls if w.faces]
     want += [q.name for q in getattr(rm, "extra_parts", []) if q.faces]
+    want += [q.name for q in getattr(rm, "decals", []) if q.faces]
     if rm.v3:
         import interior_kit as IK
         dh = getattr(rm, "door_half_v3", 0.0)
@@ -180,6 +245,19 @@ def build_one(job):
                 flags.append("%s has %d materials > %d" % (oname, len(mats), V3_MAX_MATERIALS))
             if (oname == "Interior" or oname.startswith("Tall_")) and len(mats) > K.MAX_SURFACES:
                 flags.append("%s has %d surfaces > %d (draw-call budget)" % (oname, len(mats), K.MAX_SURFACES))
+        # the game merges objects per group (presentation/models.gd): one draw call per material of each group
+        by_group = {}
+        for oname, mats in info["mats_by"].items():
+            by_group.setdefault(K.game_group(oname), set()).update(mats)
+        for g in ("Base", "Roof", "L2", "L3", "L4", "L5"):
+            if len(by_group.get(g, ())) > K.MAX_SHELL_SURFACES:
+                flags.append("group %s has %d surfaces > %d (shell draw-call budget): %s" %
+                             (g, len(by_group[g]), K.MAX_SHELL_SURFACES, sorted(by_group[g])))
+        shell_w = {m for m in by_group.get("Walls", ()) if m in K.WALL_SHELL}
+        if len(shell_w) > K.MAX_SHELL_SURFACES:
+            flags.append("wall shell has %d surfaces > %d: %s" % (len(shell_w), K.MAX_SHELL_SURFACES, sorted(shell_w)))
+        rm.group_surfaces = {g: len(v) for g, v in by_group.items()}
+        rm.group_surfaces["WallShell"] = len(shell_w)
         if len(info["materials"]) > IK.MAX_MATS_FILE:
             flags.append("file has %d materials > %d" % (len(info["materials"]), IK.MAX_MATS_FILE))
     if sorted(info["mesh_nodes"]) != sorted(want):
@@ -230,10 +308,26 @@ def build_one(job):
             row["tris_by_object"]["Tall_*"] = talls_t
         row["v3"]["tall_parts"] = len([q for q in getattr(rm, "extra_parts", []) if q.faces])
         row["v3"]["surfaces"] = {k: list(v) for k, v in getattr(rm, "surfaces", {}).items()}
+        row["v3"]["group_surfaces"] = getattr(rm, "group_surfaces", {})
+        di = getattr(rm, "decal_info", None) or {}
+        row["v3"]["decals"] = dict(decal_objects=len(di.get("decals", [])), upper_objects=len(di.get("upper", [])),
+                                   upper_z=di.get("upper_z"), upper_band=di.get("upper_band"),
+                                   shell=getattr(rm, "shell", None), name_sign_deg=getattr(rm, "name_sign_deg", None))
         if getattr(rm, "plan", None) is not None and rm.tid != "junction":
             spans, worst = IK.door_blocked(rm.plan)
             row["v3"]["door_blocked"] = spans
             row["v3"]["door_clear_min"] = worst
+            row["v3"]["door_lane_hits"] = getattr(rm.plan, "lane_hits", {})
+            row["v3"]["door_lane_ring"] = getattr(rm.plan, "lane_ring", None)
+            row["v3"]["door_lane_hit_angles"] = {t: sorted(v) for t, v in getattr(rm.plan, "lane_hit_angles", {}).items()}
+            need = LANE_MIN_FREE.get(job["key"], LANE_MIN_FREE["m"])
+            free_ = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
+            loose = set(getattr(rm.plan, "lane_hits", {})) - AIRLOCK_STRUCTURE
+            if job["tid"] == "airlock" and loose:
+                flags.append("airlock door lanes blocked by furniture %s (only the chamber may block)" % sorted(loose))
+            if job["tid"] != "airlock" and free_ < need:
+                flags.append("door lanes: %.0f deg free < %d (coordinator minimum for size %s); blocked by %s"
+                             % (free_, need, job["key"] or "m", row["v3"]["door_lane_hits"]))
             row["v3"]["door_free_deg"] = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
     print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s%s" % (job["file"], tris, budget, radius, job["R"],
                                                               row["seconds"], "; ".join(flags) or "ok",
@@ -296,7 +390,8 @@ def verify_file(job):
         me = o.data
         tris += sum(len(p.vertices) - 2 for p in me.polygons)
         for v in me.vertices:
-            rmax = max(rmax, math.hypot(v.co.x, v.co.y))
+            if o.name not in OVERHANG_PARTS:
+                rmax = max(rmax, math.hypot(v.co.x, v.co.y))
             zmin = min(zmin, v.co.z)
         if me.color_attributes:
             ca = me.color_attributes[0]
@@ -357,6 +452,8 @@ def write_reports(rows):
             existing = {}
     for r in rows:
         existing[r["id"]] = r
+        for a in r.get("also") or []:
+            existing.pop(a, None)          # a copy is not its own row (airlock.glb = airlock_m since 2026-09-25)
     order = {tid: k for k, tid in enumerate(ORDER)}
 
     def key(r):

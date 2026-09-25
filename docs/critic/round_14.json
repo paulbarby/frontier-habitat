@@ -1,0 +1,35 @@
+{
+  "round": 14,
+  "date": "2026-09-25",
+  "scope": "re-rate airlock and doors after the round-13 fixes; short check of RENDER's other round-13 items. Evidence art/critic_input/render/99-106; my own shots from build/web_render (index.pck 22:16), showcase_v31 and showcase_v3_late, airlock 49 selected and not selected, with tallparts 49.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "airlock": {"consistency": 0.80, "appeal": 0.76, "style": 0.78, "score": 0.78, "pass": true, "was": 0.72,
+      "verified": [
+        "Cutaway: tallparts 49 -> 'open 1.00 |' (no drawn part above 1.45 m) in both saves, selected and not; roof on it lists the tall parts as expected (art/critic/r14_grid.png). Riders in the chamber are visible from every angle I tried.",
+        "Selection: one floor ring, no cyan slabs (99, r14_grid.png v31_sel).",
+        "Cycle checks still all 0 (106): pump_open, swap_chamber, wrong_clothes, riders_off, closed_door."
+      ],
+      "claim_not_borne_out": "'Pump starts only after the door is shut': SIM's code comment says so (sim/agents.gd:301-303), but RENDER's own check file 106 (22:24, on the 22:16 build) still shows a door fully open at the start of 11 of 13 pump rows (e.g. 'f140 airlock 49 pump out | inner 1.00 outer 0.00 p 1.00'). Pressure still never changes with a door open. Either the view's door lags the sim phase or the build predates SIM's change. SIM and RENDER to settle which, with one re-run of the check.",
+      "fixes": [
+        {"owner": "SIM / RENDER", "fix": "Make the view door state follow the sim phase so no pump row starts with a door open; re-run tools/render_airlock_check.gd and count pump rows with a door > 0.05 (target 0)."},
+        {"owner": "SIM / RENDER", "fix": "Crate piles still sit on the porch edge of airlock 49 and riders queue among them (r14_grid.png v31_sel, v31_desel_z7). Keep piles >= 2.5 m from the outer door (round-10 fix 6, round-13 SIM fix 2)."},
+        {"owner": "ART-HAB", "fix": "The cut caps on the chamber block and housings read as large flat dark-grey plates with angular outlines (v31_desel_z7). Give them the Frame colour with a 3 cm light edge so they read as cut walls, not lids."}
+      ]},
+    "doors": {"consistency": 0.80, "appeal": 0.78, "style": 0.80, "score": 0.79, "pass": true, "was": 0.77,
+      "verified": "Clean flat caps at 1.40 m on the door housings (104, r14_grid.png v31_hab51_doors); green free, amber moving, red locked states proven (102).",
+      "fixes": []}
+  },
+  "other_round_13_items": {
+    "ship dust ring at landing": "verified: pale dust ring on the pad below 20 m (100)",
+    "take-off with engine glow and legs folding": "verified (101)",
+    "visitor helmet glow at 45 m at night": "verified: the halo grows with distance and the inspector is findable at 45 m (103)",
+    "door amber and red states": "verified (102)",
+    "standing tourist from behind": "verified: magenta and lime lower legs (104). Seen in passing: the two tourists walk through the doorway interpenetrating each other (104) - RENDER, keep 0.45 m between bodies in doorways too."
+  },
+  "score_updates": {"ships": 0.80, "visitors": 0.78},
+  "notes": [
+    "No FAIL. airlock 0.72 -> 0.78, doors 0.77 -> 0.79; ships 0.79 -> 0.80 (dust and take-off landed), visitors 0.77 -> 0.78 (night halo, lower legs).",
+    "Path check r13 (105): PASS, (b) 0.108 %, e_void 152 still unexplained (round-13 RENDER fix 6)."
+  ]
+}

@@ -1,4 +1,5 @@
 extends Node3D
+const SkyFx = preload("res://presentation/fx_sky.gd")
 ## Interior lighting (RENDER, V3_DESIGN §7.3): "bright, spacious and modern, day and night".
 ## Three layers, cheapest first:
 ##  1. Fill: interior surfaces (models.gd interior_material, wall_cut on inward faces) add a
@@ -57,7 +58,7 @@ func setup(v) -> void:
 		l.omni_attenuation = 1.3
 		l.shadow_enabled = false
 		l.light_energy = 0.0
-		l.visible = false
+		SkyFx.park(l)
 		l.light_specular = 0.35
 		add_child(l)
 		lights.append(l)
@@ -228,9 +229,10 @@ func sync(delta: float, focus: Vector3, night: float) -> void:
 			l.light_energy = lerpf(l.light_energy, tgt, 1.0 - exp(-delta * 6.0))
 			used += 1
 		else:
-			l.light_energy = lerpf(l.light_energy, 0.0, 1.0 - exp(-delta * 8.0))
-			if l.light_energy < 0.02:
-				l.visible = false
+			if not SkyFx.parked(l):
+				l.light_energy = lerpf(l.light_energy, 0.0, 1.0 - exp(-delta * 8.0))
+				if l.light_energy < 0.02:
+					SkyFx.park(l)
 	stats["lights"] = used
 	if view.sky != null:
 		view.sky.reserved = used

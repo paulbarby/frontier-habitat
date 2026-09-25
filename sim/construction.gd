@@ -104,7 +104,7 @@ func tick_second() -> void:
 		var b: Dictionary = blds[id]
 		match b["state"]:
 			"blueprint":
-				if _site_complete(b):
+				if _site_complete(b) and not _someone_on_site(b):
 					_start_work(b)
 			"building":
 				if float(b["progress"]) >= float(b["work_total"]):
@@ -112,6 +112,30 @@ func tick_second() -> void:
 			"active", "broken":
 				if bool(b["demolish"]):
 					_try_finish_demolition(b)
+
+## V3.1 (V3_1_DESIGN 4.2): the structure does not rise while a body outside stands on its
+## footprint (a plan is walked over); work waits until they have walked on, at most
+## site_clear_wait_s (then the walking map moves them off).
+func _someone_on_site(b: Dictionary) -> bool:
+	var tube: bool = b["kind"] == "link" and b["def"] == "corridor"
+	if (b["kind"] == "link" and not tube) or b["def"] == "meridian":
+		return false
+	var waited: int = int(b.get("site_wait", 0))
+	if waited >= int(sim.bal.get("site_clear_wait_s", 60)):
+		b.erase("site_wait")
+		return false
+	var r: float = (1.2 if tube else float(b["radius"])) + 0.71
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] != "alive" or a["where"] != "out":
+			continue
+		var p: Vector2 = a["pos"]
+		var d: float = Geometry2D.get_closest_point_to_segment(p, b["p0"], b["p1"]).distance_to(p) if tube else p.distance_to(b["pos"])
+		if d < r:
+			b["site_wait"] = waited + 1
+			return true
+	b.erase("site_wait")
+	return false
 
 func _site_complete(b: Dictionary) -> bool:
 	for res in b["cost"]:
@@ -331,8 +355,13 @@ func drop_point(b: Dictionary) -> Vector2:
 	var pts: Array = sim.nav.access_points(b)
 	if pts.is_empty():
 		var q = sim.nav.nearest_walkable(b["pos"], 12)
-		return q if q != null else b["pos"]
-	return pts[0]
+		return sim.place.clear_of_porches(q if q != null else b["pos"])
+	# V3.1: never on an airlock's porch (critic round 13: riders queued among crates).
+	var strips: Array = sim.place.door_strips()
+	for p in pts:
+		if not sim.place.in_porch(p, strips):
+			return p
+	return sim.place.clear_of_porches(pts[0])
 
 func _drop_point(b: Dictionary) -> Vector2:
 	return drop_point(b)

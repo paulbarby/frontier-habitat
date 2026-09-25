@@ -1,4 +1,5 @@
 extends Control
+const PG = preload("res://ui/poly_guard.gd")
 ## Progress bar with a glow: a dark well, a gradient fill, a soft halo and a bright end cap.
 ## `target` (0..1, < 0 = none) draws a marker line, for "needed" levels.
 ## `segments` > 0 draws the fill as separate blocks (upgrade levels, pips).
@@ -51,7 +52,8 @@ func _draw() -> void:
 			draw_rect(fr.grow(1.0), Color(color.r, color.g, color.b, 0.2), true)
 		var dark: Color = color.darkened(0.35)
 		var pts := PackedVector2Array([fr.position, Vector2(fr.end.x, fr.position.y), fr.end, Vector2(fr.position.x, fr.end.y)])
-		draw_polygon(pts, PackedColorArray([dark, color, color, dark]))
+		if PG.ok(pts, "glow_bar.gd:54"):
+			draw_polygon(pts, PackedColorArray([dark, color, color, dark]))
 		draw_rect(Rect2(fr.position, Vector2(fr.size.x, maxf(1.0, size.y * 0.25))), Color(1, 1, 1, 0.22), true)
 		draw_rect(Rect2(Vector2(fr.end.x - 2.0, 0.0), Vector2(2.0, size.y)), color.lightened(0.5), true)
 	if target >= 0.0 and target <= 1.0:

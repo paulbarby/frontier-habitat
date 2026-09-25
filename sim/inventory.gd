@@ -241,7 +241,7 @@ func dissolve_to_pile(inv_id: int, pos: Vector2) -> int:
 	release_for_inventory(inv_id)
 	var pile := -1
 	if total(inv_id) > 0:
-		pile = create_inv("g", 0, "pile", 100000, pos)
+		pile = create_inv("g", 0, "pile", 100000, sim.place.clear_of_porches(pos))
 		var p: Dictionary = get_inv(pile)
 		for res in inv["items"].keys():
 			_add(p, res, int(inv["items"][res]))
@@ -280,7 +280,8 @@ func totals() -> Dictionary:
 	for inv_id in sim.state["inventories"]:
 		var inv: Dictionary = sim.state["inventories"][inv_id]
 		# Materials on a construction site, in an upgrade or at the Meridian are committed.
-		if inv["role"] == "site" or inv["role"] == "upg" or inv["role"] == "ship":
+		# ... and a visiting ship's hold (V3.1 trade) is not the colony's.
+		if inv["role"] == "site" or inv["role"] == "upg" or inv["role"] == "ship" or inv["role"] == "trade":
 			continue
 		for res in inv["items"]:
 			if not out.has(res):

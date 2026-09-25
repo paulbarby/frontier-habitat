@@ -41,7 +41,12 @@ for (let i = 1; i <= tries; i++) {
   mirror();
   const c = run(['check']);
   if (c.code === 0) {
+    // Furniture grids (fx_nav) for the models in this mirror: never stale in my build.
+    const b = run(['script', 'res://tools/render_nav_bake.gd']);
+    console.log((b.out.match(/render_nav_bake:[^\n]*/) || ['nav bake: no output'])[0]);
     const e = run(['export', OUT]);
+    const pck = path.join(OUT, 'index.pck');
+    if (fs.existsSync(pck)) console.log('pck ' + (fs.statSync(pck).size / 1048576).toFixed(1) + ' MB');
     console.log(e.out.split(/\r?\n/).filter(l => /exported|EXPORT FAILED|SCRIPT ERROR|Parse Error/.test(l)).join('\n'));
     const ok = fs.existsSync(path.join(OUT, 'index.pck'));
     console.log(ok ? `ok (try ${i}, mirror ${MIRROR})` : 'export failed');

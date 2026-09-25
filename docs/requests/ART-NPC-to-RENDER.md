@@ -111,3 +111,111 @@ and every clip test (48/48) passes.** The failures and what I found:
   (0.055, 0.030, 0.017) both read near-black at 55 px; lifting colour 1 to about (0.10, 0.05, 0.025) would separate them.
   That is your choice.
 - `tools/npc_check.gd` on the new files: PASS, 140 tests, 0 failures.
+
+
+## 2026-09-25 — v3.1: `suit_swap` clip and visitor looks (V3_1 §5.4, §6.4)
+
+### 1. `suit_swap` — please add it to `tools/npc_check.gd`
+
+- New clip in both files: `suit_swap`, 60 frames = 2.0 s, oneshot, `stand` → `stand`. Metadata in
+  `astronaut_anims.json`: `clips.suit_swap = {frames: 60, duration_s: 2.0, kind: oneshot, pose_from: stand,
+  pose_to: stand, cut_frame: 30}`.
+- **Cut at frame 30 (1.0 s).** Both hands hold the helmet sides (wrists 1.62 m high, 0.225 m out). The pose is still
+  from about frame 26 to frame 31. `npc_verify` measures it: identical in both files at frame 30 (0.0000°), 0.26°
+  between frames 29 and 31. The clip data is the same in both files, so your shared bake gives the same pose.
+- Sequence: stand → hands out in front → helmet sides (hold across the cut) → chest seals → hands past the belt → stand.
+- Largest bone step 14.24° per frame (forearm.L, frame 12). Starts and ends on the stand rest pose (0.000°).
+- Please add to `npc_check.gd`: `clip suit_swap at 1x` (both variants), `idle -> suit_swap -> idle`, and the cut
+  itself: suit frame 30 vs indoor frame 30 identical.
+
+### 2. Visitor looks — how to select them
+
+**Files.** The body files do not change for visitors. The attachments are in new files:
+`assets/models/astronaut_visitor_suit.glb` and `assets/models/astronaut_visitor_indoor.glb`. Each holds the rig
+(identical to the body files: same 24 joints, same order, same rest pose; verified) and five skinned meshes
+`Vis_trader`, `Vis_tourist`, `Vis_medical`, `Vis_science`, `Vis_inspector`. The files have no clips. Drive them with
+the suit bake, as you do for the indoor meshes.
+
+**Look code.** Proposal: `look = (8 + v) * 64 + head * 8 + tone` for a visitor with look `v` (0..6). Colonists keep
+`role * 64 + head * 8 + tone` with role 0..7. So `look / 64 >= 8` means a visitor and `v = look / 64 - 8`.
+
+| v | kind | set | how it reads at 30 px |
+|---|---|---|---|
+| 0 | trader | 0 | orange body, grey helmet/HUT/pack |
+| 1 | tourist | 0 | white body, cyan helmet and HUT |
+| 2 | tourist | 1 | white body, lime helmet and HUT |
+| 3 | tourist | 2 | white body, magenta helmet and HUT |
+| 4 | medical | 0 | white body, red pack, red crosses |
+| 5 | science | 0 | blue body, white helmet/HUT/pack, mast above the helmet |
+| 6 | inspector | 0 | black body, gold stripes and crest; indoor: black peaked cap |
+
+Tourist set: pick it from a hash of the visitor id. Table: `astronaut_anims.json` → `visitors.looks[v]`.
+
+**Colours (shader).** For a visitor, replace the albedo of each surface whose material name is a key of
+`looks[v].suit` (suit model) or `looks[v].indoor` (indoor model) with that colour. Linear values are in
+`suit_linear` / `indoor_linear`. This is the rule you use now for `SuitAccent` (mode 1): `tint = colour / albedo`.
+Groups:
+- suit: `SuitMain`, `SuitHard`, `Pack`, `SuitAccent`;
+- indoor: `Jumpsuit`, `SuitAccent`.
+
+A proposal: a new mode 4 for `SuitMain` / `SuitHard` / `Pack` / `Jumpsuit`, and a `vis_cols[7 * 4]` uniform per
+material. Mode 1 (`SuitAccent`) then reads the visitor accent when `role >= 8`. Colonists (role < 8) do not change.
+
+**Attachments.** Treat `Vis_<kind>` like `Head_N`: one MultiMesh per mesh, and draw it only for the visitors whose
+`looks[v].kind` is that kind (collapse the vertices for all other instances, as you do with `head_id`). Materials on
+the attachments are plain (`VisRed`, `VisGold`, `VisGrey`, `VisWhite`, `VisDark`, `Rubber`, `Trim`, `Frame`,
+`Screen`, `LightGreen`). The exception is `SuitAccent`, which takes the visitor accent colour (tourist camera strap
+and pennant).
+
+> [!IMPORTANT]
+> Indoor inspectors must not use head 1 (the high bun). The cap does not fit it. Use head 0, 2 or 3 (JSON:
+> `visitors.heads_not_allowed.inspector = [1]`).
+
+**Triangles per visitor on screen.**
+- suit: Body 6,839 + the largest attachment (trader, 112) = 6,951 ≤ 7,000;
+- indoor: Body 3,356 + the largest head 708 + the largest attachment (science, 566) = 4,630 ≤ 6,000.
+
+The attachment files: suit 466 triangles, indoor 1,814 (all five meshes).
+
+**Sheets:** `art/npc/visitors_lineup.png` (all looks next to a colonist: front, back, and at 55 px and 30 px with the
+game camera) and `art/npc/visitors_turnaround.png` (each kind: four sides, close-up, 55 px).
+
+**Checked:** `npc_verify` 279 passed, 0 failed, 0 pending. Each attachment stays within 2 cm of the body in every
+clip, and none goes below z −0.01. `npc_check.gd` on the new body files: PASS, 140 tests, 0 failures (it has no
+suit_swap tests yet). `godot.mjs check`: 156 scripts, 0 failed. **Not tested:** the visitor files inside the game
+(this needs your loader and shader change).
+
+
+## 2026-09-25 — critic round 12: visitor changes (replaces parts of the v3.1 section above)
+
+**1. Mesh names and the head rule (changed).** The rule "indoor inspectors never use head 1" is **removed**. Every
+head can be used for every visitor. The indoor visitor file now has two inspector meshes:
+- `Vis_inspector_h023`: closed cap; draw it for heads 0, 2 and 3.
+- `Vis_inspector_h1`: the crown top is a ring, and the bun of head 1 rises through it; draw it for head 1.
+
+**Rule:** draw `Vis_<kind>` for visitors of that kind. When the name ends in `_h<digits>`, draw it only when the
+head number is one of those digits. The suit file still has one mesh per kind (it has no heads). JSON:
+`visitors.meshes = {suit: [...5 names], indoor: [...4 names, "Vis_inspector_h023", "Vis_inspector_h1"]}`.
+`visitors.heads_not_allowed` is removed.
+
+**2. New plain materials** (attachments only):
+- `VisGraphite` #3A3F47.
+- `VisHiVis` #E4F218, emission #E4F218 at 0.5.
+- `VisGoldReflect` #D9A93A, metal 0.3, emission #D9A93A at 0.8.
+
+The emission stands in for a retro-reflective trim, so it can be seen at night. Your loader already reads the emission
+from the material. If you have a night reflect effect, apply it to these two materials.
+
+**3. What changed on the models**
+- Indoor tourist: gaiters and boot covers in `SuitAccent` (the tour colour).
+- Indoor trader: the vest is `VisGraphite`, with a `VisHiVis` band and hi-vis shoulder straps.
+- Suit inspector: `VisGoldReflect` bands round both thighs and shins, and two stripes across the pack. The cuff rings
+  are removed (triangle budget).
+- The colour table (`visitors.looks`) and the look code are unchanged.
+
+**4. Triangles per visitor on screen**
+- suit: at most 6,839 + 150 (inspector) = 6,989 ≤ 7,000.
+- indoor: at most 4,064 + 878 (tourist) = 4,942 ≤ 6,000.
+
+**Checked:** `npc_verify` 281 passed, 0 failed. `npc_check.gd`: PASS, 140 tests, 0 failures. `godot.mjs check`:
+157 scripts, 0 failed. **Not tested:** visitors in the game.

@@ -830,6 +830,130 @@ func cargo_items(kind: String) -> Dictionary:
 func cargo_current() -> String:
 	return String(ship().get("cargo", ""))
 
+# ---------------------------------------------------------------- ships, visitors, credits (version 3.1)
+## V3_1_DESIGN §6. Reads sim.traffic (sim/traffic.gd). Safe when it is missing: no rows,
+## no credits. `mock` key "traffic" ({forecast, ships, credits}) replaces the rows when set.
+
+const SHIP_ICON := {"trader": "crate", "shuttle": "people", "liner": "star", "medical": "health", "science": "flask", "inspector": "eye"}
+const SHIP_PHASE := {"forecast": "COMING", "orbit": "IN ORBIT", "landing": "LANDING", "landed": "LANDED", "boarding": "BOARDING",
+	"takeoff": "TAKE-OFF", "gone": "GONE", "denied": "DENIED", "left": "LEFT"}
+
+func traffic_available() -> bool:
+	return has_helper("traffic", "forecast") or mock.has("traffic")
+
+## Arrivals shown to the player, soonest first (sim.traffic.forecast()).
+func traffic_forecast() -> Array:
+	if mock.has("traffic"):
+		return mock["traffic"].get("forecast", [])
+	if has_helper("traffic", "forecast"):
+		var r = main.sim.traffic.forecast()
+		if typeof(r) == TYPE_ARRAY:
+			return r
+	return []
+
+## Ships in orbit, landing, landed, boarding or taking off (sim.traffic.ships()).
+func traffic_ships() -> Array:
+	if mock.has("traffic"):
+		return mock["traffic"].get("ships", [])
+	if has_helper("traffic", "ships"):
+		var r = main.sim.traffic.ships()
+		if typeof(r) == TYPE_ARRAY:
+			return r
+	return []
+
+## One ship row by arrival id (ships first, then the forecast); {} when unknown.
+func traffic_row(id: int) -> Dictionary:
+	for r in traffic_ships() + traffic_forecast():
+		if int(r.get("id", -1)) == id:
+			return r
+	return {}
+
+## Door sectors of a room (version 3.1): where a corridor may meet its wall. SIM decides
+## (sim/placement.gd): door_ranges(def, size) = blocked model-angle ranges in degrees
+## ([] = all free); link_angle_ok_for(def, size, rot, world_angle) answers one direction.
+## Model angle = rot - world angle (SIM's convention). No SIM method: no sectors shown.
+func blocked_sectors(def_id: String, size: int) -> Array:
+	if has_helper("place", "door_ranges"):
+		var r = main.sim.place.door_ranges(def_id, size)
+		if typeof(r) == TYPE_ARRAY:
+			return r
+	return []
+
+## True when a corridor may leave a room of this def, size and rot in world direction `ang` (radians).
+func door_angle_free(def_id: String, size: int, rot: float, ang: float) -> bool:
+	if has_helper("place", "link_angle_ok_for"):
+		return bool(main.sim.place.link_angle_ok_for(def_id, size, rot, ang))
+	return true
+## Seconds a ship in orbit still waits for a pad before it leaves (-1 = unknown).
+func orbit_left_s(r: Dictionary) -> float:
+	var cfgd = main.sim.content.get("ships", {}) if main.sim != null else {}
+	if typeof(cfgd) != TYPE_DICTIONARY or not (cfgd as Dictionary).has("orbit_hold_h"):
+		cfgd = json("ships")
+	var hold_s: float = float(cfgd.get("orbit_hold_h", 6)) * float(cfgd.get("hour_seconds", 25))
+	var hz: float = float(bal()["tick_hz"])
+	return maxf(0.0, (float(r.get("at", st()["tick"])) + hold_s * hz - float(st()["tick"])) / hz)
+
+## Traffic notices from SIM (sim.traffic.notices(): [{code, count, text}]), e.g. tourists with no
+## bed. They are not colony alerts; the traffic panel shows each under its ship.
+func traffic_notices() -> Array:
+	if mock.has("traffic"):
+		return mock["traffic"].get("notices", [])
+	if has_helper("traffic", "notices"):
+		var r = main.sim.traffic.notices()
+		if typeof(r) == TYPE_ARRAY:
+			return r
+	return []
+
+## The ship kind a notice code belongs to ("" = none known).
+static func notice_kind(code: String) -> String:
+	for pair in [["tourist", "liner"], ["patient", "medical"], ["settler", "shuttle"], ["scientist", "science"], ["inspector", "inspector"], ["trade", "trader"]]:
+		if code.begins_with(String(pair[0])):
+			return String(pair[1])
+	return ""
+
+func credits() -> int:
+	if mock.has("traffic"):
+		return int(mock["traffic"].get("credits", 0))
+	if has_helper("traffic", "credits"):
+		return int(main.sim.traffic.credits())
+	return int(st().get("credits", {}).get("balance", 0)) if typeof(st().get("credits", 0)) == TYPE_DICTIONARY else 0
+
+func credits_state() -> Dictionary:
+	var c = st().get("credits", {})
+	return c if typeof(c) == TYPE_DICTIONARY else {}
+
+func free_beds() -> int:
+	if has_helper("traffic", "free_beds"):
+		return int(main.sim.traffic.free_beds())
+	return -1
+
+func ship_kind(kind: String) -> Dictionary:
+	var ks = main.sim.content.get("ships", {}).get("kinds", {}) if main.sim != null else {}
+	if typeof(ks) != TYPE_DICTIONARY or (ks as Dictionary).is_empty():
+		ks = json("ships").get("kinds", {})
+	return ks.get(kind, {})
+
+static func ship_icon(kind: String) -> String:
+	return String(SHIP_ICON.get(kind, "ship"))
+
+func is_visitor(a: Dictionary) -> bool:
+	return String(a.get("kind", "")) == "visitor"
+
+## Units of free space in the colony's storehouses (for bought goods).
+func storage_free() -> int:
+	var free := 0
+	for inv_id in st()["inventories"]:
+		var inv: Dictionary = st()["inventories"][inv_id]
+		if inv["role"] == "store" and inv["ot"] == "b" and int(inv["oid"]) != int(st().get("lander_id", -1)):
+			free += main.sim.inv.free_space(inv_id)
+	return free
+
+## Free units of an item: in the colony, not reserved or carried.
+func free_units(item_id: String, totals_d: Dictionary = {}) -> int:
+	var t: Dictionary = totals_d if not totals_d.is_empty() else totals()
+	var row: Dictionary = t.get(item_id, {})
+	return int(row.get("total", 0)) - int(row.get("reserved", 0)) - int(row.get("carried", 0))
+
 # ---------------------------------------------------------------- inventory
 ## {item: {total, reserved, carried}} from the sim.
 func totals() -> Dictionary:

@@ -43,6 +43,7 @@ const Awards = preload("res://sim/awards.gd")
 const Ship = preload("res://sim/ship.gd")
 const Events = preload("res://sim/events.gd")
 const Hazards = preload("res://sim/hazards.gd")
+const Traffic = preload("res://sim/traffic.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -74,6 +75,7 @@ var awards
 var ship
 var events
 var hazards
+var traffic
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -106,11 +108,12 @@ func _init() -> void:
 	ship = Ship.new(self)
 	events = Events.new(self)
 	hazards = Hazards.new(self)
+	traffic = Traffic.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -153,6 +156,8 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 		"options": {"planet": planet_id, "difficulty": diff, "spoilage": spoil, "storms": bool(options.get("storms", true)),
 			"hazards": _hazard_setting(options), "debug": bool(options.get("debug", false))},
 		"hazards": Hazards.fresh_state(),
+		"traffic": Traffic.fresh_state(),
+		"credits": Traffic.fresh_credits(int(content["trade"].get("start_credits", 0))),
 		"research": Research.fresh_state(),
 		"goals": Goals.fresh_state(),
 		"awards": {}, "award_track": {},
@@ -288,13 +293,32 @@ func alive_count() -> int:
 	var tick: int = int(state["tick"])
 	if tick == _alive_tick and _alive_n >= 0:
 		return _alive_n
+	# Colonists only: visitors (V3.1, agent.kind "visitor") are not part of the colony.
 	var n := 0
+	var v := 0
 	for aid in state["agents"]:
-		if state["agents"][aid]["state"] == "alive":
-			n += 1
+		var a: Dictionary = state["agents"][aid]
+		if a["state"] == "alive":
+			if a["kind"] != "visitor":
+				n += 1
+			else:
+				v += 1
 	_alive_tick = tick
 	_alive_n = n
+	_visitors_n = v
 	return n
+
+## Living visitors (V3.1), counted with alive_count(). They use air, water and food but are
+## not part of the colony: no colony alert, goal, award or chart counts them.
+var _visitors_n := 0
+
+func visitor_count() -> int:
+	alive_count()
+	return _visitors_n
+
+## True for a colonist, false for a visitor (V3.1).
+static func is_colonist(a: Dictionary) -> bool:
+	return a.get("kind", "") != "visitor"
 
 ## Forget the per-tick count (a colonist was added or removed during this tick).
 func alive_changed() -> void:
@@ -336,6 +360,7 @@ func step() -> void:
 	util.env_tick()
 	if second:
 		hazards.tick_second()
+		traffic.tick_second()
 	if bool(state["topo_dirty"]):
 		topo.rebuild(true)
 	util.power_tick()

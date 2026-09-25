@@ -1,0 +1,80 @@
+{
+  "round": 13,
+  "date": "2026-09-25",
+  "scope": "final v3.1 in-game round. RENDER evidence art/critic_input/render/80-98 (+ 88/91/95/96 check files, art/npc/path_check.json); my own unstaged shots from build/web_render (index.pck 20:29) with showcase_v31.fhsave (speed 1 and 4, debug=1, 'ship medical').",
+  "pass_mark": 0.65,
+  "subjects": {
+    "doors": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "was": "0.79 (r12, Blender)",
+      "verified": "Closed and open in game: full-height leaves, chevrons, green status strip, open door shows the corridor (80, 81). No half-done door seen in any of my shots. Paul's 'half done' complaint is answered.",
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Cutaway cap on the door housing is torn: jagged dark faces with slivers where FrameTop is hidden (art/critic/r13_cut_crop.png, from 82). Give the housing a clean flat cap at 1.40 m as its own object, so hiding FrameTop never leaves open faces."},
+        {"owner": "RENDER", "fix": "81 is labelled 'status amber while the leaves move' but the strip reads green in the frame. Show one frame with amber (moving) and one red (locked) so the three states are proven."}
+      ]},
+    "doorway_decals": {"consistency": 0.82, "appeal": 0.78, "style": 0.80, "score": 0.80, "pass": true, "was": "0.79 (r12)",
+      "verified": "In-game check decalcheck 0 of 131 doorways (showcase_v3_late) and 0 of 45 (scene_final); the 26 room-type sheets (83, 84) and my shots show no band, sign or porthole over an opening. Paul's decal complaint is answered.",
+      "fixes": []},
+    "airlock": {"consistency": 0.72, "appeal": 0.68, "style": 0.76, "score": 0.72, "pass": true, "was": "0.79 (r12, Blender)",
+      "verified": [
+        "Cycle: 84 + 73 cycles checked, pump_open 0, swap_chamber 0, wrong_clothes 0, riders_off 0, closed_door 0 (96). In the timeline no row has both doors open (my count over 80 rows: 0).",
+        "Night: status strips, pressure lamps and vent mist show the phase (90). Day strip reads enter -> pump -> exit (89).",
+        "No indoor clothes outside in any shot; the suit swap happens in the suit room."
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "When the airlock is selected (interior <id>), the tall chamber block and door housings are drawn as solid opaque cyan slabs that hide the chamber and riders (art/critic/r13_lock.png, r13_rooms.png airlock49 day and night). Same class of bug as round 2: leave tall parts out of the selection fill or draw the outline only."},
+        {"owner": "ART-HAB", "fix": "Chamber walls and door housings still stand at full height in game (lock_desel.png); round-12 fix 1 is still open. With the room open they hide the riders in the chamber from most camera angles."},
+        {"owner": "SIM / RENDER", "fix": "A crate pile sits on and beside the porch, and riders queue among the crates (r13_airlock_crop.png, seqA). Keep piles and pods at least 2.5 m from an outer door (round-10 fix 6)."},
+        {"owner": "SIM", "fix": "The phase changes to 'pump' while a door is still fully open (timeline: 'pump in ... outer 1.00 p 0.00', 'pump out ... inner 1.00 p 1.00', 12 of 80 rows); pressure waits, so the check passes, but lights and sounds keyed to the phase fire with the door open. Enter 'pump' only after both doors report closed, or keep a 'seal' phase until then."},
+        {"owner": "ART-HAB", "fix": "Airlock 49's 259.5 deg corridor opens onto furniture (87): 86% of the remaining furniture samples. Move or hide the item at that segment."}
+      ]},
+    "npc_paths": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true,
+      "verified": "path check PASS on both saves, 499,476 samples: (a) wall 0, (b) furniture 0.083% / 0.122% (target <= 0.2%), (c) outside intrusion 0, (d) slides 0, teleports 0 (95). My shots and strips show nobody through a wall or a habitat, riders walking the chamber, carriers on the aisles. Paul's 'through walls' complaint is answered.",
+      "fixes": [
+        {"owner": "RENDER", "fix": "e_void 138 in scene_final: bodies the sim has inside drawn in open ground near the lander (suit variant). Not a gate item, but explain it or walk them to the lander hatch."},
+        {"owner": "RENDER", "fix": "d_hidden_jump 71 / 135 (fades): confirm each is > 25 m (V3_1 4.3); a short hidden jump reads as a blink."}
+      ]},
+    "ships": {"consistency": 0.80, "appeal": 0.78, "style": 0.80, "score": 0.79, "pass": true, "was": "0.78 (r12)",
+      "verified": "Landing strip: science ship at 134 m and 7 m with hover flames, legs out and shadow, then landed (92); trader ramp closes for take-off; night floods pool on the ramp and deck, cabin windows lit (93); my 'ship medical' landed on the pad; two pads with trader and liner in the v3.1 save.",
+      "fixes": [
+        {"owner": "RENDER", "fix": "No dust ring is visible at touchdown in 92 frame 4 (7 m); V3_1 6.3 asks for a dust ring below 20 m."},
+        {"owner": "RENDER", "fix": "Show one take-off strip with the ship leaving (engine glow, legs folding); 92 shows only the ramp closing."}
+      ]},
+    "visitors": {"consistency": 0.78, "appeal": 0.76, "style": 0.78, "score": 0.77, "pass": true, "was": "0.76 (r12)",
+      "verified": "Tourists in white with colour helmets cycle through the airlock (94) and sit at the cantina bar in visitor clothes, clearly apart from the navy colonists (r13_agents.png). Inspector with gold reflective bands reads by day and at night close (97); walks the ramp lane to the pad edge and on (98).",
+      "fixes": [
+        {"owner": "RENDER", "fix": "Night far (97): the black inspector cannot be found at 45 m; give visitors the helmet lamp halo the colonists have."},
+        {"owner": "ART-NPC", "fix": "Round-12 tourist fix (colour on the lower legs) not verifiable in game: tourists are seated. Show one standing tourist from the back."}
+      ]},
+    "npc_interaction": {"consistency": 0.74, "appeal": 0.70, "style": 0.76, "score": 0.73, "pass": true, "was": 0.71,
+      "note": "not dropped. Tourists seated at the bar, colonists at the lab desks and holo table, riders spaced on the porch. The airlock porch crowding among crates is the remaining weak point."},
+    "npc_ingame": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "was": 0.77, "note": "not dropped"},
+    "interior_lighting": {"consistency": 0.76, "appeal": 0.74, "style": 0.76, "score": 0.75, "pass": true, "was": 0.75, "note": "not dropped: night cantina and habitat bright and warm (r13_rooms.png)"},
+    "interior_ingame": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "was": 0.75,
+      "note": "not dropped. The lab holo dome now draws as transparent glass (round-8 fix landed, r13_lab_crop.png). Rooms read well with the new door housings.",
+      "fixes": [{"owner": "RENDER", "fix": "Selected rooms show 2-3 stacked cyan selection rings floating above the wall (lab, cantina, kitchen). One ring at the floor is enough."}]}
+  },
+  "paul_complaints": {
+    "colonists through walls or habitats": "answered: path check (a) 0, (c) 0; none seen",
+    "paths clipping furniture": "answered: (b) 0.083-0.122%; the remainder is at airlock 49's corridor (ART-HAB fix)",
+    "jerky airlock entry and exit": "answered for motion (no teleports, no swap in the chamber); the airlock READS poorly when selected (cyan slabs) and the housings hide the riders",
+    "half-done doors": "answered; cutaway cap on the housing still torn",
+    "decals over doorways": "answered: 0 in 176 doorways"
+  },
+  "checks_asked": {
+    "no indoor clothes outside": "true: wrong_clothes 0 and no case in any shot",
+    "doors never open on both sides of a pumping chamber": "true: 0 rows with both doors open; pressure never changes with a door open (pump_open 0). Phase label 'pump' starts before the door closes (SIM fix)."
+  },
+  "notes": [
+    "No FAIL. The weakest subject is airlock (0.72, down from 0.79 on Blender evidence) because of how it reads in game.",
+    "My evidence: art/critic/r13/*.png; grids r13_rooms.png, r13_agents.png, r13_lock.png, r13_lk.png, r13_land.png, r13_seqA.png; crops r13_airlock_crop.png, r13_lab_crop.png, r13_cut_crop.png."
+  ],
+  "latest_scores": {
+    "npc_suit": [0.82, 5], "npc_indoor": [0.72, 5], "npc_animation": [0.78, 5],
+    "npc_interaction": [0.73, 13], "npc_ingame": [0.77, 13],
+    "interior_habitat": [0.79, 7], "interior_comfort": [0.75, 7], "interior_medical": [0.75, 7], "interior_food": [0.76, 7],
+    "interior_industry": [0.76, 7], "interior_science": [0.73, 7], "interior_life": [0.77, 7], "interior_logistics": [0.77, 7],
+    "interior_links": [0.71, 7], "interior_ingame": [0.76, 13], "doorways": [0.79, 8], "interior_lighting": [0.75, 13],
+    "hazard_props": [0.70, 7], "hazard_visuals": [0.70, 8],
+    "doors": [0.77, 13], "doorway_decals": [0.80, 13], "airlock": [0.72, 13], "npc_paths": [0.76, 13],
+    "ships": [0.79, 13], "landing_pad": [0.75, 12], "visitors": [0.77, 13]
+  }
+}

@@ -59,7 +59,7 @@ def build_research_lab(rm):
            3: dict(obs=(-2.9, -1.5, 2.15), pods=[(2.5, 2.3, 1.5, 2), (2.9, -2.6, 1.4, 2), (-1.5, 3.9, 1.2, 1),
                                                  (0.4, -4.6, 1.0, 1)])}[s]
     ox, oy, orr = lay["obs"]
-    top = observatory(ro, ox, oy, D, orr, slit_a=-60.0, seg=14 if s == 0 else 16)
+    top = observatory(ro, ox, oy, D, orr, slit_a=-60.0, seg=12 if s == 0 else 16)
     rm.top_z = max(rm.top_z, top)
     rm.anchor("Telescope", (ox, oy, top))
     for k, (px, py, pr, lev) in enumerate(lay["pods"]):

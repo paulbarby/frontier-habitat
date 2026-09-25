@@ -305,6 +305,27 @@ func _chunk_lod(c: Dictionary, lod: int) -> MeshInstance3D:
 	var nz: int = jj.size()
 	var plist: Array = _pad_grid.get(int(c["ci"]), [])
 	var grow: float = 0.0 if s == 1 else float(s) * hs
+	# Pads by 8 m cell of this chunk (V3.1 stall trace: every vertex tested every pad of the
+	# chunk, 60-280 ms for a finest-level chunk in the colony).
+	var pcell := {}
+	if not plist.is_empty():
+		for pi in plist:
+			var pd: Dictionary = _pads[pi]
+			var mm: float = float(pd["r"]) + 16.0 * hs * 0.5 + 4.0
+			var lo: Vector2
+			var hi: Vector2
+			if pd.has("c"):
+				lo = (pd["c"] as Vector2) - Vector2(mm, mm)
+				hi = (pd["c"] as Vector2) + Vector2(mm, mm)
+			else:
+				lo = Vector2(minf(pd["p0"].x, pd["p1"].x), minf(pd["p0"].y, pd["p1"].y)) - Vector2(mm, mm)
+				hi = Vector2(maxf(pd["p0"].x, pd["p1"].x), maxf(pd["p0"].y, pd["p1"].y)) + Vector2(mm, mm)
+			for cx in range(int(floor(lo.x / 8.0)), int(floor(hi.x / 8.0)) + 1):
+				for cz in range(int(floor(lo.y / 8.0)), int(floor(hi.y / 8.0)) + 1):
+					var kk: int = cx * 4096 + cz
+					if not pcell.has(kk):
+						pcell[kk] = []
+					(pcell[kk] as Array).append(pi)
 	var verts := PackedVector3Array()
 	var norms := PackedVector3Array()
 	verts.resize(nx * nz)
@@ -316,7 +337,9 @@ func _chunk_lod(c: Dictionary, lod: int) -> MeshInstance3D:
 			var k: int = vj * hn + vi
 			var hv: float = hts[k]
 			if not plist.is_empty():
-				hv = minf(hv, _pad_limit(vi * hs, vj * hs, plist, grow))
+				var cl = pcell.get(int(floor(vi * hs / 8.0)) * 4096 + int(floor(vj * hs / 8.0)))
+				if cl != null:
+					hv = minf(hv, _pad_limit(vi * hs, vj * hs, cl, grow))
 			verts[b * nx + a] = Vector3(vi * hs, hv, vj * hs)
 			norms[b * nx + a] = _norms[k]
 	var idx := PackedInt32Array()
@@ -381,13 +404,24 @@ func _show_lod(c: Dictionary, lod: int) -> void:
 
 ## Picks each chunk's level from the camera distance (5 times a second). A level that is not
 ## built yet shows the next coarser one; at most one mesh is built per frame.
-func update_lod(delta: float, cam: Camera3D) -> void:
+## Builds every chunk mesh the camera needs now (a loaded game: in the load frame, so no
+## later frame pays 60-240 ms for one chunk; V3.1 stall trace). Returns the number built.
+func build_needed(cam: Camera3D) -> int:
+	var n := 0
+	for k in 400:
+		_lod_clock = 0.0
+		if not update_lod(0.0, cam):
+			break
+		n += 1
+	return n
+
+func update_lod(delta: float, cam: Camera3D) -> bool:
 	if cam == null or chunks.size() <= 4:
-		return
+		return false
 	_lod_clock -= delta
 	var built := false
 	if _lod_clock > 0.0:
-		return
+		return false
 	_lod_clock = 0.2
 	var eye: Vector3 = cam.global_position
 	var near: Array = [95.0, 200.0, 420.0] if quality >= 2 else [70.0, 150.0, 340.0]
@@ -411,6 +445,7 @@ func update_lod(delta: float, cam: Camera3D) -> void:
 			show += 1
 		_show_lod(c, show)
 		lod_counts[show] += 1
+	return built
 
 ## Four strips of hills and mesas round the map, to the horizon. The inner edge samples the
 ## map edge every 8 m; the chunk skirts hide the small steps.

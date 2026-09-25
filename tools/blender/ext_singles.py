@@ -420,62 +420,200 @@ def build_lander(spec):
 # ======================================================================================
 # LANDING PAD (refresh of v1)
 # ======================================================================================
-def build_pad(spec):
-    b, lt = Part("Base"), Part("Lights")
-    SEG = 48
-    TOP = 0.35
+PAD_DECK = 9.00             # 3.1: the deck (ship plan radius 7.5 + 1.5 m of free deck)
+PAD_R = 11.50               # 3.1: the footprint (proposed to SIM): the apron ring carries the equipment
+PAD_TOP = 0.35
 
-    b.lathe([(8.90, 0.0), (8.90, 0.20), (8.90, 0.30), (8.78, TOP), (8.2, TOP), (0.0, TOP)],
-            lambda k, i: ("Frame", "Hazard" if (i // 2) % 2 == 0 else "Rubber", "Frame", "HullDark", "HullDark")[k],
-            seg=SEG, smooth=False)
+
+def build_pad(spec):
+    """Landing pad 3.1 (V3_1 section 6.2, ART-B's envelope, critic round 9 pad note).
+    Deck r 9.0 at 0.35 m: landing circle, centre mark, approach ticks, amber edge lights, one purple accent ring.
+    Apron r 9.0 .. 11.3 at ground level: control kiosk (behind the ship's nose, r >= 10), blast deflector (side),
+    fuel station with a floor fuel line to a coupling at r 7.7 (the ship's side), two light masts.
+    The ramp lanes stay clear from 6.5 m to the rim: +X +-25 deg (rear ramps) and +Y +-40 deg (side airstairs).  Anchor_Ship: deck centre, local +X = the nose
+    (yaw 180: nose to -X, ramp to +X).  Anchor_Fuel at the coupling."""
+    b, lt = Part("Base"), Part("Lights")
+    SEG = 64
+    TOP = PAD_TOP
+    D = PAD_DECK
+    # the deck: a raised disc with a chamfered, striped edge
+    b.lathe([(D, 0.0), (D, 0.20), (D - 0.12, TOP), (0.0, TOP)],
+            lambda k, i: ("Frame", "Hazard" if (i // 2) % 2 == 0 else "Rubber", "HullDark")[k], seg=SEG, smooth=False)
+    # the apron: a low ring round the deck
+    b.lathe([(PAD_R - 0.20, 0.0), (PAD_R - 0.20, 0.06), (PAD_R - 0.30, 0.10), (D + 0.02, 0.10)],
+            lambda k, i: ("Frame", "Frame", "FloorDark")[k], seg=SEG, smooth=False)
     z = TOP + 0.012
-    for r0, r1, m in ((7.35, 7.85, "Accent"), (5.45, 5.55, "Frame"), (3.55, 3.85, "Hull"), (0.75, 1.05, "Hazard")):
+    for r0, r1, m in ((7.60, 7.95, "Accent"), (5.45, 5.55, "Hull"), (3.55, 3.75, "Hull"), (0.75, 1.05, "Hazard")):
         b.ring_flat(r0, r1, z, m, seg=SEG if r1 > 2 else 24)
     for k in range(12):                                   # radial panel seams
         with b.at(RZ(15.0 + 30.0 * k)):
             b.box((6.45, 0, z - 0.004), (2.2, 0.06, 0.004), "Frame", mats={"-z": None})
             b.box((2.4, 0, z - 0.004), (2.2, 0.06, 0.004), "Frame", mats={"-z": None})
-    for k in range(4):                                    # centre marking: four bars with chevrons
+    for k in range(4):                                    # centre marking: four bars
         with b.at(RZ(90.0 * k)):
             b.box((2.15, 0, z), (1.9, 0.62, 0.004), "Hazard", mats={"-z": None})
-            for j in range(3):
-                b.poly([(4.35 + 0.45 * j, -0.35, z), (4.65 + 0.45 * j, 0.0, z), (4.35 + 0.45 * j, 0.35, z)], "Hull")
-    for k in range(8):                                    # approach ticks
-        with b.at(RZ(45.0 * k + 22.5)):
-            b.box((6.55, 0, z), (0.9, 0.30, 0.004), "Hull", mats={"-z": None})
-    for k in range(16):                                   # edge lights
-        x, y, _ = polar(8.40, 22.5 * k + 11.25)
-        b.vcyl(x, y, TOP, TOP + 0.14, 0.15, seg=8, mat="Frame")
-        b.vcyl(x, y, TOP + 0.14, TOP + 0.2, 0.12, seg=8, mat="Frost")
-        lt.hemi((x, y, TOP + 0.2), 0.12, "Light" if k % 2 else "Neon", seg=8, rings=2)
-    # control kiosk with a small tower on -X
-    with b.at(T(-7.8, 0.0, TOP)):
-        b.box0(0, 0, 0, 1.5, 1.9, 2.1, "Hull", bevel=0.10)
-        b.box((0.3, 0, 1.55), (0.95, 1.94, 0.40), "Solar", mats={"-x": None})
-        b.box((0, 0, 1.98), (1.54, 1.94, 0.16), "Accent")
-        b.box0(0, 0, 2.1, 1.1, 1.3, 0.10, "HullDark")
-        b.box0(-0.2, 0.3, 2.2, 0.8, 0.8, 0.9, "Hull", bevel=0.06)
-        b.box((0.21, 0.3, 2.75), (0.02, 0.62, 0.3), "Solar")
-        b.vcyl(-0.3, 0.5, 3.1, 4.2, 0.03, seg=5, mat="Frame")
-        b.box0(0.78, -0.45, 0, 0.12, 0.55, 1.0, "HullDark")
-    lt.box((-7.8 + 0.31, 0.0, TOP + 1.55), (0.012, 1.84, 0.34), "Window", mats={"-x": None})
-    lt.box((-7.8 + 0.22, 0.3, TOP + 2.75), (0.02, 0.56, 0.25), "Window")
-    lt.sphere((-7.8 - 0.3, 0.5, TOP + 4.25), 0.08, "Light", seg=6, rings=3)
-    # fuel station on +Y: hose reel, pump, pipe to the pad edge
-    with b.at(T(0.0, 7.85, TOP), RZ(90.0)):
-        b.box0(0, 0, 0, 0.8, 1.4, 1.2, "Hull", bevel=0.06)
-        b.box((0, 0, 0.9), (0.84, 1.44, 0.14), "Hazard")
-        with b.at(T(0.0, 0.0, 0.6), RY(90)):
-            b.cyl((0, 0, 0.42), (0, 0, 0.62), 0.4, seg=12, mat="Frame")
-            b.cyl((0, 0, 0.44), (0, 0, 0.6), 0.3, seg=12, mat="Rubber")
-    # floodlight masts on the rim (+X/-Y and +X/+Y)
+    # the ramp lanes (ART-B round 11): pad +X (rear ramps) and pad +Y (side airstairs): chevrons pointing out
+    for lane in (0.0, 90.0):
+        with b.at(RZ(lane)):
+            for j in range(4):
+                x0 = 6.6 + 0.5 * j
+                b.poly([(x0, -0.55, z), (x0 + 0.35, 0.0, z), (x0 + 0.23, 0.0, z), (x0 - 0.12, -0.55, z)], "Hull")
+                b.poly([(x0 + 0.23, 0.0, z), (x0 + 0.35, 0.0, z), (x0, 0.55, z), (x0 - 0.12, 0.55, z)], "Hull")
+    # amber edge lights on the deck rim (not in the ramp lane mouth)
+    for k in range(20):
+        a = 18.0 * k + 9.0
+        x, y, _ = polar(D - 0.45, a)
+        b.vcyl(x, y, TOP, TOP + 0.10, 0.13, seg=8, mat="Frame")
+        lt.hemi((x, y, TOP + 0.10), 0.10, "BeaconAmber", seg=8, rings=2)
+    # painted walkway (round 12): a ring lane on the apron (white edge lines, r 9.15 .. 9.81), open at the deflector,
+    # with short lanes to the kiosk and the fuel station and a step up to the deck at each
+    za = 0.10 + 0.004
+    for (r0, r1) in ((9.15, 9.21), (9.75, 9.81)):
+        b.ring_flat(r0, r1, za, "Hull", seg=48, a0=304.0, a1=584.0)
+    for k in range(40):                                   # dashed centre line
+        a = 306.0 + 7.0 * k
+        if a > 580.0:
+            break
+        b.ring_flat(9.46, 9.50, za, "Hull", seg=2, a0=a, a1=a + 3.5)
+    for (la, r_end) in ((180.0, 10.12), (318.0, 10.0)):
+        with b.at(RZ(la)):
+            for sy in (-0.55, 0.55):
+                b.box(((9.81 + r_end) / 2, sy, za), (r_end - 9.81 + 0.02, 0.06, 0.004), "Hull", mats={"-z": None})
+    for sa in (180.0, 306.0):                             # step up to the deck
+        with b.at(RZ(sa)):
+            b.box0(9.13, 0.0, 0.10, 0.26, 1.0, 0.13, "Frame", bevel=0.02)
+            b.box((9.13 - 0.10, 0.0, 0.23 + 0.003), (0.06, 1.0, 0.006), "Hazard", mats={"-z": None})
+    # tie-down points on the free deck (r 8.15), clear of the ramp lanes (+X +-25, +Y +-40) and the edge lights
+    for ta in (36.0, 144.0, 198.0, 234.0, 270.0, 306.0):
+        x, y, _ = polar(8.15, ta)
+        with b.at(T(x, y, TOP)):
+            b.ring_flat(0.13, 0.19, 0.010, "Hazard", seg=12)
+            b.ring_flat(0.0, 0.13, 0.008, "Frame", seg=12)
+            b.torus(0.075, 0.018, "Metal", seg=10, tseg=4, z=0.026)
+    # control kiosk behind the ship's nose (-X), at r 10.6 on the apron
+    kx = -10.55
+    with b.at(T(kx, 0.0, 0.10)):
+        b.box0(0, 0, 0, 0.85, 1.40, 2.10, "Hull", bevel=0.08)
+        b.box((0.43, 0, 0.95), (0.012, 1.20, 0.10), "Hazard", mats={"-x": None})
+        b.box((0.43, 0, 1.45), (0.014, 1.30, 0.66), "Frame", mats={"-x": None})     # window frame
+        b.box0(0, 0, 2.10, 0.95, 1.50, 0.08, "HullDark")
+        b.box0(-0.10, 0.25, 2.18, 0.55, 0.70, 0.70, "Hull", bevel=0.05)
+        b.vcyl(-0.20, -0.45, 2.18, 3.95, 0.045, seg=6, mat="Frame")                  # the mast
+        b.vcyl(-0.20, -0.45, 3.95, 4.02, 0.12, seg=10, mat="Frame")
+        b.vcyl(-0.20, -0.45, 4.20, 4.26, 0.12, seg=10, mat="Frame")
+        b.box((-0.08, -0.45, 3.55), (0.12, 0.30, 0.16), "Frame", bevel=0.02)          # deck floodlight housing
+    lt.box((kx + 0.44, 0.0, 0.10 + 1.45), (0.012, 1.16, 0.56), "Window", mats={"-x": None})
     for sy in (-1, 1):
-        x, y, _ = polar(8.3, 180 - sy * 40 + 180)
-        b.vcyl(x, y, TOP, TOP + 3.0, 0.07, seg=6, mat="Frame")
-        b.box((x, y, TOP + 3.1), (0.5, 0.3, 0.25), "Frame", bevel=0.03)
-        d = Vector((-x, -y, -3.0)).normalized()
-        lt.box(tuple(Vector((x, y, TOP + 3.1)) + d * 0.16), (0.36, 0.26, 0.16), "Light")
-    return [b, lt]
+        lt.box((kx + 0.08, sy * 0.706, 0.10 + 1.45), (0.46, 0.012, 0.44), "Window",
+               mats={("-y" if sy > 0 else "+y"): None})
+    lt.box((kx + 0.185, 0.25, 0.10 + 2.55), (0.012, 0.56, 0.22), "Window", mats={"-x": None})
+    lt.vcyl(kx - 0.20, -0.45, 0.10 + 4.02, 0.10 + 4.20, 0.10, seg=10, mat="BeaconAmber", cap0=False, cap1=False)
+    lt.box((kx - 0.015, -0.45, 0.10 + 3.55), (0.012, 0.26, 0.12), "Light", mats={"-x": None})
+    # blast deflector on the -Y side (outside the walkway, clear of the ramp lanes): angled plates (31 deg back from
+    # vertical) with a top rail, rear struts, a hazard stripe along the base and scorch on the face to the pad
+    R0, R1, ZB, ZT = 9.95, 10.95, 0.10, 1.75
+    A0, NP, DA = 228.0, 8, 9.0
+
+    def dpt(a, v, off=0.0):
+        r = R0 + (R1 - R0) * v - off * 0.86
+        return Vector((r * cos(radians(a)), r * sin(radians(a)), ZB + (ZT - ZB) * v + off * 0.52))
+
+    PL = [A0, A0 + DA]                                   # the plate being built: overlays follow its chord
+
+    def cpt(a, v, off=0.0):
+        u = (a - PL[0]) / (PL[1] - PL[0])
+        return dpt(PL[0], v, off).lerp(dpt(PL[1], v, off), u)
+
+    def inner_quad(a0, a1, v0, v1, mat, off):
+        b.poly([cpt(a0, v0, off), cpt(a0, v1, off), cpt(a1, v1, off), cpt(a1, v0, off)], mat)
+
+    rail = []
+    for k in range(NP):
+        a = A0 + DA * k
+        a1 = a + DA
+        PL[:] = [a, a1]
+        inner_quad(a, a1, 0.0, 1.0, "Metal", 0.0)
+        b.beam(tuple(dpt(a, 0.0, 0.02)), tuple(dpt(a, 1.0, 0.02)), 0.06, 0.04, "Frame")
+        b.poly([dpt(a1, 1.0, -0.04), dpt(a, 1.0, -0.04), dpt(a, 0.0, -0.04), dpt(a1, 0.0, -0.04)], "HullDark")
+        b.poly([dpt(a, 1.0), dpt(a1, 1.0), dpt(a1, 1.0, -0.04), dpt(a, 1.0, -0.04)], "Frame")
+        n = 6                                            # hazard stripe along the base
+        for m in range(n):
+            u0, u1 = a + (a1 - a) * m / n, a + (a1 - a) * (m + 1) / n
+            inner_quad(u0, u1, 0.02, 0.16, "Hazard" if m % 2 == 0 else "Rubber", 0.012)
+        if k not in (0, NP - 1):                         # scorch: two-tone fan, darkest at the centre
+            mid, vc = (a + a1) / 2 + 0.5 * ((k % 3) - 1), 0.44 + 0.05 * (k % 2)
+            NV = 14
+            for (ru, rv, off, mat) in (((a1 - a) * 0.30, 0.36, 0.012, "FloorDark"), ((a1 - a) * 0.15, 0.24, 0.016, "Frame")):
+                ring = []
+                for j in range(NV):
+                    th = 2 * pi * j / NV
+                    fac = 0.55 + 0.45 * ((j * 5 + k * 3) % 7) / 6.0
+                    ring.append(cpt(mid + ru * fac * cos(th), vc + rv * fac * (0.6 + 0.4 * sin(th)) * sin(th), off))
+                cen = cpt(mid, vc, off)
+                for j in range(NV):
+                    b.poly([cen, ring[(j + 1) % NV], ring[j]], mat)
+        rail.append(dpt(a, 1.0) + Vector((0, 0, 0.10)))
+        base = Vector(((R1 + 0.35) * cos(radians(a + DA / 2)), (R1 + 0.35) * sin(radians(a + DA / 2)), ZB))
+        b.beam(tuple(base), tuple(dpt(a + DA / 2, 0.75)), 0.08, 0.08, "Frame")
+        b.vcyl(base.x, base.y, 0.0, ZB + 0.06, 0.12, seg=6, mat="Frame")
+    rail.append(dpt(A0 + DA * NP, 1.0) + Vector((0, 0, 0.10)))
+    AE = A0 + DA * NP
+    b.beam(tuple(dpt(AE, 0.0, 0.02)), tuple(dpt(AE, 1.0, 0.02)), 0.06, 0.04, "Frame")
+    b.poly([dpt(A0, 0.0), dpt(A0, 1.0), dpt(A0, 1.0, -0.04), dpt(A0, 0.0, -0.04)], "Frame")
+    b.poly([dpt(AE, 0.0, -0.04), dpt(AE, 1.0, -0.04), dpt(AE, 1.0), dpt(AE, 0.0)], "Frame")
+    for q0, q1 in zip(rail, rail[1:]):
+        b.cyl(tuple(q0), tuple(q1), 0.045, seg=6, mat="Metal", cap0=False, cap1=False)
+    for q in rail:
+        b.cyl(tuple(q - Vector((0, 0, 0.10))), tuple(q), 0.03, seg=5, mat="Frame", cap0=False, cap1=False)
+    # soot on the apron in front of the deflector: dark fans that widen toward the plates
+    for sa in (237.0, 255.0, 273.0, 291.0):
+        with b.at(RZ(sa)):
+            b.poly([(9.25, -0.20, za + 0.001), (9.85, -0.62, za + 0.001), (9.85, 0.60, za + 0.001),
+                    (9.25, 0.18, za + 0.001)], "Frame")
+    # fuel station at 318 deg (clear of both ramp lanes and the deflector): an orange fuel band, a hose reel on the
+    # side; the fuel line in an orange-striped floor channel to the coupling at r 7.7 (the ship's side)
+    fa = 318.0
+    fx, fy = 10.4 * cos(radians(fa)), 10.4 * sin(radians(fa))
+    with b.at(T(fx, fy, 0.10), RZ(fa)):
+        b.box0(0, 0, 0, 0.8, 1.3, 1.25, "Hull", bevel=0.06)
+        b.box((0, 0, 0.95), (0.84, 1.34, 0.14), "Hazard")
+        b.box((0, 0, 0.45), (0.83, 1.33, 0.16), "SuitAccent")
+        b.box((-0.405, 0.0, 0.72), (0.012, 0.36, 0.14), "HullDark", mats={"+x": None})
+        for sy in (-0.45, 0.45):
+            b.vcyl(0.0, sy, 1.25, 1.45, 0.12, seg=8, mat="Metal")
+        ry = 0.93                                        # the hose reel on the station's +Y side, axis along Y
+        for sx in (-0.30, 0.30):
+            b.beam((sx, 0.66, 0.0), (sx * 0.25, ry, 0.62), 0.06, 0.06, "Frame")
+        with b.at(T(0.0, ry, 0.62), RX(90)):
+            for dz in (-0.19, 0.16):
+                b.cyl((0, 0, dz), (0, 0, dz + 0.03), 0.44, seg=16, mat="Frame")
+            b.cyl((0, 0, -0.16), (0, 0, 0.16), 0.20, seg=12, mat="Metal", cap0=False, cap1=False)
+            for dz in (-0.09, 0.0, 0.09):
+                b.torus(0.27, 0.06, "Rubber", seg=16, tseg=6, z=dz)
+            b.cyl((0, 0, -0.30), (0, 0, 0.30), 0.05, seg=8, mat="Metal")
+        b.cyl((-0.20, ry - 0.05, 0.40), (-0.55, ry - 0.30, 0.02), 0.05, seg=6, mat="Rubber", cap0=False)
+        b.box((-0.62, ry - 0.34, 0.07), (0.20, 0.09, 0.10), "SuitAccent")
+    for (r0, r1, zz) in ((10.0, 9.0, 0.10), (9.0, 7.7, TOP)):
+        with b.at(RZ(fa)):
+            b.box(((r0 + r1) / 2, 0.0, zz + 0.004), (abs(r1 - r0) + 0.02, 0.26, 0.008), "HullDark", mats={"-z": None})
+            for sy in (-0.20, 0.20):
+                b.box(((r0 + r1) / 2, sy, zz + 0.005), (abs(r1 - r0) + 0.02, 0.07, 0.008), "SuitAccent",
+                      mats={"-z": None})
+            b.cyl((r0, 0.0, zz + 0.05), (r1, 0.0, zz + 0.05), 0.045, seg=6, mat="Metal", cap0=False, cap1=False)
+    cx, cy = 7.7 * cos(radians(fa)), 7.7 * sin(radians(fa))
+    b.vcyl(cx, cy, TOP, TOP + 0.30, 0.12, seg=8, mat="Frame")
+    b.vcyl(cx, cy, TOP + 0.30, TOP + 0.36, 0.08, seg=8, mat="SuitAccent")
+    # two light masts on the apron (behind, at +-140 deg)
+    for sa in (-140.0, 140.0):
+        x, y = 10.4 * cos(radians(sa)), 10.4 * sin(radians(sa))
+        b.vcyl(x, y, 0.10, 0.20, 0.25, seg=8, mat="Frame")
+        b.vcyl(x, y, 0.20, 4.2, 0.07, seg=6, mat="Frame")
+        b.box((x, y, 4.3), (0.5, 0.3, 0.25), "Frame", bevel=0.03)
+        d = Vector((-x, -y, -3.5)).normalized()
+        lt.box(tuple(Vector((x, y, 4.3)) + d * 0.16), (0.36, 0.26, 0.16), "Light")
+    ship = Anchor("Ship", (0.0, 0.0, TOP), forward=(-1, 0, 0))
+    fuel = Anchor("Fuel", (cx, cy, TOP), forward=(0, -1, 0))
+    return [b, lt, ship, fuel]
 
 
 # ======================================================================================
@@ -490,8 +628,9 @@ MODELS = [
     dict(id="lander", kind="special", footprint=5.5, overhang=1.0, accent="logistics", budget=6500,
          objects=["Base", "Lights"], anchors=["Anchor_Ramp", "Anchor_Engine"], ao=dict(dist=1.2, samples=32),
          builder=build_lander),
-    dict(id="landing_pad", kind="exterior", footprint=9.0, accent="logistics", budget=9000,
-         objects=["Base", "Lights"], ao=dict(dist=1.2, samples=24), builder=build_pad),
+    dict(id="landing_pad", kind="exterior", footprint=PAD_R, accent="logistics", budget=9000,
+         objects=["Base", "Lights"], anchors=["Anchor_Ship", "Anchor_Fuel"], ao=dict(dist=1.2, samples=24),
+         builder=build_pad),
 ]
 
 

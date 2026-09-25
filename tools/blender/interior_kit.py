@@ -49,11 +49,13 @@ def seg_mid(k):
     return (k + 0.5) * SEG_DEG
 
 
-def clear_for(R):
+def clear_for(R, size=None):
     """Width of the free walking ring inside the wall-side items (a doorway can open anywhere on it)."""
-    # L and XL: 1.10 m, so a doorway at any angle has 1.2 m of free floor in front of it (critic round 4);
-    # S and M keep the narrower ring and list their blocked door angles (build_report door_blocked)
-    return 1.10 if R >= 5.7 else (0.80 if R >= 4.9 else 0.65)
+    # L and XL: 1.10 m (critic round 4).  M: 1.00 m (RENDER / coordinator 2026-09-25: a 0.9 m lane from every
+    # doorway to the aisle ring).  S keeps 0.65 m and lists its blocked door angles (ART-HAB-door_blocked.json).
+    if size is not None:
+        return (0.65, 1.00, 1.10, 1.10)[size]
+    return 1.10 if R >= 5.7 else (1.00 if R >= 4.9 else 0.65)
 
 
 # --------------------------------------------------------------------------------------
@@ -201,8 +203,9 @@ def build_walls_v3(rm, band="Accent", band_proud=None, wall="Hull", kick="HullDa
             # inner batten (or a rib stub every 45 degrees) at the panel joint, outer batten
             if rib:
                 with w.at(RZ(a0 + rib_deg / 2)):
-                    bbox(w, Ri - 0.085, Ri + 0.01, -0.04, 0.04, 0.29, WALL_TOP + 0.12, "Frame", mats={"+x": None})
-                    bbox(w, Ri - 0.085, Rw + 0.045, -0.04, 0.04, WALL_TOP + 0.005, WALL_TOP + 0.07, "Frame",
+                    # critic round 13: the rib stub ends at WALL_TOP (it stood 12 cm over the cutaway line)
+                    bbox(w, Ri - 0.085, Ri + 0.01, -0.04, 0.04, 0.29, WALL_TOP, "Frame", mats={"+x": None})
+                    bbox(w, Ri - 0.085, Rw + 0.045, -0.04, 0.04, WALL_TOP - 0.065, WALL_TOP, "Frame",
                          mats={"-z": None})
             else:
                 with w.at(RZ(a0 + bat_deg / 2)):
@@ -389,7 +392,7 @@ class Plan:
         self.Ri = rm.Ri
         self.item_depth = item_depth
         self.wall_front = rm.Ri + 0.02 - item_depth
-        self.clear = clear if clear is not None else clear_for(rm.R)
+        self.clear = clear if clear is not None else clear_for(rm.R, None if rm.single else rm.size)
         self.r_max = self.wall_front - self.clear
         self.rects = []
         self.circles = []
@@ -398,6 +401,10 @@ class Plan:
         self.lamps = []
         rm.extra_parts = getattr(rm, "extra_parts", [])
         rm.plan = self
+
+    def lane_r(self):
+        """Free-standing furniture inside this radius leaves every door lane clear (door_blocked, 0.9 m lane)."""
+        return 0.5 * (self.wall_front + self.r_max) - LANE_HW - 0.02
 
     # ---- footprints -----------------------------------------------------------------
     def rect(self, cx, cy, hx, hy, yaw=0.0, tag=""):
@@ -651,14 +658,25 @@ TALL_TAGS = ("suit", "screen", "hood", "curtain", "backbar", "sign")     # hidde
 DOOR_CLEAR = 1.20
 
 
-def door_blocked(plan, depth=DOOR_CLEAR, half=0.75, step=1.0):
-    """Model angles (deg) where a doorway would open onto furniture: the box `depth` m deep and the opening wide
-    in front of the pocket housings (wall line - 0.50) holds part of a free-standing footprint (Tall parts are
-    hidden by the game and do not count).  Returns ([(a0, a1)], worst clearance in m)."""
+LANE_HW = 0.45          # RENDER / coordinator 2026-09-25: a 0.9 m lane from every doorway to the aisle ring
+DOOR_FACE = 0.56        # the room face of the door housing (door kit 3.1, HX -0.56) inside the wall line
+
+
+def door_blocked(plan, half=LANE_HW, step=1.0):
+    """Model angles (deg) where a doorway has no clear lane to the aisle ring: the lane `2 * half` wide runs from
+    the room face of the door housing (wall line - 0.56) to the far side of the aisle ring (ring radius - half).
+    Free-standing footprints block it; Tall parts do not (the game hides them near a doorway), nor do wall items
+    (they hide with their wall segment).  Returns ([(a0, a1)], worst free lane depth in m)."""
     rm = plan.rm
     Rw = rm.R - 0.32
+    rr = 0.5 * (plan.wall_front + plan.r_max)
+    r_door = Rw - DOOR_FACE
+    depth = max(0.2, r_door - (rr - half))
     keep_r = [r for r in plan.rects if r[5] not in TALL_TAGS]
     keep_c = [c for c in plan.circles if c[3] not in TALL_TAGS]
+
+    hits, hit_ang, cur_a = {}, {}, [0.0]
+    plan.lane_hit_angles = hit_ang
 
     def inside(x, y):
         for (cx, cy, hx, hy, yaw, tag) in keep_r:
@@ -666,19 +684,26 @@ def door_blocked(plan, depth=DOOR_CLEAR, half=0.75, step=1.0):
             lx = c * (x - cx) + s_ * (y - cy)
             ly = -s_ * (x - cx) + c * (y - cy)
             if abs(lx) <= hx and abs(ly) <= hy:
+                hits[tag] = max(hits.get(tag, 0.0), round(hypot(x, y), 2))
+                hit_ang.setdefault(tag, set()).add(int(cur_a[0]) % 360)
                 return True
         for (cx, cy, r, tag) in keep_c:
             if hypot(x - cx, y - cy) <= r:
+                hits[tag] = max(hits.get(tag, 0.0), round(hypot(x, y), 2))
+                hit_ang.setdefault(tag, set()).add(int(cur_a[0]) % 360)
                 return True
         return False
+    plan.lane_hits = hits
+    plan.lane_ring = (round(rr, 2), round(r_door, 2), round(plan.r_max, 2))
     blocked, worst = [], 9.0
     a = 0.0
     while a < 360.0 - 1e-6:
         ca, sa = cos(radians(a)), sin(radians(a))
+        cur_a[0] = a
         clear = depth
-        for i in range(1, 25):
+        for i in range(0, 25):
             d = depth * i / 24.0
-            r = Rw - 0.50 - d
+            r = r_door - d
             hit = False
             for j in range(-3, 4):
                 t = half * j / 3.0
@@ -764,3 +789,148 @@ def check_standpoints(rm, free=STAND_FREE):
             worst = min(others, key=lambda fp: _fp_dist(fp, x, y))
             flags.append("%s has %.2f m free floor (< %.2f) next to %s" % (name, d, free, worst[-1] or "an item"))
     return flags
+
+
+# --------------------------------------------------------------------------------------
+# 3.1 decals per wall segment (docs/V3_1_DESIGN.md section 3.3)
+# --------------------------------------------------------------------------------------
+DECAL_MATS = ("Accent", "Window", "Neon", "L3Band", "L4Band", "L5Gold", "Trim", "Light", "LightStrip", "Hazard",
+              "Screen", "Glow", "Plasma", "Visor", "Rubber", "Solar")
+DECAL_ZMAX = 3.0            # the door housing top is 2.56; decals above 3.0 m never meet a doorway
+UPPER_SHELLS = ("podium", "drum", "setback")
+NAME_SIGN_DEG = 22.5        # default angle of the room-name sign (middle of segment 2)
+
+
+def _face_centre(part, idx):
+    vs = [part.verts[i] for i in idx]
+    n = len(vs)
+    return (sum(v.x for v in vs) / n, sum(v.y for v in vs) / n, sum(v.z for v in vs) / n)
+
+
+def _face_normal(part, idx):
+    a, b, c = part.verts[idx[0]], part.verts[idx[1]], part.verts[idx[2]]
+    nv = (b - a).cross(c - a)
+    return nv.normalized() if nv.length > 1e-12 else nv
+
+
+def _split_at_segments(src, idx):
+    """Round 12: cut a wall face (vertical, less than 180 deg wide) at every segment boundary it crosses, so each piece
+    lies in one segment.  New corner vertices are appended to src.verts.  Returns [(seg, [vertex ids])]."""
+    angs = [degrees(atan2(src.verts[i].y, src.verts[i].x)) for i in idx]
+    base = angs[0]
+    un = [base + ((a - base + 180.0) % 360.0) - 180.0 for a in angs]
+    lo, hi = min(un), max(un)
+    cuts = [k * SEG_DEG for k in range(int(floor(lo / SEG_DEG)) + 1, int(ceil(hi / SEG_DEG)))
+            if lo + 1e-4 < k * SEG_DEG < hi - 1e-4]
+    pieces = [list(idx)]
+    for c in cuts:
+        n = Vector((-sin(radians(c)), cos(radians(c)), 0.0))
+        nxt = []
+        for poly in pieces:
+            d = [n.dot(src.verts[i]) for i in poly]
+            if all(x >= -1e-6 for x in d) or all(x <= 1e-6 for x in d):
+                nxt.append(poly)
+                continue
+            pos, neg = [], []
+            for j in range(len(poly)):
+                i0, i1 = poly[j], poly[(j + 1) % len(poly)]
+                d0, d1 = d[j], d[(j + 1) % len(poly)]
+                (pos if d0 >= 0 else neg).append(i0)
+                if (d0 >= 0) != (d1 >= 0):
+                    t = d0 / (d0 - d1)
+                    q = src.verts[i0].lerp(src.verts[i1], t)
+                    src.verts.append(q)
+                    if hasattr(src, "vover"):
+                        src.vover.append(False)
+                    ni = len(src.verts) - 1
+                    pos.append(ni)
+                    neg.append(ni)
+            nxt += [x for x in (pos, neg) if len(x) >= 3]
+        pieces = nxt
+    out = []
+    for poly in pieces:
+        c = sum((src.verts[i] for i in poly), Vector((0, 0, 0))) / len(poly)
+        out.append((int((degrees(atan2(c.y, c.x)) % 360.0) // SEG_DEG) % NSEG, poly))
+    return out
+
+
+def split_decals(rm):
+    """Move every outer-wall decal face (by material) of Base, Roof, Lights and L2..L5 that lies in the doorway zone
+    (radius >= Rw - 0.45, z <= DECAL_ZMAX) into Decal_<seg>_<source> parts, and, for flat-walled shells, the upper
+    wall skin at the wall line (1.40 m .. deck) into Upper_<seg> parts.  The game hides them per segment at a
+    doorway.  Returns {"decals": [names], "upper": (z0, z1) or None}."""
+    Rw = rm.R - 0.32
+    upper_z = None
+    shell = getattr(rm, "shell", None)
+    if shell in ("podium", "drum") and getattr(rm, "D", None):
+        upper_z = (WALL_TOP, float(rm.D) + 0.05)
+    band = None
+    sources = [rm.base, rm.roof, rm.lights] + ([rm.L[n] for n in (2, 3, 4, 5)] if rm.levels else [])
+    out = {}
+    for src in sources:
+        if not src.faces:
+            continue
+        keep_f, keep_m, keep_s = [], [], []
+        for idx, mat, sm in zip(src.faces, src.fmat, src.fsmooth):
+            cx, cy, cz = _face_centre(src, idx)
+            r = hypot(cx, cy)
+            target = None
+            skin = False
+            seg = int((degrees(atan2(cy, cx)) % 360.0) // SEG_DEG) % NSEG
+            if upper_z and src is rm.roof and mat == "Accent" and abs(r - Rw) < 0.12 and                     upper_z[0] < cz < upper_z[1]:
+                zs_ = [src.verts[i].z for i in idx]
+                band = (min(zs_), max(zs_)) if band is None else (min(band[0], min(zs_)), max(band[1], max(zs_)))
+            if shell == "setback" and src is rm.roof and r >= Rw - 0.60 and WALL_TOP < cz < 3.2 and                     not (abs(_face_normal(src, idx).z) > 0.9 and cz < 1.6):
+                target = "Upper_%02d" % seg           # things on the setback deck near the wall (tanks, rails)
+            elif upper_z and src is rm.roof and abs(r - Rw) < 0.16 and upper_z[0] - 0.01 <= cz <= upper_z[1] \
+                    and abs(_face_normal(src, idx).z) < 0.4:
+                target = "Upper_%02d" % seg           # the upper wall skin and its band hide with the wall rule
+                skin = True                           # cut at the segment lines (the skin faces are wider)
+            elif r >= Rw - 0.45 and 0.05 <= cz <= DECAL_ZMAX:
+                if mat in DECAL_MATS or src is rm.lights:
+                    target = "Decal_%02d_%s" % (seg, src.name)
+            if target is None:
+                keep_f.append(idx)
+                keep_m.append(mat)
+                keep_s.append(sm)
+                continue
+            if skin:
+                jobs_ = [("Upper_%02d" % sg, poly) for sg, poly in _split_at_segments(src, idx)]
+            else:
+                jobs_ = [(target, idx)]
+            for target, idx_ in jobs_:
+                q = out.get(target)
+                if q is None:
+                    q = out[target] = (P(target), {})
+                part, vmap = q
+                new_idx = []
+                for i in idx_:
+                    if i not in vmap:
+                        vmap[i] = len(part.verts)
+                        part.verts.append(src.verts[i].copy())
+                        part.vover.append(src.vover[i] if i < len(src.vover) else False)
+                    new_idx.append(vmap[i])
+                part.faces.append(tuple(new_idx))
+                part.fmat.append(mat)
+                part.fsmooth.append(sm)
+        src.faces, src.fmat, src.fsmooth = keep_f, keep_m, keep_s
+    rm.decals = [q[0] for name, q in sorted(out.items())]
+    return {"decals": sorted(n for n in out if n.startswith("Decal_")),
+            "upper": sorted(n for n in out if n.startswith("Upper_")), "upper_z": upper_z,
+            "upper_band": [round(band[0], 3), round(band[1], 3)] if band else None}
+
+
+def name_sign(rm):
+    """The room-name sign (object NameSign, origin at the room centre): a lit plate on the wall face at the model
+    angle rm.name_sign_deg (default NAME_SIGN_DEG), 0.48..0.82 m high.  The game turns the object about the room axis
+    to move it to the free segment nearest to that angle."""
+    Rw = rm.R - 0.32
+    p = P("NameSign")
+    ang = getattr(rm, "name_sign_deg", NAME_SIGN_DEG)
+    rm.name_sign_deg = ang
+    with p.at(RZ(ang), T(Rw + 0.005, 0, 0)):
+        bbox(p, 0.0, 0.04, -0.52, 0.52, 0.48, 0.82, "Frame")
+        plate_x(p, 0.041, -0.48, 0.48, 0.51, 0.79, "Screen")
+        plate_x(p, 0.043, -0.46, 0.46, 0.52, 0.535, "Accent")
+    rm.decals = list(getattr(rm, "decals", [])) + [p]
+    return p

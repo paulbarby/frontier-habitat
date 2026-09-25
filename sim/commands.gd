@@ -57,6 +57,12 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 			return sim.hazards.cmd_shelter(bool(p.get("on", true)))
 		"hazard_now":
 			return sim.hazards.cmd_hazard_now(p)
+		"traffic_answer":
+			return sim.traffic.cmd_answer(p)
+		"trade":
+			return sim.traffic.cmd_trade(p)
+		"traffic_now":
+			return sim.traffic.cmd_now(p)
 		"survey_site":
 			return sim.hazards.cmd_survey(int(p.get("id", -1)))
 		"ship":

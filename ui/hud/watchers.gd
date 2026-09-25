@@ -15,6 +15,7 @@ const Profile = preload("res://ui/profile.gd")
 const Sfx = preload("res://ui/sfx.gd")
 const Kit = preload("res://ui/kit.gd")
 const AlertGate = preload("res://ui/hud/alert_gate.gd")
+const WorldSounds = preload("res://ui/hud/world_sounds.gd")
 
 const GRACE_SECONDS := 30.0
 ## Log codes that toast (sim/hazards.gd, version 3). SIM's alerts already cover an event
@@ -23,10 +24,14 @@ const GRACE_SECONDS := 30.0
 ## "maintained" (routine), "hazard_warning" (the alert).
 const HAZARD_LOG := {"hazard_detected": ["info", "hazard"], "hazard_start": ["warn", "hazard"], "hazard_impact": ["warn", "meteor"],
 	"hazard_intercepted": ["good", "turret"], "hazard_end": ["good", "sev_ok"], "breach_sealed": ["good", "wrench"],
-	"shelter": ["info", "shelter"], "survey": ["research", "exotic"]}
+	"shelter": ["info", "shelter"], "survey": ["research", "exotic"],
+	# Ships (sim/traffic.gd, version 3.1). ship_orbit, ship_takeoff, ship_gone: the traffic panel shows them.
+	"ship_forecast": ["info", "ship"], "ship_landing": ["info", "ship"], "ship_landed": ["good", "ship"],
+	"ship_denied": ["info", "ship"], "ship_left": ["warn", "ship"], "trade": ["good", "credits"]}
 
 var hud
 var gate = AlertGate.new()   # alert toasts and the steady alert list (V3_DESIGN §2)
+var world                    # world sounds from simulation state (V3_1_DESIGN §2.2)
 var _awards := {}
 var _goals_done := {}
 var _chapter := -1
@@ -40,11 +45,10 @@ var _primed := false
 var _grace_tick := 0
 var _grace_silent := 0
 var _grace_open := false
-var _cycling := {}          # airlock id -> cycling last check
-var _airlock_ms := 0
 
 func _init(h) -> void:
 	hud = h
+	world = WorldSounds.new(h)
 
 ## After a load or a new game: take the current state as known, so nothing old pops up.
 func reset() -> void:
@@ -70,6 +74,7 @@ func reset() -> void:
 	# What is wrong when a colony is loaded is shown in the list, not toasted.
 	gate.reset()
 	gate.update(hud.main.sim.alerts.incidents(), hud.main.sim.seconds(), true)
+	world.reset()
 	if not _title():
 		for id in _awards:
 			Profile.record_award(String(id), int(_awards[id]), int(st.get("seed", 0)), false)
@@ -149,7 +154,8 @@ func check() -> void:
 		var stages: Array = hud.main.sim.bal.get("stages", [])
 		if stage < stages.size() and not quiet:
 			hud.toast("New stage: %s." % stages[stage]["name"], "good", "star")
-	_airlocks(st)
+	# World sounds: airlock phases, impacts, storms, ships (the old single airlock sound is gone).
+	world.check(_title())
 	# Alerts: one toast per new key (warnings and critical only), never again for 180 s
 	# after it cleared. The alert cards read the same gate.
 	for issue in gate.update(hud.main.sim.alerts.incidents(), hud.main.sim.seconds(), quiet):
@@ -188,6 +194,10 @@ func check() -> void:
 					if HAZARD_LOG.has(String(code)):
 						var spec: Array = HAZARD_LOG[String(code)]
 						hud.toast(String(e["text"]), spec[0], spec[1])
+						if String(code) == "ship_landed" and hud.main.audio != null:
+							hud.main.audio.music.cue("mus_arrival")   # also started by RENDER's ship_touchdown sound
+						elif String(code) == "trade":
+							Sfx.play("trade_chime")
 	if not log.is_empty():
 		_log_tick = maxi(_log_tick, int(log[log.size() - 1]["tick"]))
 
@@ -212,23 +222,3 @@ func _reward_line(id: String) -> String:
 					return ""
 				return "Supply pod at the lander: " + ", ".join(parts) + "."
 	return ""
-
-## The airlock sound when an airlock near the camera starts a cycle (one at a time).
-func _airlocks(st: Dictionary) -> void:
-	if _title():
-		return
-	var rig = hud.main.rig
-	var near: bool = rig.distance < 110.0
-	var now: int = Time.get_ticks_msec()
-	for id in st["buildings"]:
-		var b: Dictionary = st["buildings"][id]
-		var lock = b.get("lock", {})
-		if typeof(lock) != TYPE_DICTIONARY or (lock as Dictionary).is_empty():
-			continue
-		var cyc: bool = not (lock.get("cyc", {}) as Dictionary).is_empty()
-		if cyc and not bool(_cycling.get(id, false)) and near and now - _airlock_ms > 2500:
-			var p: Vector2 = b["pos"]
-			if Vector2(rig.focus.x, rig.focus.z).distance_to(p) < 45.0:
-				_airlock_ms = now
-				Sfx.play("airlock")
-		_cycling[id] = cyc

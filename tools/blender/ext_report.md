@@ -95,7 +95,7 @@ for s in meridian colonists crops energy life industry singles props; do
 | `deep_drill.glb` | 4088 | 6500 | Base 2650, L2 408, L3 248, L4 268, L5 478, Lights 36 | 3.44 / 3.5 | -0.04 .. 15.23 | 271 | ok anchors: Anchor_Service |
 | `comms_tower.glb` | 2440 | 4500 | Base 2248, Lights 192 | 2.35 / 2.5 | -0.05 .. 24.35 | 160 | ok anchors: Anchor_Service |
 | `lander.glb` | 4076 | 6500 | Base 3904, Lights 172 | 5.96 / 5.5 | -0.03 .. 8.18 | 203 | ok anchors: Anchor_Engine, Anchor_Ramp |
-| `landing_pad.glb` | 3052 | 9000 | Base 2470, Lights 582 | 8.90 / 9.0 | 0.00 .. 4.68 | 158 | ok anchors: Anchor_Service |
+| `landing_pad.glb` | 6326 | 9000 | Base 5592, Lights 734 | 11.42 / 11.5 | 0.00 .. 4.43 | 331 | ok anchors: Anchor_Fuel, Anchor_Service, Anchor_Ship |
 
 ## Props (`tools/blender/ext_props.py`)
 

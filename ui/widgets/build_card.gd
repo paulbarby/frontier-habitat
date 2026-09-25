@@ -1,4 +1,5 @@
 extends Button
+const PG = preload("res://ui/poly_guard.gd")
 ## One building card of the build bar: thumbnail (assets/thumbs/<id>_<size>.png, then
 ## <id>.png, then the category icon), name, cost chips (red when the colony does not have
 ## them free), power and main output, and the S/M/L/XL size chips with per-size numbers.
@@ -351,7 +352,8 @@ func _draw() -> void:
 		for i in 6:
 			var a: float = TAU * float(i) / 6.0
 			pts.append(c + Vector2(cos(a), sin(a)) * 31.0)
-		draw_colored_polygon(pts, Color(_col.r, _col.g, _col.b, 0.14))
+		if PG.ok(pts, "build_card.gd:354"):
+			draw_colored_polygon(pts, Color(_col.r, _col.g, _col.b, 0.14))
 		pts.append(pts[0])
 		draw_polyline(pts, Color(_col.r, _col.g, _col.b, 0.5), 1.0, true)
 	if locked:

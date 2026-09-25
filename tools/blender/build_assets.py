@@ -93,6 +93,9 @@ MATERIALS = {
     # 3.0 draw-call budget (RENDER): the Interior merges its plain materials into two palette materials; the
     # colour of every face is in its vertex colour (COLOR_0 = colour x baked AO).  Base colour white.
     "Palette":    dict(color="#ffffff", rough=0.70),
+    # 3.1 door and airlock status lights (RENDER switches their colour)
+    "StatusGreen": dict(color="#5ee07a", rough=0.30, emit="#5ee07a", emit_strength=3.0),
+    "BeaconAmber": dict(color="#ffb020", rough=0.30, emit="#ffb020", emit_strength=3.0),
     # lounge seating (critic round 8): lighter than Cushion so it reads at the game camera; they merge into Palette
     "CushionLight": dict(color="#7d93b4", rough=0.90),
     "RugLight":   dict(color="#b4bfcc", rough=0.95),

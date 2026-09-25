@@ -1,4 +1,5 @@
 extends Control
+const PG = preload("res://ui/poly_guard.gd")
 ## A medal: ribbon, rim and face in the tier colour (bronze, silver, gold, platinum), with
 ## the award's glyph in the centre. `earned` false draws a dim locked medal.
 ## `shine` 0..1 sweeps a highlight across the face (the pop-up animates it).
@@ -40,8 +41,10 @@ func _draw() -> void:
 	var rt: float = c.y - r * 0.4
 	var rib_a: Color = col.darkened(0.35) if earned else Color(0.2, 0.24, 0.3)
 	var rib_b: Color = P.CYAN.darkened(0.3) if earned else Color(0.16, 0.2, 0.26)
-	draw_colored_polygon(PackedVector2Array([Vector2(c.x - r * 0.72, rt - r * 1.1), Vector2(c.x - r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.1, rt), Vector2(c.x - r * 0.42, rt)]), rib_a)
-	draw_colored_polygon(PackedVector2Array([Vector2(c.x + r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.72, rt - r * 1.1), Vector2(c.x + r * 0.42, rt), Vector2(c.x - r * 0.1, rt)]), rib_b)
+	if PG.ok(PackedVector2Array([Vector2(c.x - r * 0.72, rt - r * 1.1), Vector2(c.x - r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.1, rt), Vector2(c.x - r * 0.42, rt)]), "medal.gd:43"):
+		draw_colored_polygon(PackedVector2Array([Vector2(c.x - r * 0.72, rt - r * 1.1), Vector2(c.x - r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.1, rt), Vector2(c.x - r * 0.42, rt)]), rib_a)
+	if PG.ok(PackedVector2Array([Vector2(c.x + r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.72, rt - r * 1.1), Vector2(c.x + r * 0.42, rt), Vector2(c.x - r * 0.1, rt)]), "medal.gd:44"):
+		draw_colored_polygon(PackedVector2Array([Vector2(c.x + r * 0.18, rt - r * 1.1), Vector2(c.x + r * 0.72, rt - r * 1.1), Vector2(c.x + r * 0.42, rt), Vector2(c.x - r * 0.1, rt)]), rib_b)
 	# Glow behind an earned medal.
 	if earned:
 		for i in 4:
@@ -53,7 +56,8 @@ func _draw() -> void:
 		var a: float = TAU * float(i) / float(n) + spin
 		var rr: float = r * (1.0 if i % 2 == 0 else 0.93)
 		rim.append(c + Vector2(cos(a), sin(a)) * rr)
-	draw_colored_polygon(rim, col.darkened(0.2))
+	if PG.ok(rim, "medal.gd:56"):
+		draw_colored_polygon(rim, col.darkened(0.2))
 	draw_circle(c, r * 0.84, col.darkened(0.45) if earned else Color(0.14, 0.17, 0.22))
 	draw_circle(c, r * 0.78, col if earned else Color(0.22, 0.26, 0.32))
 	draw_circle(c + Vector2(-r * 0.2, -r * 0.22), r * 0.5, Color(1, 1, 1, 0.12 if earned else 0.04))
@@ -75,4 +79,5 @@ func _draw() -> void:
 			var band := PackedVector2Array([Vector2(x - w, c.y - r), Vector2(x + w, c.y - r), Vector2(x + w - r * 0.4, c.y + r), Vector2(x - w - r * 0.4, c.y + r)])
 			var clip: Array = Geometry2D.intersect_polygons(pts, band)
 			for poly in clip:
-				draw_colored_polygon(poly, Color(1, 1, 1, 0.06))
+				if PG.ok(poly, "medal.gd:78"):
+					draw_colored_polygon(poly, Color(1, 1, 1, 0.06))

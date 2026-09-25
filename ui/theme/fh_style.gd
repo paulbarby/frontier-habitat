@@ -1,4 +1,5 @@
 extends StyleBox
+const PG = preload("res://ui/poly_guard.gd")
 ## FhStyle: the one drawn look of every panel, card and button.
 ## Chamfered corners, a vertical gradient fill, a 1 px border, optional corner brackets,
 ## an optional header strip and accent bar, and an optional outer glow.
@@ -92,12 +93,14 @@ func _draw(ci: RID, rect: Rect2) -> void:
 		for p in pts:
 			var t: float = clampf((p.y - r.position.y) / r.size.y, 0.0, 1.0)
 			cols.append(fill_top.lerp(fill_bottom, t))
-		RenderingServer.canvas_item_add_polygon(ci, pts, cols)
+		if PG.ok(pts, "fh_style.gd:95"):
+			RenderingServer.canvas_item_add_polygon(ci, pts, cols)
 	# Header strip, clipped to the chamfered outline at the top.
 	if header_h > 0.0:
 		var hr := Rect2(r.position, Vector2(r.size.x, minf(header_h, r.size.y)))
 		var hp: PackedVector2Array = shape(hr, PackedFloat32Array([chamfer[0], chamfer[1], 0.0, 0.0]))
-		RenderingServer.canvas_item_add_polygon(ci, hp, PackedColorArray([header_color]))
+		if PG.ok(hp, "fh_style.gd:100"):
+			RenderingServer.canvas_item_add_polygon(ci, hp, PackedColorArray([header_color]))
 		if header_line.a > 0.0:
 			RenderingServer.canvas_item_add_line(ci, Vector2(r.position.x, r.position.y + hr.size.y), Vector2(r.end.x, r.position.y + hr.size.y), header_line, -1.0)
 	if accent.a > 0.0:

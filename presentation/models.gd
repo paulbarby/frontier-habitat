@@ -32,13 +32,24 @@ const SIZE_SUFFIX := ["s", "m", "l", "xl"]
 ## Top-level object names of the asset contract. Anything else is static geometry ("Base").
 const GROUPS := ["Interior", "Roof", "Rotor", "Lights", "Scaffold", "EngineGlow", "Plasma", "Damage1", "Damage2", "Damage3",
 	"Stage1", "Stage2", "Stage3", "Body", "ArmL", "ArmR", "LegL", "LegR", "L2", "L3", "L4", "L5", "Hull",
-	"DoorLTop", "DoorRTop", "DoorL", "DoorR", "FrameTop", "Sign", "Turret", "Base"]
+	"DoorLTop", "DoorRTop", "DoorL", "DoorR", "FrameTop", "Sign", "Turret",
+	# V3.1 door kit and airlock (ART-HAB D1, R5): longer names before their prefixes.
+	"InnerDoorLTop", "InnerDoorRTop", "InnerDoorL", "InnerDoorR", "InnerStatus", "InnerLights",
+	"OuterDoorLTop", "OuterDoorRTop", "OuterDoorL", "OuterDoorR", "OuterFrameTop", "OuterFrame", "OuterStatus", "OuterLights",
+	"ChamberLight", "PressurePlateTop", "PressureLight_0", "PressureLight_1", "PressureLight_2", "Beacon", "Status", "NameSign", "PorchTop",
+	"Base"]
 ## V3 §7.2: Wall_00..Wall_31 are merged into one "Walls" group (segment id in UV2.x).
 const WALL_SEGMENTS := 32
 ## Materials that the instancer recolours per instance (INSTANCE_CUSTOM.rgb).
 const TINTABLE := ["SuitAccent", "Cargo", "Skin", "Hair"]
+## Status lights (V3.1): coloured per instance and per group (green free, amber busy, red locked).
+const STATUS_MATS := ["StatusGreen", "BeaconAmber"]
+const STATUS_GROUPS := ["Status", "Lights", "InnerStatus", "InnerLights", "OuterStatus", "OuterLights", "ChamberLight",
+	"PressureLight_0", "PressureLight_1", "PressureLight_2", "Beacon"]
 ## Groups that never cast a shadow (inside a closed room, or light sources).
-const NO_SHADOW := ["Interior", "Tall", "WallsIn", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3"]
+const NO_SHADOW := ["Interior", "Tall", "WallsIn", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3",
+	"DecalB", "DecalR", "DecalL2", "DecalL3", "DecalL4", "DecalL5", "NameSign", "Status", "InnerStatus", "InnerLights",
+	"OuterStatus", "OuterLights", "ChamberLight", "PressureLight_0", "PressureLight_1", "PressureLight_2", "Beacon", "PressurePlateTop"]
 ## Materials used only inside rooms (V3 §7.3): they get the interior fill light anywhere.
 const INTERIOR_ONLY := ["Floor", "FloorDark", "Wood", "Cushion", "Fabric", "Screen"]
 ## Night fill of interiors (emission = albedo x AO x fill): day, night.
@@ -85,7 +96,10 @@ static func _scene(path: String) -> PackedScene:
 # ---------------------------------------------------------------- templates
 ## A structure template. `radius` is the record radius (size-specific); `m_radius` is the
 ## radius the unsized model was made for (the def's base radius = size M).
-static func building(def_id: String, size: int, radius: float, m_radius: float, kind: String, category: String) -> Dictionary:
+## `s_radius` = the def's radius for this size: a record whose radius differs (an airlock of
+## 2.8 m in a save made before the 3.4 m airlock) draws its sized model scaled to the record,
+## so the drawn walls match the simulation footprint, doors and corridor ends.
+static func building(def_id: String, size: int, radius: float, m_radius: float, kind: String, category: String, s_radius: float = -1.0) -> Dictionary:
 	var r: Dictionary = resolve(def_id, size)
 	if r["path"] != "":
 		var key: String = r["path"]
@@ -93,6 +107,8 @@ static func building(def_id: String, size: int, radius: float, m_radius: float, 
 		var s := 1.0
 		if not bool(r["sized"]) and m_radius > 0.01 and size >= 0:
 			s = radius / m_radius
+		elif bool(r["sized"]) and s_radius > 0.01 and absf(radius - s_radius) > 0.05:
+			s = radius / s_radius
 		return _with_scale(tpl, s)
 	var fkey := "fallback:%s:%.2f:%s" % [def_id, radius, kind]
 	if not _templates.has(fkey):
@@ -140,6 +156,17 @@ static func _template_from_file(path: String) -> Dictionary:
 static func group_of(n: String) -> String:
 	if n.begins_with("Wall_") and n.length() >= 7 and n.substr(5, 2).is_valid_int():
 		return "Walls"
+	# V3.1 (ART-HAB D2, R3): the upper wall skin hides like the wall; decals per segment by
+	# their source (Base/Lights always, Roof with the roof, L<n> with that level).
+	if n.begins_with("Upper_") and n.length() >= 8 and n.substr(6, 2).is_valid_int():
+		return "Walls"
+	if n.begins_with("Decal_") and n.length() >= 9 and n.substr(6, 2).is_valid_int():
+		var src: String = n.substr(9)
+		if src.begins_with("Roof"):
+			return "DecalR"
+		if src.length() >= 2 and src[0] == "L" and src[1].is_valid_int():
+			return "DecalL" + src[1]
+		return "DecalB"
 	# Tall furniture (ART-HAB P5): hidden when a doorway is close; cut away with the Interior.
 	if n.begins_with("Tall_") and n.substr(5).is_valid_int():
 		return "Tall"
@@ -179,8 +206,13 @@ static func _parse(root: Node3D, key: String) -> Dictionary:
 				var xf: Transform3D = pivot * rel
 				var part := {"group": group, "mesh": mesh, "xf": xf, "pivot": pivot, "local": rel,
 					"shadow": not (group in NO_SHADOW)}
-				if group == "Walls":
+				if group == "Walls" and tname.begins_with("Upper_"):
+					part["seg"] = int(tname.substr(6, 2))
+					part["upper"] = true
+				elif group == "Walls":
 					part["seg"] = int(tname.substr(5, 2))
+				elif group.begins_with("Decal"):
+					part["seg"] = int(tname.substr(6, 2))
 				elif group == "Tall":
 					part["seg"] = int(tname.substr(5))
 				parts.append(part)
@@ -239,7 +271,7 @@ static func _merge_groups(parts: Array) -> Array:
 				mw["group"] = "WallsIn"
 				out.append(mw)
 			continue
-		if g == "Tall":
+		if g == "Tall" or g.begins_with("Decal"):
 			for mw in _merge_walls(list, null):
 				mw["group"] = g
 				out.append(mw)
@@ -270,6 +302,102 @@ static func _merge_groups(parts: Array) -> Array:
 		for p in list:
 			shadow = shadow or bool(p["shadow"])
 		out.append({"group": g, "mesh": merged, "xf": Transform3D.IDENTITY, "pivot": Transform3D.IDENTITY, "local": Transform3D.IDENTITY, "shadow": shadow})
+	# Draw calls (V3.1 budget): plain opaque materials of a part become ONE palette surface
+	# (colour in COLOR_0), as ART-HAB did for interiors. Emissive, tinted, glass, screen,
+	# textured and interior-only materials keep their own surfaces.
+	for p in out:
+		var gg: String = p["group"]
+		if gg in ["Walls", "WallsIn", "Tall", "Interior"] or gg.begins_with("Decal") or gg in STATUS_GROUPS:
+			continue
+		p["mesh"] = _palettize(p["mesh"])
+	return out
+
+const PALETTE_KEEP := ["Accent", "Glass", "Screen", "SuitAccent", "Cargo", "Skin", "Hair", "StatusGreen", "BeaconAmber",
+	"Floor", "FloorDark", "Wood", "Cushion", "Fabric", "Soil", "Produce", "Visor"]
+static var _pal_mat: StandardMaterial3D
+static var _pal_done := {}
+static func _palettize(mesh: Mesh) -> Mesh:
+	if not (mesh is ArrayMesh):
+		return mesh
+	var mid: int = mesh.get_instance_id()
+	if _pal_done.has(mid):
+		return _pal_done[mid]
+	var merge: Array = []
+	for si in mesh.get_surface_count():
+		var m: Material = mesh.surface_get_material(si)
+		if m is BaseMaterial3D:
+			var b: BaseMaterial3D = m
+			if b.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not b.emission_enabled and b.albedo_texture == null and not (b.resource_name in PALETTE_KEEP):
+				merge.append(si)
+	if merge.size() < 2:
+		_pal_done[mid] = mesh
+		return mesh
+	if _pal_mat == null:
+		_pal_mat = StandardMaterial3D.new()
+		_pal_mat.resource_name = "PaletteShell"
+		_pal_mat.vertex_color_use_as_albedo = true
+		_pal_mat.albedo_color = Color(1, 1, 1)
+		_pal_mat.roughness = 0.62
+		_pal_mat.metallic = 0.12
+	var av := PackedVector3Array()
+	var an := PackedVector3Array()
+	var ac := PackedColorArray()
+	var ai := PackedInt32Array()
+	for si in merge:
+		var b2: BaseMaterial3D = mesh.surface_get_material(si)
+		var arr: Array = mesh.surface_get_arrays(si)
+		var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var n: int = v.size()
+		if n == 0:
+			continue
+		var base: int = av.size()
+		av.append_array(v)
+		var nrm = arr[Mesh.ARRAY_NORMAL]
+		if nrm is PackedVector3Array and (nrm as PackedVector3Array).size() == n:
+			an.append_array(nrm)
+		else:
+			var up := PackedVector3Array()
+			up.resize(n)
+			up.fill(Vector3.UP)
+			an.append_array(up)
+		var lin: Color = b2.albedo_color.srgb_to_linear()
+		var col = arr[Mesh.ARRAY_COLOR]
+		var has_col: bool = col is PackedColorArray and (col as PackedColorArray).size() == n and b2.vertex_color_use_as_albedo
+		for k in n:
+			var c: Color = (col as PackedColorArray)[k] if has_col else Color(1, 1, 1)
+			ac.append(Color(lin.r * c.r, lin.g * c.g, lin.b * c.b, 1.0))
+		var idx = arr[Mesh.ARRAY_INDEX]
+		if idx is PackedInt32Array and (idx as PackedInt32Array).size() > 0:
+			var src_i: PackedInt32Array = idx
+			var at: int = ai.size()
+			ai.resize(at + src_i.size())
+			for k in src_i.size():
+				ai[at + k] = src_i[k] + base
+		else:
+			var at2: int = ai.size()
+			ai.resize(at2 + n)
+			for k in n:
+				ai[at2 + k] = base + k
+	if av.is_empty():
+		_pal_done[mid] = mesh
+		return mesh
+	var out := ArrayMesh.new()
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = av
+	arrays[Mesh.ARRAY_NORMAL] = an
+	arrays[Mesh.ARRAY_COLOR] = ac
+	arrays[Mesh.ARRAY_INDEX] = ai
+	out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	out.surface_set_material(0, _pal_mat)
+	for si in mesh.get_surface_count():
+		if si in merge:
+			continue
+		var arr2: Array = mesh.surface_get_arrays(si)
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr2)
+		out.surface_set_material(out.get_surface_count() - 1, mesh.surface_get_material(si))
+	_pal_done[mid] = out
+	_pal_done[out.get_instance_id()] = out
 	return out
 
 ## Shadow proxies (draw-call budget, V3 §0.2): the shadow pass costs one draw call per
@@ -734,7 +862,7 @@ static func _night_k(n: String, f: float) -> float:
 	match n:
 		# The 3.0 rooms carry a continuous window band round the lower wall: at 1.55 it
 		# bloomed to a white ring at night (2026-09-25). 0.75 keeps it warm and readable.
-		"Window": return lerpf(0.18, 0.26, f)   # critic round 8: the band is no longer a white ring
+		"Window", "CabinWindow": return lerpf(0.18, 0.26, f)   # critic round 8: the band is no longer a white ring (ART-B: ship cabin windows follow Window)
 		"Ember": return 1.0
 		"Light": return lerpf(0.45, 2.1, f)
 		"Neon": return lerpf(0.9, 1.7, f)
@@ -744,6 +872,50 @@ static func _night_k(n: String, f: float) -> float:
 	return lerpf(0.7, 1.6, f)
 
 ## A ShaderMaterial copy of `src` whose albedo is multiplied by INSTANCE_CUSTOM.rgb.
+## A copy of a template whose status-light surfaces (StatusGreen, BeaconAmber in the status
+## groups) take their colour from the instance's group custom colour (V3.1 door and airlock
+## lights). Parts are marked "custom" so the instancer keeps custom data for them.
+static var _status_shader: Shader
+static func status_tinted(tpl: Dictionary) -> Dictionary:
+	var key: String = String(tpl["key"]) + ":status"
+	if _templates.has(key):
+		return _templates[key]
+	if _status_shader == null:
+		_status_shader = load("res://shaders/status_light.gdshader")
+	var out: Dictionary = tpl.duplicate()
+	out["key"] = key
+	var parts: Array = []
+	for p in tpl["parts"]:
+		var q: Dictionary = p.duplicate()
+		var mesh: Mesh = p["mesh"]
+		if String(p["group"]) in STATUS_GROUPS and mesh is ArrayMesh and not bool(p.get("shadow_only", false)):
+			var copy: ArrayMesh = (mesh as ArrayMesh).duplicate()
+			var any := false
+			for si in copy.get_surface_count():
+				var m: Material = copy.surface_get_material(si)
+				var src = m.get_meta("src") if m != null and m.has_meta("src") else m
+				var nm: String = String(src.resource_name) if src != null else ""
+				if nm in STATUS_MATS:
+					var sm := ShaderMaterial.new()
+					sm.shader = _status_shader
+					sm.resource_name = nm
+					sm.set_shader_parameter("base", (src as BaseMaterial3D).albedo_color if src is BaseMaterial3D else Color(0.37, 0.88, 0.48))
+					sm.set_shader_parameter("energy", (src as BaseMaterial3D).emission_energy_multiplier if src is BaseMaterial3D else 2.2)
+					copy.surface_set_material(si, sm)
+					any = true
+			if any:
+				q["mesh"] = copy
+				q["custom"] = true
+		parts.append(q)
+	out["parts"] = parts
+	_templates[key] = out
+	return out
+
+## Status colours (linear use in the shader: sRGB given).
+const STATUS_GREEN := Color("5ee07a")
+const STATUS_AMBER := Color("ffb020")
+const STATUS_RED := Color("ff3b30")
+
 static func tint_material(src: Material) -> Material:
 	if not (src is BaseMaterial3D):
 		return src

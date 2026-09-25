@@ -20,6 +20,27 @@
     "select":         { "type": "sfx", "prompt": "soft sci-fi selection chirp, short scanning beep", "duration": 0.5 },
     "amb_wind":       { "type": "sfx", "prompt": "steady dry wind over a desert planet, low howl, fine sand, seamless ambience, no gusts spikes", "duration": 20 },
     "amb_hum":        { "type": "sfx", "prompt": "low steady machinery hum of a habitat base, ventilation and distant pumps, calm seamless loop", "duration": 20 },
-    "amb_night":      { "type": "sfx", "prompt": "quiet alien night ambience, very soft wind, faint distant electronic hum, calm and empty", "duration": 20 }
+    "amb_night":      { "type": "sfx", "prompt": "quiet alien night ambience, very soft wind, faint distant electronic hum, calm and empty", "duration": 20 },
+
+    "mus_title":      { "type": "music", "duration": 105, "prompt": "Instrumental only, no vocals. Wide, hopeful space colony theme. Slow evolving synth pads and soft solo piano, distant planet horizon, gentle sense of wonder and new beginnings. 70 BPM. Calm build, soft ending that can loop." },
+    "mus_day_1":      { "type": "music", "duration": 165, "prompt": "Instrumental only, no vocals. Calm ambient electronic music for building a colony on a warm desert planet. Warm analog pads, light plucked synth pulse, soft percussion, curious and optimistic. 85 BPM. Steady, unobtrusive background music for a strategy game." },
+    "mus_day_2":      { "type": "music", "duration": 165, "prompt": "Instrumental only, no vocals. Relaxed ambient electronic, sunny alien planet, gentle marimba and synth arpeggio, warm bass, airy pads, productive and curious mood. 90 BPM. Unobtrusive background music for a colony strategy game." },
+    "mus_night":      { "type": "music", "duration": 150, "prompt": "Instrumental only, no vocals. Sparse, cool night ambience on a quiet alien planet. Low soft drones, gentle distant bells, slow airy pads, calm and a little lonely, peaceful. 60 BPM. Very unobtrusive background music." },
+    "mus_tension":    { "type": "music", "duration": 105, "prompt": "Instrumental only, no vocals. Tense sci-fi emergency underscore for a colony under threat. Low pulsing bass, rising string and synth ostinato, ticking percussion, urgent but not horror, steady intensity. 100 BPM. Loopable game background music." },
+    "mus_arrival":    { "type": "music", "duration": 25, "prompt": "Instrumental only, no vocals. Short bright cinematic cue for a spaceship arriving at a colony. Warm brass and synth swell, hopeful rising chord, gentle resolve at the end. 25 seconds." },
+
+    "door_slide":     { "type": "sfx", "prompt": "sci-fi pneumatic sliding door opening, short smooth hiss and soft mechanical slide, habitat interior", "duration": 1.0 },
+    "airlock_seal":   { "type": "sfx", "prompt": "heavy airlock door closing and sealing, deep metallic clunk then locking bolts, space station", "duration": 1.5 },
+    "airlock_pump":   { "type": "sfx", "prompt": "airlock pressure pump running, steady mechanical pumping hum and air rushing, seamless loop, no start or stop", "duration": 4.0 },
+    "airlock_vent":   { "type": "sfx", "prompt": "airlock venting air to vacuum, strong decompression hiss fading out", "duration": 2.5 },
+    "ship_descent":   { "type": "sfx", "prompt": "spaceship descending to land, steady deep rocket engine rumble with braking thrusters, seamless loop", "duration": 6.0 },
+    "ship_touchdown": { "type": "sfx", "prompt": "spaceship landing gear touchdown on a landing pad, heavy thud, hydraulic settle, engines spooling down", "duration": 3.0 },
+    "ship_takeoff":   { "type": "sfx", "prompt": "spaceship taking off from a landing pad, engines igniting and roaring, rising and fading into the sky", "duration": 6.0 },
+    "ramp":           { "type": "sfx", "prompt": "spaceship cargo ramp lowering, hydraulic whine and metal clank as it touches ground", "duration": 2.5 },
+    "meteor_impact":  { "type": "sfx", "prompt": "meteor impact on a rocky desert, deep explosive thud, debris and dust falling", "duration": 3.0 },
+    "turret_fire":    { "type": "sfx", "prompt": "sci-fi defense turret firing a short burst at the sky, sharp energy shots and a distant air burst", "duration": 1.5 },
+    "quake_rumble":   { "type": "sfx", "prompt": "deep ground earthquake rumble, low frequency shaking, rocks rattling, rising then fading", "duration": 5.0 },
+    "storm_loop":     { "type": "sfx", "prompt": "strong dust storm wind, howling gusts and sand hitting metal walls, seamless loop", "duration": 10.0 },
+    "trade_chime":    { "type": "sfx", "prompt": "pleasant trade complete chime, two bright coin-like synth tones, sci-fi market terminal", "duration": 1.2 }
   }
 }

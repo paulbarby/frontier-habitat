@@ -1,0 +1,80 @@
+{
+  "round": 12,
+  "date": "2026-09-25",
+  "scope": "v3.1 Blender-evidence round: visitors (new), airlock (S/M/L), doors, doorway_decals (13 room types), landing_pad (new, part of ships), ships (after round-11 fixes). No in-game evidence.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "visitors": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "provisional": true,
+      "what_works": [
+        "Every kind differs from the colonist and from each other at 55 px in both variants (visitors_lineup.png): orange trader, white-with-accent tourists (cyan/green/pink), red-cross medical, blue science, black-gold inspector.",
+        "Attachments are small and on the body: camera, pennant, crosses, sensor mast, cap, epaulettes (visitors_turnaround.png close-ups).",
+        "suit_swap reads: hands to the helmet, hold, hands to the chest seals, back to stand (transitions.png, s and i suit_swap 0-60)."
+      ],
+      "fixes": [
+        {"owner": "ART-NPC", "fix": "At 30 px the three tourist sets and the science visitor are all 'white with a colour patch'; the patch is only on the chest/collar. Carry the tourist colour to the helmet (suit, done) AND to the lower legs/boots on the indoor variant, so a tourist reads from the back and from above."},
+        {"owner": "ART-NPC", "fix": "Indoor trader: an orange jumpsuit with a grey vest is close to the orange-role colonist accent at 30 px. Make the vest a darker graphite with a hi-vis yellow stripe, or give the trader a hat, so it is not read as a colonist."},
+        {"owner": "ART-NPC / RENDER", "fix": "Black inspector suit at night: not checked (maker's note). Add gold reflective stripes on the legs and pack so it can be found at night; RENDER to show it in the in-game round."},
+        {"owner": "ART-NPC", "fix": "The indoor inspector cap does not fit head 1 (bun); instead of RENDER skipping that head, give the cap a bun cut-out or a lower-crown variant."}
+      ]},
+    "airlock": {"consistency": 0.80, "appeal": 0.76, "style": 0.80, "score": 0.79, "pass": true, "provisional": true, "was": 0.76,
+      "round_10_fixes_checked": {
+        "cut at 1.40 m": "partly true. The chamber side walls and the door housings in the cutaway renders (airlock_closed.png, airlock_m.png, airlock_l.png) still stand above the outer wall ring - about 2.2-2.5 m by comparison with the lockers and suit racks. The claim that the chamber is cut at 1.40 m is not borne out by the images; the housings especially. Only the roof is removed.",
+        "chamber 2.4 m (M) and 3.6 m (L)": "landed; L reads as a real walk-through chamber",
+        "amber beacon and pressure lights": "beacon landed (amber disc on the block roof); pressure lights present but tiny",
+        "faired dome to block": "landed",
+        "flat porch grate, striped lip, bollards": "landed",
+        "sizes S/M/L": "landed"
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Cut the chamber walls and door housings at 1.40 m in the cutaway, with solid caps, as every room wall (V3_1 3.2). If the housings must stay tall for the door kit, put their upper parts in the Roof/…Top group so they lift with the roof. Show one cutaway render with the housings at 1.40 m."},
+        {"owner": "ART-HAB", "fix": "Pressure lights: 3 lamps 8 cm wide on a dark plate above the inner door, so they read from the game camera."}
+      ]},
+    "doors": {"consistency": 0.80, "appeal": 0.76, "style": 0.80, "score": 0.79, "pass": true, "provisional": true, "was": 0.75,
+      "round_10_fixes_checked": {
+        "housing follows the wall, rounded corners, chamfers, curved hood": "landed; inside it now reads as part of the wall, outside the hood follows the dome on dome rooms",
+        "green status strip": "landed",
+        "kick plates and chevrons": "landed (door31_half_inside.png)"
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Water recycler M (and any podium room with tanks at the wall): the door hood cuts through a wall tank and its dome cap (art/critic/r12_wr_roof.png). Move the tank to the next free segment when a doorway takes its segment, or hide it with the segment."},
+        {"owner": "ART-HAB", "fix": "Flat-roof rooms (refinery, storehouse, assembler): the curved hood sits on the flat roof as a separate white shell (art/critic/r12_ref_roof.png). Use a flat hood on flat-roof rooms, flush with the roof edge."}
+      ]},
+    "doorway_decals": {"consistency": 0.82, "appeal": 0.76, "style": 0.80, "score": 0.79, "pass": true, "provisional": true, "was": 0.77,
+      "what_works": "13 room types with 2-3 doorways each: no band, porthole, stripe or sign on any opening, roof on or cutaway; bands end with a cap (r12_dw1.png, r12_dw2.png).",
+      "fixes": [
+        {"owner": "RENDER", "fix": "In-game acceptance on every room type (zero decal pixels in an opening). About 90 decal objects per room: merge them per room (ART-HAB's note)."},
+        {"owner": "ART-HAB", "fix": "The upper wall patch is plain (no band) beside doors on podium/drum rooms (water recycler, refinery): the upper band stops a full segment early. Carry the band to the cap as on the lower wall."}
+      ]},
+    "landing_pad": {"consistency": 0.78, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true, "part_of": "ships",
+      "what_works": [
+        "Round-9/11 notes landed: kiosk outside the footprint and ramp lanes, 20 amber edge lights, one purple ring, blast deflector, fuel station with a floor fuel line, two light masts, apron (pad31_*).",
+        "The trader sits centred with room for carriers (pad31_trader_top.png)."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Blast deflector reads as a row of flat grey boards on posts. Give it an angled face (30-40 deg back), a Frame top rail, scorch darkening on the ship side and a hazard stripe."},
+        {"owner": "ART-HAB", "fix": "The fuel station and the kiosk are small white boxes at game distance. Give the fuel station a hose reel and a red/yellow fuel stripe; give the kiosk a lit window and a mast light so both read at night."},
+        {"owner": "ART-HAB", "fix": "The apron is a flat dark ring. Add tie-down points and 4 painted walkway lanes to the ramp lanes so carriers' routes read."}
+      ]},
+    "ships": {"consistency": 0.80, "appeal": 0.76, "style": 0.78, "score": 0.78, "pass": true, "provisional": true, "was": 0.75,
+      "per_ship": {"trader": 0.78, "shuttle": 0.76, "liner": 0.78, "medical": 0.76, "science": 0.77, "courier": 0.76},
+      "round_11_fixes_checked": {
+        "1 shuttle top": "landed: graphite roof, yellow stripe, raised deck; distinct from above",
+        "2 liner dart": "landed: tapered nose, delta wings, pink spine band; the most distinct plan",
+        "3 cockpits": "landed: bus, wraparound, canopy",
+        "4 night windows": "landed: warm, dimmer passenger windows",
+        "5 night ramp renders": "delivered, but no belly or door flood is visible: ramps and the deck under each ship are dark (r12_nightramp.png)",
+        "6 trader ramp": "landed: side ramp at the tail",
+        "7 flight renders centred": "landed (near top-down)",
+        "8 flank insets": "landed"
+      },
+      "fixes": [
+        {"owner": "ART-B / RENDER", "fix": "Belly and ramp floods: make them visible - an emissive lens under the belly at each ramp and a warm pool on the ramp and the deck (RENDER in game; ART-B in the render with a real light). A landed ship at night should show where people walk."},
+        {"owner": "ART-B", "fix": "Medical and science from above still share the trader-like capsule with two engines; the cross and the dish carry them. Acceptable; optional: give the medical ship a flat white roof deck with a helipad-like cross ring."}
+      ]}
+  },
+  "notes": [
+    "No FAIL. Nothing reaches 0.80; airlock, doors and doorway_decals are at 0.79.",
+    "Claim not borne out: ART-HAB says the airlock chamber is cut at 1.40 m; in the cutaway renders the chamber walls and door housings stand well above the outer wall (airlock_closed.png, airlock_m.png, airlock_l.png).",
+    "My grids: art/critic/r12_airlock.png, r12_doors.png, r12_dw1.png, r12_dw2.png, r12_pad.png, r12_fleet.png, r12_nightramp.png, r12_trans_tail.png; crops r12_wr_roof.png, r12_ref_roof.png."
+  ]
+}

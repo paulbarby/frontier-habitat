@@ -34,7 +34,10 @@ uniform float roughness : hint_range(0.0, 1.0) = 0.6;
 uniform float metallic : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 emission : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float emission_energy = 0.0;
-uniform int mode = 0;          // 0 plain, 1 role colour, 2 skin tone, 3 hair colour
+uniform int mode = 0;          // 0 plain, 1 role colour, 2 skin tone, 3 hair colour, 4 visitor body colour
+// V3.1 visitors (look code role >= 8, v = role - 8): this material's colour per visitor look;
+// a negative colour = keep the material's own colour.
+uniform vec4 vis_cols[7];
 uniform vec4 roles[8];   // linear role colours
 uniform float ao_amount = 1.0;
 uniform int bind_slot[64];     // skin bind index -> matrix slot
@@ -42,6 +45,7 @@ uniform int head_id = -1;      // >= 0: this mesh is head variant n (only those 
 
 varying vec3 v_tint;
 varying float v_ao;
+varying float v_fade;   // INSTANCE_CUSTOM.y: 1 drawn .. 0 gone (dithered fade, V3_1 §4.3)
 
 ivec2 tx(int row, int texel) {
 	int col = row / rows_per_col;
@@ -121,6 +125,7 @@ vec3 palette6(float v, vec3 a, vec3 b, vec3 c, vec3 d, vec3 e, vec3 g) {
 
 void vertex() {
 	vec4 ic = texelFetch(bdata, ivec2(0, int(INSTANCE_CUSTOM.x + 0.5)), 0);
+	v_fade = INSTANCE_CUSTOM.y;
 	int look = int(ic.z + 0.5);
 	int role = look / 64;
 	int head = (look / 8) % 8;
@@ -156,7 +161,10 @@ void vertex() {
 		NORMAL = normalize(na);
 	}
 	v_tint = vec3(1.0);
-	if (mode == 1) {
+	if ((mode == 1 || mode == 4) && role >= 8) {
+		vec4 vc = vis_cols[clamp(role - 8, 0, 6)];
+		v_tint = vc.r >= 0.0 ? vc.rgb / max(albedo.rgb, vec3(0.04)) : vec3(1.0);
+	} else if (mode == 1) {
 		v_tint = roles[clamp(role, 0, 7)].rgb / max(albedo.rgb, vec3(0.04));
 	} else if (mode == 2) {
 		// Six skin tones (linear), dark to light: replace the albedo.
@@ -171,6 +179,12 @@ void vertex() {
 }
 
 void fragment() {
+	if (v_fade < 0.999) {
+		float hh = fract(sin(dot(floor(FRAGCOORD.xy), vec2(12.9898, 78.233))) * 43758.5453);
+		if (hh > v_fade) {
+			discard;
+		}
+	}
 	vec3 base = albedo.rgb;
 	if (use_tex) {
 		base *= texture(albedo_tex, UV).rgb;

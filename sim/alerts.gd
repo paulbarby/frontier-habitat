@@ -133,7 +133,7 @@ func _power_issues(found: Dictionary) -> void:
 		var people_inside := false
 		for aid in sim.state["agents"]:
 			var a: Dictionary = sim.state["agents"][aid]
-			if a["state"] == "alive" and a["where"] != "out" and orphans.has(int(a["bld"])):
+			if a["state"] == "alive" and a["where"] != "out" and orphans.has(int(a["bld"])) and a["kind"] != "visitor":
 				people_inside = true
 		_add(found, "power:orphans", "no_source", 3 if people_inside else 1,
 			"%s %s no power source on %s network: %s." % [Text.n(orphans.size(), "finished structure"), Text.have(orphans.size()), "its" if orphans.size() == 1 else "their", _names(orphans)],
@@ -206,7 +206,8 @@ func _air_issues(found: Dictionary) -> void:
 		var inside := 0
 		for aid in sim.state["agents"]:
 			var a: Dictionary = sim.state["agents"][aid]
-			if a["state"] == "alive" and (int(a["bed"]) == lid or int(a["bed"]) == -1):
+			# Colonists only (V3.1): a visitor without a bed is a traffic matter, never this alert.
+			if a["state"] == "alive" and a["kind"] != "visitor" and (int(a["bed"]) == lid or int(a["bed"]) == -1):
 				inside += 1
 		if inside > 0 or left > 0.0:
 			var sev: int = 3 if left < day_len * 0.5 else 2
@@ -320,7 +321,8 @@ func _people_issues(found: Dictionary) -> void:
 	var grace: float = 2.0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive":
+		# Visitors (V3.1) never raise colony alerts: their ship and the traffic panel answer.
+		if a["state"] != "alive" or a["kind"] == "visitor":
 			continue
 		var kind: String = String(a["plan_kind"])
 		var busy_need: bool = kind == "eat" or kind == "drink" or kind == "safety"
@@ -360,9 +362,13 @@ func _people_issues(found: Dictionary) -> void:
 		for q in lock["queue"]:
 			if q["dir"] == "in":
 				outside += 1
-				worst = minf(worst, float(sim.state["agents"][q["a"]]["suit"]))
-		var wait: float = ceil(float(outside) / float(sim.bal["airlock_slots"])) * float(sim.bal["airlock_cycle_seconds"])
-		if outside > 2 and (wait > unsafe or worst < wait + 5.0):
+				# The queue length counts everyone; the air margin only colonists (V3.1: a
+				# visitor's suit is its ship's matter, never a colony alert).
+				var qa: Dictionary = sim.state["agents"][q["a"]]
+				if qa["kind"] != "visitor":
+					worst = minf(worst, float(qa["suit"]))
+		var wait: float = ceil(float(outside) / float(sim.agents.lock_slots(blds[id]))) * float(sim.bal["airlock_cycle_seconds"])
+		if outside > 2 and worst < 1e8 and (wait > unsafe or worst < wait + 5.0):
 			_add(found, "lockjam:%d" % id, "airlock_congestion", 3 if worst < wait else 2,
 				"%s: %s wait outside. The last one waits about %s; the lowest suit has %s of air." % [blds[id]["name"], Text.n(outside, "person", "people"), Text.n(int(wait), "second"), Text.n(int(worst), "second")],
 				"Build a second airlock on this group of rooms.", [id], "", worst, outside)
@@ -423,7 +429,7 @@ func _nutrition_issues(found: Dictionary) -> void:
 	var starved := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "alive" and sim.nutrition.starved(a):
+		if a["state"] == "alive" and a["kind"] != "visitor" and sim.nutrition.starved(a):
 			starved += 1
 	for k in sim.nutrition.nutrients():
 		var n: int = int(counts.get(k, 0))
@@ -439,7 +445,7 @@ func _nutrition_issues(found: Dictionary) -> void:
 	var pop := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive":
+		if a["state"] != "alive" or a["kind"] == "visitor":
 			continue
 		pop += 1
 		var diet: Array = a.get("diet", [])
@@ -517,7 +523,7 @@ func _hazard_issues(found: Dictionary) -> void:
 	if not breached.is_empty():
 		for aid in sim.state["agents"]:
 			var a: Dictionary = sim.state["agents"][aid]
-			if a["state"] == "alive" and a["where"] == "in" and breached.has(int(a["bld"])):
+			if a["state"] == "alive" and a["where"] == "in" and breached.has(int(a["bld"])) and a["kind"] != "visitor":
 				inside += 1
 		_add(found, "breach", "breach", 3 if inside > 0 else 2,
 			"Hull breach in %s: %s. Air leaks." % [Text.n(breached.size(), "structure"), _names(breached)],

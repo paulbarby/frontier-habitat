@@ -28,6 +28,7 @@ var _base_zone: Image
 var _tex: ImageTexture
 var _tick := 0
 var _k := 1.0            # image pixels per metre
+var _sig := ""           # structures signature: the texture is re-uploaded only when it changes
 var _vr := Rect2()       # world rectangle the map shows
 
 class MapView extends Control:
@@ -80,7 +81,7 @@ func _ready() -> void:
 	v.add_child(row)
 	for spec in [["power", "power", "Power overlay\nWhich structures share a power network."], ["water", "water", "Water overlay\nWhich structures share water."],
 			["air", "o2", "Air overlay\nWhich rooms share air, and their oxygen."], ["walk", "follow", "Walking overlay\nWhere colonists can walk."],
-			["hazard", "hazard", "Hazard zones\nWhere meteors, wind and quakes are more likely (red meteor, blue wind, amber quake)."]]:
+			["hazard", "hazard", "Hazard zones\nWhere meteors, wind and quakes are more likely (meteor red, wind cyan, quake violet)."]]:
 		var name: String = spec[0]
 		var b: Button = Kit.icon_button(spec[1], func(): _toggle(name), spec[2], "SpeedButton", 15, 28)
 		b.toggle_mode = true
@@ -96,7 +97,6 @@ func overlay_changed() -> void:
 	for n in _ov:
 		(_ov[n] as Button).set_pressed_no_signal(n == cur)
 	_ov_label.text = ("OVERLAY: " + cur.to_upper()) if cur != "" else ("COLONY" if zoomed else "")
-	_tick = 1   # repaint at the next refresh (zones on or off)
 
 func set_zoomed(on: bool) -> void:
 	zoomed = on
@@ -128,6 +128,7 @@ func jump(p: Vector2) -> void:
 	m.rig.jump_to(m.view.to3(p))
 
 func rebuild() -> void:
+	_sig = ""
 	var ws: float = float(hud.main.sim.world.size)
 	_k = float(mini(IMG_MAX, int(ws))) / ws
 	_base = _terrain_image()
@@ -143,12 +144,16 @@ func refresh() -> void:
 	if _base == null:
 		rebuild()
 		return
-	# About once a second is enough for a map; the camera view and hazards are drawn live.
+	# The structure texture is re-uploaded only when a structure changes (fewer texture uploads);
+	# colonists, the camera view and hazards are drawn live.
 	_tick += 1
 	if _tick % 2 == 0:
 		if zoomed:
 			_update_rect()
-		_paint()
+		var sig: String = _structure_sig()
+		if sig != _sig:
+			_sig = sig
+			_paint()
 	overlay_changed()
 
 func _process(_delta: float) -> void:
@@ -182,7 +187,7 @@ func _terrain_image() -> Image:
 					small.set_pixel(xx, yy, small.get_pixel(xx, yy).lerp(Color("3a2a26"), 0.55))
 	return small
 
-## Hazard zones (meteor red, wind blue, quake amber) blended on the terrain; made once.
+## Hazard zones (meteor red, wind cyan, quake violet, as the 3D overlay) blended on the terrain; made once.
 func _zone_image() -> Image:
 	var img: Image = _base.duplicate()
 	var s = hud.main.sim
@@ -202,14 +207,23 @@ func _zone_image() -> Image:
 			var col := Color(0, 0, 0, 0)
 			var a: float = maxf(met, maxf(win, qk))
 			if a > 0.0:
-				col = (Color("FF5A5F") * met + Color("4AA8FF") * win + Color("FFB547") * qk) / maxf(0.001, met + win + qk)
+				col = (Color("FF5A5F") * met + Color("3EE0FF") * win + Color("A78BFA") * qk) / maxf(0.001, met + win + qk)
 				col.a = a * 0.75
 			z.set_pixel(i, j, col)
 	z.resize(img.get_width(), img.get_height(), Image.INTERPOLATE_BILINEAR)
 	img.blend_rect(z, Rect2i(0, 0, img.get_width(), img.get_height()), Vector2i.ZERO)
 	return img
 
-## Structures, links and colonists painted into one texture (one draw call).
+## Structures and links: one change key (count, states, breaches, the overlay).
+func _structure_sig() -> String:
+	var s = hud.main.sim
+	var h := 0
+	for id in s.state["buildings"]:
+		var b: Dictionary = s.state["buildings"][id]
+		h = hash([h, id, b["state"], bool(b.get("breach", false))])
+	return "%d:%d:%s" % [s.state["buildings"].size(), h, hud.main.view.overlay == "hazard"]
+
+## Structures and links painted into one texture (one draw call). Colonists: _draw_people.
 func _paint() -> void:
 	var s = hud.main.sim
 	var base: Image = _base
@@ -251,12 +265,6 @@ func _paint() -> void:
 		if b["state"] == "broken" or not hud.data.breach_of(b).is_empty():
 			bc = P.RED
 		_disc(img, (b["pos"] as Vector2) * k, int(roundf(r)), bc, solid)
-	for aid in s.state["agents"]:
-		var a: Dictionary = s.state["agents"][aid]
-		if a["state"] != "alive":
-			continue
-		var p: Vector2 = (a["pos"] as Vector2) * k
-		img.fill_rect(Rect2i(int(p.x) - 1, int(p.y) - 1, 2 if k < 0.8 else 3, 2 if k < 0.8 else 3), Color.WHITE if a["where"] == "out" else Color(0.85, 0.85, 0.85))
 	if _tex == null or _tex.get_width() != sz:
 		_tex = ImageTexture.create_from_image(img)
 	else:
@@ -296,9 +304,27 @@ func draw_map(c: Control) -> void:
 	var sz: Vector2 = c.size
 	if _map.tex != null:
 		c.draw_texture_rect_region(_map.tex, Rect2(Vector2.ZERO, sz), Rect2(_vr.position * _k, _vr.size * _k))
+	_draw_people(c, sz)
 	_draw_hazards(c, sz)
 	_draw_view(c, sz)
 	c.draw_rect(Rect2(Vector2.ZERO, sz), P.LINE, false, 1.0)
+
+## Colonists: one short line each, two draw calls in all (outside white, inside grey).
+func _draw_people(c: Control, sz: Vector2) -> void:
+	var outp := PackedVector2Array()
+	var inp := PackedVector2Array()
+	for aid in hud.main.sim.state["agents"]:
+		var a: Dictionary = hud.main.sim.state["agents"][aid]
+		if a["state"] != "alive":
+			continue
+		var q: Vector2 = to_map(a["pos"], sz)
+		var arr: PackedVector2Array = outp if a["where"] == "out" else inp
+		arr.append(q - Vector2(1.0, 0.0))
+		arr.append(q + Vector2(1.0, 0.0))
+	if not outp.is_empty():
+		c.draw_multiline(outp, Color.WHITE, 2.0)
+	if not inp.is_empty():
+		c.draw_multiline(inp, Color(0.85, 0.85, 0.85), 2.0)
 
 ## Detected hazards: a ring at the place (its radius, at least 4 px), pulsing when it is
 ## under 30 s away; going on now: filled. Whole-map events tint the map edge.

@@ -262,7 +262,7 @@ func _rescue_far_sites() -> void:
 		var spot = null
 		for dist in [8.0, 11.0, 6.0, 14.0]:
 			for side in [0.0, 3.0, -3.0, 6.0, -6.0]:
-				var p: Vector2 = (room["pos"] as Vector2) + dir * (float(room["radius"]) + 2.8 + dist) + dir.orthogonal() * side
+				var p: Vector2 = (room["pos"] as Vector2) + dir * (float(room["radius"]) + float(sim.bdef("airlock")["radius"]) + dist) + dir.orthogonal() * side
 				if sim.place.check_building("airlock", sim.place.snap_pos(p), sim.place.snap_rot(rot)) == "ok":
 					spot = p
 					break
@@ -326,9 +326,31 @@ func _do_place(i: int, st: Dictionary) -> void:
 		done[i] = true
 		return
 	var size: int = int(st.get("size", 1))
+	rot = _door_rot(st, p, rot, size)
 	sim.submit("place_building", {"def": st["place"], "x": p.x, "y": p.y, "rot": rot, "size": size})
 	_pending_places.append([sim.place.snap_pos(p), float(sim.sizes.def_for(st["place"], size)["radius"])])
 	done[i] = true
+
+## V3.1 door clearance: a room turns (15-degree steps, the smallest turn first) until the
+## corridor to the room it joins leaves through a free side (placement.link_angle_ok_for),
+## as a player turns the ghost. An airlock keeps a turn only where it is still legal.
+func _door_rot(st: Dictionary, p: Vector2, rot: float, size: int) -> float:
+	if not st.has("joins") or not alias.has(st["joins"]):
+		return rot
+	var partner: Dictionary = sim.state["buildings"].get(alias[st["joins"]], {})
+	if partner.is_empty():
+		return rot
+	var def_id: String = st["place"]
+	var toward: float = ((partner["pos"] as Vector2) - sim.place.snap_pos(p)).angle()
+	for k in range(0, 13):
+		for sgn in ([1] if k == 0 or k == 12 else [1, -1]):
+			var r2: float = sim.place.snap_rot(rot + deg_to_rad(15.0 * k * sgn))
+			if not sim.place.link_angle_ok_for(def_id, size, r2, toward):
+				continue
+			if r2 != rot and not _legal(def_id, p, r2, size):
+				continue
+			return r2
+	return rot
 
 ## The rotation of a step, on the 15-degree grid. "face": "ship" turns a door toward the
 ## Meridian.
@@ -516,7 +538,7 @@ func _nudge_for_link(link_step: int, st: Dictionary, code: String) -> void:
 		return
 	# The wanted partner has no free port, or its door is in the way. Join the nearest other
 	# room that does accept the link, which is what a player does.
-	if code == "ports_full" or code == "blocked_entrance":
+	if code == "ports_full" or code == "blocked_entrance" or code == "door_blocked":
 		var moving: int = int(alias[st["b"]])
 		var blds: Dictionary = sim.state["buildings"]
 		var best := -1

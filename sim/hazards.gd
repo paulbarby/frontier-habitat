@@ -1033,11 +1033,12 @@ func flare_active() -> bool:
 func retreat_health() -> float:
 	return float(kcfg("solar_flare").get("retreat_health", 70))
 
+## Colonists outside (for alerts and log severity; visitors are not counted, V3.1).
 func _people_outside() -> int:
 	var n := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "alive" and a["where"] == "out":
+		if a["state"] == "alive" and a["where"] == "out" and a["kind"] != "visitor":
 			n += 1
 	return n
 

@@ -1,0 +1,52 @@
+{
+  "round": 9,
+  "date": "2026-09-25",
+  "scope": "v3.1 ships pilot: ship_trader only (ART-B). Evidence: art/ships/trader_turnaround.png, trader_on_pad.png, trader_on_pad_rear.png, trader_flight.png, trader_night.png, ship_report.json; style reference art/screenshots/15_meridian.png, art/key_art.png, art/models/_review_*.png",
+  "pass_mark": 0.65,
+  "subjects": {
+    "ships": {
+      "consistency": 0.72, "appeal": 0.74, "style": 0.72, "score": 0.73, "pass": true, "provisional": true,
+      "note": "pilot on one ship; the subject is re-rated with all six ships, the upgraded pad and in-game landing strips",
+      "fixes": [
+        {"owner": "ART-B", "fix": "Nose and windows: the rounded 'bullet train' nose with flat pale-yellow panes reads as a toy or a cartoon bus, not as the Meridian family. Make the cockpit a faceted, chamfered block (3-4 flat planes, 4-6 cm Frame mullions), with the Window material dark glass by day (base #1B2530, roughness 0.15) and the warm emissive only at night. Keep the panes but make them read as glass, not stickers."},
+        {"owner": "ART-B", "fix": "Hull language: the hull is a smooth lofted pill with a few seam lines; the Meridian and the rooms use flat panels, hazard stripes, gantries, handrails and bolt rows. Add: 2 hazard-stripe bands (yellow/graphite, as on the Meridian) at the ramp end and the side hatch; a row of panel insets along each flank; handrails and 2 access ladders on the spine by the crane; a registration decal on each flank (large dark letters, e.g. 'TR-07')."},
+        {"owner": "ART-B", "fix": "Landing legs look thin for the mass (thin struts with orange sleeves under a 7 m body). Thicken the upper strut 40%, add a hydraulic ram per leg and a wider foot pad (0.9 m); legs should read as heavy-duty at game distance."},
+        {"owner": "ART-B", "fix": "Main engines: the nozzles are empty black rings. Give each a bell with an inner cone, a heat-tinted rim (bronze, PaletteMetal) and the Plasma material on the inner cone so it can glow in flight."},
+        {"owner": "ART-B", "fix": "Night: the ship has no running lights of its own (trader_night.png: two small white dots). Add red (port) and green (starboard) nav lights on the pod ends, a white strobe on the crane mast, 2 floodlights under the belly pointing at the ramp, and lit cockpit windows at night. A landed ship must be findable at night like the colonists."},
+        {"owner": "ART-B", "fix": "Cargo reading: the pods are the right idea and read at game distance. Add one or two exposed containers (rectangular, with ribs and stencils) on the spine next to the crane so 'cargo' is read by boxes, not only by cylinders; cylinders alone read as fuel tanks."},
+        {"owner": "ART-B", "fix": "Ramp between the two main engine nozzles: people walk down under the engine bells. Move the ramp to one side of the tail or raise the engines 0.5 m above the ramp line, so the logic reads."},
+        {"owner": "ART-B", "fix": "File naming: trader_on_pad.png shows the tail and ramp, trader_on_pad_rear.png shows the nose; swap the names."}
+      ],
+      "what_works": [
+        "Reads as a cargo freighter at game distance (art/critic/r9_gamedist.png, the pad image at 12% scale): the 4 orange pods and the crane give a clear 'working ship' silhouette.",
+        "Palette fits: off-white hull, graphite, one strong accent (orange), as the colony.",
+        "Footprint fits the 9 m pad (radius 7.44 m), height 6.0 m, 8,160 triangles, 6 materials, all named nodes present.",
+        "Flight pose: legs folded, ramp and hatch closed, clean."
+      ]
+    }
+  },
+  "pad_note": {
+    "not_scored": true,
+    "owner": "ART-HAB",
+    "notes": [
+      "The current pad is a flat grey disc with a purple ring, white dashes and a yellow cross; it reads as a helipad, fine as a base.",
+      "Clearance: at yaw 180 the kiosk stands about 1 m in front of the nose and under the nose line in trader_on_pad_rear.png; with Anchor_Ship place the kiosk at least 2.5 m outside the ship footprint and outside the ramp lane.",
+      "Upgrade per V3_1 6.2: edge lights that differ in colour from the colony (amber or white, not the pink dots now), a raised blast deflector on the approach side, a fuel line with a coupling at the ship's side, and the purple ring as the logistics accent only once (not also on the kiosk band).",
+      "The pod ends reach the purple ring; the pad radius should keep at least 1 m of free deck round the largest ship for carriers."
+    ]
+  },
+  "silhouettes_for_the_other_five": [
+    "trader: long horizontal box, pods on the flanks, crane on the spine (done). Keep it the widest and lowest.",
+    "shuttle: shorter and taller than the trader, a single continuous window row along both flanks, a side door with airstairs; no pods, no crane. Read = 'bus'.",
+    "liner: the longest and sleekest, a swept nose and tail fins, a full-length colour band (comfort pink or a liner colour), large panoramic windows; no exposed machinery. Read = 'luxury'.",
+    "medical: white-dominant, compact, a large red cross on the roof (readable from the top-down camera) and on both flanks, red nose band, a wide side door for stretchers.",
+    "science: a vertical element: a sensor dish on a mast and an antenna array, blue (science #7C8CFF) band, instrument pods under the belly; the only ship with a tall silhouette.",
+    "courier: the smallest (plan radius ~4 m), wedge-shaped, one engine, black-and-gold (inspector); must read small on the pad.",
+    "Shared: same panel language, hazard stripes, leg design and Window treatment on all six, so they read as one fleet; distinct by plan shape from the top (box, bus, dart, compact, mast, wedge) and by one dominant colour each."
+  ],
+  "notes": [
+    "PASS at 0.73; the fixes above should land before the other five ships are built, because they set the shared language.",
+    "Evidence gap: no in-game shot (landing, legs and ramp motion, night) - RENDER has not integrated.",
+    "My evidence: art/critic/r9_gamedist.png (trader_on_pad_rear.png at 12% scale, then enlarged 4x)."
+  ]
+}

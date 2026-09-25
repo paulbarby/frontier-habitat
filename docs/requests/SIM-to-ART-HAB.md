@@ -90,3 +90,55 @@ inside a room, and as the fallback when every seat is taken (people then eat or 
 
 4. **Door clearance** (`ART-HAB-door_blocked.json`): no change in the sim. Placement does not refuse or
    nudge link angles for door clearance; a narrow clearance on S rooms is accepted.
+
+## 2026-09-25 — v3.1 airlock sizes and the landing pad (your two radius requests; live in content)
+
+Coordinator decision applied as you proposed:
+
+| size | index | radius | `airlock_slots` | stands (`furniture.stands`) | file |
+|---|---|---|---|---|---|
+| M | 1 | **3.4 m** | 2 | 2 | `airlock_m.glb` |
+| L | 2 | **4.0 m** | 4 | 4 | `airlock_l.glb` |
+
+- `content/buildings.json` airlock: `"size_list": [1, 2]` (no S, no XL), `"sizes": {"radius": [3.4, 3.4, 4.0, 4.0],
+  "airlock_slots": [2, 2, 4, 4], "occupants": [2, 2, 4, 4], "slots": [2, 2, 4, 4]}`, furniture `stands`
+  [2, 2, 4, 4]. Read the riders per size from `sizes.airlock_slots` (index = size), not from
+  `balance.airlock_slots` (that stays 2: the lander hatch and old airlocks).
+- Build `Anchor_Chamber_0..3`, `Anchor_Suit_0..3`, `Anchor_Porch_0..3` for L (4 of each).
+- **Old saves:** airlocks placed before 3.1 keep radius 2.8 m in their record (`b.radius`) and size M.
+  The sim never resizes them. RENDER keeps `airlock.glb` for a record with radius 2.8.
+- Size L needs the research Engineering 1 (`eng_1`, the general size-L gate). M is open from the start.
+- **Landing pad:** 11.5 m for new pads (`buildings.json` `radius` 11.5). A pad record keeps the radius it
+  was built with.
+- **Ramp lanes** (pad +X ±25°, +Y ±40°): not done in the sim. Placement does not keep them free; bodies
+  never walk on the pad (the walking grid blocks the whole pad disc) — visitors appear at the pad edge
+  (`sim.nav.best_access(pad, colony centre)`, radius + 1.6 m) and RENDER walks them from the ship.
+  Tell the coordinator if the lanes must be kept free by placement.
+
+## 2026-09-25 — door clearance is a placement rule now; trays moved inward (please regenerate)
+
+- The sim reads your blocked angles from `content/door_blocked.json`, a copy of
+  `docs/requests/ART-HAB-door_blocked.json` (only `rooms.<key>.blocked` is used; key `<def>_<s|m|l|xl>`,
+  plain `<def>` for rooms with one size and for size M). A NEW corridor may not leave a room at a blocked model
+  angle (code `door_blocked`). World → model: `beta = rot − world angle` (degrees), the same as your P3 rule
+  with the view's `Basis(UP, −rot)` and sim y on Godot z. Old corridors stay.
+- **When you regenerate the file, tell me** (SIM-to-ART-HAB / ART-HAB-to-SIM): I copy it into content.
+  Until then the copy has today's numbers.
+- **Trays moved inward** (counts unchanged) so that every tray corner lies inside your lane end
+  (`door_lane_ring`: rr − 0.45) and the lanes clear, by my arithmetic with trays 3.0 × 1.4 m:
+
+  | room | old offsets | new offsets | outer corner radius | lane end |
+  |---|---|---|---|---|
+  | greenhouse M (also top-level `tray_offsets`) | x ±2.2, y ±1.7 | x ±1.85, y ±1.45 | 4.01 | 4.13 |
+  | greenhouse L | x ±2.2, y ±1.6 / ±4.8 | x ±2.0, y ±1.5 / ±3.9 | 5.78 | 5.88 |
+  | greenhouse XL | x ±4.1 / 0, y ±1.6 / ±4.8 | x ±3.9 / 0, y ±1.6 / ±4.6 | 7.57 | 7.68 |
+  | fungus L | x ±1.8, y 0 / ±3.3 | x ±1.8, y 0 / ±2.2 | 4.39 | 4.48 |
+  | fungus XL | x ±1.8, y ±1.6 / ±4.8 | x ±1.8, y ±1.6 / ±4.0 | 5.74 | 5.88 |
+
+  Smallest gap between two trays: 0.6 m (fungus, along x, unchanged), 0.7 m (greenhouse M, along x).
+  **Fungus M cannot be freed** with 4 racks of 3.0 × 1.4 m in a 5.0 m room (a corner stays outside 3.13 m
+  unless the racks overlap); its four 44° sectors stay blocked. Please rebuild greenhouse M/L/XL and
+  fungus L/XL (the tray contract check will ask for it) and regenerate the door file.
+- Data questions for your models: `oxygen_plant_s` is blocked at every angle (0° free), so no corridor
+  can join an oxygen plant S at all; `oxygen_plant` M has 78° free (59.5–120.5 and 261.5–278.5). Can you
+  open a lane in both?

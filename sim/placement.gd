@@ -31,6 +31,7 @@ const REASONS := {
 	"no_size": "This structure has one size only.",
 	"ship": "The Meridian takes no corridor or cable.",
 	"overlap_ship": "Overlaps the wreck of the Meridian.",
+	"door_blocked": "The door would open onto equipment. Choose another side of the room.",
 }
 
 func _init(s) -> void:
@@ -123,6 +124,11 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 				continue
 			if b["kind"] != "link" and _hits_strip(probe, b["pos"], float(b["radius"])):
 				return "blocked_entrance"
+			# V3.1 porch rule: no corridor tube in front of the new door either.
+			if b["kind"] == "link" and b["def"] == "corridor":
+				var st: Dictionary = door_strip(probe)
+				if _segment_distance(st["p0"], st["p1"], b["p0"], b["p1"]) < 1.2 + float(st["half_width"]):
+					return "blocked_entrance"
 		var door: Vector2 = pos + Vector2(cos(rot), sin(rot)) * (r + 1.3)
 		if not sim.world.in_map(door, float(sim.world.margin)) or _terrain_blocked(door):
 			return "blocked_entrance"
@@ -130,7 +136,7 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 	var open := 0
 	for k in 8:
 		var a: float = rot + k * TAU / 8.0 + 0.39
-		var p: Vector2 = pos + Vector2(cos(a), sin(a)) * (r + 1.1)
+		var p: Vector2 = pos + Vector2(cos(a), sin(a)) * (r + float(bal.get("nav_clearance", 0.6)) + 1.0)
 		if sim.world.in_map(p, float(sim.world.margin)) and not _terrain_blocked(p) and _free_of_structures(p, ignore_id):
 			open += 1
 	if open == 0:
@@ -164,6 +170,65 @@ func _free_of_structures(p: Vector2, ignore_id: int) -> bool:
 func _has_door(b: Dictionary) -> bool:
 	var def: Dictionary = sim.bdef(b["def"])
 	return bool(def.get("airlock", false)) or bool(def.get("hatch", false))
+
+## V3.1 porch zone: the ground in front of an airlock's outer door (or the lander hatch)
+## that no structure may cover. `b` is a structure record or a probe {pos, rot, radius}.
+## Returns {p0, p1, half_width, porch_length}: the strip runs from p0 (the door, on the
+## footprint edge) to p1 (door_strip_length out), half_width to each side; porch_length
+## is the part in front of the door that paths cross only to use the door.
+func door_strip(b: Dictionary) -> Dictionary:
+	var dirv := Vector2(cos(float(b["rot"])), sin(float(b["rot"])))
+	var p0: Vector2 = (b["pos"] as Vector2) + dirv * float(b["radius"])
+	return {"p0": p0, "p1": p0 + dirv * float(sim.bal["door_strip_length"]),
+		"half_width": float(sim.bal["door_strip_half_width"]), "porch_length": float(sim.bal.get("porch_length", 2.5))}
+
+## The porch zone a new airlock would have (for the placement preview).
+func door_strip_for(def_id: String, pos: Vector2, rot: float, size: int = 1) -> Dictionary:
+	var def: Dictionary = sim.sizes.def_for(def_id, size)
+	if def.is_empty() or not (bool(def.get("airlock", false)) or bool(def.get("hatch", false))):
+		return {}
+	return door_strip({"pos": snap_pos(pos), "rot": snap_rot(rot), "radius": float(def["radius"])})
+
+## Every porch zone on the map now: [{id, p0, p1, half_width, porch_length}] by id.
+func door_strips() -> Array:
+	var out: Array = []
+	var blds: Dictionary = sim.state["buildings"]
+	var ids: Array = blds.keys()
+	ids.sort()
+	for id in ids:
+		var b: Dictionary = blds[id]
+		if b["kind"] == "link" or not _has_door(b):
+			continue
+		var st: Dictionary = door_strip(b)
+		st["id"] = int(id)
+		out.append(st)
+	return out
+
+## V3.1 (critic round 13): ground piles and drop points keep clear of every airlock's porch:
+## at least pile_porch_clear (2.5 m) from the outer door and off the door strip. Returns the
+## point itself when it is clear, else the nearest clear open point on rings of 1 m (16
+## directions, up to 10 m), else the point itself.
+func in_porch(p: Vector2, strips: Array = []) -> bool:
+	if strips.is_empty():
+		strips = door_strips()
+	var keep: float = float(sim.bal.get("pile_porch_clear", 2.5))
+	for st in strips:
+		if p.distance_to(st["p0"]) < keep:
+			return true
+		if Geometry2D.get_closest_point_to_segment(p, st["p0"], st["p1"]).distance_to(p) < float(st["half_width"]):
+			return true
+	return false
+
+func clear_of_porches(p: Vector2) -> Vector2:
+	var strips: Array = door_strips()
+	if strips.is_empty() or not in_porch(p, strips):
+		return p
+	for r in range(1, 11):
+		for k in 16:
+			var q: Vector2 = p + Vector2(float(r), 0).rotated(float(k) * TAU / 16.0)
+			if sim.nav.is_walkable(q) and not in_porch(q, strips):
+				return q
+	return p
 
 ## True when a disc (c, r) touches the reserved access strip in front of a door.
 func _hits_strip(door_b: Dictionary, c: Vector2, r: float) -> bool:
@@ -228,6 +293,10 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 		for d in used:
 			if rad_to_deg(absf((d as Vector2).angle_to(dirv))) < min_angle:
 				return {"code": "ports_full"}
+		# V3.1: no doorway onto equipment (ART-HAB door clearance data, new links only). On an
+		# airlock this covers the chamber and porch side.
+		if not link_angle_ok(room, dirv.angle()):
+			return {"code": "door_blocked", "room": int(room["id"])}
 		if bool(def.get("airlock", false)):
 			var door := Vector2(cos(room["rot"]), sin(room["rot"]))
 			if rad_to_deg(absf(door.angle_to(dirv))) < 55.0:
@@ -263,6 +332,94 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 		return {"code": "slope"}
 	var n10: int = maxi(1, int(ceil(length / 10.0)))
 	return {"code": "ok", "p0": p0, "p1": p1, "length": length, "cost": _scaled(bal["corridor_cost_per_10m"], n10)}
+
+# ---------------------------------------------------------------- door clearance (V3.1)
+## Model-angle ranges (degrees; 0 = model +X, counter-clockwise seen from above, as in
+## content/door_blocked.json from ART-HAB) where a corridor may not attach to a room of this
+## type and size: the doorway would open onto equipment. [] = every angle is free.
+func door_ranges(def_id: String, size: int) -> Array:
+	var rooms: Dictionary = sim.content.get("door_blocked", {})
+	if sim.content["buildings"].get(def_id, {}).has("sizes"):
+		var key: String = "%s_%s" % [def_id, String(sim.sizes.size_name(size)).to_lower()]
+		if rooms.has(key):
+			return rooms[key].get("blocked", [])
+	return rooms.get(def_id, {}).get("blocked", [])
+
+## The model angle (degrees, 0..360) of a world direction for a room turned by `rot`. The
+## view turns a model by -rot about the vertical axis with sim y on its z axis, so model
+## angle = rot - world angle (docs/requests/ART-HAB-to-RENDER.md P3).
+static func model_angle(rot: float, world_angle: float) -> float:
+	return fposmod(rad_to_deg(rot - world_angle), 360.0)
+
+## True when a corridor may leave a room of this type, size and rotation in this world
+## direction (radians).
+func link_angle_ok_for(def_id: String, size: int, rot: float, world_angle: float) -> bool:
+	var ranges: Array = door_ranges(def_id, size)
+	if ranges.is_empty():
+		return true
+	var m: float = model_angle(rot, world_angle)
+	for r in ranges:
+		var a0: float = float(r[0])
+		var a1: float = float(r[1])
+		for w in [m - 360.0, m, m + 360.0]:
+			if w >= a0 and w <= a1:
+				return false
+	return true
+
+func link_angle_ok(room: Dictionary, world_angle: float) -> bool:
+	return link_angle_ok_for(room["def"], int(room.get("size", 1)), float(room["rot"]), world_angle)
+
+## The directions a new corridor may leave a room (placement ghost and link tool): a list
+## of {"from", "to"} world angles in radians, from < to, counter-clockwise (increasing
+## angle); to - from is at most TAU. [{"from": 0, "to": TAU}] when every angle is free, []
+## when none is.
+func link_sectors_for(def_id: String, size: int, rot: float) -> Array:
+	var ranges: Array = door_ranges(def_id, size)
+	if ranges.is_empty():
+		return [{"from": 0.0, "to": TAU}]
+	# Blocked model intervals on 0..360, split where they wrap, sorted and merged.
+	var segs: Array = []
+	for r in ranges:
+		var a0: float = float(r[0])
+		var a1: float = float(r[1])
+		if a1 - a0 >= 360.0:
+			return []
+		a0 = fposmod(a0, 360.0)
+		a1 = a0 + (float(r[1]) - float(r[0]))
+		if a1 > 360.0:
+			segs.append([a0, 360.0])
+			segs.append([0.0, a1 - 360.0])
+		else:
+			segs.append([a0, a1])
+	segs.sort_custom(func(x, y): return x[0] < y[0])
+	var merged: Array = []
+	for sg in segs:
+		if not merged.is_empty() and float(sg[0]) <= float(merged.back()[1]):
+			merged.back()[1] = maxf(float(merged.back()[1]), float(sg[1]))
+		else:
+			merged.append([float(sg[0]), float(sg[1])])
+	# Free model intervals, joined across 360 -> 0.
+	var free: Array = []
+	var at := 0.0
+	for sg in merged:
+		if float(sg[0]) > at:
+			free.append([at, float(sg[0])])
+		at = maxf(at, float(sg[1]))
+	if at < 360.0:
+		if not free.is_empty() and float(free[0][0]) <= 0.0:
+			free[0] = [at - 360.0, float(free[0][1])]
+		else:
+			free.append([at, 360.0])
+	var out: Array = []
+	for f in free:
+		# Model [m0, m1] is world [rot - m1, rot - m0].
+		var w0: float = fposmod(rot - deg_to_rad(float(f[1])), TAU)
+		out.append({"from": w0, "to": w0 + deg_to_rad(float(f[1]) - float(f[0]))})
+	out.sort_custom(func(x, y): return float(x["from"]) < float(y["from"]))
+	return out
+
+func link_sectors(room: Dictionary) -> Array:
+	return link_sectors_for(room["def"], int(room.get("size", 1)), float(room["rot"]))
 
 ## Smallest angle in degrees between two corridors on one room: the general
 ## link_min_angle_deg (28), or the room's own "link_min_angle_deg" (junction 55, so two

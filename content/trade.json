@@ -1,0 +1,18 @@
+{
+  "_note": "Trade prices in credits (docs/V3_1_DESIGN.md section 6.1). base: price of one unit. Each ship moves every price by a spread of up to +/- spread (from a hash of the ship and the item). A ship sells at the price and buys at price x buy_mult. meal_fee: credits a visitor pays for each dish. sells: items a trader can bring; buys: items traders and science ships want.",
+  "spread": 0.25,
+  "buy_mult": 0.8,
+  "meal_fee": 4,
+  "stock_units": [4, 16],
+  "want_units": [4, 16],
+  "start_credits": 100,
+  "items": {
+    "ore": 2, "silicate": 2, "exotic": 40, "metal": 6, "glass": 7, "polymer": 6, "biomass": 2,
+    "spare_parts": 12, "electronics": 18, "hull_plate": 16, "composite": 22, "rocket_fuel": 14,
+    "medicine": 20, "water": 2, "potato": 2, "wheat": 2, "soybean": 3, "tomato": 3, "greens": 2,
+    "mushroom": 3, "algae": 3, "herbs": 4, "meals": 5, "pack_basic": 8, "pack_applied": 22, "pack_exotic": 70
+  },
+  "sells": ["metal", "glass", "polymer", "spare_parts", "electronics", "hull_plate", "composite", "rocket_fuel", "medicine", "meals", "exotic", "pack_basic", "pack_applied"],
+  "buys": ["ore", "silicate", "metal", "glass", "polymer", "biomass", "spare_parts", "electronics", "potato", "wheat", "soybean", "tomato", "greens", "mushroom", "herbs", "meals", "medicine"],
+  "science_buys": ["pack_basic", "pack_applied", "pack_exotic", "exotic"]
+}

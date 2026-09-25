@@ -23,10 +23,13 @@ const SCREENS := {
 	"lost": "res://ui/screens/lost_screen.gd",
 	"title": "res://ui/screens/title_screen.gd",
 	"confirm": "res://ui/screens/confirm_dialog.gd",
+	"trade": "res://ui/screens/trade_screen.gd",
+	"shuttle": "res://ui/screens/shuttle_screen.gd",
 }
 const ALIASES := {"colony": ["dashboard", "overview"], "nutrition": ["dashboard", "food"], "load": ["saveload", "load"],
 	"save": ["saveload", "save"], "tech": ["research", null], "keys": ["help", "keys"], "pause": ["menu", null],
-	"hazards": ["dashboard", "hazards"], "maintenance": ["dashboard", "hazards"], "labs": ["research", "labs"]}
+	"hazards": ["dashboard", "hazards"], "maintenance": ["dashboard", "hazards"], "labs": ["research", "labs"],
+	"visitors": ["colonists", "visitors"]}
 
 const OVER_TITLE := ["settings", "newcolony", "saveload", "awards", "help"]
 

@@ -204,3 +204,135 @@ with no draw calls, when nothing is detected.
   were changing files; the next two exports and the ART-HAB and RENDER builds did not. Not reproduced.
 - Not tested: 1280 x 720 layout of the new panels; the OptionButton popup style of the focus selector;
   a real turret, breach and meteor fragment site in the inspector (none existed in the test colonies).
+## 2026-09-25 — v3.1: sound works, mood music, world sounds, ships, trade, visitors
+
+Contract `docs/V3_1_DESIGN.md` §1, §2, §6.5. The orchestrator's §1 fix (Stream playback,
+`default_bus_layout.tres`) is kept; `ui/audio.gd` still makes a bus only when the layout lacks it.
+
+### Sound and latency (§1)
+
+- `project.godot` `audio/driver/output_latency.web=150` (engine web default 50). Cost: sounds start up
+  to about 150 ms after their cause (the interface click too).
+- Tool `tools/ui/audio_glitch_probe.mjs`: an AudioWorklet tap on every source to the destination counts
+  dropouts (a 128-sample block of silence right after sound). `--burn <ms>` busy-waits each frame (a slow
+  machine); `--stall N` is a positive control. `maxfps` below the display rate silences web audio, so it
+  is not used for this.
+
+  | latency | new colony 42 fps (burn 18) | new colony 30 fps (burn 28) | late save speed 1 | late save speed 4 |
+  |---|---|---|---|---|
+  | 50 (default) | 255 dropouts / 13 s | 324 / 13 s | not measured | not measured |
+  | 75 | 0 | 0 | - | 299 / 21 s (burn 18) |
+  | 100 | 0 | 0 | 58 / 21 s | 161 / 21 s |
+  | 150 (chosen) | 0 | 0 | 5–8 / 21 s | 9–10 / 21 s |
+  | 200 | - | - | 6 / 21 s | 12 / 21 s |
+
+  The dropouts left at 150 ms come from frames of about 140 ms on the late save while the colony runs
+  (`__fh.cmd('spikes')`): not the HUD (same with it hidden), not the simulation (`simprof 300`: mean
+  2.3–2.5 ms, max 18.7 ms per tick). Reported to RENDER (UI-to-RENDER 6). More latency does not help.
+- Gate `tools/audio_probe.mjs build/web_ui`: music 0.5 (default) peak −23.6 dBFS, PASS; music 1.0
+  −18.1 dBFS; music 0 (ambience only) −30.1 dBFS, PASS at −60.
+
+### Music (§2.1)
+
+6 tracks from Eleven Music (`tools/ui/audio-events.json`, 128 kbps): title 105 s, day 1 and 2 165 s,
+night 150 s, tension 105 s, arrival 25 s; 11.4 MB. Levels from ffmpeg volumedetect in
+`assets/audio/manifest.json` ("music" table). Director `ui/music.gd`: title / day / night / tension from
+main twice a second; 4 s crossfades; no restart in the same state; day tracks alternate; a gap of
+5–20 s from a local counter; tension (active hazard not covered, critical alert, breach) holds 30 s after
+the cause clears and loops; `mus_arrival` cue over the music (−10 dB dip) on touchdown.
+Test `tools/ui/test_music.gd`: 13 of 13. Web: title screen `mus_title`, new colony `mus_day_1`.
+
+### World sounds (§2.2)
+
+13 SFX generated. `main.audio.world(name, pos) -> handle`, `world_stop`, `world_move`: full within 12 m of
+the camera focus, silent at 120 m, at most 3 of one name (a nearer one replaces the farthest); loops stop
+at `max_s`. `ui/hud/world_sounds.gd` plays what the simulation decides: airlock phases (seal, pump loop,
+vent / door), meteor and shower strikes, quakes, intercepts, storm loop, ship descent / touchdown /
+take-off. RENDER keeps door_slide and ramp for view events. Test `tools/ui/test_world_audio.gd`: 12 of 12;
+in `test_ships_ui` the real colony played airlock_seal 6, airlock_pump 14, airlock_vent 5, door_slide 4,
+ship_descent 1, ship_touchdown 1 in 60 s.
+
+### Ships, trade, visitors (§6.5) — on SIM's real API
+
+- Traffic panel `ui/hud/traffic_panel.gd` under the hazard panel: kind, phase, countdown (in orbit: time
+  before it leaves), offer chips, Grant / Deny, Settlers, Trade; hidden with no ships.
+- Trade screen `ui/screens/trade_screen.gd`, shuttle dialog `ui/screens/shuttle_screen.gd` (count, beds,
+  oxygen and food checks), Visitors tab in the colonist list, visitor inspector card, credits in the top
+  bar (click: trade), toasts for `ship_*` and `trade`.
+- `__fh`: `traffic`, `traffic <id> grant|deny`, `ship <kind> [s]` (debug), `trade [id]`,
+  `trade <id> buy|sell <item> <n>`; test helpers `findspot`, `cable`, `idof visitor`, `volume`, `music`,
+  `burn`, `spikes`, `simprof`, `prof`.
+- Fixed on the way: compact dialogs no longer slide in (the shuttle dialog stood 827 px above the screen).
+- Test `tools/ui/test_ships_ui.gd`: 14 of 14.
+- Shots: `docs/shots/ui31_traffic_panel.png`, `ui31_shuttle_screen.png`, `ui31_trade_screen.png`,
+  `ui31_visitor_card.png`, `ui31_visitors_tab.png`.
+
+### Not done / not tested
+
+- The shuttle dialog chooses a number of settlers, not persons (SIM takes a count; asked, UI-to-SIM 1).
+- Late-save dropouts (5–10 per 20 s) remain until the ~140 ms view frames are fixed (RENDER).
+- Music and SFX not listened to by a person. HUD draw calls with the traffic panel not measured.
+- No purchase tested (the migrated save has 0 credits); a sale was tested (paid on delivery).
+## 2026-09-25 (later) — window bounds (Paul's request) and door sectors
+
+**Window bounds** ("info and UI windows can not open outside the view panel"). One place:
+`ui/hud/bounds_keeper.gd`, a node that runs last each frame (process_priority 1000). It covers every HUD
+panel, every screen frame and dialog, toasts, medal pop-ups, banners and the placement hint: a window that
+leaves the view moves back inside with an 8 px margin; a window taller than the view gets `fit_height()`
+when it has it. `ui/screens/screen.gd`: content in a scroll area; title, tabs and extras in a sideways clip
+area (the close button stays outside it); `fit_view(vp)` caps compact dialogs to the view width, sizes
+their content area to the view height and centres them; full screens keep margins of at least 8 px.
+Screens open with a fade only (the slide tween fought the clamp). Desktop minimum window 800 x 600 (was
+1024 x 600). No window can be dragged, so there is no drag case; tooltips are placed by the engine.
+
+Test `node tools/godot.mjs script res://tools/ui/test_window_bounds.gd`: **68 of 68 pass** — 1920x1080,
+1280x720 and 800x600 (logical, no stretch scaling: harder than the game); HUD with every panel full
+(mock hazards, traffic, labs), inspector on a structure and a colonist, 4 toasts, medal, banner; 17 screens
+and tabs (each proven open), the confirm dialog; inspector at the 4 corner structures; resize 1920x1080 ->
+800x600 with dashboard, new colony, research and settings open.
+Shots at 800x600 (web, stretch on): `docs/shots/ui31_bounds_hud.png`, `_dashboard`, `_research`,
+`_newcolony`, `_settings`, `_shuttle`.
+
+Correction to the v3.1 section above: the "compact dialogs no longer slide in" change did not apply then
+(a text replace missed); the shuttle dialog was fixed by giving its check lines a width. It is true now.
+
+**Door sectors.** `ui/hud/sector_overlay.gd`: green and red arcs on the wall ring of the room ghost and of
+both rooms of a corridor being drawn, with a dot where the corridor meets the wall. Data
+`hud.data.blocked_sectors(def, size)`: SIM's `sim.place.blocked_sectors` when it exists, else a copy of
+ART-HAB's measurement. The hint shows SIM's refusal sentence; until SIM has the rule it warns. Shots:
+`docs/shots/ui31_link_sectors.png` (the shot shows SIM's current refusal "no corridor port", not a sector
+refusal: that rule is not live yet), `ui31_link_sectors_free.png`, `ui31_room_ghost_sectors.png`.
+## 2026-09-25 (later) — shuttle by person, sectors on SIM's rule
+
+- Shuttle dialog: one check box per settler (role and what it does), All / None / As many as free beds,
+  the bed, oxygen and food checks for the picked number, and a countdown (arrives in; in orbit: SIM `t_s`,
+  time before it leaves). Confirm sends `traffic_answer {id, grant: true, accept_idx}`. The traffic panel's
+  orbit countdown also reads `t_s`.
+- Door sectors: now SIM's own rule, `sim.place.link_angle_ok_for` (the test behind the `door_blocked`
+  refusal; model angle = rot - world angle). The ART-HAB copy `assets/ui/door_blocked_fallback.json` and the
+  interim warning are deleted. `docs/shots/ui31_link_sectors.png` is a real refusal: rooms 47 -> 51 on
+  showcase_v3_late (found by the new `findblocked` command), the red dot on the blocked wall and SIM's sentence
+  "The door would open onto equipment. Choose another side of the room." as the hint.
+- Tests: `test_ships_ui` 17 of 17 (new: one check box per settler, countdown, accept_idx [0] stored by SIM);
+  `test_window_bounds` 68 of 68 after the shuttle change.
+## 2026-09-25 (later) — "Invalid polygon data, triangulation failed" traced and fixed
+
+`ui/poly_guard.gd` `PG.ok(points, tag)` now guards all 19 polygon calls of the interface (charts, widgets,
+title screen, the theme stylebox): fewer than 3 points, area under 0.01 px² or NaN/inf -> the polygon is
+skipped and counted by caller. In `test_window_bounds` (68 of 68 pass) the counts were
+`sparkline.gd:51` 3,223 (a flat series at the chart bottom: zero-height quads) and `bar_chart.gd:60` 3
+(zero-height bars). The engine error no longer appears.
+## 2026-09-25 (later) — the ~61 s long frames; duplicate door_slide
+
+`spikes` now splits each frame over 50 ms into sim / view.sync / HUD / audio script time. The long frames about a
+minute into play are the first night frames at sunset (both showcase saves stand near dusk): 139–147 ms with scripts at
+2–14 / 7–13 / 0–2 / 0 ms. Reproduced paused with a view-only night switch (108 ms once, then none); music and
+ambience changes give none. Not UI work; sent to RENDER with the numbers (UI-to-RENDER, 2026-09-25). No UI change
+could reach the 50 ms target for those frames. The UI's duplicate door_slide at the airlock "open" phase is removed
+(RENDER plays every door). Debug commands added: `mus <state|auto>`.
+## 2026-09-25 (later) — traffic notices
+
+`sim.traffic.notices()` ([{code, count, text}], e.g. "3 tourists have no bed. The fee drops.") shows as an amber line on
+the card of the ship it belongs to (by kind: tourists -> liner; the first such ship landing, landed or boarding), or at
+the bottom of the traffic panel when that ship is not on show; never in the alert list. Tests: `test_ships_ui` 20 of 20
+(new: the notice sits on the mock liner card; no tourist text in the alerts), `test_window_bounds` 68 of 68.

@@ -186,7 +186,7 @@ def bay(plan, hx, hy, dirdeg, i0, tall=True, screen_side=None):
 def habitat(rm):
     s = rm.size
     fu = furniture_of(rm)
-    plan = Plan(rm, clear=0.65 if s < 2 else None)
+    plan = Plan(rm, clear=0.65 if s < 1 else None)
     IK.build_floor_v3(rm, "panel", "radial", ring_step=1.30, radial=16, edge_band=0.64, inner_disc=1.25)
     n = plan.n
     beds = fu["beds"]
@@ -196,7 +196,7 @@ def habitat(rm):
     if s == 0:
         # cabins: four beds along the ring (long side to the wall), a bedside unit at each head, a table between
         half = (BED_L + 0.07 + 0.44) / 2
-        d_out = sqrt(rmax * rmax - half * half)
+        d_out = sqrt(min(rmax, plan.lane_r()) ** 2 - half * half)     # inside the door lanes (2026-09-25)
         rc = d_out - BED_W / 2 - 0.035
         for i in range(beds):
             th = 45.0 + 360.0 * i / beds
@@ -214,7 +214,7 @@ def habitat(rm):
             plan.rect(bx + tx * 0.22, by + ty * 0.22, half, BED_W / 2 + 0.035, th + 90.0, tag="bed%d" % i)
             sx, sy = (rc - BED_BACK) * c + tx * off, (rc - BED_BACK) * sn + ty * off
             plan.anchor("Bed", sx, sy, th + 180.0)
-        r_t, r_c, n_c, a0 = 0.42, 0.76, seats, 102.0
+        r_t, r_c, n_c, a0 = 0.36, 0.68, seats, 105.0 # beds 0.12 m further in (door lanes)
         tables = [(0.0, 0.0, r_t, r_c, n_c, a0)]
         rug_r = 1.0
     else:
@@ -227,7 +227,7 @@ def habitat(rm):
         a_off = {1: 0.0, 2: 0.0, 3: 20.0}[s]
         angs = [a_off + 360.0 * k / ring_n for k in range(ring_n)]
         if s == 1:
-            angs = [20.0, 90.0, 160.0, 250.0]           # three bays in a row, one apart (critic round 7)
+            angs = [10.0, 90.0, 170.0, 260.0]           # three bays in a row, one apart (critic round 7; 1.0 m ring)
         i = 0
         for th in angs:
             bay(plan, r_head * cos(radians(th)), r_head * sin(radians(th)), th, i)
@@ -238,7 +238,7 @@ def habitat(rm):
             if nxt - angs[k] > 90.0:
                 continue                                # an open wedge: no screen
             bis = 0.5 * (angs[k] + nxt)
-            r1, r0 = r_head - 0.05, r_head - (0.80 if nxt - angs[k] < 64.0 else 1.25)
+            r1, r0 = r_head - 0.05, r_head - (0.80 if s == 1 or nxt - angs[k] < 64.0 else 1.25)   # M: 1.0 m ring
             rmid = 0.5 * (r0 + r1)
             mx, my = rmid * cos(radians(bis)), rmid * sin(radians(bis))
             tp = plan.tall(mx, my)
@@ -282,8 +282,8 @@ def habitat(rm):
             k += 1
     if s == 1:
         # the reading corner in the open wedge between the last bay and the first
-        a = 0.5 * (angs[-1] + angs[0] + 360.0)
-        rr = r_head - 1.0
+        a = 0.5 * (angs[-1] + angs[0] + 360.0) - 17.0     # toward the 260 bay: the 10-deg bay stands its bed on this side
+        rr = r_head - 1.1
         x, y = rr * cos(radians(a)), rr * sin(radians(a))
         rr_ = _FAMX.d_reading(plan, x, y, a + 90.0, 1)
         plan.circle(x, y, rr_, tag="reading")
@@ -342,7 +342,7 @@ def build_room_v3(rm):
 import interior_families as _FAM     # noqa: E402  (uses the helpers above)
 _FAMX = _FAM
 INTERIORS.update(_FAM.INTERIORS)
-for _mod in ("interior_fam_farm", "interior_fam_ind", "interior_fam_sci"):
+for _mod in ("interior_fam_farm", "interior_fam_ind", "interior_fam_sci", "interior_airlock_reg"):
     try:
         INTERIORS.update(__import__(_mod).INTERIORS)
     except ModuleNotFoundError as _exc:

@@ -752,7 +752,7 @@ func v3_v2_save(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 3, "migrated to schema 3")
+	t.eq(int(s["schema"]), 4, "migrated to schema 4 (through 3)")
 	t.eq(int(s["map_size"]), 256, "map_size 256")
 	var sim = H.Sim.new()
 	sim.load_state(s)
@@ -772,7 +772,7 @@ func v3_v2_save(t) -> void:
 	var rs := StreamPeerBuffer.new()
 	rs.data_array = saved
 	rs.seek(8)
-	t.eq(rs.get_u32(), 3, "it saves as schema 3")
+	t.eq(rs.get_u32(), 4, "it saves as schema 4 (V3.1)")
 	t.note("%d alive, day %.1f" % [sim.alive_count(), sim.seconds() / 600.0 + 1.0])
 	sim.dispose()
 	t.done()

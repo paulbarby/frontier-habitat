@@ -2,22 +2,39 @@ extends "res://ui/screens/screen.gd"
 ## Colonists: every colonist with role, health, morale, nutrition, what they do and where.
 ## Click a row to select the colonist and move the camera there. Immigration settings
 ## (open, roles, cap) when the simulation has them.
+## Tab Visitors (version 3.1): people from visiting ships, with kind, ship, time left, what they
+## paid, what they do and where. Visitors are not in the colonist list.
 
 var _rows := {}
+var _vrows := {}
 var _clock := 0
 var _sort := "name"
 
 func _init() -> void:
 	icon = "colonists"
 	title = "Colonists"
+	tabs = [["colonists", "Colonists", "colonists"], ["visitors", "Visitors", "people"]]
 
-func build() -> void:
+func _ready() -> void:
+	if typeof(arg) == TYPE_STRING and String(arg) == "visitors":
+		tab = "visitors"
+	super._ready()
+
+func build_tab(id: String, box: VBoxContainer) -> void:
+	_rows = {}
+	_vrows = {}
+	if id == "visitors":
+		_visitors(box)
+	else:
+		_colonists(box)
+
+func _colonists(box: VBoxContainer) -> void:
 	var s = hud.main.sim
 	var d = hud.data
 	# Summary line
 	var alive: Array = []
 	for aid in s.state["agents"]:
-		if s.state["agents"][aid]["state"] == "alive":
+		if s.state["agents"][aid]["state"] == "alive" and not hud.data.is_visitor(s.state["agents"][aid]):
 			alive.append(aid)
 	var roles := {}
 	for aid in alive:
@@ -30,7 +47,7 @@ func build() -> void:
 	set_subtitle("%s  ·  %s  ·  %s" % [Kit.plural(alive.size(), "colonist"), ", ".join(parts), Kit.plural(int(s.state["progress"].get("deaths", 0)), "death")])
 	var body: HBoxContainer = Kit.hbox(16)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(body)
+	box.add_child(body)
 	var left: VBoxContainer = Kit.vbox(4)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(left)
@@ -113,7 +130,7 @@ func _fill() -> void:
 	var d = hud.data
 	var ids: Array = []
 	for aid in s.state["agents"]:
-		if s.state["agents"][aid]["state"] == "alive":
+		if s.state["agents"][aid]["state"] == "alive" and not d.is_visitor(s.state["agents"][aid]):
 			ids.append(aid)
 	ids.sort_custom(func(a, b): return _less(a, b))
 	for aid in ids:
@@ -190,6 +207,7 @@ func refresh() -> void:
 	_clock += 1
 	if _clock % 3 == 0:
 		_update()
+		_update_visitors()
 
 func _update() -> void:
 	var s = hud.main.sim
@@ -204,3 +222,85 @@ func _update() -> void:
 		(r["doing"] as Label).text = String(a.get("goal", ""))
 		var where: String = "Outside" if a["where"] == "out" else String(s.state["buildings"].get(a["bld"], {}).get("name", "a room"))
 		(r["where"] as Label).text = where
+
+# ---------------------------------------------------------------- visitors (version 3.1)
+func _visitors(box: VBoxContainer) -> void:
+	var s = hud.main.sim
+	var d = hud.data
+	var ids: Array = []
+	for aid in s.state["agents"]:
+		var a: Dictionary = s.state["agents"][aid]
+		if a["state"] == "alive" and d.is_visitor(a):
+			ids.append(aid)
+	set_subtitle("%s from visiting ships  ·  credits %d" % [Kit.plural(ids.size(), "visitor"), d.credits()])
+	var head: HBoxContainer = Kit.hbox(10)
+	for c in [["Name", 214], ["Kind", 110], ["Ship", 190], ["Leaves in", 90], ["Paid", 70], ["Health", 80], ["Doing", 240], ["Where", 160]]:
+		var l: Label = Kit.head(c[0], P.TEXT_3, 10)
+		l.custom_minimum_size.x = c[1]
+		head.add_child(l)
+	box.add_child(head)
+	var list: VBoxContainer = Kit.vbox(2)
+	box.add_child(Kit.scroll(list))
+	if ids.is_empty():
+		list.add_child(Kit.wrap("No visitors now. Tourist liners, medical and science ships and inspectors bring them. The traffic panel shows the next ships.", 14, P.TEXT_2))
+		return
+	ids.sort()
+	for aid in ids:
+		var a: Dictionary = s.state["agents"][aid]
+		var id: int = aid
+		var b: Button = Kit.button("", func():
+			host.close(self)
+			hud.main.select("agent", id)
+			hud.main.focus_on(hud.main.sim.state["agents"][id]["pos"]), "", "ListButton")
+		b.custom_minimum_size.y = 34
+		var h: HBoxContainer = Kit.hbox(10)
+		h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		h.offset_left = 8
+		b.add_child(h)
+		var vk: String = String(a.get("vkind", ""))
+		var nb: HBoxContainer = Kit.hbox(8)
+		nb.custom_minimum_size.x = 210
+		nb.add_child(Kit.icon(d.ship_icon(vk), 18, P.GOLD))
+		nb.add_child(Kit.label(String(a["name"]), "", 14, P.TEXT))
+		h.add_child(nb)
+		var cells: Array = []
+		for w in [110, 190, 90, 70, 80, 240, 160]:
+			var l2: Label = Kit.label("", "", 13, P.TEXT_2)
+			l2.custom_minimum_size.x = w
+			l2.clip_text = true
+			h.add_child(l2)
+			cells.append(l2)
+		(cells[0] as Label).text = String(d.ship_kind(vk).get("vname", vk.capitalize()))
+		list.add_child(b)
+		_vrows[id] = cells
+	_update_visitors()
+
+func _update_visitors() -> void:
+	var s = hud.main.sim
+	var d = hud.data
+	for id in _vrows:
+		var a: Dictionary = s.state["agents"].get(id, {})
+		if a.is_empty():
+			continue
+		var cells: Array = _vrows[id]
+		var info: Dictionary = visitor_info(hud, a)
+		(cells[1] as Label).text = String(info["ship"])
+		(cells[2] as Label).text = String(info["leaves"])
+		(cells[3] as Label).text = "%d" % int(info["paid"])
+		(cells[4] as Label).text = "%d" % int(float(a.get("health", 100.0)))
+		(cells[5] as Label).text = String(a.get("goal", ""))
+		(cells[6] as Label).text = "Outside" if a["where"] == "out" else String(s.state["buildings"].get(a.get("bld", -1), {}).get("name", "a room"))
+
+## {ship, leaves, paid} of a visitor, in words (also used by the inspector card).
+static func visitor_info(h, a: Dictionary) -> Dictionary:
+	var d = h.data
+	var sid: int = int(a.get("ship", -1))
+	var row: Dictionary = d.traffic_row(sid) if sid >= 0 else {}
+	var ship: String = "left behind: waits for the next ship" if sid < 0 else (String(row.get("name", "ship %d" % sid)) + (" (%s)" % String(d.SHIP_PHASE.get(String(row.get("phase", "")), "")).to_lower() if not row.is_empty() else ""))
+	var leaves := "-"
+	if not row.is_empty():
+		match String(row.get("phase", "")):
+			"landed": leaves = Kit.clock(float(row.get("t_s", 0.0)))
+			"boarding": leaves = "boarding"
+			"takeoff": leaves = "now"
+	return {"ship": ship, "leaves": leaves, "paid": int(a.get("visit", {}).get("paid", 0))}

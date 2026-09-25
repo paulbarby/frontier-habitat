@@ -7,7 +7,8 @@ extends CanvasLayer
 ## Layout (logical 1600 x 900, anchored, so it holds from 1280 x 720 up):
 ##   top-left KPI bar · top-right time panel · right nav rail · left goals + alerts ·
 ##   bottom-left minimap · bottom build bar · right inspector · top-right toasts ·
-##   hazard forecast right of the goals · hazard banner top centre (version 3).
+##   hazard forecast right of the goals · hazard banner top centre (version 3) ·
+##   ship traffic under the hazard panel (version 3.1).
 ## Screens (research, goals, dashboard, ...) open over the HUD from ui/screens/.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -28,6 +29,9 @@ const ScreenHost = preload("res://ui/screens/screen_host.gd")
 const Watchers = preload("res://ui/hud/watchers.gd")
 const HazardPanel = preload("res://ui/hud/hazard_panel.gd")
 const HazardBanner = preload("res://ui/hud/hazard_banner.gd")
+const TrafficPanel = preload("res://ui/hud/traffic_panel.gd")
+const SectorOverlay = preload("res://ui/hud/sector_overlay.gd")
+const BoundsKeeper = preload("res://ui/hud/bounds_keeper.gd")
 
 const OVERLAYS := ["", "power", "water", "air", "walk", "hazard"]
 
@@ -49,11 +53,15 @@ var screens
 var watchers
 var hazard
 var hazard_banner
+var traffic
+var sectors
+var bounds      # keeps every window inside the view (ui/hud/bounds_keeper.gd)
 var cargo_choice := ""   # supply-run cargo picked in the Meridian panel ("" = the ship's kept choice)
 var kpi := {}
 var _clock := 0.0
 var _beat := 0
 var _hud_visible := true
+var last_ms := 0.0      # time of the last HUD refresh (main.gd `spikes`)
 
 # ---------------------------------------------------------------- construction
 func _ready() -> void:
@@ -70,6 +78,7 @@ func _ready() -> void:
 	hud_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(hud_root)
+	sectors = _add(SectorOverlay.new())   # door sectors while placing rooms and corridors; under every panel
 	minimap = _add(Minimap.new())
 	build_bar = _add(BuildBar.new())
 	hint = _add(PlaceHint.new())
@@ -77,6 +86,7 @@ func _ready() -> void:
 	alerts = _add(AlertsPanel.new())
 	hazard = _add(HazardPanel.new())
 	hazard_banner = _add(HazardBanner.new())
+	traffic = _add(TrafficPanel.new())
 	inspector = _add(Inspector.new())
 	top_bar = _add(TopBar.new())
 	time_panel = _add(TimePanel.new())
@@ -88,6 +98,9 @@ func _ready() -> void:
 	toasts.hud = self
 	root.add_child(toasts)
 	watchers = Watchers.new(self)
+	bounds = BoundsKeeper.new()
+	bounds.hud = self
+	add_child(bounds)
 
 func _add(m: Control) -> Control:
 	m.set("hud", self)
@@ -98,6 +111,11 @@ func _add(m: Control) -> Control:
 func _process(delta: float) -> void:
 	if main == null or main.sim == null:
 		return
+	var t0: int = Time.get_ticks_usec()
+	_refresh(delta)
+	last_ms = float(Time.get_ticks_usec() - t0) / 1000.0
+
+func _refresh(delta: float) -> void:
 	hint.frame()
 	_clock += delta
 	if _clock < 0.2:
@@ -112,6 +130,7 @@ func _process(delta: float) -> void:
 		inspector.refresh()
 		hazard.refresh()
 		hazard_banner.refresh()
+		traffic.refresh()
 		if _beat % 2 == 0:
 			goals.refresh()
 			alerts.refresh()
@@ -126,7 +145,7 @@ func _process(delta: float) -> void:
 func rebuild_all() -> void:
 	kpi = data.kpis() if main != null and main.sim != null else {}
 	screens.close_all()
-	for m in [top_bar, time_panel, nav, goals, alerts, build_bar, inspector, minimap, hazard]:
+	for m in [top_bar, time_panel, nav, goals, alerts, build_bar, inspector, minimap, hazard, traffic]:
 		m.rebuild()
 	watchers.reset()
 
@@ -205,6 +224,20 @@ func cost_text(cost: Dictionary) -> String:
 	for res in cost:
 		parts.append("%d %s" % [int(cost[res]), data.item_name(String(res)).to_lower()])
 	return ", ".join(parts) if not parts.is_empty() else "nothing"
+
+## True while the colony is in danger: a hazard going on now that is not covered, a critical
+## alert, or a hull breach. The music director plays the tension track then (V3_1 §2.1).
+func tension_now() -> bool:
+	for r in data.hazard_active():
+		if not bool(r.get("countered", false)):
+			return true
+	for inc in main.sim.alerts.incidents():
+		var issue: Dictionary = inc.get("issue", {})
+		if not bool(issue.get("live", true)):
+			continue
+		if int(issue.get("severity", 1)) >= 3 or String(issue.get("code", "")) == "breach":
+			return true
+	return false
 
 ## Space on the right that the inspector covers (toasts move left of it).
 func right_inset() -> float:

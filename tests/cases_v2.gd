@@ -128,7 +128,8 @@ func v2_sizes(t) -> void:
 	t.eq(xl["cost"], {"metal": 13, "polymer": 10}, "habitat XL cost = M x 2.6, rounded")
 	t.near(float(xl["power"]), 2.3, 1e-9, "habitat XL power = M x 2.3")
 	t.near(float(sim.sizes.def_for("research_lab", 2)["input_cap"]), 23.0, 1e-9, "unlisted capacity follows capacity_mult (12 x 1.9)")
-	t.eq(sim.sizes.sizes_of("airlock"), [1], "an airlock has one size")
+	t.eq(sim.sizes.sizes_of("junction"), [1], "a junction has one size")
+	t.eq(sim.sizes.sizes_of("airlock"), [1, 2], "an airlock has sizes M and L (V3.1)")
 	t.eq(sim.sizes.allowed("airlock", 0)["code"], "no_size", "no size S for an airlock")
 	t.eq(sim.sizes.allowed("habitat", 0)["code"], "ok", "size S is free")
 	var l: Dictionary = sim.sizes.allowed("habitat", 2)
@@ -710,7 +711,7 @@ func v2_migration(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 3, "migrated to schema 3 (through 2)")
+	t.eq(int(s["schema"]), 4, "migrated to schema 4 (through 2 and 3)")
 	t.eq(int(s["map_size"]), 256, "an old save keeps its 256 m map")
 	var raw_left := 0
 	for iid in s["inventories"]:

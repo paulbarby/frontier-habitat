@@ -252,7 +252,27 @@ func _vis_delta(bt: Dictionary, group: String, d: int) -> void:
 	bt["vis"][group] = v
 	for p in bt["parts"]:
 		if p["part"]["group"] == group:
-			(p["mmi"] as MultiMeshInstance3D).visible = v > 0
+			(p["mmi"] as MultiMeshInstance3D).visible = v > 0 and not far_hidden.has(group)
+
+## Groups not drawn at all while the camera is far (small wall signs): draw calls.
+var far_hidden := {}
+func set_far_hidden(groups: Array, on: bool) -> void:
+	var changed := false
+	for g in groups:
+		if on != far_hidden.has(g):
+			changed = true
+			if on:
+				far_hidden[g] = true
+			else:
+				far_hidden.erase(g)
+	if not changed:
+		return
+	for key in batches:
+		var bt: Dictionary = batches[key]
+		for p in bt["parts"]:
+			var g2: String = p["part"]["group"]
+			if g2 in groups:
+				(p["mmi"] as MultiMeshInstance3D).visible = int(bt["vis"].get(g2, 0)) > 0 and not far_hidden.has(g2)
 
 func _zero(at: Vector3) -> Transform3D:
 	return Transform3D(Basis.from_scale(Vector3(0.0001, 0.0001, 0.0001)), at)

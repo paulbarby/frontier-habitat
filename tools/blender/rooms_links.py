@@ -31,6 +31,10 @@ def suit_rack(n, x, y, yaw):
 
 
 def build_airlock(rm):
+    if getattr(rm, "v3_mode", False):
+        import interior_airlock as IA            # 3.1: suit room -> inner door -> chamber -> outer door -> porch
+        IA.exterior(rm)
+        return
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(pilasters=8, pil_mat="Frame", lamps=(120.0, 240.0), bolts=True, door_w=1.40, floor="grate",
                   kick="Hazard")

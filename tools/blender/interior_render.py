@@ -35,7 +35,10 @@ OUT_DIR = os.path.join(K.ROOT, "art", "interiors")
 SIZE = (1600, 1100)
 SEG = 11.25
 FRAME_HW = 1.10             # the jamb in the wall plane
-HIDE_HW = 1.64              # the room-side pocket housings reach 1.62: hide every segment they touch
+UPPER_OVER_Z = 2.24          # round 12: the upper patch over the housing starts here
+HIDE_HW = 1.76              # 3.1: the frame housing reaches 1.72: hide every segment it touches
+PATCH_HW = 1.70             # 3.1: wall patches start 2 cm inside the housing edge
+BAND_END_HW = 1.77          # 3.1 round 10: the band ends 5 cm before the housing (1.72), with a cap
 GROUND = (0.50, 0.29, 0.16)
 
 
@@ -211,7 +214,7 @@ def link_plan(R, theta):
     for k in range(k0, k1 + 1):
         ks.append(k % 32)
     a0, a1 = k0 * SEG, (k1 + 1) * SEG
-    phi_in = degrees(asin(min(0.99, (FRAME_HW - 0.03) / Rw)))
+    phi_in = degrees(asin(min(0.99, PATCH_HW / Rw)))
     patches = []
     for (pa, pb) in ((a0, theta - phi_in), (theta + phi_in, a1)):
         span = pb - pa
@@ -318,6 +321,46 @@ def place_junction(R, betas, length=4.5, cutaway=True, accent=None):
     return plan
 
 
+DOORWAY_RW = (2.50, 3.25, 4.00, 4.75, 5.50, 6.25, 7.00, 7.75, 8.50, 9.25)
+
+
+def doorway_file(Rw, flat=False):
+    """3.1: the doorway variant whose curved room face is nearest to this wall radius; the flat-lid variant for
+    flat-roofed rooms (podium, drum, setback shells)."""
+    rw = min(DOORWAY_RW, key=lambda q: abs(q - Rw))
+    return ("doorway_flat_r%03d" if flat else "doorway_r%03d") % round(rw * 100)
+
+
+def room_meta(file):
+    """build_report.json -> models[id].v3.decals (upper_z, upper_band, shell, name_sign_deg)."""
+    import json as _j
+    try:
+        for m in _j.load(open(os.path.join(HERE, "build_report.json"), encoding="utf-8"))["models"]:
+            if m["id"] == file:
+                return ((m.get("v3") or {}).get("decals") or {})
+    except Exception:
+        return {}
+    return {}
+
+
+DECAL_MARGIN = 0.40        # 3.1 section 3.3: decals hide over the door opening plus 0.4 m each side
+
+
+def decal_hide(R, theta):
+    """Segments whose decals meet the opening (half width 0.75) plus the margin, at the wall line."""
+    Rw = R - 0.32
+    phi = degrees(asin(min(0.99, (0.75 + DECAL_MARGIN) / Rw)))
+    k0, k1 = int(math.floor((theta - phi) / SEG)), int(math.floor((theta + phi) / SEG))
+    return sorted({k % 32 for k in range(k0, k1 + 1)})
+
+
+def hide_prefix(objs, prefixes):
+    for o in objs:
+        if any(o.name.startswith(p) for p in prefixes):
+            o.hide_render = True
+            o.hide_viewport = True
+
+
 def tint_accent(objs, rgb):
     for o in objs:
         if o.type != "MESH":
@@ -340,32 +383,92 @@ def tint_accent(objs, rgb):
                 o.data.materials[i] = mm
 
 
-def place_link(R, theta, length=4.5, cutaway=True, open_doors=False, accent=None):
+def place_link(R, theta, length=4.5, cutaway=True, open_doors=False, accent=None, upper_z=None, flat_roof=False,
+               upper_band=None):
     """Room centre at the origin.  Doorway, patches, corridor stub and ribs for one link."""
     plan = link_plan(R, theta)
     Rw = plan["rw"]
     rot = Matrix.Rotation(radians(theta), 4, "Z")
     Md = rot @ Matrix.Translation((Rw, 0, 0))
-    hide_d = ("FrameTop", "DoorLTop", "DoorRTop", "Sign") if cutaway else ()
-    d_objs = import_at("doorway", Md, hide=hide_d)
+    hide_d = ("FrameTop", "DoorLTop", "DoorRTop", "Sign", "Status") if cutaway else ()
+    d_objs = import_at(doorway_file(Rw, flat=bool(upper_z) or flat_roof), Md, hide=hide_d)
     if accent:
         tint_accent(d_objs, accent)
     if open_doors:
+        t = 1.0 if open_doors is True else float(open_doors)      # 0 closed .. 1 open (0.75 m per leaf)
         for o in d_objs:
             b = o.name.split(".")[0]
             if b in ("DoorL", "DoorLTop"):
-                o.matrix_world = o.matrix_world @ Matrix.Translation((0, -0.75, 0))
+                o.matrix_world = o.matrix_world @ Matrix.Translation((0, -0.75 * t, 0))
             if b in ("DoorR", "DoorRTop"):
-                o.matrix_world = o.matrix_world @ Matrix.Translation((0, 0.75, 0))
+                o.matrix_world = o.matrix_world @ Matrix.Translation((0, 0.75 * t, 0))
+    phi_b = degrees(asin(min(0.99, BAND_END_HW / Rw)))
     for (pa, pb) in plan["patches"]:
-        span = pb - pa
-        mid = 0.5 * (pa + pb)
-        chord = 2 * Rw * sin(radians(span / 2)) + 0.01
-        rr = Rw * cos(radians(span / 2))
-        M = Matrix.Rotation(radians(mid), 4, "Z") @ Matrix.Translation((rr, 0, 0)) @ Matrix.Diagonal((1, chord, 1, 1))
-        po = import_at("wall_patch", M)
-        if accent:
-            tint_accent(po, accent)
+        # 3.1: the band ends 5 cm before the housing: a plain slice there, a cap at the band's end
+        pieces = []
+        for (a0, a1) in ((pa, pb),):
+            lo_, hi_ = theta - phi_b, theta + phi_b
+            if a1 <= lo_ or a0 >= hi_:
+                pieces.append((a0, a1, "wall_patch"))
+            else:
+                if a0 < lo_:
+                    pieces.append((a0, lo_, "wall_patch"))
+                pieces.append((max(a0, lo_), min(a1, hi_), "wall_patch_plain"))
+                if a1 > hi_:
+                    pieces.append((hi_, a1, "wall_patch"))
+        for (a0, a1, fname) in pieces:
+            span = a1 - a0
+            if span <= 1e-3:
+                continue
+            mid = 0.5 * (a0 + a1)
+            chord = 2 * Rw * sin(radians(span / 2)) + 0.01
+            rr = Rw * cos(radians(span / 2))
+            M = Matrix.Rotation(radians(mid), 4, "Z") @ Matrix.Translation((rr, 0, 0)) @ Matrix.Diagonal((1, chord, 1, 1))
+            po = import_at(fname, M)
+            if accent:
+                tint_accent(po, accent)
+    for sgn in (-1, 1):
+        a = theta + sgn * phi_b
+        import_at("band_cap", Matrix.Rotation(radians(a), 4, "Z") @ Matrix.Translation((Rw, 0, 0)))
+    if upper_z:
+        # flat-walled rooms: the upper wall beside the housing (1.40 .. deck) and over it (housing top .. deck)
+        z0, z1 = upper_z
+        spans = [(pa, pb, z0) for (pa, pb) in plan["patches"]]
+        phi_h = degrees(asin(min(0.99, PATCH_HW / Rw)))
+        if z1 > UPPER_OVER_Z:
+            # round 12: from 2.24 m (the housing's rounded top corners start at 2.26), so no gap shows beside the
+            # corners; inside the housing the patch is hidden by the housing and its flat lid
+            spans.append((theta - phi_h, theta + phi_h, UPPER_OVER_Z))
+        for (pa, pb, zb) in spans:
+            span = pb - pa
+            mid = 0.5 * (pa + pb)
+            chord = 2 * Rw * sin(radians(span / 2)) + 0.01
+            rr = Rw * cos(radians(span / 2))
+            M = (Matrix.Rotation(radians(mid), 4, "Z") @ Matrix.Translation((rr, 0, zb)) @
+                 Matrix.Diagonal((1, chord, max(0.01, z1 - zb), 1)))
+            po = import_at("wall_patch_upper", M)
+            if accent:
+                tint_accent(po, accent)
+        if upper_band:
+            # the upper band carried over the patch spans to a cap 5 cm before the housing
+            b0, b1 = upper_band
+            for (pa, pb) in plan["patches"]:
+                for (a0, a1) in ((pa, min(pb, theta - phi_b)), (max(pa, theta + phi_b), pb)):
+                    if a1 - a0 <= 1e-3:
+                        continue
+                    span = a1 - a0
+                    mid = 0.5 * (a0 + a1)
+                    chord = 2 * Rw * sin(radians(span / 2)) + 0.01
+                    rr = Rw * cos(radians(span / 2))
+                    M = (Matrix.Rotation(radians(mid), 4, "Z") @ Matrix.Translation((rr, 0, b0)) @
+                         Matrix.Diagonal((1, chord, b1 - b0, 1)))
+                    po = import_at("upper_band", M)
+                    if accent:
+                        tint_accent(po, accent)
+            for sgn in (-1, 1):
+                a = theta + sgn * phi_b
+                import_at("band_cap", Matrix.Rotation(radians(a), 4, "Z") @
+                          Matrix.Translation((Rw, 0, 0.5 * (b0 + b1) - 1.03)))
     # corridor: the game draws it from the room radius R to the far room, 0.25 m longer at each end
     start = R - 0.25
     Mc = rot @ Matrix.Translation((start + length / 2, 0, 0.05)) @ Matrix.Diagonal((length, 1, 1, 1))
@@ -461,9 +564,23 @@ def room_points(R, extra=(), top=1.4):
 
 
 def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, size=(1600, 1100), elevation=56.0,
-              azimuth=-42.0, margin=1.04, open_doors=False, focus=None, samples=64, lamps=True, top_z=None):
+              azimuth=-42.0, margin=1.04, open_doors=False, focus=None, samples=64, lamps=True, top_z=None,
+              hide_extra=(), marker_z=None):
     setup(size[0], size[1], night=night, samples=samples)
-    hide = K.LEVELS + (("Roof",) if cutaway else ())
+    if marker_z is not None:
+        bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.12, minor_radius=0.025, location=(0.0, 0.0, marker_z),
+                                         major_segments=96, minor_segments=6)
+        ring = bpy.context.active_object
+        ring.name = "HeightMarker"
+        mk = bpy.data.materials.new("HeightMarker")
+        mk.use_nodes = True
+        bsdf = mk.node_tree.nodes.get("Principled BSDF")
+        bsdf.inputs["Base Color"].default_value = (1.0, 0.04, 0.04, 1.0)
+        for key, val in (("Emission Color", (1.0, 0.04, 0.04, 1.0)), ("Emission Strength", 2.0)):
+            if key in bsdf.inputs:
+                bsdf.inputs[key].default_value = val
+        ring.data.materials.append(mk)
+    hide = K.LEVELS + (("Roof",) if cutaway else ()) + tuple(hide_extra)
     objs = import_at(file, hide=hide)
     extra = []
     acc = None
@@ -479,9 +596,39 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         extra += [Vector(((R + 2.0) * cos(radians(th)), (R + 2.0) * sin(radians(th)), 0.0)) for th in links]
         links = ()
     for th in links:
-        plan = place_link(R, th, cutaway=cutaway, open_doors=open_doors, accent=acc)
-        hide_match(objs, {"Wall_%02d" % k for k in plan["hide"]})
+        meta = room_meta(file)
+        plan = place_link(R, th, cutaway=cutaway, open_doors=open_doors, accent=acc,
+                          upper_z=None if cutaway else meta.get("upper_z"),
+                          flat_roof=meta.get("shell") in ("podium", "drum", "setback"),
+                          upper_band=None if cutaway else meta.get("upper_band"))
+        hide_match(objs, {"Wall_%02d" % k for k in plan["hide"]} | {"Upper_%02d" % k for k in plan["hide"]})
+        hide_prefix(objs, ["Decal_%02d_" % k for k in decal_hide(R, th)])
         extra.append(Vector(((R + 2.6) * cos(radians(th)), (R + 2.6) * sin(radians(th)), 0.0)))
+    # 3.1 decals follow their source object: Decal_<seg>_L3 shows with L3, Decal_<seg>_Roof with the roof
+    for o in objs:
+        nm = o.name.split(".")[0]
+        if nm.startswith("Decal_") and nm.rsplit("_", 1)[-1] in hide:
+            o.hide_render = True
+            o.hide_viewport = True
+        if nm.startswith("Upper_") and "Roof" in hide:
+            o.hide_render = True
+            o.hide_viewport = True
+    if cutaway:
+        # 3.1: every "...Top" object (door housings and leaves above the wall top) lifts with the roof
+        for o in objs:
+            nm_ = o.name.split(".")[0]
+            if nm_.endswith(("Top", "Status")) or nm_.startswith(("PressureLight_", "Beacon")):
+                o.hide_render = True
+                o.hide_viewport = True
+    if open_doors:
+        # the airlock's own doors (InnerDoor*, OuterDoor*): open along their local Y (their frame is the room frame)
+        t = 1.0 if open_doors is True else float(open_doors)
+        for o in objs:
+            nm = o.name.split(".")[0]
+            if nm.startswith(("InnerDoorL", "OuterDoorL")):
+                o.matrix_world = Matrix.Translation((0, -0.75 * t, 0)) @ o.matrix_world
+            if nm.startswith(("InnerDoorR", "OuterDoorR")):
+                o.matrix_world = Matrix.Translation((0, 0.75 * t, 0)) @ o.matrix_world
     # crops on the trays, as the game places them (crop origin at the soil surface, z 0.56)
     tid_ = file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file
     if tid_ in ("greenhouse", "fungus_farm"):
@@ -535,6 +682,8 @@ def main():
     size = K.SIZE_KEYS.index(file.rsplit("_", 1)[-1]) if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else 1
     b = K.load_buildings().get(tid, {})
     R = float(b.get("sizes", {}).get("radius", [b.get("radius", 5.5)] * 4)[size]) if b.get("sizes") else float(b.get("radius", 5.5))
+    if file == "airlock_r28":
+        R = 2.8                      # old-save airlock (rooms_build.AIRLOCK_R_OLD)
     os.makedirs(OUT_DIR, exist_ok=True)
     base = os.path.join(OUT_DIR, file)
     if "jtest" in only:
@@ -575,6 +724,45 @@ def main():
         focus = [c + Vector((dx, dy, dz)) for dx in (-1.6, 1.6) for dy in (-1.6, 1.6) for dz in (0.0, 1.4)]
         shot_room(file, R, base + "_detail.png", size=(1400, 900), elevation=40.0, azimuth=th + 180.0 + 30.0,
                   focus=focus, margin=1.0)
+    if "cutproof" in only:
+        # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
+        # the cutaway may stand above the ring
+        Rw = R - 0.32
+        focus = [Vector((x, y, z)) for x in (-R, R) for y in (-R, R) for z in (0.0, 3.2)]
+        for az in (-90.0, -30.0):
+            shot_room(file, R, base + "_cut_side%s.png" % ("" if az == -90.0 else "_b"), size=(1400, 760),
+                      elevation=5.0, azimuth=az, focus=focus, margin=1.02, lamps=True, marker_z=K.WALL_TOP)
+    if "plights" in only:
+        # round 12: the pressure lights (8 cm lamps on a dark plate) over the inner door, roof off, full height
+        foc = [Vector((x, y, z)) for x in (-1.6, 0.9) for y in (-1.3, 1.3) for z in (1.4, 2.9)]
+        shot_room(file, R, base + "_pressure_lights.png", cutaway=False, hide_extra=("Roof",), size=(1200, 800),
+                  elevation=18.0, azimuth=180.0 + 25.0, focus=foc, margin=1.0)
+    if "airlock31" in only:
+        for tag, t in (("closed", 0.0), ("half", 0.5), ("open", 1.0)):
+            shot_room(file, R, os.path.join(OUT_DIR, "airlock_%s.png" % tag), open_doors=t or None, size=(1200, 860),
+                      elevation=52.0, azimuth=-60.0)
+            shot_room(file, R, os.path.join(OUT_DIR, "airlock_%s_roof.png" % tag), open_doors=t or None,
+                      cutaway=False, size=(1200, 860), elevation=24.0, azimuth=-25.0, lamps=False, margin=1.02)
+        shot_room(file, R, os.path.join(OUT_DIR, "airlock_links.png"), links=links, size=(1200, 860), elevation=50.0,
+                  azimuth=-60.0)
+        shot_room(file, R, os.path.join(OUT_DIR, "airlock_links_roof.png"), links=links, cutaway=False,
+                  size=(1200, 860), elevation=30.0, azimuth=150.0, lamps=False, margin=1.02)
+    if "door31" in only:
+        # 3.1 door kit: closed, half-open, open; cutaway and roof on
+        th = links[0]
+        Rw = R - 0.32
+        c = Vector((Rw * cos(radians(th)), Rw * sin(radians(th)), 0))
+        focus = [c + Vector((dx, dy, dz)) for dx in (-1.9, 1.9) for dy in (-1.9, 1.9) for dz in (0.0, 2.7)]
+        for tag, t in (("closed", 0.0), ("half", 0.5), ("open", 1.0)):
+            shot_room(file, R, os.path.join(OUT_DIR, "door31_%s.png" % tag), links=[th], open_doors=t or None,
+                      size=(1200, 860), elevation=34.0, azimuth=th + 180.0 - 35.0, focus=focus, margin=1.0)
+            shot_room(file, R, os.path.join(OUT_DIR, "door31_%s_roof.png" % tag), links=[th], open_doors=t or None,
+                      cutaway=False, size=(1200, 860), elevation=22.0, azimuth=th - 38.0, focus=focus, margin=1.0,
+                      lamps=False)
+            shot_room(file, R, os.path.join(OUT_DIR, "door31_%s_inside.png" % tag), links=[th], open_doors=t or None,
+                      cutaway=False, size=(1200, 860), elevation=16.0, azimuth=th + 180.0 + 12.0,
+                      focus=[c + Vector((dx, dy, dz)) for dx in (-2.8, 0.3) for dy in (-1.9, 1.9) for dz in (0.0, 2.6)],
+                      margin=1.0, lamps=False, hide_extra=("Roof",))
     if "close" in only:
         th = links[0]
         Rw = R - 0.32

@@ -1,4 +1,5 @@
 extends Button
+const PG = preload("res://ui/poly_guard.gd")
 ## One research node: branch icon, name, cost or progress, a progress ring, and the state
 ## as a word: DONE, ACTIVE, QUEUED n, READY, LOCKED. Tier-5 special nodes are gold and show
 ## their item needs. Drawn by hand for a clean, dense tree.
@@ -81,7 +82,8 @@ func _draw() -> void:
 	var cols := PackedColorArray()
 	for q in pts:
 		cols.append(top.lerp(bot, clampf(q.y / maxf(1.0, size.y), 0.0, 1.0)))
-	draw_polygon(pts, cols)
+	if PG.ok(pts, "tech_node.gd:84"):
+		draw_polygon(pts, cols)
 	# Glow for active and selected
 	if _state == "active" or _selected:
 		var gp: PackedVector2Array = FhStyle.shape(r.grow(3.0), PackedFloat32Array([9, 0, 9, 0]))

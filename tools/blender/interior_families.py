@@ -305,8 +305,11 @@ def lounge(rm):
     plan = Plan(rm)
     IK.build_floor_v3(rm, "panel", "radial", ring_step=1.4, radial=12, edge_band=0.64, inner_disc=1.0)
     rmax = plan.r_max
-    mx = -(rmax - 0.30)
-    media_unit(plan, mx, 0.0, 0.0, w=1.6 + 0.2 * s)
+    w_media = 1.6 + 0.2 * s
+    # the media unit's footprint (0.26 deep, w/2 + 0.35 wide) stays inside r_max: the door lane (2026-09-25)
+    rl = min(rmax, plan.lane_r())
+    mx = -(sqrt(max(0.3, rl ** 2 - (w_media / 2 + 0.35) ** 2)) - 0.28)
+    media_unit(plan, mx, 0.0, 0.0, w=w_media)
     if s == 0:        # 3 seats
         island(plan, mx + 1.55, 0.0, 0.0, [("sofa", 3, 0.95, 0.0, 180.0)], rug=(1.2, 1.35), table=(0.45, 0.30))
         # (critic round 7) the armchair pair, facing the table from both sides (no anchors: the room has 3 seats)
@@ -610,6 +613,14 @@ def med_bed(plan, x, y, yaw, i, arch=False):
     plan.anchor("Bed", x + c2 * off, y + s2 * off, yaw)
 
 
+def _rect_gap(cx, cy, hx, hy, yaw, x, y):
+    """Distance from the point (x, y) to an oriented rectangle (0 inside)."""
+    c, s_ = cos(radians(yaw)), sin(radians(yaw))
+    lx = c * (x - cx) + s_ * (y - cy)
+    ly = -s_ * (x - cx) + c * (y - cy)
+    return hypot(max(abs(lx) - hx, 0.0), max(abs(ly) - hy, 0.0))
+
+
 def iv_stand(n, x, y):
     n.vcyl(x, y, F, F + 0.03, 0.18, seg=6, mat="Frame", cap0=False)
     n.vcyl(x, y, F + 0.03, F + 1.75, 0.015, seg=4, mat="Metal", cap0=False)
@@ -626,16 +637,18 @@ def medical(rm):
     rmax = plan.r_max
     nb = fu["beds"]
     # a row of treatment bays on a chord in the north, heads to the north, curtains between them
-    pitch = 1.70
-    half_row = (nb - 1) * pitch / 2 + 0.75
+    pitch = 1.70 if nb < 6 else 1.55                # XL: six bays on the chord inside r_max
+    gap = (0.45 if nb < 6 else 0.52) if s >= 1 else 0.0     # extra room beside the arch bay
+    half_row = (nb - 1) * pitch / 2 + 0.75 + gap / 2
     head_y = sqrt(max(0.3, (rmax - 0.1) ** 2 - half_row ** 2)) - 0.30
     cy = head_y - BED_L / 2 - 0.12
-    arch_i = 0 if s >= 1 else -1
+    # the arch bay (footprint 1.12 wide) in the middle of the row, where the chord is longest (the door lane)
+    arch_i = nb // 2 if s >= 1 else -1
     for i in range(nb):
-        x = (i - (nb - 1) / 2) * pitch
+        x = (i - (nb - 1) / 2) * pitch - gap / 2 + (gap if i >= arch_i >= 0 else 0.0)
         med_bed(plan, x, cy, 0.0, i, arch=(i == arch_i))
         if i < nb - 1:
-            cx_ = x + pitch / 2 + (0.12 if i != arch_i else 0.25)
+            cx_ = x + max(pitch / 2 + (0.12 if i != arch_i else 0.25), 0.95) + (gap / 2 if i == arch_i - 1 else 0.0)
             tp = plan.tall(cx_, cy + 0.45)
             with at(tp, cx_, cy + 0.45, 90.0):
                 FU.privacy_screen(tp, 1.2, h=1.35, panel="Frost", edge="Frame")
@@ -664,7 +677,9 @@ def medical(rm):
                     gx, gy = rr * cos(radians(a)), rr * sin(radians(a))
                     yaw = a + 90.0
                     if plan.fits(gx, gy, hx_, hy_, yaw) and rect_ok(plan, gx, gy, yaw, hx_ + 0.25, hy_ + 0.25) \
-                            and all(hypot(gx - q[1][0], gy - q[1][1]) > max(hx_, hy_) + 0.6 for q in rm.anchors
+                            and all(hypot(gx - q[1][0], gy - q[1][1]) > max(hx_, hy_) + 0.6 and
+                                    _rect_gap(gx, gy, hx_ + 0.25, hy_ + 0.25, yaw, q[1][0], q[1][1]) >= 0.40
+                                    for q in rm.anchors
                                     if q[0].startswith(("Anchor_Bed", "Anchor_Seat", "Anchor_Stand", "Anchor_Work"))):
                         fn(plan, gx, gy, yaw)
                         done = True
@@ -691,7 +706,7 @@ def scanner(plan, x, y, yaw):
         bbox(n, -1.2, 1.2, -0.28, 0.28, F + 0.60, F + 0.72, "Hull", bevel=0.03)
         bbox(n, -0.9, 1.1, -0.22, 0.22, F + 0.72, F + 0.76, "Accent", bevel=0.01)
         plate_x(n, 0.451, -0.30, 0.30, F + 1.30, F + 1.50, "Screen")
-    rect_at(plan, n, 0.0, 0.0, 1.25, 0.85, tag="scanner")
+        rect_at(plan, n, 0.0, 0.0, 1.25, 0.85, tag="scanner")    # (was outside the frame)
 
 
 def supply_island(plan, x, y, yaw):
@@ -709,7 +724,7 @@ def supply_island(plan, x, y, yaw):
         n.vcyl(0.0, 0.72, F + 0.92, F + 1.20, 0.02, seg=6, mat="Metal", cap0=False)
         bbox(n, -0.02, 0.02, -0.55, -0.15, F + 0.92, F + 1.25, "Frame")
         plate_x(n, 0.021, -0.53, -0.17, F + 0.98, F + 1.22, "Screen", facing=1)
-    rect_at(plan, n, 0.0, 0.0, 0.45, 0.90, tag="supply")
+        rect_at(plan, n, 0.0, 0.0, 0.45, 0.90, tag="supply")     # (was outside the frame: registered at 0, 0)
 
 
 def d_glovebox(plan, x, y, yaw, k):
@@ -863,6 +878,8 @@ def kitchen(rm):
     rmax = plan.r_max
     gx = -(rmax - 0.80)                      # the galley on the west chord (under the chimney)
     L = min(3.4, 2 * sqrt(max(0.3, (rmax - 0.1) ** 2 - (abs(gx) + 0.45) ** 2)))
+    # the galley's footprint (back 0.77 m behind gx) stays inside the door lanes (2026-09-25)
+    gx = -(sqrt(max(0.3, (min(rmax, plan.lane_r()) - 0.02) ** 2 - (L / 2 + 0.02) ** 2)) - 0.77)
     cook_line(plan, gx, 0.0, 0.0, L, cooktops=(1, 2, 2, 3)[s], works=fu["work_slots"])
     if s >= 2:                               # a prep island
         ix = gx + 1.75
@@ -874,8 +891,14 @@ def kitchen(rm):
         plan.rect(ix, 0.0, 0.45, 1.05, 0.0, tag="island")
     spec = {0: [2], 1: [3], 2: [3, 2], 3: [3, 3, 2]}[s]
     x0 = (0.75, 1.0, 1.5, 0.75)[s]
-    for j, nper in enumerate(spec):
-        mess_table(plan, x0 + max(2.25, plan.r_max * 0.36) * j, 0.0, 0.0, nper, seat=("Cushion", "Fabric")[j % 2])
+    if s >= 2:
+        # L / XL: the tables turn along X and stand side by side, inside r_max (the door lane, 2026-09-25)
+        xc = (2.0, 2.3)[s - 2]
+        for j, nper in enumerate(spec):
+            mess_table(plan, xc, (j - (len(spec) - 1) / 2) * 2.3, 90.0, nper, seat=("Cushion", "Fabric")[j % 2])
+    else:
+        for j, nper in enumerate(spec):
+            mess_table(plan, x0 + max(2.25, plan.r_max * 0.36) * j, 0.0, 0.0, nper, seat=("Cushion", "Fabric")[j % 2])
     fill_decor(plan, ["racks", "planter", "cart"], seed=61 + s, align=0.0)
     plan.wall_items(["fridge", "shelf", "fridge", "planter", "cab_box", "panel", "shelf", "tap"],
                     wall_set(plan), open_every=3, seed=61 + s, depth_of=DEPTHS)

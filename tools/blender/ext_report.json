@@ -2408,49 +2408,52 @@
   {
    "id": "landing_pad",
    "kind": "exterior",
-   "footprint": 9.0,
-   "tris": 3052,
-   "tris_base": 3052,
+   "footprint": 11.5,
+   "tris": 6326,
+   "tris_base": 6326,
    "budget": 9000,
    "tris_by_object": {
-    "Base": 2470,
-    "Lights": 582
+    "Base": 5592,
+    "Lights": 734
    },
    "bbox_min": [
-    -8.9,
-    -8.9,
+    -11.3,
+    -11.4,
     0.0
    ],
    "bbox_max": [
-    8.9,
-    8.9,
-    4.68
+    11.3,
+    11.3,
+    4.425
    ],
-   "max_radius": 8.9,
+   "max_radius": 11.42,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 161892,
+   "file_size": 339800,
    "objects": [
+    "Anchor_Fuel",
     "Anchor_Service",
+    "Anchor_Ship",
     "Base",
     "Lights"
    ],
    "materials": [
     "Accent",
+    "BeaconAmber",
+    "FloorDark",
     "Frame",
-    "Frost",
     "Hazard",
     "Hull",
     "HullDark",
     "Light",
-    "Neon",
+    "Metal",
     "Rubber",
-    "Solar",
+    "SuitAccent",
     "Window"
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.3,
+   "seconds": 0.7,
    "also": []
   },
   {

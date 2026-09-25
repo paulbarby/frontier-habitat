@@ -1,4 +1,5 @@
 extends "res://ui/charts/chart_base.gd"
+const PG = preload("res://ui/poly_guard.gd")
 ## Donut chart. segments: [{name, value, color}]. The centre shows `center_value` and
 ## `center_label`; the legend lists every segment with its share. Hover highlights one.
 
@@ -80,4 +81,5 @@ func _arc_band(c: Vector2, r0: float, r1: float, a0: float, a1: float, col: Colo
 	var half: int = n + 1
 	for i in n:
 		var q := PackedVector2Array([pts[i], pts[i + 1], pts[2 * half - 2 - i], pts[2 * half - 1 - i]])
-		draw_colored_polygon(q, col)
+		if PG.ok(q, "donut_chart.gd:83"):
+			draw_colored_polygon(q, col)

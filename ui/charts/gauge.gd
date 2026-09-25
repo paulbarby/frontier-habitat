@@ -1,4 +1,5 @@
 extends "res://ui/charts/chart_base.gd"
+const PG = preload("res://ui/poly_guard.gd")
 ## Half-ring gauge: value between vmin and vmax, with coloured zones and a needle.
 ## zones: [{to, color}] in ascending order (the last zone ends at vmax).
 
@@ -58,5 +59,7 @@ func _band(c: Vector2, r0: float, r1: float, a0: float, a1: float, col: Color) -
 	for i in n:
 		var b0: float = lerpf(a0, a1, float(i) / n)
 		var b1: float = lerpf(a0, a1, float(i + 1) / n)
-		draw_colored_polygon(PackedVector2Array([c + Vector2(cos(b0), sin(b0)) * r1, c + Vector2(cos(b1), sin(b1)) * r1,
+		if PG.ok(PackedVector2Array([c + Vector2(cos(b0), sin(b0)) * r1, c + Vector2(cos(b1), sin(b1)) * r1,
+			c + Vector2(cos(b1), sin(b1)) * r0, c + Vector2(cos(b0), sin(b0)) * r0]), "gauge.gd:61"):
+			draw_colored_polygon(PackedVector2Array([c + Vector2(cos(b0), sin(b0)) * r1, c + Vector2(cos(b1), sin(b1)) * r1,
 			c + Vector2(cos(b1), sin(b1)) * r0, c + Vector2(cos(b0), sin(b0)) * r0]), col)

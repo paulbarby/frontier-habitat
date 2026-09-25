@@ -1,0 +1,164 @@
+{
+  "date": "2026-09-25T12:22:11",
+  "fps": 30,
+  "label": "before",
+  "minutes_per_save": 10.0,
+  "pass": false,
+  "saves": {
+    "scene_final.fhsave": {
+      "a_by_mode": {
+        "follow:in": 28,
+        "follow:out": 39
+      },
+      "a_by_room": {
+        "airlock": 51,
+        "cantina": 6,
+        "greenhouse": 6,
+        "habitat": 1,
+        "research_assembler": 1,
+        "research_lab": 2
+      },
+      "a_wall": 67,
+      "b_by_room": {
+        "airlock": 553,
+        "algae_bioreactor": 150,
+        "atmo_processor": 28,
+        "bio_lab": 89,
+        "cantina": 120,
+        "cold_storage": 25,
+        "greenhouse": 150,
+        "habitat": 12,
+        "kitchen": 127,
+        "lounge": 209,
+        "medical": 18,
+        "oxygen_plant": 26,
+        "refinery": 8,
+        "research_assembler": 4,
+        "research_lab": 165,
+        "storehouse": 5,
+        "water_recycler": 5
+      },
+      "b_furniture": 1694,
+      "b_furniture_pct": 3.311,
+      "c_by_what": {
+        "lander": 121
+      },
+      "c_outside_intrusion": 121,
+      "d_by_clip": {
+        "cheer:follow": 85,
+        "cheer:to_anchor": 3,
+        "idle:at_anchor": 52,
+        "idle:follow": 4161,
+        "idle:to_anchor": 113,
+        "idle_look:follow": 2412,
+        "idle_look:to_anchor": 35,
+        "jump:follow": 429,
+        "work_bench:follow": 1627
+      },
+      "d_slide": 8488,
+      "d_teleport": 429,
+      "e_by_mode": {
+        "at_anchor": 8320,
+        "follow": 71082,
+        "to_anchor": 5493
+      },
+      "e_void": 84895,
+      "frames": 4500,
+      "game_minutes": 10.0,
+      "inside_samples": 51163,
+      "outside_samples": 47612,
+      "samples": 204456,
+      "save": "scene_final.fhsave"
+    },
+    "showcase_v3_late.fhsave": {
+      "a_by_mode": {
+        "follow:in": 126,
+        "follow:out": 5
+      },
+      "a_by_room": {
+        "bio_lab": 5,
+        "cold_storage": 2,
+        "glassworks": 4,
+        "greenhouse": 3,
+        "habitat": 29,
+        "kitchen": 49,
+        "medical": 21,
+        "polymer_plant": 1,
+        "research_assembler": 2,
+        "research_lab": 1,
+        "storehouse": 14
+      },
+      "a_wall": 131,
+      "b_by_room": {
+        "airlock": 476,
+        "cantina": 47,
+        "cold_storage": 156,
+        "electronics_fab": 40,
+        "fungus_farm": 422,
+        "glassworks": 213,
+        "greenhouse": 1714,
+        "habitat": 1562,
+        "junction": 4,
+        "kitchen": 1283,
+        "lounge": 125,
+        "medical": 62,
+        "mine": 570,
+        "oxygen_plant": 305,
+        "polymer_plant": 342,
+        "refinery": 876,
+        "research_assembler": 218,
+        "research_lab": 879,
+        "storehouse": 1736,
+        "water_recycler": 78,
+        "workshop": 33
+      },
+      "b_furniture": 11141,
+      "b_furniture_pct": 4.986,
+      "c_by_what": {
+        "wind_turbine": 55
+      },
+      "c_outside_intrusion": 55,
+      "d_by_clip": {
+        "idle:at_anchor": 8,
+        "idle:follow": 216,
+        "idle:to_anchor": 21,
+        "idle_look:follow": 144,
+        "idle_look:to_anchor": 3,
+        "jump:follow": 1214,
+        "work_bench:follow": 325
+      },
+      "d_slide": 717,
+      "d_teleport": 1214,
+      "e_by_mode": {
+        "follow": 477,
+        "to_anchor": 35
+      },
+      "e_void": 512,
+      "frames": 4500,
+      "game_minutes": 10.0,
+      "inside_samples": 223452,
+      "outside_samples": 27852,
+      "samples": 295020,
+      "save": "showcase_v3_late.fhsave"
+    }
+  },
+  "speed": 4,
+  "targets": {
+    "a_wall": 0,
+    "b_furniture_pct_max": 0.2,
+    "c_outside_intrusion": 0,
+    "d_slide": 0
+  },
+  "total": {
+    "a_wall": 198,
+    "b_furniture": 12835,
+    "b_furniture_pct": 4.674,
+    "c_outside_intrusion": 176,
+    "d_slide": 9205,
+    "d_teleport": 1643,
+    "e_void": 85407,
+    "inside_samples": 274615,
+    "samples": 499476
+  },
+  "wall_ms": 119855
+}

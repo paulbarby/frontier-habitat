@@ -467,14 +467,15 @@ def transitions_sheet(rows_spec, title):
 CHAINS = [("stand to sit", "idle", "sit_enter", "sit_idle"), ("sit to stand", "sit_idle", "sit_exit", "idle"),
           ("stand to kneel", "idle", "kneel_enter", "repair_kneel"), ("kneel to stand", "repair_kneel", "kneel_exit", "idle"),
           ("stand to lie", "idle", "lie_enter", "sleep"), ("lie to stand", "sleep", "lie_exit", "idle"),
-          ("collapse", "idle", "collapse", "dead"), ("cheer", "idle", "cheer", "idle")]
+          ("collapse", "idle", "collapse", "dead"), ("cheer", "idle", "cheer", "idle"),
+          ("suit swap", "idle", "suit_swap", "idle")]
 
 
 def all_sheets(facts, clips_meta, meta):
     out = []
     order = ["idle", "idle_look", "walk", "run", "carry_idle", "carry_walk", "work_console", "work_bench", "talk",
              "injured_walk", "kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type",
-             "sit_exit", "lie_enter", "sleep", "lie_exit", "collapse", "dead", "cheer"]
+             "sit_exit", "lie_enter", "sleep", "lie_exit", "collapse", "dead", "cheer", "suit_swap"]
     variants = [v for v in ("suit", "indoor") if facts.get(v)]
     for v in variants:
         glb = os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % v)
@@ -500,4 +501,212 @@ def all_sheets(facts, clips_meta, meta):
         for v in variants:
             spec.append((v, os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % v), label, steps))
     out.append(transitions_sheet(spec, "transitions  s = suit  i = indoor"))
+    if all(os.path.exists(os.path.join(N.MODEL_DIR, "astronaut_visitor_%s.glb" % v)) for v in ("suit", "indoor")):
+        out.append(visitor_lineup())
+        out.append(visitor_turnarounds())
+    return out
+
+
+# --------------------------------------------------------------------------------------
+# visitors (V3_1 section 6.4): the tint rule of the game reproduced in Blender (albedo replaced per material group)
+# --------------------------------------------------------------------------------------
+def _material_rgb(m, rgb):
+    nt = m.node_tree
+    if nt is None:
+        return
+    done = False
+    for n in nt.nodes:
+        if n.bl_idname == "ShaderNodeMix":
+            for i in (6, 7):
+                if not n.inputs[i].is_linked:
+                    n.inputs[i].default_value = (*rgb, 1.0)
+                    done = True
+        elif n.bl_idname == "ShaderNodeMixRGB":
+            for i in (1, 2):
+                if not n.inputs[i].is_linked:
+                    n.inputs[i].default_value = (*rgb, 1.0)
+                    done = True
+        elif n.bl_idname == "ShaderNodeRGB":
+            n.outputs[0].default_value = (*rgb, 1.0)
+            done = True
+    bsdf = next((n for n in nt.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"), None)
+    if not done and bsdf is not None and not bsdf.inputs["Base Color"].is_linked:
+        bsdf.inputs["Base Color"].default_value = (*rgb, 1.0)
+
+
+def import_visitor_model(variant):
+    """The body file plus the visitor attachments, the attachments re-bound to the body rig."""
+    rig, objs = import_astronaut(os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % variant))
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=os.path.join(N.MODEL_DIR, "astronaut_visitor_%s.glb" % variant))
+    new = [o for o in bpy.data.objects if o not in before]
+    R.ao_materials()
+    vis = [o for o in new if o.type == "MESH" and o.name.split(".")[0].startswith("Vis_")]
+    for o in vis:
+        mw = o.matrix_world.copy()
+        o.parent = rig
+        o.matrix_world = mw
+        for md in o.modifiers:
+            if md.type == "ARMATURE":
+                md.object = rig
+    for o in new:
+        if o not in vis:
+            bpy.data.objects.remove(o)
+    # own material copies, so each figure can carry its own colours
+    meshes = [o for o in objs if o.type == "MESH"] + vis
+    for o in meshes:
+        for sl in o.material_slots:
+            if sl.material is not None:
+                sl.material = sl.material.copy()
+    return rig, meshes
+
+
+def vis_shown(nm, kind, head):
+    """The game's rule: Vis_<kind> for that kind; a trailing _h<digits> limits it to those heads."""
+    if kind is None:
+        return False
+    rest = nm[len("Vis_"):]
+    if rest == kind:
+        return True
+    if rest.startswith(kind + "_h") and rest[len(kind) + 2:].isdigit():
+        return str(head) in rest[len(kind) + 2:]
+    return False
+
+
+ROLE_ACCENT = (1.0, 0.346, 0.011)      # colonist technician #ff9f1c (linear), the default look
+
+
+def apply_look(meshes, variant, look, head=0, tone=3):
+    """look = None (colonist technician) or an index into npc_visitors.LOOKS."""
+    import npc_visitors as V
+    cols = {}
+    kind = None
+    if look is not None:
+        L = V.LOOKS[look]
+        kind = L["kind"]
+        cols = {k: V.hex_lin(h) for k, h in L[variant].items()}
+    for o in meshes:
+        nm = o.name.split(".")[0]
+        if nm.startswith("Vis_"):
+            o.hide_render = not vis_shown(nm, kind, head)
+        elif nm in HEADS:
+            o.hide_render = nm != "Head_%d" % head
+        for sl in o.material_slots:
+            m = sl.material
+            if m is None:
+                continue
+            base = m.name.split(".")[0]
+            if base in cols:
+                _material_rgb(m, cols[base])
+            elif base == "SuitAccent":
+                _material_rgb(m, ROLE_ACCENT)
+            elif base == "Skin":
+                _material_rgb(m, SKIN_TONES[tone])
+            elif base == "Hair":
+                _material_rgb(m, HAIR_COLOURS[(tone + head * 3) % 4])
+
+
+LINEUP = [None, 0, 1, 2, 3, 4, 5, 6]
+
+
+def _lineup_label(look):
+    import npc_visitors as V
+    if look is None:
+        return "colonist"
+    L = V.LOOKS[look]
+    return L["kind"] + (" %d" % L["set"] if L["kind"] == "tourist" else "")
+
+
+def _place_line(figs, az, spacing):
+    a = radians(az)
+    right = Vector((-sin(a), cos(a), 0.0))
+    for k, rig in enumerate(figs):
+        rig.location = right * ((k - (len(figs) - 1) / 2) * spacing)
+        set_clip(rig, "idle", 0)
+    bpy.context.view_layer.update()
+
+
+def visitor_lineup():
+    """Every visitor look next to a colonist, suit and indoor: close (front and back) and at game size."""
+    _tmpdir()
+    rows = []
+    spacing = 0.95
+    for variant in ("suit", "indoor"):
+        setup(1800, 520)
+        figs = []
+        for k, look in enumerate(LINEUP):
+            rig, meshes = import_visitor_model(variant)
+            apply_look(meshes, variant, look, head=k % 4, tone=(k * 5 + 1) % 6)
+            figs.append(rig)
+        for az, lab in ((-35, "front"), (145, "back")):
+            _place_line(figs, az, spacing)
+            bpy.context.scene.render.resolution_x = 1800
+            bpy.context.scene.render.resolution_y = 520
+            clear_cameras()
+            camera((0.0, 0.0, 0.92), az, 8, 18.5, lens=85)
+            rows.append([("%s %s" % (variant, lab), render(os.path.join(TMP, "lineup_%s_%s.png" % (variant, lab))))])
+        # game distance: the game camera (50 deg down), ortho, a 1.8 m figure = px pixels
+        _place_line(figs, -40, spacing)
+        for px in (55, 30):
+            span = spacing * len(figs) + 0.6
+            W = int(span * px / 1.8)
+            H = int(2.6 * px / 1.8)
+            bpy.context.scene.render.resolution_x = W
+            bpy.context.scene.render.resolution_y = H
+            clear_cameras()
+            camera((0.0, 0.0, 0.9), -40, 50, 60.0, lens=85, ortho=span)
+            raw = render(os.path.join(TMP, "lineup_game_%s_%d.png" % (variant, px)))
+            f = max(1, 1500 // W)
+            rows.append([("%s at %d px (x%d, game camera)" % (variant, px, f),
+                          upscale_nearest(raw, os.path.join(TMP, "lineup_game_up_%s_%d.png" % (variant, px)), f))])
+    out = os.path.join(N.ART_DIR, "visitors_lineup.png")
+    compose(rows, out, title="visitor looks, left to right: " + ", ".join(_lineup_label(x) for x in LINEUP))
+    return out
+
+
+VIS_CLOSE = {
+    "suit": {"trader": ((0.10, 0.0, 1.10), -30, 10, 2.3), "tourist": ((0.10, 0.0, 1.25), -25, 8, 2.2),
+             "medical": ((-0.15, 0.0, 1.45), 150, 12, 2.2), "science": ((-0.2, 0.1, 1.65), 140, 12, 2.4),
+             "inspector": ((0.0, 0.0, 1.62), 70, 22, 2.1)},
+    "indoor": {"trader": ((0.05, 0.0, 1.20), -35, 8, 2.0), "tourist": ((0.08, 0.0, 1.35), -30, 6, 1.9),
+               "medical": ((0.05, 0.0, 1.35), -40, 8, 1.8), "science": ((0.05, 0.0, 1.20), -35, 8, 2.4),
+               "inspector": ((0.0, 0.0, 1.62), -35, 22, 1.5)},
+}
+
+
+def visitor_turnarounds():
+    """Each visitor kind, suit and indoor: four sides, a close-up of the attachment, the game size."""
+    import npc_visitors as V
+    _tmpdir()
+    rows = []
+    for variant in ("suit", "indoor"):
+        setup(300, 440)
+        rig, meshes = import_visitor_model(variant)
+        set_clip(rig, "idle", 0)
+        for ki, kind in enumerate(V.KINDS):
+            look = next(i for i, L in enumerate(V.LOOKS) if L["kind"] == kind)
+            apply_look(meshes, variant, look, head=(ki % 4) if kind != "inspector" else 1, tone=(ki * 2 + 1) % 6)
+            row = []
+            bpy.context.scene.render.resolution_x = 300
+            bpy.context.scene.render.resolution_y = 440
+            for az in (-30, 60, 150, 240):
+                clear_cameras()
+                camera((0.0, 0.0, 0.93), az, 6.0, 4.6, lens=85)
+                row.append(("%s %s az %d" % (variant[0], kind, az),
+                            render(os.path.join(TMP, "vt_%s_%s_%d.png" % (variant, kind, az)))))
+            tgt, az, el, dist = VIS_CLOSE[variant][kind]
+            bpy.context.scene.render.resolution_x = 440
+            clear_cameras()
+            camera(tgt, az, el, dist, lens=85)
+            row.append(("close-up", render(os.path.join(TMP, "vt_%s_%s_close.png" % (variant, kind)))))
+            H = int(55 / 0.62)
+            bpy.context.scene.render.resolution_x = H
+            bpy.context.scene.render.resolution_y = H
+            clear_cameras()
+            camera((0.0, 0.0, 0.9), -40, 50, 60.0, lens=85, ortho=1.8 / 0.62)
+            raw = render(os.path.join(TMP, "vt_%s_%s_game.png" % (variant, kind)))
+            row.append(("55 px x5", upscale_nearest(raw, os.path.join(TMP, "vt_%s_%s_game_up.png" % (variant, kind)), 5)))
+            rows.append(row)
+    out = os.path.join(N.ART_DIR, "visitors_turnaround.png")
+    compose(rows, out, title="visitor kinds: four sides, attachment close-up, game size (tourist set 0)")
     return out

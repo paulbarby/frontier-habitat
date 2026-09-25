@@ -38,7 +38,7 @@ import sys
 import json
 import math
 import time
-from math import sin, cos, pi, radians, degrees, hypot, sqrt, asin
+from math import sin, cos, pi, radians, degrees, hypot, sqrt, asin, atan2
 from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +59,7 @@ POCKET_HW = 1.62            # the housing reaches this far from the door axis (t
 MAIN = (-0.38, 0.06)        # the jamb in the wall plane
 LEAF = (-0.47, -0.41)
 LEAF_W = 0.79
-COLLAR = (0.02, 0.46)
+COLLAR = (0.04, 0.46)      # 3.1: starts on the corridor face of the frame housing (no gap)
 C_OUT = (1.26, 1.46)       # collar outer: wall half width, arch rise above z 1.0
 C_IN = (1.00, 1.20)        # collar inner = corridor inside
 C_WALL = 1.00              # the corridor wall height
@@ -174,115 +174,52 @@ def collar(lo, hi):
              sy * C_OUT[0] + 0.04 if sy > 0 else -C_IN[0], 0.0, 0.10, "Frame", mats={"-z": None})
 
 
-def jamb(lo, hi, sy):
-    """One side (sy = -1 or +1): the jamb in the wall plane and ONE clean room-side profile, 12 cm deep, that is
-    also the pocket housing of the leaf (open leaves slide into it; nothing shows outside the wall on S rooms).
-    Split at WALL_TOP."""
-    y0, y1 = (OPEN_HW, FRAME_HW) if sy > 0 else (-FRAME_HW, -OPEN_HW)
-    p0, p1 = (OPEN_HW, POCKET_HW) if sy > 0 else (-POCKET_HW, -OPEN_HW)
-    yi = sy * OPEN_HW
-    bbox(lo, MAIN[0], MAIN[1], y0, y1, 0.0, WALL_TOP, "Hull")
-    # above the wall top the jamb stays under the entry hood: its top follows the corridor arch
-    ya_, yb_ = sorted((abs(y0), abs(y1)))
-    ys = [ya_ + (yb_ - ya_) * k / 4 for k in range(5)]
-    prof = [(sy * ys[0], WALL_TOP), (sy * ys[-1], WALL_TOP)] + [(sy * y, arch_z(y) - 0.03) for y in reversed(ys)]
-    hi.prism_x(prof, MAIN[0], HOOD_X[1] - 0.01, "Hull")
-    # the pocket housing (below the wall top only): back plate, front plate, far end; the slot faces the opening
-    xa, xb = POCKET
-    bbox(lo, xa, xa + 0.03, p0, p1, 0.0, WALL_TOP, "Hull")                 # room face
-    bbox(lo, xb - 0.03, xb, p0, p1, 0.0, WALL_TOP, "Hull")                 # back
-    pe0, pe1 = (POCKET_HW - 0.04, POCKET_HW) if sy > 0 else (-POCKET_HW, -POCKET_HW + 0.04)
-    bbox(lo, xa + 0.03, xb - 0.03, pe0, pe1, 0.0, WALL_TOP, "Hull")        # far end
-    bbox(lo, xa, xb, p0, p1, WALL_TOP - 0.03, WALL_TOP, "Frame")          # cap
-    # room face: a recessed panel line and a Frame edge on the slot side
-    plate_x(lo, xa - 0.002, min(p0, p1) + 0.05, max(p0, p1) - 0.05, 0.18, WALL_TOP - 0.05, "HullDark", facing=-1)
-    plate_x(lo, xa - 0.004, min(p0, p1) + 0.08, max(p0, p1) - 0.08, 0.21, WALL_TOP - 0.05, "Hull", facing=-1)
-    plate_x(lo, xa - 0.005, min(p0, p1) + 0.08, max(p0, p1) - 0.08, WALL_TOP - 0.20, WALL_TOP - 0.15, "Accent",
-            facing=-1)
-    # slot edges (Frame) on the opening face
-    for part, za, zb in ((lo, F, WALL_TOP),):
-        for (ea, eb) in ((POCKET[0], POCKET[0] + 0.03), (POCKET[1] - 0.03, POCKET[1])) +                 (((MAIN[0], MAIN[1]),) if part is lo else ()):
-            plate_y(part, yi - sy * 0.002, ea, eb, za, zb, "Frame", facing=-sy)
-    bbox(lo, POCKET[0] + 0.03, POCKET[1] - 0.03, min(p0, p1), max(p0, p1), 0.0, F + 0.004, "Frame", mats={"-z": None})
+# --------------------------------------------------------------------------------------
+# 3.1 DOOR KIT (docs/V3_1_DESIGN.md section 3): a solid frame housing with the pockets inside it, full-height
+# opaque leaves, a threshold plate, a header status light, solid caps at the cutaway height.
+# --------------------------------------------------------------------------------------
+
+def sbox(lo, hi, x0, x1, y0, y1, z0, z1, mat, cap="HullDark", bevel=0.0, mats=None):
+    """A solid box split at WALL_TOP: the lower half gets a solid cap face (the cutaway cut), the upper half keeps
+    its own bottom face; each half is a closed box."""
+    if z1 <= WALL_TOP + 1e-6:
+        bbox(lo, x0, x1, y0, y1, z0, z1, mat, bevel=bevel, mats=mats)
+        return
+    if z0 >= WALL_TOP - 1e-6:
+        bbox(hi, x0, x1, y0, y1, z0, z1, mat, bevel=bevel, mats=mats)
+        return
+    m_lo = dict(mats or {})
+    m_lo["+z"] = cap
+    bbox(lo, x0, x1, y0, y1, z0, WALL_TOP, mat, mats=m_lo)
+    bbox(hi, x0, x1, y0, y1, WALL_TOP, z1, mat, mats=mats)
 
 
-def leaf(lo, hi, sy):
-    """Sliding leaf on the sy side, closed position.  Meeting edge at y = 0."""
-    ya, yb = (0.0, LEAF_W) if sy > 0 else (-LEAF_W, 0.0)
-    x0, x1 = LEAF
-    bbox(lo, x0, x1, ya, yb, F + 0.005, WALL_TOP, "Hull")
-    bbox(lo, x0 - 0.008, x1 + 0.008, -0.012 if sy < 0 else 0.0, 0.012 if sy > 0 else 0.0, F + 0.005, WALL_TOP, "Rubber")
-    # the upper leaf: square top to the door top, its outer corner cut along the corridor arch
-    ys = [LEAF_W * k / 6 for k in range(7)]
-    top = [min(DOOR_TOP - 0.005, arch_z(y) - 0.04) for y in ys]
-    prof = [(0.0, WALL_TOP), (sy * LEAF_W, WALL_TOP)] + [(sy * y, t) for y, t in reversed(list(zip(ys, top)))]
-    hi.prism_x(prof, x0, x1, "Hull")
-    zr = min(DOOR_TOP - 0.005, arch_z(0.012) - 0.04)
-    bbox(hi, x0 - 0.008, x1 + 0.008, -0.012 if sy < 0 else 0.0, 0.012 if sy > 0 else 0.0, WALL_TOP, zr, "Rubber")
-    for fx, face in ((x0 - 0.003, -1), (x1 + 0.003, 1)):
-        yA, yB = ya + 0.05, yb - 0.05
-        plate_x(lo, fx, yA, yB, 0.95, 1.03, "Trim", facing=face)
-        for k in range(5):
-            w = (yB - yA) / 5.0
-            a, b = yA + w * k, yA + w * (k + 1)
-            m = "Hazard" if k % 2 == 0 else "Rubber"
-            if face > 0:
-                lo.quad((fx, a, 0.22), (fx, b, 0.22), (fx, b, 0.36), (fx, a, 0.36), m)
-            else:
-                lo.quad((fx, b, 0.22), (fx, a, 0.22), (fx, a, 0.36), (fx, b, 0.36), m)
-        yv0, yv1 = (0.14, 0.34) if sy > 0 else (-0.34, -0.14)
-        plate_x(hi, fx + face * 0.001, yv0 - 0.03, yv1 + 0.03, 1.52, 2.04, "Frame", facing=face)
-        plate_x(hi, fx + face * 0.003, yv0, yv1, 1.55, 2.01, "Visor", facing=face)
-        for z in (0.62, 1.30):
-            plate_x(lo, fx, yA, yB, z, z + 0.015, "Frame", facing=face)
+def splate_x(lo, hi, x, y0, y1, z0, z1, mat, facing=1):
+    if z0 < WALL_TOP:
+        plate_x(lo, x, y0, y1, z0, min(z1, WALL_TOP), mat, facing=facing)
+    if z1 > WALL_TOP:
+        plate_x(hi, x, y0, y1, max(z0, WALL_TOP), z1, mat, facing=facing)
 
 
-def sill(lo, lights):
-    x0, x1 = -0.70, COLLAR[1]
-    bbox(lo, x0, x1, -FRAME_HW, FRAME_HW, -0.05, F + 0.012, "FloorDark", bevel=0.01)
-    plate_z(lo, F + 0.0135, LEAF[0] - 0.02, LEAF[1] + 0.02, -OPEN_HW, OPEN_HW, "Frame")
-    for k in range(8):
-        ya = -OPEN_HW + 1.5 * k / 8.0
-        yb = ya + 1.5 / 8.0
-        lo.quad((x0 + 0.03, ya, F + 0.0135), (x0 + 0.12, ya, F + 0.0135), (x0 + 0.12, yb, F + 0.0135),
-                (x0 + 0.03, yb, F + 0.0135), "Hazard" if k % 2 == 0 else "Rubber")
+def threshold(lo, x1=None):
+    x0, x1 = HX[0] - 0.14, (COLLAR[1] if x1 is None else x1)
+    bbox(lo, x0, x1, -OPEN_HW - 0.02, OPEN_HW + 0.02, -0.05, F + 0.012, "FloorDark", bevel=0.01)
+    plate_z(lo, F + 0.0135, SLOT[0], SLOT[1], -OPEN_HW, OPEN_HW, "Frame")
+    for (xa, xb) in ((x0 + 0.03, x0 + 0.12), (x1 - 0.12, x1 - 0.03)):
+        for k in range(8):
+            ya = -OPEN_HW + 1.5 * k / 8.0
+            yb = ya + 1.5 / 8.0
+            lo.quad((xa, ya, F + 0.0135), (xb, ya, F + 0.0135), (xb, yb, F + 0.0135), (xa, yb, F + 0.0135),
+                    "Hazard" if k % 2 == 0 else "Rubber")
 
 
-def status_strips(lights):
-    """Green status strips on the inner (opening) faces only: one on each pocket housing, one on each jamb."""
-    for sy in (-1, 1):
-        yi = sy * (OPEN_HW - 0.004)
-        plate_y(lights, yi, POCKET[0] + 0.045, POCKET[0] + 0.075, 0.45, 1.36, "Glow", facing=-sy)
-        plate_y(lights, yi, MAIN[0] + 0.18, MAIN[0] + 0.21, 0.45, 1.36, "Glow", facing=-sy)
-
-
-def header(hi):
-    """(critic round 4) The entry hood: the corridor's outer U profile carried inward from the collar to the pocket
-    plane (x -0.52 .. 0.02), above the wall top only.  On a small dome it reads as the corridor tube entering the
-    dome; everything above the wall top stays inside it.  A short track over the opening."""
-    x0, x1 = HOOD_X
-    out = u_contour(*C_OUT)
-    inn = u_contour(C_OUT[0] - 0.05, C_OUT[1] - 0.05)
-    n_ = len(out)
-    for i in range(n_ - 1):
-        (ya, za), (yb, zb) = out[i], out[i + 1]
-        (yc, zc), (yd, zd) = inn[i], inn[i + 1]
-        if min(za, zb) < WALL_TOP - 1e-4 or min(zc, zd) < WALL_TOP - 0.06:
-            continue
-        wo = radial_want(0.5 * (ya + yb), 0.5 * (za + zb))
-        oquad(hi, (x1, ya, za), (x0, ya, za), (x0, yb, zb), (x1, yb, zb), "Hull", wo, smooth=True)
-        oquad(hi, (x0, yc, zc), (x1, yc, zc), (x1, yd, zd), (x0, yd, zd), "HullDark", -wo, smooth=True)
-        oquad(hi, (x0, yb, zb), (x0, ya, za), (x0, yc, zc), (x0, yd, zd), "Frame", (-1, 0, 0))
-    bbox(hi, POCKET[0], POCKET[1], -0.62, 0.62, DOOR_TOP - 0.05, DOOR_TOP, "Frame")
-
-
-def signs(sg):
-    """Exit signs: a lit plate with a door-and-arrow pictogram (no text)."""
-    def pictogram(xf, facing, zc, w, h):
-        with sg.at(T(xf, 0, zc), RZ(0.0 if facing > 0 else 180.0)):
+def signs31(sg, rw=None):
+    """Exit signs: on the room face of the +Y housing block (turned with the curved face) and on the corridor face
+    of the collar top."""
+    def pictogram(xf, facing, yc, zc, w, h):
+        with sg.at(T(xf, yc, zc), RZ(0.0 if facing > 0 else 180.0)):
             bbox(sg, -0.03, 0.0, -w / 2 - 0.02, w / 2 + 0.02, -h / 2 - 0.02, h / 2 + 0.02, "Frame")
             plate_x(sg, 0.002, -w / 2, w / 2, -h / 2, h / 2, "Screen")
-            # door outline (left) and an arrow (right), in LightStrip
             dx = -w * 0.22
             for (y0, y1, z0, z1) in ((dx - 0.05, dx + 0.05, h * 0.30, h * 0.36), (dx - 0.05, dx - 0.035, -h * 0.34, h * 0.36),
                                      (dx + 0.035, dx + 0.05, -h * 0.34, h * 0.36)):
@@ -290,23 +227,301 @@ def signs(sg):
             ax = w * 0.14
             plate_x(sg, 0.004, ax - 0.10, ax + 0.04, -0.012, 0.012, "LightStrip")
             sg.tri((0.004, ax + 0.03, -0.055), (0.004, ax + 0.11, 0.0), (0.004, ax + 0.03, 0.055), "LightStrip")
-    with sg.at(T(0, 0.93, 0)):
-        pictogram(MAIN[0] - 0.006, -1, 1.60, 0.22, 0.12)
-    pictogram(COLLAR[1] + 0.003, 1, 2.30, 0.44, 0.13)
+    ys = 1.20
+    slope = degrees(atan2(x_room(ys + 0.01, rw) - x_room(ys - 0.01, rw), 0.02))
+    with sg.at(T(x_room(ys, rw) - 0.006, ys, 0.0), RZ(-slope)):
+        pictogram(0.0, -1, 0.0, 1.66, 0.40, 0.15)
+    pictogram(COLLAR[1] + 0.003, 1, 0.0, 2.30, 0.44, 0.13)
 
 
-def build_doorway():
-    parts = {n: P(n) for n in ("Frame", "FrameTop", "DoorL", "DoorLTop", "DoorR", "DoorRTop", "Lights", "Sign")}
-    lo, hi = parts["Frame"], parts["FrameTop"]
-    sill(lo, parts["Lights"])
+# --------------------------------------------------------------------------------------
+# 3.1 DOOR KIT, round 10 (docs/V3_1_DESIGN.md section 3; critic round 10): the room face of the housing follows
+# the wall radius, rounded top corners, 8 cm chamfers at the ends, a curved hood over the top that carries the dome
+# line; a clear green status strip; kick plates and a chevron strip at the meeting edge.
+# --------------------------------------------------------------------------------------
+HX = (-0.56, 0.04)          # housing depth at the door axis: room face .. corridor face (the collar starts at 0.04)
+HY = 1.72                   # housing half width (pockets to 1.66, open leaves to 1.54)
+HT = 2.56                   # housing top at the door axis
+TOP_R = 0.30                # rounded top corners (elevation)
+CHAMFER = 0.08
+SLOT = (-0.31, -0.21)       # the pocket slot (the leaves run in it; hidden inside the housing)
+LEAF31 = (-0.29, -0.23)     # leaf plane: 6 cm thick
+POCKET_END = 1.66
+OPEN_TRAVEL = 0.75
+DOORWAY_RW = (2.50, 3.25, 4.00, 4.75, 5.50, 6.25, 7.00, 7.75, 8.50, 9.25)   # doorway_r<rw>.glb variants
+
+
+def x_room(y, rw):
+    """Room face of the housing at lateral offset y: 0.56 m inside the wall line, following the wall radius."""
+    if not rw:
+        return HX[0]
+    r = rw + HX[0]
+    return sqrt(max(0.0, r * r - y * y)) - rw
+
+
+def top_z(y):
+    """Housing top at |y|: flat, with rounded outer corners (TOP_R)."""
+    a = abs(y)
+    y0 = HY - TOP_R
+    if a <= y0:
+        return HT
+    d = min(TOP_R, a - y0)
+    return HT - TOP_R + sqrt(max(0.0, TOP_R * TOP_R - d * d))
+
+
+def solid_loft(p, sections, mat_fn, cap_mats=("HullDark", "HullDark")):
+    """Closed solid through convex sections (lists of points, same count, in order round the section).  Faces are
+    turned outward (away from the local section centroid).  mat_fn(edge, k) -> material; cap_mats for the two
+    end sections (None = no cap)."""
+    ids = [[p.v(pt) for pt in sec] for sec in sections]
+    cents = [sum((Vector(pt) for pt in sec), Vector((0, 0, 0))) / len(sec) for sec in sections]
+    n = len(sections[0])
+    for k in range(len(sections) - 1):
+        c = 0.5 * (cents[k] + cents[k + 1])
+        for i in range(n):
+            j = (i + 1) % n
+            a, b = Vector(sections[k][i]), Vector(sections[k][j])
+            cc, d = Vector(sections[k + 1][j]), Vector(sections[k + 1][i])
+            nv = (b - a).cross(d - a)
+            if nv.length < 1e-12:
+                nv = (cc - b).cross(a - b)
+            fc = (a + b + cc + d) / 4
+            quad = [ids[k][i], ids[k][j], ids[k + 1][j], ids[k + 1][i]]
+            if nv.dot(fc - c) < 0:
+                quad.reverse()
+            m = mat_fn(i, k)
+            if m:
+                p.f(quad, m)
+    for (end, other, cm) in ((0, 1, cap_mats[0]), (len(sections) - 1, len(sections) - 2, cap_mats[1])):
+        if not cm:
+            continue
+        sec = sections[end]
+        a, b, c3 = Vector(sec[0]), Vector(sec[1]), Vector(sec[2])
+        nv = (b - a).cross(c3 - a)
+        face = list(ids[end])
+        if nv.dot(cents[end] - cents[other]) < 0:
+            face.reverse()
+        p.f(face, cm)
+
+
+def _side_sections(sy, rw, z0, z1f, steps=10):
+    """Sections (x-z rectangles) along y for one side block, from the opening edge to the end (with a chamfer)."""
+    xs_c = HX[1]
+    ys = [OPEN_HW + (HY - CHAMFER - OPEN_HW) * t / steps for t in range(steps + 1)] + [HY]
+    secs = []
+    for y in ys:
+        ch = CHAMFER if y > HY - 1e-6 else 0.0
+        xr = x_room(y, rw) + ch
+        xc = xs_c - ch
+        zt = z1f(y) - (ch if z1f(y) > WALL_TOP + 0.05 and z0 >= WALL_TOP - 1e-6 else 0.0)
+        yy = sy * y
+        secs.append([(xr, yy, z0), (xc, yy, z0), (xc, yy, zt), (xr, yy, zt)])
+    return secs
+
+
+CAP_T = 0.025        # critic round 13: the cutaway cap plate, 2.5 cm thick, 8 mm proud of the housing faces
+CAP_OUT = 0.008
+
+
+def cap_plate(cap, sy, rw):
+    """The clean cutaway cap of one side block (object FrameCap / <prefix>FrameCap): a Frame plate WALL_TOP - CAP_T
+    .. WALL_TOP + 0.004, 8 mm proud of the housing faces, on the same outline (curved room face, chamfered end)."""
+    secs = []
+    for sec in _side_sections(sy, rw, WALL_TOP - CAP_T, lambda y: WALL_TOP + 0.004):
+        (xr, yy, z0), (xc, _, _), _, _ = sec
+        yy2 = yy + sy * (CAP_OUT if abs(yy) >= HY - 1e-6 else 0.0)
+        secs.append([(xr - CAP_OUT, yy2, z0), (xc + CAP_OUT, yy2, z0), (xc + CAP_OUT, yy2, WALL_TOP + 0.004),
+                     (xr - CAP_OUT, yy2, WALL_TOP + 0.004)])
+    # critic round 14: a light Trim plate with the Frame-coloured top inset 2.5 cm, so the cut reads as a wall with
+    # a thin light edge (not a dark lid)
+    solid_loft(cap, secs, lambda i, k: ("Trim", "Trim", "Trim", "Trim")[i], cap_mats=("Trim", "Trim"))
+    ins = []
+    for sec in secs:
+        (xa, yy, _), (xb, _, _), _, _ = sec
+        yy2 = yy - sy * (CAP_EDGE if abs(yy) >= HY - 1e-6 else 0.0)
+        ins.append([(xa + CAP_EDGE, yy2, WALL_TOP + 0.004), (xb - CAP_EDGE, yy2, WALL_TOP + 0.004),
+                    (xb - CAP_EDGE, yy2, WALL_TOP + 0.005), (xa + CAP_EDGE, yy2, WALL_TOP + 0.005)])
+    ins[0] = [(x, y - sy * 0.0, z) for (x, y, z) in ins[0]]
+    solid_loft(cap, ins, lambda i, k: (None, "Frame", "Frame", "Frame")[i], cap_mats=("Frame", "Frame"))
+
+
+CAP_EDGE = 0.025
+
+
+def cap_top(p, x0, x1, y0, y1, z):
+    """A cut-wall cap on a box footprint: a light Trim plate (8 mm proud) with a Frame-coloured top inset 2.5 cm."""
+    bbox(p, x0 - CAP_OUT, x1 + CAP_OUT, y0 - CAP_OUT, y1 + CAP_OUT, z - CAP_T, z + 0.004, "Trim", mats={"-z": None})
+    e = min(CAP_EDGE, 0.25 * (x1 - x0), 0.25 * (y1 - y0))
+    bbox(p, x0 - CAP_OUT + e, x1 + CAP_OUT - e, y0 - CAP_OUT + e, y1 + CAP_OUT - e, z + 0.004, z + 0.005, "Frame",
+         mats={"-z": None})
+
+
+def collar_cap(cap):
+    """Caps of the collar ring where WALL_TOP cuts it (both sides): the ring cross-section, closed."""
+    x0, x1 = COLLAR
+    out = u_contour(*C_OUT)
+    inn = u_contour(*C_IN)
+    for side in (0, 1):
+        io = [i for i, (y, z) in enumerate(out) if abs(z - WALL_TOP) < 1e-6]
+        ii = [i for i, (y, z) in enumerate(inn) if abs(z - WALL_TOP) < 1e-6]
+        if len(io) < 2 or len(ii) < 2:
+            continue
+        yo, yi = out[io[side]][0], inn[ii[side]][0]
+        ya, yb = sorted((yo, yi))
+        cap_top(cap, x0, x1, ya, yb, WALL_TOP)
+
+
+def housing(lo, hi, rw=None, flat=False, cap=None):
+    """The frame housing: two side blocks and the header, split at WALL_TOP (the lower half closed with a solid cap),
+    the room face on the wall radius rw (None = flat, for partitions), rounded top corners, chamfered ends; the
+    pocket slots are inside (a dark slot line on each reveal)."""
+    # critic round 13: the lower block has no top face and the upper block no bottom face (they met at WALL_TOP
+    # and fought); the cut is closed by the separate cap plate (cap_plate), which reads clean in the cutaway
+    def mats(face):
+        return lambda i, k: ("Frame", "Hull", None, "Hull")[i] if face == "lo" else (None, "Hull", "Hull", "Hull")[i]
+    cap = cap if cap is not None else lo
     for sy in (-1, 1):
-        jamb(lo, hi, sy)
-    header(hi)
+        solid_loft(lo, _side_sections(sy, rw, 0.0, lambda y: WALL_TOP), mats("lo"), cap_mats=("Hull", "Hull"))
+        solid_loft(hi, _side_sections(sy, rw, WALL_TOP, top_z), mats("hi"), cap_mats=("Hull", "Hull"))
+        cap_plate(cap, sy, rw)
+        # the cutaway cap: a dark plate on top of the lower block
+        yi = sy * OPEN_HW
+        # slot line on the reveal (the leaf runs here) and the reveal trim
+        for part, za, zb in ((lo, F, WALL_TOP), (hi, WALL_TOP, DOOR_TOP)):
+            plate_y(part, yi - sy * 0.002, SLOT[0], SLOT[1], za, zb, "Rubber", facing=-sy)
+            for (ea, eb) in ((HX[0] + 0.02, HX[0] + 0.06), (HX[1] - 0.06, HX[1] - 0.02)):
+                plate_y(part, yi - sy * 0.003, ea, eb, za, zb, "Frame", facing=-sy)
+        # room face details: a recessed panel with the room stripe (on the curved face, per section)
+        steps = 6
+        for t in range(steps):
+            ya = OPEN_HW + 0.10 + (HY - 0.20 - OPEN_HW - 0.10) * t / steps
+            yb = OPEN_HW + 0.10 + (HY - 0.20 - OPEN_HW - 0.10) * (t + 1) / steps
+            xa, xb = x_room(ya, rw) - 0.004, x_room(yb, rw) - 0.004
+            for (z0, z1, m, part) in ((0.92, 1.10, "Accent", lo), (0.28, 0.31, "Frame", lo),
+                                      (HT - 0.12, HT - 0.08, "Accent", hi)):
+                pa, pb = (sy * ya, sy * yb)
+                q = [(xa, pa, z0), (xb, pb, z0), (xb, pb, z1), (xa, pa, z1)]
+                oquad(part, *q, m, (-1, 0, 0))
+        # corridor face: the room stripe and a trim line
+        for (z0, z1, m, part) in ((0.92, 1.10, "Accent", lo), (HT - 0.12, HT - 0.08, "Accent", hi)):
+            y0, y1 = sorted((sy * (OPEN_HW + 0.10), sy * (HY - 0.20)))
+            plate_x(part, HX[1] + 0.003, y0, y1, z0, z1, m, facing=1)
+    # the header over the opening (room face curved as well)
+    secs = []
+    for t in range(5):
+        y = -OPEN_HW + 2 * OPEN_HW * t / 4
+        xr = x_room(y, rw)
+        secs.append([(xr, y, DOOR_TOP), (HX[1], y, DOOR_TOP), (HX[1], y, HT), (xr, y, HT)])
+    solid_loft(hi, secs, lambda i, k: ("Frame", "Hull", "Hull", "Hull")[i], cap_mats=(None, None))
+    if flat:
+        flat_lid(hi, rw)
+    else:
+        hood(hi, rw)
+
+
+def flat_lid(hi, rw):
+    """For flat-roofed rooms (podium, drum, setback): a flat lid with a Frame edge instead of the curved hood, so the
+    housing top reads flush with the roof edge."""
+    secs = []
+    steps = 14
+    for t in range(steps + 1):
+        y = -HY + 0.06 + (2 * HY - 0.12) * t / steps
+        zt = top_z(y)
+        xr, xc = x_room(y, rw) - 0.02, HX[1] + 0.03
+        secs.append([(xc, y, zt - 0.002), (xr, y, zt - 0.002), (xr, y, zt + 0.06), (xc, y, zt + 0.06)])
+    solid_loft(hi, secs, lambda i, k: ("HullDark", "Frame", "Frame", "Frame")[i], cap_mats=("Frame", "Frame"))
+
+
+def hood(hi, rw):
+    """A curved hood over the housing top: it rises from the corridor face to the room side, so the housing reads as
+    part of the dome, not a plate on it."""
+    secs = []
+    steps = 14
+    for t in range(steps + 1):
+        y = -HY + 0.10 + (2 * HY - 0.20) * t / steps
+        zt = top_z(y)
+        xr = x_room(y, rw) - 0.04
+        xc = HX[1] + 0.02
+        xm = 0.5 * (xr + xc)
+        secs.append([(xc, y, zt - 0.01), (xr, y, zt + 0.26), (xr, y, zt + 0.32), (xm, y, zt + 0.26),
+                     (xc, y, zt + 0.06)])
+    solid_loft(hi, secs, lambda i, k: ("HullDark", "Hull", "Hull", "Hull", "Frame")[i], cap_mats=("Frame", "Frame"))
+
+
+def status_light(st, rw=None):
+    """The header status light (object Status): a clear strip over the opening on both faces, StatusGreen
+    (#5EE07A); RENDER switches it to amber or red."""
+    for (fc,) in ((-1,), (1,)):
+        if fc < 0:
+            xs = [x_room(-0.55, rw), x_room(0.0, rw), x_room(0.55, rw)]
+            x0 = min(xs) - 0.035
+            x1 = min(xs) - 0.005
+        else:
+            x0, x1 = HX[1] + 0.005, HX[1] + 0.035
+        bbox(st, x0, x1, -0.55, 0.55, DOOR_TOP + 0.07, DOOR_TOP + 0.12, "StatusGreen")
+
+
+def tunnel_lights(lights):
+    """Green strips on both reveals (below 1.40 m): the status colour at eye level."""
+    for sy in (-1, 1):
+        yi = sy * (OPEN_HW - 0.004)
+        for (xa, xb) in ((HX[0] + 0.10, HX[0] + 0.14), (HX[1] - 0.14, HX[1] - 0.10)):
+            plate_y(lights, yi, xa, xb, 0.40, 1.36, "StatusGreen", facing=-sy)
+
+
+def reveal_trim(lo, hi):
+    """(kept for the airlock callers: the reveal trim is part of housing() now)"""
+    return
+
+
+def leaf31(lo, hi, sy):
+    """One full-height opaque leaf (6 cm): a window strip, a seal line at the meeting edge, a chevron strip beside it,
+    a dark kick plate, trim lines."""
+    ya, yb = (0.0, LEAF_W) if sy > 0 else (-LEAF_W, 0.0)
+    x0, x1 = LEAF31
+    z0, z1 = F + 0.005, DOOR_TOP + 0.01
+    sbox(lo, hi, x0, x1, ya, yb, z0, z1, "Hull", cap="HullDark")
+    e0, e1 = (0.0, 0.014) if sy > 0 else (-0.014, 0.0)
+    sbox(lo, hi, x0 - 0.006, x1 + 0.006, e0, e1, z0, z1, "Rubber", cap="Rubber")
+    wy0, wy1 = sorted((sy * 0.16, sy * 0.25))
+    cy0, cy1 = sorted((sy * 0.02, sy * 0.10))                   # the chevron strip beside the meeting edge
+    for (fx, face) in ((x0 - 0.002, -1), (x1 + 0.002, 1)):
+        splate_x(lo, hi, fx, wy0 - 0.02, wy1 + 0.02, 1.08, 1.98, "Frame", facing=face)
+        splate_x(lo, hi, fx + face * 0.002, wy0, wy1, 1.10, 1.96, "Visor", facing=face)
+        fy0, fy1 = sorted((sy * 0.12, sy * (LEAF_W - 0.04)))
+        plate_x(lo, fx, fy0, fy1, F + 0.02, 0.52, "HullDark", facing=face)            # kick plate
+        plate_x(lo, fx + face * 0.001, fy0 + 0.03, fy1 - 0.03, 0.50, 0.515, "Frame", facing=face)
+        for z in (0.95, 1.30):
+            plate_x(lo, fx, sorted((sy * 0.30, sy * (LEAF_W - 0.06)))[0], sorted((sy * 0.30, sy * (LEAF_W - 0.06)))[1],
+                    z, z + 0.015, "Frame", facing=face)
+        plate_x(hi, fx, fy0, fy1, 1.90, 1.915, "Frame", facing=face)
+        # chevrons: slanted Hazard / Rubber bands, 0.16 m apart, from the kick plate up to the window level
+        nch = 12
+        for k in range(nch):
+            za = 0.54 + 0.13 * k
+            zb = za + 0.065
+            part = lo if zb + 0.04 <= WALL_TOP else (hi if za - 0.04 >= WALL_TOP else None)
+            if part is None:
+                continue
+            m = "Hazard" if k % 2 == 0 else "Rubber"
+            q = [(fx + face * 0.002, cy0, za), (fx + face * 0.002, cy1, za + (0.04 if sy > 0 else -0.04)),
+                 (fx + face * 0.002, cy1, zb + (0.04 if sy > 0 else -0.04)), (fx + face * 0.002, cy0, zb)]
+            oquad(part, *q, m, (face, 0, 0))
+
+
+def build_doorway(rw=None, flat=False):
+    parts = {n: P(n) for n in ("Frame", "FrameCap", "FrameTop", "DoorL", "DoorLTop", "DoorR", "DoorRTop", "Lights",
+                               "Status", "Sign")}
+    lo, hi = parts["Frame"], parts["FrameTop"]
+    housing(lo, hi, rw, flat=flat, cap=parts["FrameCap"])
+    threshold(lo)
     collar(lo, hi)
-    leaf(parts["DoorL"], parts["DoorLTop"], -1)
-    leaf(parts["DoorR"], parts["DoorRTop"], 1)
-    status_strips(parts["Lights"])
-    signs(parts["Sign"])
+    collar_cap(parts["FrameCap"])
+    leaf31(parts["DoorL"], parts["DoorLTop"], -1)
+    leaf31(parts["DoorR"], parts["DoorRTop"], 1)
+    tunnel_lights(parts["Lights"])
+    status_light(parts["Status"], rw)
+    signs31(parts["Sign"], rw)
     anchors = [("Anchor_Room", (-1.05, 0.0, F), 180.0), ("Anchor_Corridor", (1.00, 0.0, F), 0.0)]
     return parts, anchors
 
@@ -314,13 +529,14 @@ def build_doorway():
 # --------------------------------------------------------------------------------------
 # Wall patch
 # --------------------------------------------------------------------------------------
-def build_wall_patch():
+def build_wall_patch(band="Accent", batten=True):
     """A straight 1.0 m slice of the 3.0 wall: the category band (Accent: the game tints it to the room's category
-    colour), the pipe run and a batten, so the wall continues to the doorway frame."""
+    colour), the pipe run and a batten, so the wall continues to the doorway frame.  band=None: the plain slice for
+    the last 5 cm before a door housing (3.1: the band ends before the door, with a cap)."""
     b = P("Base")
     Rw = 10.0
     Ri = Rw - 0.20
-    prof, mats = IK.wall_profile_v3(Rw, Ri, band="Accent", band_proud=True)
+    prof, mats = IK.wall_profile_v3(Rw, Ri, band=band, band_proud=True)
     rings = []
     for y in (-0.5, 0.5):                       # this order gives outward normals (checked: outer face -> +X)
         rings.append([(r - Rw, y, z) for (r, z) in prof])
@@ -330,8 +546,9 @@ def build_wall_patch():
         m = mats[i]
         m = "Hull" if m == "IN" else m
         b.f([A[i], B[i], B[i + 1], A[i + 1]], m)
-    plate_x(b, -0.2 - 0.018, -0.015, 0.015, 0.29, 1.255, "Frame", facing=-1)
-    plate_x(b, 0.008, -0.015, 0.015, 0.33, 0.915, "HullDark", facing=1)
+    if batten:
+        plate_x(b, -0.2 - 0.018, -0.015, 0.015, 0.29, 1.255, "Frame", facing=-1)
+        plate_x(b, 0.008, -0.015, 0.015, 0.33, 0.915, "HullDark", facing=1)
     for z in IK.PIPE_Z:
         b.cyl((-0.2 - 0.045, -0.5, z), (-0.2 - 0.045, 0.5, z), IK.PIPE_R, seg=5, mat="Metal", cap0=False, cap1=False)
     return {"Base": b}, []
@@ -344,6 +561,33 @@ def build_wall_patch():
 # --------------------------------------------------------------------------------------
 JPOST_HW = 0.12             # post half width (tangential)
 JPOST_X = (-0.26, 0.07)     # post depth: inner face just inside the wall's inner face, outer face just outside
+
+
+def build_wall_patch_upper():
+    """Upper wall slice for flat-walled rooms (podium, drum, setback): 1.0 m long on Y (the game scales it on its
+    local Godot Z like the wall patch) and 1.0 m high (scaled on Y to the deck height - 1.40); outer face on x = 0,
+    inner face x = -0.20, a Frame lip on top.  Placed at z 1.40 beside a door housing and over it."""
+    b = P("Base")
+    bbox(b, -0.20, 0.0, -0.5, 0.5, 0.0, 1.0, "Hull", mats={"+y": None, "-y": None, "-z": None})
+    bbox(b, -0.22, 0.02, -0.5, 0.5, 0.97, 1.0, "Frame", mats={"+y": None, "-y": None})
+    return {"Base": b}, []
+
+
+def build_upper_band():
+    """The upper wall band of flat-walled rooms, carried over a door's patch span to its cap: 1.0 m on local Godot
+    Z (scaled like the patches) and 1.0 m high (scaled to the room's band height); proud of the wall line by 3 cm;
+    material Accent (tinted by the game)."""
+    b = P("Base")
+    bbox(b, 0.0, 0.03, -0.5, 0.5, 0.0, 1.0, "Accent", mats={"+y": None, "-y": None, "-x": None})
+    return {"Base": b}, []
+
+
+def build_band_cap():
+    """The end cap of the wall band before a door (not scaled): a small Frame block over the proud band's end, its
+    origin on the wall line at the band's end; local +Y points away from the door."""
+    b = P("Base")
+    bbox(b, -0.01, 0.05, -0.02, 0.02, 0.90, 1.16, "Frame", bevel=0.008)
+    return {"Base": b}, []
 
 
 def build_junction_post():
@@ -458,13 +702,20 @@ def build_corridor_rib():
 # Export and checks
 # --------------------------------------------------------------------------------------
 BUILDS = {
-    "doorway": (build_doorway, 1600),
+    "doorway": (lambda: build_doorway(5.50), 2400),
     "wall_patch": (build_wall_patch, 120),
+    "wall_patch_plain": (lambda: build_wall_patch(band=None, batten=False), 120),
+    "band_cap": (build_band_cap, 60),
+    "wall_patch_upper": (build_wall_patch_upper, 60),
+    "upper_band": (build_upper_band, 30),
     "corridor": (build_corridor, 400),
     "corridor_rib": (build_corridor_rib, 400),
     "junction_post": (build_junction_post, 300),
     "junction_sill": (build_junction_sill, 60),
 }
+for _rw in DOORWAY_RW:          # 3.1: the room face follows the wall; RENDER takes the variant nearest to Rw
+    BUILDS["doorway_r%03d" % round(_rw * 100)] = ((lambda rw=_rw: build_doorway(rw)), 2400)
+    BUILDS["doorway_flat_r%03d" % round(_rw * 100)] = ((lambda rw=_rw: build_doorway(rw, flat=True)), 2400)
 ALLOWED = set(K.MATERIALS) | set(K.PER_FILE)
 
 
@@ -480,9 +731,20 @@ def export_parts(name, parts, anchors, accent="logistics"):
     bpy.context.view_layer.update()
     static = tuple(n for n in objs if n in ("Frame", "FrameTop", "Sign", "Base", "Roof"))
     sets = {n: tuple(sorted(set(static) | {n})) for n in objs}
+    if "FrameCap" in objs:
+        sets["FrameCap"] = ("Frame", "FrameCap")      # the cap is seen with the upper parts gone: no AO from them
     kw = dict(K.AO_DEFAULT)
     kw["dist"] = 0.8
     rays, secs = K.bake_ao(objs, sets=sets, **kw)
+    # draw calls (RENDER 2026-09-25): plain materials of the static and door parts join the palette
+    for pname, o in objs.items():
+        g = K.game_group(pname)
+        if g in ("Status", "Lights", "Sign"):
+            continue
+        if name.startswith(("wall_patch", "band_cap", "upper_band")):
+            K.shell_fold(o, mset)              # patches join the wall shell look: shell names only
+            continue
+        K.palette_merge(o, mset, max_surfaces=K.MAX_SHELL_SURFACES, keep=K.INTERIOR_ONLY + ("Visor",))
     path = os.path.join(K.MODEL_DIR, name + ".glb")
     K.export_glb_atomic(path)
     return path
@@ -510,7 +772,7 @@ def check_file(name, path, parts, budget):
         flags.append("unknown materials %s" % bad)
     if info["child_nodes"]:
         flags.append("nodes have children")
-    if name == "doorway":
+    if name.startswith("doorway"):
         # the cut at WALL_TOP: lower objects below, upper objects above
         for pn, part in parts.items():
             zs = [v.z for v in part.verts]
@@ -518,17 +780,21 @@ def check_file(name, path, parts, budget):
                 continue
             if pn in ("Frame", "DoorL", "DoorR", "Lights") and max(zs) > WALL_TOP + 0.002:
                 flags.append("%s reaches z %.3f > WALL_TOP" % (pn, max(zs)))
-            if pn in ("FrameTop", "DoorLTop", "DoorRTop", "Sign") and min(zs) < WALL_TOP - 0.002:
+            if pn == "FrameCap" and (max(zs) > WALL_TOP + 0.005 or min(zs) < WALL_TOP - CAP_T - 0.001):
+                flags.append("%s reaches z %.3f > WALL_TOP" % (pn, max(zs)))
+            if False:
+                flags.append("%s reaches z %.3f > WALL_TOP" % (pn, max(zs)))
+            if pn in ("FrameTop", "DoorLTop", "DoorRTop", "Sign", "Status") and min(zs) < WALL_TOP - 0.002:
                 flags.append("%s starts at z %.3f < WALL_TOP" % (pn, min(zs)))
-        worst = 0.0
-        for pn in ("FrameTop", "DoorLTop", "DoorRTop", "Sign"):
+        # 3.1: an open leaf (moved 0.75 m) stays inside the frame housing and its pocket slot
+        for pn, sy in (("DoorL", -1), ("DoorLTop", -1), ("DoorR", 1), ("DoorRTop", 1)):
             for v in parts[pn].verts:
-                if v.x < COLLAR[0] - 1e-4:
-                    worst = max(worst, abs(v.y) - C_OUT[0], v.z - arch_z(v.y), HOOD_X[0] - v.x)
-        if worst > 0.005:
-            flags.append("upper door parts leave the entry hood by %.3f m" % worst)
-        ys = [abs(v.y) for pn in ("Frame", "FrameTop") for v in parts[pn].verts]
-        if max(ys) > POCKET_HW + 0.01:
+                yo = v.y + sy * OPEN_TRAVEL
+                if abs(yo) > POCKET_END + 1e-3 or not (SLOT[0] - 1e-3 <= v.x <= SLOT[1] + 1e-3):
+                    flags.append("%s leaves the pocket when open (y %.3f, x %.3f)" % (pn, yo, v.x))
+                    break
+        ys = [abs(v.y) for pn in ("Frame", "FrameTop") for v in parts[pn].verts if v.x < COLLAR[0] - 1e-4]
+        if max(ys) > HY + 0.01:
             flags.append("frame half width %.2f" % max(ys))
     return dict(id=name, tris=tris, budget=budget, tris_by_object=info["tris"], materials=info["materials"],
                 empties=info["empties"], flags=flags, file_size=os.path.getsize(path))

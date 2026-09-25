@@ -98,6 +98,8 @@ MATERIALS = {
     "L5Gold":     dict(color="#ffd166", metal=0.90, rough=0.30, emit="#ffd166", emit_strength=0.6),
     "Frost":      dict(color="#ddefff", rough=0.50),
     "Glow":       dict(color="#9cffb0", rough=0.40, emit="#9cffb0", emit_strength=3.0),
+    "BeaconAmber": dict(color="#ffb020", rough=0.30, emit="#ffb020", emit_strength=3.0),
+    "StatusGreen": dict(color="#5ee07a", rough=0.30, emit="#5ee07a", emit_strength=3.0),
     "Ember":      dict(color="#ff5a0a", rough=0.40, emit="#ff4a00", emit_strength=1.6),
     "Plasma":     dict(color="#8fd8ff", rough=0.30, emit="#8fd8ff", emit_strength=5.0),
     # 3.0 (docs/V3_DESIGN.md section 7.3), the same values as build_assets.MATERIALS

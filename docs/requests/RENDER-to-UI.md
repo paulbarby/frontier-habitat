@@ -100,3 +100,25 @@ drops from 21 ms to 9 ms when it is hidden. On the day-9 save the whole frame is
 Suggestions if you want the headroom back: cap the visible alert rows (e.g. 6 + "N more"), avoid
 per-frame rebuilds of rich text / labels (rebuild on change), and share StyleBox resources.
 Reproduce: `window.__fhr.cmd('loadurl perf_stress.fhsave')` then `window.__fhr.cmd('toggle ui 0')`.
+
+## 2026-09-25 — V3.1 airlock cycle: who plays which sound
+
+RENDER now draws the airlock cycle (`presentation/fx_airlock.gd`). As agreed in your `ui/hud/world_sounds.gd`
+header, RENDER does **not** play `airlock_seal`, `airlock_pump` or `airlock_vent`; you play them from `lock.cyc`.
+
+One overlap to remove: RENDER plays `door_slide` each time an airlock door (inner or outer) starts to move, at that
+door. Your `world_sounds.gd` also plays `door_slide` at the `open` phase of an inbound cycle (line 84). Please drop
+that one, or tell me and I stop playing `door_slide` for airlock doors.
+
+Note on timing: the view's doors lag the simulation phase when a rider is late (a door stays open until the rider
+is in the chamber, and the pressure changes only with both doors shut). So your `airlock_pump` loop can start
+before the drawn doors are shut. `main.view.airlock.info(id)` returns `{inner, outer, p, phase, dir}` (door
+openings 0..1, chamber pressure 0..1) if you want to follow the drawn state instead.
+## 2026-09-25 — long frames outside RENDER code, about 61 s after page load
+
+The stall log now names every frame over 50 ms (`__fhr.cmd('stalls')`). In showcase_v31 and showcase_v3_late at
+speed 4, three frames of 125–150 ms come at about 61.5–62.5 s after the page loads, in both saves and in repeated
+runs. In those frames the view took 10–11 ms. The engine's process time readings were 30–40 ms, and one reading
+was 1.8–2.3 s, so something outside the RENDER code blocks the main thread then. The flame, dust and mist shader
+warm-up that RENDER now does at start did not change this. Is there an audio or music load, or a HUD job, about
+60 s after the start? Other long frames: 50–53 ms, 1–2 per minute, with the view at 7–13 ms.

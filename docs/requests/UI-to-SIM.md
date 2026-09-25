@@ -73,3 +73,38 @@ item, breach and turret, `at_risk()`, `sheltered()`, `zone_at()`, `turret_range(
 once each; `breach`, `fault`, `maintained`, `hazard_warning` are not toasted because your alerts
 cover them), `load_state(state, {debug: true})`, `hazard_now {in}`. Items B1–B5 and C3 are closed.
 Still open: **C1** per-lab `rate`, **C2** `ship {action: "cargo"}`.
+## 2026-09-25 — version 3.1 (UI)
+
+Used as published in SIM-to-UI (thank you): `sim.traffic.forecast() / ships() / credits() / free_beds()`,
+`traffic_answer {id, grant, accept}`, `trade {id, buy, sell}`, `traffic_now {kind, in}` (my `__fh` command
+`ship <kind> [s]`), `state.credits`, visitor agents (`kind`, `vkind`, `ship`, `visit`), log codes
+`ship_*` and `trade`, `lock.cyc.phase` (airlock sounds). Test: `node tools/godot.mjs script
+res://tools/ui/test_ships_ui.gd` (14 checks on showcase_v3_late: pad, cable, trader, shuttle, liner, sale, visitors).
+
+### Requests
+
+1. **Choose which settlers stay.** §6.5 asks for "pick which immigrants to accept (role, needs)". `accept` is
+   a count. Please accept `traffic_answer {id, grant, accept_idx: [i, ...]}` (indexes into `offer.roles`). The
+   shuttle dialog then shows one check box per settler instead of the count. Until then it says: "The shuttle
+   chooses which of them stay."
+2. **Orbit time left.** In `orbit`, `t_s` is 0 (`t` = arrival tick). The UI computes the wait itself from
+   `at + orbit_hold_h`. A `t_s` = seconds before the ship leaves would be simpler and safer.
+3. **(For information)** A new landing pad needs a cable before ships come (`powered`). The traffic panel is
+   empty until then. If you want, a notice alert "Landing pad has no power: ships cannot land" helps players.
+## 2026-09-25 (later) — door sectors: the name the UI calls
+
+The link tool and the room ghost draw the door sectors on the wall ring (green free, red blocked) and show
+your refusal sentence (`sim.place.reason_text(code)`) as the placement hint. Please publish:
+
+- `sim.place.blocked_sectors(def_id: String, size: int) -> Array` = the blocked ranges `[[a0, a1], ...]` in
+  **model degrees** (0 = model +X, counter-clockwise from above; the content angle is this + the room's
+  `rot`), the same numbers as `docs/requests/ART-HAB-door_blocked.json` (airlocks: chamber and porch side
+  included). `[]` = every angle free.
+
+Until it exists the UI reads a copy of ART-HAB's file (`assets/ui/door_blocked_fallback.json`) and only
+WARNS ("Equipment blocks this side of ..."); with your method present it stops warning and shows your
+refusal. When you publish, I delete the copy. Also 1 and 2 of your answer (settlers by person, orbit
+`t_s`): thank you, the shuttle dialog will use `accept_idx`.
+**Update 2026-09-25 (later):** found and used your `door_ranges` / `link_angle_ok_for` (the UI now asks
+`link_angle_ok_for` for every arc point, so the ring and your refusal always agree). No need for
+`blocked_sectors`; the ART-HAB copy is deleted. Settlers by person (`accept_idx`) and orbit `t_s`: in use.

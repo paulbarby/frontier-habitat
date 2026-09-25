@@ -315,3 +315,309 @@ Performance after ART-HAB's 8-surface cut (`tools/render_perf.mjs`, same method 
 
 Perf (showcase_v3_late): 110 m HUD on 56.5–60.0 / 48–56 fps, 1 325 draw calls; HUD off 70.7 / 67; 35 m 68.6 / 62;
 450 m 75.3 / 71; stress 68.3 / 60, 1 199. npc_check PASS 140/0.
+
+## 2026-09-25 — v3.1 milestone 1: paths (§4)
+
+- `tools/render_path_check.gd` (delivery gate, §4.4): headless, showcase_v3_late + scene_final, 10 game minutes
+  each at speed 4, 30 fps, drawn positions of every body. Results `art/npc/path_check.json`;
+  before-copy `art/npc/path_check_before.json`.
+- New: `presentation/fx_nav.gd` (furniture grid per room model from its triangles, 0.1 m; baked to
+  `presentation/navgrid/*.res` by `tools/render_nav_bake.gd`, run by `render_export.mjs`; a changed model
+  is rebuilt live), `presentation/fx_npc_path.gd` (door graph on AStar3D; A* + string pulling on free floor
+  with 0.30 m clearance, 0.15 m fallback; doorway entry search when furniture blocks the door line; outdoor
+  legs), walker in `fx_npc.gd` (exact path following, corners rounded r 0.4 m, speed ramp 1.5 m/s², turn
+  300°/s, fade out/in for jumps over 25 m, no straight slides).
+
+| check (10 game min × 2 saves, 499 476 samples) | before | after | target |
+|---|---:|---:|---:|
+| (a) body in a wall band outside a door | 198 | 16 | 0 |
+| (b) body in furniture it does not use | 12 835 (4.67 %) | 2 919 (1.06 %) | ≤ 0.2 % |
+| (c) outdoor body in a structure / tube | 176 | 18 | 0 |
+| (d) slide | 9 205 | 85 | 0 |
+| (d) teleport (jump > 1.5 m, visible) | 1 643 | 0 | 0 |
+| (e) indoor body on open ground | 85 407 | 1 218 | — |
+
+Not met: (b) — 93 % within 1.5 m of a door opening (furniture in front of doorways; request to ART-HAB);
+(a) 16 and (c) 18 (a wind-turbine service exit) not traced to the end; (e) 1 218 all in scene_final (lander queue).
+Perf (showcase_v3_late overview, other agents' jobs running on the machine, noisy): agents 5.2–6.7 ms (was 4.5),
+fps 40–54, draw calls 1 488 — over budget since ART-HAB's rollout (room `Base` 8–11 surfaces; request sent).
+
+## 2026-09-25 — V3.1 milestone 2: paths (all causes traced), doors and decals
+
+**Path check** (`tools/render_path_check.gd`, showcase_v3_late + scene_final, 10 game minutes each, speed 4,
+499 476 samples). File: `art/npc/path_check.json`.
+
+| check | before | milestone 1 | milestone 2 | target |
+|---|---:|---:|---:|---:|
+| (a) wall | 198 | 16 | **0** | 0 |
+| (b) furniture | 4.674 % | 1.06 % | **0.608 %** (1 763) | 0.2 % |
+| (c) outside in structure | 176 | 18 | **0** | 0 |
+| (d) slide | 9 205 | 85 | **0** | 0 |
+| (d) visible jump | 1 643 | 0 | **0** | 0 |
+| (e) indoor off rooms and tubes | 85 407 | 1 218 | **302** | — |
+
+Causes traced and fixed:
+
+1. **Wall (a), airlocks.** Old saves hold airlocks of record radius 2.8 m. The view drew them with
+   `airlock_m.glb` (3.4 m) unscaled, so the drawn wall was 0.5 m outside the simulation wall and the corridor
+   ends. Fix: a record radius under 3.0 m loads `airlock_r28.glb` unscaled (ART-HAB F0). General rule in
+   `Models.building`: a sized model whose record radius differs from the size radius is scaled to the record.
+2. **Wall (a), targets on the wall.** The simulation puts some indoor bodies on the wall circle of their room
+   (region "out" while `where` is "in"). Fix: `planner.room_near` + `pull_in` move the target 0.65 m inside the
+   wall line of that room; rooms without aisles (airlocks) and suited bodies held in a chamber get the same pull.
+3. **Wall (a), doorway entries.** `_entry_search` no longer walks cells within 0.62 m of the wall ring except at
+   the opening.
+4. **Outside (c), turbines.** A body getting up at a machine's `Anchor_Service` (inside the machine circle). Not
+   a crossing; the checker excludes "leaving at the anchor".
+5. **Slide (d).** 204 of 205 were fade jumps: the body is fully faded out (alpha 0) on the frame it moves more
+   than 25 m. Nothing is drawn moving. The checker counts them apart (`d_hidden_jump`: 214). The last one was a
+   working body creeping over its last 0.4 m while the work clip played; a working body now stands still.
+6. **Furniture (b), doorways.** The furniture grid marked the wall of a doorway span as furniture. The wall
+   segments that a doorway hides are now open: grid cells of `Walls`/`WallsIn` keep their segment (`wseg`,
+   baked), and `Nav.at(..., wall_hidden)` uses `fx_doors.masks`. (b) fell from 1.075 % to 0.519 % in
+   showcase_v3_late.
+7. **Furniture (b), what remains.** 86 % (1 519 of 1 763) is inside `airlock_r28`: the old saves have corridors
+   at model angles 83°, 215.5°, 259.5° and 270°, which ART-HAB's lane list blocks, and the doorway opens onto a
+   bench. Request to ART-HAB (`docs/requests/RENDER-to-ART-HAB.md`, round 2). Without airlocks: 244 samples =
+   0.084 %.
+8. **(e) remaining 302**: lander deck ring (showcase) and airlock porch (scene_final); not in the targets.
+
+**Doors and decals.** ART-HAB door kit by wall radius (`doorway_r*`, `doorway_flat_r*` for podium, drum and
+setback shells); J2 hide rule dropped; `Decal_<seg>_*` merged per room and hidden within the door span; NameSign
+moved to the nearest free segment; status strips green / amber / red; open within 1.6 m, close 0.8 s after the
+last body, 0.6 s ease, `door_slide` world sound; cutaway hides FrameTop, leaf tops, Status and Sign. In-game
+`decalcheck`: 0 decal segments in an opening (131 doorways showcase_v3_late, 45 scene_final).
+
+**Frame stalls (UI item 6)**, 60 s of showcase_v3_late, `stalls` counter:
+
+| | before (UI) | milestone 1 | milestone 2 |
+|---|---|---|---|
+| speed 1 max frame | about 140 ms | 49.1 ms | **33.3 ms**, 0 frames over 50 ms |
+| speed 4 max frame | about 140 ms | 52.7 ms (2 over 50) | **39.4 ms**, 0 frames over 50 ms |
+| dropouts (`audio_glitch_probe`, 30 s) | about 6 in 20 s | 0 / 0 | **0 at speed 1, 0 at speed 4** |
+
+**Perf** (`tools/render_perf.mjs`, RTX 3060, 1600 x 900, quality 2, no frame cap; other agents' Blender ran
+during runs 1–2):
+
+| view | fps mean / min | draw calls | agents ms |
+|---|---|---:|---:|
+| 110 m, HUD on, run 1 / 2 / 3 | 53.3 / 36, 44.0 / 35, **61.1 / 50** | 1 178 | 5.6 / 6.8 / 5.2 |
+| 450 m, HUD on, run 1 / 2 | 46.3 / 42, 54.5 / 44 | 1 192 | 3.9 / 3.5 |
+
+Draw calls went from 1 277 to 1 178 after ART-HAB's shell fold (budget 1 400). **pck 79.5 MB** (10^6 bytes;
+75.9 MiB), `node tools/render_export.mjs`.
+
+Files: `presentation/fx_nav.gd`, `fx_npc_path.gd`, `fx_npc.gd`, `models.gd`, `world_view.gd`,
+`tools/render_path_check.gd`, `tools/render_nav_probe.gd`, `tools/render_radius_probe.gd` (debug).
+Evidence: `art/critic_input/render/80–88`.
+
+Next: airlock cycle (§5.3), then ships, pad and visitors (§6.3), world sounds (§2.2).
+## 2026-09-25 — V3.1 milestone 3: airlock cycle (§5.3)
+
+`presentation/fx_airlock.gd` (new) draws `b.lock.cyc` {phase, pt, dir, agents} and `b.lock.queue` on ART-HAB's
+airlock kit (`airlock_m`, `airlock_l`, and `airlock_r28` for record radius < 3.0 m).
+
+- **Doors.** InnerDoorL/R and OuterDoorL/R (and their *Top parts) slide 0.75 m in 0.6 s of game time. The inner
+  door opens only at base pressure and the outer door only at vacuum, never both at once. A door does not close on
+  a body in its opening. A rider who is still walking holds the door open, and the pump waits until both doors
+  are shut. The view can lag the sim phase by up to about 2 s; it never shows a body passing a shut door.
+- **Pressure and lights.** Chamber pressure p runs 1 → 0 (outbound) or 0 → 1 (inbound) during pump, with both
+  doors shut. ChamberLight is amber, then red (outbound) or green (inbound). PressureLight_0..2 are lit green
+  above 1/6, 1/2 and 5/6 of pressure, dark red below. InnerStatus/InnerLights and OuterStatus/OuterLights are
+  green (may open), amber (moving) or red (locked or breach). The Beacon blinks amber while the lock cycles.
+  Airlock templates use `Models.status_tinted`.
+- **Vent mist** (CPUParticles3D, soft round sprites) only while the chamber pumps with both doors shut: a jet
+  from the vent above the outer door (outbound), or mist rising in the chamber (inbound). It is made only within
+  120 m of the camera.
+- **Riders.** They walk to `Anchor_Chamber_<i>` and wait at the suit room or porch until their door is open. A
+  rider in indoor clothes goes to `Anchor_Suit_<i>` first. Inbound riders go to the suit anchors after `open`.
+- **Suit swap.** The variant changes only at a suit anchor. The `suit_swap` clip plays and the variant is cut at
+  1.0 s (ART-NPC frame 30). A body is never drawn outdoors in indoor clothes. `tools/npc_check.gd`: 145 tests
+  PASS, including `idle -> suit_swap -> idle` (both variants) and the cut (suit vs indoor at 1.0 s: 0.04°).
+- **Queues.** Outbound: suit anchors, then Anchor_Stand_*. Inbound: Anchor_Porch_0/1, then 0.8 m apart outward.
+- **Other indoor bodies** whose sim position is on the chamber side (the airlock centre) wait at a stand point in
+  the suit room.
+- **Paths.** The door leaves are wall (code 2) in the walk grid, so the room planner never crosses a door.
+  `fx_airlock.route` gives the path through the openings: suit room → inner door → chamber → outer door →
+  porch. Airlock aisle points on the chamber side are not used for strolls.
+- **Sounds.** `door_slide` per airlock door (RENDER). `airlock_seal`, `airlock_pump` and `airlock_vent` are UI's
+  (`ui/hud/world_sounds.gd`). One overlap is reported to UI.
+
+**Airlock check** (`tools/render_airlock_check.gd`, new: showcase_v31 + showcase_v3_late; checks door crossings
+while shut, a door open while pressure changes, a swap in the chamber, clothes, riders outside while pumping):
+
+| run | cycles | closed-door crossings | door open while pumping | swap in chamber | wrong clothes | rider outside while pumping |
+|---|---:|---:|---:|---:|---:|---:|
+| first working version, 3 game min, speed 1 | 25 + 18 | 950 + 914 | 0 | 0 | 410 + 179 | 64 + 0 |
+| final, 3 game min, speed 4 | 25 + 27 | 1 + 0 | 0 | 0 | 7 + 0 | 0 + 0 |
+| final, 10 game min, speed 4 | 84 + 73 | 1 + 1 | 0 | 0 | 8 + 68 | 0 + 0 |
+
+Left: showcase_v31, all at old-save airlock 645; showcase_v3_late, 63 of the 68 are one indoor body drawn outdoors at (404.8, 402.0), 30 m from any airlock (an (e) case; cause not yet traced). At airlock 645 the corridor at model angle 270° opens onto the chamber side wall of
+`airlock_r28`, so a body crossing that airlock has no clear path (the same lane request to ART-HAB).
+
+**Path check** (10 game min x 2 saves): (a) 0, (b) **0.227 %** (was 0.608 %: the airlock doors are now wall, so
+room paths keep off them), (c) 0, (d) 0, teleport 0, (e) 188. Of (b), 63 % (419 samples) is in `airlock_r28`;
+without airlocks (b) is 0.084 %.
+
+**Perf** (render_perf, RTX 3060, 1600 x 900, no Blender running): v3_late overview **57.8 / 54 fps, 1 178 draw
+calls**, agents 6.2 ms, airlock 0.39 ms. showcase_v31 overview 58.5 / 53 fps, 1 207 draw calls.
+**Stalls** (60 s, v3_late): speed 1 max 50.3 ms (1 frame over 50, view 10 ms in it); speed 4 max 53.1 ms (1 frame,
+view 15 ms). The view part stays under 35 ms. **Dropouts:** 0 at speed 1, 0 at speed 4 (30 s each).
+New: at most 2.5 ms of path planning per frame (PLAN_BUDGET_US); the stall log names frames over 50 ms.
+**pck 79.6 MB.**
+
+Evidence: `art/critic_input/render/89–91`.
+## 2026-09-25 — V3.1 milestone 4: ships, pad, visitors, colonist cost, traces, final numbers
+
+**Ships** (`presentation/fx_traffic.gd`, new; `state.traffic.ships` phase and `t`):
+- Six ART-B ships are drawn on the pad's `Anchor_Ship` (nose to pad −X).
+- **Landing, 20 s:** the ship curves in from 150 m, nose first, pitched up while it brakes. Main thrusters fire
+  first, then the hover thrusters. The legs unfold between 40 and 10 m (ART-B hinge rule, `extras.stow_deg`).
+  There is a dust ring under 20 m and a touchdown bump. After touchdown the ramp (2.5 s) and doors (1.5 s) open.
+- **Take-off, 15 s:** ramp and doors close, the ship lifts with the hover thrusters, then leaves on the main
+  thrusters. The legs fold above 10 m.
+- **Engines and lights:** the Plasma nozzle cones follow the thrust. The Lights node is on at dusk.
+  `CabinWindow` follows the `Window` night curve. At night each `Flood_<i>` carries a SpotLight3D (#FFD9A0, 40°,
+  9 m, energy 7), which gives a warm pool on the ramp and deck (critic round 12).
+- **Sounds:** `ramp` when the ramp moves. `ship_descent`, `ship_touchdown` and `ship_takeoff` are UI's.
+- A loaded game shows landed ships with the ramp down.
+
+**Visitors:**
+- The ART-NPC files `astronaut_visitor_{suit,indoor}.glb` are joined to the body skeleton before the bake.
+  `Vis_<kind>` meshes are drawn only for visitors of that kind; `_h<digits>` meshes only for those heads.
+- Look code `(8+v)*64+head*8+tone`. Tourists pick one of 3 sets by id; inspector (courier) = 6.
+- Shader: `vis_cols[7]` per material; mode 4 (SuitMain, SuitHard, Pack, Jumpsuit) and mode 1 (SuitAccent) take
+  the visitor colours.
+- **Pad decision:** a visitor who first appears at the pad edge starts at the ship's `Anchor_Ramp` and walks the
+  straight lane to the sim position. A visitor removed on boarding walks back to the ramp foot and fades out
+  (0.4 s).
+- **Not shown yet:** the black inspector at night. The test saves have no inspector ship; `ship inspector`
+  (debug) can call one.
+
+**Colonist cost:**
+- Use and target are recomputed only on sim ticks (10 a second), not every frame.
+- Bodies outside the camera frustum update at the far rate (1 in 3 frames).
+- Planning is capped at 2.5 ms a frame.
+- A body at one anchor that is given another now walks there instead of jumping.
+- Result, agents ms at the 110 m overview: 6.2 → **4.6** (v3_late), 5.0 → **4.9** (v31 with visitors).
+
+**Traces asked by the coordinator:**
+1. **Indoor body outdoors (63 samples)** — cause found: colonist 3749's sim path from airlock 3769 to habitat 2385
+   runs straight across open ground, outside every corridor. The drawn body followed it (a 25 m fade put it
+   outdoors). Fix: an indoor target outside rooms and tubes snaps to the nearest corridor centre line within 14 m.
+   Now 0. The sim path is reported to SIM.
+2. **Airlock 49 (5 wrong clothes, 1 shut-door crossing)** — cause not identified. The samples were not reproduced
+   after the ART-HAB `airlock_r28` rebuild (18:13), the grid re-bake and fix 1. Final airlock check: 0 in both
+   saves.
+3. **Frames over 50 ms:**
+   - Most are 50–53 ms, with the view at 7–13 ms of the frame.
+   - Three frames of 125–150 ms come about 61–62 s after page load in both saves, with the view at 10 ms. That is
+     outside RENDER code (question to UI).
+   - Warm-up added: flame, dust and mist shaders now compile at game start.
+
+**Old-save airlock doorways (ART-HAB note):**
+- Choice: **route round the housing**, not hide it.
+- The 83°, 259.5° and 270° doorways open onto the walkway beside the chamber. `fx_airlock.walkway_route` sends a
+  path from there to the suit room, or back, through a corner point 0.55 m past the inner-door housing, never
+  through the chamber.
+- Airlock 645 had all the earlier cases; the final airlock check shows 0 there.
+
+**Final numbers:**
+
+| check | before v3.1 | final | target |
+|---|---:|---:|---:|
+| path (a) wall | 198 | **0** | 0 |
+| path (b) furniture | 4.674 % | **0.114 %** | 0.2 % |
+| path (c) outside | 176 | **0** | 0 |
+| path (d) slide / jump | 9 205 / 1 643 | **0 / 0** | 0 |
+| path (e) indoor off rooms | 85 407 | 138 (lander deck ring, scene_final) | — |
+| airlock: shut door, open while pumping, swap in chamber, clothes, riders | — | **0, 0, 0, 0, 0** | 0 |
+
+Path check result: **PASS** (`art/npc/path_check.json`).
+
+| perf (render_perf, RTX 3060, 1600 x 900) | fps mean / min | draw calls | agents ms |
+|---|---|---:|---:|
+| v3_late 110 m, HUD on | **64.5 / 61** | 1 179 | 4.65 |
+| v31 110 m, HUD on (2 ships, 6 visitors) | **63.1 / 60** | 1 248 | 4.88 |
+| v31 450 m | 69.7 / 60 | 1 281 | 2.95 |
+
+**Stalls:** in 60 s, the number of frames over 50 ms (the largest frame):
+
+| save | speed 1 | speed 4 |
+|---|---|---|
+| v3_late | 0 (41.7 ms) | 1 (51.3 ms) |
+| v31 | 2 (51.9 ms) | 5 (to 150 ms, see trace 3) |
+
+**Dropouts:** 0 at speed 1 and 0 at speed 4 (30 s each). **pck 79.6 MB.** `tools/npc_check.gd` 145 PASS.
+Evidence: `art/critic_input/render/92–96`.
+## 2026-09-25 — V3.1 milestone 5: stall trace (UI item 6 follow-up) and critic round 13
+
+**Stalls — causes found and fixed**
+1. **First second after load (`view.sync` 94–290 ms).** Cause: terrain chunk meshes. Each vertex tested every pad
+   (structure footprint) of the chunk: 60–290 ms per finest chunk. Fix: pads bucketed by 8 m cell per chunk (the
+   "paths" part of those frames fell to 17–25 ms). On a load, the needed chunks and every room's walk grids are
+   built in the load frame (`_boot_prewarm`: grids 80–140 ms, inside the 3.4 s load).
+2. **Load cover and night warm-up.** A black cover is up while the first frames compile shaders. Under it the view
+   draws 1.3 s at sunset/full night with an omni and a spot light reaching everything, plus every model first used
+   mid-game (crates, supply pod, meteor props, all six ships). The cover lifts after 20 fast frames (at most 5 s),
+   and the stall counters restart then. Cover time 0.3–1.2 s.
+3. **Sunset (the UI's 108–150 ms).** Traced by stepping the time of day while paused. The frame comes when a
+   light **turns on** (energy 0 → above 0): the sky's night lamps at night 0.05, the ship floods at 0.15. Warming
+   under the cover did not remove it, and neither did hiding and showing the light. Fix: those lights stay on at
+   almost no energy by day (0.0005). Paused sunset 340 → 440: **0 frames over 50 ms** (was 1–2 of 132–148 ms).
+   The key light is also never hidden now.
+
+**Remaining (not fixed):** in showcase_v31 at speed 4, one frame of 138–146 ms at 73.5 s. It comes back in every
+run, and it is the first frame where night reaches 1.00. The view takes 8–9 ms of it and the whole process
+23–41 ms. It is **not** time of day alone: the paused sunset through night 1.0 gives none. It is not a hazard,
+a new model batch or a new label (logged). The cause is open. The long-frame log now names hazards, new instancer
+batches, view children, ships and night for every frame over 50 ms.
+
+**Critic round 13**
+1. **Airlock cutaway.** ART-HAB's files are correct. `PorchTop` was added to GROUPS. In game (`tallparts 49`,
+   cutaway open 1.00), no drawn part of the airlock or its doorway kits is above 1.45 m.
+2. **Selection.** The outline now draws only the structure body (Base, Roof, levels). There are no more cyan
+   slabs from the hidden *Top, status and door parts, and no stacked rings from decal bands: one ring at the floor.
+3. **Ships.** The dust ring is paler (it was orange on orange ground), with 160 particles and a 1.5–5.5 m ring.
+   Evidence: landing strip, and take-off crops with engine glow and legs folding.
+4. **Visitors at night.** The helmet halo grows with camera distance (×1 to ×3.2): the inspector can be found at
+   45 m.
+5. **Doors.** Four states on one doorway: green, amber (moving), open, red (staged with the new test command
+   `doors <room> red`).
+6. **Path check (r13).** (a) 0, (b) 0.108 %, (c) 0, (d) 0, visible jumps 0 — **PASS**. Hidden (faded) jumps:
+   52 and 126, shortest **25.17 m and 25.0 m**, so every one is ≥ 25 m. `e_void` 152: all in scene_final, suited
+   bodies boarding the old lander. The simulation counts them inside once they reach the hatch, while the drawn
+   body still walks the last 1–2 m to the ramp outside the hull.
+7. **Tourists from behind:** item 104.
+
+Airlock check (10 game min, speed 4): all counts 0, both saves. Evidence 99–106.
+**Final stall numbers** (120 s after the load cover lifts, frames over 50 ms / largest frame):
+
+| save | speed 1 | speed 4 |
+|---|---|---|
+| showcase_v31 | 2 / 58.4 ms | 4 / 131.5 ms (73.5 s, the open case; the other 3 are 51–59 ms) |
+| showcase_v3_late | 1 / 51.4 ms | 2 / 52.8 ms |
+
+Before this work (UI's figures): 3 frames of 96–242 ms in the first second, and 3 of 139–147 ms at sunset. The
+first-second frames now come under the load cover: 5–6 frames, at most 150 ms, cover time 0.5 s. Apart from the
+open case, every frame over 50 ms is 51–59 ms, and the view takes 6–15 ms of it. **Target (no frame over 50 ms)
+not met.**
+## 2026-09-25 — critic round 14 items
+
+1. **Door open at pump start.** The drawn door did lag: a late rider held it open into `pump`. Now the doors follow the
+   simulation phase. They shut during `seal` and nothing holds them in `seal` or `pump`. A rider not yet in the
+   chamber at `seal` fades into its chamber place (0.15 s out and 0.15 s in); in the fade it is suited, and its
+   suit_swap clip ends. A non-rider in the chamber or a doorway fades to a suit-room or porch place. The enter
+   pressure matches in 0.3 s (was 0.8 s), so the first door opens sooner. Every rider or queued body gets its own
+   place, 0.6 m apart.
+   **Airlock check (10 game min, speed 4): pump starts with a drawn door more than 5 % open: 0 of 84 and 0 of 75.**
+   Shut-door crossings 0, door open while pumping 0, suit_swap in the chamber 0, wrong clothes 0, rider outside
+   while pumping 0. (`107_airlock_check_r14.json`.)
+2. **Doorway spacing.** New: at a doorway (room door kits), a body keeps 0.45 m behind a body going the same way.
+   It gives way to a body coming the other way that is nearer the doorway centre, and the one that waits steps
+   aside up to 0.55 m on free floor. New path-check count (f): pairs of standing bodies closer than 0.40 m in a
+   doorway zone (1.1 m) or a corridor, per 10 game minutes. Showcase_v3_late, both moving in a room doorway:
+   1 462 without the rule, 1 245 with it (−15 %). **Not solved:** most pairs remain. The remaining pairs at
+   airlocks are bodies standing at shared places.
+   Path check r14: (a) 0, (b) 0.128 %, (c) 0, (d) 0, jumps 0 — PASS. The short unseen fades of airlock riders
+   (29 and 34) are counted apart from slides.

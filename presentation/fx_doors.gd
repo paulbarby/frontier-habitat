@@ -16,9 +16,18 @@ extends Node3D
 ## -r, so a world content angle theta is Blender angle (r - theta).
 
 const Models = preload("res://presentation/models.gd")
+const Nav = preload("res://presentation/fx_nav.gd")
 const OPEN_HALF := 0.80      # m: half the clear opening (1.5 m) plus a margin
 const FRAME_HALF := 1.10     # m: half the frame width (2.2 m)
-const NEAR := 2.0            # m: a colonist this close opens the doors
+const NEAR := 1.6            # m: a body this close to the door centre opens it (V3_1 §3.4)
+const CLOSE_AFTER := 0.8     # s after the last body leaves
+const MOVE_T := 0.6          # s: leaf travel time, ease in-out
+const HIDE_HW := 1.76        # m: wall segments hidden within beta +- asin(HIDE_HW / Rw) (ART-HAB D1)
+const PATCH_HW := 1.70       # m: wall patches from asin(PATCH_HW / Rw) outward
+const BAND_HW := 1.77        # m: plain patches inside, band patches and the band cap from here (R2)
+const DECAL_GROUPS := ["DecalB", "DecalR", "DecalL2", "DecalL3", "DecalL4", "DecalL5"]
+const DOOR_RADII := [250, 325, 400, 475, 550, 625, 700, 775, 850, 925]
+const FLAT_SHELLS := ["podium", "drum", "setback"]
 const SLIDE := 0.75          # m: leaf travel
 const RIB_STEP := 2.5        # m between corridor ribs (ART-HAB)
 
@@ -32,10 +41,15 @@ var patches: Array = []      # wall_patch handles (close the hidden span beside 
 var dirty := true
 var tpl := {}
 var have_doorway := false
+## Test staging only (__fhr "doors <room> red"): that room's doors show the red (locked) state.
+var force_red := {}
 var slide := {"DoorL": Vector3(0, 0, 1), "DoorR": Vector3(0, 0, -1)}
 var stats := {"doors": 0, "rooms_cut": 0, "ribs": 0}
 var tall_stats := {}          # "<def>_<size>" -> "n of m hidden" (Tall_* near doorways, P5)
 var force_open := {}         # test staging only (__fhr "doors"): room id -> true
+var _t := 0.0
+var _door_tpls := {}         # file id -> template (status-tinted, accent-tinted, no shadow)
+var sign_rot := {}           # room id -> NameSign rotation (rad) applied
 
 func setup(v) -> void:
 	view = v
@@ -54,6 +68,27 @@ func setup(v) -> void:
 				var c: Vector3 = ((p["xf"] as Transform3D) * (p["mesh"] as Mesh).get_aabb()).get_center()
 				if absf(c.z) > 0.05:
 					slide[g] = Vector3(0, 0, signf(c.z))
+
+## The door kit whose wall radius is nearest to rw (ART-HAB R1); the flat-lid kit on
+## flat-roofed shells (F1).
+func door_tpl(rw: float, flat: bool) -> Dictionary:
+	var best: int = DOOR_RADII[0]
+	for r in DOOR_RADII:
+		if absf(float(r) / 100.0 - rw) < absf(float(best) / 100.0 - rw):
+			best = r
+	var id: String = ("doorway_flat_r%d" if flat else "doorway_r%d") % best
+	if not Models.has_model(id):
+		id = "doorway_r%d" % best
+	if not Models.has_model(id):
+		id = "doorway"
+	if _door_tpls.has(id):
+		return _door_tpls[id]
+	var tp: Dictionary = Models.no_shadow(Models.accent_tinted(Models.status_tinted(Models.prop([id], 1.2, "room", "logistics"))))
+	_door_tpls[id] = tp
+	return tp
+
+func _room_id(meta: Dictionary) -> String:
+	return String(meta["tpl"].get("key", "")).get_slice("@", 0).get_file().get_basename()
 
 func mark_dirty() -> void:
 	dirty = true
@@ -93,6 +128,8 @@ func _clear() -> void:
 			inst.set_group_custom(view.bmeta[rid]["h"], "Walls", Color(0, 0, 0, 0))
 			inst.set_group_custom(view.bmeta[rid]["h"], "WallsIn", Color(0, 0, 0, 0))
 			inst.set_group_custom(view.bmeta[rid]["h"], "Tall", Color(0, 0, 0, 0))
+			for g in DECAL_GROUPS:
+				inst.set_group_custom(view.bmeta[rid]["h"], g, Color(0, 0, 0, 0))
 	masks = {}
 	hb_masks = {}
 
@@ -154,9 +191,14 @@ func _rebuild() -> void:
 			_junction(rid, meta, room, per_room[rid], seg, patch_tpl)
 			continue
 		var rw: float = maxf(1.5, float(room["radius"]) - 0.32 * s)
-		# ART-HAB P4: the room-side pocket housings reach +-1.62 m.
-		var phi: float = asin(minf(0.99, 1.64 / rw))
-		var phi2: float = asin(clampf(1.07 / rw, 0.0, 1.0))
+		# ART-HAB D1/R1: the housing reaches +-1.72 m; segments within HIDE_HW go.
+		var phi: float = asin(minf(0.99, HIDE_HW / rw))
+		var phi2: float = asin(clampf(PATCH_HW / rw, 0.0, 0.99))
+		var phib: float = asin(clampf(BAND_HW / rw, 0.0, 0.99))
+		var rmeta: Dictionary = Nav.room_meta(_room_id(meta))
+		var has_upper: bool = rmeta.get("upper_z") != null or bool(meta["tpl"].get("has_upper", false))
+		var flat: bool = String(rmeta.get("shell", "")) in FLAT_SHELLS or has_upper
+		var dtpl: Dictionary = door_tpl(rw, flat) if have_doorway else {}
 		var room_xf: Transform3D = meta["xf"]
 		var accent: Color = (Models.CATEGORY_COLOR.get(String(sim.bdef(room["def"]).get("category", "logistics")), Color(0.8, 0.8, 0.8)) as Color).srgb_to_linear()
 		var hidden := {}
@@ -169,8 +211,8 @@ func _rebuild() -> void:
 			if have_doorway:
 				var local := Transform3D(Basis(Vector3.UP, beta), Vector3(rw * cos(beta), 0.0, -rw * sin(beta)))
 				var xf: Transform3D = room_xf * local
-				var h: int = inst.add(tpl, xf, accent)
-				doors.append({"room": rid, "link": d["link"], "h": h, "pos": xf.origin, "open": 0.0, "top": false})
+				var h: int = inst.add(dtpl, xf, accent)
+				doors.append({"room": rid, "link": d["link"], "h": h, "pos": xf.origin, "open": 0.0, "top": false, "near_t": -99.0, "want": 0.0, "status": ""})
 		var mask := 0
 		for k in hidden:
 			mask |= 1 << int(k)
@@ -200,6 +242,30 @@ func _rebuild() -> void:
 		var cuts: Array = []
 		for d in per_room[rid]:
 			cuts.append([float(d["beta"]) - phi2, float(d["beta"]) + phi2])
+		var plain_tpl: Dictionary = _plain_patch_tpl()
+		var upper_tpl: Dictionary = _prop_tpl("wall_patch_upper", false)
+		var cap_tpl: Dictionary = _prop_tpl("band_cap", true)
+		var uband_tpl: Dictionary = _prop_tpl("upper_band", true)
+		var uz = rmeta.get("upper_z")
+		var deck: float = float(uz[1]) if uz is Array and (uz as Array).size() > 1 else float(meta["tpl"].get("upper_deck", 0.0))
+		var setback: bool = String(rmeta.get("shell", "")) == "setback"
+		var ub = rmeta.get("upper_band")
+		# Band caps where the wall band ends beside each housing (R2, F2).
+		for d in per_room[rid]:
+			for sgn in [-1.0, 1.0]:
+				var ca: float = float(d["beta"]) + sgn * phib
+				if _in_patch_span(ca, hidden, seg, cuts) and not cap_tpl.is_empty():
+					var cxf := Transform3D(Basis(Vector3.UP, ca), Vector3(rw * cos(ca), 0.0, -rw * sin(ca)))
+					patches.append(inst.add(cap_tpl, room_xf * cxf, accent))
+					if ub is Array and (ub as Array).size() > 1:
+						var cz: float = 0.5 * (float(ub[0]) + float(ub[1])) - 1.03
+						patches.append(inst.add(cap_tpl, room_xf * Transform3D(cxf.basis, cxf.origin + Vector3(0, cz, 0)), accent))
+			# The upper patch over the housing (R3/F2): from 2.24 m to the deck.
+			if has_upper and not setback and deck > 2.24 and not upper_tpl.is_empty():
+				var hb0: float = float(d["beta"]) - phi2
+				var hb1: float = float(d["beta"]) + phi2
+				_patch_pieces(hb0, hb1, rw, func(mid: float, ch: float, r: float):
+					patches.append(inst.add(upper_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck - 2.24, ch)), Vector3(r * cos(mid), 2.24, -r * sin(mid))), accent)))
 		for run in _runs(hidden):
 			var a0: float = float(run[0]) * seg
 			var a1: float = float(run[1] + 1) * seg
@@ -219,23 +285,40 @@ func _rebuild() -> void:
 							nxt.append([c1, iv[1]])
 					parts = nxt
 			for iv in parts:
-				var span: float = float(iv[1]) - float(iv[0])
-				if span * rw < 0.02:
-					continue
-				var n: int = maxi(1, int(ceil(2.0 * rw * sin(span * 0.5) / 0.45)))
-				for i in n:
-					var b0: float = float(iv[0]) + span * i / n
-					var b1: float = float(iv[0]) + span * (i + 1) / n
-					var mid: float = (b0 + b1) * 0.5
-					var dd: float = b1 - b0
-					var ch: float = 2.0 * rw * sin(dd * 0.5) + 0.01
-					var r: float = rw * cos(dd * 0.5)
-					var local := Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, 1, ch)), Vector3(r * cos(mid), 0.0, -r * sin(mid)))
-					patches.append(inst.add(patch_tpl, room_xf * local, accent))
+				# Split at every band boundary (beta +- phib): plain patch inside, band patch outside.
+				var cutsb: Array = [float(iv[0]), float(iv[1])]
+				for d in per_room[rid]:
+					for sgn in [-1.0, 1.0]:
+						for shift in [-TAU, 0.0, TAU]:
+							var ca: float = float(d["beta"]) + sgn * phib + shift
+							if ca > float(iv[0]) and ca < float(iv[1]):
+								cutsb.append(ca)
+				cutsb.sort()
+				for ci in range(cutsb.size() - 1):
+					var s0: float = cutsb[ci]
+					var s1: float = cutsb[ci + 1]
+					var near_door := false
+					for d in per_room[rid]:
+						var mm: float = absf(angle_difference(float(d["beta"]), (s0 + s1) * 0.5))
+						if mm < phib:
+							near_door = true
+					var ptpl: Dictionary = plain_tpl if near_door and not plain_tpl.is_empty() else patch_tpl
+					_patch_pieces(s0, s1, rw, func(mid: float, ch: float, r: float):
+						patches.append(inst.add(ptpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, 1, ch)), Vector3(r * cos(mid), 0.0, -r * sin(mid))), accent))
+						if has_upper and not setback and deck > 1.40 and not upper_tpl.is_empty():
+							patches.append(inst.add(upper_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck - 1.40, ch)), Vector3(r * cos(mid), 1.40, -r * sin(mid))), accent))
+						if not near_door and ub is Array and (ub as Array).size() > 1 and not uband_tpl.is_empty():
+							patches.append(inst.add(uband_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, float(ub[1]) - float(ub[0]), ch)), Vector3(r * cos(mid), float(ub[0]), -r * sin(mid))), accent)))
 	for rid in masks:
 		var m: int = masks[rid]
-		inst.set_group_custom(view.bmeta[rid]["h"], "Walls", Color(float(m & 0xFFFF), float((m >> 16) & 0xFFFF), 0, 0))
-		inst.set_group_custom(view.bmeta[rid]["h"], "WallsIn", Color(float(m & 0xFFFF), float((m >> 16) & 0xFFFF), 0, 0))
+		var mc := Color(float(m & 0xFFFF), float((m >> 16) & 0xFFFF), 0, 0)
+		inst.set_group_custom(view.bmeta[rid]["h"], "Walls", mc)
+		inst.set_group_custom(view.bmeta[rid]["h"], "WallsIn", mc)
+		# Decals hide with the wall segments (ART-HAB D2: the doorway opening + 0.4 m lies
+		# inside the hidden span; the patches carry the band there).
+		for g in DECAL_GROUPS:
+			inst.set_group_custom(view.bmeta[rid]["h"], g, mc)
+		_place_sign(rid, m)
 	for rid in hb_masks:
 		var m2: int = hb_masks[rid]
 		inst.set_group_custom(view.bmeta[rid]["h"], "Tall", Color(float(m2 & 0xFFFF), float((m2 >> 16) & 0xFFFF), 0, 0))
@@ -342,6 +425,76 @@ func _junction(rid: int, meta: Dictionary, room: Dictionary, links: Array, seg: 
 	stats["junctions"] = int(stats.get("junctions", 0)) + 1
 	stats["junction_posts"] = int(stats.get("junction_posts", 0)) + posts.size()
 
+static var _plain_cache := {}
+func _plain_patch_tpl() -> Dictionary:
+	return _prop_tpl("wall_patch_plain", true)
+
+func _prop_tpl(id: String, accent: bool) -> Dictionary:
+	if not Models.has_model(id):
+		return {}
+	var key := "%s|%s" % [id, str(accent)]
+	if _plain_cache.has(key):
+		return _plain_cache[key]
+	var tp: Dictionary = Models.prop([id], 1.0, "room", "logistics")
+	tp = Models.no_shadow(Models.accent_tinted(tp) if accent else tp)
+	_plain_cache[key] = tp
+	return tp
+
+## Patch pieces of <= 0.45 m chord over [a0, a1]; fn(mid, chord, radius).
+func _patch_pieces(a0: float, a1: float, rw: float, fn: Callable) -> void:
+	var span: float = a1 - a0
+	if span * rw < 0.02:
+		return
+	var n: int = maxi(1, int(ceil(2.0 * rw * sin(span * 0.5) / 0.45)))
+	for i in n:
+		var b0: float = a0 + span * i / n
+		var b1: float = a0 + span * (i + 1) / n
+		var dd: float = b1 - b0
+		fn.call((b0 + b1) * 0.5, 2.0 * rw * sin(dd * 0.5) + 0.01, rw * cos(dd * 0.5))
+
+## True when model angle a lies in a hidden wall run outside every doorway cut.
+func _in_patch_span(a: float, hidden: Dictionary, seg: float, cuts: Array) -> bool:
+	if not hidden.has(posmod(int(floor(a / seg)), Models.WALL_SEGMENTS)):
+		return false
+	for c in cuts:
+		for shift in [-TAU, 0.0, TAU]:
+			if a > float(c[0]) + shift and a < float(c[1]) + shift:
+				return false
+	return true
+
+## The room-name sign on the free wall segment nearest its default angle (ART-HAB D2).
+func _place_sign(rid: int, mask: int) -> void:
+	var meta: Dictionary = view.bmeta[rid]
+	var sp: Dictionary = _group_part(meta, "NameSign")
+	if sp.is_empty():
+		return
+	var rmeta: Dictionary = Nav.room_meta(_room_id(meta))
+	var a0: float
+	if rmeta.has("name_sign_deg"):
+		a0 = deg_to_rad(float(rmeta["name_sign_deg"]))
+	else:
+		var c: Vector3 = ((sp["xf"] as Transform3D) * (sp["mesh"] as Mesh).get_aabb()).get_center()
+		a0 = atan2(-c.z, c.x)
+	var seg: float = TAU / float(Models.WALL_SEGMENTS)
+	var best := 0.0
+	for step in 33:
+		var off: float = seg * float((step + 1) / 2) * (1.0 if step % 2 == 1 else -1.0) if step > 0 else 0.0
+		var a: float = a0 + off
+		# The plate spans about 0.6 m either side; it needs free segments there.
+		var ok := true
+		for dk in [-1, 0, 1]:
+			if mask & (1 << posmod(int(floor(a / seg)) + dk, Models.WALL_SEGMENTS)):
+				ok = false
+		if ok:
+			best = off
+			break
+	if absf(best - float(sign_rot.get(rid, 0.0))) > 0.001 or not sign_rot.has(rid):
+		sign_rot[rid] = best
+		if absf(best) < 0.001:
+			view.inst.clear_extra(meta["h"], "NameSign")
+		else:
+			view.inst.set_extra(meta["h"], "NameSign", Transform3D(Basis(Vector3.UP, best), Vector3.ZERO))
+
 ## Contiguous runs [first, last] of hidden segments (a run may wrap past segment 31: then
 ## last > 31 and is taken mod 32 by the caller's angles).
 func _runs(hidden: Dictionary) -> Array:
@@ -371,6 +524,7 @@ func _runs(hidden: Dictionary) -> Array:
 	return out
 ## Door leaves slide open near a colonist; *Top parts follow the room's cutaway.
 func sync(delta: float, bodies: Array) -> void:
+	_t += delta
 	if dirty:
 		_rebuild()
 	if doors.is_empty() and ribs.is_empty():
@@ -396,9 +550,14 @@ func sync(delta: float, bodies: Array) -> void:
 						near = true
 						break
 		var o: float = float(d["open"])
-		var want: float = 1.0 if near or force_open.has(int(d["room"])) else 0.0
+		if near or force_open.has(int(d["room"])):
+			d["near_t"] = _t
+		var want: float = 1.0 if _t - float(d["near_t"]) < CLOSE_AFTER else 0.0
+		if want != float(d.get("want", 0.0)):
+			d["want"] = want
+			view.world_sound("door_slide", d["pos"])
 		if o != want:
-			o = move_toward(o, want, delta / (0.35 if near else 0.6))
+			o = move_toward(o, want, delta / MOVE_T)
 			d["open"] = o
 			var e: float = o * o * (3.0 - 2.0 * o) * SLIDE
 			for g in ["DoorL", "DoorLTop"]:
@@ -409,15 +568,25 @@ func sync(delta: float, bodies: Array) -> void:
 		var top: bool = rm != null and float(rm["open"]) > 0.5
 		# ART-HAB J2: an open door's upper leaves stand outside the entry hood: hidden while
 		# the door is open (at all), and with the roof in the cutaway.
-		var up_hide: bool = top or o > 0.01
+		# V3.1 (ART-HAB D1): a leaf is never hidden; in the cutaway everything above 1.40 m
+		# goes (…Top, Status, Sign).
 		if top != bool(d["top"]):
 			d["top"] = top
-			for g in ["FrameTop", "Sign"]:
+			for g in ["FrameTop", "DoorLTop", "DoorRTop", "Status", "Sign"]:
 				inst.set_hidden(d["h"], g, top)
-		if up_hide != bool(d.get("up_hidden", false)):
-			d["up_hidden"] = up_hide
-			for g in ["DoorLTop", "DoorRTop"]:
-				inst.set_hidden(d["h"], g, up_hide)
+		# Status light: red locked (breach in the room or its corridor, a shelter order),
+		# amber while the leaves move, green free.
+		var st := "green"
+		var blds2: Dictionary = sim.state["buildings"]
+		if force_red.has(int(d["room"])) or bool(blds2.get(int(d["room"]), {}).get("breach", false)) or bool(blds2.get(int(d["link"]), {}).get("breach", false)) or bool(sim.state.get("shelter", false)):
+			st = "red"
+		elif o > 0.001 and o < 0.999:
+			st = "amber"
+		if st != String(d.get("status", "")):
+			d["status"] = st
+			var sc: Color = Models.STATUS_RED if st == "red" else (Models.STATUS_AMBER if st == "amber" else Models.STATUS_GREEN)
+			inst.set_group_custom(d["h"], "Status", sc)
+			inst.set_group_custom(d["h"], "Lights", sc)
 	for lid in ribs:
 		var lm = view.bmeta.get(int(lid))
 		var open: bool = lm != null and float(lm["open"]) > 0.5

@@ -29,6 +29,8 @@ const Icons = preload("res://presentation/fx_icons.gd")
 const Ship = preload("res://presentation/fx_ship.gd")
 const Npc = preload("res://presentation/fx_npc.gd")
 const Doors = preload("res://presentation/fx_doors.gd")
+const Airlock = preload("res://presentation/fx_airlock.gd")
+const Traffic = preload("res://presentation/fx_traffic.gd")
 const Interior = preload("res://presentation/fx_interior.gd")
 const Hazards = preload("res://presentation/fx_hazards.gd")
 const Rng = preload("res://sim/rng.gd")
@@ -51,6 +53,8 @@ var ship
 var npc                    # fx_npc: skinned astronauts (falls back to the v2 rigid colonists)
 var npc_fixture := false   # test only: the procedural rig instead of the GLBs
 var doors                  # fx_doors: doorways, wall cuts, corridor ribs
+var airlock                # fx_airlock: the airlock cycle (V3_1 §5.3)
+var traffic                # fx_traffic: visiting ships landing and taking off (V3_1 §6.3)
 var interior               # fx_interior: interior lights and light pools
 var hazards                # fx_hazards: meteors, storms, quakes, flares, dust devils, breaches
 var inst                   # fx_instancer shared by structures, figures, crops, crates, rocks
@@ -157,6 +161,14 @@ func setup(s) -> void:
 	doors.name = "Doorways"
 	add_child(doors)
 	doors.setup(self)
+	airlock = Airlock.new()
+	airlock.name = "Airlocks"
+	add_child(airlock)
+	airlock.setup(self)
+	traffic = Traffic.new()
+	traffic.name = "Traffic"
+	add_child(traffic)
+	traffic.setup(self)
 	interior = Interior.new()
 	interior.name = "InteriorLights"
 	add_child(interior)
@@ -371,6 +383,8 @@ func sync(delta: float) -> void:
 	# Time of day (visual) and weather.
 	var day_len: float = float(sim.bal["day_length"])
 	var daylight: float = float(sim.planet["daylight_seconds"])
+	_night_warmup()
+	_cover_update(delta)
 	var t: float = time_override if time_override >= 0.0 else sim.util.day_time()
 	var storm: float = _storm_level()
 	sky.storm = lerpf(sky.storm, storm, 1.0 - exp(-delta * 0.8))
@@ -385,8 +399,16 @@ func sync(delta: float) -> void:
 	terrain.update_lod(delta, cam)
 	terrain.update_paths(sim_dt)
 	tp = _prof("paths", tp)
+	_made_now = 0
 	_sync_buildings(delta)
 	tp = _prof("buildings", tp)
+	# A colony just built (a load): do the one-time work now, in this (load) frame, instead of
+	# in the frames after it (V3.1 stall trace: 60-240 ms frames in the first second).
+	if _made_now >= 20:
+		_boot_prewarm(cam)
+		tp = _prof("boot", tp)
+	airlock.sync(delta)
+	tp = _prof("airlock", tp)
 	if npc.sync(delta):
 		if not ameta.is_empty():
 			for id in ameta.keys():
@@ -401,6 +423,7 @@ func sync(delta: float) -> void:
 	tp = _prof("hazards", tp)
 	_sync_piles()
 	ship.sync(delta, sim_dt)
+	traffic.sync(delta)
 	_sync_selection(delta)
 	overlays.sync(delta)
 	tp = _prof("misc", tp)
@@ -424,13 +447,140 @@ func sync(delta: float) -> void:
 		(_labels[id] as Label3D).visible = show_words
 	icons.visible = labels_visible and not _photo_mode()
 	_shake = move_toward(_shake, 0.0, delta * 2.0)
-	_frame_ms = lerpf(_frame_ms, (Time.get_ticks_usec() - t_frame) / 1000.0, 0.05)
+	# Name plates and door signs (0.3 m) cannot be read from far: not drawn beyond 60 m.
+	inst.set_far_hidden(["NameSign", "Sign"], camera_distance > 60.0)
+	var vms: float = (Time.get_ticks_usec() - t_frame) / 1000.0
+	_frame_ms = lerpf(_frame_ms, vms, 0.05)
+	_log_stall(delta, vms)
+	_frame_secs = {}
 	_publish_stats(delta)
 
 ## World labels and badges on or off (the title screen turns them off). Photo orbit and a
 ## time override also hide the words.
 func set_labels_visible(on: bool) -> void:
 	labels_visible = on
+
+var _made_now := 0
+var _night_warm := 0
+var _warm_frames := 0
+var _warm_t0 := 0.0
+var _warm_restore := -2.0
+var _warm_nodes: Array = []
+var _warm_handles: Array = []
+var _warm_cover: CanvasLayer = null
+## One-time work of a new colony: every terrain chunk mesh the camera needs, the walk grids of
+## every room, and a night warm-up (see _night_warmup).
+func _boot_prewarm(cam: Camera3D) -> void:
+	var t0: int = Time.get_ticks_usec()
+	var n: int = terrain.build_needed(cam)
+	var t1: int = Time.get_ticks_usec()
+	var g := 0
+	if npc != null and npc.planner != null:
+		for rid in bmeta:
+			var b: Dictionary = sim.state["buildings"].get(rid, {})
+			if b.is_empty() or String(b["kind"]) != "room" or bmeta[rid]["mode"] != "inst":
+				continue
+			npc.planner.coarse(int(rid))
+			npc.planner.coarse(int(rid), 0.15)
+			npc.planner.doors_of(int(rid))
+			g += 1
+	_warm_frames = 0
+	if traffic != null:
+		traffic._warm_n = 0
+	boot_info = {"chunks": n, "chunk_ms": snappedf((t1 - t0) / 1000.0, 0.1), "rooms": g, "grid_ms": snappedf((Time.get_ticks_usec() - t1) / 1000.0, 0.1)}
+	_night_warm = 3
+
+## Night warm-up (V3.1 stall trace, UI: the first night frame cost 108-150 ms of shader and
+## light-variant compiles). For 3 frames after a load the view is drawn at full night with an
+## omni and a spot light near the focus, under an opaque cover, then the time is restored.
+func _night_warmup() -> void:
+	if _night_warm <= 0:
+		return
+	if _warm_restore < -1.5:
+		_warm_restore = time_override
+		time_override = 420.0
+		_warm_t0 = _time
+		_sites_clock = 0.0
+		_warm_cover = CanvasLayer.new()
+		_warm_cover.layer = 120
+		var cr := ColorRect.new()
+		cr.color = Color(0, 0, 0, 1)
+		cr.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_warm_cover.add_child(cr)
+		add_child(_warm_cover)
+		var cam: Camera3D = get_viewport().get_camera_3d()
+		var at: Vector3 = _focus_now + Vector3(0, 4, 0)
+		var om := OmniLight3D.new()
+		om.omni_range = 600.0
+		om.light_energy = 1.0
+		add_child(om)
+		om.global_position = at
+		var sp := SpotLight3D.new()
+		sp.spot_range = 600.0
+		sp.spot_angle = 89.0
+		add_child(sp)
+		sp.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), at + Vector3(0, 150, 0))
+		# (both reach every structure in view: each material meets an omni and a spot once)
+		_warm_nodes = [om, sp]
+		# Models first used mid-game (a pile of bought goods, a supply pod, meteor props, a ship
+		# kind not on a pad yet): drawn once, tiny, in front of the camera (V3.1 stall trace).
+		_warm_handles = []
+		if cam != null:
+			var fwd: Vector3 = -cam.global_transform.basis.z
+			var wx := Transform3D(Basis.from_scale(Vector3(0.01, 0.01, 0.01)), cam.global_position + fwd * 3.0)
+			for f in ["crate_raw", "crate_material", "crate_component", "crate_medical", "crate_food", "crate", "supply_pod", "meteor_rock", "crater", "fragments", "meteor_turret"]:
+				if Models.has_model(f):
+					_warm_handles.append(inst.add(Models.prop([f], 0.5, "exterior", "logistics"), wx))
+			for k in ["trader", "shuttle", "liner", "medical", "science", "courier"]:
+				if Models.has_model("ship_" + k):
+					var sn: Node3D = Models.node_from(Models.prop(["ship_" + k], 1.0, "exterior", "logistics"))
+					add_child(sn)
+					sn.global_transform = wx
+					_warm_nodes.append(sn)
+	# Hold the night until the sky is fully dark and every structure's Lights are on (at most
+	# 40 frames); the flame, dust and mist warm-up of fx_traffic runs in the same frames.
+	# (at least 1.3 s: the night lamp sites, helmet lamps and light pools refresh once a second)
+	if _night_warm == 1 and (float(sky.night) < 0.97 or _time - _warm_t0 < 1.3) and _time - _warm_t0 < 3.0:
+		_night_warm = 2
+	# First the sunset itself (the sun at the horizon: 108-150 ms of first-use work, UI trace),
+	# then full night.
+	time_override = 360.0 if _time - _warm_t0 < 0.6 else 420.0
+	_warm_frames += 1
+	_night_warm -= 1
+	if _night_warm == 0:
+		boot_info["warm_frames"] = _warm_frames
+		boot_info["warm_night"] = snappedf(float(sky.night), 0.01)
+		boot_info["warm_s"] = snappedf(_time - _warm_t0, 0.01)
+		_cover_hold = 0.0
+		time_override = _warm_restore
+		_warm_restore = -2.0
+		for nd in _warm_nodes:
+			if is_instance_valid(nd):
+				(nd as Node).queue_free()
+		_warm_nodes = []
+		for hh in _warm_handles:
+			inst.remove(hh)
+		_warm_handles = []
+var boot_info := {}
+## The load cover stays until the first-draw frames are over (shader compiles of a new colony):
+## two frames in a row under 34 ms, at most 4 s. Stall counters restart when it lifts.
+var _cover_hold := -1.0
+var _cover_fast := 0
+func _cover_update(delta: float) -> void:
+	if _cover_hold < 0.0 or _warm_cover == null:
+		return
+	_cover_hold += delta
+	_cover_fast = _cover_fast + 1 if delta < 0.034 else 0
+	if _cover_fast >= 20 or _cover_hold > 5.0:
+		boot_info["cover_s"] = snappedf(_cover_hold, 0.01)
+		boot_info["cover_frames_over_50"] = int(stall_count["frame_over_50"])
+		boot_info["cover_max_ms"] = snappedf(float(stall_count["max_frame_ms"]), 0.1)
+		_warm_cover.queue_free()
+		_warm_cover = null
+		_cover_hold = -1.0
+		stall_count = {"view_over_25": 0, "frame_over_50": 0, "frames": 0, "max_frame_ms": 0.0, "max_view_ms": 0.0}
+		stalls = []
 
 func _photo_mode() -> bool:
 	var r = rig()
@@ -441,7 +591,51 @@ var _prof_ms := {}
 func _prof(name: String, t0: int) -> int:
 	var t1: int = Time.get_ticks_usec()
 	_prof_ms[name] = lerpf(float(_prof_ms.get(name, 0.0)), (t1 - t0) / 1000.0, 0.05)
+	_frame_secs[name] = (t1 - t0) / 1000.0
 	return t1
+
+## Stall log (UI item 6): every view frame over 25 ms with its sections, and every real
+## frame over 50 ms (the whole engine frame, from delta).
+var _frame_secs := {}
+var stalls: Array = []
+var stall_count := {"view_over_25": 0, "frame_over_50": 0, "frames": 0, "max_frame_ms": 0.0, "max_view_ms": 0.0}
+var _last_proc_ms := 0.0
+var _batch_keys := {}
+var _new_batches: Array = []
+var _child_n := 0
+func _log_stall(delta: float, view_ms: float) -> void:
+	if inst.batches.size() != _batch_keys.size():
+		for bk in inst.batches:
+			if not _batch_keys.has(bk):
+				_batch_keys[bk] = true
+				_new_batches.append("%.1fs %s" % [_time, String(bk).get_file()])
+		while _new_batches.size() > 6:
+			_new_batches.pop_front()
+	var cn: int = get_child_count()
+	# (the frame before this one: its process time; delta is that frame's full length)
+	_last_proc_ms = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	stall_count["frames"] = int(stall_count["frames"]) + 1
+	stall_count["max_frame_ms"] = maxf(float(stall_count["max_frame_ms"]), delta * 1000.0)
+	stall_count["max_view_ms"] = maxf(float(stall_count["max_view_ms"]), view_ms)
+	if delta * 1000.0 > 50.0:
+		stall_count["frame_over_50"] = int(stall_count["frame_over_50"]) + 1
+		if stalls.size() < 40:
+			stalls.append("%.1fs FRAME %.0f ms (view %.0f ms, last process %.0f ms, sim step avg %.1f ms x speed %d, mist %d, draws %d)" % [_time, delta * 1000.0, view_ms, _last_proc_ms, float(get_parent().get("_step_ms") if get_parent().get("_step_ms") != null else -1.0), int(get_parent().get("speed") if get_parent().get("speed") != null else 0), airlock.get_child_count() if airlock != null else 0, int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))])
+			var hz_now: Array = []
+			for ev in sim.hazards.active():
+				hz_now.append(String(ev.get("kind", "")) + ":" + String(ev.get("phase", "")))
+			var lg0: Array = sim.state.get("log", [])
+			stalls.append("   new batches %s view children %d mem %.1f MB (max %.1f)" % [str(_new_batches), cn, Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, Performance.get_monitor(Performance.MEMORY_STATIC_MAX) / 1048576.0])
+			stalls.append("   hazards %s fx children %d hz children %d last log %s" % [str(hz_now), fx.get_child_count(), hazards.get_child_count(), str(lg0[-1].get("code", "")) if not lg0.is_empty() and lg0[-1] is Dictionary else ""])
+			stalls.append("   night %.2f bld %d agents %d ships %s objects %d" % [float(sky.night), bmeta.size(), sim.state["agents"].size(), str(traffic.info().map(func(r): return String(r["kind"]) + ":" + String(r["phase"]) + ":" + str(r["hgt"]))) if traffic != null else "", int(Performance.get_monitor(Performance.OBJECT_COUNT))])
+	if view_ms > 25.0:
+		stall_count["view_over_25"] = int(stall_count["view_over_25"]) + 1
+		var top: Array = []
+		for k in _frame_secs:
+			if float(_frame_secs[k]) > 3.0:
+				top.append("%s %.0f" % [k, _frame_secs[k]])
+		if stalls.size() < 40:
+			stalls.append("%.1fs view %.0f ms: %s" % [_time, view_ms, ", ".join(top)])
 
 func _focus() -> Vector3:
 	var r = rig()
@@ -487,7 +681,17 @@ func _template(b: Dictionary) -> Dictionary:
 	if b["kind"] == "link":
 		return Models.prop([String(b["def"])], 1.2, "room", "logistics")
 	var size: int = int(b.get("size", 1)) if def.has("sizes") else -1
-	return Models.building(b["def"], size, float(b["radius"]), float(def.get("radius", b["radius"])), b["kind"], def.get("category", "logistics"))
+	# Old-save airlocks (record radius 2.8 m, before the 3.4 m airlock): ART-HAB's own R 2.8
+	# model, unscaled (ART-HAB F0; never airlock_m scaled down).
+	if String(b["def"]) == "airlock" and float(b["radius"]) < 3.0 and Models.has_model("airlock_r28"):
+		return Models.status_tinted(Models.building("airlock_r28", -1, float(b["radius"]), float(b["radius"]), b["kind"], def.get("category", "logistics")))
+	var s_r: float = -1.0
+	if size >= 0 and (def["sizes"] as Dictionary).has("radius"):
+		var ra: Array = def["sizes"]["radius"]
+		s_r = float(ra[clampi(size, 0, ra.size() - 1)])
+	var tb: Dictionary = Models.building(b["def"], size, float(b["radius"]), float(def.get("radius", b["radius"])), b["kind"], def.get("category", "logistics"), s_r)
+	# Airlock lights take their colour from the cycle (fx_airlock).
+	return Models.status_tinted(tb) if String(b["def"]) == "airlock" else tb
 
 func _bxf(b: Dictionary) -> Transform3D:
 	if b["kind"] == "link":
@@ -514,6 +718,7 @@ func _sync_buildings(delta: float) -> void:
 		if not bmeta.has(id):
 			_make_building(b, mode)
 			changed = true
+			_made_now += 1
 		elif bmeta[id]["mode"] != mode:
 			_mode_flips[id] = "%s>%s" % [bmeta[id]["mode"], mode]
 			_drop_building(id)
@@ -689,6 +894,15 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 				inst.clear_extra(hnd, g)
 			else:
 				inst.set_extra(hnd, g, xf)
+	# V3.1 (ART-HAB D1/D2/R5): in the cutaway everything above 1.40 m goes: every group whose
+	# name ends in Top or Status, the pressure lights, the beacon, roof decals; level decals
+	# show with their level only.
+	for g in (meta["tpl"].get("groups", {}) as Dictionary):
+		var gs: String = g
+		if gs.ends_with("Top") or gs.ends_with("Status") or gs.begins_with("PressureLight") or gs == "Beacon" or gs == "DecalR":
+			inst.set_hidden(hnd, gs, o > 0.0)
+		elif gs.begins_with("DecalL"):
+			inst.set_hidden(hnd, gs, o > 0.0 or lvl < int(gs.substr(6)))
 	if not bool(meta["glass_roof"]):
 		inst.set_hidden(hnd, "Interior", o <= 0.0)
 		inst.set_hidden(hnd, "Tall", o <= 0.0)
@@ -1372,7 +1586,11 @@ func _make_outline(id: int) -> Node3D:
 		var g: String = p["group"]
 		# Wall segments are left out: the outline shader does not know the doorway mask, so
 		# hidden segments would show as cyan shells (critic round 2).
-		if g in ["Interior", "Lights", "Rotor", "Scaffold", "EngineGlow", "Plasma", "Walls", "WallsIn", "Tall"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))):
+		# Critic round 13: only the body of the structure (Base, roof, levels). Decal bands drew
+		# 2-3 stacked cyan rings on rooms, and the airlock's door, housing, status and *Top parts
+		# (hidden in the cutaway) drew as solid cyan slabs.
+		var body_part: bool = g == "Base" or g == "Roof" or (g.length() == 2 and g[0] == "L" and g[1].is_valid_int()) or g == "Rotor"
+		if not body_part or g in ["Rotor"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))):
 			continue
 		if g.length() == 2 and g[0] == "L" and int(g[1]) > lvl:
 			continue
@@ -1571,6 +1789,9 @@ func stats() -> Dictionary:
 		"prof": _prof_snapshot(),
 		"npc": npc.stats() if npc != null else {},
 		"doors": doors.stats if doors != null else {},
+		"airlock": airlock.stats if airlock != null else {},
+		"boot": boot_info,
+		"traffic": traffic.stats if traffic != null else {},
 		"interior": interior.stats if interior != null else {},
 		"hazards": hazards.stats if hazards != null else {},
 		"lod": terrain.lod_counts if terrain != null else [],
@@ -1754,9 +1975,51 @@ func debug_cmd(text: String) -> String:
 						best = minf(best, cp.distance_to(sim.state["buildings"][bid]["pos"]))
 					o2.append("%.0f,%.0f r%.1f near%.1f" % [cp.x, cp.y, float(c["r"]), best])
 			return str(o2)
+		"tallparts":
+			# tallparts <room id>: drawn groups of the room and its doorway kits whose top is above
+			# 1.45 m (the cutaway rule check, critic round 13).
+			var rid0: int = int(w[1])
+			var hs: Array = []
+			if bmeta.has(rid0):
+				hs.append(["room", int(bmeta[rid0]["h"])])
+			for dd in doors.doors:
+				if int(dd["room"]) == rid0:
+					hs.append(["door", int(dd["h"])])
+			var out0: Array = []
+			for e in hs:
+				if not inst.handles.has(e[1]):
+					continue
+				var he: Dictionary = inst.handles[e[1]]
+				var bt: Dictionary = inst.batches[he["key"]]
+				var sc: float = float(he.get("scale", 1.0))
+				for pp in bt["parts"]:
+					var part: Dictionary = pp["part"]
+					if bool(part.get("shadow_only", false)) or (he["hidden"] as Dictionary).has(part["group"]):
+						continue
+					var ab0: AABB = (part["xf"] as Transform3D) * (part["mesh"] as Mesh).get_aabb()
+					if ab0.end.y * sc > 1.45:
+						out0.append("%s %s %.2f" % [e[0], part["group"], ab0.end.y * sc])
+			return "open %.2f | %s" % [float(bmeta[rid0]["open"]) if bmeta.has(rid0) else -1.0, ", ".join(out0)]
+		"visitors":
+			# visitors: id vkind x z of every visitor body (tests and shots).
+			var vl: Array = []
+			for vid in npc.agents:
+				var va: Dictionary = sim.state["agents"].get(vid, {})
+				if String(va.get("kind", "")) == "visitor":
+					var vp: Vector3 = npc._dp(npc.agents[vid])
+					vl.append("%d %s %.1f %.1f" % [int(vid), String(va.get("vkind", "")), vp.x, vp.z])
+			return ";".join(vl)
+		"ships":
+			# ships: the view state of visiting ships (height, legs, ramp, doors, floods).
+			return str(traffic.info())
+		"airlock":
+			# airlock <id>: the view state of an airlock's cycle (doors, pressure, phase).
+			return str(airlock.info(int(w[1])))
 		"doors":
 			# doors <room id> 1|0: hold that room's doors open (tests and shots; view only).
-			if w.size() > 2 and w[2] == "1":
+			if w.size() > 2 and w[2] == "red":
+				doors.force_red[int(w[1])] = true
+			elif w.size() > 2 and w[2] == "1":
 				doors.force_open[int(w[1])] = true
 			else:
 				doors.force_open.erase(int(w[1]))
@@ -1903,6 +2166,13 @@ func debug_cmd(text: String) -> String:
 			else:
 				npc.forced_goto[int(w[1])] = [Vector2(float(w[2]), float(w[3])), float(w[4]) if w.size() > 4 else 3.4]
 			return "ok"
+		"breachdoor":
+			# breachdoor: "x z yaw" of a doorway whose room or corridor is breached (red state shots).
+			for d in doors.doors:
+				var bl: Dictionary = sim.state["buildings"]
+				if bool(bl.get(int(d["room"]), {}).get("breach", false)) or bool(bl.get(int(d["link"]), {}).get("breach", false)):
+					return "%.2f %.2f %d %d" % [(d["pos"] as Vector3).x, (d["pos"] as Vector3).z, int(d["room"]), int(d["link"])]
+			return "none"
 		"doorpos":
 			# doorpos <room id>: world x z of each doorway of that room and its open value (tests).
 			var dp: Array = []
@@ -1961,6 +2231,47 @@ func debug_cmd(text: String) -> String:
 					var mi5: MeshInstance3D = ch
 					dl2.append("%s vis%s gp%s sc%s aabb%s prio%d col%s icol%s layers%d" % [mi5.name, str(mi5.is_visible_in_tree()), str(mi5.global_position.snappedf(0.1)), str(mi5.scale.snappedf(0.1)), str(mi5.get_aabb()), mi5.material_override.render_priority, str(mi5.material_override.get_shader_parameter("color")), str(mi5.get_instance_shader_parameter("icolor")), mi5.layers])
 			return str(dl2)
+		"stalls":
+			# stalls [reset]: frames over 50 ms and view frames over 25 ms with their sections.
+			if w.size() > 1 and w[1] == "reset":
+				stalls = []
+				stall_count = {"view_over_25": 0, "frame_over_50": 0, "frames": 0, "max_frame_ms": 0.0, "max_view_ms": 0.0}
+				return "ok"
+			return JSON.stringify({"count": stall_count, "log": stalls})
+		"decalcheck":
+			# decalcheck: for every doorway, the visible Decal_<seg> segments that meet the opening
+			# plus 0.4 m on each side (ART-HAB D2 acceptance: must be 0). Per room type.
+			var seg: float = TAU / float(Models.WALL_SEGMENTS)
+			var bad := {}
+			var checked := {}
+			for d in doors.doors:
+				var rid: int = int(d["room"])
+				if not bmeta.has(rid):
+					continue
+				var room: Dictionary = sim.state["buildings"][rid]
+				var meta2: Dictionary = bmeta[rid]
+				var s2: float = float(meta2["tpl"].get("scale", 1.0))
+				var rw: float = maxf(1.5, float(room["radius"]) - 0.32 * s2)
+				var l3: Vector3 = (meta2["xf"] as Transform3D).affine_inverse() * (d["pos"] as Vector3)
+				var beta: float = atan2(-l3.z, l3.x)
+				var ph: float = asin(minf(0.99, (0.75 + 0.40) / rw))
+				var mask: int = int(doors.masks.get(rid, 0))
+				var tk: String = "%s_%d" % [room["def"], int(room.get("size", 1))]
+				checked[tk] = int(checked.get(tk, 0)) + 1
+				for p in meta2["tpl"]["parts"]:
+					if not String(p["group"]).begins_with("Decal"):
+						continue
+					for sk in (p.get("seg_pos", {}) as Dictionary):
+						if mask & (1 << int(sk)):
+							continue
+						var a0: float = float(sk) * seg
+						var a1: float = a0 + seg
+						var lo: float = beta - ph
+						var hi: float = beta + ph
+						for sh in [-TAU, 0.0, TAU]:
+							if a1 > lo + sh and a0 < hi + sh:
+								bad[tk] = int(bad.get(tk, 0)) + 1
+			return JSON.stringify({"doorways_checked": checked, "decal_segments_in_openings": bad})
 		"followid":
 			# followid <agent id>: the camera follows that body (tests and shots).
 			var r6 = rig()
@@ -2114,3 +2425,28 @@ func debug_cmd(text: String) -> String:
 		_:
 			return "unknown command"
 	return "ok"
+
+## World sound (V3_1 §2.2): UI plays it with distance fall-off from the camera focus.
+## Returns UI's handle (for world_stop / world_move), or -1.
+func world_sound(name: String, pos: Vector3) -> int:
+	var au = _audio()
+	if au != null and (au as Object).has_method("world"):
+		var r = au.world(name, pos)
+		return int(r) if r != null else -1
+	return -1
+
+func world_stop(handle: int) -> void:
+	var au = _audio()
+	if handle >= 0 and au != null and (au as Object).has_method("world_stop"):
+		au.world_stop(handle)
+
+func world_move(handle: int, pos: Vector3) -> void:
+	var au = _audio()
+	if handle >= 0 and au != null and (au as Object).has_method("world_move"):
+		au.world_move(handle, pos)
+
+func _audio():
+	var m = get_parent()
+	while m != null and not (m.get("audio") != null):
+		m = m.get_parent()
+	return m.get("audio") if m != null else null

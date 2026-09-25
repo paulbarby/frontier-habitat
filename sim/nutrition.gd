@@ -66,8 +66,18 @@ func starved(a: Dictionary) -> bool:
 			return true
 	return false
 
+## True when any nutrient is below the deficiency line (the same test as deficient(), without
+## building the list: this runs for every worker every tick).
+func any_deficient(a: Dictionary) -> bool:
+	var n: Dictionary = a.get("nutrition", {})
+	var lim: float = float(_cfg["deficient_below"])
+	for k in _n:
+		if float(n.get(k, 100.0)) < lim:
+			return true
+	return false
+
 func work_mult(a: Dictionary) -> float:
-	return float(_cfg["deficient_work_mult"]) if not deficient(a).is_empty() else 1.0
+	return float(_cfg["deficient_work_mult"]) if any_deficient(a) else 1.0
 
 func regen_mult(a: Dictionary) -> float:
 	return float(_cfg["well_fed_regen_mult"]) if well_fed(a) else 1.0
@@ -77,25 +87,27 @@ func morale_delta(a: Dictionary) -> float:
 	var m := 0.0
 	if well_fed(a):
 		m += float(_cfg["well_fed_morale"])
-	elif not deficient(a).is_empty():
+	elif any_deficient(a):
 		m += float(_cfg["deficient_morale"])
+	# Variety and taste over the last meals, without copying the diet (runs once a second
+	# for every colonist; the same sums in the same order as before).
 	var diet: Array = a.get("diet", [])
-	var window: int = int(_cfg["variety_window"])
-	var recent: Array = diet.slice(maxi(0, diet.size() - window))
-	var distinct := {}
-	for d in recent:
-		distinct[d] = true
+	var n: int = diet.size()
+	var from: int = maxi(0, n - int(_cfg["variety_window"]))
+	var distinct: Array = []
+	for i in range(from, n):
+		if not distinct.has(diet[i]):
+			distinct.append(diet[i])
 	if distinct.size() >= int(_cfg["variety_good"]):
 		m += float(_cfg["variety_good_morale"])
-	elif distinct.size() == 1 and recent.size() >= 3:
+	elif distinct.size() == 1 and n - from >= 3:
 		m += float(_cfg["variety_bad_morale"])
-	var tw: int = int(_cfg["taste_window"])
-	var last: Array = diet.slice(maxi(0, diet.size() - tw))
-	if not last.is_empty():
+	var from2: int = maxi(0, n - int(_cfg["taste_window"]))
+	if n > from2:
 		var t := 0.0
-		for d in last:
-			t += float(sim.items.info(String(d)).get("taste", 0.0))
-		m += float(_cfg["taste_morale_mult"]) * t / last.size()
+		for i in range(from2, n):
+			t += float(sim.items.info(String(diet[i])).get("taste", 0.0))
+		m += float(_cfg["taste_morale_mult"]) * t / (n - from2)
 	return m
 
 ## Once per second: while the colonist is critically hungry (not eating), every value
@@ -160,7 +172,7 @@ func colony() -> Dictionary:
 	var people := 0
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive":
+		if a["state"] != "alive" or a["kind"] == "visitor":
 			continue
 		people += 1
 		var n: Dictionary = a.get("nutrition", {})
@@ -178,7 +190,7 @@ func shortage_counts() -> Dictionary:
 	var out := {}
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive":
+		if a["state"] != "alive" or a["kind"] == "visitor":
 			continue
 		for k in deficient(a):
 			out[k] = int(out.get(k, 0)) + 1

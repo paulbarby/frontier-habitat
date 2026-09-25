@@ -26,6 +26,10 @@ static func load_all() -> Dictionary:
 	var goals_file: Dictionary = _read("res://content/goals.json")
 	c["chapters"] = goals_file.get("chapters", [])
 	c["victory"] = goals_file.get("victory", {})
+	c["ships"] = _strip(_read("res://content/ships.json"))
+	c["trade"] = _strip(_read("res://content/trade.json"))
+	# V3.1 door clearance (ART-HAB data): model angles where a new corridor may not attach.
+	c["door_blocked"] = _read("res://content/door_blocked.json").get("rooms", {}) if FileAccess.file_exists("res://content/door_blocked.json") else {}
 	var awards_file: Dictionary = _read("res://content/awards.json")
 	c["award_tiers"] = awards_file.get("tiers", {})
 	c["awards"] = awards_file.get("awards", {})
