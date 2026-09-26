@@ -81,6 +81,10 @@ func _process(_d: float) -> bool:
 			# 60 game seconds in 1 s slices with a world-sound check after each (like play at
 			# speed 1, where the check runs 5 times a second), the camera at the pad.
 			cmd("goto " + String(get_meta("spot")))
+			# Close over the pad: local sounds are heard only zoomed in (<= 35 m) and within 25 m.
+			main.rig.distance = 15.0
+			main.rig.target_distance = 15.0
+			main.rig.focus = main.view.to3(main.hud.data.traffic_row(-1).get("pad_pos", Vector2(float(String(get_meta("spot")).split(" ")[0]), float(String(get_meta("spot")).split(" ")[1]))))
 			main.hud.watchers.world.reset()
 			for sec in 60:
 				for k in int(main.sim.bal["tick_hz"]):
@@ -146,7 +150,7 @@ func _process(_d: float) -> bool:
 			if vid != "not found":
 				check("visitor inspector card", main.hud.inspector.visible and String(main.hud.inspector._title.text).length() > 0 and main.hud.inspector._badges.get_child_count() > 0, main.hud.inspector._title.text)
 			var pl: Dictionary = main.audio.played
-			check("world sounds from the simulation played (airlock, ship)", pl.has("airlock_seal") and pl.has("ship_touchdown") and pl.has("ship_descent"), str(pl))
+			check("world sounds from the simulation played close over the pad (ship landing)", pl.has("ship_touchdown") and pl.has("ship_descent"), str(pl))
 			# door_slide is RENDER's (fx_doors.gd, fx_airlock.gd): the UI's world sounds must not play it.
 			check("the UI plays no door_slide (RENDER plays the doors)", not FileAccess.get_file_as_string("res://ui/hud/world_sounds.gd").contains("world(\"door_slide\""), "RENDER played it %d times" % int(pl.get("door_slide", 0)))
 			print("RESULT %s (%d failed)" % ["PASS" if fails == 0 else "FAIL", fails])

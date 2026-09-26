@@ -72,6 +72,8 @@ alternate. Tension holds for at least 30 s after its cause clears. Silence gap 5
 tracks (deterministic from a local counter, not the sim RNG). Music bus default 0.5 (exists).
 
 ### 2.2 World sounds (positional)
+**Changed 26 Sep (Paul):** local sounds (doors, airlock, machines, construction, ramp, turret, ship engines) play only when the camera is zoomed in: zoom factor full at ≤ 20 m camera distance, silent at 35 m; source factor full within 8 m of the focus, silent at 25 m. Meteor impact, quake and storm stay audible at every zoom, quieter when zoomed out.
+
 RENDER calls `main.audio.world(name: String, pos: Vector3)` for events it shows; UI plays them with
 distance fall-off from the camera focus (inaudible beyond 120 m) and a limit of 3 of one name at a
 time. New SFX (Eleven SFX): `door_slide`, `airlock_seal`, `airlock_pump` (loop 3–4 s),

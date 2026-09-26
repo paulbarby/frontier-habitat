@@ -336,3 +336,14 @@ could reach the 50 ms target for those frames. The UI's duplicate door_slide at 
 the card of the ship it belongs to (by kind: tourists -> liner; the first such ship landing, landed or boarding), or at
 the bottom of the traffic panel when that ship is not on show; never in the alert list. Tests: `test_ships_ui` 20 of 20
 (new: the notice sits on the mock liner card; no tourist text in the alerts), `test_window_bounds` 68 of 68.
+## 2026-09-26 — effect sounds only when zoomed in and close (Paul)
+
+`ui/audio.gd`: world sound level = zoom factor x distance factor, by class, numbers in `assets/audio/manifest.json`
+"world_rules". Local (doors, airlock seal/pump/vent, construction, ramp, turret, ship descent/touchdown/take-off,
+the old airlock sound): zoom full <= 20 m, silent >= 35 m; source full within 8 m of the focus, silent at 25 m.
+Big (meteor impact, quake rumble, storm loop): every zoom, 0.4 of the level at >= 150 m zoom, silent beyond 500 m.
+Levels follow the camera each frame (loops fade out on zoom-out, back on zoom-in); a silent one-shot does not start.
+Construction and upgrade sounds moved from the interface bus to world sounds at the structure.
+Tests: `test_world_audio` 16 of 16 (no local sound at 110 m or 50 m zoom; full at 15 m zoom within 8 m; loop fade;
+big events at 110 m zoom lower than close); `test_ships_ui` 20 of 20 (camera at 15 m over the pad);
+`test_window_bounds` 68 of 68; `audio_probe` PASS: music −23.7 dBFS peak, ambience only −30.1 dBFS.

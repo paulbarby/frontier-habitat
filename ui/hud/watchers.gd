@@ -171,12 +171,12 @@ func check() -> void:
 			match String(e.get("code", "")):
 				"commissioned":
 					hud.toast(String(e["text"]), "good", "build")
-					Sfx.play("construct")
+					_world_at("construct", e)
 				"settlers":
 					hud.toast(String(e["text"]), "info", "people")
 				"upgraded":
 					hud.toast(String(e["text"]), "good", "upgrade")
-					Sfx.play("construct")
+					_world_at("construct", e)
 				"ship", "ship_run", "ship_flight":
 					hud.toast(String(e["text"]), "info", "ship")
 				"storm_warning", "storm":
@@ -200,6 +200,13 @@ func check() -> void:
 							Sfx.play("trade_chime")
 	if not log.is_empty():
 		_log_tick = maxi(_log_tick, int(log[log.size() - 1]["tick"]))
+
+## A world sound at the log entry's first structure (only heard zoomed in and close: audio.gd rules).
+func _world_at(name: String, e: Dictionary) -> void:
+	var ents: Array = e.get("entities", [])
+	var blds: Dictionary = hud.main.sim.state["buildings"]
+	if hud.main.audio != null and not ents.is_empty() and blds.has(int(ents[0])):
+		hud.main.audio.world(name, blds[int(ents[0])]["pos"])
 
 func _goal_name(id: String) -> String:
 	for ch in hud.data.chapters():

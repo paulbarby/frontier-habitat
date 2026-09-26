@@ -143,65 +143,95 @@
   "world": {
     "door_slide": {
       "file": "door_slide.mp3",
-      "db": -8
+      "db": -8,
+      "class": "local"
     },
     "airlock_seal": {
       "file": "airlock_seal.mp3",
-      "db": -6
+      "db": -6,
+      "class": "local"
     },
     "airlock_pump": {
       "file": "airlock_pump.mp3",
       "db": -12,
       "loop": true,
-      "max_s": 30
+      "max_s": 30,
+      "class": "local"
     },
     "airlock_vent": {
       "file": "airlock_vent.mp3",
-      "db": -8
+      "db": -8,
+      "class": "local"
     },
     "ship_descent": {
       "file": "ship_descent.mp3",
       "db": -12,
       "loop": true,
-      "max_s": 40
+      "max_s": 40,
+      "class": "local"
     },
     "ship_touchdown": {
       "file": "ship_touchdown.mp3",
-      "db": -8
+      "db": -8,
+      "class": "local"
     },
     "ship_takeoff": {
       "file": "ship_takeoff.mp3",
-      "db": -12
+      "db": -12,
+      "class": "local"
     },
     "ramp": {
       "file": "ramp.mp3",
-      "db": -4
+      "db": -4,
+      "class": "local"
     },
     "meteor_impact": {
       "file": "meteor_impact.mp3",
-      "db": -2
+      "db": -2,
+      "class": "big"
     },
     "turret_fire": {
       "file": "turret_fire.mp3",
-      "db": -6
+      "db": -6,
+      "class": "local"
     },
     "quake_rumble": {
       "file": "quake_rumble.mp3",
-      "db": 0
+      "db": 0,
+      "class": "big"
     },
     "storm_loop": {
       "file": "storm_loop.mp3",
       "db": -10,
       "loop": true,
-      "max_s": 300
+      "max_s": 300,
+      "class": "big"
     },
     "airlock": {
       "file": "airlock.mp3",
-      "db": -10
+      "db": -10,
+      "class": "local"
     },
     "construct": {
       "file": "construct.mp3",
-      "db": -8
+      "db": -8,
+      "class": "local"
+    }
+  },
+  "world_rules": {
+    "_note": "Paul 2026-09-26: effect sounds only when zoomed in and close. local: zoom (camera distance to its focus) full <= zoom_full, silent >= zoom_off; source full within near_full of the focus, silent at near_off. big: every zoom; zoomed out (>= zoom_far) at far_gain of the level; full within near_full, silent at near_off. Metres.",
+    "local": {
+      "zoom_full": 20,
+      "zoom_off": 35,
+      "near_full": 8,
+      "near_off": 25
+    },
+    "big": {
+      "zoom_full": 35,
+      "zoom_far": 150,
+      "far_gain": 0.4,
+      "near_full": 40,
+      "near_off": 500
     }
   }
 }
