@@ -1823,8 +1823,10 @@ _GAME_GROUPS = ["Interior", "Roof", "Rotor", "Lights", "Scaffold", "EngineGlow",
 
 def game_group(n):
     """The group the game merges an object into (presentation/models.gd group_of)."""
-    if (n.startswith("Wall_") and n[5:7].isdigit()) or (n.startswith("Upper_") and n[6:8].isdigit()):
+    if n.startswith("Wall_") and n[5:7].isdigit():
         return "Walls"
+    if n.startswith("Upper_") and n[6:8].isdigit():
+        return "WallsUp"                   # RENDER 2026-09-26: masked like Walls, hidden with the roof
     if n.startswith("Decal_") and n[6:8].isdigit():
         src = n[9:]
         if src.startswith("Roof"):
@@ -1967,6 +1969,18 @@ def shell_fold(o, mset, into=SHELL_FOLD_INTO, fold=SHELL_FOLD):
     return before, len(order)
 
 
+def clamp_wall_tops(rm, reach=0.10):
+    """Paul 2026-09-26 (cutaway top edge): wall-mounted items flat on the curved wall (panels, posters, refill ports,
+    racks' back plates) stood up to 1.48 m and poked through the cut wall top as white wedges.  Every Wall_* vertex
+    within `reach` of the inner wall face is held just under WALL_TOP, so the wall's own top face covers the cut."""
+    top = WALL_TOP - 0.004
+    r_in = rm.Ri - reach
+    for w in rm.walls:
+        for v in w.verts:
+            if v.z > top and hypot(v.x, v.y) >= r_in:
+                v.z = top
+
+
 def build_file(rm, path, also=(), ao=None):
     """Turn a finished Room into objects, bake AO, export atomically.  Returns (objs, rays, seconds)."""
     t0 = time.time()
@@ -1977,6 +1991,8 @@ def build_file(rm, path, also=(), ao=None):
         rm.decal_info = IK.split_decals(rm)
         IK.name_sign(rm)
         rm.decals_done = True
+    if getattr(rm, "v3", False):
+        clamp_wall_tops(rm)
     objs = {}
     for part in rm.parts():
         if not part.faces:

@@ -256,6 +256,14 @@ func sync(delta: float) -> void:
 					var wq: Dictionary = pick.call(room_pts if dir == "out" else porch_pts, k, false)
 					if not wq.is_empty():
 						goal = {"pos": wq["pos"], "yaw": wq["yaw"], "zone": "wait", "bid": bid, "want_var": "suit"}
+					else:
+						# Every wait place taken (2026-09-26, airlock check r15: rider 2381 walked
+						# through the shut inner door): share a wait place on the rider's side. A
+						# hold point on the door axis blocked the doorway (path check (a) 6).
+						var wl: Array = room_pts if dir == "out" else porch_pts
+						if not wl.is_empty():
+							var ws: Dictionary = wl[k % wl.size()]
+							goal = {"pos": ws["pos"], "yaw": ws["yaw"], "zone": "wait", "bid": bid, "want_var": "suit"}
 			# Seal or pump with this rider not yet in the chamber (a late walker): it fades into its
 			# chamber place (0.3 s, V3_1 §4.3) so the door can shut on time.
 			if rec != null and (phase == "seal" or phase == "pump") and not _is_chamber(g, rec["pos"]) and not rec.has("fade_to"):

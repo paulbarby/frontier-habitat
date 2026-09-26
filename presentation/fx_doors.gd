@@ -38,6 +38,43 @@ var masks := {}              # room id -> int mask
 var hb_masks := {}           # room id -> int mask of hidden headboards
 var ribs := {}               # link id -> [handles]
 var patches: Array = []      # wall_patch handles (close the hidden span beside a doorway)
+## Paul 2026-09-26: patch pieces that stand above the 1.40 m cut (upper patches, upper band,
+## upper band caps), by room: hidden whole while that room's roof is open.
+var cut_patches := {}        # room id -> [handles]
+var _cut_shown := {}         # room id -> true while its tall patches are drawn
+const CUT_H := 1.42
+
+func _flush_cut(rid: int, start: int) -> void:
+	if not view.bmeta.has(rid):
+		return
+	var fy: float = (view.bmeta[rid]["xf"] as Transform3D).origin.y
+	var list: Array = []
+	for i in range(start, patches.size()):
+		var h: int = patches[i]
+		if not view.inst.handles.has(h):
+			continue
+		var e: Dictionary = view.inst.handles[h]
+		var tpl: Dictionary = view.inst.batches[e["key"]]["tpl"]
+		var top: float = ((e["xf"] as Transform3D) * (tpl["aabb"] as AABB)).end.y - fy
+		if top > CUT_H:
+			list.append(h)
+	if not list.is_empty():
+		cut_patches[rid] = list
+		_cut_shown[rid] = true
+
+func _sync_cut_patches() -> void:
+	for rid in cut_patches:
+		var rm = view.bmeta.get(rid)
+		var show: bool = rm == null or float(rm["open"]) <= 0.0
+		if show == bool(_cut_shown.get(rid, true)):
+			continue
+		_cut_shown[rid] = show
+		for h in cut_patches[rid]:
+			if not view.inst.handles.has(h):
+				continue
+			var e: Dictionary = view.inst.handles[h]
+			for g in view.inst.batches[e["key"]]["tpl"].get("groups", {}):
+				view.inst.set_hidden(h, g, not show)
 var dirty := true
 var tpl := {}
 var have_doorway := false
@@ -127,6 +164,7 @@ func _clear() -> void:
 		if view.bmeta.has(rid) and int(view.bmeta[rid]["h"]) != -1:
 			inst.set_group_custom(view.bmeta[rid]["h"], "Walls", Color(0, 0, 0, 0))
 			inst.set_group_custom(view.bmeta[rid]["h"], "WallsIn", Color(0, 0, 0, 0))
+			inst.set_group_custom(view.bmeta[rid]["h"], "WallsUp", Color(0, 0, 0, 0))
 			inst.set_group_custom(view.bmeta[rid]["h"], "Tall", Color(0, 0, 0, 0))
 			for g in DECAL_GROUPS:
 				inst.set_group_custom(view.bmeta[rid]["h"], g, Color(0, 0, 0, 0))
@@ -183,7 +221,14 @@ func _rebuild() -> void:
 				list.append(inst.add(rib_tpl, Transform3D(basis, Vector3(p.x, lerpf(y0, y1, t) + 0.05, p.y))))
 				s0 += RIB_STEP
 			ribs[int(lid)] = list
+	cut_patches = {}
+	var prev_rid := -1
+	var prev_start := 0
 	for rid in per_room:
+		if prev_rid >= 0:
+			_flush_cut(prev_rid, prev_start)
+		prev_rid = rid
+		prev_start = patches.size()
 		var meta: Dictionary = view.bmeta[rid]
 		var room: Dictionary = blds[rid]
 		var s: float = float(meta["tpl"].get("scale", 1.0))
@@ -309,11 +354,14 @@ func _rebuild() -> void:
 							patches.append(inst.add(upper_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck - 1.40, ch)), Vector3(r * cos(mid), 1.40, -r * sin(mid))), accent))
 						if not near_door and ub is Array and (ub as Array).size() > 1 and not uband_tpl.is_empty():
 							patches.append(inst.add(uband_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, float(ub[1]) - float(ub[0]), ch)), Vector3(r * cos(mid), float(ub[0]), -r * sin(mid))), accent)))
+	if prev_rid >= 0:
+		_flush_cut(prev_rid, prev_start)
 	for rid in masks:
 		var m: int = masks[rid]
 		var mc := Color(float(m & 0xFFFF), float((m >> 16) & 0xFFFF), 0, 0)
 		inst.set_group_custom(view.bmeta[rid]["h"], "Walls", mc)
 		inst.set_group_custom(view.bmeta[rid]["h"], "WallsIn", mc)
+		inst.set_group_custom(view.bmeta[rid]["h"], "WallsUp", mc)
 		# Decals hide with the wall segments (ART-HAB D2: the doorway opening + 0.4 m lies
 		# inside the hidden span; the patches carry the band there).
 		for g in DECAL_GROUPS:
@@ -587,6 +635,7 @@ func sync(delta: float, bodies: Array) -> void:
 			var sc: Color = Models.STATUS_RED if st == "red" else (Models.STATUS_AMBER if st == "amber" else Models.STATUS_GREEN)
 			inst.set_group_custom(d["h"], "Status", sc)
 			inst.set_group_custom(d["h"], "Lights", sc)
+	_sync_cut_patches()
 	for lid in ribs:
 		var lm = view.bmeta.get(int(lid))
 		var open: bool = lm != null and float(lm["open"]) > 0.5

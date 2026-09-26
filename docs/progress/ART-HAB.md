@@ -5,6 +5,19 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-09-26 — RENDER cut check 116: wall items above the cut
+
+- My check measured the wall ring only; RENDER's measures every drawn vertex (the correct rule). Their run
+  also overlapped my rebuild. Now: `fit_under_cut` scales every wall item under 1.396 m, and `cut_top_check`
+  uses RENDER's rule. Build 96 files 0 flags; GLB probe 0 of 96 above the cut. Godot check 172 / 0 failed,
+  export done. RENDER asked to re-run `render_cut_check.gd`.
+
+## 2026-09-26 — Paul: cutaway top edge ("polygon bleeding")
+
+- Cause: `Upper_*` skin and podium ribs drawn in the game cutaway (RENDER now hides them as WallsUp), plus
+  wall-mounted items 1.44–1.48 m poking through the cut. Fix: `clamp_wall_tops`; check `cut_top_check`
+  (96 files, 0 flagged). Tools: `probe_gamecut.py`, `probe_cutaway.py`. Godot check 172 / 0 failed, export done.
+
 ## 2026-09-25 — critic round 14: cut-wall caps
 
 - FrameCap / InnerFrameCap / OuterFrameCap, collar caps and chamber wall caps: a light Trim plate (8 mm proud)

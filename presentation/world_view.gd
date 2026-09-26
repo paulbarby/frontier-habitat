@@ -461,6 +461,71 @@ func set_labels_visible(on: bool) -> void:
 	labels_visible = on
 
 var _made_now := 0
+var _force_open_all := false
+## Groups that stand above the cut on purpose: furniture inside the room (shelves, tanks,
+## racks: seen through the open roof) and wall items hidden by doorways.
+const CUT_ALLOWED := ["Interior", "Tall"]
+func _cut_check() -> Dictionary:
+	var out := {}
+	var blds: Dictionary = sim.state["buildings"]
+	for rid in bmeta:
+		var b: Dictionary = blds.get(rid, {})
+		var meta: Dictionary = bmeta[rid]
+		if b.is_empty() or String(b["kind"]) != "room" or meta["mode"] != "inst":
+			continue
+		var key: String = "%s_%d" % [b["def"], int(b.get("size", 1))]
+		var fy: float = (meta["xf"] as Transform3D).origin.y
+		var hs: Array = [["room", int(meta["h"])]]
+		for dd in doors.doors:
+			if int(dd["room"]) == int(rid):
+				hs.append(["door", int(dd["h"])])
+		for ph in doors.cut_patches.get(rid, []):
+			hs.append(["patch", int(ph)])
+		var mask: int = int(doors.masks.get(rid, 0))
+		var bad := {}
+		var ok := {}
+		for e in hs:
+			if not inst.handles.has(e[1]):
+				continue
+			var he: Dictionary = inst.handles[e[1]]
+			var bt: Dictionary = inst.batches[he["key"]]
+			for pp in bt["parts"]:
+				var part: Dictionary = pp["part"]
+				var g: String = part["group"]
+				if bool(part.get("shadow_only", false)) or (he["hidden"] as Dictionary).has(g):
+					continue
+				# The drawn transform, with the group extra (cutaway wall Y scale of a scaled record).
+				var px: Transform3D = inst._part_xf(he, part)
+				var ab0: AABB = px * (part["mesh"] as Mesh).get_aabb()
+				if ab0.end.y - fy <= 1.45:
+					continue
+				var top := -1.0
+				var mesh: Mesh = part["mesh"]
+				for si in mesh.get_surface_count():
+					var arr: Array = mesh.surface_get_arrays(si)
+					var vv: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+					var uv2 = arr[Mesh.ARRAY_TEX_UV2]
+					var use_mask: bool = bool(part.get("mask", false)) and uv2 is PackedVector2Array and (uv2 as PackedVector2Array).size() == vv.size() and e[0] == "room"
+					for vi in vv.size():
+						if use_mask:
+							var sg: int = int((uv2 as PackedVector2Array)[vi].x + 0.5) - 1
+							if sg >= 0 and (mask >> sg) & 1 == 1:
+								continue
+						var yy: float = (px * vv[vi]).y - fy
+						if yy > top:
+							top = yy
+				if top > 1.45:
+					var k2: String = "%s %s" % [e[0], g]
+					var tgt: Dictionary = ok if g in CUT_ALLOWED else bad
+					tgt[k2] = snappedf(maxf(float(tgt.get(k2, 0.0)), top), 0.01)
+		if not out.has(key):
+			out[key] = {"rooms": 0, "above_cut": {}, "allowed": {}}
+		out[key]["rooms"] = int(out[key]["rooms"]) + 1
+		for k3 in bad:
+			out[key]["above_cut"][k3] = maxf(float(out[key]["above_cut"].get(k3, 0.0)), float(bad[k3]))
+		for k4 in ok:
+			out[key]["allowed"][k4] = maxf(float(out[key]["allowed"].get(k4, 0.0)), float(ok[k4]))
+	return out
 var _night_warm := 0
 var _warm_frames := 0
 var _warm_t0 := 0.0
@@ -899,7 +964,7 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 	# show with their level only.
 	for g in (meta["tpl"].get("groups", {}) as Dictionary):
 		var gs: String = g
-		if gs.ends_with("Top") or gs.ends_with("Status") or gs.begins_with("PressureLight") or gs == "Beacon" or gs == "DecalR":
+		if gs.ends_with("Top") or gs.ends_with("Status") or gs.begins_with("PressureLight") or gs == "Beacon" or gs == "DecalR" or gs == "WallsUp":
 			inst.set_hidden(hnd, gs, o > 0.0)
 		elif gs.begins_with("DecalL"):
 			inst.set_hidden(hnd, gs, o > 0.0 or lvl < int(gs.substr(6)))
@@ -907,6 +972,16 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 		inst.set_hidden(hnd, "Interior", o <= 0.0)
 		inst.set_hidden(hnd, "Tall", o <= 0.0)
 		inst.set_hidden(hnd, "WallsIn", o <= 0.0)
+	# Coordinator 2026-09-26: a record drawn larger than its model (old-save radius, uniform
+	# scale s > 1) would carry the cut up to 1.40 * s. In the cutaway the wall groups get Y scale
+	# 1/s, so the cut stays at 1.40 m in world space. Floors, doors and walk grids keep scale s.
+	var s: float = float(meta["tpl"].get("scale", 1.0))
+	if room and s > 1.001:
+		for g in ["Walls", "WallsIn"]:
+			if o > 0.0:
+				inst.set_extra(hnd, g, Transform3D(Basis.from_scale(Vector3(1.0, 1.0 / s, 1.0)), Vector3.ZERO))
+			else:
+				inst.clear_extra(hnd, g)
 
 func _has_trays(b: Dictionary) -> bool:
 	return (b.get("trays", []) as Array).size() > 0
@@ -924,7 +999,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 		# Roof cutaway: nearby roofs open when the camera is close; the selected one always.
 		if b["kind"] != "link" or b["def"] == "corridor":
 			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0 and not _no_cutaway
-			var want: float = 1.0 if (near or (selected_kind == "building" and selected_id == id)) else 0.0
+			var want: float = 1.0 if (near or _force_open_all or (selected_kind == "building" and selected_id == id)) else 0.0
 			var o: float = float(meta["open"])
 			if o != want:
 				meta["open"] = move_toward(o, want, delta * 3.5)
@@ -1975,6 +2050,17 @@ func debug_cmd(text: String) -> String:
 						best = minf(best, cp.distance_to(sim.state["buildings"][bid]["pos"]))
 					o2.append("%.0f,%.0f r%.1f near%.1f" % [cp.x, cp.y, float(c["r"]), best])
 			return str(o2)
+		"cutcheck":
+			# cutcheck open: every room's cutaway opens (test staging). cutcheck: per room type, every
+			# drawn vertex (room, its doorway kits, its wall patches) above 1.45 m, by group; groups
+			# meant to stand are listed apart (Paul, 2026-09-26).
+			if w.size() > 1 and w[1] == "open":
+				_force_open_all = true
+				return "ok"
+			if w.size() > 1 and w[1] == "off":
+				_force_open_all = false
+				return "ok"
+			return JSON.stringify(_cut_check())
 		"tallparts":
 			# tallparts <room id>: drawn groups of the room and its doorway kits whose top is above
 			# 1.45 m (the cutaway rule check, critic round 13).

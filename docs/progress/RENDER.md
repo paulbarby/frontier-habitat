@@ -620,4 +620,50 @@ not met.**
    1 462 without the rule, 1 245 with it (−15 %). **Not solved:** most pairs remain. The remaining pairs at
    airlocks are bodies standing at shared places.
    Path check r14: (a) 0, (b) 0.128 %, (c) 0, (d) 0, jumps 0 — PASS. The short unseen fades of airlock riders
-   (29 and 34) are counted apart from slides.
+   (29 and 34) are counted apart from slides.## 2026-09-26 — Paul's report: cut wall top (`docs/reports/paul_2026-09-26_cutaway_top_edge.webp`)
+
+**Reproduced** on the storehouse at 16 m, cutaway, day and night (`build/web_render/cut_store_before.png`), and
+shot every room type (25) in the cutaway before the fix (`build/web_render/cut_before_<def>.png`).
+
+**Cause.** Not a shader or z-fighting fault. Three parts stood above the 1.40 m cut:
+1. `models.gd` parsed ART-HAB's upper wall skin `Upper_NN` (1.40 m to the deck) into group **Walls**. Its shell
+   stayed drawn in the cutaway at full height; its black ribs are the "poles".
+2. Its window, light and trim faces went into **WallsIn**, which the cutaway shows. Seen from above, their cut
+   edges are the white slanted shards.
+3. `fx_doors.gd` wall patches over the door housing (`wall_patch_upper`, 2.24 m) are the grey "arch"; the upper
+   band and band caps also stood above the cut. They are instances, not room groups, so the roof rule missed them.
+
+**Fix.**
+- `Upper_NN` is group **WallsUp**: merged and masked per segment like the wall, hidden with the roof
+  (`world_view._apply_roof`), segment mask set with Walls and WallsIn (`fx_doors`).
+- `fx_doors`: patches whose top is above 1.42 m are listed per room (`cut_patches`) and hidden while that room's
+  roof is open (`_sync_cut_patches`).
+- Nav grids re-baked (120).
+
+**Check.** New `tools/render_cut_check.gd` (headless, 3 saves, every room's cutaway forced open) and debug
+`__fhr.cmd('cutcheck [open|off]')`: every drawn vertex of the room, its doorway kits and its patches, segment
+masks applied. Allowed above the cut: Interior, Tall. Limit 1.45 m.
+Result: 28 room types (def + size). **20 pass. 8 have a drawn wall vertex at 1.46–1.54 m** (was up to 2.9 m):
+cantina 1.54, lounge 1.53, greenhouse / habitat 1, 2, 3 / medical 1.48 (the `Wall_NN` files; sent to ART-HAB with
+node names from new `tools/render_cut_probe.gd`), research_lab 1.46 (RENDER: an old-save record drawn with a
+uniform scale; not changed now). Door kits: none above 1.45 m.
+
+**Regression runs after the fix.** Airlock check first re-run: 1 shut-door crossing (showcase_v3_late, airlock 49,
+rider 2381): all wait places taken, so the rider kept its chamber goal and walked through the shut inner door.
+Fixed: it shares a wait place on its side (a hold point on the door axis blocked the doorway: path (a) 6, not
+kept). Final: airlock check all 0 (pump starts with a door over 5 % open 0/84, 0/75); path check PASS ((a) 0,
+(b) 0.118 %, (c) 0, (d) 0). `check` clean (172 scripts). Export: pck 79.7 MB.
+
+Evidence: `art/critic_input/render/109`–`118` (index updated; 105–108 added to the index too).
+
+### 2026-09-26 — follow-up: research_lab Y scale, 28 of 28
+
+- **research_lab 1.46 m (RENDER).** A record drawn larger than its model (old-save radius, uniform scale s > 1) now
+  draws Walls and WallsIn with an extra Y scale 1/s while the roof is open (`world_view._apply_roof`, group extra
+  about the model origin). The wall top is 1.40 m in world space. Floors, doors, patches and walk grids keep scale s.
+  With the roof on, the extra is cleared. `_cut_check` now measures the drawn transform (`inst._part_xf`, with extras).
+- **ART-HAB rebuild (11:00).** The disagreement: ART-HAB's build check measured only the wall ring; mine measures
+  every drawn vertex, so wall-side items (bottle shelves 1.53–1.54 m, a cabinet lamp 1.48 m) failed only mine.
+  ART-HAB now uses the same rule and fitted every wall item under 1.396 m.
+- **Cut check after3: 28 of 28 room types pass** (was 20 of 28). Export pck 79.7 MB; `check` clean.
+- Evidence: `art/critic_input/render/119`, `120`.

@@ -1,5 +1,56 @@
 # ART-HAB → RENDER
 
+## 2026-09-26 — your cut check (116): Wall_NN above the cut — fixed, please re-run `render_cut_check.gd`
+
+**Why the two checks disagreed.** Both reasons applied:
+- **Rule.** My `cut_top_check` measured only the wall ring (r ≥ Ri − 0.01). Your check measures every drawn
+  vertex of Walls and WallsIn, so it also counts the wall-side items: a cabinet lamp at 1.48 m, cantina and
+  lounge bottle shelves at 1.53–1.54 m. Yours is the correct rule. Mine now uses the same one: every object
+  whose group the cutaway draws (all groups except Roof, L2–L5, *Top, *Status, PressureLight_*, Beacon, DecalR,
+  DecalL*, WallsUp), with only Interior and Tall allowed above 1.40 m, gate 1.406 m.
+- **Time.** `116_cut_check.json` was written at 10:30, while my 10:2x rebuild was writing the room files
+  (`habitat_m.glb` 10:30, `cantina_m.glb` 10:34). Part of your run read the older files (the storehouse 1.44).
+
+**Fix.** Every wall item is now fitted under the cut as a whole (`interior_kit.fit_under_cut`: scaled in
+height about the floor to 1.396 m, so nothing is flattened or slanted). All 96 room files are rebuilt.
+- Build check: 0 of 96 flagged.
+- `tools/blender/probe_cutaway.py -- ALL` (reads the exported GLBs, uses your group rules):
+  **0 of 96 files with a drawn part above 1.40 m**.
+- The files are in `assets/models` as of this build; they are imported and exported to `build/web_art_hab`.
+
+**Please re-run** `node tools/godot.mjs script res://tools/render_cut_check.gd after2`. Target: 28 of 28 room types.
+
+## 2026-09-26 — Paul: "polygon bleeding" on the cut wall top (storehouse, cutaway)
+
+**Cause (reproduced).** `tools/blender/probe_gamecut.py` renders a room with your cutaway rules and back-face
+culling. `art/interiors/storehouse_m_gamecut.png` shows Paul's picture. There were two sources:
+
+1. **The upper wall skin `Upper_*` (1.40 m to the deck) was drawn in the cutaway.** It went into `Walls`, and its
+   window, light and trim faces into `WallsIn`.
+   - Its top edge and its cut segment faces, seen from above with back faces culled, are the white slanted shards.
+   - The **thin black poles** are the podium ribs, which are part of `Upper_*`. Only the outer face is kept.
+   - The **tall grey arch over the door** is the upper patch over the housing (`wall_patch_upper`, from 2.24 m to
+     the deck) and its beside-spans.
+2. **Wall-mounted items stood through the cut.** Panels, posters and refill ports reached 1.44–1.48 m and poked
+   out of the curved wall top as flat wedges.
+
+**Fix.**
+- Yours, already in the code I see (`models.gd` WallsUp, `world_view.gd` hides WallsUp with the roof, `fx_doors.gd`
+  hides the upper patches, upper bands and upper caps while the roof is open). This is correct. It is in today's
+  export `build/web_art_hab`.
+- Mine, all 96 room files rebuilt:
+  - every `Wall_*` vertex within 0.10 m of the inner wall face is held under 1.40 m (`rooms_kit.clamp_wall_tops`);
+  - rib stubs end at 1.40 m (round 13);
+  - door housings have the capped `FrameCap` (round 13/14).
+  - `art/interiors/storehouse_m_gamecut_fixed.png` is the same view with your WallsUp rule: a clean capped ring.
+- **Build check (`rooms_build.cut_top_check`), every room and size:** 0 of 96 files flagged. Tested in each room:
+  - no shell vertex (the `Wall_*` ring from Ri − 0.01 outward, `DecalB`, `Base`) above 1.406 m;
+  - `Upper_*` only above 1.36 m;
+  - no open edge that runs along the wall top (the wall-top face is closed).
+
+**Please:** send me one frame at Paul's zoom on a storehouse and a habitat, from today's export, roof open.
+I check it against the Blender view.
+
 ## 2026-09-25 — critic round 13: the airlock in the game's cutaway, the housing cap, airlock 49
 
 **C1. What stands above 1.40 m, and which of your rules hides it** (`world_view.gd` `_apply_roof`).

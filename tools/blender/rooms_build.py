@@ -175,6 +175,63 @@ def write_door_blocked(rows):
             json.dump(doc, fh, indent=1, sort_keys=True)
 
 
+CUT_SHELL_GROUPS = ("Walls", "DecalB", "Base")     # shell groups the game shows in the roof cutaway
+
+
+def cut_top_check(rm, objs, eps=0.006):
+    """Paul 2026-09-26 (cutaway top edge): every shell piece the game shows in the roof cutaway ends flat at
+    WALL_TOP with a closed top.  Checks, on the built objects:
+      - no vertex of Wall_* (shell AND wall-side items), DecalB or Base objects (not the porch) above WALL_TOP + eps;
+      - Upper_* pieces lie wholly at or above WALL_TOP - 0.02 (they must hide with the roof, RENDER U1);
+      - no open (boundary) edge of a Wall_* object runs along the top at WALL_TOP: the top face is closed."""
+    import bmesh
+    out = []
+    high, low_upper, open_top = [], [], []
+    Rw, Ri = rm.Rw, rm.Ri
+    for nm, o in objs.items():
+        g = K.game_group(nm)
+        vs = [v.co for v in o.data.vertices]
+        if not vs:
+            continue
+        if nm.startswith("Upper_"):
+            if min(v.z for v in vs) < K.WALL_TOP - 0.04:
+                low_upper.append(nm)
+            continue
+        # every drawn vertex counts, wall-side items included (RENDER render_cut_check.gd: the game draws Walls and
+        # WallsIn in the cutaway; only Interior and Tall may stand above the cut)
+        shell = vs
+        drawn = not (g == "Roof" or (len(g) == 2 and g[0] == "L") or g.endswith(("Top", "Status"))
+                     or g.startswith("PressureLight") or g in ("Beacon", "DecalR", "Interior", "Tall")
+                     or g.startswith("DecalL"))
+        if drawn and nm not in OVERHANG_PARTS and shell and max(v.z for v in shell) > K.WALL_TOP + eps:
+            high.append("%s %.2f" % (nm, max(v.z for v in shell)))
+        if nm.startswith("Wall_"):
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+            n_open = 0
+            for e in bm.edges:
+                if not e.is_boundary:
+                    continue
+                a, b_ = e.verts[0].co, e.verts[1].co
+                if a.z > K.WALL_TOP - 0.003 and b_.z > K.WALL_TOP - 0.003:
+                    ra, rb = a.xy.length, b_.xy.length
+                    rm_ = 0.5 * (ra + rb)
+                    inside_wall = Ri + 0.005 < rm_ < Rw - 0.005        # buried in the wall thickness: unseen
+                    if abs(ra - rb) < 0.5 * (a.xy - b_.xy).length and rm_ >= Ri - 0.01 and not inside_wall:
+                        n_open += 1
+            bm.free()
+            if n_open:
+                open_top.append("%s(%d)" % (nm, n_open))
+    if high:
+        out.append("cutaway: shell above %.2f m: %s" % (K.WALL_TOP, high[:6]))
+    if low_upper:
+        out.append("cutaway: Upper pieces below the cut: %s" % low_upper[:6])
+    if open_top:
+        out.append("cutaway: open wall top edges: %s" % open_top[:6])
+    return out
+
+
 def build_one(job):
     t0 = time.time()
     bdef = job["bdef"]
@@ -193,6 +250,8 @@ def build_one(job):
     also = [os.path.join(K.MODEL_DIR, a + ".glb") for a in job["also"]]
     objs, rays, secs = K.build_file(rm, path, also=also)
     flags = []
+    if rm.v3:
+        flags += cut_top_check(rm, objs)
     stats = {p.name: K.part_stats(p) for p in rm.parts() if p.faces}
     tris = sum(s["tris"] for s in stats.values())
     budget = (V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]]

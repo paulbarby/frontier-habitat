@@ -158,8 +158,12 @@ static func group_of(n: String) -> String:
 		return "Walls"
 	# V3.1 (ART-HAB D2, R3): the upper wall skin hides like the wall; decals per segment by
 	# their source (Base/Lights always, Roof with the roof, L<n> with that level).
+	# Paul, 2026-09-26 ("polygon bleeding" on the cut wall top): the upper wall skin
+	# (1.40 m to the deck) is its own group, WallsUp: masked per segment like the wall, and
+	# hidden with the roof in the cutaway. It was merged into Walls, and its window, light
+	# and trim faces into WallsIn, so they stood above the cut.
 	if n.begins_with("Upper_") and n.length() >= 8 and n.substr(6, 2).is_valid_int():
-		return "Walls"
+		return "WallsUp"
 	if n.begins_with("Decal_") and n.length() >= 9 and n.substr(6, 2).is_valid_int():
 		var src: String = n.substr(9)
 		if src.begins_with("Roof"):
@@ -206,7 +210,7 @@ static func _parse(root: Node3D, key: String) -> Dictionary:
 				var xf: Transform3D = pivot * rel
 				var part := {"group": group, "mesh": mesh, "xf": xf, "pivot": pivot, "local": rel,
 					"shadow": not (group in NO_SHADOW)}
-				if group == "Walls" and tname.begins_with("Upper_"):
+				if group == "WallsUp":
 					part["seg"] = int(tname.substr(6, 2))
 					part["upper"] = true
 				elif group == "Walls":
@@ -271,7 +275,7 @@ static func _merge_groups(parts: Array) -> Array:
 				mw["group"] = "WallsIn"
 				out.append(mw)
 			continue
-		if g == "Tall" or g.begins_with("Decal"):
+		if g == "Tall" or g == "WallsUp" or g.begins_with("Decal"):
 			for mw in _merge_walls(list, null):
 				mw["group"] = g
 				out.append(mw)
@@ -307,7 +311,7 @@ static func _merge_groups(parts: Array) -> Array:
 	# textured and interior-only materials keep their own surfaces.
 	for p in out:
 		var gg: String = p["group"]
-		if gg in ["Walls", "WallsIn", "Tall", "Interior"] or gg.begins_with("Decal") or gg in STATUS_GROUPS:
+		if gg in ["Walls", "WallsIn", "WallsUp", "Tall", "Interior"] or gg.begins_with("Decal") or gg in STATUS_GROUPS:
 			continue
 		p["mesh"] = _palettize(p["mesh"])
 	return out
@@ -415,7 +419,7 @@ static func _shadow_proxies(parts: Array) -> Array:
 		var mesh: Mesh = p["mesh"]
 		if mesh.get_surface_count() < 2:
 			continue
-		var walls: bool = p["group"] == "Walls" or p["group"] == "WallsIn" or p["group"] == "Tall"
+		var walls: bool = p["group"] == "Walls" or p["group"] == "WallsIn" or p["group"] == "WallsUp" or p["group"] == "Tall"
 		var av := PackedVector3Array()
 		var an := PackedVector3Array()
 		var a2 := PackedVector2Array()

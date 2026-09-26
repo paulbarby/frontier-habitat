@@ -69,3 +69,50 @@ angle, the same as the `Tall_*` rule). The M and L files are not affected (no ol
 - **C3.** Old-save doorways that meet the inner door housing (83°, 259.5°, 270°): the path goes round the housing
   through a corner point 0.55 m past it (`fx_airlock.walkway_route`), never through the chamber. The final airlock
   check has 0 shut-door crossings and 0 bodies in the chamber in the wrong clothes.
+## 2026-09-26 — Paul's report: cut wall top (high priority)
+
+Report: `docs/reports/paul_2026-09-26_cutaway_top_edge.webp` (storehouse, cutaway, 12–20 m: white slanted
+shards on the cut wall top, a tall grey door-frame arch, black poles round the ring).
+
+**Cause (RENDER side, fixed).** `models.gd` parsed your `Upper_NN` skin into group Walls. Its shell faces stayed
+drawn in the cutaway at full height (the black ribs = the "poles"); its window, light and trim faces went into
+WallsIn, which the cutaway shows (the white shards). The fx_doors `wall_patch_upper` pieces over the door housing
+(2.24 m) made the arch; the upper band and band caps also stood above the cut. Now: `Upper_NN` is group
+**WallsUp**, masked per segment like the wall, hidden with the roof; door patches whose top is above 1.42 m are
+hidden per room while its roof is open. Your door kits pass: no kit vertex above 1.45 m.
+
+**New check.** `node tools/godot.mjs script res://tools/render_cut_check.gd <label>` opens the cutaway of every
+room on 3 saves and measures every drawn vertex (room, its doorway kits, its patches; segment masks applied).
+Allowed above the cut: Interior, Tall. Output `build/web_render/cut_check_<label>.json`
+(copy: `art/critic_input/render/116_cut_check.json`). `render_cut_probe.gd <def> ...` lists the GLB nodes.
+
+**Request.** 8 room types of 28 still have a drawn wall vertex above 1.45 m. All are `Wall_NN` nodes of the
+size-M files (group Walls; their non-shell materials land in WallsIn). Clamp the wall top to 1.40 m, or move the
+part above 1.40 m into `Upper_NN`:
+
+| file | nodes | top (model units, drawn) |
+|---|---|---|
+| `cantina_m.glb` | Wall_00, 07, 12, 19, 24, 31 | 1.526–1.540 (drawn 1.54) |
+| `lounge_m.glb` | Wall_04, 16, 28 | 1.526–1.539 (drawn 1.53) |
+| `greenhouse_m.glb` | Wall_04 | 1.480 |
+| `habitat_m.glb` | Wall_00 | 1.480 (habitat S and L drawn 1.48 too) |
+| `medical_m.glb` | Wall_03 | 1.480 |
+| `storehouse_m.glb` | Wall_00, 03, 07, 09, 12, 16, 18, 21, 25, 27, 30 | 1.440 (under the 1.45 gate; above 1.40) |
+
+The S, L and XL files have the same overshoot (probe run 2026-09-26): cantina S/L 1.530–1.540, lounge S/L
+1.526–1.539, habitat S/L/XL, greenhouse S/L, medical S/L 1.480. Pass a file id to the probe
+(`render_cut_probe.gd habitat_s cantina_l`).
+
+`research_lab` (drawn 1.46): all its files are under 1.42. The 1.46 is RENDER's: an old-save record whose
+radius differs from the def is drawn with a uniform scale (`models.building`, `s_radius`), so the wall height
+grows with the radius. Not changed now (floor height, doors and walk grids use the same scale); I will scale
+only X/Z after integration if the coordinator wants it. Nothing for you there.
+
+## 2026-09-26 — re-run after your 11:00 rebuild: 28 of 28 pass
+
+- `render_cut_check.gd after3` (showcase_v3_late, showcase_v31, scene_final; imports of 11:04): **28 of 28 room
+  types pass**, 0 with a drawn vertex above 1.45 m (`art/critic_input/render/120_cut_check_28_of_28.json`).
+- research_lab (1.46) was mine: a scaled record now draws Walls and WallsIn with Y scale 1/s in the cutaway.
+- The frames you asked for (storehouse and habitat at Paul's zoom, 16 m, roof open, today's export, day and night):
+  `art/critic_input/render/119_cut_storehouse_habitat_research_lab_day_night_r15.png`.
+  Single frames: `build/web_render/cut_r15_<storehouse|habitat|research_lab>_<day|night>.png`.

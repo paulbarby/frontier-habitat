@@ -573,7 +573,9 @@ class Plan:
                     continue
                 d = 0.08
             with wall_slot(rm, k) as p:
+                n0 = len(p.verts)
                 builders[kind](p, w, d, k)
+                fit_under_cut(p, n0)
             placed[k] = kind
         return placed
 
@@ -587,6 +589,24 @@ class Plan:
 # --------------------------------------------------------------------------------------
 # Anchors: counts and checks
 # --------------------------------------------------------------------------------------
+CUT_TOP = WALL_TOP - 0.004     # wall items stay under the cut (the game draws Walls / WallsIn in the cutaway)
+
+
+def fit_under_cut(p, n0):
+    """Paul 2026-09-26 / RENDER cut check: a wall item (the vertices added since n0) that reaches above the cut is
+    scaled down in height about the floor, as a whole, so its top ends at CUT_TOP (no slanted or flattened parts)."""
+    vs = p.verts[n0:]
+    if not vs:
+        return
+    top = max(v.z for v in vs)
+    if top <= CUT_TOP:
+        return
+    k = (CUT_TOP - F) / max(1e-6, top - F)
+    for v in vs:
+        if v.z > F:
+            v.z = F + (v.z - F) * k
+
+
 def add_anchor(rm, kind, i, pos, yaw):
     rm.anchor("%s_%d" % (kind, i), pos, yaw)
 

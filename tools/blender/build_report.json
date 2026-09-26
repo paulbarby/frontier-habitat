@@ -127,11 +127,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 782688,
+   "file_size": 782736,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 2.9,
    "ao_rays": 986304,
    "trays": [],
    "v3": {
@@ -751,13 +751,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1138316,
+   "file_size": 1138376,
    "color0": true,
    "also": [
     "habitat"
    ],
    "flags": [],
-   "seconds": 4.2,
+   "seconds": 3.6,
    "ao_rays": 1485600,
    "trays": [],
    "v3": {
@@ -1614,11 +1614,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1401132,
+   "file_size": 1401192,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.2,
+   "seconds": 4.3,
    "ao_rays": 1880544,
    "trays": [],
    "v3": {
@@ -2707,11 +2707,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1793604,
+   "file_size": 1793668,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.4,
+   "seconds": 5.6,
    "ao_rays": 2476416,
    "trays": [],
    "v3": {
@@ -3995,11 +3995,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 675272,
+   "file_size": 675304,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.5,
+   "seconds": 2.1,
    "ao_rays": 733248,
    "trays": [
     [
@@ -4577,13 +4577,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 685888,
+   "file_size": 685920,
    "color0": true,
    "also": [
     "greenhouse"
    ],
    "flags": [],
-   "seconds": 2.8,
+   "seconds": 2.2,
    "ao_rays": 746208,
    "trays": [
     [
@@ -5424,11 +5424,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 832568,
+   "file_size": 832600,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 2.9,
    "ao_rays": 948864,
    "trays": [
     [
@@ -6523,11 +6523,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 889304,
+   "file_size": 889336,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 3.0,
    "ao_rays": 1025136,
    "trays": [
     [
@@ -7735,11 +7735,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 690216,
+   "file_size": 690248,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.4,
+   "seconds": 2.0,
    "ao_rays": 821280,
    "trays": [],
    "v3": {
@@ -8377,13 +8377,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 838204,
+   "file_size": 838236,
    "color0": true,
    "also": [
     "kitchen"
    ],
    "flags": [],
-   "seconds": 3.1,
+   "seconds": 2.6,
    "ao_rays": 1056384,
    "trays": [],
    "v3": {
@@ -8990,11 +8990,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 998424,
+   "file_size": 998456,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.9,
+   "seconds": 3.3,
    "ao_rays": 1332768,
    "trays": [],
    "v3": {
@@ -9871,11 +9871,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1216824,
+   "file_size": 1216856,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.8,
+   "seconds": 4.4,
    "ao_rays": 1638816,
    "trays": [],
    "v3": {
@@ -11020,11 +11020,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 749412,
+   "file_size": 749440,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.1,
+   "seconds": 2.5,
    "ao_rays": 774240,
    "trays": [],
    "v3": {
@@ -11277,6 +11277,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -11702,13 +11703,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 932936,
+   "file_size": 932964,
    "color0": true,
    "also": [
     "storehouse"
    ],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 3.2,
    "ao_rays": 1055520,
    "trays": [],
    "v3": {
@@ -12067,6 +12068,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 4,
      "WallShell": 2
     },
@@ -12527,11 +12529,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1197696,
+   "file_size": 1197724,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.0,
+   "seconds": 4.3,
    "ao_rays": 1458912,
    "trays": [],
    "v3": {
@@ -13098,6 +13100,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -13601,11 +13604,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1468544,
+   "file_size": 1468572,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
+   "seconds": 5.7,
    "ao_rays": 1851648,
    "trays": [],
    "v3": {
@@ -14244,6 +14247,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -14630,11 +14634,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 592656,
+   "file_size": 592688,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.4,
+   "seconds": 1.9,
    "ao_rays": 703104,
    "trays": [],
    "v3": {
@@ -15248,13 +15252,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 650152,
+   "file_size": 650184,
    "color0": true,
    "also": [
     "oxygen_plant"
    ],
    "flags": [],
-   "seconds": 2.5,
+   "seconds": 2.0,
    "ao_rays": 836160,
    "trays": [],
    "v3": {
@@ -15883,11 +15887,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 755620,
+   "file_size": 755652,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 2.6,
    "ao_rays": 1062624,
    "trays": [],
    "v3": {
@@ -16615,11 +16619,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 865212,
+   "file_size": 865244,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 3.5,
    "ao_rays": 1278912,
    "trays": [],
    "v3": {
@@ -17319,11 +17323,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 860336,
+   "file_size": 860432,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.4,
+   "seconds": 2.8,
    "ao_rays": 979296,
    "trays": [],
    "v3": {
@@ -17622,6 +17626,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 8,
      "WallShell": 3
     },
@@ -18061,13 +18066,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1070600,
+   "file_size": 1070692,
    "color0": true,
    "also": [
     "research_lab"
    ],
    "flags": [],
-   "seconds": 4.1,
+   "seconds": 3.5,
    "ao_rays": 1299264,
    "trays": [],
    "v3": {
@@ -18394,6 +18399,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 9,
      "WallShell": 4
     },
@@ -18869,11 +18875,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1199836,
+   "file_size": 1199928,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.8,
+   "seconds": 4.0,
    "ao_rays": 1522176,
    "trays": [],
    "v3": {
@@ -19461,6 +19467,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 9,
      "WallShell": 4
     },
@@ -20021,11 +20028,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1399932,
+   "file_size": 1400024,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 5.0,
    "ao_rays": 1827264,
    "trays": [],
    "v3": {
@@ -20829,6 +20836,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 9,
      "WallShell": 4
     },
@@ -21262,11 +21270,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 659228,
+   "file_size": 659256,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.7,
+   "seconds": 2.0,
    "ao_rays": 787104,
    "trays": [],
    "v3": {
@@ -21856,13 +21864,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 694368,
+   "file_size": 694400,
    "color0": true,
    "also": [
     "mine"
    ],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 2.2,
    "ao_rays": 849216,
    "trays": [],
    "v3": {
@@ -22428,11 +22436,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 750668,
+   "file_size": 750696,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 2.4,
    "ao_rays": 944736,
    "trays": [],
    "v3": {
@@ -23190,11 +23198,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 957720,
+   "file_size": 957748,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.8,
+   "seconds": 3.3,
    "ao_rays": 1227552,
    "trays": [],
    "v3": {
@@ -24054,11 +24062,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 744220,
+   "file_size": 744248,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 2.5,
    "ao_rays": 802368,
    "trays": [],
    "v3": {
@@ -24251,6 +24259,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -24773,13 +24782,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 760948,
+   "file_size": 760980,
    "color0": true,
    "also": [
     "refinery"
    ],
    "flags": [],
-   "seconds": 3.5,
+   "seconds": 2.7,
    "ao_rays": 826080,
    "trays": [],
    "v3": {
@@ -25044,6 +25053,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -25494,11 +25504,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 891592,
+   "file_size": 891620,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.1,
+   "seconds": 3.1,
    "ao_rays": 1022496,
    "trays": [],
    "v3": {
@@ -25949,6 +25959,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -26457,11 +26468,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1283876,
+   "file_size": 1283904,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
+   "seconds": 5.3,
    "ao_rays": 1547136,
    "trays": [],
    "v3": {
@@ -26954,6 +26965,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -27438,11 +27450,11 @@
     "PaletteMetal",
     "Screen"
    ],
-   "file_size": 740244,
+   "file_size": 740272,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.5,
+   "seconds": 2.5,
    "ao_rays": 796512,
    "trays": [],
    "v3": {
@@ -27708,6 +27720,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -28190,13 +28203,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 776212,
+   "file_size": 776244,
    "color0": true,
    "also": [
     "polymer_plant"
    ],
    "flags": [],
-   "seconds": 3.5,
+   "seconds": 2.8,
    "ao_rays": 883968,
    "trays": [],
    "v3": {
@@ -28480,6 +28493,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -28941,11 +28955,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 863184,
+   "file_size": 863212,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.9,
+   "seconds": 3.2,
    "ao_rays": 1039680,
    "trays": [],
    "v3": {
@@ -29454,6 +29468,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -29962,11 +29977,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1119156,
+   "file_size": 1119184,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.6,
+   "seconds": 4.8,
    "ao_rays": 1470336,
    "trays": [],
    "v3": {
@@ -30385,6 +30400,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -30857,11 +30873,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 734908,
+   "file_size": 734936,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 2.4,
    "ao_rays": 768768,
    "trays": [],
    "v3": {
@@ -31096,6 +31112,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -31582,13 +31599,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 756652,
+   "file_size": 756684,
    "color0": true,
    "also": [
     "workshop"
    ],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 2.8,
    "ao_rays": 810240,
    "trays": [],
    "v3": {
@@ -31841,6 +31858,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -32293,11 +32311,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 839928,
+   "file_size": 839956,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 3.0,
    "ao_rays": 930720,
    "trays": [],
    "v3": {
@@ -32771,6 +32789,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -33290,11 +33309,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1165448,
+   "file_size": 1165476,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.3,
+   "seconds": 4.5,
    "ao_rays": 1368672,
    "trays": [],
    "v3": {
@@ -33854,6 +33873,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -34266,11 +34286,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 625676,
+   "file_size": 625708,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.1,
+   "seconds": 1.8,
    "ao_rays": 768672,
    "trays": [],
    "v3": {
@@ -34833,13 +34853,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 704432,
+   "file_size": 704464,
    "color0": true,
    "also": [
     "medical"
    ],
    "flags": [],
-   "seconds": 2.4,
+   "seconds": 2.1,
    "ao_rays": 878976,
    "trays": [],
    "v3": {
@@ -35417,11 +35437,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 878196,
+   "file_size": 878228,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 2.7,
    "ao_rays": 1151136,
    "trays": [],
    "v3": {
@@ -36188,11 +36208,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1040948,
+   "file_size": 1040980,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.2,
+   "seconds": 3.5,
    "ao_rays": 1396368,
    "trays": [],
    "v3": {
@@ -37060,11 +37080,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 740516,
+   "file_size": 740552,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.4,
+   "seconds": 1.9,
    "ao_rays": 940752,
    "trays": [],
    "v3": {
@@ -37627,13 +37647,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 890964,
+   "file_size": 891004,
    "color0": true,
    "also": [
     "lounge"
    ],
    "flags": [],
-   "seconds": 2.7,
+   "seconds": 2.3,
    "ao_rays": 1143264,
    "trays": [],
    "v3": {
@@ -38283,11 +38303,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1041376,
+   "file_size": 1041416,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 2.9,
    "ao_rays": 1391328,
    "trays": [],
    "v3": {
@@ -39213,11 +39233,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1272764,
+   "file_size": 1272804,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.0,
+   "seconds": 3.5,
    "ao_rays": 1749552,
    "trays": [],
    "v3": {
@@ -40353,13 +40373,13 @@
     "Trim",
     "Visor"
    ],
-   "file_size": 669628,
+   "file_size": 669664,
    "color0": true,
    "also": [
     "airlock"
    ],
    "flags": [],
-   "seconds": 1.8,
+   "seconds": 1.4,
    "ao_rays": 878400,
    "trays": [],
    "v3": {
@@ -41065,11 +41085,11 @@
     "Trim",
     "Visor"
    ],
-   "file_size": 747000,
+   "file_size": 747028,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 1.9,
+   "seconds": 1.7,
    "ao_rays": 979488,
    "trays": [],
    "v3": {
@@ -41762,11 +41782,11 @@
     "Trim",
     "Visor"
    ],
-   "file_size": 581608,
+   "file_size": 581632,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 1.3,
+   "seconds": 1.2,
    "ao_rays": 763584,
    "trays": [],
    "v3": {
@@ -42517,11 +42537,11 @@
     "PaletteMetal",
     "Screen"
    ],
-   "file_size": 406976,
+   "file_size": 407008,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 1.0,
+   "seconds": 0.9,
    "ao_rays": 481344,
    "trays": [],
    "v3": {
@@ -43064,11 +43084,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 741552,
+   "file_size": 741580,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 2.5,
    "ao_rays": 792096,
    "trays": [],
    "v3": {
@@ -43271,6 +43291,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -43790,13 +43811,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 764892,
+   "file_size": 764924,
    "color0": true,
    "also": [
     "glassworks"
    ],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 2.7,
    "ao_rays": 836160,
    "trays": [],
    "v3": {
@@ -44071,6 +44092,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -44524,11 +44546,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 831488,
+   "file_size": 831516,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 3.0,
    "ao_rays": 954336,
    "trays": [],
    "v3": {
@@ -44976,6 +44998,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -45493,11 +45516,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1022832,
+   "file_size": 1022860,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.8,
+   "seconds": 3.9,
    "ao_rays": 1191840,
    "trays": [],
    "v3": {
@@ -46062,6 +46085,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -46549,11 +46573,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 757560,
+   "file_size": 757588,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.1,
+   "seconds": 2.5,
    "ao_rays": 810336,
    "trays": [],
    "v3": {
@@ -46773,7 +46797,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
-     "Walls": 6,
+     "WallsUp": 2,
+     "Walls": 5,
      "WallShell": 2
     },
     "decals": {
@@ -47337,13 +47362,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 772296,
+   "file_size": 772328,
    "color0": true,
    "also": [
     "electronics_fab"
    ],
    "flags": [],
-   "seconds": 3.4,
+   "seconds": 2.7,
    "ao_rays": 831360,
    "trays": [],
    "v3": {
@@ -47608,7 +47633,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
-     "Walls": 6,
+     "WallsUp": 2,
+     "Walls": 5,
      "WallShell": 2
     },
     "decals": {
@@ -48062,11 +48088,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 930476,
+   "file_size": 930504,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.2,
+   "seconds": 3.3,
    "ao_rays": 1083360,
    "trays": [],
    "v3": {
@@ -48566,7 +48592,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
-     "Walls": 6,
+     "WallsUp": 2,
+     "Walls": 5,
      "WallShell": 2
     },
     "decals": {
@@ -49078,11 +49105,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1271756,
+   "file_size": 1271784,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.1,
+   "seconds": 5.5,
    "ao_rays": 1633248,
    "trays": [],
    "v3": {
@@ -49573,7 +49600,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
-     "Walls": 6,
+     "WallsUp": 2,
+     "Walls": 5,
      "WallShell": 2
     },
     "decals": {
@@ -50053,11 +50081,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 758024,
+   "file_size": 758052,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 2.6,
    "ao_rays": 797760,
    "trays": [],
    "v3": {
@@ -50308,6 +50336,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -50757,13 +50786,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 805200,
+   "file_size": 805228,
    "color0": true,
    "also": [
     "fabricator"
    ],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 3.2,
    "ao_rays": 857184,
    "trays": [],
    "v3": {
@@ -51095,6 +51124,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -51603,11 +51633,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 971972,
+   "file_size": 972000,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.4,
+   "seconds": 3.7,
    "ao_rays": 1099392,
    "trays": [],
    "v3": {
@@ -52097,6 +52127,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -52644,11 +52675,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1198560,
+   "file_size": 1198588,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.9,
+   "seconds": 4.9,
    "ao_rays": 1487808,
    "trays": [],
    "v3": {
@@ -53183,6 +53214,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -53598,11 +53630,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 747928,
+   "file_size": 747988,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 2.6,
    "ao_rays": 970368,
    "trays": [
     [
@@ -54120,13 +54152,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 608472,
+   "file_size": 608504,
    "color0": true,
    "also": [
     "fungus_farm"
    ],
    "flags": [],
-   "seconds": 2.7,
+   "seconds": 1.9,
    "ao_rays": 734976,
    "trays": [
     [
@@ -54995,11 +55027,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 805408,
+   "file_size": 805456,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.9,
+   "seconds": 3.6,
    "ao_rays": 1053120,
    "trays": [
     [
@@ -55875,11 +55907,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 899136,
+   "file_size": 899168,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.0,
+   "seconds": 4.3,
    "ao_rays": 1207872,
    "trays": [
     [
@@ -56958,11 +56990,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 716040,
+   "file_size": 716072,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.3,
+   "seconds": 3.2,
    "ao_rays": 793152,
    "trays": [],
    "v3": {
@@ -57183,6 +57215,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -57690,13 +57723,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 773956,
+   "file_size": 773988,
    "color0": true,
    "also": [
     "algae_bioreactor"
    ],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 3.6,
    "ao_rays": 878688,
    "trays": [],
    "v3": {
@@ -57945,6 +57978,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -58415,11 +58449,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 945400,
+   "file_size": 945432,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 5.0,
    "ao_rays": 1175616,
    "trays": [],
    "v3": {
@@ -58704,6 +58738,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -59206,11 +59241,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1126244,
+   "file_size": 1126276,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 6.5,
    "ao_rays": 1515072,
    "trays": [],
    "v3": {
@@ -59602,6 +59637,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 4,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -59989,11 +60025,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 602716,
+   "file_size": 602748,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.2,
+   "seconds": 2.3,
    "ao_rays": 729120,
    "trays": [],
    "v3": {
@@ -60190,6 +60226,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -60667,13 +60704,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 674512,
+   "file_size": 674544,
    "color0": true,
    "also": [
     "water_recycler"
    ],
    "flags": [],
-   "seconds": 2.5,
+   "seconds": 2.8,
    "ao_rays": 882912,
    "trays": [],
    "v3": {
@@ -60897,6 +60934,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -61388,11 +61426,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 730160,
+   "file_size": 730192,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.0,
+   "seconds": 3.3,
    "ao_rays": 987360,
    "trays": [],
    "v3": {
@@ -61708,6 +61746,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -62078,11 +62117,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 810452,
+   "file_size": 810484,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.4,
+   "seconds": 4.0,
    "ao_rays": 1146240,
    "trays": [],
    "v3": {
@@ -62488,6 +62527,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -62848,11 +62888,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 699116,
+   "file_size": 699148,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 3.4,
    "ao_rays": 811584,
    "trays": [],
    "v3": {
@@ -63072,6 +63112,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -63651,13 +63692,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 774576,
+   "file_size": 774608,
    "color0": true,
    "also": [
     "atmo_processor"
    ],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 4.0,
    "ao_rays": 961632,
    "trays": [],
    "v3": {
@@ -63940,6 +63981,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -64389,11 +64431,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 917228,
+   "file_size": 917260,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.5,
+   "seconds": 5.0,
    "ao_rays": 1202400,
    "trays": [],
    "v3": {
@@ -64830,6 +64872,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -65343,11 +65386,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1091736,
+   "file_size": 1091768,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.1,
+   "seconds": 6.4,
    "ao_rays": 1495776,
    "trays": [],
    "v3": {
@@ -65920,6 +65963,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 3,
+     "WallsUp": 1,
      "Walls": 5,
      "WallShell": 2
     },
@@ -66410,11 +66454,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 681864,
+   "file_size": 681896,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 3.2,
    "ao_rays": 726912,
    "trays": [],
    "v3": {
@@ -66642,6 +66686,7 @@
      "NameSign": 3,
      "Roof": 5,
      "Tall": 6,
+     "WallsUp": 1,
      "Walls": 6,
      "WallShell": 2
     },
@@ -67066,13 +67111,13 @@
     "Soil",
     "Window"
    ],
-   "file_size": 725248,
+   "file_size": 725280,
    "color0": true,
    "also": [
     "bio_lab"
    ],
    "flags": [],
-   "seconds": 3.5,
+   "seconds": 3.6,
    "ao_rays": 818496,
    "trays": [],
    "v3": {
@@ -67336,6 +67381,7 @@
      "NameSign": 3,
      "Roof": 5,
      "Tall": 6,
+     "WallsUp": 1,
      "Walls": 6,
      "WallShell": 2
     },
@@ -67792,11 +67838,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 812000,
+   "file_size": 812032,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.1,
+   "seconds": 4.4,
    "ao_rays": 941760,
    "trays": [],
    "v3": {
@@ -68168,6 +68214,7 @@
      "NameSign": 3,
      "Roof": 5,
      "Tall": 6,
+     "WallsUp": 1,
      "Walls": 6,
      "WallShell": 2
     },
@@ -68688,11 +68735,11 @@
     "Soil",
     "Window"
    ],
-   "file_size": 918692,
+   "file_size": 918724,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.5,
+   "seconds": 5.0,
    "ao_rays": 1114944,
    "trays": [],
    "v3": {
@@ -69244,6 +69291,7 @@
      "NameSign": 3,
      "Roof": 5,
      "Tall": 6,
+     "WallsUp": 1,
      "Walls": 6,
      "WallShell": 2
     },
@@ -69666,11 +69714,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 734892,
+   "file_size": 734944,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.5,
+   "seconds": 2.8,
    "ao_rays": 876192,
    "trays": [],
    "v3": {
@@ -70294,13 +70342,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 884560,
+   "file_size": 884612,
    "color0": true,
    "also": [
     "cantina"
    ],
    "flags": [],
-   "seconds": 3.2,
+   "seconds": 3.6,
    "ao_rays": 1112160,
    "trays": [],
    "v3": {
@@ -71068,11 +71116,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1026968,
+   "file_size": 1027016,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 4.2,
    "ao_rays": 1335168,
    "trays": [],
    "v3": {
@@ -72132,11 +72180,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1233416,
+   "file_size": 1233464,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 5.3,
    "ao_rays": 1648080,
    "trays": [],
    "v3": {
@@ -73560,11 +73608,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 656256,
+   "file_size": 656276,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.6,
+   "seconds": 2.8,
    "ao_rays": 632832,
    "trays": [],
    "v3": {
@@ -73756,7 +73804,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 2,
-     "Walls": 7,
+     "WallsUp": 3,
+     "Walls": 6,
      "WallShell": 2
     },
     "decals": {
@@ -74249,13 +74298,13 @@
     "Screen",
     "Window"
    ],
-   "file_size": 696636,
+   "file_size": 696652,
    "color0": true,
    "also": [
     "cold_storage"
    ],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 3.1,
    "ao_rays": 691584,
    "trays": [],
    "v3": {
@@ -74528,7 +74577,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 2,
-     "Walls": 7,
+     "WallsUp": 3,
+     "Walls": 6,
      "WallShell": 2
     },
     "decals": {
@@ -74955,11 +75005,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 787704,
+   "file_size": 787724,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.1,
+   "seconds": 3.3,
    "ao_rays": 842400,
    "trays": [],
    "v3": {
@@ -75303,7 +75353,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 2,
-     "Walls": 7,
+     "WallsUp": 3,
+     "Walls": 6,
      "WallShell": 2
     },
     "decals": {
@@ -75752,11 +75803,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 917292,
+   "file_size": 917312,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.8,
+   "seconds": 4.2,
    "ao_rays": 1023552,
    "trays": [],
    "v3": {
@@ -76226,7 +76277,8 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 2,
-     "Walls": 7,
+     "WallsUp": 3,
+     "Walls": 6,
      "WallShell": 2
     },
     "decals": {
@@ -76669,11 +76721,11 @@
     "Plasma",
     "Screen"
    ],
-   "file_size": 816768,
+   "file_size": 816800,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.4,
+   "seconds": 3.8,
    "ao_rays": 899136,
    "trays": [],
    "v3": {
@@ -76862,6 +76914,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 6,
+     "WallsUp": 2,
      "Walls": 5,
      "WallShell": 2
     },
@@ -77380,13 +77433,13 @@
     "Plasma",
     "Screen"
    ],
-   "file_size": 1009628,
+   "file_size": 1009660,
    "color0": true,
    "also": [
     "research_assembler"
    ],
    "flags": [],
-   "seconds": 4.4,
+   "seconds": 5.0,
    "ao_rays": 1179360,
    "trays": [],
    "v3": {
@@ -77626,6 +77679,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 6,
+     "WallsUp": 2,
      "Walls": 6,
      "WallShell": 2
     },
@@ -78074,11 +78128,11 @@
     "Plasma",
     "Screen"
    ],
-   "file_size": 1108340,
+   "file_size": 1108372,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.8,
+   "seconds": 5.3,
    "ao_rays": 1317792,
    "trays": [],
    "v3": {
@@ -78399,6 +78453,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 6,
+     "WallsUp": 2,
      "Walls": 6,
      "WallShell": 2
     },
@@ -78917,11 +78972,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1363468,
+   "file_size": 1363500,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.3,
+   "seconds": 7.0,
    "ao_rays": 1710336,
    "trays": [],
    "v3": {
@@ -79494,6 +79549,7 @@
      "L5": 3,
      "NameSign": 3,
      "Roof": 6,
+     "WallsUp": 2,
      "Walls": 6,
      "WallShell": 2
     },
