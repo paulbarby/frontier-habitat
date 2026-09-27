@@ -1,0 +1,33 @@
+{
+  "round": 19,
+  "date": "2026-09-27",
+  "scope": "v4.0 vehicles, full set from Blender renders: small rover (after round-16 fixes), medium rover, hopper, satellite, launch pad with rocket. Evidence art/vehicles/* ; ART-B log. No in-game evidence.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "vehicles": {"consistency": 0.74, "appeal": 0.72, "style": 0.72, "score": 0.73, "pass": true, "provisional": true, "was": 0.71,
+      "per_model": {
+        "rover_small": {"score": 0.77, "note": "all 5 round-16 fixes landed: graphite fenders with an orange lip, tucked 7 cm over the tyre, skid plate, lower body, lugged dark tyres with bolted rims, bed lamp halved and amber corner markers, tilted roof with an edge. Now reads as a work vehicle, not a toy."},
+        "rover_medium": {"score": 0.72, "note": "role reads (8 wheels, pressurised hull, portholes, rear door-kit hatch with ramp, roof rack with Outpost Kits). Two faults: the nose is a smooth bullet-train cap with a dark windscreen (the same 'toy bus' read the trader had in round 9), and the purple band is the logistics accent at full saturation over a third of the hull - louder than any building."},
+        "hopper": {"score": 0.68, "note": "lander-like, legs and hover thrusters, ladder and vestibule read; but the capsule is a smooth white egg with a dark cap - reads as a cartoon pod or a rice cooker. The rear vestibule is a flat box stuck on the curve."},
+        "satellite": {"score": 0.72, "note": "clear and simple: bus, two wings, dish. Gold foil box is fine. Only seen against a flat blue background."},
+        "launch_pad": {"score": 0.74, "note": "reads at once: orange lattice tower, service arms, white rocket with orange and graphite bands, lit deck. Scale with colonists right."}
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Medium rover nose: replace the rounded bullet cap with a faceted cab like the trader's round-9 fix: 3-4 flat chamfered planes, framed windscreen with mullions, dark glass by day and warm light at night. Carry a bumper with a winch and two tow hooks."},
+        {"owner": "ART-B", "fix": "Medium rover colour: narrow the purple band to 20-25 cm (now about 60 cm), desaturate it to the band tone the rooms use, and add the colony orange lip on the fenders as on the small rover, so the two rovers read as one fleet."},
+        {"owner": "ART-B", "fix": "Hopper capsule: facet the egg (8-10 flat panels with seam lines and bolted access plates), a structural ring with hard edges at the belly band, a framed cockpit bubble, and fair the vestibule into the hull with a chamfered collar. Give the hover thrusters bells like the ships' (bronze rim, glowing cone)."},
+        {"owner": "ART-B", "fix": "Night: the hopper's landing floods make 4 bright pools that read well; the medium rover's portholes glow flat yellow - use the warm #FFD9A0 at 50% (CabinWindow) as on the ships."},
+        {"owner": "ART-B", "fix": "Satellite: add one render over the planet or on the launch-pad rocket so its scale and look in the game context can be judged."}
+      ],
+      "what_works": [
+        "One family: shared wheel and suspension kit, registration codes (RV-01, MR-02, HP-03, LP-01), hazard-stripe bumpers, off-white and graphite bodies, colony orange accent (small rover, launch pad).",
+        "Roles read: small open work rover; long pressurised rover; lander-like hopper; rocket on a pad.",
+        "Scale next to suited colonists is right on all three crewed vehicles and on the pad.",
+        "Night outline pattern (white front, red rear, amber markers) is consistent."
+      ]}
+  },
+  "notes": [
+    "PASS 0.73 (up from 0.71), provisional until in-game driving and flight. Weakest: hopper (0.68).",
+    "My grids: art/critic/r19_night.png, r19_misc.png."
+  ]
+}

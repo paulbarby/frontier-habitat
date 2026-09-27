@@ -43,6 +43,9 @@ func _process(_delta: float) -> void:
 	var ban = hud.get("hazard_banner")
 	if ban != null and (ban as Control).visible:
 		top = maxf(top, (ban as Control).get_global_rect().end.y + 10.0)
+	var rb = hud.get("reactor_banner")   # version 4 meltdown warning: toasts go under it
+	if rb != null and (rb as Control).visible:
+		top = maxf(top, (rb as Control).get_global_rect().end.y + 10.0)
 	_box.offset_top = top
 
 func push(text: String, kind: String = "info", icon: String = "") -> void:
@@ -58,9 +61,9 @@ func push(text: String, kind: String = "info", icon: String = "") -> void:
 		kind = _guess(text)
 	var spec: Array = KIND[kind]
 	var col: Color = spec[1]
-	var p: PanelContainer = Kit.panel("ToastPanel", true, [8, 0, 8, 0])
+	var p: PanelContainer = Kit.panel("ToastPanel", true, [12, 0, 12, 0])
 	var st = UiTheme.panel_style("toast")
-	st.accent = col
+	st.accent_left = col
 	p.add_theme_stylebox_override("panel", st)
 	p.mouse_filter = Control.MOUSE_FILTER_STOP
 	p.custom_minimum_size.x = 360

@@ -135,3 +135,20 @@ over 50 ms into script time: simulation, `view.sync`, HUD, audio (ambience and m
 **UI note 2026-09-25 (later):** `presentation/world_view.gd:559` `_night_warmup` prints "SCRIPT ERROR: Trying to cast a
 freed object." at exit in headless runs (`tools/ui/test_window_bounds.gd`). The tests still pass; it looks like the
 warm-up runs after its node is freed.
+## 2026-09-27 — V4 planner overlays: the split between UI and RENDER (V4_DESIGN §6)
+
+UI side (done): three new overlay names in `hud.OVERLAYS` and on the minimap's second button row:
+`"radiation"`, `"sun"`, `"resources"`. `hud.set_overlay(name)` calls `view.set_overlay(name)` as before.
+The minimap draws them now (radiation from `sim.world.rad_at`, sun share from `sim.world.sun_vis` over 8 times of
+the day, deposits by `tier`), with a legend under the map. Key O steps through all of them.
+
+Asked of RENDER (the 3D layers, when you have room):
+1. `set_overlay("radiation")`: tint the ground by `sim.world.rad_at(x, y)` (mSv/h). The minimap uses: under 0.5
+   dark/no tint, 1–2 amber, 3 and more red. Same thresholds in 3D, please.
+2. `set_overlay("sun")`: tint by the share of the day in sunlight (`sun_vis` averaged over the day; you already
+   have the horizon data). Bright = full sun, dark = under half.
+3. `set_overlay("resources")`: rings on the ground at each `state.deposits` entry (`x, y, r, kind, tier`), in
+   the tier colour (basic #B0B6BE, mid #3EE0FF, high-end #FFD166), with the kind name at close zoom.
+4. Later, when SIM publishes them: `"explored"` (fog of war, milestone 7) and `"vehicles"` (vehicle ranges).
+   I will add the names to the overlay list and the minimap when the SIM data exists; the 3D layer is yours.
+Until you draw them, `set_overlay` with these names just shows no network lines (it does not error).

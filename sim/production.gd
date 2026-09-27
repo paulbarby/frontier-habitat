@@ -75,12 +75,19 @@ func machine_block(b: Dictionary) -> String:
 		return "no_power"
 	if has_batch(b):
 		return ""
+	# V4: some recipes need a building level (content recipes min_level).
+	if int(recipe_of(b).get("min_level", 1)) > int(b.get("level", 1)):
+		return "level_low"
 	if not output_space(b):
 		return "output_blocked"
 	if is_menu(b) and _stock_full():
 		return "stock_full"
 	if _output_stock_full(recipe_of(b)):
 		return "stock_full"
+	if int(recipe_of(b).get("from_deposit", 0)) > 0:
+		var dep: Dictionary = _deposit_under(b)
+		if not dep.is_empty() and deposit_locked(dep):
+			return "deposit_locked"
 	if not inputs_ready(b):
 		var rec: Dictionary = recipe_of(b)
 		if int(rec.get("from_deposit", 0)) > 0:
@@ -102,9 +109,17 @@ func start_batch(b: Dictionary) -> bool:
 	var rec: Dictionary = recipe_of(b)
 	if bool(rec.get("menu", false)):
 		return _start_dish(b)
+	var outs: Dictionary = (rec["outputs"] as Dictionary).duplicate()
+	if int(rec.get("from_deposit", 0)) > 0:
+		# V4: a mine gives what its deposit holds (iron ore on the old maps).
+		var info: Dictionary = deposit_info(_deposit_under(b))
+		var total := 0
+		for res in outs:
+			total += int(outs[res])
+		outs = {String(info.get("item", "ore")): int(info.get("per_batch", total))}
 	var n := 0
-	for res in rec["outputs"]:
-		n += int(rec["outputs"][res])
+	for res in outs:
+		n += int(outs[res])
 	var hold: int = sim.inv.hold_in(b["inv_out"], "_batch", n, -int(b["id"]) - 1000000)
 	if hold == -1:
 		return false
@@ -120,8 +135,21 @@ func start_batch(b: Dictionary) -> bool:
 		var d: Dictionary = _deposit_under(b)
 		d["ore"] = int(d["ore"]) - int(rec["from_deposit"])
 	b["batch"] = {"recipe": recipe_id(b), "progress": 0.0, "work": float(rec["work"]), "hold": hold,
-		"outputs": (rec["outputs"] as Dictionary).duplicate()}
+		"outputs": outs}
 	return true
+
+## V4: what a mine takes out of a deposit: {item, research?, per_batch?}
+## (content terrain_v4.deposit_items by deposit kind; a deposit without a kind gives iron ore).
+func deposit_info(d: Dictionary) -> Dictionary:
+	var k: String = String(d.get("kind", ""))
+	if k == "":
+		return {"item": "ore"}
+	return sim.content["terrain_v4"].get("deposit_items", {}).get(k, {"item": "ore"})
+
+## True while the research a deposit kind needs is not done.
+func deposit_locked(d: Dictionary) -> bool:
+	var r: String = String(deposit_info(d).get("research", ""))
+	return r != "" and not sim.research.is_done(r) and not sim.unlocked_all()
 
 func _start_dish(b: Dictionary) -> bool:
 	var dish: String = menu_pick(b)
@@ -189,6 +217,8 @@ func set_recipe(b: Dictionary, rid: String) -> Dictionary:
 		return {"ok": false, "code": "invalid"}
 	if not sim.research.recipe_unlocked(rid):
 		return {"ok": false, "code": "locked_research"}
+	if int(sim.content["recipes"][rid].get("min_level", 1)) > int(b.get("level", 1)):
+		return {"ok": false, "code": "level_low"}
 	if recipe_id(b) == rid:
 		b["recipe_sel"] = rid
 		return {"ok": true, "code": "ok"}
@@ -470,7 +500,7 @@ func finish_seed(b: Dictionary, tray_i: int) -> void:
 
 func harvest_units(crop_id: String) -> Dictionary:
 	var crop: Dictionary = crop_info(crop_id)
-	var m: float = 1.0 + sim.research.bonus("crop_yield_mult")
+	var m: float = float(sim.bal.get("crop_yield_base", 1.0)) + sim.research.bonus("crop_yield_mult")
 	var out := {}
 	var y: int = int(floor(float(crop["yield"]) * m + 0.5))
 	if y > 0:

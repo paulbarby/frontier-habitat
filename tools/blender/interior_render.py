@@ -30,8 +30,9 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 import rooms_kit as K            # noqa: E402
 import rooms_render as RR        # noqa: E402
+import interior_kit as IK       # noqa: E402
 
-OUT_DIR = os.path.join(K.ROOT, "art", "interiors")
+OUT_DIR = os.path.join(K.ROOT, "art", "interiors", "v4pilot") if K.V4PILOT else os.path.join(K.ROOT, "art", "interiors")
 SIZE = (1600, 1100)
 SEG = 11.25
 FRAME_HW = 1.10             # the jamb in the wall plane
@@ -468,7 +469,7 @@ def place_link(R, theta, length=4.5, cutaway=True, open_doors=False, accent=None
             for sgn in (-1, 1):
                 a = theta + sgn * phi_b
                 import_at("band_cap", Matrix.Rotation(radians(a), 4, "Z") @
-                          Matrix.Translation((Rw, 0, 0.5 * (b0 + b1) - 1.03)))
+                          Matrix.Translation((Rw, 0, 0.5 * (b0 + b1) - 0.5 * (IK.BAND_Z[0] + IK.BAND_Z[1]))))
     # corridor: the game draws it from the room radius R to the far room, 0.25 m longer at each end
     start = R - 0.25
     Mc = rot @ Matrix.Translation((start + length / 2, 0, 0.05)) @ Matrix.Diagonal((length, 1, 1, 1))
@@ -681,7 +682,11 @@ def main():
     tid = file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file
     size = K.SIZE_KEYS.index(file.rsplit("_", 1)[-1]) if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else 1
     b = K.load_buildings().get(tid, {})
+    if not b:
+        import rooms_build_defs as _RBD       # 4.0 types not in content yet
+        b = _RBD.provisional(tid)
     R = float(b.get("sizes", {}).get("radius", [b.get("radius", 5.5)] * 4)[size]) if b.get("sizes") else float(b.get("radius", 5.5))
+    R = K.v4_radius(tid, size, R)     # 4.0: the files are built at 1.5 x the v3 radius
     if file == "airlock_r28":
         R = 2.8                      # old-save airlock (rooms_build.AIRLOCK_R_OLD)
     os.makedirs(OUT_DIR, exist_ok=True)

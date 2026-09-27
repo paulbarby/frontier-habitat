@@ -18,6 +18,7 @@ func _init() -> void:
 func header_extra(row: HBoxContainer) -> void:
 	var c := CheckButton.new()
 	c.text = "Only items in stock"
+	c.tooltip_text = "Only items in stock\nHides the items the colony has none of."
 	c.focus_mode = Control.FOCUS_NONE
 	c.toggled.connect(func(on):
 		_only_stock = on
@@ -27,11 +28,12 @@ func header_extra(row: HBoxContainer) -> void:
 func build_tab(id: String, box: VBoxContainer) -> void:
 	var d = hud.data
 	_rows = {}
-	var totals: Dictionary = d.totals()
+	var totals: Dictionary = _totals()
 	var units := 0
 	for k in totals:
 		units += int(totals[k].get("total", 0))
-	set_subtitle("%s in the colony  ·  %s of item" % [Kit.plural(units, "unit"), Kit.plural(totals.size(), "kind")])
+	var where: String = ("at " + hud.base_filter_name()) if hud.base_filter >= 0 else "in the colony"
+	set_subtitle("%s %s  ·  %s of item" % [Kit.plural(units, "unit"), where, Kit.plural(totals.size(), "kind")])
 	# Column heads
 	var head: HBoxContainer = _cols(null)
 	for c in [["Item", 230], ["Total", 70], ["Reserved", 80], ["Carried", 72], ["Free", 64], ["Trend", 150], ["Days of supply", 110], ["Spoilage", 170]]:
@@ -39,8 +41,8 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 		l.custom_minimum_size.x = c[1]
 		head.add_child(l)
 	box.add_child(Kit.margin(head, 8, 0, 0, 0))
-	var body: VBoxContainer = Kit.vbox(2)
-	box.add_child(Kit.scroll(body))
+	var body: VBoxContainer = Kit.seam_list(2)   # v4: rows with seams in a darker well
+	box.add_child(Kit.well_scroll(body))
 	var cats: Dictionary = d.item_categories()
 	var order: Array = cats.keys()
 	order.sort_custom(func(a, b): return int(cats[a].get("order", 0)) < int(cats[b].get("order", 0)))
@@ -58,11 +60,25 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 		var ch: HBoxContainer = Kit.hbox(8)
 		ch.add_child(Kit.icon("icat_" + String(cat), 16, P.CYAN))
 		ch.add_child(Kit.head(String(cats[cat].get("name", cat)), P.CYAN, 12, "head_wide"))
-		body.add_child(Kit.gap(0, 6))
+		var gp: Control = Kit.gap(0, 6)
+		gp.set_meta("no_seam", true)
+		ch.set_meta("no_seam", true)
+		body.add_child(gp)
 		body.add_child(ch)
 		for it in ids:
 			body.add_child(_row(it))
 	_update()
+
+## Stock of the whole colony, or of the base picked in the top bar (sim.bases.totals, SIM v4).
+func _totals() -> Dictionary:
+	var s = hud.main.sim
+	if hud.base_filter >= 0 and "bases" in s and s.bases != null:
+		return s.bases.totals(hud.base_filter)
+	return hud.data.totals()
+
+## The base filter changed: build the tab again.
+func rebuild_tab() -> void:
+	_build_tab_content()
 
 func _cols(parent) -> HBoxContainer:
 	var h: HBoxContainer = Kit.hbox(10)
@@ -114,7 +130,7 @@ func refresh() -> void:
 
 func _update() -> void:
 	var d = hud.data
-	var totals: Dictionary = d.totals()
+	var totals: Dictionary = _totals()
 	var daily: Array = d.daily()
 	var last: Dictionary = daily[daily.size() - 1] if not daily.is_empty() else {}
 	var used: Dictionary = last.get("consumed", {})

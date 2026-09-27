@@ -216,6 +216,28 @@ func _off_grid_ids() -> Array:
 			_off_grid.append(id)
 	return _off_grid
 
+## V4 (docs/V4_DESIGN.md 1.1): the share of the sun a solar structure gets where it stands
+## (crater walls and mountains hide it; sim.world.sun_vis). 1.0 on maps before version 4.
+## Kept per structure for SUN_STEP seconds of the day (the sun moves slowly).
+const SUN_STEP := 5.0
+var _sun_key := -1
+var _sun_angles := {}
+var _sun_cache := {}
+
+func _sun_on(b: Dictionary) -> float:
+	var w = sim.world
+	var key: int = int(day_time() / SUN_STEP) + 100000 * day_number()
+	if key != _sun_key:
+		_sun_key = key
+		_sun_cache = {}
+		_sun_angles = w.sun_angles(float(int(day_time() / SUN_STEP)) * SUN_STEP, float(sim.planet["daylight_seconds"]), float(sim.bal["day_length"]))
+	var bid: int = int(b["id"])
+	var v = _sun_cache.get(bid)
+	if v == null:
+		v = w.sun_vis(b["pos"], float(_sun_angles["elev_deg"]), float(_sun_angles["bearing"]))
+		_sun_cache[bid] = v
+	return float(v)
+
 func power_tick() -> void:
 	power_stats = {}
 	var blds: Dictionary = sim.state["buildings"]
@@ -229,6 +251,7 @@ func power_tick() -> void:
 	# Wind storms drive the turbines harder (V3 hazards: env.wind_mult).
 	var wind_mult: float = (1.0 + sim.research.bonus("wind_mult")) * float(env.get("wind_mult", 1.0))
 	var batt_mult: float = 1.0 + sim.research.bonus("battery_mult")
+	var v4sun: bool = int(sim.world.version) >= 4
 	for id in _off_grid_ids():
 		var b0: Dictionary = blds.get(id, {})
 		if not b0.is_empty():
@@ -249,7 +272,7 @@ func power_tick() -> void:
 			else:
 				var f1: int = e0[PE_F]
 				if f1 & PF_SOLAR:
-					gen += rt(float(e0[PE_SOLAR]) * sun * solar_mult * float(b1["out_rate"]) * (0.5 if bool(b1.get("dust", false)) else 1.0))
+					gen += rt(float(e0[PE_SOLAR]) * sun * solar_mult * float(b1["out_rate"]) * (0.5 if bool(b1.get("dust", false)) else 1.0) * (_sun_on(b1) if v4sun else 1.0))
 				if f1 & PF_WIND:
 					gen += rt(float(e0[PE_WIND]) * wind * wind_mult * float(b1["out_rate"]))
 				b1["powered"] = true
@@ -286,7 +309,7 @@ func power_tick() -> void:
 			if f & (PF_SOLAR | PF_WIND | PF_FUSION):
 				if f & PF_SOLAR:
 					# Dust from a dust devil halves a panel's output until it is cleaned.
-					gen += rt(float(e[PE_SOLAR]) * sun * solar_mult * float(b["out_rate"]) * (0.5 if bool(b.get("dust", false)) else 1.0))
+					gen += rt(float(e[PE_SOLAR]) * sun * solar_mult * float(b["out_rate"]) * (0.5 if bool(b.get("dust", false)) else 1.0) * (_sun_on(b) if v4sun else 1.0))
 				if f & PF_WIND:
 					gen += rt(float(e[PE_WIND]) * wind * wind_mult * float(b["out_rate"]))
 				if f & PF_FUSION:
@@ -370,6 +393,10 @@ func power_tick() -> void:
 func _fusion(b: Dictionary, def: Dictionary) -> int:
 	if not bool(b["enabled"]):
 		b["block"] = "disabled"
+		return 0
+	# V4: a fission reactor makes power only while its fission runs (fuel, no SCRAM).
+	if bool(def.get("reactor", false)) and not sim.reactors.running(b):
+		b["block"] = "scram" if bool(b.get("rx", {}).get("scram", false)) else "no_fuel"
 		return 0
 	var w: int = rt(float(def.get("water_in", 0.0)))
 	if w > 0 and not draw_water(b["id"], w, 1):
@@ -560,15 +587,23 @@ func _spread_water(wp: Dictionary, total: int) -> void:
 		left -= share
 
 # ---------------------------------------------------------------- atmosphere
+## A core's own air (the lander from the start of the game; an outpost core from its
+## deployment: b.air_until, V4).
 func lander_supplied(b: Dictionary) -> bool:
+	if b.has("air_until"):
+		return int(sim.state["tick"]) < int(b["air_until"]) and b["state"] == "active"
 	var days: float = float(sim.bdef(b["def"]).get("shelter_days", 3.0))
 	return days_elapsed() < days and b["state"] == "active"
 
-func lander_seconds_left() -> float:
-	var lid: int = int(sim.state["lander_id"])
+## Seconds of air left in a core (the lander when no id is given).
+func lander_seconds_left(core_id: int = -1) -> float:
+	var lid: int = int(sim.state["lander_id"]) if core_id == -1 else core_id
 	if not sim.state["buildings"].has(lid):
 		return 0.0
-	var days: float = float(sim.bdef("lander").get("shelter_days", 3.0))
+	var b: Dictionary = sim.state["buildings"][lid]
+	if b.has("air_until"):
+		return maxf(0.0, float(int(b["air_until"]) - int(sim.state["tick"])) / float(sim.bal["tick_hz"]))
+	var days: float = float(sim.bdef(b["def"]).get("shelter_days", 3.0))
 	return maxf(0.0, (days - days_elapsed()) * float(sim.bal["day_length"]))
 
 func comp_supplied(comp: int) -> bool:

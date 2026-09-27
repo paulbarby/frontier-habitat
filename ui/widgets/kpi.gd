@@ -29,6 +29,7 @@ var _trend_good_up := true
 var _state := 0                 # 0 ok, 1 warn, 2 bad
 var _hover := false
 var _min_w := 100.0
+var _fsz := 0          # text floor the width was measured at
 
 ## One control, drawn by hand: icon, value, trend arrow, sub line (few canvas items).
 func setup(k: String, icon_name: String, color: Color, min_w: float = 104.0) -> void:
@@ -40,6 +41,7 @@ func setup(k: String, icon_name: String, color: Color, min_w: float = 104.0) -> 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	custom_minimum_size = Vector2(min_w, 36)
+	add_to_group("fs_redraw")
 	tooltip_text = " "
 	mouse_entered.connect(func():
 		_hover = true
@@ -50,16 +52,18 @@ func setup(k: String, icon_name: String, color: Color, min_w: float = 104.0) -> 
 
 ## state: 0 normal, 1 warning (amber), 2 critical (red). trend: -1, 0, 1, or 99 = hide.
 func set_value(value: String, sub: String, state: int = 0, trend: int = 99, trend_good_up: bool = true) -> void:
-	if value == _val_text and sub == _sub_text and state == _state and trend == _trend and trend_good_up == _trend_good_up:
+	if value == _val_text and sub == _sub_text and state == _state and trend == _trend and trend_good_up == _trend_good_up and _fsz == P.fs(11):
 		return
+	_fsz = P.fs(11)
 	_val_text = value
 	_sub_text = sub
 	_state = state
 	_trend = trend
 	_trend_good_up = trend_good_up
 	var f: Font = Fonts.get_font("mono_b")
-	var w: float = 28.0 + f.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + (16.0 if trend != 99 else 0.0)
-	var w2: float = 28.0 + Fonts.get_font("body").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	# Widths at the floored text sizes (P.fs, critic round 21), so a larger text never overlaps the next KPI.
+	var w: float = 28.0 + f.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(15)).x + (16.0 if trend != 99 else 0.0)
+	var w2: float = 28.0 + Fonts.get_font("body").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11)).x
 	var want: float = maxf(_min_w, maxf(w, w2))
 	if absf(want - custom_minimum_size.x) > 0.5:
 		custom_minimum_size.x = want
@@ -75,14 +79,14 @@ func _draw() -> void:
 	draw_texture_rect(Icons.tex(_icon_name, 20), Rect2(Vector2(0, h * 0.5 - 10), Vector2(20, 20)), false, tint)
 	var c: Color = P.TEXT if _state == 0 else (P.AMBER if _state == 1 else P.RED)
 	var mf: Font = Fonts.get_font("mono_b")
-	draw_string(mf, Vector2(26, h * 0.5 + 2), _val_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, c)
+	draw_string(mf, Vector2(26, h * 0.5 + 2), _val_text, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(15), c)
 	if _trend != 99:
 		var name: String = "trend_up" if _trend > 0 else ("trend_down" if _trend < 0 else "trend_flat")
 		var good: bool = (_trend > 0) == _trend_good_up
 		var tc: Color = P.TEXT_3 if _trend == 0 else (P.GREEN if good else P.AMBER)
-		var tx: float = 26.0 + mf.get_string_size(_val_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 4.0
+		var tx: float = 26.0 + mf.get_string_size(_val_text, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(15)).x + 4.0
 		draw_texture_rect(Icons.tex(name, 12), Rect2(Vector2(tx, h * 0.5 - 12), Vector2(12, 12)), false, tc)
-	draw_string(Fonts.get_font("body"), Vector2(26, h * 0.5 + 15), _sub_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, P.TEXT_2 if _state == 0 else c)
+	draw_string(Fonts.get_font("body"), Vector2(26, h * 0.5 + 4.0 + float(P.fs(11))), _sub_text, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11), P.TEXT_2 if _state == 0 else c)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

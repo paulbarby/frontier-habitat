@@ -1182,7 +1182,330 @@ def cheer_keys():
 # --------------------------------------------------------------------------------------
 # clip table
 # --------------------------------------------------------------------------------------
-POSE_STATE_REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep", 0), "kneel": ("repair_kneel", 0)}
+# --------------------------------------------------------------------------------------
+# vehicles (V4_DESIGN section 5, 8): seat loops, boarding and alighting
+# --------------------------------------------------------------------------------------
+# Two frames of reference (all metres, character axes: +x forward = vehicle forward, +y = left, z up):
+#  * SEAT frame (drive_sit, ride_sit): origin on the cabin floor, like a chair: seat top 0.46 m, seat centre 0.30 m
+#    behind the origin, feet on the floor at z 0, control grips and the grab handle as below.
+#  * DOOR frame (board, alight): origin on the ground beside the vehicle, facing the vehicle's forward direction; the
+#    seat is on the character's right.  seat_offset = the seat-frame origin in the door frame.  board ends (and alight
+#    starts) on ride_sit frame 0 moved by seat_offset, so the game moves the body origin by seat_offset at the cut.
+#  * board_r / alight_r are the mirror images (seat on the character's left, seat_offset y > 0): the right-hand door.
+VEHICLE = dict(
+    floor_z=0.32,                                   # cabin floor above the ground (door frame)
+    seat_offset=(0.0, -0.52, 0.32),                 # seat-frame origin in the door frame (left-hand door)
+    seat_z=0.46, seat_back=0.30, seat_width=0.50,   # seat frame (as the chair)
+    floor_edge_y=-0.22,                             # door frame: the cabin floor starts here (the sill), y <= this
+    # seat frame, ART-B's small rover (vehicle_rover_small.glb): vertical handles; the PALM centre (bone prop.S) is
+    # placed on the handle axis at these points
+    grips=((0.298, 0.142, 0.925), (0.298, -0.142, 0.925)),   # driver's control handles (L, R), 0.785..1.015 high
+    grab_handle=(0.261, 0.316, 0.725),              # door-side grab handle (door on +y), 0.625..0.825 high
+    handle_half=0.10,
+    # ground frame (step_up / step_down): the door point on the running board seen from the ground point
+    step_offset=(0.0, -0.53, 0.50),
+    headroom_z=1.60,                                # seat frame: a roof must be above this (seated suit helmet top)
+    pack_clear_x=-0.70,                             # seat frame: the seat back must be behind this or notched (pack)
+)
+
+
+def mirror_pose(P):
+    """The mirror image of a pose about the character's XZ plane (left <-> right)."""
+    Q = Pose()
+    for k, v in P.items():
+        parts = k.split(".")
+        comp = parts[-1]
+        if len(parts) >= 3 and parts[1] in ("L", "R"):
+            nk = ".".join([parts[0], "R" if parts[1] == "L" else "L"] + parts[2:])
+            sg = -1.0 if comp in ("rx", "rz", "y", "yaw", "roll", "wx", "wz", "out", "py") else 1.0
+        else:
+            nk = k
+            sg = -1.0 if comp in ("rx", "rz", "y") else 1.0
+        Q[nk] = v * sg
+    return Q
+
+
+def shift_pose(P, o):
+    """The same pose with the whole body moved by o = (x, y, z): hips, foot targets, IK wrist targets."""
+    Q = Pose(P)
+    for c, d in zip("xyz", o):
+        Q["hips." + c] = Q.g("hips." + c) + d
+        for s in ("L", "R"):
+            Q["foot.%s.%s" % (s, c)] = Q.g("foot.%s.%s" % (s, c)) + d
+            Q["arm.%s.%s" % (s, c)] = Q.g("arm.%s.%s" % (s, c)) + d
+    return Q
+
+
+def palm_to(P, s, target, iters=5):
+    """Move the IK wrist target so the palm centre (prop.S head) lands on `target` (character space)."""
+    for _ in range(iters):
+        _, _, pos, _ = solver().solve(P)
+        e = Vector(target) - pos["prop." + s]
+        for c, d in zip("xyz", e):
+            P["arm.%s.%s" % (s, c)] = P.g("arm.%s.%s" % (s, c)) + d
+    return P
+
+
+def vehicle_seat_base():
+    """ride_sit frame 0 = the vehicle pose-state rest: seated, hands on the thighs, a little more upright."""
+    P = Pose(SIT)
+    P.update({"hips.ry": -6.0, "spine.ry": 6.0, "neck.ry": 3.0})
+    return P
+
+
+VSEAT = vehicle_seat_base()
+
+
+def drive_base():
+    P = Pose(VSEAT)
+    P.update({"hips.ry": -5.0, "spine.ry": 11.0, "chest.ry": 3.0, "neck.ry": -4.0, "head.ry": -6.0})
+    for s, g in zip(("L", "R"), VEHICLE["grips"]):
+        set_arm_ik(P, s, (g[0] - 0.06, abs(g[1]) + 0.05, g[2] - 0.02), (1.0, 0.0, 0.35), (0.0, -1.0, 0.0), w=1.0,
+                   pole=-30.0)
+        P["arm.%s.stiff" % s] = 1.0
+        palm_to(P, s, g)
+    return P
+
+
+def drive_fn(n=120):
+    base = drive_base()
+
+    def fn(f):
+        u = f / n
+
+        def w(g):
+            return g(u) - g(0.0)
+        P = add(base,
+                hips__z=w(lambda u: 0.002 * (1 - cos(3 * TAU * u)) + 0.001 * (1 - cos(7 * TAU * u))),
+                hips__rx=w(lambda u: 0.9 * sin(2 * TAU * u + 0.2)),
+                spine__rx=w(lambda u: -0.6 * sin(2 * TAU * u + 0.2)),
+                chest__ry=w(lambda u: 0.8 * sin(3 * TAU * u + 1.0)),
+                head__rz=w(lambda u: 9.0 * sin(TAU * u + 0.5) + 2.5 * sin(3 * TAU * u)),
+                head__ry=w(lambda u: 2.0 * sin(2 * TAU * u + 0.8)))
+        # steering on fixed handles: the grips twist a little (the wrists stay; the palms move a few millimetres)
+        tw = w(lambda u: 4.0 * sin(2 * TAU * u) + 1.5 * sin(5 * TAU * u + 0.6))
+        P["hand.L.wz"] = P.g("hand.L.wz") + tw
+        P["hand.R.wz"] = P.g("hand.R.wz") + tw
+        P["arm.L.pole"] = P.g("arm.L.pole") + 2.0 * tw
+        P["arm.R.pole"] = P.g("arm.R.pole") - 2.0 * tw
+        return P
+    return fn, n
+
+
+def ride_fn(n=150):
+    """Passenger: hands on the thighs, looks round, the body takes the vehicle's bumps; now and then the right hand
+    lifts to brace on the knee."""
+    def fn(f):
+        u = f / n
+
+        def w(g):
+            return g(u) - g(0.0)
+        P = add(VSEAT,
+                hips__z=w(lambda u: 0.0025 * (1 - cos(3 * TAU * u)) + 0.001 * (1 - cos(8 * TAU * u))),
+                hips__rx=w(lambda u: 1.1 * sin(2 * TAU * u)),
+                spine__rx=w(lambda u: -0.8 * sin(2 * TAU * u + 0.3)),
+                chest__ry=w(lambda u: -1.0 * sin(TAU * u) + 0.5 * sin(3 * TAU * u)),
+                head__rz=w(lambda u: 16.0 * sin(TAU * u + 0.4) + 4.0 * sin(2 * TAU * u)),
+                head__ry=w(lambda u: 4.0 * sin(2 * TAU * u + 1.0)),
+                neck__rz=w(lambda u: 5.0 * sin(TAU * u + 0.4)))
+        b = bump(u, 0.62, 0.09)
+        P["arm.R.x"] = P.g("arm.R.x") + 0.06 * b
+        P["arm.R.z"] = P.g("arm.R.z") + 0.035 * b
+        return P
+    return fn, n
+
+
+def board_keys():
+    """Stand beside the vehicle (door frame) -> right hand to the grab handle -> right foot up on the cabin floor ->
+    push up and across -> sit -> left leg in -> ride_sit rest (seat frame, moved by seat_offset)."""
+    O = VEHICLE["seat_offset"]
+    fz = VEHICLE["floor_z"]
+    gh = Vector(VEHICLE["grab_handle"]) + Vector(O)                 # grab handle in the door frame
+    END = shift_pose(VSEAT, O)
+    S0 = Pose(STAND)
+    K1 = add(S0, hips__y=0.025, hips__rx=-2.0, spine__ry=3.0, neck__rz=-8.0, head__rz=-14.0, head__ry=6.0)
+    set_arm_ik(K1, "R", (gh.x - 0.06, -(gh.y + 0.03), gh.z + 0.02), (1.0, -0.3, -0.35), (0.0, -0.85, -0.5), w=1.0,
+               pole=-20.0)
+    K1 = fill_arm_targets(K1)
+    set_foot(K1, "R", (0.020, 0.140, ANK.z + 0.10), pitch=6.0, yaw=2.0, knee_out=3.0)     # the step up begins
+    palm_to(K1, "R", gh + Vector((-0.02, 0.03, 0.03)))      # reaching, just short of the handle
+    K1b = Pose(K1)                                 # right foot lifted outside the sill, then in over the floor
+    K1b.update({"hips.y": 0.035, "hips.z": -0.012, "spine.ry": 5.0})
+    set_foot(K1b, "R", (0.060, 0.180, fz + ANK.z + 0.045), pitch=8.0, yaw=-3.0, knee_out=4.0)
+    set_arm_ik(K1b, "R", (gh.x - 0.045, -(gh.y + 0.02), gh.z + 0.015), (1.0, -0.3, -0.22), (0.0, -0.6, -0.8), w=1.0,
+               pole=-22.0)
+    palm_to(K1b, "R", gh)
+    K2 = Pose(K1)
+    K2.update({"hips.x": 0.01, "hips.y": -0.05, "hips.z": -0.03, "hips.rx": 3.0, "spine.rx": 5.0, "spine.ry": 8.0,
+               "chest.ry": 4.0, "neck.rz": -6.0, "head.rz": -10.0})
+    set_foot(K2, "R", (0.080, 0.360, fz + ANK.z), pitch=0.0, yaw=-5.0, knee_out=4.0)
+    set_arm_ik(K2, "R", (gh.x - 0.03, -(gh.y + 0.01), gh.z + 0.01), (1.0, -0.3, -0.25), (0.0, -0.6, -0.8), w=1.0,
+               pole=-25.0)
+    palm_to(K2, "R", gh + Vector((0.0, 0.0, -0.03)))
+    # free left arm: FK, out a little for balance (the standing hand turn kept: no wrist flip)
+    set_arm_ik(K2, "L", (0.030, 0.265, 0.925), (0.5, 0.05, -0.85), (0.0, -0.55, -0.8), w=1.0, pole=5.0)
+    K3 = Pose(K2)
+    K3.update({"hips.x": -0.06, "hips.y": -0.30, "hips.z": 0.075, "hips.rx": 4.0, "hips.ry": 4.0, "spine.rx": 4.0,
+               "spine.ry": 10.0, "chest.ry": 4.0, "neck.rz": -3.0, "head.rz": -4.0, "head.ry": 0.0})
+    set_foot(K3, "L", (0.015, -0.130, 0.470), pitch=0.0, yaw=0.0, knee_out=6.0)
+    set_arm_ik(K3, "L", (0.030, 0.020, 0.975), (0.85, 0.03, -0.5), (0.0, -0.2, -1.0), w=1.0, pole=8.0)
+    K4 = Pose(K3)
+    K4.update({"hips.x": -0.19, "hips.y": -0.47, "hips.z": 0.005, "hips.rx": 1.5, "hips.ry": -2.0, "spine.rx": 1.5,
+               "spine.ry": 8.0, "chest.ry": 2.0, "neck.rz": 0.0, "head.rz": 0.0})
+    set_foot(K4, "L", (0.020, -0.360, fz + ANK.z + 0.04), pitch=0.0, yaw=4.0, knee_out=6.0)
+    set_foot(K4, "R", (0.000, 0.620, fz + ANK.z + 0.02), pitch=0.0, yaw=8.0, knee_out=6.0)
+    for s in ("L", "R"):
+        K4["arm.%s.ik" % s] = 1.0
+    set_arm_ik(K4, "L", (END.g("arm.L.x") + 0.03, END.g("arm.L.y") + 0.02, END.g("arm.L.z") + 0.06),
+               (1.0, 0.03, -0.26), (0.0, 0.12, -1.0), w=1.0, pole=10.0)
+    set_arm_ik(K4, "R", (END.g("arm.R.x") + 0.04, -END.g("arm.R.y"), END.g("arm.R.z") + 0.08),
+               (1.0, 0.03, -0.26), (0.0, 0.12, -1.0), w=1.0, pole=10.0)
+    # every key as FK angles (no IK weight changes inside the clip: no wrist flips, see suit_swap)
+    S0, K1, K1b, K2, K3, K4, END = (ik_to_fk(k) for k in (S0, K1, K1b, K2, K3, K4, END))
+    return [(0.0, S0, {"hold": True}), (0.36, K1), (0.60, K1b), (0.84, K2), (1.16, K3), (1.52, K4),
+            (1.88, END, {"hold": True})]
+
+
+def alight_keys():
+    """ride_sit rest (moved by seat_offset) -> left hand to the grab handle, slide to the seat edge, left foot to the
+    sill -> rise onto the left foot -> left foot down to the ground -> right foot out -> stand (door frame)."""
+    O = VEHICLE["seat_offset"]
+    fz = VEHICLE["floor_z"]
+    gh = Vector(VEHICLE["grab_handle"]) + Vector(O)
+    S0 = shift_pose(VSEAT, O)
+    K1 = Pose(S0)
+    K1.update({"hips.y": S0.g("hips.y") + 0.10, "hips.z": S0.g("hips.z") + 0.012, "hips.ry": 2.0, "spine.ry": 9.0,
+               "neck.rz": 8.0, "head.rz": 16.0})
+    set_foot(K1, "L", (0.040, -0.285, fz + ANK.z + 0.01), pitch=0.0, yaw=10.0, knee_out=6.0)
+    set_arm_ik(K1, "L", (gh.x - 0.05, gh.y + 0.01, gh.z + 0.03), (1.0, 0.3, -0.2), (0.0, -0.6, -0.8), w=1.0,
+               pole=-20.0)
+    palm_to(K1, "L", gh + Vector((0.0, 0.0, 0.03)))
+    K2 = Pose(K1)
+    K2.update({"hips.x": -0.05, "hips.y": -0.28, "hips.z": 0.09, "hips.rx": -4.0, "hips.ry": 8.0, "spine.rx": -4.0,
+               "spine.ry": 12.0, "chest.ry": 4.0, "neck.rz": 5.0, "head.rz": 10.0, "head.ry": 8.0})
+    set_foot(K2, "R", (0.030, 0.520, fz + ANK.z), pitch=0.0, yaw=6.0, knee_out=4.0)
+    set_foot(K2, "L", (0.040, -0.170, fz + ANK.z + 0.05), pitch=0.0, yaw=10.0, knee_out=5.0)
+    for c in "xyz":                       # the right hand stays on the right thigh and moves with the hips
+        K2["arm.R." + c] = S0.g("arm.R." + c) + (K2.g("hips." + c) - S0.g("hips." + c))
+    K3 = Pose(K2)
+    K3.update({"hips.x": -0.03, "hips.y": -0.13, "hips.z": -0.035, "hips.rx": -3.0, "hips.ry": 6.0, "spine.rx": -3.0,
+               "spine.ry": 8.0, "neck.rz": 2.0, "head.rz": 4.0, "head.ry": 6.0})
+    set_foot(K3, "L", (-0.005, 0.075, ANK.z), pitch=0.0, yaw=7.0, knee_out=3.0)
+    set_foot(K3, "R", (0.030, 0.330, fz + ANK.z + 0.09), pitch=0.0, yaw=4.0, knee_out=4.0)
+    set_arm_ik(K3, "L", (gh.x - 0.04, gh.y + 0.03, gh.z + 0.02), (1.0, 0.3, -0.2), (0.0, -0.6, -0.8), w=1.0,
+               pole=-25.0)
+    palm_to(K3, "L", gh + Vector((0.0, 0.0, 0.01)))
+    # the right hand comes off the thigh palm down; it turns to the standing hand in the last segment
+    set_arm_ik(K3, "R", (0.070, 0.300, 0.940), (1.0, 0.03, -0.45), (0.0, -0.3, -1.0), w=1.0, pole=10.0)
+    K4 = fill_arm_targets(add(Pose(STAND), hips__y=0.02, hips__z=-0.02, spine__ry=3.0))
+    set_foot(K4, "L", (ANK.x, 0.100, ANK.z), yaw=7.0, knee_out=3.0)
+    # the left hand comes off the handle through a low point in front of the thigh (palm turning in)
+    set_arm_ik(K4, "L", (0.100, 0.215, 0.880), (0.45, 0.0, -0.9), (0.0, -0.8, -0.55), w=1.0, pole=5.0)
+    K3b = Pose(K3)                                 # right foot out over the sill, still high, then down
+    for c in ("x", "y", "z"):
+        K3b["hips." + c] = 0.5 * (K3.g("hips." + c) + K4.g("hips." + c))
+    set_foot(K3b, "R", (0.020, 0.160, fz + ANK.z - 0.01), pitch=0.0, yaw=5.0, knee_out=3.0)
+    set_arm_ik(K3b, "R", (0.060, 0.255, 0.900), (0.7, 0.0, -0.7), (0.0, -0.6, -0.8), w=1.0, pole=8.0)
+    set_arm_ik(K3b, "L", (gh.x - 0.10, gh.y + 0.07, gh.z - 0.07), (0.8, 0.2, -0.55), (0.0, -0.7, -0.7), w=1.0,
+               pole=-10.0)
+    S0, K1, K2, K3, K3b, K4, K5 = (ik_to_fk(k) for k in (S0, K1, K2, K3, K3b, K4, Pose(STAND)))
+    return [(0.0, S0, {"hold": True}), (0.34, K1), (0.72, K2), (1.08, K3), (1.33, K3b), (1.60, K4),
+            (1.88, K5, {"hold": True})]
+
+
+def step_up_keys():
+    """Ground point -> the door point on the running board (step_offset: 0.53 m to the right, 0.50 m up), facing
+    forward: right palm on the grab handle, right foot up on the running board, pull up, left foot up, stand."""
+    so = Vector(VEHICLE["step_offset"])
+    O = Vector(VEHICLE["seat_offset"])
+    gh = Vector(VEHICLE["grab_handle"]) + O + so                    # grab handle in the ground frame
+    rb = so.z                                                       # running board top
+    END = shift_pose(Pose(STAND), so)
+    S0 = Pose(STAND)
+    K1 = add(S0, hips__y=0.02, spine__rx=3.0, spine__ry=2.0, neck__rz=-8.0, head__rz=-12.0, head__ry=-8.0)
+    set_arm_ik(K1, "R", (gh.x - 0.10, -(gh.y + 0.06), gh.z - 0.08), (1.0, -0.3, -0.25), (0.0, -0.6, -0.8), w=1.0,
+               pole=-20.0)
+    palm_to(K1, "R", gh + Vector((-0.03, 0.04, -0.02)))
+    set_foot(K1, "R", (-0.060, 0.190, ANK.z + 0.16), pitch=0.0, yaw=3.0, knee_out=24.0)  # the knee starts to rise
+    K1b = Pose(K1)                                 # right knee up: the foot above the board, outside its edge
+    K1b.update({"hips.y": 0.03, "hips.z": 0.005, "hips.rx": -2.0, "hips.rz": -20.0, "spine.rx": 5.0, "spine.ry": 4.0,
+                "spine.rz": 12.0, "chest.rz": 6.0})
+    set_foot(K1b, "R", (-0.110, 0.265, rb + ANK.z + 0.035), pitch=0.0, yaw=0.0, knee_out=38.0)   # knee to the step
+    palm_to(K1b, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K2 = Pose(K1)
+    K2.update({"hips.y": -0.07, "hips.z": -0.05, "hips.rx": 4.0, "hips.rz": -16.0, "spine.rx": 7.0, "spine.ry": 6.0,
+               "spine.rz": 10.0, "chest.rz": 5.0, "neck.rz": -5.0, "head.rz": -8.0, "head.ry": -4.0})
+    set_foot(K2, "R", (-0.090, 0.560, rb + ANK.z), pitch=0.0, yaw=-3.0, knee_out=34.0)   # knee clear of the fender
+    palm_to(K2, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K2 = add(K2, upper_arm__L__rx=8.0, forearm__L__ry=-10.0)
+    K3 = Pose(K2)
+    K3.update({"hips.y": -0.34, "hips.z": 0.26, "hips.rx": 3.0, "hips.rz": -8.0, "spine.rx": 4.0, "spine.ry": 7.0,
+               "spine.rz": 5.0, "chest.rz": 2.0, "neck.rz": -2.0, "head.rz": -3.0, "head.ry": 0.0})
+    set_foot(K3, "L", (-0.020, -0.220, rb + ANK.z + 0.055), pitch=0.0, yaw=2.0, knee_out=12.0)
+    palm_to(K3, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K4 = Pose(K3)
+    K4.update({"hips.y": -0.50, "hips.z": 0.46, "hips.rx": 1.0, "hips.rz": 0.0, "spine.rx": 1.0, "spine.ry": 3.0,
+               "spine.rz": 0.0, "chest.rz": 0.0, "neck.rz": 0.0, "head.rz": 0.0})
+    set_foot(K4, "L", (ANK.x, -0.530 + 0.115, rb + ANK.z), pitch=0.0, yaw=7.0, knee_out=3.0)
+    set_foot(K4, "R", (ANK.x, 0.530 + 0.115, rb + ANK.z), pitch=0.0, yaw=7.0, knee_out=3.0)
+    palm_to(K4, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K4 = add(K4, upper_arm__L__rx=-4.0, forearm__L__ry=5.0)
+    S0, K1, K1b, K2, K3, K4, END = (ik_to_fk(k) for k in (S0, K1, K1b, K2, K3, K4, END))
+    return [(0.0, S0, {"hold": True}), (0.38, K1), (0.65, K1b), (0.89, K2), (1.22, K3), (1.55, K4),
+            (1.88, END, {"hold": True})]
+
+
+def step_down_keys():
+    """The door point on the running board -> the ground point: right palm on the grab handle, crouch on the right
+    leg, left foot down to the ground, right foot down, stand."""
+    so = Vector(VEHICLE["step_offset"])
+    O = Vector(VEHICLE["seat_offset"])
+    gh = Vector(VEHICLE["grab_handle"]) + O + so
+    rb = so.z
+    S0 = shift_pose(Pose(STAND), so)
+    K1 = add(S0, hips__y=-0.02, spine__rx=3.0, neck__rz=-6.0, head__rz=-6.0, head__ry=8.0)
+    set_foot(K1, "R", (-0.120, 0.645, rb + ANK.z), pitch=0.0, yaw=7.0, knee_out=6.0)
+    set_arm_ik(K1, "R", (gh.x - 0.06, -(gh.y + 0.03), gh.z - 0.04), (1.0, -0.3, -0.25), (0.0, -0.6, -0.8), w=1.0,
+               pole=-20.0)
+    palm_to(K1, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K1b = Pose(K1)                                 # crouch on the right leg; the left foot up and out over the edge
+    K1b.update({"hips.y": so.y - 0.01, "hips.z": so.z - 0.12, "hips.rx": -3.0, "spine.rx": 1.0, "spine.ry": 8.0,
+                "head.ry": 12.0})
+    set_foot(K1b, "L", (-0.040, -0.255, rb + ANK.z + 0.04), pitch=0.0, yaw=7.0, knee_out=35.0)
+    set_foot(K1b, "R", (-0.120, 0.645, rb + ANK.z), pitch=0.0, yaw=7.0, knee_out=8.0)    # crouch: knee behind the fender
+    palm_to(K1b, "R", gh + Vector((0.0, 0.0, -0.02)))
+    K2 = Pose(K1)
+    K2.update({"hips.y": -0.20, "hips.z": -0.03, "hips.rx": -4.0, "spine.rx": -3.0, "spine.ry": 12.0,
+               "neck.rz": -2.0, "head.rz": 2.0, "head.ry": 14.0})
+    set_foot(K2, "L", (0.000, 0.050, ANK.z), pitch=0.0, yaw=7.0, knee_out=3.0)
+    set_foot(K2, "R", (-0.120, 0.645, rb + ANK.z), pitch=0.0, yaw=7.0, knee_out=8.0)
+    palm_to(K2, "R", gh + Vector((0.0, 0.0, -0.03)))       # the hand stays high on the handle (its base is the dash)
+    K2 = add(K2, upper_arm__L__rx=10.0, forearm__L__ry=-12.0)
+    K3 = Pose(K2)
+    K3.update({"hips.y": -0.10, "hips.z": -0.025, "hips.rx": -2.0, "hips.rz": -20.0, "spine.rx": -1.0, "spine.ry": 7.0,
+               "spine.rz": 12.0, "chest.rz": 6.0, "head.rz": 0.0, "head.ry": 6.0})
+    set_foot(K3, "R", (-0.170, 0.290, rb + ANK.z + 0.01), pitch=0.0, yaw=-10.0, knee_out=34.0)
+    # the right hand lets go of the handle as the right foot leaves the running board
+    set_arm_ik(K3, "R", (0.200, 0.480, 1.230), (0.85, 0.05, -0.5), (0.0, -0.65, -0.75), w=1.0, pole=-5.0)
+    K4 = fill_arm_targets(add(Pose(STAND), hips__y=-0.01, hips__z=-0.02, spine__ry=3.0))
+    set_foot(K4, "L", (ANK.x, 0.090, ANK.z), yaw=7.0, knee_out=3.0)
+    set_arm_ik(K4, "R", (0.130, 0.300, 1.020), (0.7, 0.1, -0.7), (0.0, -0.7, -0.7), w=1.0, pole=5.0)
+    S0, K1, K1b, K2, K3, K4, K5 = (ik_to_fk(k) for k in (S0, K1, K1b, K2, K3, K4, Pose(STAND)))
+    return [(0.0, S0, {"hold": True}), (0.35, K1), (0.59, K1b), (0.92, K2), (1.22, K3), (1.60, K4),
+            (1.88, K5, {"hold": True})]
+
+
+def mirrored_clip(fn):
+    return lambda f: mirror_pose(fn(f))
+
+
+BOARD_META = dict(frame="door", seat_offset=list(VEHICLE["seat_offset"]), cut_frame=None,
+                  cut_note="board: at the LAST frame the pose equals ride_sit frame 0 moved by seat_offset; move the "
+                           "body origin to the seat anchor and play the seat loops.")
+
+
+POSE_STATE_REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep", 0), "kneel": ("repair_kneel", 0),
+                   "vehicle": ("ride_sit", 0)}
 
 
 def all_clips():
@@ -1245,4 +1568,33 @@ def all_clips():
     out.append(("cheer", "oneshot", "stand", "stand", False, n, fn, {}))
     fn, n = keyed_clip(suit_swap_keys())
     out.append(("suit_swap", "oneshot", "stand", "stand", False, n, fn, dict(cut_frame=SWAP_CUT_FRAME)))
+    # vehicles (V4 section 5): seat loops in the seat frame; board / alight in the door frame (see VEHICLE)
+    fn, n = drive_fn()
+    out.append(("drive_sit", "loop", "vehicle", "vehicle", True, n, fn, dict(frame="seat")))
+    fn, n = ride_fn()
+    out.append(("ride_sit", "loop", "vehicle", "vehicle", True, n, fn, dict(frame="seat")))
+    so = list(VEHICLE["seat_offset"])
+    so_r = [so[0], -so[1], so[2]]
+    fn, n = keyed_clip(board_keys())
+    out.append(("board", "enter", "stand", "vehicle", False, n, fn,
+                dict(frame="door", seat_offset=so, cut_frame=n, door="left of the seat (seat on the right)")))
+    out.append(("board_r", "enter", "stand", "vehicle", False, n, mirrored_clip(fn),
+                dict(frame="door", seat_offset=so_r, cut_frame=n, door="right of the seat (seat on the left)")))
+    fn, n = keyed_clip(alight_keys())
+    out.append(("alight", "exit", "vehicle", "stand", False, n, fn,
+                dict(frame="door", seat_offset=so, cut_frame=0, door="left of the seat (seat on the right)")))
+    out.append(("alight_r", "exit", "vehicle", "stand", False, n, mirrored_clip(fn),
+                dict(frame="door", seat_offset=so_r, cut_frame=0, door="right of the seat (seat on the left)")))
+    st = list(VEHICLE["step_offset"])
+    st_r = [st[0], -st[1], st[2]]
+    fn, n = keyed_clip(step_up_keys())
+    out.append(("step_up", "oneshot", "stand", "stand", False, n, fn,
+                dict(frame="ground", step_offset=st, cut_frame=n, door="left door (vehicle on the right)")))
+    out.append(("step_up_r", "oneshot", "stand", "stand", False, n, mirrored_clip(fn),
+                dict(frame="ground", step_offset=st_r, cut_frame=n, door="right door (vehicle on the left)")))
+    fn, n = keyed_clip(step_down_keys())
+    out.append(("step_down", "oneshot", "stand", "stand", False, n, fn,
+                dict(frame="ground", step_offset=st, cut_frame=0, door="left door (vehicle on the right)")))
+    out.append(("step_down_r", "oneshot", "stand", "stand", False, n, mirrored_clip(fn),
+                dict(frame="ground", step_offset=st_r, cut_frame=0, door="right door (vehicle on the left)")))
     return out

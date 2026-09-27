@@ -164,14 +164,7 @@ func _make_card(r: Dictionary) -> Dictionary:
 	var denied: bool = String(r.get("answer", "grant")) == "deny"
 	var col: Color = P.TEXT_3 if denied else (P.GREEN if ph == "landed" else P.CYAN)
 	var card := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(col.r, col.g, col.b, 0.07)
-	st.border_color = Color(col.r, col.g, col.b, 0.9)
-	st.border_width_left = 3
-	st.content_margin_left = 9
-	st.content_margin_right = 6
-	st.content_margin_top = 5
-	st.content_margin_bottom = 6
+	var st = load("res://ui/theme/list_row.gd").make(col)   # v4 list row: signal bar + seam, no box
 	card.add_theme_stylebox_override("panel", st)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	if ["landing", "landed", "boarding", "takeoff"].has(ph) and typeof(r.get("pad_pos")) == TYPE_VECTOR2:

@@ -122,3 +122,10 @@ runs. In those frames the view took 10–11 ms. The engine's process time readin
 was 1.8–2.3 s, so something outside the RENDER code blocks the main thread then. The flame, dust and mist shader
 warm-up that RENDER now does at start did not change this. Is there an audio or music load, or a HUD job, about
 60 s after the start? Other long frames: 50–53 ms, 1–2 per minute, with the view at 7–13 ms.
+## 2026-09-27 15:35 — `ui/hud/minimap.gd` line 107: I restored one missing line break
+
+Your file (saved 15:05) had `_ov[name2] = b2` and `_legend = Kit.label(...)` joined on line 107 (a tab between
+them, no newline). `check` failed on 22 scripts and main.gd would not compile, so no game or check could run. I
+split the line (one newline, one tab indent); nothing else changed. Please look at it in case the merge dropped
+more than the newline. The map-layer buttons you added (radiation, sun, resources) are what RENDER will draw next;
+the 3D layers will switch with `view.set_overlay(name)` using the same three names.

@@ -36,6 +36,8 @@ func tick_second() -> void:
 	_gen_ship()
 	_gen_construction()
 	_gen_upgrades()
+	_gen_vehicles()
+	_gen_reactors()
 	_gen_dining()
 	_gen_trade()
 	_gen_water_fill()
@@ -237,6 +239,8 @@ func _stores_with_space(skip_lander: bool) -> Array:
 
 # ---------------------------------------------------------------- generators
 func _gen_construction() -> void:
+	if bool(sim.state.get("options", {}).get("freeze_build", false)):
+		return
 	var blds: Dictionary = sim.state["buildings"]
 	var cap: int = int(sim.bal["haul_outstanding_per_destination"])
 	var carry: int = int(sim.bal["carry_human"])
@@ -324,6 +328,37 @@ func _gen_upgrades() -> void:
 				_new_task("upgrade", "construction", id, {"role": "technician"})
 			u["block"] = "suit_range" if _range_blocked(id, "upgrade") else ""
 
+## V4 vehicles: parts to the depot's order, then technician work outside at the depot.
+func _gen_vehicles() -> void:
+	if sim.vehicles == null:
+		return
+	var cap: int = int(sim.bal["haul_outstanding_per_destination"])
+	for d in sim.vehicles.builders():
+		var o: Dictionary = d.get("vorder", {})
+		if o.is_empty() or _parked(d):
+			continue
+		var id: int = int(d["id"])
+		if o["state"] == "deliver":
+			var miss: String = _fill(int(o["inv"]), o["cost"], "construction", id, 0, d["pos"], cap)
+			o["block"] = ("materials:" + miss) if miss != "" else ""
+		elif o["state"] == "work":
+			while int(_count.get("vbuild:%d" % id, 0)) < 2:
+				_new_task("vbuild", "construction", id, {"role": "technician"})
+			o["block"] = "suit_range" if _range_blocked(id, "vbuild") else ""
+
+## V4 reactors: fuel rods and coolant to the reactor's buffer; coolant is urgent when it runs hot.
+func _gen_reactors() -> void:
+	if sim.reactors == null:
+		return
+	var c: Dictionary = sim.bal["disasters"]["reactor"]
+	for b in sim.reactors.reactors():
+		if int(b["inv_in"]) == -1 or b["state"] != "active" or _parked(b):
+			continue
+		var st: String = String(b.get("rx", {}).get("stage", "ok"))
+		var em: int = 3 if st == "critical" else (2 if st == "warning" else 0)
+		var miss: String = _fill(int(b["inv_in"]), {"coolant": int(c["coolant_keep"]), "fuel_rod": int(c["rods_keep"])}, "industry", int(b["id"]), em, b["pos"], 3)
+		b["block"] = ("materials:" + miss) if miss != "" and String(b["block"]) == "" else String(b["block"])
+
 ## The Meridian: parts to the hull, then exterior work; later maintenance.
 func _gen_ship() -> void:
 	var b: Dictionary = sim.ship.record()
@@ -351,7 +386,30 @@ func _gen_machine_inputs() -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	var batches: int = int(sim.bal["machine_input_batches"])
 	var food_days := -1.0
-	for id in blds:
+	# V4: research-pack machines leave an item alone while a planned structure waits for it
+	# (a fabricator waited ten days for 2 electronics while every unit became packs).
+	var starved := {}
+	if bool(sim.bal.get("packs_yield_to_sites", false)):
+		for sid in blds:
+			var sb: Dictionary = blds[sid]
+			if sb["state"] == "blueprint" and String(sb["block"]).begins_with("materials:"):
+				starved[String(sb["block"]).substr(10)] = true
+	# ...and a machine that makes such an item takes its inputs first (at work speed 1.05 the
+	# electronics fab waited eight days for silicate while the glassworks took every unit, and
+	# the fabricator for the Meridian's plates waited for its electronics).
+	var order: Array = blds.keys()
+	if not starved.is_empty():
+		var first: Array = []
+		var rest: Array = []
+		for id in order:
+			var ob: Dictionary = blds[id]
+			var orec: Dictionary = sim.prod.recipe_of(ob) if ob["state"] == "active" and int(ob["inv_in"]) != -1 else {}
+			if not orec.is_empty() and _makes_any(orec, starved):
+				first.append(id)
+			else:
+				rest.append(id)
+		order = first + rest
+	for id in order:
 		var b: Dictionary = blds[id]
 		if b["state"] != "active" or int(b["inv_in"]) == -1 or not bool(b["enabled"]) or bool(b["demolish"]) or _parked(b):
 			continue
@@ -369,11 +427,28 @@ func _gen_machine_inputs() -> void:
 		# A machine whose output stock is full does not hoard inputs (V3: steel for the ship).
 		if sim.prod._output_stock_full(rec):
 			continue
+		if not starved.is_empty() and bool(rec.get("auto", false)) and _uses_any(rec, starved):
+			continue
 		for res in rec["inputs"]:
 			wants[res] = int(rec["inputs"][res]) * batches
 		# A machine that stands idle for want of input gets its goods first.
 		var idle: bool = not sim.prod.has_batch(b) and String(b["block"]) == "no_input"
-		_fill(b["inv_in"], wants, rec["category"], id, 1 if idle else 0, b["pos"], 3)
+		var em: int = 1 if idle else 0
+		if not starved.is_empty() and _makes_any(rec, starved):
+			em = 2
+		_fill(b["inv_in"], wants, rec["category"], id, em, b["pos"], 3)
+
+static func _makes_any(rec: Dictionary, items: Dictionary) -> bool:
+	for res in rec.get("outputs", {}):
+		if items.has(res):
+			return true
+	return false
+
+static func _uses_any(rec: Dictionary, items: Dictionary) -> bool:
+	for res in rec["inputs"]:
+		if items.has(res):
+			return true
+	return false
 
 ## Research labs: the items of a special project go to the first lab; scientists work.
 func _gen_research() -> void:
@@ -845,6 +920,10 @@ func _expire() -> void:
 					var u: Dictionary = b.get("upgrade", {})
 					if u.is_empty() or u["state"] != "work":
 						fail(tid, "done")
+				"vbuild":
+					var vo: Dictionary = b.get("vorder", {})
+					if vo.is_empty() or vo["state"] != "work":
+						fail(tid, "done")
 				"research":
 					if not sim.research.lab_can_work(b) or b["state"] != "active" or not bool(b["powered"]) or not bool(b["enabled"]):
 						fail(tid, "no_project")
@@ -956,17 +1035,45 @@ func cancel_tasks_for_inventory(inv_id: int, reason: String) -> void:
 			fail(tid, reason)
 
 ## Cancels the upgrade work of a building and the hauls into its upgrade inventory.
-func cancel_upgrade_tasks(bid: int, upg_inv: int) -> void:
+func cancel_upgrade_tasks(bid: int, upg_inv: int, kind: String = "upgrade") -> void:
 	var tasks: Dictionary = sim.state["tasks"]
 	for tid in tasks.keys():
 		if not tasks.has(tid):
 			continue
 		var t: Dictionary = tasks[tid]
-		if (t["kind"] == "upgrade" and int(t["bld"]) == bid) or (upg_inv != -1 and int(t["dst"]) == upg_inv):
+		if (t["kind"] == kind and int(t["bld"]) == bid) or (upg_inv != -1 and int(t["dst"]) == upg_inv):
 			fail(tid, "upgrade_ended")
+
+## The base a task belongs to (V4): its structure's base, else the base where its goods
+## are. Kept per task until the structures or links change.
+var _tb := {}
+var _tb_key := ""
+
+func task_base(t: Dictionary) -> int:
+	var key: String = "%d:%d:%d" % [sim.state["buildings"].size(), int(sim.state["rev"]["power"]), sim.bases.count()]
+	if key != _tb_key:
+		_tb_key = key
+		_tb = {}
+	var tid: int = int(t["id"])
+	var got = _tb.get(tid)
+	if got != null:
+		return int(got)
+	var b := -1
+	if int(t.get("bld", -1)) != -1 and sim.state["buildings"].has(int(t["bld"])):
+		b = sim.bases.base_of(int(t["bld"]))
+	elif int(t.get("src", -1)) != -1 and sim.inv.exists(int(t["src"])):
+		b = sim.bases.base_at(sim.inv.position_of(int(t["src"])))
+	elif int(t.get("dst", -1)) != -1 and sim.inv.exists(int(t["dst"])):
+		b = sim.bases.base_at(sim.inv.position_of(int(t["dst"])))
+	_tb[tid] = b
+	return b
 
 func score(t: Dictionary, agent: Dictionary) -> float:
 	var prio: int = int(sim.state["policies"]["priority"].get(t["cat"], 1))
+	# V4: the colonist's own job priorities (set_jobs) come before the colony's.
+	var own = agent.get("jobs")
+	if own != null and (own as Dictionary).has(t["cat"]):
+		prio = int(own[t["cat"]])
 	if prio <= 0:
 		return -1e9
 	var blds: Dictionary = sim.state["buildings"]

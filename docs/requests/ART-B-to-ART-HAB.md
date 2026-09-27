@@ -59,3 +59,35 @@ The trader's ramp moved from the tail centre to the ship's −Y side at the tail
 All six ramps are now either rear-centre (medical, science) or on the ship's −Y side. With yaw 180° this puts
 every side ramp at pad +Y. Please keep pad +Y (±40°) and pad +X (±25°) clear from 6.5 m to the rim. The medical
 and science ramps land at pad +X; the trader, shuttle, liner and courier ramps land at pad +Y.
+
+## 4. Rover depot — vehicle footprint (V4 §5) — 2026-09-27
+
+Small rover built: `assets/models/vehicle_rover_small.glb`. Envelope at rest (tailgate closed, antenna excluded):
+**length 4.31 m (x −2.10 … +2.21), width 2.60 m, height 2.66 m (roof 2.55, beacon 2.66)** (whip antenna to 3.46 m, thin; it may pass under a
+door header if the header is ≥ 2.8 m and it can clip at the tip). Origin = wheelbase centre on the ground; front = +X.
+Tailgate open adds 0.20 m at the rear (x −2.30). Colonists board from the sides (`Anchor_Board_1/2` at y ±1.62) and load from
+the rear (`Anchor_Cargo` 2.60 m behind the origin).
+
+**Proposal for the depot bays** (please confirm or change):
+
+| vehicle | envelope L × W × H | bay (clear floor) | door (W × H) |
+|---|---|---|---|
+| small rover (built) | 4.3 × 2.6 × 2.7 | 6.0 × 4.4 (0.9 m walkway each side for boarding) | 3.4 × 3.0 |
+| medium rover (planned) | ≤ 7.5 × 3.2 × 3.4 | 9.5 × 5.0 | 4.0 × 3.8 |
+| hopper (planned) | ≤ 5.0 × 5.0 plan, ≤ 4.0 high | launch/landing pad outside, not in a bay | — |
+
+An `Anchor_Bay_<i>` empty per bay (at the bay centre on the floor, local +X = the way out through the door) would let
+RENDER park a rover with no numbers in code. The rover's origin goes on that anchor with the same yaw.
+
+## 5. Vehicle envelopes after critic round 16 — replaces the numbers in item 4 — 2026-09-27
+
+Origin = centre on the ground, front = +X. Measured from the exported files.
+
+| model | closed envelope L × W × H | open / deployed | crew access | proposed depot bay (clear floor) / door |
+|---|---|---|---|---|
+| small rover `vehicle_rover_small.glb` | 4.68 × 2.52 × 2.68 (antenna 3.48) | tailgate: rear to x −2.30 | sides (running boards at x 0.96, y ±0.92; ground points y ±1.45); rear loading at x −2.60 | 6.5 × 4.4 / 3.4 × 3.0 |
+| medium rover `vehicle_rover_medium.glb` | 6.9 × 3.20 × 4.05 (whips 4.30) | ramp down: rear to x −4.58 | rear hatch + ramp; ramp foot at x −4.54 | 10.0 × 5.0 / 4.0 × 4.4 (the whips may flex) |
+| hopper `vehicle_hopper.glb` | plan 4.1 × 4.1 (feet), H 3.70 | — | rear ladder, foot at x −2.42 | outside (landing pad, `Anchor_Ship`) |
+| launch pad `launch_pad.glb` | octagon r 6.0 (11.7 across), tower 12.5 m | rocket lifts off | crew point on the deck at (−3.0, 0.4) | its own footprint: proposed **6.5 m** radius to SIM |
+
+The medium rover door height changed from my item 4 guess (3.8) to **4.4 m**. `Anchor_Bay_<i>` request unchanged.

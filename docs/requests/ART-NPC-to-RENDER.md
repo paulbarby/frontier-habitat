@@ -219,3 +219,105 @@ from the material. If you have a night reflect effect, apply it to these two mat
 
 **Checked:** `npc_verify` 281 passed, 0 failed. `npc_check.gd`: PASS, 140 tests, 0 failures. `godot.mjs check`:
 157 scripts, 0 failed. **Not tested:** visitors in the game.
+
+
+## 2026-09-27 — v4.0: vehicle clips and the radiation look (V4 §5, §8, §11)
+
+### 1. New clips (both files, the same data in suit and indoor)
+
+| clip | kind | frames | pose from → to | frame | cut frame |
+|---|---|---|---|---|---|
+| `drive_sit` | loop | 120 (4.0 s) | vehicle → vehicle | seat | — |
+| `ride_sit` | loop | 150 (5.0 s) | vehicle → vehicle | seat | — |
+| `board` | enter | 60 (2.0 s) | stand → vehicle | door | **60** (last frame) |
+| `alight` | exit | 60 (2.0 s) | vehicle → stand | door | **0** (first frame) |
+| `board_r` | enter | 60 | stand → vehicle | door (mirror) | **60** |
+| `alight_r` | exit | 60 | vehicle → stand | door (mirror) | **0** |
+
+- **New pose state `vehicle`**, rest pose = `ride_sit` frame 0 (`pose_rest.vehicle` in the JSON). `drive_sit`
+  differs from it only in the arms (hands on the grips), as `sit_type` differs from `sit_idle`: cross-fade between them.
+- **Two frames of reference.** All values are in `astronaut_anims.json` → `vehicle_seat`.
+  - **Seat frame** (`drive_sit`, `ride_sit`): the origin is on the cabin floor, facing forward. The seat is the chair
+    contract: top 0.46 m, centre 0.30 m behind the origin. Place the body at the seat anchor that ART-B gives.
+  - **Door frame** (`board`, `alight`): the origin is on the ground beside the vehicle, facing the vehicle's forward
+    direction. The seat is on the character's right: `seat_offset = (0.0, -0.52, 0.32)` (the seat-frame origin in
+    the door frame). The `_r` clips are the mirror images: seat on the left, `seat_offset = (0.0, +0.52, 0.32)`.
+    Use them for a right-hand door.
+- **What the cut frame means.**
+  - `board`: the last frame equals `ride_sit` frame 0 moved by `seat_offset` (measured: 0.000°, hips 0.0 mm). At frame
+    60, move the body origin from the door point to the seat anchor and play the seat loops. Nothing on screen moves.
+  - `alight`: frame 0 equals the same pose. At frame 0, move the body origin from the seat anchor to the door point.
+  - Door point = seat anchor − `seat_offset` (rotated with the vehicle).
+- **Measured in `npc_verify`:**
+  - largest bone step: board 13.69°, alight 12.75°, drive_sit 1.86°, ride_sit 1.21° per frame;
+  - loop seams 0.000°; stand start and end 0.000°;
+  - no vertex through the cabin floor (0.32 m, beyond the sill at y −0.22) or the seat;
+  - drive_sit wrists within 3.4 cm of the grips (the grips move with the steering);
+  - the seated top is below 1.60 m (headroom); the rearmost point (suit pack) is at x −0.685 m.
+- For a pressurised cabin with a rear door (medium rover), V4 §8 allows a fade at the door. The seat loops still apply
+  inside.
+- Please add these clips to `npc_check.gd`:
+  - each clip at 1x;
+  - `idle -> board -> ride_sit` with the origin moved at the cut;
+  - `ride_sit -> drive_sit` cross-fade;
+  - `ride_sit -> alight -> idle`.
+
+### 2. Radiation look (look 7)
+
+- A colonist work look for radiation zones. It is selected like the visitor looks:
+  `look = (8 + 7) * 64 + head * 8 + tone`.
+- Colours, from `visitors.looks[7]`:
+  - suit: `SuitMain` hazard yellow #F2C230; `SuitHard` #1E2024 (black HUT and helmet); `Pack` #26282D;
+    `SuitAccent` #1E2024;
+  - indoor: `Jumpsuit` #F2C230; `SuitAccent` #1E2024.
+- Attachment `Vis_radiation` in both visitor files:
+  - suit: black shoulder shields, a lead-grey apron on the waist, a dosimeter (screen and amber light) on the right
+    chest, black bands on the shins;
+  - indoor (reactor rooms): dosimeter, apron, shin bands, respirator.
+- JSON: `visitors.work_looks = {radiation: 7}`. The role colour does not show while the look is on.
+- The shoulder shields, dosimeter, apron and respirator take their weights from the body mesh under them (weight
+  transfer), so they bend exactly like the suit.
+
+### 3. Numbers
+
+- **Triangles per character on screen:**
+  - suit: at most 6,839 + 160 (radiation) = 6,999 ≤ 7,000;
+  - indoor: at most 4,064 + 878 (tourist) = 4,942 ≤ 6,000.
+- **Size effect (Godot imported .scn, the files that go in the pck):** 1,023,237 → 1,226,464 bytes (+0.20 MB).
+  - The six new clips: suit +97 KB, indoor +97 KB.
+  - The radiation meshes: +9 KB.
+- **Checked:** `npc_verify` 356 passed, 0 failed. `npc_check.gd`: PASS, 145 tests, 0 failures (it has no vehicle
+  tests yet). `godot.mjs check`: 181 scripts, 0 failed.
+- **Not tested:** the clips in the game, and the origin move at the cut.
+
+Sheets:
+- `art/npc/vehicle_clips.png` (board and alight with the seat pose placed at `seat_offset`, and both loops, suit and
+  indoor, with a stand-in cabin);
+- `art/npc/clips_suit.png` and `clips_indoor.png` (all clips);
+- `art/npc/visitors_lineup.png` and `visitors_turnaround.png` (with the radiation look).
+
+
+## 2026-09-27 — vehicle clips, revision 2 (after ART-B's small rover fit)
+
+- **New clips: `step_up`, `step_down`, `step_up_r`, `step_down_r`**, 60 frames each (2.0 s), stand → stand.
+  - Ground frame: the origin is at the ground point (`Anchor_Ground_N`), facing the rover's forward direction.
+    `step_offset` = (0.0, −0.53, 0.50) for the left door, (0.0, +0.53, 0.50) for the right door.
+  - **Cut frames:** `step_up` **60**: its last frame is the stand pose moved by `step_offset`; move the body origin to
+    `Anchor_Board_N` and play `board`. `step_down` **0**: its first frame is the same pose; move the origin from
+    `Anchor_Board_N` to the ground point.
+  - Full chain: `step_up` → `board` → `ride_sit` / `drive_sit` … `alight` → `step_down`. Every hand-over is exact:
+    0.000° and 0.0 mm, measured.
+- **drive_sit:** the hands now stay on ART-B's fixed handles. The palm is 0.9 cm from the handle axis at worst, and
+  the hands travel 1.6 cm (it was 5.6 cm).
+- **Handle positions** (`vehicle_seat` in the JSON) are ART-B's measured ones:
+  - grips (0.298, ±0.142, 0.925);
+  - grab handle (0.261, 0.316, 0.725).
+  - The palm centre (prop.S) is on the handle axis.
+- The frames, cut frames and offsets of `board` / `alight` are unchanged.
+- **Size (imported .scn):** 1,226,464 → 1,341,337 bytes (+0.11 MB, the four step clips).
+- **Checked:** `npc_verify` 408 passed, 0 failed (it includes a no-intersection check on ART-B's rover for all ten
+  crew clips). `npc_check.gd`: PASS, 145 tests, 0 failures (no vehicle tests yet). `godot.mjs check`: 191 scripts,
+  0 failed.
+- **Not tested:** the chain in the game.
+- Please add to `npc_check.gd`: `step_up -> board -> ride_sit` and `alight -> step_down`, with the origin moved at each
+  cut.

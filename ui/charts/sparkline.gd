@@ -57,9 +57,9 @@ func _draw() -> void:
 	draw_circle(lp, 1.4, Color.WHITE)
 	if show_range:
 		var f: Font = Fonts.get_font("mono")
-		draw_string(f, Vector2(r.end.x + 4, r.position.y + 8), _f(hi), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, P.TEXT_3)
-		draw_string(f, Vector2(r.end.x + 4, r.end.y), _f(lo), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, P.TEXT_3)
-		draw_string(Fonts.get_font("body"), Vector2(2, 9), "last %d samples" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, P.TEXT_3)
+		draw_string(f, Vector2(r.end.x + 4, r.position.y + 8), _f(hi), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(10), P.TEXT_3)
+		draw_string(f, Vector2(r.end.x + 4, r.end.y), _f(lo), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(10), P.TEXT_3)
+		draw_string(Fonts.get_font("body"), Vector2(2, 9), "last %d samples" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(9), P.TEXT_3)
 
 static func _f(v: float) -> String:
 	if absf(v) >= 100.0 or absf(v - roundf(v)) < 0.05:

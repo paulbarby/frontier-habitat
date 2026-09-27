@@ -86,6 +86,8 @@ func position_of(inv_id: int) -> Vector2:
 		"a":
 			var a: Dictionary = sim.state["agents"].get(inv["oid"], {})
 			return a.get("pos", Vector2.ZERO)
+		"v":
+			return sim.vehicles.get_v(int(inv["oid"])).get("pos", inv["pos"])
 	return inv["pos"]
 
 # ---------------------------------------------------------------- holds

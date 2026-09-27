@@ -71,6 +71,12 @@ class ProfAgents extends "res://sim/agents.gd":
 		var t0 := Time.get_ticks_usec()
 		var r: Dictionary = super(a, t)
 		_t("plan_for_task", t0)
+		if t["kind"] == "build" and not bool(r.get("ok", false)) and not prof.has("seen_%d" % int(t["bld"])):
+			prof["seen_%d" % int(t["bld"])] = 1
+			var bb: Dictionary = sim.state["buildings"].get(int(t["bld"]), {})
+			print("build fail: ", bb.get("name"), " ", bb.get("state"), " pos ", bb.get("pos"), " reason ", r.get("reason"), " agent ", a["name"], " where ", a["where"], " tick ", sim.state["tick"])
+		_t("pft_" + String(t["kind"]) + "_" + str(r.get("ok", false)), t0)
+		prof["pft_" + String(t["kind"]) + "_" + str(r.get("ok", false)) + "#"] = int(prof.get("pft_" + String(t["kind"]) + "_" + str(r.get("ok", false)) + "#", 0)) + 1
 		prof["plan_for_task#"] = int(prof.get("plan_for_task#", 0)) + 1
 		return r
 	func _idle(a: Dictionary) -> void:

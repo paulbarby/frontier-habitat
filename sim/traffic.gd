@@ -401,6 +401,8 @@ func _land(arr: Dictionary, pad: Dictionary, tick: int) -> void:
 			a["hunger"] = 25.0
 			a["thirst"] = 25.0
 		sim.stat_add("settlers", "", n)
+		if n > 0:
+			sim.settler_supplies(n, _spot(spawn, pad, 0))
 		arr["result"]["settlers"] = n
 		text += " %s joined the colony." % Text.n(n, "settler")
 	elif int(arr["people"]) > 0:

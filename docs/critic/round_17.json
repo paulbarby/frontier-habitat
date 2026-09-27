@@ -1,0 +1,29 @@
+{
+  "round": 17,
+  "date": "2026-09-27",
+  "scope": "v4.0 room_identity pilot (V4_DESIGN 2-3): habitat, kitchen, workshop, research lab at size M, 1.5x radius. Evidence art/interiors/v4_identity_* (110 m, 250 m, night, v3 before) and art/interiors/v4pilot/*. Blender only, rooms alone on flat ground.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "room_identity": {"consistency": 0.74, "appeal": 0.72, "style": 0.70, "score": 0.72, "pass": true, "provisional": true,
+      "label_free_test": {
+        "110 m day": "4 of 4 named at once: house badge + lit window ring (habitat), leaf + glass vault (kitchen), gear + stacks + hall (workshop), atom + striped dome + mast (lab). v3 before: 0 of 4 certain (three white domes and one dark disc).",
+        "250 m day": "4 of 4: rooms are about 35-45 px wide; the badges still read and the silhouettes (stacks, vault, dome) help (art/critic/r17_250_crop.png).",
+        "250 m night": "3 of 4: lab (cyan windows), workshop (lit hall windows), habitat (window ring). The kitchen is a dark disc; its leaf badge and vault go dark (r17_250n_crop.png). The badges are not lit at night."
+      },
+      "what_works": [
+        "A clear step from v3: each family now differs by roof shape, badge and a band twice as wide.",
+        "Style holds: same hull, graphite, bands and detail density; the stacks, vault and mast are in the colony language."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Night: make the badge's icon emissive (family accent, strength 1.5) and give the kitchen vault an interior grow-light glow, so every family passes the 250 m night test."},
+        {"owner": "ART-HAB", "fix": "Badge style: the black disc with a flat bright icon reads like a helipad or a game UI stamp, and on the habitat it covers half the dome. Reduce the disc to 0.30-0.40 Rw, make the disc hull-grey one step darker (not black), and give the icon a thin painted edge; keep it readable at 250 m."},
+        {"owner": "ART-HAB", "fix": "Lab vs habitat: both are domes; the difference at 250 m rests on the badge. Make the lab mast twice as thick with a dish 1.2 m across and a beacon, and give the lab dome its striped pattern in the science blue (now grey/white) so the silhouette and colour say 'lab' without the badge."},
+        {"owner": "ART-HAB", "fix": "Density at 1.5x: every pilot interior now has large empty floor (the kitchen is the worst: one mess table, a cook line and a few planters on about 150 m2 of tile; the lab and workshop have single items scattered on a large floor; habitat bays float apart). Fill by function, not decor: kitchen 3 mess tables and a serving line, a pantry wall; workshop a second workbench line and parts racks; lab a second desk pod ring and a sample wall; habitat a lounge corner and lockers between bays. Target: no empty floor patch wider than 2.5 m outside the aisles."},
+        {"owner": "RENDER / ART-HAB", "fix": "Evidence gap: test identity in a real colony (showcase save, 110 m and 250 m, corridors and neighbours around each room, day and night), not alone on flat sand."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.72, provisional. The label-free test passes by day at both distances; the night test fails for the kitchen.",
+    "My evidence: art/critic/r17_110.png, r17_250.png, r17_rooms.png, crops r17_250_crop.png, r17_250n_crop.png, r17_250v3_crop.png."
+  ]
+}

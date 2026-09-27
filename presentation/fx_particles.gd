@@ -29,6 +29,8 @@ const KINDS := {
 	"impact_dust": {"add": false, "cap": 420, "per": 0, "life": 7.0, "dir": Vector3(0, 0.3, 0), "spread": 1.0, "speed": [1.5, 7.0], "gravity": Vector3(0, -0.25, 0), "size": [1.5, 10.0], "c0": Color(0.6, 0.42, 0.29, 0.75), "c1": Color(0.7, 0.52, 0.38, 0.0), "wind": 0.6, "r": 2.0, "radial": 7.0},
 	"fire": {"add": true, "cap": 240, "per": 0, "life": 0.8, "dir": Vector3(0, 1, 0), "spread": 1.0, "speed": [2.0, 9.0], "gravity": Vector3(0, 1.5, 0), "size": [1.4, 4.5], "c0": Color(1.0, 0.86, 0.55, 1.0), "c1": Color(1.0, 0.28, 0.05, 0.0), "wind": 0.0, "r": 1.0},
 	"devil": {"add": false, "cap": 320, "per": 40, "life": 3.2, "dir": Vector3(0, 1, 0), "spread": 0.22, "speed": [3.0, 8.0], "gravity": Vector3(0, -0.4, 0), "size": [0.7, 4.0], "c0": Color(0.64, 0.46, 0.32, 0.42), "c1": Color(0.7, 0.52, 0.38, 0.0), "wind": 0.8, "r": 2.5},
+	# V4 radiation zone (fx_reactor): slow, faint green-yellow motes rising over the zone.
+	"rad_motes": {"add": true, "cap": 360, "per": 30, "life": 4.0, "dir": Vector3(0, 1, 0), "spread": 0.3, "speed": [0.2, 0.6], "gravity": Vector3(0, 0.05, 0), "size": [0.08, 0.2], "c0": Color(0.75, 1.0, 0.35, 0.85), "c1": Color(0.9, 1.0, 0.4, 0.0), "wind": 0.2, "r": 10.0, "spawn": 1},
 	"site_dust": {"add": false, "cap": 240, "per": 8, "life": 3.2, "dir": Vector3(0, 0.3, 0), "spread": 0.6, "speed": [0.3, 0.9], "gravity": Vector3(0, -0.05, 0), "size": [0.5, 2.0], "c0": Color(0.66, 0.47, 0.33, 0.38), "c1": Color(0.72, 0.55, 0.4, 0.0), "wind": 0.5, "r": 1.0, "spawn": 1},
 }
 
@@ -46,7 +48,10 @@ var _glow: MultiMeshInstance3D
 var _glow_mat: ShaderMaterial
 var _lamp_sig := ""
 var wind_storm := 0.0      # V3 wind storm 0..1 (fx_hazards): fast pale dust sheets
-const HUGE_AABB := AABB(Vector3(-800, -100, -800), Vector3(2600, 500, 2600))
+const HUGE_AABB := AABB(Vector3(-900, -200, -900), Vector3(4400, 700, 4400))   # the 2,560 m v4 map too
+
+var field_on := true        # the camera dust motes (off for critic stills: `toggle dust 0`)
+var field_light := 1.0      # V4: motes dim in a shadowed crater (no bright streaks on a dark floor)
 
 func setup(v) -> void:
 	view = v
@@ -214,6 +219,20 @@ func emitter_stop(key: String) -> void:
 		(pool["free"] as Array).append(slot)
 	emitters.erase(key)
 
+## Load warm-up (world_view._night_warmup): every pool made now, one particle of each at pos,
+## and one glow sprite, so each particle shader meets the warm-up light mixes. A pool made
+## mid-game (the first POI pulse) cost a 480-680 ms web frame (showcase_v4, 2026-09-28).
+func prewarm(pos: Vector3) -> void:
+	for kind in KINDS:
+		burst(kind, pos, 1, 0.01)
+	var mm: MultiMesh = _glow.multimesh
+	if mm.instance_count == 0:
+		mm.instance_count = 1
+		mm.set_instance_transform(0, Transform3D(Basis.from_scale(Vector3(0.01, 0.01, 0.01)), pos))
+		mm.set_instance_color(0, Color(1, 1, 1, 1))
+		mm.set_instance_custom_data(0, Color(0, 0, 0.01, 1))
+		_lamp_sig = "warm"
+
 ## One-shot particles (dust puff, sparks shower).
 func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float = 0.0) -> void:
 	if not KINDS.has(kind):
@@ -291,8 +310,8 @@ func sync(delta: float, sim_dt: float, cam: Camera3D, focus: Vector3, wind: floa
 	_field_mat.set_shader_parameter("wind", wv * 1.4)
 	_field_mat.set_shader_parameter("field_center", center)
 	_field_mat.set_shader_parameter("field_size", Vector3(70, 12, 70))
-	_field_mat.set_shader_parameter("color0", Color(0.8, 0.62, 0.46, 0.28 * (1.0 - night * 0.6)))
-	_field.visible = quality >= 1
+	_field_mat.set_shader_parameter("color0", Color(0.8, 0.62, 0.46, 0.28 * (1.0 - night * 0.6) * field_light))
+	_field.visible = quality >= 1 and field_on
 	var st2: float = maxf(storm, wind_storm)
 	_storm.visible = st2 > 0.02
 	if _storm.visible:

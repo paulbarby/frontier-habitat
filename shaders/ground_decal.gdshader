@@ -89,6 +89,14 @@ void fragment() {
 		float pr = fract(TIME * 0.8 + ipulse);
 		float pulse = (1.0 - smoothstep(0.0, 0.035, abs(r - pr))) * (1.0 - pr);
 		a = max(max(ring, ticks), pulse * 0.8) + (1.0 - r) * 0.08;
+	} else if (mode == 7) {
+		// Radiation zone (V4 4.2): a hazard-hatched disc, a pulsing boundary, denser toward the centre.
+		float r = UV.y;
+		float hatch = step(0.5, fract((UV.x * 6.2831853 * r * 9.0 + r * 18.0) * 1.0 - TIME * 0.15));
+		float edge = 1.0 - smoothstep(0.0, 0.025, abs(r - 0.97));
+		float pr = fract(TIME * 0.35 + ipulse);
+		float wave = (1.0 - smoothstep(0.0, 0.03, abs(r - pr))) * (1.0 - pr) * 0.6;
+		a = (1.0 - smoothstep(0.6, 1.0, r)) * (0.16 + 0.12 * hatch) + edge * (0.55 + 0.35 * sin(TIME * 2.4)) + wave;
 	} else {
 		float r = UV.y;
 		a = (1.0 - smoothstep(0.55, 1.0, r)) * 0.35 + smoothstep(0.85, 0.97, r) * (1.0 - smoothstep(0.97, 1.0, r)) * 0.6;

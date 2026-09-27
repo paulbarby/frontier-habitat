@@ -1,4 +1,5 @@
 extends Control
+const P = preload("res://ui/theme/palette.gd")
 ## Small line chart of one column of the metrics history.
 
 var history: Array = []
@@ -18,7 +19,7 @@ func _draw() -> void:
 	for row in history:
 		hi = maxf(hi, float(row[column]))
 	var last: float = float(history[history.size() - 1][column]) if not history.is_empty() else 0.0
-	draw_string(font, Vector2(6, 15), "%s  now %s  max %s" % [title, _fmt(last), _fmt(hi)], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.85))
+	draw_string(font, Vector2(6, 15), "%s  now %s  max %s" % [title, _fmt(last), _fmt(hi)], HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(13), Color(1, 1, 1, 0.85))
 	if history.size() < 2:
 		return
 	var pts := PackedVector2Array()

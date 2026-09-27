@@ -177,3 +177,56 @@ materials changed). ART-HAB note: item 3. Not tested in the running game.
 - Blender night renders place a warm 1 300 W spot on every `Flood_*`; `<kind>_night_ramp.png` re-rendered for all six.
 - Triangles now: trader 10 296, shuttle 8 758, liner 9 552, medical 7 156, science 8 632, courier 5 746; 8 materials.
   Godot import done; `check` 157 scripts, 0 failed. Not tested in the running game.
+
+## 2026-09-27 — v4.0: small rover pilot (V4 §5)
+
+- `assets/models/vehicle_rover_small.glb` from `tools/blender/vehicle_rover_small.py` (library
+  `tools/blender/vehicle_common.py`; 9 more glyphs added to `ship_common.GLYPHS`, ships unchanged).
+- 6 wheels (r 0.44 m, staggered tread, amber hub caps), 6 coil-over struts that rise between body and fender (visible
+  above the fender line), front and rear axles steer, faceted white hood with an amber stripe, graphite chassis and
+  roll cage, solar sunshade, 4 headlights, 4 roof work lights, bed lamp, red tail lights, amber beacon, whip antenna,
+  2 seats (low backs for the suit pack), cargo bed with drop tailgate and a removable `Cargo` load, code RV-01.
+- 5 900 triangles (limit 6 000), 6 materials, COLOR_0 AO (wheels baked with self-shadow only, as they spin).
+  L 4.31 × W 2.60 × H 2.66 m (antenna 3.46 m). GLB 308 KB; Godot `.scn` 156 KB.
+- Nodes: `Body`, `Susp_*` → `Steer_*` → `Wheel_*`, `Door_Tailgate`, `Cargo`, `Lights`, `Light_*` (9), `Seat_1/2`,
+  `Anchor_Board_1/2`, `Anchor_Controls`, `Anchor_Cargo`, `Dust_L/R`. Contract: `ART-B-to-RENDER.md` item 4.
+- Renders `art/vehicles/`: `rover_small_turnaround.png`, `_scale.png` (suit colonists: seated in `Seat_2`, at the
+  boarding point, at the tailgate), `_poses.png` (steer, suspension, tailgate), `_night.png`. `.gdignore` added.
+- Requests: RENDER item 4, ART-HAB item 4 (depot bays), ART-NPC item 1 (driver pose). Godot import done; `check`
+  179 scripts, 0 failed. Not tested in the running game.
+
+## 2026-09-27 — v4.0: critic round 16 fixes, ART-NPC seat contract, medium rover, hopper, satellite, launch pad
+
+**Round 16 fixes (small rover, 5 992 tris, 6 mats):** 1 graphite cycle fenders with a thin orange lip (accent now
+colony orange #E07A3A everywhere, no yellow); 2 fenders 7 cm over the tyre and 3 cm thick, bare-metal skid plate,
+body 10 cm lower; 3 dark tyres with 16 staggered block lugs, recessed rims with 5 bolts; 4 bed lamp half strength and
+aimed down, amber corner markers; 5 roof tilted 3° with a frame edge. Wheel, strut and fender parts are a shared kit
+(`vehicle_common.WheelKit`).
+
+**ART-NPC seat contract (`ART-NPC-to-ART-B.md`):** small rover rebuilt to it — front axle to x 1.75, seats at
+x 0.96, running boards 0.32 m under the floor at the door points, dash at +0.46, roof 1.62 m, handles at the measured
+grip centres. `tools/blender/vehicle_fit.py` plays their clips on the exported rover: hands ≤ 3.0 cm, body only on the
+cushion edge (≤ 2.1 cm). Differences written back in `ART-B-to-ART-NPC.md` item 2 (floor 0.82 m, not 0.32; hands
+travel 5.6 cm in drive_sit; grab-hand points).
+
+**New models:** medium rover (8 446 tris, 7 mats; 8 wheels, kit at 1.3×, pressurised hull, portholes, rear
+airlock hatch in the door-kit style + ramp, roof rack with two Outpost Kits, reactor pack, dish, 6 seats), hopper
+(4 162 tris, 8 mats; lander capsule, bubble canopy, 4 folding legs, 4 hover thrusters, tanks, rear vestibule + ladder,
+3 seats), satellite (976 tris; sun-tracking wings, dish, scanner anchor), launch pad (2 092 tris; deck, mount, tower,
+2 service arms, rocket node with Thruster_Main, floods).
+
+Renders `art/vehicles/<id>_{turnaround,poses,night,scale}.png` (satellite: turnaround, poses). RENDER table:
+`ART-B-to-RENDER.md` item 4 (replaced). ART-HAB: item 5. Size effect: the five `.scn` total 0.48 MB (pck ≈ 80.2 MB,
+estimate). Godot import done; `check` 187 scripts, 0 failed. Not tested in the running game.
+
+## 2026-09-27 — v4.0: critic round 19 fixes 1–5
+
+1. Medium rover: faceted, framed cab (the trader's cockpit part; dark glass by day), bumper with winch and tow hooks.
+2. Medium rover: band 0.23 m, desaturated purple #8F7FAE as paint; Accent = colony orange (fender lips, springs).
+3. Hopper: 10-panel faceted body with seams, 4 access plates, hard belly ring, framed canopy (base ring + spine),
+   vestibule faired into the hull with a collar frame and junction seams, 4 bell nozzles (the ships' engine_bell).
+4. Medium rover portholes lit with CabinWindow (#FFD9A0, 0.5).
+5. `art/vehicles/satellite_context.png`: in orbit over the planet limb.
+Tris: medium 8 406 (8 mats), hopper 6 446 (8 mats). Moved nodes: medium Light_Work*, hopper Thruster_Hover_* (RENDER
+item 4 updated). Size: the five .scn total 0.55 MB (pck ≈ 80.3 MB, estimate). `check` 189 scripts, 0 failed.
+Not tested in the running game.

@@ -64,9 +64,15 @@ static func _disc(px: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 ## Icon names for content ids.
+## Item categories, set by ui/data.gd: an item without an icon of its own (many of the 72 items of
+## version 4) shows its category icon instead of nothing.
+static var item_cat := {}
+
 static func item(id: String) -> String:
 	if id == "water":
 		return "water_can"
+	if not has(id) and item_cat.has(id):
+		return "icat_" + String(item_cat[id])
 	return id
 
 static func category(cat: String) -> String:

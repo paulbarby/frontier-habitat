@@ -25,7 +25,11 @@ const BLUE := Color("4A90D9")
 # Text
 const TEXT := Color("E6EEF7")
 const TEXT_2 := Color("A3B5CA")
-const TEXT_3 := Color("6A7F97")
+# Hints and disabled labels (coordinator 2026-09-27): readable, >= 4.5:1 measured on the glass
+# (was 6A7F97, 2.5:1). Same lightness as TEXT_2, a cooler grey; size and weight mark it as a hint.
+const TEXT_3 := Color("9FAFC2")
+# Decoration only (never text): tick marks, idle outlines.
+const DECOR := Color("6A7F97")
 const TEXT_DARK := Color("06101C")
 
 const CATEGORY := {
@@ -83,6 +87,15 @@ static func level(v: float, warn: float = 50.0, bad: float = 25.0) -> Color:
 
 static func with_alpha(c: Color, a: float) -> Color:
 	return Color(c.r, c.g, c.b, a)
+
+## Text floor (critic round 21, fix 4): text is never under 12 screen pixels, at any interface scale
+## or window size. `text_scale` is the canvas scale (window stretch x interface scale), kept by
+## ui/text_floor.gd; fs(n) is the logical size to use for a wanted size n in custom-drawn text.
+static var text_scale := 1.0
+const MIN_TEXT_PX := 12.0
+
+static func fs(n: int) -> int:
+	return maxi(n, int(ceil(MIN_TEXT_PX / maxf(0.2, text_scale))))
 
 ## Opaque colour of `top` at `a` over the panel colour (for crisp strokes on glass).
 static func over_panel(top: Color, a: float) -> Color:

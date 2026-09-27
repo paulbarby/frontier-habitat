@@ -5,6 +5,75 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-09-28 — critic round 22 fixes 1–4
+
+- Rover depot: bay portal frames with hazard stripes and green status lamps, an Accent band round the walls, roof
+  ribs, a side annex (office, window, door, roof unit, beacon).
+- Logistics (storehouse, cold storage): the deck is light Hull (`rooms_identity.lighten_deck`) and a cargo crane
+  with a 6–8 m Hazard-yellow jib (`cargo_crane`, kept inside the footprint).
+- Outpost core: a ring deck with a LightStrip rim, a rail and struts; a 5 m flag mast with an Accent flag and a lamp.
+- Boulders: new `Rock` (#a07458) with sun-lit tops (`ext_common.vc_gradient`) and a `Dust` skirt.
+- Pictures: `art/interiors/v4b/`, `v4_identity_v4_logistics_*.png`.
+
+## 2026-09-27 — SIM's 12 industry buildings, door slots, pck cleanup
+
+- Rooms `rooms_v4ind.py` + `interior_fam_v4ind.py`: 9 types × S–XL; exteriors in `ext_v4.py`: fuel rod plant,
+  He-3 separator, graphene reactor. Build 132 room files 0 flags; ext_verify 60 + new 0 flagged.
+- Door slots (S 4 / M 6 / L 7 / XL 8 at 3.74 m spacing): `rooms_build.door_slots`; all 33 types pass; replaces the
+  120° / 180° rule. `content/door_blocked.json` regenerated.
+- Copies removed (40), import settings on every file: pck 94.4 → **77.2 MB**. Godot check 217 scripts / 0 failed.
+
+## 2026-09-27 — 4.0 buildings (ext_v4.py) and the airlock and junction at 1.5 ×
+
+- New: `boulder_a..f`, `rover_depot_m/_l` (ART-B bays, `Anchor_Bay_<i>`), `fission_reactor`, `crystal_refinery`,
+  `chemical_plant`, `crevice_bridge_s/_l`, `outpost_core`. All pass ext_verify (60 older files 0 flagged).
+- Airlock M 5.1, L 6.0 (chamber by size, dome +0.6), junction 3.75, as SIM asked; r28 stays.
+- pck **71.5 MB**. Godot check: 4 UI scripts fail on `ui/theme/glass_frame.gd` (UI's work, not mine).
+- Waiting: SIM's list of mid / high-end industry buildings; RENDER's `_m` fallback (then the copies go);
+  corridors 1.25 × with RENDER.
+
+## 2026-09-27 — v4.0 ROLL-OUT: every room at 1.5 ×, identity on every family (critic round 17 fixes 1–4)
+
+- Round 17 fixes:
+  1. The icons glow (Neon); the kitchen vault has Glow grow lights.
+  2. The badge disc is HullDark with a Frame rim, 0.34–0.38 × Rw (was a black disc, 0.36–0.56).
+  3. Lab: the mast is twice as thick, with a 1.5 m tilted dish, a bigger beacon and science-blue (Accent) gores.
+  4. Density by function: the greedy filler (`interior_rooms.v4_decor`, build check ≤ 2.5 m +0.2 grid) and
+     specific items: kitchen 3+ tables with the seats shared out, a prep island, a pantry wall; lab desk pods;
+     workshop bench line; habitat lounge corner and lockers.
+- Roll-out: `rooms_kit.V4STYLE` on by default, R = 1.5 × `tools/blender/v3_radii.json` (`FH_V3=1` builds the
+  3.x rooms). Airlock and junction unchanged. Tray offsets × (built R / content R).
+- Every other family: `rooms_identity.identity_pass` — the family badge on the largest smooth free roof patch
+  (or a badge plate over the crown), industry stacks, a logistics crane, a science mast, a dome foot ring;
+  medical keeps its big red cross.
+- Build: 96 room files 0 flags, 30 link files 0 flags; `content/door_blocked.json` regenerated (23 files changed).
+- **pck: 79.7 → 60.9 MB** (import settings: no LODs, no shadow meshes, no tangents) **→ 70.9 MB after the
+  roll-out.** Godot check 192 scripts / 0 failed.
+- Pictures: `art/interiors/v4_identity_v4_rollout_*.png`, `v4_identity_v4_families_*.png`.
+- Open: corridors 1.25 × wider (door kit and fx_doors, with RENDER); the new buildings; RENDER's in-game identity
+  test (fix 5); SIM's content radii.
+
+## 2026-09-27 — v4.0 room identity PILOT (V4_DESIGN §2, §3)
+
+- Pilot build mode: `FH_V4PILOT=1` builds rooms at 1.5 x the content radius into `build/v4pilot/` (outside the
+  game assets; the live game and the pck do not change). `rooms_kit.V4STYLE` switches the identity on.
+- Pilot rooms, M: habitat R 8.25, kitchen 6.90, workshop 7.50, research lab 7.50. All build checks pass.
+- Identity (`tools/blender/rooms_identity.py`):
+  - habitat: a low dome with 12 large lit windows and the house badge;
+  - kitchen (food): a flat deck with a glass greenhouse vault, herb beds, the chimney and the leaf badge;
+  - workshop (industry): the hall with two tall hazard-banded stacks, vent units and the gear badge;
+  - research lab (science): a tall striped dome with a glowing sensor ring, a lattice sensor mast, a dish, a
+    beacon and the atom badge.
+- Badges: the family icon (Accent) on a dark disc with a light rim, 0.36–0.56 × Rw, turned for the game's
+  default camera. Stronger band: the wall band is 0.38 m (was 0.19) with a Neon pin line; the podium upper
+  band is 0.34 m.
+- More furniture: family decor clusters on the extra floor (`interior_rooms.v4_decor`), clear of the
+  people anchors and inside the door lanes.
+- Pictures: `art/interiors/v4_identity_v4_{110m,250m}.png`, `_night_`, and before: `v4_identity_v3_before_*`;
+  the room sheets are in `art/interiors/v4pilot/`.
+- Size: the pilot GLBs are 26–57 % larger than v3 (habitat_m 1.14 → 1.44 MB). A 1.5 x roll-out needs mesh
+  compression to stay under 95 MB; to be measured at the roll-out.
+
 ## 2026-09-26 — RENDER cut check 116: wall items above the cut
 
 - My check measured the wall ring only; RENDER's measures every drawn vertex (the correct rule). Their run

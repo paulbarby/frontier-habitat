@@ -21,10 +21,11 @@ F = FLOOR_Z
 
 
 def tray_offsets(rm):
+    k = getattr(rm, "tray_scale", 1.0)          # 4.0: scaled with the room until content has the new offsets
     offs = rm.bdef.get("sizes", {}).get("tray_offsets")
     if offs:
-        return [tuple(o) for o in offs[rm.size]]
-    return [tuple(o) for o in rm.bdef.get("tray_offsets", [])]
+        return [(o[0] * k, o[1] * k) for o in offs[rm.size]]
+    return [(o[0] * k, o[1] * k) for o in rm.bdef.get("tray_offsets", [])]
 
 
 def rect(cx, cy, hx, hy, z):
@@ -289,7 +290,42 @@ def chimney(p, x, y, z0, z1, r=0.34, band="Accent"):
     return z1 + 0.34
 
 
+def build_kitchen_v4(rm):
+    """4.0 identity, food family: a flat deck with a GLASS GREENHOUSE VAULT (herb beds under glass), the cooker
+    chimney and the leaf badge on the open half of the deck."""
+    import rooms_identity as RI
+    s = rm.size
+    Rw, Ri = rm.Rw, rm.Ri
+    rm.build_base(windows=(0.52, 0.82) if s >= 1 else None, win_seams=(10, 12, 14, 16)[s], lamps=(160.0, 200.0),
+                  bolts=s >= 2)
+    D = 2.6
+    rm.build_podium(D, ribs=(8, 12, 14, 16)[s], band="Accent", band_z=D - 0.62, parapet=0.16)
+    ro = rm.roof
+    hw = 0.25 * Rw
+    vy = 0.40 * Rw
+    vx = sqrt(max(1.0, (Rw - 0.5) ** 2 - (vy + hw) ** 2))
+    with ro.at(T(0.0, vy, 0.0)):
+        top = RI.glass_vault(ro, -vx, vx, hw, D + 0.02, 0.62 * hw + 0.6, ribs=(4, 5, 6, 7)[s])
+    obst = []
+    rm.rooms_hi = list(rm.rooms_hi)
+    cook_a = 180.0
+    x, y, _ = polar(Ri - 1.15, cook_a)
+    top = max(top, chimney(ro, x, y, D - 0.3, D + 2.2 + 0.2 * s, r=0.34 + 0.03 * s))
+    rm.anchor("Smoke", (x, y, D + 2.2 + 0.2 * s + 0.35))
+    obst.append((x, y, 0.8))
+    bx, by, br = 0.0, -0.42 * Rw, 0.36 * Rw
+    RI.badge(ro, "food", bx, by, br, lambda x_, y_: D + 0.02, lift=0.015)
+    rm.badge_done = True
+    obst.append((bx, by, br + 0.2))
+    for k in range(7):
+        obst.append((-vx + 2 * vx * k / 6, vy, hw + 0.2))
+    rm.top_z = max(rm.top_z, top)
+    levels_podium(rm, K.auto_sites(rm, obst, D))
+
+
 def build_kitchen(rm):
+    if K.V4STYLE:
+        return build_kitchen_v4(rm)
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(windows=(0.52, 0.82) if s >= 1 else None, win_seams=(10, 12, 14, 16)[s], lamps=(160.0, 200.0),

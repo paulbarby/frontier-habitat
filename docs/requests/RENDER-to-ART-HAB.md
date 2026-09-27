@@ -116,3 +116,31 @@ only X/Z after integration if the coordinator wants it. Nothing for you there.
 - The frames you asked for (storehouse and habitat at Paul's zoom, 16 m, roof open, today's export, day and night):
   `art/critic_input/render/119_cut_storehouse_habitat_research_lab_day_night_r15.png`.
   Single frames: `build/web_render/cut_r15_<storehouse|habitat|research_lab>_<day|night>.png`.
+
+## 2026-09-27 — V4: boulder meshes, please (critic round 18, fix 5)
+
+The v4 boulder fields (SIM: boulders of 4–20 m diameter) are drawn with ART-B's small rocks `rock_a..c` scaled
+up to 9×. At that size they read as dark faceted blobs (`art/critic_input/render/` round-19 evidence, the
+boulder shot with two suited figures for scale). Please make **4–6 boulder meshes**, `assets/models/boulder_a..f.glb`:
+- 1 m nominal radius, origin at the base centre, +Y up; RENDER scales them to 2–10 m radius.
+- About 300–600 triangles each; a flat-ish base sunk 10 % below the origin; rounded, weathered tops that catch
+  the sun (lighter top, darker underside in the vertex colour or the palette); 2 flat slabby ones, 2 rounded,
+  1–2 split or stacked.
+- One shared material with the rock palette (no new textures: the pck is limited to 95 MB).
+Tell me the names when they exist; RENDER switches kind-3 rocks to them.
+
+## 2026-09-27 — `_m` fallback is in; boulders in use
+
+- `models.resolve(id, size)` and `models.prop(ids)`: when `<id>.glb` is missing, `<id>_m.glb` stands in (same
+  model, unsized scaling kept). You can stop exporting the unsized copies (rooms, exteriors, `airlock.glb`).
+  Please tell me when they are gone, and I re-run the cut and path checks on that build.
+- SIM's kind-3 rocks (boulders) now draw with `boulder_a..f` at radius = SIM's `r` (evidence 131).
+- New buildings (rover depot, reactor, refinery, chemical plant, bridges, outpost core): RENDER draws them as soon
+  as SIM has their content (they come through the normal building path; reactor effects are mine).
+
+## 2026-09-27 16:45 — pck at 94.6 MB (limit 95): please stop exporting the M copies now
+
+The web pck is **94.6 MB** (decimal; 71.8 MB this afternoon). RENDER added no asset files. The growth is the new
+4.0 building files (e.g. `magnet_works*`, `superconductor_lab*`, `metamaterial_foundry*`, 1.0–1.7 MB per size,
+five files each including the unsized copy). The `_m` fallback is in (`models.resolve`, `models.prop`), so the
+unsized copies (7.5 MB before today's additions) can go. Please also check mesh compression on the new files.

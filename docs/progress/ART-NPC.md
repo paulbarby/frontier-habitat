@@ -179,3 +179,47 @@ checked. The cut-frame pose is not checked in Godot.
 0 failed. Sheets re-rendered.
 
 **Not tested:** night rendering in the game; visitors in the game.
+
+## v4.0 — 2026-09-27 — vehicle clips and the radiation look (V4 §5, §8, §11)
+
+- Clips (both variants, identical data):
+  - `drive_sit` (120 frames; hands on two grips, steering, head scan, upward-only jolts);
+  - `ride_sit` (150 frames; the rest pose of the new `vehicle` state);
+  - `board` and `alight` (60 frames each);
+  - plus the mirror images `board_r` and `alight_r` for right-hand doors (`mirror_pose`).
+- Seat frame (like the chair) for the loops. Door frame for board/alight, `seat_offset` (0, −0.52, 0.32). Cut frames:
+  board 60, alight 0. Every board/alight key is FK converted from IK designs (no wrist flips). Foot-lift keys carry
+  the feet over the 0.32 m sill.
+- Radiation look (look 7): hazard yellow and black colour groups, plus `Vis_radiation` (suit: shoulder shields, apron,
+  dosimeter, shin bands; indoor: dosimeter, apron, shin bands, respirator). New `transfer_rule`: weights copied from
+  the nearest body vertices.
+- `npc_verify` new checks: vehicle seat rest, seat penetration, feet on the floor, headroom and pack line, grips,
+  board/alight continuity with `seat_offset`, cabin floor and seat solid, grab handle reach, JSON seat contract and cut
+  frames, the radiation look in the palette.
+- Sheets: `art/npc/vehicle_clips.png` (new); the clip sheets, lineup and turnaround re-rendered.
+- Requests: RENDER (clips, frames, cut frames, radiation look), ART-B (seat contract, new file).
+
+**Measured:** `npc_verify` 356 passed, 0 failed, 0 pending, 12 info. `npc_check.gd`: PASS, 145 tests, 0 failures.
+`godot.mjs check`: 181 scripts, 0 failed. Imported size +0.20 MB (1,023,237 → 1,226,464 bytes). Suit
+6,999 / 7,000 triangles with the radiation attachment.
+
+**Not tested:** the clips in the game (RENDER); the real rover seats (ART-B has not built them yet; the contract is
+mine and can change). Night readability of the radiation suit is not checked.
+
+## v4.0 — 2026-09-27 — small rover fit (ART-B item 2)
+
+- New clips `step_up` / `step_down` (+ `_r`): ground → running board (0.50 m up, 0.53 m to the side) with a palm on
+  the grab handle. Feet go over the running board edge above its height. While the knee is high, the pelvis turns
+  20° and the knee turns to the vehicle, so it clears the front fender. Cut frames: step_up 60, step_down 0.
+- drive_sit: the hands stay on the fixed handles (steering = a grip twist). Travel 1.6 cm (it was 5.6 cm).
+- Handles: ART-B's measured grip and grab positions; new `palm_to` puts the palm centre (prop.S) on the handle axis.
+- `npc_verify`: palm-on-handle checks; step clip continuity; a read-only fit against `vehicle_rover_small.glb` (all
+  ten crew clips, suit, 1 cm; exemptions: cushion edge 3 cm, the gripping hand within 7 cm of a handle axis). The
+  tourist gaiter now ends above the ankle blend (drift in the deep step_down knee).
+- ART-B's `vehicle_fit.py` re-run: grips 0.8 / 0.7 cm; grab 0.4 cm (board), 2.0 cm (alight); only contact left is the
+  thighs 2.0–2.1 cm into the cushion front edge.
+
+**Measured:** `npc_verify` 408 passed, 0 failed. `npc_check.gd` PASS (145 tests, 0 failures). `godot.mjs check`
+191 scripts, 0 failed. Imported size +0.11 MB (1,341,337 bytes in all).
+
+**Not tested:** the chain in the game (RENDER).

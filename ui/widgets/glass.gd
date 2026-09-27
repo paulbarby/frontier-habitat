@@ -18,7 +18,8 @@ const SHADER := """
 shader_type canvas_item;
 render_mode unshaded;
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
-uniform float radius = 5.0;
+uniform float radius = 6.5;
+float grain(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void fragment() {
 	vec2 px = SCREEN_PIXEL_SIZE * radius;
 	vec3 acc = texture(screen_tex, SCREEN_UV).rgb * 0.16;
@@ -34,8 +35,9 @@ void fragment() {
 	acc += texture(screen_tex, SCREEN_UV - vec2(px.x * 2.0, 0.0)).rgb * 0.05;
 	acc += texture(screen_tex, SCREEN_UV + vec2(0.0, px.y * 2.0)).rgb * 0.05;
 	acc += texture(screen_tex, SCREEN_UV - vec2(0.0, px.y * 2.0)).rgb * 0.05;
-	// Slight cool tint and darkening, like smoked glass.
-	acc = mix(acc, vec3(0.05, 0.09, 0.15), 0.35);
+	// Slight cool tint and darkening, like smoked glass, and a fine frost grain (version 4).
+	acc = mix(acc, vec3(0.05, 0.09, 0.15), 0.20);   // 0.35 in the pilot: critic round 15 fix 1
+	acc += (grain(floor(FRAGCOORD.xy)) - 0.5) * 0.03;
 	COLOR = vec4(acc, COLOR.a);
 }
 """
@@ -48,7 +50,16 @@ static func material() -> ShaderMaterial:
 		_material.shader = sh
 	return _material
 
+## Version 4 draw-call budget: HUD panels, windows and toasts share ONE glass drawer (the
+## `shared` node, first child of the HUD root): all their outlines go into one triangle array, one
+## draw call and one screen copy, instead of one draw and a batch break per panel. Full screens
+## (ModalPanel) keep their own node: they blur the dimmed backdrop in front of the HUD.
+static var shared = null    # ui/widgets/glass_shared.gd, set by ui/hud.gd
+
 static func attach(panel: Control, ch: Array = [12, 0, 12, 0]) -> Node2D:
+	if shared != null and is_instance_valid(shared) and panel.theme_type_variation != "ModalPanel":
+		shared.add_panel(panel, PackedFloat32Array(ch))
+		return shared
 	var g = load("res://ui/widgets/glass.gd").new()
 	g.chamfer = PackedFloat32Array(ch)
 	g.show_behind_parent = true
@@ -60,6 +71,8 @@ static func attach(panel: Control, ch: Array = [12, 0, 12, 0]) -> Node2D:
 
 static func set_enabled(on: bool) -> void:
 	enabled = on
+	if shared != null and is_instance_valid(shared):
+		shared.visible = on
 	for g in _all.duplicate():
 		if is_instance_valid(g):
 			g.visible = on

@@ -24,6 +24,105 @@
     "airlock_m",
     "airlock_r28"
    ]
+  },
+  {
+   "at": "2026-09-27 10:03",
+   "rooms": [
+    "algae_bioreactor_s",
+    "atmo_processor_s",
+    "cold_storage_s",
+    "electronics_fab_s",
+    "fungus_farm",
+    "fungus_farm_m",
+    "glassworks_s",
+    "kitchen_s",
+    "lounge_s",
+    "medical_s",
+    "mine_s",
+    "oxygen_plant",
+    "oxygen_plant_l",
+    "oxygen_plant_m",
+    "oxygen_plant_s",
+    "polymer_plant_s",
+    "refinery_s",
+    "research_assembler_s",
+    "water_recycler",
+    "water_recycler_l",
+    "water_recycler_m",
+    "water_recycler_s",
+    "workshop_s"
+   ]
+  },
+  {
+   "at": "2026-09-27 14:07",
+   "rooms": [
+    "airlock",
+    "airlock_l",
+    "airlock_m"
+   ]
+  },
+  {
+   "at": "2026-09-27 15:24",
+   "rooms": [
+    "airlock",
+    "airlock_l",
+    "airlock_m"
+   ]
+  },
+  {
+   "at": "2026-09-27 16:04",
+   "rooms": [
+    "battery_plant",
+    "battery_plant_m",
+    "carbon_works",
+    "carbon_works_m",
+    "ceramics_kiln",
+    "ceramics_kiln_m",
+    "magnet_works",
+    "magnet_works_m",
+    "metamaterial_foundry",
+    "metamaterial_foundry_m",
+    "parts_works",
+    "parts_works_m",
+    "steel_mill",
+    "steel_mill_m",
+    "superconductor_lab",
+    "superconductor_lab_m",
+    "titanium_smelter",
+    "titanium_smelter_m"
+   ]
+  },
+  {
+   "at": "2026-09-27 16:09",
+   "rooms": [
+    "battery_plant_l",
+    "battery_plant_s",
+    "battery_plant_xl",
+    "carbon_works_l",
+    "carbon_works_s",
+    "carbon_works_xl",
+    "ceramics_kiln_l",
+    "ceramics_kiln_s",
+    "ceramics_kiln_xl",
+    "magnet_works_l",
+    "magnet_works_s",
+    "magnet_works_xl",
+    "metamaterial_foundry_l",
+    "metamaterial_foundry_s",
+    "metamaterial_foundry_xl",
+    "parts_works_l",
+    "parts_works_s",
+    "parts_works_xl",
+    "steel_mill_l",
+    "steel_mill_s",
+    "steel_mill_xl",
+    "superconductor_lab_l",
+    "superconductor_lab_s",
+    "superconductor_lab_xl",
+    "titanium_smelter_l",
+    "titanium_smelter_s",
+    "titanium_smelter_xl"
+   ]
   }
  ],
  "generator": "tools/blender/rooms_build.py",
@@ -133,26 +232,9 @@
    "min_lane_m": 0.99
   },
   "algae_bioreactor_s": {
-   "blocked": [
-    [
-     1.5,
-     16.5
-    ],
-    [
-     19.5,
-     20.5
-    ],
-    [
-     339.5,
-     340.5
-    ],
-    [
-     343.5,
-     358.5
-    ]
-   ],
-   "free_deg": 328.0,
-   "min_lane_m": 0.78
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "algae_bioreactor_xl": {
    "blocked": [],
@@ -175,28 +257,36 @@
    "min_lane_m": 0.99
   },
   "atmo_processor_s": {
-   "blocked": [
-    [
-     5.5,
-     35.5
-    ],
-    [
-     144.5,
-     174.5
-    ],
-    [
-     185.5,
-     215.5
-    ],
-    [
-     324.5,
-     354.5
-    ]
-   ],
-   "free_deg": 240.0,
-   "min_lane_m": 0.65
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "atmo_processor_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "battery_plant": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "battery_plant_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "battery_plant_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "battery_plant_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "battery_plant_xl": {
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
@@ -219,7 +309,7 @@
   "bio_lab_s": {
    "blocked": [],
    "free_deg": 360.0,
-   "min_lane_m": 0.81
+   "min_lane_m": 0.82
   },
   "bio_lab_xl": {
    "blocked": [],
@@ -251,6 +341,56 @@
    "free_deg": 360.0,
    "min_lane_m": 1.04
   },
+  "carbon_works": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "carbon_works_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "carbon_works_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "carbon_works_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "carbon_works_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "ceramics_kiln": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "ceramics_kiln_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "ceramics_kiln_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "ceramics_kiln_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "ceramics_kiln_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
   "cold_storage": {
    "blocked": [],
    "free_deg": 360.0,
@@ -267,14 +407,9 @@
    "min_lane_m": 0.99
   },
   "cold_storage_s": {
-   "blocked": [
-    [
-     280.5,
-     337.5
-    ]
-   ],
-   "free_deg": 303.0,
-   "min_lane_m": 0.31
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "cold_storage_xl": {
    "blocked": [],
@@ -297,34 +432,9 @@
    "min_lane_m": 0.99
   },
   "electronics_fab_s": {
-   "blocked": [
-    [
-     4.5,
-     21.5
-    ],
-    [
-     24.5,
-     25.5
-    ],
-    [
-     134.5,
-     162.5
-    ],
-    [
-     197.5,
-     225.5
-    ],
-    [
-     334.5,
-     335.5
-    ],
-    [
-     338.5,
-     355.5
-    ]
-   ],
-   "free_deg": 268.0,
-   "min_lane_m": 0.65
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "electronics_fab_xl": {
    "blocked": [],
@@ -349,7 +459,7 @@
   "fabricator_s": {
    "blocked": [],
    "free_deg": 360.0,
-   "min_lane_m": 0.81
+   "min_lane_m": 0.82
   },
   "fabricator_xl": {
    "blocked": [],
@@ -357,26 +467,9 @@
    "min_lane_m": 1.04
   },
   "fungus_farm": {
-   "blocked": [
-    [
-     0.5,
-     44.5
-    ],
-    [
-     135.5,
-     179.5
-    ],
-    [
-     180.5,
-     224.5
-    ],
-    [
-     315.5,
-     359.5
-    ]
-   ],
-   "free_deg": 184.0,
-   "min_lane_m": 0.29
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "fungus_farm_l": {
    "blocked": [],
@@ -384,26 +477,9 @@
    "min_lane_m": 1.04
   },
   "fungus_farm_m": {
-   "blocked": [
-    [
-     0.5,
-     44.5
-    ],
-    [
-     135.5,
-     179.5
-    ],
-    [
-     180.5,
-     224.5
-    ],
-    [
-     315.5,
-     359.5
-    ]
-   ],
-   "free_deg": 184.0,
-   "min_lane_m": 0.29
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "fungus_farm_s": {
    "blocked": [],
@@ -431,14 +507,9 @@
    "min_lane_m": 0.99
   },
   "glassworks_s": {
-   "blocked": [
-    [
-     137.5,
-     222.5
-    ]
-   ],
-   "free_deg": 275.0,
-   "min_lane_m": 0.2
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "glassworks_xl": {
    "blocked": [],
@@ -511,50 +582,9 @@
    "min_lane_m": 0.99
   },
   "kitchen_s": {
-   "blocked": [
-    [
-     14.5,
-     15.5
-    ],
-    [
-     17.5,
-     20.5
-    ],
-    [
-     21.5,
-     25.5
-    ],
-    [
-     26.5,
-     29.5
-    ],
-    [
-     32.5,
-     33.5
-    ],
-    [
-     326.5,
-     327.5
-    ],
-    [
-     330.5,
-     333.5
-    ],
-    [
-     334.5,
-     338.5
-    ],
-    [
-     339.5,
-     342.5
-    ],
-    [
-     344.5,
-     345.5
-    ]
-   ],
-   "free_deg": 336.0,
-   "min_lane_m": 0.78
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "kitchen_xl": {
    "blocked": [],
@@ -579,34 +609,39 @@
   "lounge_s": {
    "blocked": [
     [
-     149.5,
-     150.5
-    ],
-    [
-     216.5,
-     217.5
-    ],
-    [
-     219.5,
-     221.5
-    ],
-    [
-     222.5,
-     225.5
-    ],
-    [
-     226.5,
-     236.5
-    ],
-    [
-     237.5,
-     239.5
+     -1.5,
+     15.5
     ]
    ],
-   "free_deg": 341.0,
+   "free_deg": 343.0,
    "min_lane_m": 0.75
   },
   "lounge_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "magnet_works": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "magnet_works_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "magnet_works_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "magnet_works_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "magnet_works_xl": {
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
@@ -627,16 +662,36 @@
    "min_lane_m": 0.99
   },
   "medical_s": {
-   "blocked": [
-    [
-     279.5,
-     322.5
-    ]
-   ],
-   "free_deg": 317.0,
-   "min_lane_m": 0.51
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "medical_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "metamaterial_foundry": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "metamaterial_foundry_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "metamaterial_foundry_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "metamaterial_foundry_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "metamaterial_foundry_xl": {
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
@@ -657,14 +712,9 @@
    "min_lane_m": 0.99
   },
   "mine_s": {
-   "blocked": [
-    [
-     128.5,
-     231.5
-    ]
-   ],
-   "free_deg": 257.0,
-   "min_lane_m": 0.31
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "mine_xl": {
    "blocked": [],
@@ -672,58 +722,51 @@
    "min_lane_m": 1.04
   },
   "oxygen_plant": {
-   "blocked": [
-    [
-     200.5,
-     339.5
-    ]
-   ],
-   "free_deg": 221.0,
-   "min_lane_m": 0.25
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "oxygen_plant_l": {
-   "blocked": [
-    [
-     36.5,
-     59.5
-    ],
-    [
-     120.5,
-     143.5
-    ],
-    [
-     216.5,
-     258.5
-    ],
-    [
-     281.5,
-     323.5
-    ]
-   ],
-   "free_deg": 230.0,
-   "min_lane_m": 0.48
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
   },
   "oxygen_plant_m": {
-   "blocked": [
-    [
-     200.5,
-     339.5
-    ]
-   ],
-   "free_deg": 221.0,
-   "min_lane_m": 0.25
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "oxygen_plant_s": {
-   "blocked": [
-    [
-     184.5,
-     355.5
-    ]
-   ],
-   "free_deg": 189.0,
-   "min_lane_m": 0.0
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "oxygen_plant_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "parts_works": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "parts_works_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "parts_works_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "parts_works_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "parts_works_xl": {
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
@@ -744,26 +787,9 @@
    "min_lane_m": 0.99
   },
   "polymer_plant_s": {
-   "blocked": [
-    [
-     158.5,
-     159.5
-    ],
-    [
-     162.5,
-     163.5
-    ],
-    [
-     196.5,
-     197.5
-    ],
-    [
-     200.5,
-     201.5
-    ]
-   ],
-   "free_deg": 356.0,
-   "min_lane_m": 0.78
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "polymer_plant_xl": {
    "blocked": [],
@@ -786,14 +812,9 @@
    "min_lane_m": 0.99
   },
   "refinery_s": {
-   "blocked": [
-    [
-     132.5,
-     227.5
-    ]
-   ],
-   "free_deg": 265.0,
-   "min_lane_m": 0.14
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "refinery_xl": {
    "blocked": [],
@@ -816,26 +837,9 @@
    "min_lane_m": 0.99
   },
   "research_assembler_s": {
-   "blocked": [
-    [
-     41.5,
-     71.5
-    ],
-    [
-     248.5,
-     250.5
-    ],
-    [
-     253.5,
-     286.5
-    ],
-    [
-     289.5,
-     291.5
-    ]
-   ],
-   "free_deg": 293.0,
-   "min_lane_m": 0.68
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "research_assembler_xl": {
    "blocked": [],
@@ -867,6 +871,31 @@
    "free_deg": 360.0,
    "min_lane_m": 1.04
   },
+  "steel_mill": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "steel_mill_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "steel_mill_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "steel_mill_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "steel_mill_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
   "storehouse": {
    "blocked": [],
    "free_deg": 360.0,
@@ -892,101 +921,80 @@
    "free_deg": 360.0,
    "min_lane_m": 1.04
   },
-  "water_recycler": {
-   "blocked": [
-    [
-     12.5,
-     60.5
-    ],
-    [
-     130.5,
-     229.5
-    ],
-    [
-     330.5,
-     331.5
-    ],
-    [
-     334.5,
-     336.5
-    ],
-    [
-     338.5,
-     340.5
-    ],
-    [
-     342.5,
-     344.5
-    ],
-    [
-     346.5,
-     347.5
-    ]
-   ],
-   "free_deg": 205.0,
-   "min_lane_m": 0.54
+  "superconductor_lab": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
-  "water_recycler_l": {
+  "superconductor_lab_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "superconductor_lab_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "superconductor_lab_s": {
    "blocked": [
     [
-     146.5,
-     171.5
-    ],
-    [
-     188.5,
-     213.5
+     95.5,
+     106.5
     ]
    ],
-   "free_deg": 310.0,
+   "free_deg": 349.0,
+   "min_lane_m": 0.78
+  },
+  "superconductor_lab_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "titanium_smelter": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "titanium_smelter_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "titanium_smelter_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "titanium_smelter_s": {
+   "blocked": [],
+   "free_deg": 360.0,
    "min_lane_m": 0.82
   },
+  "titanium_smelter_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "water_recycler": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "water_recycler_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
   "water_recycler_m": {
-   "blocked": [
-    [
-     12.5,
-     60.5
-    ],
-    [
-     130.5,
-     229.5
-    ],
-    [
-     330.5,
-     331.5
-    ],
-    [
-     334.5,
-     336.5
-    ],
-    [
-     338.5,
-     340.5
-    ],
-    [
-     342.5,
-     344.5
-    ],
-    [
-     346.5,
-     347.5
-    ]
-   ],
-   "free_deg": 205.0,
-   "min_lane_m": 0.54
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "water_recycler_s": {
-   "blocked": [
-    [
-     -46.5,
-     63.5
-    ],
-    [
-     133.5,
-     226.5
-    ]
-   ],
-   "free_deg": 157.0,
-   "min_lane_m": 0.0
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "water_recycler_xl": {
    "blocked": [],
@@ -1009,14 +1017,9 @@
    "min_lane_m": 0.99
   },
   "workshop_s": {
-   "blocked": [
-    [
-     153.5,
-     206.5
-    ]
-   ],
-   "free_deg": 307.0,
-   "min_lane_m": 0.58
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
   },
   "workshop_xl": {
    "blocked": [],

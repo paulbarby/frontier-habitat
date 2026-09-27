@@ -186,6 +186,22 @@ static func scroll(child: Control, horizontal: bool = false) -> ScrollContainer:
 	s.add_child(child)
 	return s
 
+## Version 4 list: rows with seams between them (ui/widgets/seam_list.gd).
+static func seam_list(sep: int = 4) -> VBoxContainer:
+	var v: VBoxContainer = load("res://ui/widgets/seam_list.gd").new()
+	v.add_theme_constant_override("separation", sep)
+	return v
+
+## A scroll area inside a darker glass well (WellPanel), for lists and tables.
+static func well_scroll(child: Control, horizontal: bool = false) -> PanelContainer:
+	var w := PanelContainer.new()
+	w.theme_type_variation = "WellPanel"
+	w.mouse_filter = Control.MOUSE_FILTER_PASS
+	w.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	w.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	w.add_child(scroll(child, horizontal))
+	return w
+
 ## Removes every child now and frees it. Layout sees the change in the same frame.
 static func clear(node: Node) -> void:
 	for c in node.get_children():

@@ -24,6 +24,7 @@ const SHORT := {
 	"storage_full": "STORAGE FULL", "no_reservoir": "NO RESERVOIR", "deposit_empty": "DEPOSIT EMPTY",
 	"unreachable": "OUT OF REACH", "suit_range": "TOO FAR", "occupied": "WAITING", "no_spares": "NO SPARES",
 	"no_staff": "NO WORKER", "no_recipe": "NO RECIPE", "no_menu": "NO DISH",
+	"level_low": "NEEDS LEVEL 2", "deposit_locked": "LOCKED DEPOSIT",
 }
 
 var insp
@@ -73,9 +74,12 @@ func _grid() -> GridContainer:
 func _fact(g: GridContainer, name: String, getter: Callable, color: Color = P.TEXT) -> void:
 	var l: Label = Kit.dim(name, 13)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # long text wraps; the window never widens (fix 7)
 	g.add_child(l)
 	var v: Label = Kit.num(String(getter.call()), 13, color)
 	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.custom_minimum_size.x = 140.0
 	g.add_child(v)
 	insp.bind(func(): v.text = String(getter.call()))
 
@@ -142,6 +146,8 @@ func status_of(b: Dictionary) -> Array:
 	if float(def.get("power", 0.0)) > 0.0 and not bool(b.get("powered", true)):
 		return ["NO POWER", P.RED]
 	var blk2: String = String(b.get("block", ""))
+	if blk2.begins_with("materials:"):
+		return ["WAITING: " + _d().item_name(blk2.substr(10)).to_upper(), P.AMBER]
 	if blk2 != "" and blk2 != "disabled":
 		return [SHORT.get(blk2, blk2.replace("_", " ").to_upper()), P.AMBER]
 	if String(b.get("kind", "")) == "room" and not s.util.building_supplied(b["id"]) and String(b["def"]) != "lander":
@@ -184,6 +190,10 @@ func building(b: Dictionary) -> void:
 		tabs.append(["upgrade", "Upgrade"])
 	if int(def.get("occupants", 0)) > 0 or def.has("work_slots"):
 		tabs.append(["staff", "Staff"])
+	if _is_depot(b) and b["state"] == "active":
+		tabs.append(["vehicles", "Vehicles"])
+	if _is_pad(b) and b["state"] == "active":
+		tabs.append(["satellite", "Satellite"])
 	tabs.append(["stats", "Stats"])
 	insp.add_tabs(tabs)
 	match insp.tab:
@@ -193,8 +203,175 @@ func building(b: Dictionary) -> void:
 		"upgrade": _upgrade(b, def)
 		"staff": _staff(b, def)
 		"stats": _stats(b, def)
+		"vehicles": _depot(b)
+		"satellite": _pad(b)
 		_: _overview(b, def)
 	_footer_building(b, base)
+
+# ---------------------------------------------------------------- launch pad: survey satellite (SIM milestone 7)
+func _is_pad(b: Dictionary) -> bool:
+	var s = _sim()
+	return "vehicles" in s and s.vehicles != null and s.vehicles.has_method("is_pad") and bool(s.vehicles.is_pad(b))
+
+## The satellites in orbit (bands mapped, the uplink), the one being built (parts, then assembly;
+## Cancel) and the Build button with its cost and research lock. Command: build_satellite {pad}.
+func _pad(b: Dictionary) -> void:
+	var s = _sim()
+	var d = _d()
+	var id: int = b["id"]
+	var v4 = insp.hud.v4
+	var sc: Dictionary = s.content.get("vehicles", {}).get("satellite", {})
+	var orbit: VBoxContainer = _section("In orbit", "satellite")
+	var ol: VBoxContainer = Kit.vbox(4)
+	orbit.add_child(ol)
+	var upd_orbit := func():
+		Kit.clear(ol)
+		var sats: Array = v4.sats()
+		if sats.is_empty():
+			ol.add_child(Kit.wrap("No satellite yet. A survey satellite maps one band of the planet every minute: the points of interest in it are found.", 13, P.TEXT_2))
+			return
+		for st in sats:
+			var line: String = "%s: %d of %d bands mapped." % [String(st["name"]), int(st["bands_done"]), int(st["bands"])]
+			if int(st["bands_done"]) >= int(st["bands"]):
+				line += " Done."
+			elif bool(st["uplink"]):
+				line += " Next band in %d s." % int(ceilf(float(st["next_s"])))
+			ol.add_child(Kit.wrap(line, 13, P.TEXT))
+			if not bool(st["uplink"]) and int(st["bands_done"]) < int(st["bands"]):
+				ol.add_child(Kit.wrap("No uplink: it maps only while a comms tower has power.", 13, P.AMBER))
+	upd_orbit.call()
+	insp.bind(upd_orbit)
+	# The order in progress (the same record as a depot's vehicle order).
+	var ob: VBoxContainer = _section("Building", "build")
+	var head: Label = Kit.label("", "", 14, P.TEXT)
+	ob.add_child(head)
+	var bar = Kit.bar(0.0, P.CYAN, 6.0)
+	ob.add_child(bar)
+	var why: Label = Kit.wrap("", 13, P.AMBER)
+	why.custom_minimum_size.x = 300
+	ob.add_child(why)
+	ob.add_child(Kit.button("Cancel the build", func(): insp.hud.confirm("Cancel the satellite?", ["The parts already delivered go back to storage."], func(): v4.cancel_vehicle(id), "Cancel build", true),
+		"Cancel\nStops the build. Delivered parts go back to storage.", "DangerButton", "close", 14))
+	var upd := func():
+		var bb: Dictionary = s.state["buildings"].get(id, {})
+		var vo = bb.get("vorder", null)
+		var has: bool = typeof(vo) == TYPE_DICTIONARY and not (vo as Dictionary).is_empty()
+		ob.visible = has
+		if not has:
+			return
+		var st: String = String(vo.get("state", ""))
+		head.text = "Survey satellite: %s" % ("carriers bring the parts" if st == "deliver" else "technicians assemble it, then it launches")
+		bar.value = clampf(float(vo.get("progress", 0.0)) / maxf(1.0, float(vo.get("work_total", 1.0))), 0.0, 1.0) if st == "work" else 0.0
+		var blk: String = String(vo.get("block", ""))
+		why.text = ("Waiting for %s: none free in storage." % d.item_name(blk.substr(10)).to_lower()) if blk.begins_with("materials:") else (v4.refusal_text(blk) if blk != "" else "")
+		why.visible = why.text != ""
+	upd.call()
+	insp.bind(upd)
+	var bs: VBoxContainer = _section("Build a survey satellite", "satellite")
+	var tech: String = String(sc.get("research", ""))
+	var locked: bool = tech != "" and not d.tech_done(tech)
+	var btn: Button = Kit.button("Build satellite", func():
+		var r: Dictionary = v4._submit("build_satellite", {"pad": id})
+		var ok: bool = bool(r.get("ok", false)) or String(r.get("code", "")) == "submitted"
+		var code: String = String(r.get("code", ""))
+		insp.hud.toast("Survey satellite: %s" % ("ordered. Carriers bring the parts." if ok else v4.refusal_text("depot_busy" if code == "busy" else code)), "info" if ok else "warn"),
+		"Build a survey satellite\nCarriers bring the parts; technicians assemble it on the pad; then it launches.", "PrimaryButton" if not locked else "", "satellite", 14)
+	btn.disabled = locked
+	bs.add_child(btn)
+	bs.add_child(Kit.wrap(String(sc.get("desc", "")), 12, P.TEXT_2))
+	if locked:
+		bs.add_child(Kit.wrap("Needs research: %s." % d.tech_name(tech), 12, P.AMBER))
+	bs.add_child(_cost_chips(sc.get("cost", {})))
+
+# ---------------------------------------------------------------- rover depot (version 4, SIM milestone 3)
+func _is_depot(b: Dictionary) -> bool:
+	var s = _sim()
+	return "vehicles" in s and s.vehicles != null and s.vehicles.has_method("is_depot") and bool(s.vehicles.is_depot(b))
+
+## The depot's bays (who stands in each), the vehicle being built (parts delivered, then assembly, with
+## progress and what it waits for; Cancel), and one Build button per kind with its cost, seats, cargo and
+## research lock. Commands: build_vehicle {depot, kind}, cancel_vehicle {depot}.
+func _depot(b: Dictionary) -> void:
+	var s = _sim()
+	var d = _d()
+	var id: int = b["id"]
+	var v4 = insp.hud.v4
+	var sec: VBoxContainer = _section("Bays", "rover")
+	var parked := {}
+	var bays: Array = s.vehicles.bays(b)
+	for v in v4.vehicles():
+		if int(v.get("depot", -1)) == id and int(v.get("bay", -1)) >= 0:
+			parked[int(v["bay"])] = v
+		else:
+			for bay0 in bays:   # standing on a bay without the bay number set (e.g. just spawned): by position
+				if String(v.get("state", "")) == "parked" and (v["pos"] as Vector2).distance_to(bay0["pos"]) < 4.0:
+					parked[int(bay0["i"])] = v
+	for bay in bays:
+		var i: int = int(bay["i"])
+		var who: String = "free"
+		if parked.has(i):
+			var pv: Dictionary = parked[i]
+			who = "%s (%s, %d%% %s)" % [String(pv["name"]), v4.vehicle_name(String(pv["kind"])).to_lower(), int(100.0 * float(pv["fuel"] if String(pv["kind"]) == "hopper" else pv["charge"])), "fuel" if String(pv["kind"]) == "hopper" else "charge"]
+		sec.add_child(Kit.label("Bay %d, %s: %s" % [i + 1, String(bay["kind"]), who], "", 13, P.TEXT if parked.has(i) else P.TEXT_2))
+	sec.add_child(Kit.wrap("Parked here, a vehicle charges (1 per second with power), takes rocket fuel from the depot store and spare parts for repairs.", 12, P.TEXT_2))
+	# The order in progress.
+	var ob: VBoxContainer = _section("Building", "build")
+	var head: Label = Kit.label("", "", 14, P.TEXT)
+	ob.add_child(head)
+	var bar = Kit.bar(0.0, P.CYAN, 6.0)
+	ob.add_child(bar)
+	var why: Label = Kit.wrap("", 13, P.AMBER)
+	why.custom_minimum_size.x = 300
+	ob.add_child(why)
+	var cancel: Button = Kit.button("Cancel the build", func(): insp.hud.confirm("Cancel the vehicle?", ["The parts already delivered go back to storage."], func(): v4.cancel_vehicle(id), "Cancel build", true),
+		"Cancel\nStops the build. Delivered parts go back to storage.", "DangerButton", "close", 14)
+	ob.add_child(cancel)
+	var upd := func():
+		var bb: Dictionary = s.state["buildings"].get(id, {})
+		var vo = bb.get("vorder", null)
+		var has: bool = typeof(vo) == TYPE_DICTIONARY and not (vo as Dictionary).is_empty()
+		ob.visible = has
+		if not has:
+			return
+		var st: String = String(vo.get("state", ""))
+		head.text = "%s: %s" % [v4.vehicle_name(String(vo.get("kind", ""))), "carriers bring the parts" if st == "deliver" else "technicians assemble it"]
+		bar.value = clampf(float(vo.get("progress", 0.0)) / maxf(1.0, float(vo.get("work_total", 1.0))), 0.0, 1.0) if st == "work" else 0.0
+		var blk: String = String(vo.get("block", ""))
+		why.text = ("Waiting for %s: none free in storage." % d.item_name(blk.substr(10)).to_lower()) if blk.begins_with("materials:") else (v4.refusal_text(blk) if blk != "" else "")
+		why.visible = why.text != ""
+	upd.call()
+	insp.bind(upd)
+	# One Build button per kind.
+	var bs: VBoxContainer = _section("Build a vehicle", "rover")
+	var kinds: Dictionary = v4.kinds()
+	for k in kinds:
+		var kd: Dictionary = kinds[k]
+		var kk: String = String(k)
+		var card: PanelContainer = Kit.panel("CardPanel", false)
+		var cv: VBoxContainer = Kit.vbox(4)
+		card.add_child(cv)
+		var top: HBoxContainer = Kit.hbox(8)
+		cv.add_child(top)
+		top.add_child(Kit.icon("rover", 18, P.CYAN))
+		var nm: Label = Kit.label(String(kd.get("name", kk)), "BodyStrong", 14, P.TEXT)
+		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		top.add_child(nm)
+		var tech: String = String(kd.get("research", ""))
+		var locked: bool = tech != "" and not d.tech_done(tech)
+		var btn: Button = Kit.button("Build", func():
+			var r: Dictionary = v4.build_vehicle(id, kk)
+			var ok: bool = bool(r.get("ok", false)) or String(r.get("code", "")) == "submitted"
+			var code: String = String(r.get("code", ""))
+			insp.hud.toast("%s: %s" % [String(kd.get("name", kk)), "ordered. Carriers bring the parts." if ok else v4.refusal_text("depot_busy" if code == "busy" else code)], "info" if ok else "warn"),
+			"Build a %s\nCarriers bring the parts; technicians assemble it outside the depot. It needs a free %s bay." % [String(kd.get("name", kk)).to_lower(), String(kd.get("bay", "small"))], "PrimaryButton" if not locked else "", "build", 14)
+		btn.disabled = locked
+		top.add_child(btn)
+		var facts: String = "%d seats, cargo %d, %s. %s bay." % [int(kd.get("seats", 0)), int(kd.get("cargo", 0)), "pressurised cabin" if bool(kd.get("pressurised", false)) else "open (crew in suits)", String(kd.get("bay", "small")).capitalize()]
+		cv.add_child(Kit.wrap(facts, 12, P.TEXT_2))
+		if locked:
+			cv.add_child(Kit.wrap("Needs research: %s." % d.tech_name(tech), 12, P.AMBER))
+		cv.add_child(_cost_chips(kd.get("cost", {})))
+		bs.add_child(card)
 
 func _overview(b: Dictionary, def: Dictionary) -> void:
 	var s = _sim()
@@ -299,6 +476,7 @@ func _wear_breach(b: Dictionary, def: Dictionary) -> void:
 	var row: HBoxContainer = Kit.bar_row("Wear", 0.0, "", P.AMBER, 70.0)
 	body.add_child(row)
 	var eta: Label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
+	eta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # never widens the window (critic round 15, fix 7)
 	body.add_child(eta)
 	insp.bind(func():
 		var bb: Dictionary = s.state["buildings"].get(id, {})
@@ -450,11 +628,16 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 			var tip: String = "Make %s from %s." % [d.item_name(out).to_lower(), insp.hud.cost_text(r.get("inputs", {}))]
 			if locked:
 				tip = "Locked. Research %s first." % d.tech_name(lock_tech)
-			var bt: Button = Kit.button(String(r.get("name", rid)), func(): insp.hud.main.submit("set_recipe", {"id": id, "recipe": rr}), tip, "ChipButton", "lock" if locked else (Icons.item(out) if out != "" else ""), 14)
+			# Version 4: a recipe with min_level needs the structure at that level (SIM code level_low).
+			var min_lv: int = int(r.get("min_level", 1))
+			var low: bool = min_lv > 1 and d.level_of(b) < min_lv
+			if low and not locked:
+				tip = "Needs level %d. Upgrade this structure first (Upgrade tab).\n%s" % [min_lv, tip]
+			var bt: Button = Kit.button(String(r.get("name", rid)) + (("  (L%d)" % min_lv) if min_lv > 1 else ""), func(): insp.hud.main.submit("set_recipe", {"id": id, "recipe": rr}), tip, "ChipButton", "lock" if locked else (Icons.item(out) if out != "" else ""), 14)
 			bt.toggle_mode = true
 			bt.set_pressed_no_signal(rr == cur)
 			bt.custom_minimum_size.y = 28
-			bt.disabled = not can or locked
+			bt.disabled = not can or locked or low
 			row.add_child(bt)
 		if not can:
 			sec2.add_child(Kit.label("Recipe choice is not available yet.", "SmallLabel", 12, P.TEXT_3))
@@ -675,6 +858,7 @@ func _menu(b: Dictionary, def: Dictionary) -> void:
 			var dd: String = String(dish)
 			var tg := CheckButton.new()
 			tg.button_pressed = not off.has(dd)
+			tg.tooltip_text = "On the menu\nOn: the cook may make this dish. Off: never." if can else "On the menu\nThis kitchen level cannot cook it yet."
 			tg.disabled = not can
 			tg.focus_mode = Control.FOCUS_NONE
 			tg.toggled.connect(func(on): insp.hud.main.submit("set_dish", {"id": id, "dish": dd, "on": on}))
@@ -956,7 +1140,7 @@ func _footer_building(b: Dictionary, base: Dictionary) -> void:
 			var on: bool = bool(b.get("enabled", true))
 			f.add_child(Kit.button("Switch off" if on else "Switch on", func(): m.submit("set_enabled", {"id": id, "on": not bool(m.sim.state["buildings"][id]["enabled"])}), "Switch on or off\nA switched-off structure uses no power and does no work.", "", "power_toggle", 14))
 		if _sim().prod.has_batch(b):
-			f.add_child(Kit.button("Cancel batch", func(): insp.hud.confirm("Cancel the batch in %s?" % b["name"], ["The inputs already used by this batch are lost."], func(): m.submit("cancel_batch", {"id": id}), "Cancel batch", true), "", "", "close", 14))
+			f.add_child(Kit.button("Cancel batch", func(): insp.hud.confirm("Cancel the batch in %s?" % b["name"], ["The inputs already used by this batch are lost."], func(): m.submit("cancel_batch", {"id": id}), "Cancel batch", true), "Cancel batch\nStops the batch now. The inputs it already used are lost.", "", "close", 14))
 		if b["def"] == "corridor":
 			var open: bool = bool(b.get("door_open", true))
 			f.add_child(Kit.button("Close door" if open else "Open door", func(): m.submit("set_door", {"id": id, "open": not bool(m.sim.state["buildings"][id].get("door_open", true))}), "Isolation door\nA closed door separates the air of the two sides.", "", "door", 14))
@@ -999,6 +1183,10 @@ func agent(a: Dictionary) -> void:
 			if float(a.get("nutrition", {}).get(k, 100.0)) < 25.0:
 				low = true
 		insp.add_badge(Kit.badge("DEFICIENT" if low else ("WELL FED" if score >= 70.0 else "FED"), P.RED if low else (P.GREEN if score >= 70.0 else P.AMBER)))
+	# Radiation dose (SIM milestone 6): a badge from 250 mSv.
+	var dl: Array = insp.hud.v4.dose_level(insp.hud.v4.dose_of(a))
+	if String(dl[0]) != "":
+		insp.add_badge(Kit.badge(String(dl[0]), dl[1]))
 	if d.is_visitor(a):
 		_visitor(a)
 		return
@@ -1072,9 +1260,31 @@ func _needs(a: Dictionary) -> void:
 		srow.get_child(1).value = float(aa.get("suit", 0.0)) / suit_max
 		srow.get_child(1).color = P.CYAN if float(aa.get("suit", 0.0)) > suit_max * 0.3 else P.RED
 		(srow.get_child(2) as Label).text = "%ds" % int(aa.get("suit", 0.0)))
+	# Radiation dose: the bar fills to the sickness level (1,000 mSv); ticks of colour at 250 and 750.
+	var v4 = insp.hud.v4
+	var lim: Dictionary = v4.dose_limits()
+	var dose0: float = v4.dose_of(a)
+	var drow: HBoxContainer = Kit.bar_row("Dose", dose0 / float(lim["sick"]), "%d mSv" % int(dose0), v4.dose_level(dose0)[1] if dose0 >= float(lim["warn"]) else P.GREEN, 70.0)
+	drow.tooltip_text = "Radiation dose\nHigh from %d mSv, dangerous from %d, sickness above %d. It falls slowly (5 %% a day). Inside a room a colonist takes a tenth of the outside rate." % [int(lim["warn"]), int(lim["critical"]), int(lim["sick"])]
+	drow.mouse_filter = Control.MOUSE_FILTER_PASS
+	body.add_child(drow)
+	insp.bind(func():
+		var aa: Dictionary = s.state["agents"].get(id, {})
+		if aa.is_empty():
+			return
+		var dd: float = v4.dose_of(aa)
+		drow.get_child(1).value = minf(1.0, dd / float(lim["sick"]))
+		drow.get_child(1).color = v4.dose_level(dd)[1] if dd >= float(lim["warn"]) else P.GREEN
+		(drow.get_child(2) as Label).text = "%d mSv" % int(dd))
 	var g: GridContainer = _grid()
 	body.add_child(g)
 	_fact(g, "Doing", func(): return String(s.state["agents"].get(id, {}).get("goal", "")), P.CYAN)
+	_fact(g, "Radiation now", func():
+		var aa: Dictionary = s.state["agents"].get(id, {})
+		if aa.is_empty():
+			return "-"
+		var rr: float = v4.dose_rate(aa)
+		return ("%.2f mSv/h" % rr) if rr >= 0.005 else "none")
 	_fact(g, "Air here", func():
 		var aa: Dictionary = s.state["agents"].get(id, {})
 		if aa.is_empty():

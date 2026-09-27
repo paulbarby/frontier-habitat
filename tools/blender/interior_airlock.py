@@ -50,11 +50,13 @@ def spec(rm):
     """(riders, chamber length, dome height) for this airlock's radius."""
     bal = json.load(open(os.path.join(IK.K.ROOT, "content", "balance.json"), encoding="utf-8"))
     base = int(bal.get("airlock_slots", 2))
-    if rm.R >= 3.9:
-        return 2 * base, 3.6, 3.9
-    if rm.R >= 3.3:
-        return base, 2.4, 3.6
-    return base, None, 3.35
+    if rm.R < 3.0:                                   # the old-save 2.8 m airlock (airlock_r28): compact
+        return base, None, 3.35
+    # by size (4.0: the M and L airlocks are 1.5 x, R 5.1 and 6.0; the chamber keeps its rider spacing)
+    dh = 0.6 if rm.R > 4.5 else 0.0
+    if rm.size >= 2:
+        return 2 * base, 3.6, 3.9 + dh
+    return base, 2.4, 3.6 + dh
 
 
 def layout(rm):

@@ -580,7 +580,7 @@ func _strike(ev: Dictionary, p: Vector2, r: float, sev: int) -> void:
 			continue
 		var d: float = 0.0
 		if b["kind"] == "link":
-			d = maxf(0.0, Geometry2D.get_closest_point_to_segment(p, b["p0"], b["p1"]).distance_to(p) - (1.2 if b["def"] == "corridor" else 0.2))
+			d = maxf(0.0, Geometry2D.get_closest_point_to_segment(p, b["p0"], b["p1"]).distance_to(p) - (sim.corridor_r() if b["def"] == "corridor" else 0.2))
 		else:
 			d = maxf(0.0, (b["pos"] as Vector2).distance_to(p) - float(b["radius"]))
 		if d > r:

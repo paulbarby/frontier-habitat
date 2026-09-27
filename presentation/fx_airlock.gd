@@ -405,9 +405,11 @@ func sync(delta: float) -> void:
 		in_w = in_w and p > 0.97 and float(st["outer"]) < 0.02
 		out_w = out_w and p < 0.03 and float(st["inner"]) < 0.02
 		# Never close on a body in the opening (outside seal and pump: then the riders are in).
-		if not locked and not in_w and float(st["inner"]) > 0.3 and _in_opening(g, bodies, float(g["inner_x"])):
+		# (2026-09-27: a door closing at 0.33 cut a fast walker at speed 4: hold while the door is
+		# still a little open, and look 0.8 m either side of the door plane.)
+		if not locked and not in_w and float(st["inner"]) > 0.05 and _in_opening(g, bodies, float(g["inner_x"]), 0.8) and p > 0.97:
 			in_w = true
-		if not locked and not out_w and float(st["outer"]) > 0.3 and _in_opening(g, bodies, float(g["outer_x"])):
+		if not locked and not out_w and float(st["outer"]) > 0.05 and _in_opening(g, bodies, float(g["outer_x"]), 0.8) and p < 0.03:
 			out_w = true
 		var inst = view.inst
 		for side in [["inner", "Inner", in_w, "door_in"], ["outer", "Outer", out_w, "door_out"]]:
@@ -474,11 +476,11 @@ func _col(st: Dictionary, h: int, group: String, c: Color) -> void:
 	view.inst.set_group_custom(h, group, Color(c.r, c.g, c.b, 1.0))
 
 ## A body within 0.45 m of a door plane, inside its opening (bodies = [id, drawn, walker]).
-func _in_opening(g: Dictionary, bodies: Array, dx: float) -> bool:
+func _in_opening(g: Dictionary, bodies: Array, dx: float, reach: float = 0.45) -> bool:
 	var inv: Transform3D = (g["xs"] as Transform3D).affine_inverse()
 	for e in bodies:
 		var l: Vector3 = inv * (e[1] as Vector3)
-		if absf(l.x - dx) < 0.45 and absf(l.z) < 0.9:
+		if absf(l.x - dx) < reach and absf(l.z) < 0.9:
 			return true
 	return false
 
@@ -743,6 +745,37 @@ func _walkway_side(g: Dictionary, p: Vector3) -> float:
 	return 0.0
 
 # ---------------------------------------------------------------- queries (fx_npc)
+## True when a step from `a` to `b` (drawn) walks into an airlock door that is less than 80 %
+## open: the walker then waits at the door (2026-09-27: a body left the chamber while the
+## outer door was still opening, 0.33).
+func door_blocks(a: Vector3, b: Vector3) -> bool:
+	var blds: Dictionary = sim.state["buildings"]
+	for bid in locks:
+		var bl = blds.get(bid)
+		if bl == null or Vector2(b.x, b.z).distance_to(bl["pos"]) > float(bl["radius"]) + 1.5:
+			continue
+		var meta = view.bmeta.get(bid)
+		if meta == null:
+			continue
+		var g: Dictionary = _geo(bid, meta)
+		if not bool(g.get("kit", false)):
+			continue
+		var inv: Transform3D = (g["xs"] as Transform3D).affine_inverse()
+		var la: Vector3 = inv * a
+		var lb: Vector3 = inv * b
+		if absf(lb.z) > 0.95:
+			continue
+		var st: Dictionary = locks[bid]
+		for side in [["inner_x", "inner"], ["outer_x", "outer"]]:
+			if float(st[side[1]]) >= 0.8:
+				continue
+			var dx: float = float(g[side[0]])
+			var da: float = la.x - dx
+			var db: float = lb.x - dx
+			if (da > 0.0) != (db > 0.0) or (absf(db) < 0.3 and absf(db) < absf(da)):
+				return true
+	return false
+
 ## True when p (drawn) is inside an airlock building (within its wall).
 func inside_lock(p: Vector3) -> bool:
 	var blds: Dictionary = sim.state["buildings"]

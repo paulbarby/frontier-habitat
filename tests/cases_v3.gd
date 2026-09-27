@@ -556,7 +556,7 @@ func v3_meteor(t) -> void:
 	var craters0: int = sim.hazards.craters().size()
 	var rp0: float = float(sim.state["research"]["rp_total"]) + float(sim.state["research"]["bank"])
 	sim.state["goals"]["chapter"] = (sim.content["chapters"] as Array).size()   # test set-up: no goal RP
-	var r: Dictionary = g.cmd("hazard_now", {"kind": "meteor", "x": (hab["pos"] as Vector2).x, "y": (hab["pos"] as Vector2).y + 4.0, "severity": 2, "radius": 7.0})
+	var r: Dictionary = g.cmd("hazard_now", {"kind": "meteor", "x": (hab["pos"] as Vector2).x, "y": (hab["pos"] as Vector2).y + float(hab["radius"]) + 1.0, "severity": 2, "radius": 7.0})
 	t.check(bool(r["ok"]), "debug meteor accepted")
 	t.check(not sim.hazards.forecast().is_empty(), "the forecast shows it")
 	g.run(30)
@@ -752,7 +752,7 @@ func v3_v2_save(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 4, "migrated to schema 4 (through 3)")
+	t.eq(int(s["schema"]), 5, "migrated to schema 5 (through 3 and 4)")
 	t.eq(int(s["map_size"]), 256, "map_size 256")
 	var sim = H.Sim.new()
 	sim.load_state(s)
@@ -772,24 +772,25 @@ func v3_v2_save(t) -> void:
 	var rs := StreamPeerBuffer.new()
 	rs.data_array = saved
 	rs.seek(8)
-	t.eq(rs.get_u32(), 4, "it saves as schema 4 (V3.1)")
+	t.eq(rs.get_u32(), 5, "it saves as schema 5 (V4)")
 	t.note("%d alive, day %.1f" % [sim.alive_count(), sim.seconds() / 600.0 + 1.0])
 	sim.dispose()
 	t.done()
 
 ## A junction takes new corridors at least 55 degrees apart (CRITIC measure: two 2.36 m
-## tubes stop overlapping 2.7 m from the centre at 60 degrees); other rooms keep 28. A save
+## tubes stop overlapping 2.7 m from the centre at 60 degrees); other rooms keep 28 or the
+## door-housing angle (V4), the larger. A save
 ## with closer corridors (made before the rule) loads and keeps them.
 func v3_junction_angle(t) -> void:
 	var g = H.empty_game(1001)
 	var sim = g.sim
 	sim.state["flags"]["unlock_all"] = true                      # test set-up
 	var errors: Array = []
-	var jc := Vector2(-45, 35)
+	var jc := Vector2(-45, 35) * 1.5
 	var j: Dictionary = H.spawn(sim, "junction", jc, 0.0, errors)
 	var rooms := {}
 	for deg in [0, 40, 300, 180, 220]:
-		var off: Vector2 = jc + Vector2(15.0, 0).rotated(deg_to_rad(float(deg)))
+		var off: Vector2 = jc + Vector2(22.5, 0).rotated(deg_to_rad(float(deg)))
 		rooms[deg] = H.spawn(sim, "storehouse", off, 0.0, errors, 0)
 	for e in errors:
 		t.fail(e)
@@ -798,7 +799,9 @@ func v3_junction_angle(t) -> void:
 		t.done()
 		return
 	t.near(sim.place.link_min_angle(j), 55.0, 1e-9, "junction minimum angle")
-	t.near(sim.place.link_min_angle(rooms[0]), 28.0, 1e-9, "other rooms keep 28")
+	# V4 (Paul, links per size): other rooms take 28 or the door-housing angle, the larger.
+	var room_min: float = maxf(28.0, sim.place.door_angle(float(rooms[0]["radius"])))
+	t.near(sim.place.link_min_angle(rooms[0]), room_min, 1e-9, "other rooms: 28 or the door housing (%.1f)" % room_min)
 	t.eq(g.cmd("place_link", {"def": "corridor", "a": j["id"], "b": rooms[0]["id"]})["code"], "ok", "first corridor")
 	t.eq(sim.place.check_link("corridor", j["id"], rooms[40]["id"])["code"], "ports_full", "40 degrees from it: refused")
 	t.eq(sim.place.check_link("corridor", j["id"], rooms[300]["id"])["code"], "ok", "60 degrees from it (the other side): accepted")

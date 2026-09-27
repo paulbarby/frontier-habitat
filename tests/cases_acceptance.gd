@@ -132,7 +132,7 @@ func a01_conservation(t) -> void:
 		t.eq(g.sim.inv.audit(), {}, "ledger at second %d" % s)
 		if s == 30:
 			var c: Vector2 = g.sim.world.center
-			var r: Dictionary = g.cmd("place_building", {"def": "solar_array", "x": c.x + 8.0, "y": c.y - 30.0, "rot": 0.0})
+			var r: Dictionary = g.cmd("place_building", {"def": "solar_array", "x": c.x + 8.0 * 1.5, "y": c.y - 30.0 * 1.5, "rot": 0.0})
 			t.check(r["ok"], "extra blueprint accepted: %s" % r.get("code", ""))
 			extra = int(r.get("id", -1))
 		if s == 110 and extra != -1 and g.sim.state["buildings"].has(extra):
@@ -267,8 +267,11 @@ func a06_emergency(t) -> void:
 	g.run(2)
 	H.fill_utilities(g.sim, 1.0, 0.5, true)
 	var ctr: Vector2 = g.sim.world.center
-	var r: Dictionary = g.cmd("place_building", {"def": "solar_array", "x": ctr.x + 8.0, "y": ctr.y - 22.0, "rot": 0.0})
-	t.check(r["ok"], "site accepted")
+	var r: Dictionary = g.cmd("place_building", {"def": "solar_array", "x": ctr.x + 8.0 * 1.5, "y": ctr.y - 22.0 * 1.5, "rot": 0.0})
+	if not t.check(r["ok"], "site accepted: %s" % r.get("code", "")):
+		g.dispose()
+		t.done()
+		return
 	var site: Dictionary = g.sim.state["buildings"][r["id"]]
 	for res in site["cost"]:
 		g.sim.inv.add_new_forced(site["inv_site"], res, int(site["cost"][res]), "test")   # test set-up: materials on site
@@ -285,8 +288,9 @@ func a06_emergency(t) -> void:
 	for a in H.alive_agents(g.sim):
 		if a["goal"] == "Building " + String(site["name"]) and int(a["pi"]) == 1:
 			worker = a
-	worker["fatigue"] = 72.0      # tired and hungry, but not critical: only suit air may stop the work
-	worker["hunger"] = 72.0
+	worker["fatigue"] = 62.0      # tired and hungry, but not critical: only suit air may stop the work
+	worker["hunger"] = 62.0       # (V4: 110 s of suit air, so the needs start lower)
+	worker["thirst"] = minf(float(worker["thirst"]), 50.0)
 	var cap: float = float(g.sim.bal["suit_air_seconds"])
 	var turned: bool = g.run_until(func(): return worker["plan_kind"] == "safety", 1500)
 	t.check(turned, "the worker aborts the ordinary task for air")

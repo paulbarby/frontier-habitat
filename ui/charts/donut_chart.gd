@@ -26,7 +26,7 @@ func _draw() -> void:
 	var inner: float = r * (1.0 - thickness)
 	if total <= 0.0:
 		_arc_band(c, inner, r, 0.0, TAU, Color(1, 1, 1, 0.06))
-		draw_string(_font, Vector2(c.x - r, c.y + 5), "No data yet.", HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, 12, P.TEXT_3)
+		draw_string(_font, Vector2(c.x - r, c.y + 5), "No data yet.", HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, P.fs(12), P.TEXT_3)
 		return
 	var a := -PI * 0.5
 	var hover_i := -1
@@ -47,7 +47,7 @@ func _draw() -> void:
 		a += sweep
 	# Centre text
 	draw_string(_mono_b(), Vector2(c.x - inner, c.y + 4), center_value, HORIZONTAL_ALIGNMENT_CENTER, inner * 2.0, int(clampf(inner * 0.42, 12.0, 26.0)), P.TEXT)
-	draw_string(_font, Vector2(c.x - inner, c.y + 22), center_label, HORIZONTAL_ALIGNMENT_CENTER, inner * 2.0, 11, P.TEXT_2)
+	draw_string(_font, Vector2(c.x - inner, c.y + 22), center_label, HORIZONTAL_ALIGNMENT_CENTER, inner * 2.0, P.fs(11), P.TEXT_2)
 	# Legend
 	if legend_right:
 		var lx: float = area.position.x + ring_w + 4.0
@@ -58,8 +58,8 @@ func _draw() -> void:
 			var col: Color = s.get("color", P.CYAN)
 			var bright: bool = hover_i == -1 or hover_i == i
 			draw_rect(Rect2(lx, ly - 8, 9, 9), col if bright else P.with_alpha(col, 0.35), true)
-			draw_string(_font, Vector2(lx + 15, ly), String(s.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, size.x - lx - 70.0, 12, P.TEXT if bright else P.TEXT_3)
-			draw_string(_mono, Vector2(size.x - 60, ly), "%d%%" % int(roundf(v / total * 100.0)), HORIZONTAL_ALIGNMENT_RIGHT, 52, 12, P.TEXT_2)
+			draw_string(_font, Vector2(lx + 15, ly), String(s.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, size.x - lx - 70.0, P.fs(12), P.TEXT if bright else P.TEXT_3)
+			draw_string(_mono, Vector2(size.x - 60, ly), "%d%%" % int(roundf(v / total * 100.0)), HORIZONTAL_ALIGNMENT_RIGHT, 52, P.fs(12), P.TEXT_2)
 			ly += 18.0
 	if hover_i >= 0:
 		var s: Dictionary = segments[hover_i]

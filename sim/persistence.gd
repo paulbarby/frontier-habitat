@@ -7,7 +7,7 @@ extends RefCounted
 ## bytes_to_var never decodes objects, so an imported file cannot run code.
 
 const MAGIC := "FHSAVE1\n"
-const SCHEMA := 4
+const SCHEMA := 5
 const REQUIRED := ["schema", "seed", "tick", "rng", "buildings", "inventories", "agents", "tasks", "holds", "policies", "ledger"]
 const Research = preload("res://sim/research.gd")
 const Goals = preload("res://sim/goals.gd")
@@ -15,6 +15,7 @@ const Ship = preload("res://sim/ship.gd")
 const Hazards = preload("res://sim/hazards.gd")
 const Traffic = preload("res://sim/traffic.gd")
 const Rng = preload("res://sim/rng.gd")
+const Bases = preload("res://sim/bases.gd")
 ## Ticks in a day of every schema so far (600 s at 10 Hz).
 const DAY_TICKS := 6000
 const ROLES := ["technician", "grower", "operator", "medic", "scientist"]
@@ -68,6 +69,9 @@ static func migrate(state: Dictionary) -> Dictionary:
 	if v < 4:
 		_v3_to_v4(state)
 		v = 4
+	if v < 5:
+		_v4_to_v5(state)
+		v = 5
 	state["schema"] = v
 	return state
 
@@ -218,6 +222,16 @@ static func _v2_to_v3(s: Dictionary) -> void:
 ## Version 4 (docs/V3_1_DESIGN.md section 7): an empty traffic schedule (ships come once a
 ## powered pad exists), credits 0, and the phase of an airlock cycle in progress (shares
 ## as balance.airlock_phases).
+## Version 5 (docs/V4_DESIGN.md section 9): bases, vehicles, orders, fog, zones, dose, reactors
+## and the new items. A save from before has no "rules" key and so keeps the v3 balance
+## (sim.legacy_balance), and keeps its map size (256 or 810 m). The bases record is added here
+## (its first base is made by sim.load_state round the lander). Vehicles, fog, zones, orders,
+## dose and reactor records are absent until used, so nothing else is needed. A v4 save made
+## during development (schema 4 with rules 4) gets its fog in sim.load_state (explore.ensure).
+static func _v4_to_v5(s: Dictionary) -> void:
+	if not s.has("bases"):
+		s["bases"] = Bases.fresh_state()
+
 static func _v3_to_v4(s: Dictionary) -> void:
 	if not s.has("traffic"):
 		s["traffic"] = Traffic.fresh_state()

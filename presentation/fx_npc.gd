@@ -30,6 +30,7 @@ const PLANS_PER_FRAME := 8
 ## Planning time per frame (µs): no new plan starts once it is spent (a frame-time spike guard;
 ## a body without a plan waits one frame).
 const PLAN_BUDGET_US := 2500
+var plan_budget_us := PLAN_BUDGET_US   # tests: a count-only budget (deterministic runs) with plan_budget_us = 1 << 30
 const SKIN_SHADER = preload("res://shaders/npc_skin.gdshader")
 
 const FPS := 30.0
@@ -37,12 +38,14 @@ const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
 const FILES := {"suit": "res://assets/models/astronaut_suit.glb", "in": "res://assets/models/astronaut_indoor.glb"}
 const META_FILE := "res://assets/models/astronaut_anims.json"
 const LOOPS := ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
-	"repair_kneel", "sit_idle", "sit_eat", "sit_type", "sleep", "injured_walk", "dead"]
+	"repair_kneel", "sit_idle", "sit_eat", "sit_type", "sleep", "injured_walk", "dead", "drive_sit", "ride_sit"]
 const ENTER_EXIT := {"sit_enter": ["stand", "sit"], "sit_exit": ["sit", "stand"], "lie_enter": ["stand", "lie"], "lie_exit": ["lie", "stand"],
 	"kneel_enter": ["stand", "kneel"], "kneel_exit": ["kneel", "stand"], "collapse": ["stand", "lie"]}
 const ALL_CLIPS := ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
 	"kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit",
-	"lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap"]
+	"lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap",
+	# V4 vehicle crews (ART-NPC 2026-09-27): seat loops, door clips and the step chain.
+	"drive_sit", "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r"]
 ## suit_swap (ART-NPC, V3_1 §5.4): the variant is cut at this clip time (frame 30 of 60).
 const SWAP_CUT := 1.0
 const ROLE_INDEX := {"technician": 0, "grower": 1, "operator": 2, "medic": 3, "scientist": 4}
@@ -758,7 +761,7 @@ func _make_mm(variant: String, lib: Dictionary) -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = m
 		mmi.name = "Astronauts_%s_%s" % [variant, part["name"]]
-		mmi.custom_aabb = AABB(Vector3(-100, -60, -100), Vector3(1100, 260, 1100))
+		mmi.custom_aabb = AABB(Vector3(-200, -200, -200), Vector3(3000, 600, 3000))
 		if bool(part.get("shadow_only", false)):
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		elif int(part["head"]) >= 0 or bool(part.get("proxied", false)) or part.has("vis"):
@@ -1143,6 +1146,7 @@ func sync(delta: float) -> bool:
 				_drop(id)
 	var lists := {"suit": [], "in": []}
 	_walk_ghosts(delta, lists)
+	_sync_puppets(delta, lists)
 	_build_occ()
 	var focus: Vector3 = view._focus_now
 	var cam_d: float = float(view.camera_distance)
@@ -1170,6 +1174,16 @@ func sync(delta: float) -> bool:
 		if dead and tick - int(a.get("death_tick", 0)) >= 1200:
 			if agents.has(id):
 				_drop(id)
+			continue
+		# V4 riders (SIM: where == "vehicle") are drawn by fx_vehicles in their seats; a body
+		# getting in or out plays the vehicle chain there too, so it is not drawn here.
+		if a["where"] == "vehicle" or (view.get("vehicles") != null and view.vehicles.hides(int(id))):
+			if agents.has(id):
+				var rv: Dictionary = agents[id]
+				var vp: Vector2 = a["pos"]
+				rv["pos"] = Vector3(vp.x, view.h(vp.x, vp.y), vp.y)
+				rv["seen"] = false
+				rv["wp"] = []
 			continue
 		var inside: bool = a["where"] == "in"
 		# A body on (or walking to, or getting up from) a room anchor is indoors.
@@ -1269,7 +1283,7 @@ func _make_lamps() -> void:
 	_halo_mat.shader = load("res://shaders/helmet_glow.gdshader")
 	_halo.material_override = _halo_mat
 	_halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_halo.custom_aabb = AABB(Vector3(-100, -60, -100), Vector3(1100, 260, 1100))
+	_halo.custom_aabb = AABB(Vector3(-200, -200, -200), Vector3(3000, 600, 3000))
 	add_child(_halo)
 	var pst := SurfaceTool.new()
 	pst.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1507,7 +1521,7 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 				goal = ["stand", "idle"]
 			else:
 				var ap: Vector3 = rec["anchor"]["pos"]
-				var vmax: float = 3.4 if before.distance_to(ap) > 3.0 else 1.1
+				var vmax: float = v_fast() if before.distance_to(ap) > 3.0 else 1.1
 				now = _walk(rec, before, ap, dt, vmax, inside or String(rec["var"]) == "in")
 				if now.distance_to(ap) < 0.03:
 					now = ap
@@ -1631,7 +1645,7 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 		elif sm.is_busy() and sm.pose_state == "stand":
 			now = before
 		else:
-			now = _walk(rec, before, target, dt, 3.4 if lg == null or dist > 2.0 else 1.3, inside)
+			now = _walk(rec, before, target, dt, v_fast() if lg == null or dist > 2.0 else 1.3, inside)
 		goal = ["stand", "loco"]
 		if lg != null and lg.has("yaw") and now.distance_to(target) < 0.12:
 			want_yaw = float(lg["yaw"])
@@ -1715,6 +1729,11 @@ func _free_aisles(rid: int, aisles: Array) -> Array:
 func _walk(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: float, inside: bool) -> Vector3:
 	var tw0: int = Time.get_ticks_usec()
 	var r: Vector3 = _walk2(rec, before, goal, dt, vmax, inside)
+	# An airlock door that is not open yet: wait at it (never walk through a closed leaf).
+	if door_gate and r != before and view.airlock != null and not rec.has("fade_to") and view.airlock.door_blocks(before, r):
+		rec["v"] = 0.0
+		_t_walk += Time.get_ticks_usec() - tw0
+		return before
 	# Critic round 14: two bodies never pass through each other in a doorway; one waits.
 	if door_yield and r != before and _door_yield(rec, before, r, dt):
 		rec["v"] = 0.0
@@ -1730,6 +1749,12 @@ func _walk(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: flo
 	return r
 
 var door_yield := true      # (tests can turn it off to measure)
+## The walker's top speed: above the sim's walking speed so the drawn body never falls behind
+## (v3 rules 3.6 / 3.2 m/s: 3.4 as before; V4 new games cap 4.0 indoors, 3.5 outside: 4.2).
+func v_fast() -> float:
+	return 4.2 if (view.sim.state as Dictionary).has("rules") else 3.4
+
+var door_gate := true       # airlock door gate (tests can turn it off to measure)
 
 func _step_aside(rec: Dictionary, before: Vector3, next: Vector3, dt: float, inside: bool) -> Vector3:
 	var dir := Vector2(next.x - before.x, next.z - before.z).normalized()
@@ -1748,7 +1773,29 @@ func _step_aside(rec: Dictionary, before: Vector3, next: Vector3, dt: float, ins
 		return before
 	if reg1["k"] == "room" and not planner.free_in_room(int(reg1["id"]), want):
 		return before
-	return before.move_toward(want, 0.8 * dt * maxf(game_rate, 0.0))
+	# 2026-09-27 (path check, one run in two: 16 samples): a body waiting in a corridor end stepped
+	# aside into the wall band of the room the corridor meets. Never step into a room wall band.
+	if _in_wall_band(want):
+		return before
+	# (0.25 m/s: slower than the slide limit of a standing clip; path check 2026-09-27: 0.57 m/s)
+	return before.move_toward(want, 0.25 * dt * maxf(game_rate, 0.0))
+
+## True when p lies within 0.45 m of a room's wall line (the path check's band is 0.25 m).
+func _in_wall_band(p: Vector3) -> bool:
+	var q := Vector2(p.x, p.z)
+	var blds: Dictionary = view.sim.state["buildings"]
+	for rid in view.bmeta:
+		var b = blds.get(rid)
+		if b == null or String(b["kind"]) != "room":
+			continue
+		var rr: float = float(b["radius"])
+		var d: float = q.distance_to(b["pos"])
+		if d > rr + 1.0:
+			continue
+		var s: float = float(view.bmeta[rid]["tpl"].get("scale", 1.0)) if view.bmeta[rid].has("tpl") else 1.0
+		if absf(d - (rr - 0.20 * s)) < 0.45:
+			return true
+	return false
 const DOOR_ZONE := 1.1     # m round a doorway centre
 const BODY_GAP := 0.45     # m between two bodies in a doorway
 var _occ := {}             # 1 m cell -> [agent ids] (walker positions, this frame)
@@ -1880,7 +1927,7 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			rec["wp_goal"] = goal
 			pend = goal
 	if pend.distance_to(goal) > 0.8 or (wp.is_empty() and gap > 0.05):
-		if (_plans_frame < PLANS_PER_FRAME and _plan_us < PLAN_BUDGET_US) or wp.is_empty() and gap < 1.5:
+		if (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or wp.is_empty() and gap < 1.5:
 			_plans_frame += 1
 			var tq0: int = Time.get_ticks_usec()
 			wp = _round_corners(before, planner.plan(before, goal, inside))
@@ -1895,7 +1942,7 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		var lc: Vector3 = wp[wp.size() - 2] if wp.size() > 1 else before
 		if planner.same_leg(lc, goal, inside):
 			wp[-1] = goal
-		elif _plans_frame < PLANS_PER_FRAME and _plan_us < PLAN_BUDGET_US:
+		elif _plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us:
 			_plans_frame += 1
 			var tq1: int = Time.get_ticks_usec()
 			wp = _round_corners(before, planner.plan(before, goal, inside))
@@ -2144,6 +2191,37 @@ func _walk_ghosts(delta: float, lists: Dictionary) -> void:
 				view.inst.remove(rec["crate"])
 			_ghosts.erase(id)
 			continue
+		var lib: Dictionary = libs.get(String(rec["var"]), libs.values()[0])
+		(lists[String(rec["var"])] as Array).append([rec, lib])
+
+# ---------------------------------------------------------------- puppets (V4 vehicle crews)
+## View-only bodies driven by another module (fx_vehicles: boarding, seats, alighting). The
+## owner sets rec.pos, rec.yaw, rec.fade and plays clips with rec.sm.force(); this node advances
+## the clip and draws the body with the colonists. Nothing here is in sim.state.
+var puppets := {}
+
+func puppet(key: String, variant: String = "suit", role: String = "engineer") -> Dictionary:
+	if puppets.has(key):
+		return puppets[key]
+	if libs.is_empty():
+		return {}
+	var lib: Dictionary = libs.get(variant, libs.values()[0])
+	var rec: Dictionary = _new_rec({"id": absi(hash(key)) % 100000, "pos": Vector2.ZERO, "role": role}, lib)
+	rec["var"] = variant if libs.has(variant) else String(libs.keys()[0])
+	rec["mode"] = "puppet"
+	puppets[key] = rec
+	return rec
+
+func puppet_free(key: String) -> void:
+	puppets.erase(key)
+
+func _sync_puppets(delta: float, lists: Dictionary) -> void:
+	var dtg: float = delta * maxf(float(view.game_rate), float(view.get("demo_rate") if view.get("demo_rate") != null else 0.0))
+	for key in puppets:
+		var rec: Dictionary = puppets[key]
+		if float(rec.get("fade", 1.0)) <= 0.0:
+			continue
+		rec["sm"].advance(dtg)
 		var lib: Dictionary = libs.get(String(rec["var"]), libs.values()[0])
 		(lists[String(rec["var"])] as Array).append([rec, lib])
 

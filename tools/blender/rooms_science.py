@@ -45,7 +45,37 @@ def observatory(p, cx, cy, z0, r, slit_a=-60.0, seg=16):
     return ztop
 
 
+def build_research_lab_v4(rm):
+    """4.0 identity, science: a TALL dome with a ring of glowing sensor strips, a lattice sensor mast with a dish
+    and a red beacon on its shoulder, the atom badge on the crown."""
+    import rooms_identity as RI
+    s = rm.size
+    Rw = rm.Rw
+    rm.build_base(windows=(0.50, 0.84) if s else None, win_seams=(10, 14, 16, 20)[s], lamps=(160.0, 200.0),
+                  bolts=s >= 2)
+    H = WALL_TOP + 0.60 * Rw
+    # the science dome: alternate gores dark (a segmented instrument dome, unlike the plain white habitat)
+    rm.build_dome(H, crown="apex", seams=12, seam_phase=0.0,
+                  mat=lambda t, a: "Accent" if int(((a % 360.0) + 360.0) // 30.0) % 2 else "Hull")
+    rm.door_hood(depth=1.1)
+    ro = rm.roof
+    RI.dome_band(rm, ro)
+    RI.dome_windows(rm, ro, 22.0, 30.0, 16, 6.0, phase=11.25, skip=(0.0,), mat="Screen")
+    pm, _ = rm.dpt(36.0, 145.0)
+    top = RI.sensor_mast(ro, rm.lights, pm.x, pm.y, pm.z - 0.05, 5.0 + 0.5 * s)
+    rm.anchor("Telescope", (pm.x, pm.y, top))
+    RI.badge(ro, "science", 0.0, 0.0, 0.36 * Rw, rm.dome_z, lift=0.03)
+    rm.badge_done = True
+    rm.top_z = max(rm.top_z, top, H)
+    pb5, _ = rm.dpt(45.0, -120.0)
+    K.levels_dome(rm, dict(ant=(45.0, -150.0, 1.2), band3=(38.0, 40.5), mod3=(45.0, -60.0), band4=(14.0, 16.5),
+                         fins4=(45.0, 60.0), annex4=(21.0, -90.0), crown5=(50.0, 52.0), emblem5=(44.0, -20.0),
+                         beacon5=(pb5.x, pb5.y, pb5.z - 0.02)))
+
+
 def build_research_lab(rm):
+    if K.V4STYLE:
+        return build_research_lab_v4(rm)
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(windows=(0.50, 0.84) if s else None, win_seams=(10, 14, 16, 20)[s], lamps=(160.0, 200.0),

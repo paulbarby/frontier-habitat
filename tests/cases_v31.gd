@@ -31,7 +31,7 @@ func tests() -> Array:
 ## A room placed near a spot and joined by a corridor to `to` (test set-up).
 func _room(t, sim, def_id: String, near: Vector2, to: int) -> Dictionary:
 	var errors: Array = []
-	for r in [0.0, 4.0, 8.0, 12.0]:
+	for r in [0.0, 4.0, 8.0, 12.0, 16.0, 20.0, 26.0]:
 		for j in (1 if r == 0.0 else 12):
 			var off: Vector2 = near + Vector2(r, 0).rotated(j * TAU / 12.0)
 			var pos: Vector2 = sim.place.snap_pos(sim.world.center + off)
@@ -321,7 +321,7 @@ func v31_save(t) -> void:
 	var raw := StreamPeerBuffer.new()
 	raw.data_array = bytes
 	raw.seek(8)
-	t.eq(raw.get_u32(), 4, "saves are schema 4")
+	t.eq(raw.get_u32(), 5, "saves are schema 5 (V4)")
 	sim2.dispose()
 	g.dispose()
 	for name in ["showcase_v3_late", "showcase_mid"]:
@@ -330,7 +330,7 @@ func v31_save(t) -> void:
 		if not bool(dec["ok"]):
 			continue
 		var s: Dictionary = dec["state"]
-		t.eq(int(s["schema"]), 4, "%s migrated to 4" % name)
+		t.eq(int(s["schema"]), 5, "%s migrated to 5" % name)
 		t.eq(int(s["credits"]["balance"]), 0, "%s: credits 0" % name)
 		var sim3 = H.Sim.new()
 		sim3.load_state(s)
@@ -644,7 +644,7 @@ func v31_showcase_save(t) -> void:
 		return
 	var sim = H.Sim.new()
 	sim.load_state(dec["state"])
-	t.eq(int(sim.state["schema"]), 4, "schema 4")
+	t.eq(int(sim.state["schema"]), 5, "schema 5 (V4)")
 	t.eq(H.buildings_of(sim, "landing_pad", true).size() >= 2, true, "two pads or more")
 	var kinds: Array = sim.traffic.ships().map(func(x): return "%s:%s" % [x["kind"], x["phase"]])
 	t.check(kinds.has("trader:landed") and kinds.has("liner:landed"), "a trader and a liner landed (%s)" % str(kinds))
@@ -782,9 +782,9 @@ func v31_door_clearance(t) -> void:
 	# The airlock: never on the chamber and porch side, at any rotation.
 	for k in 24:
 		var rot: float = k * TAU / 24.0
-		for off in [-50.0, 0.0, 50.0]:
+		for off in [-25.0, 0.0, 25.0]:
 			if sim.place.link_angle_ok_for("airlock", 1, rot, rot - deg_to_rad(off)):
-				t.fail("airlock rot %d deg: a link %d deg off the door side is allowed" % [k * 15, int(off)])
+				t.fail("airlock rot %d deg: a link %d deg off the door side is allowed (content/door_blocked.json)" % [k * 15, int(off)])
 		t.check(sim.place.link_angle_ok_for("airlock", 1, rot, rot + PI), "airlock rot %d deg: the back is free" % (k * 15))
 	# Sectors agree with the angle test.
 	var bad := 0
@@ -818,7 +818,7 @@ func v31_door_clearance(t) -> void:
 	var errors: Array = []
 	var front: Dictionary = {}
 	for d in [10.0, 12.0, 14.0, 16.0]:
-		for deg in [30.0, -30.0, 40.0, -40.0, 20.0, -20.0]:
+		for deg in [15.0, -15.0, 20.0, -20.0, 10.0, -10.0]:
 			if not front.is_empty():
 				break
 			var q: Vector2 = (lock["pos"] as Vector2) + dirv.rotated(deg_to_rad(deg)) * d

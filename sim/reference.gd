@@ -262,7 +262,7 @@ func _rescue_far_sites() -> void:
 		var spot = null
 		for dist in [8.0, 11.0, 6.0, 14.0]:
 			for side in [0.0, 3.0, -3.0, 6.0, -6.0]:
-				var p: Vector2 = (room["pos"] as Vector2) + dir * (float(room["radius"]) + float(sim.bdef("airlock")["radius"]) + dist) + dir.orthogonal() * side
+				var p: Vector2 = (room["pos"] as Vector2) + dir * (float(room["radius"]) + float(sim.sizes.def_for("airlock", 1)["radius"]) + dist) + dir.orthogonal() * side
 				if sim.place.check_building("airlock", sim.place.snap_pos(p), sim.place.snap_rot(rot)) == "ok":
 					spot = p
 					break
@@ -367,7 +367,14 @@ func _legal(def_id: String, p: Vector2, rot: float, size: int) -> bool:
 	var q: Vector2 = sim.place.snap_pos(p)
 	if sim.place.check_building(def_id, q, rot, -1, size) != "ok":
 		return false
-	return not _hits_pending(q, float(sim.sizes.def_for(def_id, size)["radius"]))
+	var rad: float = float(sim.sizes.def_for(def_id, size)["radius"])
+	# V4: a player keeps the ore free. With the 1.5 x rooms the spread layout covered the
+	# deposit at the start plateau's edge, and the only mine went 180 m out.
+	if not bool(sim.bdef(def_id).get("needs_deposit", false)):
+		for d in sim.state["deposits"]:
+			if Vector2(d["x"], d["y"]).distance_to(q) < rad + float(d["r"]) + 2.0:
+				return false
+	return not _hits_pending(q, rad)
 
 ## True when a place overlaps something ordered earlier in this drive() call.
 func _hits_pending(pos: Vector2, r: float) -> bool:
@@ -453,19 +460,21 @@ func _candidate(st: Dictionary, n: int):
 			return null
 		var rad: float = float(sim.sizes.def_for(st["place"], size)["radius"])
 		var aim: Vector2 = sim.world.center
-		for gap in [3.0, 5.0, 8.0, 11.0, 15.0, 20.0]:
-			var best = null
-			var best_d := 1e18
+		# The n-th legal place in this order (n = how often a corridor to the earlier ones
+		# was refused): nearest gap first, then nearest to the lander. Before V4 a refused
+		# corridor put the room back on the same place every time ("crossing" on the v4 map).
+		var skip: int = n
+		for gap in [3.0, 5.0, 8.0, 11.0, 15.0, 20.0, 25.0, 30.0]:
+			var cands: Array = []
 			for j in 24:
 				var p: Vector2 = (anchor["pos"] as Vector2) + Vector2(float(anchor["radius"]) + rad + gap, 0).rotated(j * TAU / 24.0)
 				if not _legal(st["place"], p, rot, size):
 					continue
-				var d: float = p.distance_to(aim)
-				if d < best_d:
-					best_d = d
-					best = p
-			if best != null:
-				return best
+				cands.append([p.distance_to(aim), j, p])
+			cands.sort_custom(func(x, y): return x[0] < y[0] if x[0] != y[0] else x[1] < y[1])
+			if skip < cands.size():
+				return cands[skip][2]
+			skip -= cands.size()
 		return null
 	var want = _place_point(st)
 	if want == null:
@@ -495,7 +504,9 @@ func _candidate(st: Dictionary, n: int):
 ## Both straight legs a-p and p-b keep clear of every rock (the margin check_link uses,
 ## plus room for the rooms' radii not being known here).
 func _legs_clear(pa: Vector2, p: Vector2, pb: Vector2, a_id: int = -1, b_id: int = -1) -> bool:
-	for rock in sim.world.rocks:
+	var lo := Vector2(minf(pa.x, minf(p.x, pb.x)), minf(pa.y, minf(p.y, pb.y)))
+	var hi := Vector2(maxf(pa.x, maxf(p.x, pb.x)), maxf(pa.y, maxf(p.y, pb.y)))
+	for rock in sim.world.rocks_near((lo + hi) * 0.5, (hi - lo).length() * 0.5 + 2.0):
 		var rp := Vector2(rock["x"], rock["y"])
 		var lim: float = float(rock["r"]) + 1.9
 		if Geometry2D.get_closest_point_to_segment(rp, pa, p).distance_to(rp) < lim:
@@ -538,7 +549,7 @@ func _nudge_for_link(link_step: int, st: Dictionary, code: String) -> void:
 		return
 	# The wanted partner has no free port, or its door is in the way. Join the nearest other
 	# room that does accept the link, which is what a player does.
-	if code == "ports_full" or code == "blocked_entrance" or code == "door_blocked":
+	if code == "ports_full" or code == "links_full" or code == "blocked_entrance" or code == "door_blocked":
 		var moving: int = int(alias[st["b"]])
 		var blds: Dictionary = sim.state["buildings"]
 		var best := -1
@@ -629,7 +640,17 @@ func _place_point(st: Dictionary):
 				break
 			t += 0.5
 		return c + u * (t - float(st["x"])) + u.orthogonal() * float(st["y"])
-	return c + Vector2(float(st["x"]), float(st["y"]))
+	var ls: float = _layout_scale()
+	# Exterior structures did not grow with the rooms: they spread less (shorter walks
+	# for their repairs, within suit range).
+	if st.has("place") and String(sim.bdef(String(st["place"])).get("kind", "")) == "exterior":
+		ls = float(sim.bal.get("layout_scale_exterior", ls))
+	return c + Vector2(float(st["x"]), float(st["y"])) * ls
+
+## V4: rooms are 1.5 x the v3 radius, so the documented layout spreads as much
+## (balance.layout_scale).
+func _layout_scale() -> float:
+	return float(sim.bal.get("layout_scale", 1.0))
 
 func _resolve() -> void:
 	var blds: Dictionary = sim.state["buildings"]

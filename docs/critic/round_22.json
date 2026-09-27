@@ -1,0 +1,73 @@
+{
+  "round": 22,
+  "date": "2026-09-28",
+  "scope": "final v4.0 in-game round. RENDER evidence art/critic_input/render/125-141; UI docs/shots/ui4_*, ui5_*, ui6_*; art/vehicles/, art/interiors/v4b/. My own shots from build/web_render (09-28 01:53): showcase_v4.fhsave (debug=1: base jumps, reactor stage commands, radiation layer, overviews to 700 m, 6 interiors day and night) and a new game seed=1001&scenario=frontier (start, research screen, perf).",
+  "pass_mark": 0.65,
+  "subjects": {
+    "vehicles": {"consistency": 0.76, "appeal": 0.74, "style": 0.74, "score": 0.75, "pass": true, "was": "0.73 (r19, Blender)",
+      "verified": "Crew chain step_up -> board -> drive_sit on the small rover; small and medium rover driving with suspension, wheel spin and dust; night head and work lights; hopper spool-up with ground dust, flight with legs folded and hover flames, landing; launch pad arms clear, ignition, lift-off (132). SIM-driven: rover with seated crew, hopper mid-hop, depot with an order hologram, route rover at night (136, 140).",
+      "fixes": [
+        {"owner": "SIM / RENDER", "fix": "Expedition rover parked on a 30 deg crater flank (known): park only on slope <= 10 deg; RENDER tilts the body to the ground normal but clamps at 15 deg."},
+        {"owner": "ART-HAB", "fix": "Rover depot reads as a plain grey box with a pink badge at game distance (136, 141, v4b/rover_depot_l.png) - the least detailed building in the colony. Add roof ribs and vents, a bay-door frame with hazard stripes and lit status lights per bay, a side annex, and use the logistics accent as a band, not only on the roof edge."},
+        {"owner": "RENDER", "fix": "Hopper at game distance is a small white blob; give its hover flames a ground-lit dust ring and a brief glow on landing so the hop reads from 150 m."}
+      ]},
+    "reactor_and_disaster": {"consistency": 0.72, "appeal": 0.68, "style": 0.70, "score": 0.70, "pass": true, "was": "new",
+      "verified": "Reactor model with cooling towers and dome reads as a reactor. Warning: red lamps and a red blast-radius ring; critical: red glow and steam at night. Breach from SIM's log: flash, fireball, debris, dust, 60 m shock ring, scorched crater, 140 m radiation zone (134, 138). Crystal refinery blast and chemical toxic leak also drawn (138).",
+      "fixes": [
+        {"owner": "RENDER", "fix": "The radiation zone is a flat yellow-green disc of concentric hatch lines with a bright ring - it reads as a UI target, not contamination. Make it a ground stain (dark olive speckle, faint green emissive flecks) with a soft pulsing edge; keep the hard ring only when the radiation layer or a warning is on."},
+        {"owner": "RENDER", "fix": "Scale of the breach: a reactor meltdown with a 60 m shock ring shows a fireball about 12 m wide that is gone in 2 s. Double the fireball, add a rising mushroom column of dust for 8-10 s and a second, slower shock ring; darken the sky tint for 3 s."},
+        {"owner": "RENDER", "fix": "The warning ring is a thin 2 px red line at 60-120 m zoom; thicken it to 3-4 px with a soft inner fade so the blast radius is readable at the colony camera."},
+        {"owner": "SIM / UI", "fix": "My reproduction: 'reactor stage warning|critical|breach' each advanced only one phase and lagged (after 'breach' the reactor reported 'warning'); I did not see a breach in 15 s. Not a visual fault, but the debug command should set the stage it names."}
+      ]},
+    "exploration": {"consistency": 0.72, "appeal": 0.68, "style": 0.70, "score": 0.70, "pass": true, "was": "new",
+      "verified": "SIM fog grid with explored areas lit and unexplored dark; POIs as coloured beams with dashed rings and labels (anomaly, cave, meteorite field, rich deposit, wreck, derelict probe); fogged -> found -> close sequence; survey satellite beam and scan band; satellite launch from the pad (139). Map layers: radiation with contours, sun share, resources by tier (133).",
+      "fixes": [
+        {"owner": "RENDER", "fix": "Fog edge: the boundary between explored and unexplored is a jagged staircase of 16 m cells at the overview camera (139, first two frames). Blur the fog mask 2-3 cells and add a thin warm rim at the edge."},
+        {"owner": "RENDER / ART-HAB", "fix": "POIs read by their beam and ring only; the thing itself (cave mouth, wreck, probe) is a few pixels. Give each POI a readable model or decal 6-12 m across (cave mouth shadow, wreck debris field, probe with a bright panel) so the find reads without the label."},
+        {"owner": "RENDER", "fix": "Unexplored land is a flat dark wash; show terrain relief faintly under the fog (20% of lit) so mountains and craters hint at what lies there."}
+      ]},
+    "room_identity": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "was": "0.72 (r17, pilot)",
+      "label_free_test": "Real colony (141, my b1_*): at 110 m every family is named at once (medical cross, science striped dome with the atom, greenhouse glass domes, habitat window ring with the house badge, industry flat roof with stacks, depot). At 250 m by day 6 of 8 families are certain; logistics and industry flat dark discs are confused (both dark discs with a small badge). At 250 m by night badges and windows glow; 6 of 8.",
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Logistics vs industry at 250 m: give logistics its crane (V4 3.1) at a visible size (arm 6-8 m) and a lighter roof (hull grey), keep industry dark with stacks."},
+        {"owner": "ART-HAB", "fix": "Outpost base 2 (Crater camp, 2 structures) reads as a lone capsule and a box; give the outpost core a ring deck with lights and a flag mast so a second base reads as a base from 110 m."}
+      ]},
+    "terrain_v4": {"consistency": 0.76, "appeal": 0.74, "style": 0.76, "score": 0.75, "pass": true, "was": "0.71 (r20)",
+      "round_20_fixes_checked": {
+        "crater floor by day": "landed: 15.5% of the lit plain, cool grey, rocks readable at 110 m (129).",
+        "crevices": "landed: own lofted mesh with lips, walls and floor (130). The walls show a regular ribbed 'picket fence' pattern from above; add rock noise to the wall profile.",
+        "tiling": "landed: variation at 83 m and 610 m (131).",
+        "deposit rings": "landed: none without the resource overlay.",
+        "boulders": "landed (ART-HAB boulder_a-f), but they render as uniformly dark chocolate-brown lumps with no lit top (131); use the terrain rock colour with a lit top and a dust skirt.",
+        "camera range": "RENDER's 700-1,300 m shots exist; in my runs the zoom command did not change the view on the frontier map (fr_t25 vs fr_z60 identical) - check that the player's scroll zoom works on the frontier map."
+      }},
+    "ui_theme": {"consistency": 0.80, "appeal": 0.76, "style": 0.76, "score": 0.77, "pass": true, "was": "0.77 (r21)",
+      "verified": "New v4 screens follow the theme: research tree with search, codex with the crafting tree, reactor window with SCRAM / dump coolant / evacuate, vehicles and routes, orders with a refused order and 'Confirm anyway', priorities, depot tab, dose column, launch pad satellite tab, advisor (ui4_*, ui5_*, ui6_*).",
+      "fixes": [
+        {"owner": "UI", "fix": "Routes, vehicles and priorities windows are large and mostly empty (3 rows in a full-screen frame). Size them to content (a compact window) or fill the space with a route map / vehicle preview."},
+        {"owner": "UI", "fix": "Tech tree: node text is about 10 px and locked nodes are low contrast on dark glass; raise node text to 12 px and locked text to TEXT_2."}
+      ]},
+    "npc_ingame": {"score": 0.77, "pass": true, "note": "not dropped: suited crew on vehicles and colonists in the colony read as before (132, 136, my shots). Not re-measured."},
+    "interior_ingame": {"score": 0.76, "pass": true, "note": "not dropped: showcase_v4 interiors (habitat, kitchen, lab, airlock, greenhouse) bright and furnished by day and warm at night (art/critic/r22_interiors.png)."},
+    "doors": {"score": 0.79, "pass": true, "note": "not dropped: cut check 28 of 28 room types (120); doors and housings clean in my interior shots."},
+    "airlock": {"score": 0.78, "pass": true, "note": "not dropped: showcase_v4 airlock cutaway clean (r22_interiors.png)."},
+    "npc_paths": {"score": 0.76, "pass": true, "note": "not dropped in what I saw; no new path check on the v4 saves was supplied - RENDER to run render_path_check.gd on showcase_v4 and the frontier map."}
+  },
+  "notes": [
+    "No FAIL. The two new v4 simulation subjects (reactor_and_disaster, exploration) pass at 0.70; both read clearly but still look more like overlays than events in the world.",
+    "Performance note (not a visual subject): frontier new game at speed 4 reported fps 59, draws 1,383, process_ms_avg 40.1.",
+    "My evidence: art/critic/r22/*.png; grids r22_grid.png, r22_frontier.png, r22_interiors.png, r22_ui_a.png, r22_ui_b.png, r22_v4b.png; crops r22_breach_crop.png, r22_chem_crop.png, r22_id110.png, r22_id250.png, r22_ghost_crop.png, r22_fog_crop.png."
+  ],
+  "latest_scores": {
+    "npc_suit": [0.82, 5], "npc_indoor": [0.72, 5], "npc_animation": [0.78, 5],
+    "npc_interaction": [0.73, 13], "npc_ingame": [0.77, 22],
+    "interior_habitat": [0.79, 7], "interior_comfort": [0.75, 7], "interior_medical": [0.75, 7], "interior_food": [0.76, 7],
+    "interior_industry": [0.76, 7], "interior_science": [0.73, 7], "interior_life": [0.77, 7], "interior_logistics": [0.77, 7],
+    "interior_links": [0.71, 7], "interior_ingame": [0.76, 22], "doorways": [0.79, 8], "interior_lighting": [0.75, 13],
+    "hazard_props": [0.70, 7], "hazard_visuals": [0.70, 8],
+    "doors": [0.79, 22], "doorway_decals": [0.80, 13], "airlock": [0.78, 22], "npc_paths": [0.76, 22],
+    "ships": [0.80, 14], "landing_pad": [0.75, 12], "visitors": [0.78, 14],
+    "ui_theme": [0.77, 22], "vehicles": [0.75, 22], "room_identity": [0.76, 22], "terrain_v4": [0.75, 22],
+    "reactor_and_disaster": [0.70, 22], "exploration": [0.70, 22]
+  }
+}

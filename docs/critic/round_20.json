@@ -1,0 +1,35 @@
+{
+  "round": 20,
+  "date": "2026-09-27",
+  "scope": "re-rate terrain_v4 on SIM's generator. Evidence art/critic_input/render/125-128 (RENDER) and my own unstaged shots from build/web_render (14:06), seed=1001&scenario=frontier: overview day/dusk/night, deep crater (675,1586) day/dusk/night and floor, mountains (1135,1976) and (762,615), crevices (577,2088) and (160,972), boulder field (1901,1169), plateau (380,1047), start plateau day and night.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "terrain_v4": {"consistency": 0.72, "appeal": 0.70, "style": 0.72, "score": 0.71, "pass": true, "provisional": false, "was": 0.60,
+      "round_18_fixes_checked": {
+        "1 haze scaled with camera height": "landed: the overview reads crisp at 1,300 m; blacks stay black; features read by morning and dusk (125).",
+        "2 shadow = sun shading + horizon term, soft edge, cold ambient": "mostly landed: sun shading and soft edges read (126). The cold blue-grey shows only at night; by day the crater floor in horizon shadow is near pure black (art/critic/r20_floor_crop.png) - nothing is readable on it without base lights.",
+        "3 mountains without spikes, SIM heights": "landed for mountains and plateaus: smooth massive forms with cast shadows (mtn1135, mtn762, 128). Not for crevices: see fix 2 below.",
+        "4 crater form": "landed: rim lip lit at dusk, slumped terraces, rayed apron, floor debris (126). This is the best feature of the round.",
+        "5 boulders": "partly (builder's note confirmed): scaled low-poly rocks with dark flat faces (boulders1901, 127); the 18 m boulder next to two 1.8 m figures sells the scale.",
+        "6 detail texture on the whole map": "landed, but the pale gravel patches tile visibly as a hexagonal blotch pattern on the plain (overview_day, start_day, crevice shots).",
+        "7 weather streaks": "landed: none in the stills.",
+        "8 base lamp pools": "landed: the staged crater base is an island of warm light in a dark bowl, day and night (127)."
+      },
+      "what_works": [
+        "Paul's asks now read: massive deep craters that get little sun with proper shadows; mountains you go around; high plateaus with ramps; crevices; boulders with scale.",
+        "Morning and dusk light give drama without hiding the features; night is dark but readable on lit rims."
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "Crater floor by day: raise the horizon-shadow ambient so a shadowed floor keeps 12-18% of its lit brightness with the cold blue-grey tint (now about 2%, r20_floor_crop.png). A player must see rocks, deposits and building ghosts on the floor without lamps."},
+        {"owner": "RENDER", "fix": "Crevice walls are tall sheets of stretched triangles with jagged spikes (r20_crevice_crop.png, crevice577, crevice160). Build crevices as their own wall mesh along SIM's polyline (two lofted walls with rock noise and a floor), not from the 4 m heightfield."},
+        {"owner": "RENDER", "fix": "Texture tiling: the pale gravel patches repeat as a regular hex-blotch pattern across the plain. Break it with a second, larger noise scale (100-300 m) and random rotation per tile."},
+        {"owner": "RENDER / SIM", "fix": "Dashed orange deposit rings are drawn on every crater floor and slope even with no overlay open (crater675_floor, overview, start). Show them only with the resource overlay or when a surveyor has found them."},
+        {"owner": "ART-HAB", "fix": "Boulders (in progress): real meshes with rounded, eroded forms, lit tops and a dust skirt; 3-4 giants per field; replace the faceted scaled rocks."},
+        {"owner": "RENDER", "fix": "Camera: the overview only reaches about 200 m with the zoom command in my build (my overview shots are at 200 m, RENDER's at 1,300 m). Confirm the player can reach the 1,300 m view in normal play."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.71 (was a FAIL at 0.60).",
+    "My evidence: art/critic/r20/*.png, r20_grid.png, crops r20_crevice_crop.png, r20_floor_crop.png."
+  ]
+}

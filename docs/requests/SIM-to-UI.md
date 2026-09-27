@@ -217,3 +217,320 @@ airlocks already built while placing anything)
   `tourists_no_bed`, text e.g. "3 tourists have no bed. The fee drops." (a tourist who does not sleep
   pays 20 % less). Show it there, not in the alert list.
 - Test `v31_visitors_raise_no_colony_alerts`.
+
+## 2026-09-27 — V4 milestone 1: the 2,560 m planet (live)
+
+- New game on the v4 planet: `sim.new_game(seed, "frontier", options)` (scenario "frontier", 2,560 m).
+  Make it the default of the new-game screen; keep "tutorial" (810 m) as the first-landing option.
+  `options.map_size` also exists (256, 810, 2560) for tools.
+- Overlays and tooltips: `sim.world.rad_at(x, y)` (mSv/h), `sim.world.terrain_at(p)` (plain name),
+  `sim.world.sun_vis(p, elev, bearing)` with `sim.world.sun_angles(...)` (see SIM-to-RENDER), deposits
+  with `kind` and `tier` in `state.deposits`.
+- The whole map is 2,560 m: the minimap needs a zoom; fog of war comes in milestone 7.
+
+## 2026-09-27 — V4 milestone 2: bases, Outpost Kit, filters (live)
+
+**Bases** (`sim.bases`)
+- `sim.bases.list()` → `[{id, name, core, pos, structures, colonists, beds}]` by id. A new game has one
+  base, "Landing base", round the lander (old saves get it on load).
+- `sim.bases.base_of(structure_id)`, `sim.bases.base_at(pos)`, `sim.bases.base_of_agent(agent)` (where it
+  is now), `sim.bases.home_of(agent)` (its bed's base), `sim.bases.name_of(id)`, `sim.bases.core_of(id)`.
+- Filters: every alert in `state.issues` has **`base`** (the base id, −1 = the whole colony);
+  `sim.bases.totals(base_id)` = stock of one base in the `inv.totals()` shape (its structures, its ground
+  piles, what its colonists carry). Per-base numbers for charts: use `list()` (colonists, beds,
+  structures) for now; tell me which series you want per base and I add them.
+- Commands: `rename_base {id, name}` (1–32 characters; codes `unknown`, `invalid`);
+  `deploy_outpost {x, y, rot, inv, name?}` — takes one `outpost_kit` from inventory `inv` (a ground pile,
+  a store or, from milestone 3, a vehicle hold) within 30 m of the place, and sets up an **outpost core**
+  there: a new base with its own air for 3 days. Codes: `no_kit`, `kit_far`, `too_close_base` (closer
+  than 300 m to another base's core), and the usual placement codes. Result `{id: base id, core}`.
+  Preview: `sim.bases.check_outpost(pos, rot)` → "ok" or a code.
+- New alert code `core_expiry` (key `core_expiry:<base id>`): "<base name>: the core air ends in …". The
+  lander's own `lander_expiry` is unchanged.
+- Colonists work, sleep and take core beds at the base they are at; moving between bases comes with
+  vehicles (milestone 3).
+
+**Items and buildings**
+- Item `outpost_kit` ("Outpost Kit"); recipe `outpost_kit` at the fabricator (16 steel, 8 polymer,
+  4 electronics, 4 spare parts; 160 work). Building `outpost_core` (not placeable directly; comes from the
+  kit): 4 beds, 120 storage, a hatch, air for 3 days.
+
+**Scale on the v4 map** — new rooms are 1.5 × the v3 radius (every size; `sim.sizes.def_for` already
+gives the scaled radius), corridors are `sim.corridor_r()` = 1.5 m in radius (1.2 on older maps).
+Exterior structures keep their size. Use the record's `radius` for built structures, the def's for ghosts.
+
+## 2026-09-27 — V4 rules and the 1.5 × rooms (live)
+
+- Rooms are 1.5 × the v3 radius on every map for NEW structures (`sim.sizes.def_for(...).radius`); airlock
+  and junction unchanged; old records keep their radius. New games walk 4.0 m/s inside and 3.5 m/s outside,
+  carry 4 units and have 130 s of suit air; saves from before V4 keep the v3 numbers (read `sim.bal`, which
+  is the right table for the loaded game: never `sim.content.balance` directly).
+- `sim.set_freeze_build(on)` for test tools (no construction change while on).
+
+## 2026-09-27 — Corridor links per room (Paul's rule, live for new links)
+
+- A room takes at most **S 4, M 6, L 7, XL 8** corridors. Airlocks and junctions keep their own rules.
+- New links on one room are at least `max(28°, door angle)` apart. Door angle = the chord of the door
+  housing (3.44 m + 0.3 m gap) at the wall radius (`radius − 0.32`).
+- API: `sim.place.max_links(room)`, `sim.place.link_min_angle(room)`, `sim.place.door_angle(radius)`.
+- New refusal code **`links_full`**: "This room has all the corridors it can take (S 4, M 6, L 7, XL 8)."
+  It comes before `door_blocked` and `ports_full`.
+- Old saves keep every link they have. Balance keys: `room_max_links` [4,6,7,8], `door_housing_m` 3.44,
+  `door_gap_m` 0.3.
+
+## 2026-09-27 — V4 milestone 3: vehicles (live in sim; numbers in `content/vehicles.json`)
+
+**Kinds** (`sim.content.vehicles.kinds`)
+
+| kind | seats | cargo | speed m/s | cabin | energy | wear | research |
+|---|---|---|---|---|---|---|---|
+| `small_rover` | 2 | 12 | 6 | open (suits) | charge 100, 10 per km | 1.5 per km | space_1 |
+| `medium_rover` | 6 | 40 | 7 | pressurised | charge 300, 12 per km | 1.0 per km | space_1 |
+| `hopper` | 3 | 6 | 25 in flight | pressurised | fuel 30, 3 per hop (hop ≤ 400 m) | 2 per hop | space_2 |
+
+Wear 100 = broken. Rovers drive on the rover grid (`sim.nav.vehicle_path(a, b, "rover")`); the hopper
+flies straight hops with a 3 s stop between hops. Vehicles drive on the 2,560 m map only.
+
+**Depot** (`rover_depot`, exterior, size M or L): M has 2 small bays, L has 2 small + 1 medium bay.
+`sim.vehicles.bays(depot)` → `[{i, kind "small"|"medium", pos, rot}]`: the bays stand in a row in front
+of the depot (its `rot` direction), `radius + 5 m` out, 7 m apart. A small vehicle may use a medium bay.
+A parked vehicle at a depot: charges 1 per second when the depot is powered; takes 1 `rocket_fuel` from
+the depot store for 3 fuel; takes 1 `spare_parts` for −25 wear (this also clears "broken").
+
+**Snapshot for the view and the panels**: `sim.vehicles.list()` → rows
+`{id, kind, name, pos, rot, state ("parked"|"driving"|"broken"), block ("" | no_charge | no_fuel |
+no_driver | broken | "route: …"), charge, charge_cap, fuel, fuel_cap, wear, crew [agent ids], seats,
+cargo {item: n}, cargo_inv, dest (Vector2 or null), path [Vector2], pi (next path index), hopping (bool,
+true while a hopper is in the air), depot, bay, route {}}`.
+`sim.vehicles.get_v(id)` is the live record. The cargo is an inventory with owner type `"v"`
+(`sim.inv.position_of` returns the vehicle's position).
+
+**Riders**: an agent in a vehicle has `where == "vehicle"` and `veh = <vehicle id>`, `bld = -1`, and
+`pos` = the vehicle's position every tick. Do not draw a body for a rider (or draw it in a seat); the
+agent panel can say "Riding in <name>" (that is the agent's `goal`). A pressurised cabin gives air and
+fills suits; in the small rover suits run down, and the rover turns back to a depot by itself when the
+crew's air only just covers the drive back (log code `vehicle_air`).
+
+**Commands** (results `{ok, code}`):
+- `build_vehicle {depot, kind}` — carriers bring the parts, technicians assemble it outside at the depot.
+  Codes: `unknown` (not a depot), `not_active`, `invalid` (kind), `locked_research`, `busy` (one order per
+  depot), `no_bay`. Order record: `depot.vorder = {kind, cost, inv, progress, work_total, state
+  ("deliver"|"work"), block}` (same shape as `upgrade`). New task kind `vbuild` (like `upgrade`).
+  `cancel_vehicle {depot}`.
+- `vehicle_board {id, agents: [ids]}` — those colonists walk to the vehicle and get in (plan kind
+  `order`). Codes `no_seat`, `no_path`. Result has `sent`.
+- `vehicle_drive {id, x, y}` — codes `no_driver`, `broken`, `no_route`.
+- `vehicle_return {id}` — to a free bay of its depot, else the nearest depot with a free bay.
+- `vehicle_stop {id}` — stops where it is; the crew stays aboard; a route ends.
+- `vehicle_alight {id}` — everyone gets out beside it (outside, suited).
+- `vehicle_cargo {id, load: {item: n}, unload: true}` — with the stores of the base where it stands
+  (store and output inventories within 85 m). Codes `moving`, `no_store`. Result `{loaded, unloaded}`.
+- `vehicle_route {id, a, b, load: {item: n}, back: {item: n}}` — runs between bases a and b while it has
+  a driver: unload + load at a, drive to b (a free depot bay of b, else beside b's core), unload + load
+  `back`, drive to a. `{id, stop: true}` ends it. `route.trips` counts deliveries to b.
+- `deploy_outpost` accepts a vehicle's `cargo_inv` as `inv` (the kit must be within 30 m).
+
+**Crew rules**: crew stay aboard while the vehicle drives or runs a route. Parked without a route and
+within suit reach of air, they get out after 120 s (5 s in an open rover). Far from air they stay aboard
+until ordered. With air in reach, a rider with a critical need gets out.
+
+**Log codes**: `vehicle_order`, `vehicle_built`, `vehicle_stopped`, `vehicle_broken`, `vehicle_air`.
+
+## 2026-09-27 — V4 milestone 4: orders (live in sim, `sim/orders.gd`)
+
+**Order a colonist or a group**: command `order {agents: [ids], kind, …, confirm?}`.
+
+| kind | fields | what the colonist does | ends |
+|---|---|---|---|
+| `go` | x, y, stay? | walks there (into a room if the point is in one) | on arrival (with `stay: true` it becomes `stay`) |
+| `stay` | x, y | walks there and stays | when cleared |
+| `return` | — | walks to the core of its home base (else a room with air of that base) | on arrival |
+| `board` | v | walks to the vehicle and gets in | when seated |
+| `work_at` | b | takes only tasks of that structure (any role) | when cleared or the structure is gone |
+| `survey` | site | surveys that hazard site (any role); POIs join in milestone 7 | when surveyed |
+
+Result: `{ok (any accepted), code, text, accepted: [ids], refused: {id: {code, text, confirmable}}}`.
+Preview for the cursor: `sim.orders.check(agent, payload)` → `{ok, code, text, confirmable}`.
+
+**Refusals** (text is ready for the player, STE):
+- `suit_range` "The suit air is not enough to go there and come back." — confirmable
+- `exposed_stay` "The colonist cannot stay outside: the suit air ends." — confirmable
+- `radiation` "The radiation there is too high (x.x mSv/h)." (above `balance.order_rad_refuse` = 1.0) — confirmable
+- `no_path`, `in_vehicle`, `in_airlock`, `no_vehicle`, `no_seat`, `no_building`, `no_site`, `no_base`,
+  `not_colonist` (visitors), `dead`, `unknown`, `invalid`.
+- With `confirm: true` a confirmable order runs and the colonist does NOT turn back for air or shelter
+  while it runs (the player accepted the risk). Show the reason and a confirm button.
+
+**Rules**: an order overrides the colonist's own choices; critical thirst, hunger and exhaustion still
+interrupt it and the order continues after. An unconfirmed order that runs out of air margin ends (log
+code `order_ended`, "…: the order ended (low suit air).").
+`order_clear {agents}` ends orders. Agent field `order` (absent = none):
+`{kind, p, b, v, site, stay, confirm, t}`; `agent.goal` says "Going to the ordered place",
+"Staying here (order)", "Returning to base (order)", "Working at <name> (order)", "Survey (order)".
+
+**Own job priorities**: `set_jobs {agent, jobs: {category: 0..3}}` (0 = not allowed) and
+`set_jobs {agent, clear: true}`. Categories = `sim.orders.job_categories()` (construction, food,
+industry, logistics, repair). Agent field `jobs` (absent = colony priorities). A task already taken is
+finished first.
+
+**Vehicles**: `vehicle_explore {id, x, y, r}` — the driver takes the vehicle round 8 points on a circle
+of r (50–600 m); unreachable points are left out. Row field `explore` in `sim.vehicles.list()` ({} or
+`{pts, i, c, r}`). Other vehicle commands end an explore. Driving and boarding orders stay the vehicle
+commands of milestone 3 (`vehicle_board` equals `order kind board` for a group).
+
+## 2026-09-27 — debug-only commands for screenshots and the preview (your request)
+
+Only while `state.options.debug` is true (`new_game(..., {debug: true})`, or a loaded save with
+`sim.load_state(state, {debug: true})`); otherwise the code is `debug_only`. Each one is written to the log
+(code `debug`) and is a recorded command, so a replay stays exact. File: `sim/debug_cmds.gd`.
+
+- `spawn_vehicle {kind, x?, y?, depot?}` (alias `debug_vehicle`): a finished vehicle in a free bay of `depot`,
+  else at (x, y), else beside the lander. Result `{ok, code, id}`; codes `invalid`, `no_bay`, `no_place`.
+- `place_finished {def, x, y, rot?, size?}` (alias `debug_building`): a finished structure after the normal
+  placement check; research does not lock it. Result `{ok, code, id}`; the placement codes.
+- `finish_building {id}`: a plan or a half-built structure is finished at once. Codes `unknown`, `not_building`.
+- Reserved for later milestones: `reactor_stage {id, stage}` (milestone 6) and `reveal {x, y, r}` (milestone 7).
+
+Orders are published above in this file ("V4 milestone 4: orders"): the live names are `order`,
+`order_clear`, `set_jobs`, `vehicle_explore` (not the mock `order_give`, `order_cancel`, `set_priority`).
+
+## 2026-09-27 — V4 milestone 5: materials, crafting, tech tree (content live)
+
+Counts: **72 items, 46 recipes (+ cook), 82 techs**. All in content; nothing new to call except below.
+
+- Item category **`find`** ("Finds", order 9): `data_core`, `derelict_parts`, `meteorite_sample`,
+  `blueprint_fragment` (points of interest give them in milestone 7).
+- Three tiers of materials. Basic: ore, silicate, ice, metal (steel), glass, polymer. Mid: alloy, titanium,
+  ceramic, graphite, carbon_fiber, acid, coolant, battery_cell, rover_parts, slag (by-product). High-end:
+  yellowcake → fuel_rod, he3_regolith → he3_gas → he3_fuel, rare_earth_ore → rare_earth_oxide → magnet /
+  superconductor, graphite → graphene, exotic → purified_crystal → crystal_lattice → metamaterial.
+- Recipes can have **`min_level`** (2 for alloy_graphite, superconductor, metamaterial, hull_plate_ti,
+  electronics_graphene). `set_recipe` refuses with code **`level_low`**; `prod.machine_block` gives
+  `level_low` too. Show "Needs level 2" on the recipe.
+- A recipe can make two items (by-product): `alloy` and `titanium` also make `slag`.
+- **Mining by deposit kind** (v4 map): a mine gives what its deposit holds —
+  `sim.prod.deposit_info(deposit)` → `{item, research?, per_batch?}`; `sim.prod.deposit_locked(deposit)`.
+  A locked deposit gives `machine_block` code **`deposit_locked`** ("Research <tech> first to mine this").
+  Content: `terrain_v4.deposit_items`. Old maps: iron ore as before.
+- Techs: new branches `mat`, `nuc`, `veh`, `explore`, `rad`, `deep` (plus the old ones). New `unlocks` keys:
+  `deposits` [deposit kinds] and `orders` [command names] (`logi_routes` unlocks `vehicle_route`; code
+  `locked_research` before it). Tier 4 of the new branches uses `pack_advanced`; tier 5 uses `pack_deep`.
+  Effects of `exp_*`, `rad_*` and `nuc_safety` arrive with milestones 6 and 7 (their text says so).
+- New buildings (ART-HAB's): rooms `steel_mill`, `titanium_smelter`, `ceramics_kiln`, `carbon_works`,
+  `battery_plant`, `parts_works`, `magnet_works`, `superconductor_lab`, `metamaterial_foundry` (staffed,
+  S–XL); automatic exteriors (no staff, like the research assembler) `fuel_rod_plant`, `he3_separator`,
+  `graphene_reactor`, and now placeable `chemical_plant`, `crystal_refinery`. `launch_pad` needs `exp_sat`;
+  `fission_reactor` needs `nuc_reactor`.
+- Vehicle bonuses: `sim.vehicles.charge_cap(v)` (row `charge_cap` includes research).
+- **Food margin (new games)**: each settler lands with 8 ration meals (a ground pile at the landing place;
+  log code `settler_supplies`). Research-pack machines leave an item alone while a planned structure waits
+  for it. Saves from before V4 keep the old rules.
+
+## 2026-09-27 — "stay" at the lander fixed; indoor orders never check suit air
+
+Your finding is fixed: an order whose walk stays inside (no open ground, no airlock) is never refused for suit
+air. `stay` in the room the colonist is in is accepted even with an empty suit. Test
+`v4_indoor_orders_need_no_air`. (Walking outside, the hatch or airlock fills the suit first; long walks are still
+refused.) Depot bays moved inside the hangar (see SIM-to-RENDER.md); a colonist boards at the bay door.
+
+## 2026-09-27 — V4 milestone 6: reactor, disasters, radiation dose (live in sim, `sim/reactors.gd`)
+
+**Reactor rows**: `sim.reactors.list()` → `[{id, name, pos, heat, stage ("ok"|"warning"|"critical"|"breach"),
+rate (heat per s), next_stage, next_phase_s (-1 = not coming), running, scram, scram_left_s, evac, fuel_s, rods,
+coolant, blast_r (60), zone_r (140)}]`. `sim.reactors.forecast(building)` gives the same forecast for one.
+Heat: 20 cold, 40 running; warning 60, critical 85, breach 100. Running adds 0.05/s, a damaged or worn
+reactor more; coolant (1 unit per 150 s) takes 0.06/s off, without coolant only 0.01/s. So a reactor without
+coolant reaches warning in 500 s, critical in ~1100 s, breach in ~1500 s — the forecast says when.
+One fuel rod runs 1,200 s. Carriers keep 2 rods and 8 coolant in its buffer (urgent when hot).
+
+**Commands**: `reactor_scram {id}` (fission stops after 12 s; `done` if already), `reactor_restart {id}`
+(`too_hot` at warning or above), `reactor_cool {id}` (dumps up to 4 coolant, −12 heat each; `no_coolant`),
+`reactor_evacuate {id}` → `{moved, stuck}`: colonists within 140 m get a confirmed `stay` order in the nearest
+room with air outside the zone (`agent.order.evac` = reactor id); the orders end when the core is safe again.
+Debug only: `reactor_stage {id, stage}` (ok | warning | critical | breach; breach explodes on the next second).
+
+**Breach**: every structure within 60 m is destroyed (log `destroyed`, contents lost; the lander and other
+special structures are damaged instead), everyone within 60 m dies, vehicles break; a radiation zone of 140 m
+(60 mSv/h at the centre, halving every 2 days). Log `reactor_breach`.
+
+**Other risky plants**: crystal refinery without power while a batch runs → alert `unstable_power` with a
+countdown (45 s), then an explosion of 14 m (log `unstable_blast`). A chemical plant below health 50 leaks: a
+toxic zone of 30 m for 2 days hurts people outside in it (alert and log `toxic_leak`).
+
+**Zones**: `sim.reactors.zones()` → `[{kind "rad"|"toxic", x, y, r, peak | dmg, t0, half_s | until, src}]`.
+`sim.reactors.rad_at(Vector2)` = the ground (v4 map) + zones, mSv/h (use this for the radiation overlay now,
+not `world.rad_at`). `sim.reactors.toxic_at(Vector2)` = damage per day.
+
+**Dose**: `agent.dose` (mSv; absent = 0). Inside a room a tenth of the outside rate, a pressurised cabin 0.3.
+It halves slowly (5 % a day; 20 % with Radiation Medicine). Alerts `rad_dose` at 250 mSv (warning) and 750
+(critical); above 1,000 it hurts ("radiation sickness"). Research Dosimetry and Shielded Suits cut the dose
+10 % and 30 %. Orders into ground above 1 mSv/h are refused unless confirmed.
+
+**Alert codes**: `reactor_warning`, `reactor_critical`, `reactor_fuel`, `unstable_power`, `toxic_leak`, `rad_dose`.
+**Log codes**: `reactor_warning`, `reactor_critical`, `reactor_ok`, `reactor_scram`, `reactor_cool`,
+`reactor_evacuate`, `reactor_breach`, `destroyed`, `unstable_warning`, `unstable_blast`, `toxic_leak`.
+
+## 2026-09-27 — V4 milestone 7: fog of war, points of interest, finds, satellite (live, `sim/explore.gd`)
+
+Only on the 2,560 m map; older maps have no fog (`sim.explore.active()` false, `explored()` always true).
+
+**Fog**: `sim.explore.fog()` → `{cell: 16.0, n: 160, bits: PackedByteArray n*n (row j*n+i, 1 = explored), rev,
+count}`. Upload the texture only when `rev` changes. `sim.explore.explored(Vector2)`, `explored_share()` (0..1).
+The landing area (300 m) is known at the start. Colonists outside reveal 40 m round them, rovers 120 m, hoppers
+200 m (+25 % with Survey Methods). A revealed deposit becomes `surveyed` (log `deposit_found`).
+
+**POIs**: `sim.explore.pois()` → `[{id, kind, x, y, found, visited, need}]`; content `terrain_v4.explore.pois`
+(name, desc, finds). Kinds: `wreck` (5), `derelict_probe` (3), `meteorite_field` (4), `cave` (4, near mountain
+feet), `anomaly` (3, anywhere, often only a hopper reaches it), `rich_deposit` (4). 380–1,180 m from the
+landing. Show only `found` ones. A POI is visited when a colonist comes within 20 m (`need`: `any`,
+`on_foot` = somebody outside, not only in a vehicle, `scientist` = a scientist among them). Finds go into
+the cargo of a vehicle there, else a ground pile at the POI. Anomaly: +200 research points. Rich deposit: a
+new deposit (1,500 units, `rich: true`). Logs `poi_found`, `poi_visited` (with what was found).
+Order: `order {agents, kind: "survey", poi}` walks there (suit and radiation refusals as usual; confirm).
+
+**Satellite**: `build_satellite {pad}` (a launch pad; research Orbital Survey; the parts are carried there,
+technicians assemble it, then it launches; it uses the depot order record `vorder` with kind "satellite").
+`sim.explore.sats()` → `[{id, name, bands_done, bands (16), next_s, band, uplink}]`. With an uplink (any
+powered comms tower) it maps one band (a strip across the map) every 60 s; the POIs in it are found; with
+Deep Scan the deposits in it are surveyed too. Logs `satellite_launched`, `satellite_done`.
+
+**Debug**: `reveal {x, y, r}` (debug=1 only).
+**Content**: blueprint fragments → 3 advanced packs at the research assembler (`pack_blueprint`, Survey Methods).
+
+## 2026-09-27 — V4 milestone 8: save schema 5, `showcase_v4.fhsave`
+
+- Saves are **schema 5**. Migration: v1–v3 as before; v4 (V3.1) → 5 adds `bases`. Saves from before V4 keep
+  the v3 balance and their map size (256 or 810 m). A v4 save made during development gets fog on load.
+- **`content/saves/showcase_v4.fhsave`** (made by `tests/make_showcase_v4.gd`, day 12, seed 1001, hazards normal):
+  2,560 m map, 20 colonists, two bases (landing base and "Crater camp", ~440 m apart), a size L rover depot with
+  a medium rover on a route to the camp (10 metal each way out), an expedition rover with two people at a deep
+  crater rim, a fission reactor (2 rods, 8 coolant, ~170–280 m from the lander), a launch pad, comms tower and
+  battery, and a survey satellite with 5 of 16 bands mapped (fog about 36 % explored). Debug is off in the
+  save; load it with `debug=1` to use the debug commands (for example `reactor_stage` for the disaster shots).
+
+## 2026-09-27 — branch names and item tiers are in content (your two asks)
+
+- `research.json` `branches` has 16 rows: the 6 new ones use your names and colours (`mat` Materials, `nuc` Nuclear,
+  `veh` Vehicles, `explore` Exploration, `rad` Radiation, `deep` Deep tech), rows 10–15. `BRANCH_EXTRA` can go.
+- Every item in `items.json` has `"tier": 1 | 2 | 3` (the numbers your reader takes) and `"tier_name": "basic" |
+  "mid" | "high"`. 32 basic, 20 mid, 20 high. Raw deposits follow their deposit tier; finds: derelict parts and
+  blueprint fragments mid, data cores and meteorite samples high; electronics, composite, hull plates and rocket
+  fuel mid (V4 §4.1 table).
+
+## 2026-09-27 — showcase_v4 rebuilt: the uplink has power
+
+Your finding is fixed. The comms tower and the launch pad are on their own powered grid (two solar arrays, two charged
+batteries, cables). The satellite maps a new band every 60 s after load (6 of 16 at load; 8 or more after 130 s). The
+base also got a size L habitat joined by a corridor, so all 20 colonists have beds: no critical alert at load (it was
+"The lander air has ended. 4 people have no other bed.", true for the day-12 reference base). Test `v4_showcase` now
+checks the uplink, both structures' power, new bands and no critical alert.
+
+## 2026-09-28 — the long frame after a debug `reveal`
+
+Measured natively on showcase_v4 (`tests/dev/reveal_time.gd`): `reveal` touches only the fog cells within r (no fog
+rebuild), then one loop over the deposits and POIs (under 100 entries) and one log line per find; no path planning.
+reveal() itself 0.06 ms (r 100) to 2.1 ms (r 4,000); the whole tick with the command 1.2–2.9 ms; a satellite band
+1.4 ms. In the test `long_v4_tick_max` a 1,000 m reveal that finds a POI takes 1.3 ms. So the 126 ms you measured is
+not the reveal: most likely it was the old 50–78 ms walk-search ticks (now fixed: worst tick in 900 s of showcase_v4
+16–20 ms), or several sim ticks run in one web frame to catch up. If it comes back with the current build, send me
+the tick number and the command.

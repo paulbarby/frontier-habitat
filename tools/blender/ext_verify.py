@@ -97,7 +97,7 @@ def verify(spec):
         for n, e in free.items():
             if rfree > fp + e + 1e-3:
                 out["flags"].append("%s radius %.2f > %.2f" % (n, rfree, fp + e))
-    for extra_name in spec.get("also", []):
+    for extra_name in [e for e in spec.get("also", []) if spec["id"] != e + "_m"]:
         p2 = os.path.join(C.MODEL_DIR, extra_name + ".glb")
         if not os.path.exists(p2) or md5(p2) != md5(path):
             out["flags"].append("copy %s.glb differs or missing" % extra_name)

@@ -23,6 +23,7 @@ const WorldGen = preload("res://sim/world_gen.gd")
 const InventorySys = preload("res://sim/inventory.gd")
 const Topology = preload("res://sim/topology.gd")
 const Nav = preload("res://sim/nav.gd")
+const NavV4 = preload("res://sim/nav_v4.gd")
 const Placement = preload("res://sim/placement.gd")
 const Construction = preload("res://sim/construction.gd")
 const Utilities = preload("res://sim/utilities.gd")
@@ -44,6 +45,12 @@ const Ship = preload("res://sim/ship.gd")
 const Events = preload("res://sim/events.gd")
 const Hazards = preload("res://sim/hazards.gd")
 const Traffic = preload("res://sim/traffic.gd")
+const Bases = preload("res://sim/bases.gd")
+const Vehicles = preload("res://sim/vehicles.gd")
+const Orders = preload("res://sim/orders.gd")
+const DebugCmds = preload("res://sim/debug_cmds.gd")
+const Reactors = preload("res://sim/reactors.gd")
+const Explore = preload("res://sim/explore.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -76,6 +83,12 @@ var ship
 var events
 var hazards
 var traffic
+var bases
+var vehicles
+var orders
+var debug
+var reactors
+var explore
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -109,11 +122,17 @@ func _init() -> void:
 	events = Events.new(self)
 	hazards = Hazards.new(self)
 	traffic = Traffic.new(self)
+	bases = Bases.new(self)
+	vehicles = Vehicles.new(self)
+	orders = Orders.new(self)
+	debug = DebugCmds.new(self)
+	reactors = Reactors.new(self)
+	explore = Explore.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -157,6 +176,7 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 			"hazards": _hazard_setting(options), "debug": bool(options.get("debug", false))},
 		"hazards": Hazards.fresh_state(),
 		"traffic": Traffic.fresh_state(),
+		"bases": Bases.fresh_state(),
 		"credits": Traffic.fresh_credits(int(content["trade"].get("start_credits", 0))),
 		"research": Research.fresh_state(),
 		"goals": Goals.fresh_state(),
@@ -164,11 +184,19 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 		"ship": Ship.fresh_state(),
 		"stats": fresh_stats(),
 	}
-	state["map_size"] = int(sc["map_size"])
-	world = WorldGen.get_world(seed_value, planet, bal, int(state["map_size"]))
+	# options.map_size (tests, tools) overrides the scenario's map: 256, 810 or 2560 (v4).
+	# V4 rules (bigger rooms, faster walking, longer suits): new games only.
+	state["rules"] = 4
+	bal = content["balance"]
+	state["map_size"] = int(options.get("map_size", sc["map_size"]))
+	world = WorldGen.get_world(seed_value, planet, bal, int(state["map_size"]), content["terrain_v4"])
+	_pick_nav()
+	var known_r: float = float(content["terrain_v4"].get("known_radius", 300.0))
 	for d in world.deposit_sites:
 		var dep: Dictionary = d.duplicate()
 		dep["id"] = new_id()
+		# V4: on the v4 map a deposit is known near the start and after a survey (fog, finds).
+		dep["surveyed"] = int(world.version) < 4 or Vector2(d["x"], d["y"]).distance_to(world.center) <= known_r
 		state["deposits"].append(dep)
 	var lander: Dictionary = build.spawn_active("lander", world.center, 0.0)
 	lander["name"] = "Lander"
@@ -177,7 +205,12 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 	for res in sc["lander_cargo"]:
 		inv.add_new_forced(lander["inv_out"], res, maxi(0, int(round(float(sc["lander_cargo"][res]) * cargo_mult))), "scenario")
 	ship.place_initial()
+	bases.ensure_first()
 	topo.rebuild(true)
+	# V4 milestone 7: fog of war and points of interest (v4 map only).
+	explore.setup()
+	if nav.has_method("prewarm"):
+		nav.prewarm()
 	var i := 0
 	for role in sc["colonists"]:
 		var a: Dictionary = agents.spawn(role, next_name(), nav.slot_pos(lander, i), lander["id"])
@@ -187,6 +220,57 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 		i += 1
 	goals.tick_second()
 	log_event("landed", "The lander is down. %s, shelter for %s." % [Text.n(i, "colonist"), Text.n(int(bdef("lander")["shelter_days"]), "day")], [lander["id"]], 1)
+
+## Is a deposit known to the colony (surveyed)? Saves before V4 know every deposit.
+static func deposit_known(d: Dictionary) -> bool:
+	return bool(d.get("surveyed", true))
+
+## Test tools: no structure is built, finished or removed while on (saved in options).
+func set_freeze_build(on: bool) -> void:
+	if not state.has("options"):
+		state["options"] = {}
+	state["options"]["freeze_build"] = on
+
+## The balance of a game saved before V4: balance.json with the legacy_v3 values on top
+## (made once, shared, never written).
+static var _legacy_bal := {}
+
+## V4 food margin: settlers land with their own ration meals (balance.settler_meals each; 0 in
+## saves from before V4). The meals are a ground pile at the landing place; carriers store them.
+func settler_supplies(count: int, at: Vector2) -> void:
+	var n: int = int(bal.get("settler_meals", 0)) * count
+	if n <= 0:
+		return
+	var q = nav.nearest_walkable(at, 8)
+	var pile: int = inv.create_inv("g", 0, "pile", 100000, place.clear_of_porches(q if q != null else at))
+	inv.add_new_forced(pile, "meals", n, "settler_supplies")
+	log_event("settler_supplies", "The settlers brought %d ration meals." % n, [], 0)
+
+func legacy_balance() -> Dictionary:
+	if _legacy_bal.is_empty():
+		var b: Dictionary = content["balance"].duplicate(false)
+		var leg: Dictionary = b.get("legacy_v3", {})
+		for k in leg:
+			b[k] = leg[k]
+		_legacy_bal = b
+	return _legacy_bal
+
+## Radius of a corridor tube in metres (1.2 on older maps; terrain_v4 corridor_scale on the
+## v4 map, 1.0 until the wider tubes go live).
+func corridor_r() -> float:
+	if world == null or int(world.version) < 4:
+		return 1.2
+	return 1.2 * float(content["terrain_v4"].get("corridor_scale", 1.25))
+
+## The walking graph for the map: one fine grid (maps before version 4) or the hierarchical
+## graph of the 2,560 m map (sim/nav_v4.gd).
+func _pick_nav() -> void:
+	var want_v4: bool = int(world.version) >= 4
+	var is_v4: bool = nav != null and nav.get_script() == NavV4
+	if want_v4 != is_v4 or nav == null:
+		if nav != null:
+			nav.sim = null
+		nav = NavV4.new(self) if want_v4 else Nav.new(self)
 
 func _hazard_setting(options: Dictionary) -> String:
 	var hs: String = String(options.get("hazards", "normal"))
@@ -212,8 +296,11 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 		state["options"]["debug"] = true
 	var sc: Dictionary = content["scenarios"][state["scenario"]]
 	planet = content["planets"][state["planet"]]
+	# A save from before V4 keeps the v3 walking, carrying and suit numbers.
+	bal = content["balance"] if int(state.get("rules", 3)) >= 4 else legacy_balance()
 	# A version-2 save keeps its 256 m map (the migration writes map_size 256).
-	world = WorldGen.get_world(int(state["seed"]), planet, bal, int(state.get("map_size", 256)))
+	world = WorldGen.get_world(int(state["seed"]), planet, bal, int(state.get("map_size", 256)), content["terrain_v4"])
+	_pick_nav()
 	pending = []
 	# A version-1 save has no Meridian yet: it lands on the first free site (migration).
 	if int(state["ship"].get("id", -1)) == -1:
@@ -224,6 +311,13 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 			topo.rebuild(false)
 	else:
 		topo.rebuild(false)
+	# Saves before V4 have no bases: the first one is made round the lander (derived only
+	# from the state, so the loaded game and a migrated game agree).
+	bases.ensure_first()
+	# V4 saves from before the fog get it here (landing area and the ground round the base).
+	explore.ensure()
+	if nav.has_method("prewarm"):
+		nav.prewarm()
 	util.power_stats = {}
 	util.water_stats = {}
 	util.atmo_stats = {}
@@ -333,9 +427,13 @@ func next_name() -> String:
 		name += " %d" % (n / names.size() + 1)
 	return name
 
-func log_event(code: String, text: String, entities: Array, sev: int = 1) -> void:
+## extra: more fields for the entry (V4: "pos" [x, y] and "def" of an explosion).
+func log_event(code: String, text: String, entities: Array, sev: int = 1, extra: Dictionary = {}) -> void:
 	var log: Array = state["log"]
-	log.append({"tick": int(state["tick"]), "code": code, "text": text, "ents": entities.duplicate(), "sev": sev})
+	var e := {"tick": int(state["tick"]), "code": code, "text": text, "ents": entities.duplicate(), "sev": sev}
+	for k in extra:
+		e[k] = extra[k]
+	log.append(e)
 	var cap: int = int(bal["log_max_entries"])
 	while log.size() > cap:
 		log.pop_front()
@@ -370,11 +468,15 @@ func step() -> void:
 	if second:
 		build.tick_second()
 		upgrades.tick_second()
+		vehicles.tick_second()
+		reactors.tick_second()
+		explore.tick_second()
 		ship.tick_second()
 		jobs.tick_second()
 	agents.think_tick()
 	agents.locks_tick()
 	agents.act_tick()
+	vehicles.tick()
 	ship.tick()
 	if second:
 		prod.crops_second()

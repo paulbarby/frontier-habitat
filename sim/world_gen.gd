@@ -5,6 +5,7 @@ extends RefCounted
 ## same terrain on desktop and in the browser.
 
 const Rng = preload("res://sim/rng.gd")
+const V4 = preload("res://sim/world_v4.gd")
 
 var size: int = 256
 var hstep: float = 2.0
@@ -35,10 +36,29 @@ var hz_n: int = 0
 var hz_meteor := PackedFloat32Array()
 var hz_wind := PackedFloat32Array()
 var hz_quake := PackedFloat32Array()
+## Version 4 (docs/V4_DESIGN.md section 1, sim/world_v4.gd). Empty on v2 and v3 maps.
+var v4 := {}                        # content/terrain_v4.json
+var mountains: Array = []           # [{pts: [Vector2], width, height, passes: [Vector2], peak: Vector2}]
+var plateaus: Array = []            # [{x, y, r, h, ramps: [{x0, y0, x1, y1, w}]}]
+var deep_craters: Array = []        # [{x, y, r, depth, floor_r, ramp: {x0, y0, x1, y1, w}}]
+var crevices: Array = []            # [{pts: [Vector2], w, d}]
+var boulder_fields: Array = []      # [{x, y, r}] (the boulders are in rocks, kind 3)
+var dunes: Array = []               # [{x, y, r, wave, h, dir}]
+var _ramps: Array = []              # plateau and crater ramps (applied after the features)
+var gen_parts := {}                 # microseconds per generation step (budget report)
+var horizon := PackedFloat32Array() # horizon elevation (deg) per [cell][sun bin]
+var hz_cell: float = 0.0
+var hz_bins: int = 0
+var hz_side: int = 0
+var rad := PackedFloat32Array()     # radiation mSv/h on a rad_cell grid
+var rad_cell: float = 0.0
+var rad_side: int = 0
+var rock_grid := {}                 # 64 m bucket -> [rock index]
+const ROCK_BUCKET := 64.0
 
 static var _cache := {}
 
-static func get_world(seed_value: int, planet: Dictionary, bal: Dictionary, map_size: int):
+static func get_world(seed_value: int, planet: Dictionary, bal: Dictionary, map_size: int, v4cfg: Dictionary = {}):
 	var key := "%d:%s:%d" % [seed_value, planet.get("name", ""), map_size]
 	if _cache.has(key):
 		return _cache[key]
@@ -48,9 +68,13 @@ static func get_world(seed_value: int, planet: Dictionary, bal: Dictionary, map_
 		w.margin = int(bal.get("map_margin_v2", 4))
 		w._generate_valid(seed_value, planet, bal, map_size)
 		w._hazard_fields_v2()
-	else:
+	elif map_size < 2000 or v4cfg.is_empty():
 		w.margin = int(bal.get("map_margin", 8))
 		w._generate_v3(seed_value, planet, bal, map_size)
+	else:
+		V4.generate(w, seed_value, planet, bal, v4cfg)
+	if w.rock_grid.is_empty():
+		w.index_rocks()
 	w.gen_msec = Time.get_ticks_msec() - t0
 	_cache[key] = w
 	return w
@@ -745,6 +769,149 @@ func is_steep_cell(cx: int, cy: int) -> bool:
 	var qx: int = clampi(int(cx / hstep), 0, qn - 1)
 	var qy: int = clampi(int(cy / hstep), 0, qn - 1)
 	return steep[qy * qn + qx] == 1
+
+# ---------------------------------------------------------------- version 4 queries
+## Rocks and boulders in 64 m buckets (a v4 map has thousands).
+func index_rocks() -> void:
+	rock_grid = {}
+	for i in rocks.size():
+		var r: Dictionary = rocks[i]
+		var k: int = int(float(r["y"]) / ROCK_BUCKET) * 4096 + int(float(r["x"]) / ROCK_BUCKET)
+		if not rock_grid.has(k):
+			rock_grid[k] = []
+		rock_grid[k].append(i)
+
+## The rocks whose centre may lie within `reach` of p (bucket test; callers test the exact
+## distance). The largest boulder radius is 10 m: the search adds it.
+func rocks_near(p: Vector2, reach: float) -> Array:
+	var out: Array = []
+	var r: float = reach + 10.0
+	var x0: int = int(maxf(0.0, p.x - r) / ROCK_BUCKET)
+	var x1: int = int(maxf(0.0, p.x + r) / ROCK_BUCKET)
+	var y0: int = int(maxf(0.0, p.y - r) / ROCK_BUCKET)
+	var y1: int = int(maxf(0.0, p.y + r) / ROCK_BUCKET)
+	for by in range(y0, y1 + 1):
+		for bx in range(x0, x1 + 1):
+			var l = rock_grid.get(by * 4096 + bx)
+			if l != null:
+				for i in l:
+					out.append(rocks[i])
+	return out
+
+## True when p is inside a crevice (grown by `grow` metres). Nobody walks or drives there.
+func crevice_at(p: Vector2, grow: float = 0.0) -> bool:
+	for cv in crevices:
+		var pts: Array = cv["pts"]
+		var half: float = float(cv["w"]) * 0.5 + grow
+		for i in range(1, pts.size()):
+			var a: Vector2 = pts[i - 1]
+			var b: Vector2 = pts[i]
+			if p.x < minf(a.x, b.x) - half or p.x > maxf(a.x, b.x) + half or p.y < minf(a.y, b.y) - half or p.y > maxf(a.y, b.y) + half:
+				continue
+			if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) < half:
+				return true
+	return false
+
+## Metres from p to the flank of the nearest mountain range (negative: on the range).
+func near_mountain(p: Vector2) -> float:
+	var best := 1e9
+	for mt in mountains:
+		var pts: Array = mt["pts"]
+		var d := 1e18
+		for i in range(1, pts.size()):
+			d = minf(d, Geometry2D.get_closest_point_to_segment(p, pts[i - 1], pts[i]).distance_to(p))
+		best = minf(best, d - float(mt["width"]) * 2.2)
+	return best
+
+## Radiation of the ground, mSv/h (V4 section 1). 0.0 on maps before version 4. Flares and
+## reactor leaks are added by the simulation, not here.
+func rad_at(x: float, y: float) -> float:
+	if rad_side <= 1:
+		return 0.0
+	var fx: float = clampf(x / rad_cell, 0.0, rad_side - 1.001)
+	var fy: float = clampf(y / rad_cell, 0.0, rad_side - 1.001)
+	var i0: int = int(fx)
+	var j0: int = int(fy)
+	var tx: float = fx - i0
+	var ty: float = fy - j0
+	var n: int = rad_side
+	return lerpf(lerpf(rad[j0 * n + i0], rad[j0 * n + i0 + 1], tx), lerpf(rad[(j0 + 1) * n + i0], rad[(j0 + 1) * n + i0 + 1], tx), ty)
+
+## The sun of a v4 map at a moment of the day. Returns {elev_deg, bearing (0..PI across the
+## day, PI..TAU at night), dir: Vector3 toward the sun in view space (x = sim x, y up,
+## z = sim y)}. The view uses this path; the solar output too.
+func sun_angles(day_time_s: float, daylight_s: float, day_len_s: float) -> Dictionary:
+	var sun: Dictionary = v4.get("sun", {})
+	var max_e: float = float(sun.get("max_elev_deg", 64.0))
+	var night_e: float = float(sun.get("night_elev_deg", -28.0))
+	var az_off: float = deg_to_rad(float(sun.get("az_offset_deg", -40.0)))
+	var h_ang: float
+	var e_deg: float
+	if day_time_s < daylight_s:
+		var s: float = day_time_s / daylight_s
+		h_ang = PI * s
+		e_deg = max_e * sin(PI * s)
+	else:
+		var nn: float = (day_time_s - daylight_s) / maxf(1.0, day_len_s - daylight_s)
+		h_ang = PI + PI * nn
+		e_deg = night_e * sin(PI * nn)
+	var hv: Vector2 = Vector2(-cos(h_ang), sin(h_ang)).rotated(az_off)
+	var e: float = deg_to_rad(e_deg)
+	return {"elev_deg": e_deg, "bearing": h_ang, "dir": Vector3(hv.x * cos(e), sin(e), hv.y * cos(e)).normalized()}
+
+## Sun on the ground at p, 0..1: 1 in the open, 0 behind the horizon (crater walls,
+## mountains), soft over soft_deg degrees. 1.0 on maps before version 4 (no horizon map).
+func sun_vis(p: Vector2, elev_deg: float, bearing: float) -> float:
+	if hz_side <= 1:
+		return 1.0
+	if elev_deg <= 0.0 or bearing > PI:
+		return 0.0
+	var fb: float = clampf(bearing / PI, 0.0, 1.0) * float(hz_bins - 1)
+	var b0: int = mini(int(fb), hz_bins - 2)
+	var tb: float = fb - b0
+	var fx: float = clampf(p.x / hz_cell, 0.0, hz_side - 1.001)
+	var fy: float = clampf(p.y / hz_cell, 0.0, hz_side - 1.001)
+	var i0: int = int(fx)
+	var j0: int = int(fy)
+	var tx: float = fx - i0
+	var ty: float = fy - j0
+	var n: int = hz_side
+	var nb: int = hz_bins
+	var h00: float = lerpf(horizon[(j0 * n + i0) * nb + b0], horizon[(j0 * n + i0) * nb + b0 + 1], tb)
+	var h10: float = lerpf(horizon[(j0 * n + i0 + 1) * nb + b0], horizon[(j0 * n + i0 + 1) * nb + b0 + 1], tb)
+	var h01: float = lerpf(horizon[((j0 + 1) * n + i0) * nb + b0], horizon[((j0 + 1) * n + i0) * nb + b0 + 1], tb)
+	var h11: float = lerpf(horizon[((j0 + 1) * n + i0 + 1) * nb + b0], horizon[((j0 + 1) * n + i0 + 1) * nb + b0 + 1], tb)
+	var hz_e: float = lerpf(lerpf(h00, h10, tx), lerpf(h01, h11, tx), ty)
+	var soft: float = float(v4.get("sun", {}).get("soft_deg", 4.0))
+	return clampf((elev_deg - hz_e) / soft + 0.5, 0.0, 1.0)
+
+## A plain name for the ground at p (tooltips, overlays): "start plateau", "mountain",
+## "plateau", "deep crater", "crater rim", "crevice", "boulder field", "dunes", "plain".
+func terrain_at(p: Vector2) -> String:
+	if version < 4:
+		return "plain"
+	if p.distance_to(center) < float(v4.get("plateau_r", 125.0)):
+		return "start plateau"
+	if crevice_at(p, 2.0):
+		return "crevice"
+	for cr in deep_craters:
+		var d: float = p.distance_to(Vector2(cr["x"], cr["y"]))
+		if d < float(cr["r"]) * 0.92:
+			return "deep crater"
+		if d < float(cr["r"]) * 1.15:
+			return "crater rim"
+	if near_mountain(p) < 0.0:
+		return "mountain"
+	for pl in plateaus:
+		if p.distance_to(Vector2(pl["x"], pl["y"])) < float(pl["r"]):
+			return "plateau"
+	for bf in boulder_fields:
+		if p.distance_to(Vector2(bf["x"], bf["y"])) < float(bf["r"]):
+			return "boulder field"
+	for dn in dunes:
+		if p.distance_to(Vector2(dn["x"], dn["y"])) < float(dn["r"]) * 0.8:
+			return "dunes"
+	return "plain"
 
 func in_map(p: Vector2, margin: float) -> bool:
 	return p.x >= margin and p.y >= margin and p.x <= size - margin and p.y <= size - margin

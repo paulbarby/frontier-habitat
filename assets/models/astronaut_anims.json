@@ -240,6 +240,152 @@
    "pose_to": "stand",
    "loop": false,
    "cut_frame": 30
+  },
+  "drive_sit": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "kind": "loop",
+   "pose_from": "vehicle",
+   "pose_to": "vehicle",
+   "loop": true,
+   "frame": "seat"
+  },
+  "ride_sit": {
+   "frames": 150,
+   "duration_s": 5.0,
+   "kind": "loop",
+   "pose_from": "vehicle",
+   "pose_to": "vehicle",
+   "loop": true,
+   "frame": "seat"
+  },
+  "board": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "vehicle",
+   "loop": false,
+   "frame": "door",
+   "seat_offset": [
+    0.0,
+    -0.52,
+    0.32
+   ],
+   "cut_frame": 60,
+   "door": "left of the seat (seat on the right)"
+  },
+  "board_r": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "vehicle",
+   "loop": false,
+   "frame": "door",
+   "seat_offset": [
+    0.0,
+    0.52,
+    0.32
+   ],
+   "cut_frame": 60,
+   "door": "right of the seat (seat on the left)"
+  },
+  "alight": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "exit",
+   "pose_from": "vehicle",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "door",
+   "seat_offset": [
+    0.0,
+    -0.52,
+    0.32
+   ],
+   "cut_frame": 0,
+   "door": "left of the seat (seat on the right)"
+  },
+  "alight_r": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "exit",
+   "pose_from": "vehicle",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "door",
+   "seat_offset": [
+    0.0,
+    0.52,
+    0.32
+   ],
+   "cut_frame": 0,
+   "door": "right of the seat (seat on the left)"
+  },
+  "step_up": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "ground",
+   "step_offset": [
+    0.0,
+    -0.53,
+    0.5
+   ],
+   "cut_frame": 60,
+   "door": "left door (vehicle on the right)"
+  },
+  "step_up_r": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "ground",
+   "step_offset": [
+    0.0,
+    0.53,
+    0.5
+   ],
+   "cut_frame": 60,
+   "door": "right door (vehicle on the left)"
+  },
+  "step_down": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "ground",
+   "step_offset": [
+    0.0,
+    -0.53,
+    0.5
+   ],
+   "cut_frame": 0,
+   "door": "left door (vehicle on the right)"
+  },
+  "step_down_r": {
+   "frames": 60,
+   "duration_s": 2.0,
+   "kind": "oneshot",
+   "pose_from": "stand",
+   "pose_to": "stand",
+   "loop": false,
+   "frame": "ground",
+   "step_offset": [
+    0.0,
+    0.53,
+    0.5
+   ],
+   "cut_frame": 0,
+   "door": "right door (vehicle on the left)"
   }
  },
  "furniture": {
@@ -268,6 +414,10 @@
   },
   "kneel": {
    "clip": "repair_kneel",
+   "frame": 0
+  },
+  "vehicle": {
+   "clip": "ride_sit",
    "frame": 0
   }
  },
@@ -311,7 +461,8 @@
    "tourist",
    "medical",
    "science",
-   "inspector"
+   "inspector",
+   "radiation"
   ],
   "looks": [
    {
@@ -663,6 +814,56 @@
       0.0423
      ]
     }
+   },
+   {
+    "index": 7,
+    "kind": "radiation",
+    "set": 0,
+    "mesh": "Vis_radiation",
+    "suit": {
+     "SuitMain": "#F2C230",
+     "SuitHard": "#1E2024",
+     "Pack": "#26282D",
+     "SuitAccent": "#1E2024"
+    },
+    "indoor": {
+     "Jumpsuit": "#F2C230",
+     "SuitAccent": "#1E2024"
+    },
+    "suit_linear": {
+     "SuitMain": [
+      0.8879,
+      0.5395,
+      0.0296
+     ],
+     "SuitHard": [
+      0.013,
+      0.0144,
+      0.0176
+     ],
+     "Pack": [
+      0.0194,
+      0.0212,
+      0.0262
+     ],
+     "SuitAccent": [
+      0.013,
+      0.0144,
+      0.0176
+     ]
+    },
+    "indoor_linear": {
+     "Jumpsuit": [
+      0.8879,
+      0.5395,
+      0.0296
+     ],
+     "SuitAccent": [
+      0.013,
+      0.0144,
+      0.0176
+     ]
+    }
    }
   ],
   "look_code": "look code = (8 + v) * 64 + head * 8 + tone for a visitor with look v (index into looks); colonists keep role * 64 + head * 8 + tone with role 0..7.  So look / 64 >= 8 means a visitor, v = look / 64 - 8.  Colour groups: replace the albedo of every surface whose material name is a key of looks[v].suit (suit model) or looks[v].indoor (indoor model) with that colour (linear values given), as the shader already does for SuitAccent (mode 1) and Skin (mode 2); colonists (role < 8) are unchanged.  Attachments: assets/models/astronaut_visitor_<variant>.glb holds skinned meshes Vis_<kind> on the same skeleton; draw Vis_<kind> only for visitors whose looks[v].kind is that kind (like Head_N).  A name that ends in _h<digits> (Vis_inspector_h023, Vis_inspector_h1) is also limited to those head numbers. Vis materials (VisRed, VisGold, VisGrey, VisWhite, VisDark and the shared names) are plain except SuitAccent, which takes the visitor's accent colour.",
@@ -676,17 +877,60 @@
     "Vis_tourist",
     "Vis_medical",
     "Vis_science",
-    "Vis_inspector"
+    "Vis_inspector",
+    "Vis_radiation"
    ],
    "indoor": [
     "Vis_trader",
     "Vis_tourist",
     "Vis_medical",
     "Vis_science",
+    "Vis_radiation",
     "Vis_inspector_h023",
     "Vis_inspector_h1"
    ]
   },
-  "note": "Colonists keep their looks.  Tourists: pick the set (0..2) from a hash of the visitor id.  Every head can be used for every visitor."
+  "work_looks": {
+   "radiation": 7
+  },
+  "note": "Colonists keep their looks.  Tourists: pick the set (0..2) from a hash of the visitor id.  Every head can be used for every visitor.  Look 7 (radiation) is a colonist work look: the same look code rule ((8 + 7) * 64 + head * 8 + tone), used while the colonist works in a radiation zone (the role colour is replaced by the hazard black)."
+ },
+ "vehicle_seat": {
+  "floor_z": 0.32,
+  "seat_offset": [
+   0.0,
+   -0.52,
+   0.32
+  ],
+  "seat_z": 0.46,
+  "seat_back": 0.3,
+  "seat_width": 0.5,
+  "floor_edge_y": -0.22,
+  "grips": [
+   [
+    0.298,
+    0.142,
+    0.925
+   ],
+   [
+    0.298,
+    -0.142,
+    0.925
+   ]
+  ],
+  "grab_handle": [
+   0.261,
+   0.316,
+   0.725
+  ],
+  "handle_half": 0.1,
+  "step_offset": [
+   0.0,
+   -0.53,
+   0.5
+  ],
+  "headroom_z": 1.6,
+  "pack_clear_x": -0.7,
+  "note": "Seat frame (drive_sit, ride_sit): origin on the cabin floor, facing forward; seat top seat_z, seat centre seat_back behind the origin (as the chair).  Door frame (board, alight): origin on the ground beside the vehicle, facing forward.  seat_offset = the seat-frame origin in the door frame (board, alight: seat on the right; board_r, alight_r: the mirror, y > 0).  board ends on ride_sit frame 0 moved by seat_offset: at its cut_frame (the last frame) move the body origin to the seat anchor.  alight starts on the same pose: at its cut_frame (0) move the body origin from the seat anchor to the door point."
  }
 }

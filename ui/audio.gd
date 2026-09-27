@@ -36,6 +36,9 @@ const FALLBACK := {"hover": "", "tick": "click", "select": "click", "open": "cli
 const RULES := {
 	"local": {"zoom_full": 20.0, "zoom_off": 35.0, "near_full": 8.0, "near_off": 25.0},
 	"big": {"zoom_full": 35.0, "zoom_far": 150.0, "far_gain": 0.4, "near_full": 40.0, "near_off": 500.0},
+	# Paul 2026-09-27: door sounds only right up close. One door sound at a time; the same door not
+	# again within "repeat_s".
+	"door": {"zoom_full": 10.0, "zoom_off": 18.0, "near_full": 3.0, "near_off": 8.0, "max_at_once": 1.0, "repeat_s": 1.5},
 }
 const PER_NAME := 3
 const WORLD_POOL := 14
@@ -55,6 +58,7 @@ var _wpool: Array = [] # world players
 var _wrec := {}        # player -> {name, pos, db, handle, t}
 var _handle := 0
 var played := {}       # world sound name -> times it started (tests, the `music` command)
+var _door_last := {}   # door key (name + position to 0.5 m) -> msec of its last sound
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -242,6 +246,20 @@ func world(name: String, pos) -> int:
 	var g: float = gain(cls, d, _zoom())
 	if g <= 0.0001 and not bool(rec.get("loop", false)):
 		return -1
+	if cls == "door":
+		# At most max_at_once door sounds at a time, and one door not again within repeat_s.
+		var r: Dictionary = rules["door"]
+		var now: int = Time.get_ticks_msec()
+		var key: String = "%s@%d,%d,%d" % [name, int(roundf(p3.x * 2.0)), int(roundf(p3.y * 2.0)), int(roundf(p3.z * 2.0))]
+		if now - int(_door_last.get(key, -100000)) < int(float(r.get("repeat_s", 1.5)) * 1000.0):
+			return -1
+		var doors := 0
+		for pl in _wrec:
+			if String(_wrec[pl].get("class", "")) == "door":
+				doors += 1
+		if doors >= int(r.get("max_at_once", 1.0)):
+			return -1
+		_door_last[key] = now
 	# At most PER_NAME of one name: replace the farthest when this one is nearer.
 	var same: Array = []
 	for pl in _wrec:

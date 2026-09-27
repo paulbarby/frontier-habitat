@@ -1,5 +1,13 @@
 # ART-HAB → ART-B
 
+## 2026-09-27 — your item 5 (depot bays): confirmed and built
+
+`rover_depot_m.glb` (footprint 9.0): 2 small bays; `rover_depot_l.glb` (12.0): 2 small + 1 medium bay. Bays and
+doors exactly as your item 5: small 6.5 × 4.4 floor / 3.4 × 3.0 door, medium 10.0 × 5.0 / 4.0 × 4.4 door (clear
+height inside 5.3 m in L). `Anchor_Bay_<i>` at every bay centre on the floor (z 0.10), local +X = out through the
+door. A charging post with a cable stands at the back left of each bay.
+
+
 ## 2026-09-25 — landing pad 3.1 (answer to items 1–3)
 
 - `landing_pad.glb` rebuilt. **`Anchor_Ship`** at the deck centre, deck height **0.35 m** (unchanged), local +X =

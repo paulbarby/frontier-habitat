@@ -1,0 +1,32 @@
+{
+  "round": 16,
+  "date": "2026-09-27",
+  "scope": "v4.0 vehicles pilot: small rover only (V4_DESIGN 5). Evidence art/vehicles/rover_small_turnaround.png, _scale.png, _poses.png, _night.png, vehicle_report.json; ART-B log. No in-game evidence.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "vehicles": {"consistency": 0.72, "appeal": 0.72, "style": 0.70, "score": 0.71, "pass": true, "provisional": true,
+      "what_works": [
+        "Reads as a small work rover at game distance (art/critic/r16_gamedist.png at 15%): six big wheels, open cab under a solar roof, a cargo bed with a load.",
+        "Scale is right: a suited colonist stands shoulder-high to the roll cage, sits in the seat with the pack clear of the low back, and reaches the bed at the tailgate (rover_small_scale.png).",
+        "Suspension reads: coil-overs visible above the fenders, +0.12 / -0.10 m travel shown, both axles steer 25 deg (rover_small_poses.png).",
+        "Night: four headlights throw real beams, red tail lights, amber beacon, lit bed (rover_small_night.png).",
+        "Family cues shared with the ships: faceted panels, registration code RV-01, hazard-stripe bumpers, graphite chassis."
+      ],
+      "fixes": [
+        {"owner": "ART-B", "fix": "Colour balance: six large saturated yellow fenders are the dominant mass; from above the rover reads yellow, and yellow is not a colony accent (the colony is off-white + graphite + one family accent; the trader is orange #E07A3A). Make the fenders graphite or off-white with the accent only as a 10 cm band on the fender lip, and use the logistics or industry accent (or the colony orange) instead of safety yellow."},
+        {"owner": "ART-B", "fix": "Toy read: the fenders are thick flat shells that float wide of the wheels and the whole body sits high and boxy (golf cart / toy tractor). Tuck the fenders to 6-8 cm above the tyre, thin them to a 3 cm edge, add a chamfered underbody skid plate and drop the body 10 cm so it sits in the suspension."},
+        {"owner": "ART-B", "fix": "Tyres: flat grey discs with a thin hub from most angles; the staggered tread does not read. Give the tyres 16-20 chunky tread lugs on the silhouette (visible when rolling) and a darker rubber, the hub as a recessed rim with 5-6 bolts."},
+        {"owner": "ART-B", "fix": "Night: the bed lamp blows out to a white blob that outshines the headlights (night rear). Halve its emissive and aim it down into the bed; add a small amber marker on each fender corner so the rover's outline reads from above at night."},
+        {"owner": "ART-B", "fix": "Solar roof: a flat dark slab on thin posts; add a 3 cm frame edge and a slight tilt so it reads as a panel, not a table top."}
+      ],
+      "steer_medium_rover_and_hopper": [
+        "Medium rover (4-6 seats, pressurised): a closed cabin module with round portholes and a docking hatch that matches the airlock door kit; longer (6-7 m), 8 wheels, the same wheel and suspension parts scaled 1.3x so the family reads; off-white hull with the colony accent band; roof rack for Outpost Kits.",
+        "Hopper: a lander-derived shape (legs, thrust bells like the ships' hover thrusters), not a rover on wheels; small cockpit bubble, fuel tanks visible; the same RV/HP code decals and hazard stripes.",
+        "All three: one accent colour each at most, graphite running gear, off-white bodies, registration codes; night outline lights in the same pattern (amber corners, red rear, white front)."
+      ]}
+  },
+  "notes": [
+    "PASS 0.71, provisional until the in-game driving round (terrain, dust, wheel spin, boarding).",
+    "My evidence: art/critic/r16_gamedist.png."
+  ]
+}

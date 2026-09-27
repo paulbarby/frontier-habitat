@@ -1,10 +1,16 @@
 extends StyleBox
 const PG = preload("res://ui/poly_guard.gd")
+const Rim = preload("res://ui/theme/rim.gd")
+const Bake = preload("res://ui/theme/bake.gd")
 ## FhStyle: the one drawn look of every panel, card and button.
 ## Chamfered corners, a vertical gradient fill, a 1 px border, optional corner brackets,
 ## an optional header strip and accent bar, and an optional outer glow.
 ## Strokes are drawn opaque (pre-blended over the panel colour), so the glass shader can
 ## blur only the translucent fill (ui/theme/glass.gd).
+## Version 4 (critic round 15 rules): `rim` > 0 draws a bevelled metal rim (ui/theme/rim.gd) in
+## place of the flat border and the brackets: raised for buttons, `engraved` for wells and inputs.
+## `inner_glow` lights the glass just inside the rim (the primary button). The theme no longer
+## uses brackets: one frame language.
 
 var fill_top := Color(0.075, 0.118, 0.196, 0.88)
 var fill_bottom := Color(0.043, 0.071, 0.125, 0.86)
@@ -24,6 +30,11 @@ var top_line := Color(0, 0, 0, 0)  # bright line along the top edge (alpha 0 = n
 var glow := Color(0, 0, 0, 0)      # outer glow colour (alpha 0 = none)
 var glow_size := 6.0
 var inset := 0.0                   # draw the shape inset by this many px
+var rim := 0.0                     # metal rim width (1 or 2 px; 0 = the flat border)
+var engraved := false              # rim sunk into the panel (wells, inputs) instead of raised
+var rim_tint := Color.WHITE        # multiplies the rim metal (dim for disabled)
+var inner_glow := Color(0, 0, 0, 0) # glow inside the rim (alpha 0 = none)
+var top_line_w := 1.0
 
 func _init() -> void:
 	content_margin_left = 10
@@ -35,6 +46,7 @@ func clone() -> StyleBox:
 	var s = get_script().new()
 	for p in ["fill_top", "fill_bottom", "border", "border_width", "chamfer", "bracket", "bracket_len", "bracket_width",
 			"header_h", "header_color", "header_line", "accent", "accent_w", "top_line", "glow", "glow_size", "inset",
+			"rim", "engraved", "rim_tint", "inner_glow", "top_line_w",
 			"content_margin_left", "content_margin_right", "content_margin_top", "content_margin_bottom"]:
 		s.set(p, get(p))
 	s.chamfer = chamfer.duplicate()
@@ -87,6 +99,13 @@ func _draw(ci: RID, rect: Rect2) -> void:
 			gp.append(gp[0])
 			var c := Color(glow.r, glow.g, glow.b, glow.a * (0.55 - 0.16 * float(i)))
 			RenderingServer.canvas_item_add_polyline(ci, gp, PackedColorArray([c]), 2.0, true)
+	# Version 4 rims: one baked nine-patch (ui/theme/bake.gd) instead of a fill polygon, glow rings
+	# and rim rings: one draw command, and the same texture for every control of this look.
+	if rim > 0.0 and header_h <= 0.0 and accent.a <= 0.0:
+		var bk: Dictionary = Bake.rim_tex(self)
+		if Bake.fits(r, bk):
+			Bake.draw(ci, r, bk)
+			return
 	# Fill: vertical gradient, exact on a convex polygon.
 	if fill_top.a > 0.0 or fill_bottom.a > 0.0:
 		var cols := PackedColorArray()
@@ -107,8 +126,21 @@ func _draw(ci: RID, rect: Rect2) -> void:
 		var top: float = r.position.y + chamfer[0]
 		var bot: float = r.end.y - chamfer[3]
 		RenderingServer.canvas_item_add_rect(ci, Rect2(r.position.x, top, accent_w, maxf(0.0, bot - top)), accent)
+	if inner_glow.a > 0.0:
+		# Soft rings just inside the rim: the glass lit from its edge.
+		var gi: float = maxf(rim, 1.0)
+		for k in 3:
+			var a: Rect2 = r.grow(-gi - float(k) * 1.5)
+			var b: Rect2 = r.grow(-gi - float(k + 1) * 1.5)
+			if b.size.x > 2.0 and b.size.y > 2.0:
+				var ga := Color(inner_glow.r, inner_glow.g, inner_glow.b, inner_glow.a * (0.7 - 0.22 * float(k)))
+				Rim.ring(ci, Rim.shape(a, Rim.inner_chamfer(chamfer, gi + float(k) * 1.5)), Rim.shape(b, Rim.inner_chamfer(chamfer, gi + float(k + 1) * 1.5)), ga, ga, ga)
 	if top_line.a > 0.0:
-		RenderingServer.canvas_item_add_line(ci, Vector2(r.position.x + chamfer[0], r.position.y + 0.5), Vector2(r.end.x - chamfer[1], r.position.y + 0.5), top_line, 1.0)
+		var tw: float = maxf(1.0, top_line_w)
+		RenderingServer.canvas_item_add_rect(ci, Rect2(r.position.x + chamfer[0], r.position.y + rim, maxf(0.0, r.size.x - chamfer[0] - chamfer[1] - rim), tw), top_line)
+	if rim > 0.0:
+		Rim.bevel(ci, r, chamfer, rim, not engraved, rim_tint)
+		return
 	# Border
 	if border_width > 0.0 and border.a > 0.0:
 		# Half a pixel inside, so a 1 px line covers exactly one pixel row.

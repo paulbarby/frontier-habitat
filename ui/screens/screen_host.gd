@@ -25,6 +25,8 @@ const SCREENS := {
 	"confirm": "res://ui/screens/confirm_dialog.gd",
 	"trade": "res://ui/screens/trade_screen.gd",
 	"shuttle": "res://ui/screens/shuttle_screen.gd",
+	"codex": "res://ui/screens/codex_screen.gd",
+	"vehicles": "res://ui/screens/vehicles_screen.gd",
 }
 const ALIASES := {"colony": ["dashboard", "overview"], "nutrition": ["dashboard", "food"], "load": ["saveload", "load"],
 	"save": ["saveload", "save"], "tech": ["research", null], "keys": ["help", "keys"], "pause": ["menu", null],

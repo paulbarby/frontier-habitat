@@ -40,7 +40,10 @@ function run(cmd) {
 for (let i = 1; i <= tries; i++) {
   mirror();
   const c = run(['check']);
-  if (c.code === 0) {
+  // Godot 4.4.1 can crash at EXIT (0xC0000005, leaked GDScript cycles in the UI theme scripts)
+  // after every script parsed: the check's own verdict line decides, not the exit code.
+  const parsed = /checked \d+ scripts, 0 failed/.test(c.out) && !/^FAILED |SCRIPT ERROR|Parse Error/m.test(c.out);
+  if (c.code === 0 || parsed) {
     // Furniture grids (fx_nav) for the models in this mirror: never stale in my build.
     const b = run(['script', 'res://tools/render_nav_bake.gd']);
     console.log((b.out.match(/render_nav_bake:[^\n]*/) || ['nav bake: no output'])[0]);

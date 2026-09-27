@@ -586,7 +586,8 @@ def build_band_cap():
     """The end cap of the wall band before a door (not scaled): a small Frame block over the proud band's end, its
     origin on the wall line at the band's end; local +Y points away from the door."""
     b = P("Base")
-    bbox(b, -0.01, 0.05, -0.02, 0.02, 0.90, 1.16, "Frame", bevel=0.008)
+    z0, z1 = IK.BAND_Z
+    bbox(b, -0.01, 0.06, -0.02, 0.02, z0 - 0.035, z1 + 0.035, "Frame", bevel=0.008)
     return {"Base": b}, []
 
 
@@ -600,7 +601,7 @@ def build_junction_post():
     bbox(b, x0, x1, -hw, hw, 0.20, WALL_TOP - 0.10, "Hull", bevel=0.03, mats={"-z": None, "+z": None})
     bbox(b, x0 - 0.03, x1 + 0.03, -hw - 0.03, hw + 0.03, WALL_TOP - 0.10, WALL_TOP, "Frame", bevel=0.02)
     for (xf, face) in ((x0 - 0.001, -1), (x1 + 0.001, 1)):
-        plate_x(b, xf, -hw + 0.03, hw - 0.03, 0.935, 1.125, "Accent", facing=face)
+        plate_x(b, xf, -hw + 0.03, hw - 0.03, IK.BAND_Z[0], IK.BAND_Z[1], "Accent", facing=face)
         plate_x(b, xf, -hw + 0.03, hw - 0.03, 0.30, 0.34, "HullDark", facing=face)
     for sy in (-1, 1):
         plate_y(lt, sy * (hw + 0.001), -0.10, -0.06, 0.40, 1.20, "Glow", facing=sy)

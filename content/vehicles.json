@@ -1,0 +1,34 @@
+{
+  "_note": "Vehicles (docs/V4_DESIGN.md section 5). sim/vehicles.gd reads this file. Speeds m/s, charge and fuel in units, wear 0..100 (100 = broken). A rover drives on the rover grid (slope <= 0.6, no crevice, round boulders); a hopper flies hops of up to hop_m metres. Seats from ART-B. build_work: technician work at the depot, like construction.",
+  "kinds": {
+    "small_rover": {
+      "name": "Small rover", "seats": 2, "cargo": 12, "speed": 6.0, "pressurised": false,
+      "charge_cap": 100.0, "charge_per_km": 10.0, "wear_per_km": 1.5, "move": "rover", "bay": "small",
+      "cost": {"metal": 12, "polymer": 4, "electronics": 3, "spare_parts": 2}, "build_work": 120.0, "research": "space_1",
+      "desc": "Two seats, small cargo, short range. For work round the base. Crew wear suits."
+    },
+    "medium_rover": {
+      "name": "Medium rover", "seats": 6, "cargo": 40, "speed": 7.0, "pressurised": true,
+      "charge_cap": 300.0, "charge_per_km": 12.0, "wear_per_km": 1.0, "move": "rover", "bay": "medium",
+      "cost": {"metal": 24, "polymer": 10, "electronics": 8, "composite": 4, "spare_parts": 4}, "build_work": 240.0, "research": "space_1",
+      "desc": "Six seats, a pressurised cabin, large cargo and long range. Carries Outpost Kits and runs routes between bases."
+    },
+    "hopper": {
+      "name": "Hopper", "seats": 3, "cargo": 6, "speed": 25.0, "pressurised": true,
+      "fuel_cap": 30.0, "fuel_per_hop": 3.0, "hop_m": 400.0, "wear_per_hop": 2.0, "move": "hopper", "bay": "small",
+      "cost": {"metal": 20, "polymer": 6, "electronics": 10, "composite": 4}, "build_work": 200.0, "research": "space_2",
+      "desc": "Short flights of up to 400 m over crevices and up to plateaus and peaks. Uses rocket fuel."
+    }
+  },
+  "satellite": {"name": "Survey satellite", "cost": {"metal": 10, "electronics": 8, "composite": 4, "rocket_fuel": 12, "battery_cell": 2}, "build_work": 200.0, "research": "exp_sat", "desc": "Built and launched at a launch pad. With an uplink (a powered comms tower) it maps one band of the planet every minute."},
+  "charge_per_s": 1.0,
+  "refuel_item": "rocket_fuel",
+  "fuel_per_item": 3.0,
+  "repair_per_spare": 25.0,
+  "board_reach": 8.0,
+  "load_per_s": 2,
+  "dock_reach": 25.0,
+  "crew_idle_s": 120,
+  "park_slope_deg": 10.0,
+  "taxi_speed": 3.0
+}

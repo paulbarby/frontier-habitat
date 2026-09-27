@@ -14,6 +14,9 @@ var main
 
 func _init(m) -> void:
 	main = m
+	var Ic = load("res://ui/theme/icons.gd")
+	for id in json("items").get("items", {}):
+		Ic.item_cat[String(id)] = String(json("items")["items"][id].get("category", "material"))
 
 func sim():
 	return main.sim
@@ -23,6 +26,8 @@ func st() -> Dictionary:
 
 func bal() -> Dictionary:
 	return main.sim.bal
+
+var _cache := {}    # derived tables (branches with fallbacks, item tiers); content is fixed for a game
 
 # ---------------------------------------------------------------- content
 static func json(key: String) -> Dictionary:
@@ -101,8 +106,118 @@ func dish_ids() -> Array:
 func techs() -> Dictionary:
 	return _c("techs", json("research").get("techs", {}))
 
+## Research branches. SIM milestone 5 added branches (mat, nuc, veh, explore, rad, deep) that are not in
+## research.json "branches" yet: the UI gives them a name, a colour and the next lanes (asked of SIM).
+const BRANCH_EXTRA := {
+	"mat": {"name": "Materials", "color": "#B07A5A"}, "nuc": {"name": "Nuclear", "color": "#9EF01A"},
+	"veh": {"name": "Vehicles", "color": "#5FD3E8"}, "explore": {"name": "Exploration", "color": "#F2C14E"},
+	"rad": {"name": "Radiation", "color": "#FF7A59"}, "deep": {"name": "Deep tech", "color": "#C792EA"},
+}
 func branches() -> Dictionary:
-	return _c("research_branches", json("research").get("branches", {}))
+	if _cache.has("branches_full"):
+		return _cache["branches_full"]
+	var b: Dictionary = json("research").get("branches", {}).duplicate(true)
+	var used := {}
+	var next_row := 0
+	for k in b:
+		next_row = maxi(next_row, int(b[k].get("row", 0)) + 1)
+	for t in techs().values():
+		used[String(t.get("branch", ""))] = true
+	for k in used:
+		if k != "" and not b.has(k):
+			var e: Dictionary = BRANCH_EXTRA.get(k, {"name": String(k).capitalize(), "color": "#9FB3C8"}).duplicate()
+			e["row"] = next_row
+			next_row += 1
+			b[k] = e
+	_cache["branches_full"] = b
+	return b
+
+# ---------------------------------------------------------------- material tiers (SIM milestone 5)
+## 1 basic, 2 mid, 3 high-end; 0 = not a tiered material (food, water, finds). SIM's milestone-5 note
+## names the tiers of the raw and refined materials; everything made from them takes the highest
+## tier of its inputs (so hull plates stay basic, rover parts are mid, magnets are high-end). A
+## "tier" field in items.json, when SIM adds one, wins.
+const TIER_SEED := {
+	"ore": 1, "silicate": 1, "ice": 1, "metal": 1, "glass": 1, "polymer": 1, "biomass": 1,
+	"titanium_ore": 2, "carbon_ore": 2, "alloy": 2, "titanium": 2, "ceramic": 2, "graphite": 2, "carbon_fiber": 2, "acid": 2,
+	"coolant": 2, "battery_cell": 2, "rover_parts": 2, "slag": 2,
+	"uranium_ore": 3, "thorium_ore": 3, "yellowcake": 3, "fuel_rod": 3, "he3_regolith": 3, "he3_gas": 3, "he3_fuel": 3,
+	"rare_earth_ore": 3, "rare_earth_oxide": 3, "magnet": 3, "superconductor": 3, "graphene": 3, "exotic": 3,
+	"purified_crystal": 3, "crystal_lattice": 3, "metamaterial": 3,
+}
+const TIER_NAME := {1: "Basic", 2: "Mid", 3: "High-end"}
+const TIER_COLOR := {1: Color("B0B6BE"), 2: Color("3EE0FF"), 3: Color("FFD166")}
+const UNTIERED_CATS := ["crop", "dish", "water", "find", "medical"]
+
+func item_tier(id: String) -> int:
+	if not _cache.has("item_tiers"):
+		_cache["item_tiers"] = _tiers()
+	return int(_cache["item_tiers"].get(id, 0))
+
+func _tiers() -> Dictionary:
+	var t := {}
+	for id in items():
+		var it: Dictionary = items()[id]
+		if it.has("tier"):
+			t[id] = int(it["tier"])
+		elif TIER_SEED.has(id):
+			t[id] = int(TIER_SEED[id])
+	# Made items: the highest tier of any way to make them from inputs (lowest over recipes).
+	var recs: Dictionary = recipes()
+	for pass_i in 6:
+		for rid in recs:
+			if String(rid).begins_with("_") or typeof(recs[rid]) != TYPE_DICTIONARY:
+				continue
+			var rec: Dictionary = recs[rid]
+			var ins: Dictionary = rec.get("inputs", {})
+			if ins.is_empty():
+				continue
+			var hi := 0
+			var known := true
+			for i in ins:
+				if item_cat(String(i)) in UNTIERED_CATS:
+					continue
+				if not t.has(String(i)):
+					known = false
+					break
+				hi = maxi(hi, int(t[String(i)]))
+			if not known or hi == 0:
+				continue
+			for o in rec.get("outputs", {}):
+				var oo: String = String(o)
+				if TIER_SEED.has(oo) or item_cat(oo) in UNTIERED_CATS or items().get(oo, {}).has("tier"):
+					continue
+				t[oo] = mini(int(t.get(oo, 9)), hi)
+	for k in t.keys():
+		if int(t[k]) >= 9:
+			t.erase(k)
+	# Made only from untiered inputs (water, crops) or not made at all: basic.
+	for id in items():
+		if not t.has(id) and not (item_cat(String(id)) in UNTIERED_CATS) and not String(id).begins_with("_"):
+			t[id] = 1
+	return t
+
+func tier_name(tier: int) -> String:
+	return String(TIER_NAME.get(tier, ""))
+
+## A structure's tier for the build palette: the highest tier of what its recipes make, else of its cost.
+func building_tier(def_id: String) -> int:
+	var b: Dictionary = bdef(def_id)
+	# Tier of the lowest recipe it runs (a mine that digs ore is basic even if it can dig
+	# uranium later); a recipe's tier is its highest output. No recipe: highest cost item.
+	var hi := 0
+	var r = b.get("recipes", b.get("recipe", b.get("auto_recipe", null)))
+	var list: Array = r if typeof(r) == TYPE_ARRAY else ([r] if typeof(r) == TYPE_STRING else [])
+	for rid in list:
+		var rt := 0
+		for o in recipes().get(String(rid), {}).get("outputs", {}):
+			rt = maxi(rt, item_tier(String(o)))
+		if rt > 0:
+			hi = rt if hi == 0 else mini(hi, rt)
+	if hi == 0:
+		for c in b.get("cost", {}):
+			hi = maxi(hi, item_tier(String(c)))
+	return maxi(1, hi)
 
 func chapters() -> Array:
 	var v = main.sim.content.get("chapters", null) if main.sim != null else null

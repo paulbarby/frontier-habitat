@@ -583,3 +583,138 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
   length counts everyone, the air margin colonists only.
 - Test `v31_visitors_raise_no_colony_alerts` (fails on the old lander rule). Full suite 77 of 77
   (799.8 s); perf 1.673 ms median in the suite run; campaign hull day 24.9; a13 26 colonists.
+
+## 2026-09-27, v4 milestone 1: the 2,560 m planet (docs/V4_DESIGN.md sections 1 and 1.1)
+- `sim/world_v4.gd` (generator) + `content/terrain_v4.json` (every number): mountain ranges with passes,
+  plateaus 20–60 m with cliffs and ramps, deep craters 200–480 m wide / 40–120 m deep with a ramp,
+  crevices 3–15 m, boulder fields (boulders 4–20 m), dunes, ridges, canyons, small craters, flats, a flat
+  start plateau (125 m). Generation 0.5–0.8 s (budget 4 s): noise summed on lattices and upsampled once
+  (Image cubic), features on their boxes only.
+- Queries in `sim/world_gen.gd`: `rad_at`, `sun_angles`, `sun_vis` (horizon map 32 m × 13 bearings),
+  `crevice_at`, `near_mountain`, `terrain_at`, `rocks_near` (64 m buckets, also used by placement).
+- Materials by tier and danger (kind + tier on each deposit): metal/ice on the plain, titanium on plateaus,
+  carbon by crevices, uranium/thorium far or on dangerous ground (radiation 2–6 mSv/h), deep ice and
+  helium-3 on crater floors, rare earths by crevices, exotic crystal on mountain peaks (hopper only).
+- Solar output × sun_vis on v4 maps (crater floors 0–40 % of the open sun; noon elevation 32°).
+- `sim/nav_v4.gd`: hierarchical walking (8 m coarse grid + fine 1 m windows of 320 m, at most 8) and
+  `vehicle_path` (rover grid: slope ≤ 0.6, no crevice, boulders + 4 m; hopper: hops ≤ hop_m).
+  Signature from the structures, so a loaded game walks like the saved one.
+- Scenario "frontier" (2,560 m); `options.map_size` override. v3 and v2 maps unchanged (digest of the
+  reference campaign at day 6 identical).
+- Tests `v4_world_generation`, `v4_radiation_and_sun`, `v4_nav_walk_drive_hop`, `v4_solar_output_uses_horizon`,
+  `v4_frontier_game_plays`. Full suite 82 of 82 (797 s); v3 perf 1.803 ms; campaign hull day 24.9.
+
+## 2026-09-27, v4 milestone 2: bases and scale (docs/V4_DESIGN.md section 2)
+- `sim/bases.gd`: bases with a core (lander or outpost core), names, membership from the corridor +
+  cable graph (else the nearest core), `list`, `base_of`, `base_at`, `base_of_agent`, `home_of`, `totals`,
+  alert `base` field, `rename_base`, `deploy_outpost` (Outpost Kit within 30 m, 300 m from other cores).
+- Outpost core (special, hatch, 4 beds, 120 storage, air 3 days from deployment: `air_until`); alert
+  `core_expiry`; beds: cores are shelter (fallback to the core of the colonist's base).
+- Locality with several bases: work and room beds only at the colonist's base.
+- Scale on v4 maps: rooms 1.5 x radius (sizes), corridors 1.25 x (sim.corridor_r() in nav, placement,
+  construction, hazards), corridor length limits x 1.5, reference layout x 1.5. v3 unchanged (digest).
+- Critic round 18: crater lip, terraced walls, apron, floor boulders; mountain slope limit (steepest 2.3).
+- v4 reference campaign: "crossing" fixed (an "around" place now moves on after a refused corridor).
+- Tests: `v4_room_and_corridor_scale`, `v4_outpost_founds_a_base`, `v4_outpost_content_and_migration`,
+  `v4_rover_reaches_high_end_ground`; world test checks spikes and rims.
+
+## 2026-09-27, 1.5 x rooms live, V4 rules, content for ART-HAB's buildings
+- buildings.json: the 23 room types at ART-HAB's 1.5 x radii (every map), greenhouse/fungus tray offsets x 1.5;
+  airlock and junction unchanged; sizes.gd v4-only scaling removed; corridor_scale 1.0 until the wide tubes.
+- V4 rules for new games (state.rules = 4): carry 3, walk 5.4 / 4.0 m/s, suit air 110 s, corridors 39 m, cables
+  90 m, reference layout x 1.5 (balance.layout_scale). Saves before V4 use balance.legacy_v3 (showcase saves play
+  as before: 85 / 76 airlock cycles in 10 min vs 86 / 75 on v3.1.1).
+- Reference driver: keeps structures off ore deposits; "around" rings reach 30 m (second refinery was lost).
+- sim.set_freeze_build(on) for RENDER's checks. state.deposits[i].surveyed (v4: known within 300 m).
+- Content ids: rover_depot (M 9 / L 12), launch_pad 6.5, fission_reactor 12 (gen_const 120, water 8),
+  crystal_refinery 8 and chemical_plant 9 and crevice_bridge (S/L) not placeable yet (stage 9).
+- Industry list sent to ART-HAB (12 buildings).
+- Full suite 86 of 86 (712 s): campaign hull day 24.2, a13 26 colonists, perf 1.846 ms (70 col), 1.536 (60).
+
+## 2026-09-27, walk-speed cap, links per room, V4 milestone 3 (vehicles)
+- Walking caps (coordinator): new games 4.0 m/s inside, 3.5 m/s outside. Other levers: carry 4, suit air
+  130 s, reference layout x 1.3 (was 1.4; 1.4 no longer finished the hull after the access-point fix: the
+  campaign is sensitive, trials 1.25 -> 24.4, 1.3 -> 22.9, 1.35 -> none). Old saves keep legacy_v3.
+- Nav: access points snap to cell centres (a raw point could lie inside a neighbour's corridor tube).
+- Links per room (Paul): S 4, M 6, L 7, XL 8; spacing max(28 deg, door-housing angle); code `links_full`;
+  `place.max_links`, `place.link_min_angle`, `place.door_angle`; old saves keep links. v3 junction test
+  now expects the door-housing angle for rooms.
+- Vehicles: `sim/vehicles.gd`, `content/vehicles.json`. Depot bays, `build_vehicle` (parts carried, task
+  `vbuild` by technicians), board / alight / drive / return / stop / cargo / route commands, charge, fuel,
+  wear, repair and refuel at a depot, pressurised cabins, open-rover air guard, riders `where == "vehicle"`.
+  Cargo inventory owner type "v"; an Outpost Kit deploys from a vehicle hold.
+- Tests: `v4_vehicle_build_board_drive`, `v4_vehicle_rules`, `v4_vehicle_route`, `v4_room_link_counts`.
+- Full suite 90 of 90 (766 s): campaign hull day 22.9, a13 26 colonists, perf 1.884 ms (70 col),
+  1.920 ms (74 col, 150 structures).
+- API sent to UI, RENDER, ART-B (new file SIM-to-ART-B.md) and the links rule to ART-HAB.
+
+## 2026-09-27, V4 milestone 4 (orders)
+- `sim/orders.gd`: `order` (go, stay, return, board, work_at, survey), `order_clear`, `set_jobs`
+  (own job priorities, 0 = not allowed), `sim.orders.check` preview. Refusals with STE reasons:
+  suit_range, exposed_stay, radiation (> 1.0 mSv/h, `balance.order_rad_refuse`) are confirmable;
+  a confirmed order runs without the turn-back for air. Critical needs still interrupt an order.
+- `vehicle_explore {id, x, y, r}`: a loop of 8 points round an area.
+- Test `v4_orders` (38 checks). Full suite 91 of 91 (659 s): campaign hull 22.9, a13 26,
+  perf 1.717 ms (70 col), 1.453 ms (74 col).
+
+## 2026-09-27, debug commands; V4 milestone 5 (materials, crafting, tech tree, food margin)
+- Debug-only (options.debug): `spawn_vehicle`, `place_finished`, `finish_building` (+ aliases), test
+  `v4_debug_commands`.
+- Content: 72 items, 46 recipes, 82 techs; 12 industry buildings (ART-HAB counts), chemical plant and
+  crystal refinery placeable. High-end chains of 3+ steps. Mines give the item of their deposit kind, gated
+  by research (`terrain_v4.deposit_items`); recipes with `min_level`; by-products (slag).
+- Vehicle research: charge +50 %, wear -30 %, hopper fuel -30 %; `logi_routes` gates vehicle_route.
+- Food margin (new games; old saves unchanged): 8 ration meals per settler; research-pack machines leave
+  an item alone while a planned structure waits for it. Campaign at work speed 0.9 / 0.95 / 1.0 / 1.05 /
+  1.1: no deaths in any (before: 26 malnutrition deaths at 1.05). Hull day: 27.4 / none / 24.2 / none /
+  none — the hull timing is still sensitive (electronics for the fabricator at 1.05).
+- Tests `v4_content_tree`, `v4_materials_in_play`, `v4_food_margin`.
+- Coordinator fixes: depot bays at ART-HAB's Anchor_Bay_<i> (inside the hangar, facing out; taxi through
+  the bay door at 3 m/s; board point on the apron); indoor-only orders never check suit air. Tests
+  `v4_depot_bays`, `v4_indoor_orders_need_no_air`.
+- Full suite 97 of 97 (812 s): campaign hull 24.2, a13 26 colonists, perf 1.908 ms (70 col), 1.692 ms (74 col).
+
+## 2026-09-27, V4 milestone 6 (reactor, disasters, dose)
+- `sim/reactors.gd`: fission reactor heat model with a forecast, fuel rods, coolant, SCRAM, restart, coolant
+  dump, evacuation (confirmed stay orders), breach (60 m destroyed, 140 m radiation zone); unstable crystal
+  refinery; toxic chemical plant; radiation zones; colonist dose with shielding, decay and sickness; alerts.
+- `construction.destroy(b, cause)` (explosions); reactor power only while fission runs; `reactor_stage` debug.
+- Tests `v4_reactor_meltdown` (28 checks), `v4_other_disasters`.
+
+## 2026-09-27, V4 milestone 7 (fog, POIs, finds, satellite)
+- `sim/explore.gd`: fog grid 16 m (160 x 160 bits, rev counter), reveal by colonists/rovers/hoppers, deposits
+  surveyed on reveal; 23 POIs of 6 kinds (deterministic from the seed), visits by need, finds to the vehicle or
+  the ground, anomaly RP, rich deposits; satellites from launch pads mapping bands with an uplink; `reveal` debug;
+  survey orders to POIs; older v4 saves get fog on load.
+- Tests `v4_fog_and_pois` (18), `v4_poi_visits` (20), `v4_satellite` (9). Milestone 6 suite: 99 of 99 old and
+  M6 tests passed (campaign hull 24.2, perf 1.898 ms at 70 colonists).
+
+## 2026-09-27, V4 milestone 8 (saves, showcase, perf) and the hull-timing cause
+- Save schema 5 (`_v4_to_v5`), tests updated for schema 5. `showcase_v4.fhsave` + `tests/make_showcase_v4.gd`,
+  test `v4_showcase` (14 checks).
+- Perf: `long_v4_perf_100_colonists_6_vehicles`: 2.098 ms per tick median (1.923 / 2.098 / 2.261) with 100
+  colonists and 6 vehicles driving (5 medium rovers, 1 hopper), budget 2.5 ms. Set-up: air topped up for 100
+  (the day-12 reference base has 16 beds and O2 for 40).
+- Hull-timing swing: cause found. With little silicate, the glassworks took every unit into its input buffer
+  and the electronics fab waited for days; the fabricator blueprint (Meridian plates) waited for its
+  electronics. Now machines that make an item a planned structure waits for take their inputs first (new
+  games only). Campaign at work speed 0.9 / 0.95 / 1.0 / 1.05 / 1.1: hull day 29.1 / 27.3 / 24.6 / 27.0 / 26.6
+  (before: 27.4 / none / 24.2 / none / none); no deaths in any.
+- Full suite 104 of 104 (919 s; one schema-4 expectation in cases_v31 updated to 5 after the run and re-run
+  alone): campaign hull 24.6, a13 26 colonists, perf 1.878 ms (70 col, old map), 1.796 ms (74 col),
+  v4 perf 2.053 ms median (100 col + 6 vehicles).
+- Content for UI: branch names for the 6 new branches; `tier` (1/2/3) and `tier_name` on all 72 items (test
+  `v4_content_tree` checks both). Full suite 104 of 104 (886 s): campaign hull 24.6, a13 26, perf 1.875 ms (70 col),
+  1.897 ms (74 col), v4 1.870 ms (100 col + 6 vehicles).
+- showcase_v4 rebuilt (UI finding): powered uplink grid, satellite maps bands after load, an extra habitat so no
+  critical alert at load; `v4_showcase` 19 checks.
+- RENDER fixes (2026-09-28): blast log entries carry the id, pos, def and radii; debug `reactor_stage breach`
+  breaches at once; vehicles park on ground under 15 deg (`park_spot`), showcase_v4 rebuilt; POI find measured at
+  3.8–6.1 ms per tick (explore 0.2 ms): not a sim spike. Tests: v4_showcase 20, v4_reactor_meltdown 30,
+  v4_other_disasters 7, vehicle, order, POI and satellite tests all pass.
+- Frame budget: closed-pocket detection in nav_v4 windows (same answers, no whole-window failed A*), window
+  prewarm at load/new game; worst tick in 900 s of showcase_v4 78 ms -> 16–20 ms; test `long_v4_tick_max` (30 ms).
+  Parking 10 deg; reactor_stage exact and at once; test `v4_reactor_stage_debug`.
+- Debug reveal / find timing: reveal 0.06–2.1 ms natively (r 100–4,000), tick 1.2–2.9 ms, satellite band 1.4 ms;
+  `long_v4_tick_max` also times a 1,000 m reveal that finds a POI (1.3 ms). Full suite 106 of 106 (849 s):
+  campaign hull 24.6, perf 1.864 ms (70 col), v4 1.736 ms (100 col + 6 vehicles), worst tick 19.5 ms.

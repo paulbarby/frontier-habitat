@@ -24,7 +24,8 @@ const REASONS := {
 	"too_far": "Too far apart.",
 	"too_close": "Too close together for a corridor.",
 	"duplicate": "These two are already joined.",
-	"ports_full": "No free port: too many corridors on one room, or too close to another corridor.",
+	"ports_full": "No free port: too close to another corridor on this room.",
+	"links_full": "This room has all the corridors it can take (S 4, M 6, L 7, XL 8).",
 	"crossing": "The corridor would cross another corridor. Build a junction where they meet.",
 	"lander": "The lander has no corridor port. Its air cannot feed the base.",
 	"locked_research": "Research is needed first.",
@@ -36,6 +37,11 @@ const REASONS := {
 
 func _init(s) -> void:
 	sim = s
+
+## How much wider a corridor tube is than on the v3 maps (0.0 there, exactly: the v3
+## margins keep their exact values; 0.3 m on the v4 map).
+func _dc() -> float:
+	return sim.corridor_r() - 1.2
 
 func reason_text(code: String) -> String:
 	return REASONS.get(code, code)
@@ -86,7 +92,7 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 		if b["kind"] == "link":
 			if b["def"] == "corridor":
 				var cp: Vector2 = Geometry2D.get_closest_point_to_segment(pos, b["p0"], b["p1"])
-				if cp.distance_to(pos) < r + 1.5:
+				if cp.distance_to(pos) < r + 1.5 + _dc():
 					return "overlap_corridor"
 			continue
 		if b["def"] == "meridian":
@@ -97,9 +103,12 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 			return "overlap"
 		if _has_door(b) and _hits_strip(b, pos, r):
 			return "blocks_entrance"
-	for rock in sim.world.rocks:
+	for rock in sim.world.rocks_near(pos, r + 0.3):
 		if Vector2(rock["x"], rock["y"]).distance_to(pos) < r + float(rock["r"]) + 0.3:
 			return "overlap_rock"
+	# V4: nothing stands in a crevice.
+	if sim.world.crevice_at(pos, r + 0.5):
+		return "slope"
 	var max_slope: float = float(bal["max_slope_exterior"]) if def["kind"] == "exterior" else float(bal["max_slope_rooms"])
 	if sim.world.slope_over(pos, r) > max_slope:
 		return "slope"
@@ -127,7 +136,7 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 			# V3.1 porch rule: no corridor tube in front of the new door either.
 			if b["kind"] == "link" and b["def"] == "corridor":
 				var st: Dictionary = door_strip(probe)
-				if _segment_distance(st["p0"], st["p1"], b["p0"], b["p1"]) < 1.2 + float(st["half_width"]):
+				if _segment_distance(st["p0"], st["p1"], b["p0"], b["p1"]) < 1.2 + _dc() + float(st["half_width"]):
 					return "blocked_entrance"
 		var door: Vector2 = pos + Vector2(cos(rot), sin(rot)) * (r + 1.3)
 		if not sim.world.in_map(door, float(sim.world.margin)) or _terrain_blocked(door):
@@ -146,7 +155,7 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 func _terrain_blocked(p: Vector2) -> bool:
 	if sim.world.is_steep_cell(int(p.x), int(p.y)):
 		return true
-	for rock in sim.world.rocks:
+	for rock in sim.world.rocks_near(p, 0.3):
 		if Vector2(rock["x"], rock["y"]).distance_to(p) < float(rock["r"]) + 0.3:
 			return true
 	return false
@@ -158,7 +167,7 @@ func _free_of_structures(p: Vector2, ignore_id: int) -> bool:
 			continue
 		var b: Dictionary = blds[id]
 		if b["kind"] == "link":
-			if b["def"] == "corridor" and Geometry2D.get_closest_point_to_segment(p, b["p0"], b["p1"]).distance_to(p) < 1.4:
+			if b["def"] == "corridor" and Geometry2D.get_closest_point_to_segment(p, b["p0"], b["p1"]).distance_to(p) < 1.4 + _dc():
 				return false
 		elif b["def"] == "meridian":
 			if Ship.surface_distance(b, p) < 0.3:
@@ -287,8 +296,8 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 		var dirv: Vector2 = pair[1]
 		var def: Dictionary = sim.bd(room)
 		var used: Array = _corridor_dirs(room["id"])
-		if used.size() >= int(def.get("max_links", 4)):
-			return {"code": "ports_full"}
+		if used.size() >= max_links(room):
+			return {"code": "links_full", "room": int(room["id"])}
 		var min_angle: float = link_min_angle(room)
 		for d in used:
 			if rad_to_deg(absf((d as Vector2).angle_to(dirv))) < min_angle:
@@ -309,24 +318,30 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 			if o["def"] == "corridor":
 				if Geometry2D.segment_intersects_segment(p0, p1, o["p0"], o["p1"]) != null:
 					return {"code": "crossing"}
-				if _segment_distance(p0, p1, o["p0"], o["p1"]) < 2.6 and not _shares_room(o, a_id, b_id):
+				if _segment_distance(p0, p1, o["p0"], o["p1"]) < 2.6 + 2.0 * _dc() and not _shares_room(o, a_id, b_id):
 					return {"code": "overlap_corridor"}
 			continue
 		if o["def"] == "meridian":
 			continue
 		var cp: Vector2 = Geometry2D.get_closest_point_to_segment(o["pos"], p0, p1)
-		if cp.distance_to(o["pos"]) < float(o["radius"]) + 1.5:
+		if cp.distance_to(o["pos"]) < float(o["radius"]) + 1.5 + _dc():
 			return {"code": "overlap"}
 		if _has_door(o):
 			var dirv2 := Vector2(cos(o["rot"]), sin(o["rot"]))
 			var s0: Vector2 = o["pos"] + dirv2 * float(o["radius"])
 			var s1: Vector2 = s0 + dirv2 * float(bal["door_strip_length"])
-			if _segment_distance(p0, p1, s0, s1) < 1.3 + float(bal["door_strip_half_width"]):
+			if _segment_distance(p0, p1, s0, s1) < 1.3 + _dc() + float(bal["door_strip_half_width"]):
 				return {"code": "blocks_entrance"}
-	for rock in sim.world.rocks:
+	for rock in sim.world.rocks_near((p0 + p1) * 0.5, p0.distance_to(p1) * 0.5 + 1.4):
 		var rp := Vector2(rock["x"], rock["y"])
 		if Geometry2D.get_closest_point_to_segment(rp, p0, p1).distance_to(rp) < float(rock["r"]) + 1.4:
 			return {"code": "overlap_rock"}
+	# V4: a corridor does not cross a crevice (a bridge does, later).
+	for cv in sim.world.crevices:
+		var cpts: Array = cv["pts"]
+		for ci in range(1, cpts.size()):
+			if _segment_distance(p0, p1, cpts[ci - 1], cpts[ci]) < float(cv["w"]) * 0.5 + 1.5 + _dc():
+				return {"code": "slope"}
 	var dh: float = absf(sim.world.height_at(p0.x, p0.y) - sim.world.height_at(p1.x, p1.y))
 	if dh / maxf(1.0, length) > 0.4:
 		return {"code": "slope"}
@@ -426,7 +441,30 @@ func link_sectors(room: Dictionary) -> Array:
 ## corridor tubes of 2.36 m do not overlap outside its hub; V3, CRITIC measure). Only new
 ## links are checked, so saves with closer corridors still load and work.
 func link_min_angle(room: Dictionary) -> float:
-	return float(sim.bd(room).get("link_min_angle_deg", sim.bal["link_min_angle_deg"]))
+	var d: Dictionary = sim.bd(room)
+	var base: float = float(d.get("link_min_angle_deg", sim.bal["link_min_angle_deg"]))
+	if bool(d.get("airlock", false)) or d.has("link_min_angle_deg"):
+		return base          # airlocks and junctions keep their own rule
+	return maxf(base, door_angle(float(room["radius"])))
+
+## Paul, 2026-09-27: the angle a doorway's housing needs at the wall of a room of this
+## radius (housing 3.44 m + 0.3 m gap as a chord at the wall radius, radius - 0.32 m), so two
+## door frames never overlap.
+func door_angle(radius: float) -> float:
+	var rw: float = maxf(1.0, radius - 0.32)
+	var half: float = float(sim.bal.get("door_housing_m", 3.44) + sim.bal.get("door_gap_m", 0.3)) * 0.5
+	return rad_to_deg(2.0 * asin(minf(1.0, half / rw)))
+
+## How many corridors a room takes (Paul, 2026-09-27): S 4, M 6, L 7, XL 8
+## (balance.room_max_links); airlocks and junctions keep their own number.
+func max_links(room: Dictionary) -> int:
+	var d: Dictionary = sim.bd(room)
+	if d.has("max_links"):
+		return int(d["max_links"])
+	if bool(d.get("airlock", false)) or not sim.content["buildings"].get(room["def"], {}).has("sizes"):
+		return 4
+	var per: Array = sim.bal.get("room_max_links", [4, 6, 7, 8])
+	return int(per[clampi(int(room.get("size", 1)), 0, per.size() - 1)])
 
 func _shares_room(link: Dictionary, a_id: int, b_id: int) -> bool:
 	return link["a"] == a_id or link["b"] == a_id or link["a"] == b_id or link["b"] == b_id

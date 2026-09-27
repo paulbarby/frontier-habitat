@@ -1,6 +1,8 @@
 extends "res://ui/screens/screen.gd"
 ## New colony: a planet card for each planet in content/scenarios.json (sunlight, wind,
 ## radiation, terrain), the difficulty from balance.difficulty, and a seed.
+## Version 4: the map. "Frontier" (the 2,560 m planet of V4_DESIGN §1, SIM scenario "frontier") is the
+## default; "First landing" (810 m, scenario "tutorial") stays for a first game.
 
 var _planet := "dry"
 var _diff := "standard"
@@ -10,6 +12,12 @@ var _diffs := {}
 var _summary: Label
 var _hazards := "normal"
 var _hazard_btns := {}
+var _scenario := "frontier"
+var _scen_btns := {}
+const SCENARIOS := [
+	["frontier", "Frontier", "2,560 m. Mountains, plateaus, deep craters and crevices. Rare materials lie far out, on dangerous ground.", "map"],
+	["tutorial", "First landing", "810 m. A smaller map round the landing site. Good for a first colony.", "ship"],
+]
 
 const HAZARD_TEXT := {
 	"off": "No hazard events.",
@@ -36,7 +44,7 @@ func build() -> void:
 	for id in planets:
 		var p: Dictionary = planets[id]
 		var pid: String = String(id)
-		var b: Button = Kit.button("", func(): _pick_planet(pid), "", "CardButton")
+		var b: Button = Kit.button("", func(): _pick_planet(pid), "%s\n%s" % [String(p.get("name", pid)), _blurb(pid)], "CardButton")
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(300, 250)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -67,6 +75,30 @@ func build() -> void:
 		_stat(g, "ore", "Mineral deposits", "%d" % int(p.get("terrain", {}).get("deposits", 5)), Color("B07A5A"))
 		row.add_child(b)
 		_cards[pid] = b
+	content.add_child(Kit.head("Map", P.TEXT_2, 12))
+	var mrow: HBoxContainer = Kit.hbox(12)
+	content.add_child(mrow)
+	for sc in SCENARIOS:
+		var sid: String = sc[0]
+		var bm: Button = Kit.button("", func(): _pick_scenario(sid), "%s map\n%s" % [String(sc[1]), String(sc[2])], "CardButton")
+		bm.toggle_mode = true
+		bm.custom_minimum_size = Vector2(0, 66)
+		bm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var vm: VBoxContainer = Kit.vbox(2)
+		vm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		vm.offset_left = 16
+		vm.offset_top = 9
+		vm.offset_right = -10
+		bm.add_child(vm)
+		var tm: HBoxContainer = Kit.hbox(6)
+		tm.add_child(Kit.icon(String(sc[3]), 15, P.CYAN))
+		tm.add_child(Kit.label(String(sc[1]).to_upper(), "TitleLabel", 15, P.TEXT))
+		vm.add_child(tm)
+		var lm: Label = Kit.label(String(sc[2]), "SmallLabel", 12, P.TEXT_2)
+		lm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vm.add_child(lm)
+		mrow.add_child(bm)
+		_scen_btns[sid] = bm
 	content.add_child(Kit.head("Difficulty", P.TEXT_2, 12))
 	var drow: HBoxContainer = Kit.hbox(12)
 	content.add_child(drow)
@@ -80,7 +112,7 @@ func build() -> void:
 		lines.append("research x%s" % Kit.fmt(float(dd.get("research_mult", 1.0))))
 		lines.append("wear x%s" % Kit.fmt(float(dd.get("wear_mult", 1.0))))
 		lines.append("spoilage " + ("on" if bool(dd.get("spoilage", true)) else "off"))
-		var b2: Button = Kit.button("", func(): _pick_diff(did), "", "CardButton")
+		var b2: Button = Kit.button("", func(): _pick_diff(did), "%s difficulty\n%s." % [String(dd.get("name", did)), ", ".join(lines)], "CardButton")
 		b2.toggle_mode = true
 		b2.custom_minimum_size = Vector2(0, 74)
 		b2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -103,9 +135,9 @@ func build() -> void:
 		var lines: String = String(HAZARD_TEXT[hh])
 		if typeof(hz_cfg) == TYPE_DICTIONARY and hz_cfg.has(hh) and typeof(hz_cfg[hh]) == TYPE_DICTIONARY and hz_cfg[hh].has("rate_mult"):
 			lines += " Events x%s." % Kit.fmt(float(hz_cfg[hh]["rate_mult"]))
-		var b3: Button = Kit.button("", func(): _pick_hazards(hh), "", "CardButton")
+		var b3: Button = Kit.button("", func(): _pick_hazards(hh), "Hazards: %s\n%s" % [hh, lines], "CardButton")
 		b3.toggle_mode = true
-		b3.custom_minimum_size = Vector2(0, 66)
+		b3.custom_minimum_size = Vector2(0, 76)   # two lines of text stay inside the rim
 		b3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var v3: VBoxContainer = Kit.vbox(2)
 		v3.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -141,6 +173,7 @@ func build() -> void:
 	if not hud.main.sim.has_method("new_game") or hud.data.arg_count(hud.main.sim, "new_game") < 3:
 		content.add_child(Kit.label("The planet and difficulty choice is not available yet: the dry world and standard rules are used.", "SmallLabel", 12, P.AMBER))
 	_pick_planet(_planet)
+	_pick_scenario(_scenario)
 	_pick_diff(_diff)
 	_pick_hazards(_hazards)
 
@@ -167,6 +200,12 @@ func _pick_planet(id: String) -> void:
 		(_cards[k] as Button).set_pressed_no_signal(k == id)
 	_update_summary()
 
+func _pick_scenario(id: String) -> void:
+	_scenario = id
+	for k in _scen_btns:
+		(_scen_btns[k] as Button).set_pressed_no_signal(k == id)
+	_update_summary()
+
 func _pick_diff(id: String) -> void:
 	_diff = id
 	for k in _diffs:
@@ -182,11 +221,11 @@ func _pick_hazards(id: String) -> void:
 func _update_summary() -> void:
 	if _summary == null:
 		return
-	_summary.text = "%s, %s, hazards %s." % [String(hud.data.planets().get(_planet, {}).get("name", _planet)), String(hud.data.difficulties().get(_diff, {}).get("name", _diff)).to_lower(), _hazards]
+	_summary.text = "%s, %s map, %s, hazards %s." % [String(hud.data.planets().get(_planet, {}).get("name", _planet)), "frontier" if _scenario == "frontier" else "first-landing", String(hud.data.difficulties().get(_diff, {}).get("name", _diff)).to_lower(), _hazards]
 
 func _start() -> void:
 	var seed_value: int = int(_seed.text) if _seed.text.is_valid_int() else 1001
-	var go := func(): hud.main.start_new(seed_value, {"planet": _planet, "difficulty": _diff, "hazards": _hazards})
+	var go := func(): hud.main.start_new(seed_value, {"planet": _planet, "difficulty": _diff, "hazards": _hazards, "scenario": _scenario})
 	if hud.main.on_title:
 		go.call()
 	else:

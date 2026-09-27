@@ -303,7 +303,7 @@ func _rebuild() -> void:
 					var cxf := Transform3D(Basis(Vector3.UP, ca), Vector3(rw * cos(ca), 0.0, -rw * sin(ca)))
 					patches.append(inst.add(cap_tpl, room_xf * cxf, accent))
 					if ub is Array and (ub as Array).size() > 1:
-						var cz: float = 0.5 * (float(ub[0]) + float(ub[1])) - 1.03
+						var cz: float = 0.5 * (float(ub[0]) + float(ub[1])) - 1.07   # ART-HAB 4.0 V2 (band 0.88-1.26 m)
 						patches.append(inst.add(cap_tpl, room_xf * Transform3D(cxf.basis, cxf.origin + Vector3(0, cz, 0)), accent))
 			# The upper patch over the housing (R3/F2): from 2.24 m to the deck.
 			if has_upper and not setback and deck > 2.24 and not upper_tpl.is_empty():

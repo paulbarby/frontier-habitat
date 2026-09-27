@@ -62,7 +62,7 @@ func _draw() -> void:
 		"active": col = P.CYAN
 		"queued": col = P.VIOLET
 		"available": col = gold if special else P.CYAN
-		_: col = P.TEXT_3
+		_: col = P.TEXT_2   # locked: TEXT_2, not TEXT_3 (critic round 22: brighter labels on locked nodes)
 	var r := Rect2(Vector2.ZERO, size)
 	var ch := PackedFloat32Array([8, 0, 8, 0])
 	var pts: PackedVector2Array = FhStyle.shape(r, ch)
@@ -89,7 +89,9 @@ func _draw() -> void:
 		var gp: PackedVector2Array = FhStyle.shape(r.grow(3.0), PackedFloat32Array([9, 0, 9, 0]))
 		gp.append(gp[0])
 		draw_polyline(gp, Color(col.r, col.g, col.b, 0.35), 3.0, true)
-	var bp: PackedVector2Array = FhStyle.shape(r.grow(-0.5), ch)
+	# Version 4: a 2 px metal rim (ui/theme/rim.gd), then the state line just inside it.
+	load("res://ui/theme/rim.gd").bevel(get_canvas_item(), r, ch, 2.0, true, Color(1, 1, 1, 1) if _state != "locked" else Color(0.7, 0.7, 0.7, 1))
+	var bp: PackedVector2Array = FhStyle.shape(r.grow(-2.5), load("res://ui/theme/rim.gd").inner_chamfer(ch, 2.5))
 	bp.append(bp[0])
 	var bc: Color = col if (_selected or _state in ["active", "done", "available", "queued"]) else Color(0.3, 0.36, 0.45)
 	if special and _state != "done":
@@ -105,25 +107,25 @@ func _draw() -> void:
 	draw_texture_rect(Icons.tex("sparkle" if special else icon_name, int(isz)), Rect2(Vector2(10, 9), Vector2(isz, isz)), false, ic_col)
 	# Name (two lines at most)
 	var f: Font = Fonts.get_font("body_sb")
-	var fs: int = 11 if compact else (12 if String(t.get("name", tech)).length() > 15 else 13)
+	var fs: int = P.fs(12 if compact or String(t.get("name", tech)).length() > 15 else 13)
 	var name: String = String(t.get("name", tech))
 	var tx: float = 10.0 + isz + 6.0
 	var tw: float = size.x - tx - (8.0 if compact else 30.0)
-	var tc: Color = P.TEXT if _state != "locked" else P.TEXT_3
+	var tc: Color = P.TEXT if _state != "locked" else P.TEXT_2
 	draw_multiline_string(f, Vector2(tx, 20), name, HORIZONTAL_ALIGNMENT_LEFT, tw, fs, 2, tc)
 	# Bottom line: state word and cost/progress
 	var hf: Font = Fonts.get_font("head")
 	var word: String = {"done": "DONE", "active": "ACTIVE", "queued": "QUEUED %d" % _queue_pos, "available": "READY", "locked": "LOCKED"}.get(_state, _state.to_upper())
-	draw_string(hf, Vector2(10, size.y - 9), word, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
+	draw_string(hf, Vector2(10, size.y - 9), word, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12), col)
 	var mf: Font = Fonts.get_font("mono")
 	var cost: float = float(t.get("cost", 0))
 	var ctext: String = ("%d RP" % int(cost)) if _state != "active" else ("%d/%d" % [int(_progress * cost), int(cost)])
-	var tc2: Color = P.TEXT_2 if _state != "locked" else P.TEXT_3
+	var tc2: Color = P.TEXT_2
 	var by: float = size.y - 9.0
-	draw_string(mf, Vector2(0, by), ctext, HORIZONTAL_ALIGNMENT_RIGHT, size.x - 8.0, 10, tc2)
+	draw_string(mf, Vector2(0, by), ctext, HORIZONTAL_ALIGNMENT_RIGHT, size.x - 8.0, P.fs(12), tc2)
 	# Items and research packs it needs, right to left before the RP: [icon]n (version 3).
 	if not compact:
-		var x: float = size.x - 8.0 - mf.get_string_size(ctext, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x - 6.0
+		var x: float = size.x - 8.0 - mf.get_string_size(ctext, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12)).x - 10.0
 		var needs: Array = []
 		var items: Dictionary = t.get("items", {})
 		for it in items:
@@ -132,17 +134,17 @@ func _draw() -> void:
 		for it in packs:
 			needs.append([String(it), int(packs[it])])
 		needs.reverse()
-		var word_w: float = Fonts.get_font("head").get_string_size("QUEUED 9", HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x + 14.0
+		var word_w: float = Fonts.get_font("head").get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12)).x + 14.0
 		for nd in needs:
 			var nt: String = "%d" % int(nd[1])
-			var w: float = mf.get_string_size(nt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+			var w: float = mf.get_string_size(nt, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12)).x
 			if x - w - 13.0 < word_w:
 				break
-			draw_string(mf, Vector2(x - w, by), nt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, tc2)
+			draw_string(mf, Vector2(x - w, by), nt, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12), tc2)
 			x -= w + 13.0
 			var ic: Color = data.item_color(String(nd[0]))
 			if _state == "locked":
-				ic = Color(ic.r, ic.g, ic.b, 0.5)
+				ic = Color(ic.r, ic.g, ic.b, 0.75)
 			draw_texture_rect(Icons.tex(Icons.item(String(nd[0])), 12), Rect2(Vector2(x, by - 10.0), Vector2(12, 12)), false, ic)
 			x -= 5.0
 	# Progress ring (not in compact nodes)

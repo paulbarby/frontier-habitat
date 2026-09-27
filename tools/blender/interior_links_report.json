@@ -34,25 +34,26 @@
    ],
    "flags": [],
    "file_size": 131256,
-   "seconds": 0.7
+   "seconds": 0.8
   },
   {
    "id": "wall_patch",
-   "tris": 58,
+   "tris": 62,
    "budget": 120,
    "tris_by_object": {
-    "Base": 58
+    "Base": 62
    },
    "materials": [
     "Accent",
     "FloorDark",
     "Hull",
-    "LightStrip"
+    "LightStrip",
+    "Neon"
    ],
    "empties": [],
    "flags": [],
-   "file_size": 8056,
-   "seconds": 0.0
+   "file_size": 9368,
+   "seconds": 0.1
   },
   {
    "id": "corridor",
@@ -74,7 +75,7 @@
    "empties": [],
    "flags": [],
    "file_size": 13964,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "id": "corridor_rib",
@@ -109,7 +110,7 @@
    ],
    "empties": [],
    "flags": [],
-   "file_size": 14740,
+   "file_size": 14752,
    "seconds": 0.1
   },
   {
@@ -162,7 +163,7 @@
    ],
    "flags": [],
    "file_size": 131252,
-   "seconds": 0.2
+   "seconds": 0.4
   },
   {
    "id": "doorway_r550",
@@ -232,7 +233,7 @@
    ],
    "flags": [],
    "file_size": 131256,
-   "seconds": 0.2
+   "seconds": 0.3
   },
   {
    "id": "doorway_r325",
@@ -267,7 +268,7 @@
    ],
    "flags": [],
    "file_size": 131256,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_r400",
@@ -302,7 +303,7 @@
    ],
    "flags": [],
    "file_size": 131252,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_r475",
@@ -337,7 +338,7 @@
    ],
    "flags": [],
    "file_size": 131256,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_r625",
@@ -442,7 +443,7 @@
    ],
    "flags": [],
    "file_size": 131256,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_r850",
@@ -494,7 +495,7 @@
    "empties": [],
    "flags": [],
    "file_size": 6348,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "id": "band_cap",
@@ -574,7 +575,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r325",
@@ -609,7 +610,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r400",
@@ -644,7 +645,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r475",
@@ -679,7 +680,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r550",
@@ -714,7 +715,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r625",
@@ -749,7 +750,7 @@
    ],
    "flags": [],
    "file_size": 128064,
-   "seconds": 0.2
+   "seconds": 0.3
   },
   {
    "id": "doorway_flat_r700",
@@ -819,7 +820,7 @@
    ],
    "flags": [],
    "file_size": 128068,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "id": "doorway_flat_r850",

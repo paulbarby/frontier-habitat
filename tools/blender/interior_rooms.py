@@ -19,6 +19,7 @@ Every family has its own layout language (round-2 critique: "rooms must not look
 Anchor counts come from content/buildings.json `furniture` (SIM, final) and are checked by rooms_build.py.
 """
 import math
+import os
 import random
 from math import sin, cos, radians, degrees, hypot, sqrt, atan2, asin, pi
 from mathutils import Vector
@@ -131,7 +132,201 @@ def accents(plan):
         rm.anchor("Accent_%d" % i, (x, y, z), 0.0)
 
 
+# 4.0 (V4_DESIGN section 2, critic round 17 fix 4): the 1.5 x rooms are filled BY FUNCTION: no empty floor patch
+# wider than V4_MAX_PATCH outside the walkways.  A greedy filler puts a family item in the centre of the largest
+# empty patch (keeping 0.7 m round it free and clear of every people anchor) until no patch is wider.
+V4_MAX_PATCH = 2.5
+V4_MIN_HEAD = 2.0           # decor stands only where the roof is at least this high (tall racks 1.9 m)
+V4_KINDS = {"housing": ["lounge", "lockers", "plant", "reading", "light"],
+            "comfort": ["lounge", "gametable", "plant", "reading", "light"],
+            "food": ["serving", "pantry", "planter", "cart", "bottles", "plant"],
+            "industry": ["wbench", "racks", "crates", "pallets", "cart"],
+            "science": ["deskpod", "server", "specimen", "glovebox", "labfridge", "plant"],
+            "medical": ["labfridge", "cart", "bench", "plant"],
+            "life_support": ["tanks", "unit", "cart", "plant"],
+            "logistics": ["pallets", "racks", "crates", "cart"]}
+
+
+def d_lounge(plan, x, y, yaw, k):
+    """A lounge corner: a two-seat sofa facing a low table (decor: no seat anchors)."""
+    n = plan.n
+    with at(n, x, y, yaw):
+        with n.at(T(-0.45, 0, 0)):
+            FU.sofa(n, n=2, fabric=("Cushion", "Fabric")[k % 2])
+        bbox(n, 0.25, 0.85, -0.45, 0.45, F, F + 0.38, "Wood", bevel=0.02)
+        FU.pot_plant(n, 0.55, 0.30, r=0.12, h=0.25, s=0.6, seed=k, z0=F + 0.38)
+    return 1.05
+
+
+def d_lockers(plan, x, y, yaw, k):
+    """Two tall lockers back to back (decor)."""
+    n = plan.n
+    with at(n, x, y, yaw):
+        for sx in (-0.26, 0.26):
+            with n.at(T(sx, 0, F), RZ(0.0 if sx < 0 else 180.0)):
+                K.locker(n, w=0.9, d=0.48, h=1.75)
+    return 0.62
+
+
+def d_wbench(plan, x, y, yaw, k):
+    """A second-line workbench with a vice, a tool board and a stool (decor)."""
+    n = plan.n
+    with at(n, x, y, yaw):
+        K.workbench(n, w=1.8, d=0.75, stripe="Accent")
+    return 1.0
+
+
+def d_deskpod(plan, x, y, yaw, k):
+    """Two lab desks back to back with a divider (unstaffed stations: no work anchors)."""
+    n = plan.n
+    c, s_ = cos(radians(yaw)), sin(radians(yaw))
+    for side in (-1, 1):
+        _FAMX.sit_desk(plan, x + side * 0.34 * c, y + side * 0.34 * s_, yaw + (0.0 if side > 0 else 180.0),
+                       w=1.2, d=0.62, monitors=1, seed=k + side, work=False, chair=True)
+    return 1.05
+
+
+def d_serving(plan, x, y, yaw, k):
+    """A serving line: a counter with a sneeze guard and food trays (decor)."""
+    n = plan.n
+    with at(n, x, y, yaw):
+        bbox(n, -0.35, 0.35, -1.0, 1.0, F, F + 0.88, "Hull", bevel=0.02)
+        bbox(n, -0.37, 0.37, -1.02, 1.02, F + 0.88, F + 0.92, "Metal", bevel=0.008)
+        for j in range(4):
+            bbox(n, -0.22, 0.22, -0.85 + 0.45 * j, -0.50 + 0.45 * j, F + 0.92, F + 0.97,
+                 ("Plant", "Wood", "Accent", "Plant")[j])
+        bbox(n, -0.02, 0.02, -1.0, 1.0, F + 1.15, F + 1.40, "Glass")
+        bbox(n, -0.03, 0.03, -1.0, 1.0, F + 1.40, F + 1.43, "Frame")
+    return 1.05
+
+
+def d_pantry(plan, x, y, yaw, k):
+    """A pantry island: two shelf racks back to back full of stores (decor)."""
+    n = plan.n
+    with at(n, x, y, yaw):
+        for sx in (-0.30, 0.30):
+            with n.at(T(sx, 0, F), RZ(0.0 if sx < 0 else 180.0)):
+                K.shelf_rack(n, w=1.6, d=0.5, h=1.7, levels=4, fill=0.85, seed=k * 3 + (sx > 0))
+    return 0.95
+
+
+def _register_v4_decor():
+    for k_, f_, r_ in (("lounge", d_lounge, 1.05), ("lockers", d_lockers, 0.62), ("wbench", d_wbench, 1.0),
+                       ("deskpod", d_deskpod, 1.05), ("serving", d_serving, 1.05), ("pantry", d_pantry, 0.95)):
+        _FAMX.DECOR.setdefault(k_, f_)
+        _FAMX.NEED.setdefault(k_, r_)
+
+
+def empty_patch(plan, step=0.3, people=None):
+    """(largest empty-patch diameter in m, its centre): floor inside r_max, measured to the nearest footprint or
+    the r_max edge; floor within 0.9 m of a people anchor counts as their free floor, not as empty."""
+    rm = plan.rm
+    if people is None:
+        people = _people(rm)
+    best, where = 0.0, None
+    m = int(plan.r_max // step)
+    for i in range(-m, m + 1):
+        for j in range(-m, m + 1):
+            x, y = i * step, j * step
+            r = hypot(x, y)
+            if r > plan.r_max - 0.2:
+                continue
+            if any(hypot(x - ax, y - ay) < 0.9 for (ax, ay) in people):
+                continue
+            if rm.headroom(x, y) < V4_MIN_HEAD:
+                continue
+            e = min(plan.dist(x, y), plan.r_max - r)
+            if e > best:
+                best, where = e, (x, y)
+    return 2.0 * best, where
+
+
+def _people(rm):
+    return [a[1][:2] for a in rm.anchors
+            if a[0].startswith(("Anchor_Bed", "Anchor_Seat", "Anchor_Work", "Anchor_Stand", "Anchor_Tray",
+                                "Anchor_Chamber", "Anchor_Suit"))]
+
+
+def _fit_under_roof(rm, part, n0, gap=0.05):
+    """A decor item (the vertices added since n0) taller than the roof over it is scaled down in height about the
+    floor, as a whole."""
+    vs = part.verts[n0:]
+    if not vs:
+        return
+    top = max(v.z for v in vs)
+    lim = min(rm.headroom(v.x, v.y) for v in vs) - gap
+    if top <= lim:
+        return
+    k = (lim - F) / max(1e-6, top - F)
+    for v in vs:
+        if v.z > F:
+            v.z = F + (v.z - F) * k
+
+
+def v4_decor(plan, max_items=40):
+    rm = plan.rm
+    _register_v4_decor()
+    kinds = [k_ for k_ in V4_KINDS.get(rm.cat, ["plant", "cart"]) + ["cart", "plant", "light"]
+             if k_ in _FAMX.DECOR]
+    kinds = list(dict.fromkeys(kinds))
+    if not kinds:
+        return 0
+    people = _people(rm)
+    placed, tried = 0, set()
+    k = 0
+    for _ in range(max_items * 3):
+        if placed >= max_items:
+            break
+        # the largest patch not yet tried
+        best, where = 0.0, None
+        step = 0.3
+        m = int(plan.r_max // step)
+        for i in range(-m, m + 1):
+            for j in range(-m, m + 1):
+                x, y = i * step, j * step
+                if (i, j) in tried:
+                    continue
+                r = hypot(x, y)
+                if r > plan.r_max - 0.2 or any(hypot(x - ax, y - ay) < 0.9 for (ax, ay) in people):
+                    continue
+                if rm.headroom(x, y) < V4_MIN_HEAD:        # under a ledge or a low roof part: not decor floor
+                    continue
+                e = min(plan.dist(x, y), plan.r_max - r)
+                if e > best:
+                    best, where, wij = e, (x, y), (i, j)
+        if where is None or 2.0 * best <= V4_MAX_PATCH:
+            break
+        x, y = where
+        # the biggest family item that leaves 0.7 m round it and keeps clear of the people anchors
+        order = sorted(kinds, key=lambda q: -_FAMX.NEED[q])
+        rot = order[k % len(order):] + order[:k % len(order)]
+        done = False
+        for kind in sorted(rot, key=lambda q: -_FAMX.NEED[q]):
+            need = _FAMX.NEED[kind]
+            if need > best - 0.6 or hypot(x, y) > plan.r_max - need - 0.05:
+                continue
+            if min(rm.headroom(x + need * cos(radians(a_)), y + need * sin(radians(a_))) for a_ in range(0, 360, 45))                     < V4_MIN_HEAD:
+                continue
+            if any(hypot(x - ax, y - ay) < need + (0.9 if need > 0.6 else 0.65) for (ax, ay) in people):
+                continue
+            yaw = degrees(atan2(y, x)) + 90.0
+            n0 = len(plan.n.verts)
+            rr = _FAMX.DECOR[kind](plan, x, y, yaw, k)
+            _fit_under_roof(rm, plan.n, n0)
+            plan.circle(x, y, rr, tag="decor")
+            placed += 1
+            k += 1
+            done = True
+            break
+        if not done:
+            tried.add(wij)
+    plan.v4_patch = empty_patch(plan, people=people)[0]
+    return placed
+
+
 def finish(plan, lights=None, aisle=True):
+    if K.V4STYLE and K.R_SCALE > 1.0 and not os.environ.get("FH_NO_V4DECOR"):
+        v4_decor(plan)
     plan.lights(lights)
     accents(plan)
     if aisle:
@@ -317,7 +512,8 @@ INTERIORS = {
 
 def v2_builders():
     out = {}
-    for m in ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links"):
+    for m in ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
+              "rooms_v4ind"):
         out.update(getattr(__import__(m), "BUILDERS", {}))
     return out
 
@@ -330,6 +526,9 @@ def build_room_v3(rm):
     rm.keep_door = rm.tid == "airlock"
     v2 = v2_builders()
     v2[rm.tid](rm)
+    if K.V4STYLE:
+        import rooms_identity as RI       # 4.0: the family badge on every room type without its own branch
+        RI.identity_pass(rm)
     if not rm.v3:                  # a v2 builder that did not call build_base
         raise NotImplementedError(rm.tid + ": no base")
     rm.interior = P("Interior")
@@ -342,7 +541,7 @@ def build_room_v3(rm):
 import interior_families as _FAM     # noqa: E402  (uses the helpers above)
 _FAMX = _FAM
 INTERIORS.update(_FAM.INTERIORS)
-for _mod in ("interior_fam_farm", "interior_fam_ind", "interior_fam_sci", "interior_airlock_reg"):
+for _mod in ("interior_fam_farm", "interior_fam_ind", "interior_fam_sci", "interior_airlock_reg", "interior_fam_v4ind"):
     try:
         INTERIORS.update(__import__(_mod).INTERIORS)
     except ModuleNotFoundError as _exc:

@@ -74,6 +74,10 @@ func _next_save() -> bool:
 		return _next_save()
 	main._import_bytes(FileAccess.get_file_as_bytes(path))
 	main.set_speed(speed)
+	main.step_cap_us = 1 << 30
+	# SIM 2026-09-27: a stable save for the gate (no structure starts, finishes or is removed).
+	if main.sim.has_method("set_freeze_build"):
+		main.sim.set_freeze_build(true)
 	frames = 0
 	frames_want = int(minutes * 60.0 / float(speed) / DT)
 	cur = {"save": path.get_file(), "frames": 0, "cycles": 0, "swaps": 0, "closed_door": 0, "pump_open": 0,

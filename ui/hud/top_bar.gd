@@ -1,6 +1,9 @@
 extends PanelContainer
 ## Top-left resource bar: headline KPIs with icons, trends, days of supply and rich
 ## tooltips (breakdown + sparkline), then the building materials.
+## Version 4 (V4_DESIGN §2): with more than one base, a base switcher comes first: "All bases" or one
+## base. Picking a base moves the camera to its core and filters the alerts panel and the inventory
+## screen to that base (hud.base_filter). With one base it is hidden and takes no room.
 
 const P = preload("res://ui/theme/palette.gd")
 const Kit = preload("res://ui/kit.gd")
@@ -11,11 +14,24 @@ var hud
 var _k := {}
 var _mat_box: HBoxContainer
 var _mats := {}
+var _base_opt: OptionButton
+var _base_ids: Array = []    # option index -> base id (-1 = all bases)
+var _base_sig := ""
+var _rename_btn: Button
+var _pop: PopupPanel
+var _pop_edit: LineEdit
 
 const MATERIALS := ["metal", "polymer", "spare_parts", "electronics"]
 
 func _ready() -> void:
-	theme_type_variation = "HudPanel"
+	# Version 4 (V4_DESIGN §7): the glass-and-metal HUD bar (pilot of the new theme).
+	var st = load("res://ui/theme/glass_frame.gd").new()
+	st.kind = "hud"
+	st.content_margin_left = 14
+	st.content_margin_right = 14
+	st.content_margin_top = 9
+	st.content_margin_bottom = 9
+	add_theme_stylebox_override("panel", st)
 	Glass.attach(self)
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	offset_left = 8
@@ -23,6 +39,27 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var row: HBoxContainer = Kit.hbox(8)
 	add_child(row)
+	_base_opt = OptionButton.new()
+	_base_opt.visible = false
+	_base_opt.custom_minimum_size = Vector2(170, 0)
+	_base_opt.clip_text = true
+	_base_opt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_base_opt.tooltip_text = "Base\nAll bases, or one base: the camera goes to its core, and the alerts and the inventory show that base only."
+	_base_opt.item_selected.connect(func(i: int): hud.set_base_filter(int(_base_ids[i]) if i < _base_ids.size() else -1))
+	row.add_child(_base_opt)
+	_rename_btn = Kit.icon_button("edit", func(): _open_rename(), "Rename this base\n1 to 32 characters.", "GhostButton", 14, 28)
+	_rename_btn.visible = false
+	row.add_child(_rename_btn)
+	_pop = PopupPanel.new()
+	var pv: HBoxContainer = Kit.hbox(8)
+	_pop_edit = LineEdit.new()
+	_pop_edit.max_length = 32
+	_pop_edit.custom_minimum_size.x = 220
+	_pop_edit.text_submitted.connect(func(_s): _do_rename())
+	pv.add_child(_pop_edit)
+	pv.add_child(Kit.button("Rename", func(): _do_rename(), "Rename\nGives the base this name (1 to 32 characters).", "PrimaryButton", "check", 14))
+	_pop.add_child(pv)
+	add_child(_pop)
 	var specs := [
 		["pop", "people", P.CATEGORY["housing"], 78], ["o2", "o2", P.CATEGORY["life_support"], 94],
 		["water", "water", Color("3AA0D8"), 84], ["power", "power", P.GOLD, 98],
@@ -56,6 +93,24 @@ func _fit() -> void:
 	if _mat_box != null:
 		_mat_box.visible = w >= 1640.0   # 1540 before the credits field (version 3.1)
 
+## Critic round 21 (bottom and top rows never overlap): when the bar would reach the time panel
+## (large interface scale, small window), the least urgent numbers hide first; they come back when
+## there is room. Their values stay on the dashboard.
+const DROP_ORDER := ["credits", "research", "morale", "energy"]
+var _dropped := 0
+func _process(_d: float) -> void:
+	if hud == null or hud.time_panel == null:
+		return
+	var limit: float = hud.time_panel.get_global_rect().position.x - 8.0
+	var end_x: float = get_global_rect().end.x
+	if end_x > limit and _dropped < DROP_ORDER.size():
+		(_k[DROP_ORDER[_dropped]] as Control).visible = false
+		_dropped += 1
+		reset_size()
+	elif _dropped > 0 and end_x + 130.0 < limit:
+		_dropped -= 1
+		(_k[DROP_ORDER[_dropped]] as Control).visible = true
+
 func _on_kpi(key: String) -> void:
 	var page := "overview"
 	match key:
@@ -80,7 +135,46 @@ func _on_kpi(key: String) -> void:
 func rebuild() -> void:
 	refresh()
 
+func _refresh_bases() -> void:
+	var s = hud.main.sim
+	var list: Array = s.bases.list() if "bases" in s and s.bases != null else []
+	var sig: String = str(hud.base_filter)
+	for b in list:
+		sig += "|%d:%s" % [int(b["id"]), String(b["name"])]
+	if sig == _base_sig:
+		return
+	_base_sig = sig
+	_base_opt.visible = list.size() > 1
+	_base_opt.clear()
+	_base_ids = [-1]
+	_base_opt.add_item("All bases")
+	for b in list:
+		_base_opt.add_item(String(b["name"]))
+		_base_ids.append(int(b["id"]))
+	var idx: int = _base_ids.find(hud.base_filter)
+	_base_opt.select(maxi(0, idx))
+	_rename_btn.visible = _base_opt.visible and hud.base_filter >= 0
+
+## Rename the picked base (SIM command rename_base; refusals come back as a toast).
+func _open_rename() -> void:
+	if hud.base_filter < 0:
+		return
+	_pop_edit.text = hud.base_filter_name()
+	var r: Rect2 = _rename_btn.get_global_rect()
+	_pop.popup(Rect2i(Vector2i(int(r.position.x), int(r.end.y) + 6), Vector2i(0, 0)))
+	_pop_edit.grab_focus()
+	_pop_edit.select_all()
+
+func rename_to(name: String) -> void:
+	hud.main.submit("rename_base", {"id": hud.base_filter, "name": name.strip_edges()})
+	_base_sig = ""
+
+func _do_rename() -> void:
+	rename_to(_pop_edit.text)
+	_pop.hide()
+
 func refresh() -> void:
+	_refresh_bases()
 	var k: Dictionary = hud.kpi
 	if k.is_empty():
 		return

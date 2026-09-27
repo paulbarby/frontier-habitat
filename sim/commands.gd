@@ -57,6 +57,48 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 			return sim.hazards.cmd_shelter(bool(p.get("on", true)))
 		"hazard_now":
 			return sim.hazards.cmd_hazard_now(p)
+		"rename_base":
+			return sim.bases.cmd_rename(p)
+		"deploy_outpost":
+			return sim.bases.cmd_deploy(p)
+		"build_vehicle":
+			return sim.vehicles.cmd_build(p)
+		"cancel_vehicle":
+			return sim.vehicles.cmd_cancel(p)
+		"vehicle_board":
+			return sim.vehicles.cmd_board(p)
+		"vehicle_alight":
+			return sim.vehicles.cmd_alight(p)
+		"vehicle_drive":
+			return sim.vehicles.cmd_drive(p)
+		"vehicle_return":
+			return sim.vehicles.cmd_return(p)
+		"vehicle_stop":
+			return sim.vehicles.cmd_stop(p)
+		"vehicle_cargo":
+			return sim.vehicles.cmd_cargo(p)
+		"vehicle_route":
+			return sim.vehicles.cmd_route(p)
+		"vehicle_explore":
+			return sim.vehicles.cmd_explore(p)
+		"order":
+			return sim.orders.cmd_order(p)
+		"build_satellite":
+			return sim.vehicles.cmd_build({"pad": int(p.get("pad", -1)), "kind": "satellite"})
+		"reactor_scram":
+			return sim.reactors.cmd_scram(p)
+		"reactor_restart":
+			return sim.reactors.cmd_restart(p)
+		"reactor_cool":
+			return sim.reactors.cmd_cool(p)
+		"reactor_evacuate":
+			return sim.reactors.cmd_evacuate(p)
+		"order_clear":
+			return sim.orders.cmd_clear(p)
+		"set_jobs":
+			return sim.orders.cmd_jobs(p)
+		"spawn_vehicle", "debug_vehicle", "place_finished", "debug_building", "finish_building", "reactor_stage", "reveal":
+			return sim.debug.run(kind, p)
 		"traffic_answer":
 			return sim.traffic.cmd_answer(p)
 		"trade":
@@ -156,6 +198,7 @@ func _land(count: int, allow: Array) -> void:
 		var a: Dictionary = sim.agents.spawn(role, sim.next_name(), q if q != null else base, -1)
 		a["hunger"] = 25.0
 		a["thirst"] = 25.0
+	sim.settler_supplies(count, base)
 	var m: Dictionary = sim.state["metrics"]
 	m["settlers_admitted"] = int(m.get("settlers_admitted", 0)) + count
 	sim.stat_add("settlers", "", count)

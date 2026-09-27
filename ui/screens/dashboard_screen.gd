@@ -168,7 +168,8 @@ func _overview(body: VBoxContainer) -> void:
 		var row: HBoxContainer = Kit.hbox(6)
 		row.add_child(Kit.icon(P.sev_icon(int(i["issue"]["severity"])), 14, P.sev(int(i["issue"]["severity"]))))
 		var l: Label = Kit.label(String(i["issue"]["text"]), "", 12, P.TEXT)
-		l.clip_text = true
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
+		l.custom_minimum_size.x = 200
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l.tooltip_text = String(i["issue"]["text"]) + "\n" + String(i["issue"]["action"])
 		l.mouse_filter = Control.MOUSE_FILTER_PASS

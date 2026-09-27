@@ -24,6 +24,7 @@ func tick_second() -> void:
 	_nutrition_issues(found)
 	_progress_issues(found)
 	_hazard_issues(found)
+	sim.reactors.issues(found, self)
 	_merge(found)
 
 func _add(found: Dictionary, key: String, code: String, severity: int, text: String, action: String, entities: Array, cause: String = "", forecast: float = -1.0, count: int = 1) -> void:
@@ -66,6 +67,8 @@ func _merge(found: Dictionary) -> void:
 	for key in found:
 		var f: Dictionary = found[key]
 		f["live"] = true
+		# V4: the base an alert is about (-1: the whole colony), for the filter.
+		f["base"] = sim.bases.base_of_entities(f["entities"])
 		if issues.has(key):
 			f["first_tick"] = issues[key]["first_tick"]
 			f["ack"] = issues[key]["ack"]
@@ -216,6 +219,28 @@ func _air_issues(found: Dictionary) -> void:
 				text = "The lander air has ended. %s %s no other bed." % [Text.n(inside, "person", "people"), Text.have(inside)]
 			if inside > 0:
 				_add(found, "lander_expiry", "lander_expiry", sev, text, "Finish an airlock, a habitat and an oxygen plant, joined by corridors.", [lid], "", left, inside)
+	# V4: every outpost core's own air (the same rule for the people of that base).
+	for base_id in sim.bases.ids():
+		var cid: int = int(sim.bases.get_base(base_id).get("core", -1))
+		if cid == lid or not blds.has(cid):
+			continue
+		var cleft: float = sim.util.lander_seconds_left(cid)
+		if cleft >= day_len * 1.5:
+			continue
+		var cin := 0
+		for aid in sim.state["agents"]:
+			var ca: Dictionary = sim.state["agents"][aid]
+			if ca["state"] != "alive" or ca["kind"] == "visitor":
+				continue
+			if int(ca["bed"]) == cid or (int(ca["bed"]) == -1 and sim.bases.base_of_agent(ca) == base_id):
+				cin += 1
+		if cin == 0:
+			continue
+		var bname: String = sim.bases.name_of(base_id)
+		var ctext: String = "%s: the core air ends in %s. %s still %s there." % [bname, _clock(cleft), Text.n(cin, "person", "people"), Text.s(cin, "sleep")]
+		if cleft <= 0.0:
+			ctext = "%s: the core air has ended. %s %s no other bed." % [bname, Text.n(cin, "person", "people"), Text.have(cin)]
+		_add(found, "core_expiry:%d" % base_id, "core_expiry", 3 if cleft < day_len * 0.5 else 2, ctext, "Finish an airlock, a habitat and an oxygen plant at this base, joined by corridors.", [cid], "", cleft, cin)
 
 # ---------------------------------------------------------------- structures
 func _building_issues(found: Dictionary) -> void:

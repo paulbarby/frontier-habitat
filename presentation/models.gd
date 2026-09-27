@@ -86,6 +86,10 @@ static func resolve(id: String, size: int = -1) -> Dictionary:
 			return {"path": "res://assets/models/%s.glb" % sized, "sized": true}
 	if has_model(id):
 		return {"path": "res://assets/models/%s.glb" % id, "sized": false}
+	# ART-HAB 4.0 V4: the unsized copy (<id>.glb = <id>_m.glb) is no longer exported; the M file
+	# stands in for it (the same model, sized = false keeps the record-radius scaling as before).
+	if has_model(id + "_m"):
+		return {"path": "res://assets/models/%s_m.glb" % id, "sized": false}
 	return {"path": "", "sized": false}
 
 static func _scene(path: String) -> PackedScene:
@@ -122,6 +126,8 @@ static func prop(ids: Array, radius: float = 0.5, kind: String = "exterior", cat
 	for id in ids:
 		if has_model(id):
 			return _with_scale(_template_from_file("res://assets/models/%s.glb" % id), 1.0)
+		if has_model(String(id) + "_m"):
+			return _with_scale(_template_from_file("res://assets/models/%s_m.glb" % id), 1.0)
 	var fkey := "fallback:%s:%.2f:%s" % [ids[0], radius, kind]
 	if not _templates.has(fkey):
 		var node: Node3D = _fallback_node(String(ids[0]), radius, kind, CATEGORY_COLOR.get(category, Color.GRAY))

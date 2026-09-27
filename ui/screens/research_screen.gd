@@ -18,7 +18,8 @@ const COL_GAP := 34.0
 const ROW_GAP := 14.0
 const LABEL_W := 118.0
 const BRANCH_ICON := {"eng": "build", "life": "o2", "agri": "cat_food", "ind": "cat_industry", "energy": "power", "sci": "health", "space": "ship",
-	"hazards": "hazard", "haz": "hazard", "suits": "role_technician", "suit": "role_technician", "science": "icat_science"}
+	"hazards": "hazard", "haz": "hazard", "suits": "role_technician", "suit": "role_technician", "science": "icat_science",
+	"mat": "icat_material", "nuc": "reactor", "veh": "rover", "explore": "search", "rad": "radiation", "deep": "advisor"}
 
 var selected := ""
 var _canvas: Control
@@ -35,6 +36,11 @@ var _lab_updaters: Array = []
 var _lab_sig := ""
 var _lab_box: VBoxContainer
 var _clock := 0
+var _tree_scroll: ScrollContainer
+var _search: LineEdit
+var _only_open: CheckButton
+var _match_label: Label
+var matches: Array = []     # tech ids matching the search now (tests)
 
 class Canvas extends Control:
 	var scr
@@ -117,11 +123,64 @@ func _build_tree(box: VBoxContainer) -> void:
 	var sc: ScrollContainer = Kit.scroll(_canvas, true)
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(sc)
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tree_scroll = sc
+	# Version 4 (82 projects in 16 lanes): search, "can start now" filter and a legend over the tree.
+	var left: VBoxContainer = Kit.vbox(6)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(left)
+	var bar: HBoxContainer = Kit.hbox(10)
+	left.add_child(bar)
+	_search = LineEdit.new()
+	_search.placeholder_text = "Find: name, unlock, branch"
+	_search.tooltip_text = "Find a project\nType part of a name, of what it unlocks (a structure, an item) or a branch. Enter: go to the first match."
+	_search.clear_button_enabled = true
+	_search.custom_minimum_size.x = 340
+	_search.text_changed.connect(func(_s): apply_search())
+	_search.text_submitted.connect(func(_s): goto_first_match())
+	bar.add_child(_search)
+	_only_open = CheckButton.new()
+	_only_open.text = "Can start now"
+	_only_open.tooltip_text = "Can start now\nDims every project that is done, or locked by the projects it needs."
+	_only_open.focus_mode = Control.FOCUS_NONE
+	_only_open.toggled.connect(func(_on): apply_search())
+	bar.add_child(_only_open)
+	_match_label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
+	_match_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(_match_label)
+	for lg in [["Done", P.GREEN], ["Active", P.CYAN], ["Queued", P.VIOLET], ["Can start", P.TEXT], ["Locked", P.TEXT_3]]:
+		var lh: HBoxContainer = Kit.hbox(4)
+		var sw := ColorRect.new()
+		sw.color = lg[1]
+		sw.custom_minimum_size = Vector2(10, 10)
+		sw.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lh.add_child(sw)
+		lh.add_child(Kit.label(String(lg[0]), "SmallLabel", 12, P.TEXT_2))
+		bar.add_child(lh)
+	left.add_child(sc)
+	# Column heads: the tier and the research packs its projects use (milestone 5: packs by tier).
+	var tier_packs := {}
+	for t0 in d.techs():
+		var tr0: int = int(d.techs()[t0].get("tier", 1))
+		if not tier_packs.has(tr0):
+			tier_packs[tr0] = []
+		for pk in d.tech_packs(String(t0)):
+			if not (tier_packs[tr0] as Array).has(String(pk)):
+				tier_packs[tr0].append(String(pk))
 	for tier in range(1, max_tier + 1):
-		var h: Label = Kit.head("Tier %d" % tier if tier < 5 else "Tier %d  ·  special" % tier, P.GOLD if tier >= 5 else P.TEXT_3, 11)
-		h.position = Vector2(LABEL_W + float(tier - 1) * (NODE_W + COL_GAP), 4)
-		_canvas.add_child(h)
+		var hh: HBoxContainer = Kit.hbox(4)
+		hh.position = Vector2(LABEL_W + float(tier - 1) * (NODE_W + COL_GAP), 2)
+		hh.add_child(Kit.head("Tier %d" % tier, P.GOLD if tier >= 5 else P.TEXT_3, 11))
+		var pks: Array = tier_packs.get(tier, [])
+		pks.sort()
+		var pk_names: Array = []
+		for pk in pks:
+			hh.add_child(Kit.icon(Icons.item(String(pk)), 14, d.item_color(String(pk))))
+			pk_names.append(d.item_name(String(pk)).to_lower())
+		hh.tooltip_text = "Tier %d\n%s" % [tier, ("Projects here use: %s." % ", ".join(pk_names)) if not pk_names.is_empty() else "Projects here need research points only."]
+		hh.mouse_filter = Control.MOUSE_FILTER_PASS
+		_canvas.add_child(hh)
 	for b in branches:
 		var br: Dictionary = branches[b]
 		var y: float = _row_y(int(br.get("row", 0)))
@@ -159,6 +218,7 @@ func _build_tree(box: VBoxContainer) -> void:
 		_nodes[tid] = node
 	var dp: PanelContainer = Kit.panel("CardPanel", false)
 	dp.custom_minimum_size.x = 320
+	apply_search()
 	dp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(dp)
 	_detail = Kit.vbox(8)
@@ -168,6 +228,50 @@ func _build_tree(box: VBoxContainer) -> void:
 	_queue_row = Kit.hbox(8)
 	qp.add_child(_queue_row)
 	_refresh_all()
+
+## Search and filter: a project matches by its name, its description, the names of what it unlocks,
+## or its branch. Others are dimmed (never hidden: the lanes keep their shape).
+func _haystack(t: String) -> String:
+	var d = hud.data
+	var tech: Dictionary = d.techs().get(t, {})
+	var s: String = "%s %s %s" % [d.tech_name(t), String(tech.get("desc", "")), String(d.branches().get(String(tech.get("branch", "")), {}).get("name", ""))]
+	var un: Dictionary = tech.get("unlocks", {})
+	for k in un:
+		for x in (un[k] if typeof(un[k]) == TYPE_ARRAY else []):
+			var xs: String = str(x)
+			s += " " + (String(d.bdef(xs).get("name", xs)) if k == "buildings" else xs.replace("_", " "))
+	return s.to_lower()
+
+func apply_search() -> void:
+	if _search == null or not is_instance_valid(_search):
+		return
+	var q: String = _search.text.strip_edges().to_lower()
+	var only: bool = _only_open.button_pressed
+	matches = []
+	for t in _nodes:
+		var st: String = hud.data.tech_state(String(t))
+		var ok: bool = (q == "" or _haystack(String(t)).contains(q)) and (not only or st in ["available", "active", "queued"])
+		(_nodes[t] as Control).modulate.a = 1.0 if ok else 0.25
+		if ok and (q != "" or only):
+			matches.append(String(t))
+	if _canvas != null and is_instance_valid(_canvas):
+		_canvas.queue_redraw()
+	if q == "" and not only:
+		_match_label.text = "%d projects" % _nodes.size()
+	elif matches.is_empty():
+		_match_label.text = "No project matches."
+	else:
+		_match_label.text = "%s. Enter goes to the first." % Kit.plural(matches.size(), "match", "matches")
+
+## Selects the first match and scrolls the tree to it.
+func goto_first_match() -> void:
+	if matches.is_empty():
+		return
+	var t: String = matches[0]
+	_select(t)
+	var n: Control = _nodes[t]
+	_tree_scroll.scroll_horizontal = int(maxf(0.0, n.position.x - 60.0))
+	_tree_scroll.scroll_vertical = int(maxf(0.0, n.position.y - 60.0))
 
 ## Rows are as tall as the most techs one tier of the branch holds (usually one).
 func _layout_rows(branches: Dictionary, techs: Dictionary) -> void:
@@ -218,6 +322,8 @@ func draw_links(c: Control) -> void:
 				col = P.with_alpha(P.GREEN, 0.9)
 			if selected == String(t) or selected == String(req):
 				col = P.VIOLET
+			elif minf(from.modulate.a, to.modulate.a) < 1.0:
+				col.a *= 0.3     # a search dims the links of the projects it does not match
 			var pts := PackedVector2Array()
 			var dx: float = maxf(20.0, (b.x - a.x) * 0.5)
 			for i in 17:
@@ -391,7 +497,9 @@ func _fill_detail() -> void:
 	var special: bool = tier >= 5
 	var col: Color = P.GOLD if special else P.VIOLET
 	_detail.add_child(Kit.head("Tier %d  ·  %s" % [tier, String(d.branches().get(String(t.get("branch", "")), {}).get("name", ""))], col, 11))
-	_detail.add_child(Kit.label(String(t.get("name", selected)).to_upper(), "TitleLabel", 20, P.TEXT))
+	var title: Label = Kit.label(String(t.get("name", selected)).to_upper(), "TitleLabel", 20, P.TEXT)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.add_child(title)
 	var stc: Color = {"done": P.GREEN, "active": P.CYAN, "queued": P.VIOLET, "available": P.CYAN, "locked": P.TEXT_3}.get(st, P.TEXT_3)
 	var badges: HBoxContainer = Kit.hbox(6)
 	badges.add_child(Kit.badge(st.to_upper(), stc))
@@ -405,7 +513,7 @@ func _fill_detail() -> void:
 	_detail.add_child(Kit.bar_row("Progress", prog / maxf(1.0, cost), "%s/%s" % [Kit.fmt(prog), Kit.fmt(cost)], col, 64.0))
 	if st == "active":
 		var eta: float = d.tech_eta_seconds(selected)
-		_detail.add_child(Kit.label("Done in about %s at %s RP/day." % [Kit.clock(eta), Kit.fmt(d.rp_rate())] if eta >= 0.0 else "No research points are made now. A research lab needs a scientist.", "SmallLabel", 12, P.TEXT_2))
+		_detail.add_child(Kit.wrap("Done in about %s at %s RP/day." % [Kit.clock(eta), Kit.fmt(d.rp_rate())] if eta >= 0.0 else "No research points are made now. A research lab needs a scientist.", 12, P.TEXT_2))
 	# Research packs (version 3)
 	var packs: Dictionary = d.tech_packs(selected)
 	if not packs.is_empty():
@@ -417,9 +525,9 @@ func _fill_detail() -> void:
 			var have: int = d.total_of(String(pid), totals)
 			f.add_child(Kit.chip(Icons.item(String(pid)), "%d" % int(packs[pid]), d.item_color(String(pid)), "%s: %d for the whole project, %d in the colony now" % [d.item_name(String(pid)), int(packs[pid]), have], st == "done" or have > 0, 18))
 		_detail.add_child(f)
-		_detail.add_child(Kit.label("A lab uses them as it works, in step with the RP. Without them it does not work on this project.", "SmallLabel", 12, P.TEXT_2))
+		_detail.add_child(Kit.wrap("A lab uses them as it works, in step with the RP. Without them it does not work on this project.", 12, P.TEXT_2))
 	elif d.packs_available() and st != "done":
-		_detail.add_child(Kit.label("No packs needed. A lab that holds basic packs works x%s on it." % Kit.fmt(float(hud.main.sim.bal.get("research", {}).get("pack_boost", 2.0))), "SmallLabel", 12, P.TEXT_2))
+		_detail.add_child(Kit.wrap("No packs needed. A lab that holds basic packs works x%s on it." % Kit.fmt(float(hud.main.sim.bal.get("research", {}).get("pack_boost", 2.0))), 12, P.TEXT_2))
 	# Special items (version 2 special research)
 	var items: Dictionary = t.get("items", {})
 	if not items.is_empty():
@@ -431,7 +539,7 @@ func _fill_detail() -> void:
 			var have2: int = d.total_of(String(it))
 			f2.add_child(Kit.chip(Icons.item(String(it)), "%d" % int(items[it]), d.item_color(String(it)), "%s: %d in the colony" % [d.item_name(String(it)), have2], paid or have2 >= int(items[it]), 16))
 		_detail.add_child(f2)
-		_detail.add_child(Kit.label("Delivered." if paid else "Not delivered yet. Carriers bring them when the project is active.", "SmallLabel", 12, P.GREEN if paid else P.AMBER))
+		_detail.add_child(Kit.wrap("Delivered." if paid else "Not delivered yet. Carriers bring them when the project is active.", 12, P.GREEN if paid else P.AMBER))
 	# Requirements
 	var req: Array = t.get("requires", [])
 	if not req.is_empty():
@@ -441,7 +549,7 @@ func _fill_detail() -> void:
 			var row: HBoxContainer = Kit.hbox(6)
 			row.add_child(Kit.icon("sev_ok" if ok else "lock", 14, P.GREEN if ok else P.AMBER))
 			var qq: String = String(q)
-			var lb: Button = Kit.button(d.tech_name(qq), func(): _select(qq), "", "ListButton")
+			var lb: Button = Kit.button(d.tech_name(qq), func(): _select(qq), "%s\nIn the queue. Click to see it." % d.tech_name(qq), "ListButton")
 			lb.custom_minimum_size.y = 24
 			row.add_child(lb)
 			_detail.add_child(row)
@@ -471,7 +579,7 @@ func _fill_detail() -> void:
 	if st == "available":
 		_detail.add_child(Kit.button("Add to queue", func(): _queue(selected), "Queue\nStarts after the projects before it.", "", "queue", 16))
 	elif st == "queued":
-		_detail.add_child(Kit.button("Remove from queue", func(): _unqueue(selected), "", "", "close", 14))
+		_detail.add_child(Kit.button("Remove from queue", func(): _unqueue(selected), "Remove from queue\nThe project keeps the points it has.", "", "close", 14))
 
 func _unlock_lines(t: Dictionary) -> Array:
 	var d = hud.data

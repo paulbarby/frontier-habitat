@@ -30,7 +30,7 @@ func build() -> void:
 	var btns: HBoxContainer = Kit.hbox(10, BoxContainer.ALIGNMENT_END)
 	content.add_child(btns)
 	var on_yes: Callable = a.get("on_yes", Callable())
-	btns.add_child(Kit.button("Back" if on_yes.is_valid() else "OK", func(): host.close(self), "", "", "close", 14))
+	btns.add_child(Kit.button("Back" if on_yes.is_valid() else "OK", func(): host.close(self), ("Back\nCloses this and changes nothing.") if on_yes.is_valid() else "OK\nCloses this message.", "", "close", 14))
 	if on_yes.is_valid():
 		var yes: Button = Kit.button(String(a.get("yes", "Yes")), func():
 			host.close(self)

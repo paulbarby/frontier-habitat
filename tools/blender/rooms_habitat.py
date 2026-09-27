@@ -155,18 +155,34 @@ def build_habitat(rm):
     wall_portholes(rm, (4, 7, 7, 9)[s])
     n = rm.interior
     rb = radial_fit(Ri, 1.08, 0.46)
-    if s <= 1:
+    if s <= 1 and K.V4STYLE:
+        # 4.0 identity: a LOW dome with a ring of large windows, the family ring at its foot, the house badge
+        import rooms_identity as RI
+        H = (3.6, 4.5)[s] + 0.3
+        rm.build_dome(H, crown="apex", seams=8, hseams=() if s == 0 else None)
+        RI.dome_windows(rm, rm.roof, 19.0, 34.0, 12, 10.0, phase=15.0, skip=(0.0,))
+        RI.dome_band(rm, rm.roof)
+        RI.badge(rm.roof, "housing", 0.0, 0.0, 0.38 * rm.Rw, rm.dome_z, lift=0.03)
+        rm.badge_done = True
+    elif s <= 1:
         H = (3.6, 4.5)[s]
         rm.build_dome(H, crown="hatch", seams=8, hseams=() if s == 0 else None)
         dome_portholes(rm, 32.0, (5, 7)[s], (0.30, 0.36)[s])
         rm.door_hood(depth=0.9 if s == 0 else 1.1)
-        if s == 1:
+        if s == 1 and not K.V4STYLE:
             for a in (150.0, 210.0):
                 pos, _ = rm.dpt(58.0, a)
                 roof_vent(rm.roof, pos.x, pos.y, pos.z)
-        levels_dome(rm, dict(band3=(41.0, 44.0), band4=(14.0, 17.0), mod3=(58.0, -62.0), fins4=(45.0, 120.0),
-                             annex4=(20.0, -80.0) if s else (21.0, -95.0), ant=(55.0, -125.0, 1.3),
-                             emblem5=(50.0, -8.0)))
+        if K.V4STYLE:
+            # 4.0: the level parts stay off the windows (19..34 deg) and the badge (above ~62 deg)
+            pb5, _ = rm.dpt(45.0, 175.0)
+            levels_dome(rm, dict(band3=(38.5, 41.0), band4=(14.0, 16.5), mod3=(45.0, -60.0), fins4=(45.0, 120.0),
+                                 annex4=(11.0, -100.0), ant=(46.0, -150.0, 1.3), crown5=(51.0, 53.0),
+                                 emblem5=(44.0, -20.0), beacon5=(pb5.x, pb5.y, pb5.z - 0.02)))
+        else:
+            levels_dome(rm, dict(band3=(41.0, 44.0), band4=(14.0, 17.0), mod3=(58.0, -62.0), fins4=(45.0, 120.0),
+                                 annex4=(20.0, -80.0) if s else (21.0, -95.0), ant=(55.0, -125.0, 1.3),
+                                 emblem5=(50.0, -8.0)))
         # ---- interior: radial beds, lockers, table, tap ----------------------------------
         nb = (4, 8)[s]
         angs = [360.0 * (k + 0.5) / nb + (22.5 if nb == 4 else 0.0) for k in range(nb)]

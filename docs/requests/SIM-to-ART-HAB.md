@@ -142,3 +142,78 @@ Coordinator decision applied as you proposed:
 - Data questions for your models: `oxygen_plant_s` is blocked at every angle (0° free), so no corridor
   can join an oxygen plant S at all; `oxygen_plant` M has 78° free (59.5–120.5 and 261.5–278.5). Can you
   open a lane in both?
+
+## 2026-09-27 — V4: room scale and the outpost core (requests)
+
+- **Scale:** on the v4 map every new room is 1.5 × the v3 radius for its size (content radii × 1.5,
+  rounded to 0.05 m; e.g. habitat M 8.25 m, airlock M 5.1 m, airlock L 6.0 m, junction 3.75 m). Corridors are
+  1.25 × wider: tube radius 1.5 m. Old saves keep their radii. Furniture counts per size are unchanged in
+  `buildings.json` for now; tell me the new counts you want at 1.5 × and I put them in content.
+- **New model `outpost_core`** (`assets/models/outpost_core.glb`): a small lander (radius 4.5 m), three legs,
+  a ramp and hatch on +X, a beacon mast, a folded solar wing. Inside: 4 beds (`Anchor_Bed_0..3`),
+  `Anchor_Stand_0..1`. Kind "special" like the lander: no corridor ports.
+
+## 2026-09-27 — V4: the 1.5 × radii are in content; content ids for your new buildings; the industry list
+
+**1.5 × rooms are live** (`content/buildings.json`, every map): the 23 room types of your table at your
+radii (S–XL), greenhouse and fungus `tray_offsets` × 1.5 (top level and per size). Airlock (3.4 / 4.0 m) and
+junction (2.5 m) are unchanged (coordinator). Old saves keep their record radius. Corridors stay 1.2 m radius
+until the wider tubes go live with you and RENDER (`content/terrain_v4.json` `corridor_scale`, now 1.0).
+Your `content/door_blocked.json` (1.5 × rooms) is the file the sim reads.
+
+**Content ids for the buildings you exported** (radius = your footprint):
+
+| id | file | kind | radius | notes |
+|---|---|---|---|---|
+| `rover_depot` | `rover_depot_m.glb` / `rover_depot_l.glb` | exterior | M 9.0, L 12.0 | sizes M and L only (`size_list` [1, 2]); bays: M 2 small, L 2 small + 1 medium |
+| `launch_pad` | ART-B's `launch_pad*` | exterior | 6.5 | satellite launch |
+| `fission_reactor` | `fission_reactor.glb` | exterior | 12.0 | |
+| `crystal_refinery` | `crystal_refinery.glb` | exterior | 8.0 | not placeable yet (crafting milestone) |
+| `chemical_plant` | `chemical_plant.glb` | exterior | 9.0 | not placeable yet (crafting milestone) |
+| `crevice_bridge` | `crevice_bridge_s.glb` (size S) / `crevice_bridge_l.glb` (size L) | special | S 5.0, L 9.0 | span 8 / 15 m, length 10 / 18 m, deck 4.4 m; not placeable yet |
+| `outpost_core` | `outpost_core.glb` | special | 4.5 | live (milestone 2) |
+
+**The new industry buildings (please model; each is a room (corridors, work places)
+unless marked exterior; sizes S–XL with the room radii 6 / 7.5 / 9.6 / 11.7 unless given):**
+
+| id | tier | kind | makes | look |
+|---|---|---|---|---|
+| `steel_mill` | mid | room | steel alloy from steel + titanium | a squat furnace hall with a tall stack and ladle rails; glowing pour window |
+| `titanium_smelter` | mid | room | titanium from titanium ore | an electric arc furnace dome with thick cables to a transformer yard |
+| `ceramics_kiln` | mid | room | ceramics from silicate + titanium | a long low tunnel kiln with vents along the roof |
+| `carbon_works` | mid | room | carbon fibre from carbon | spinning towers, fibre spools stacked outside |
+| `battery_plant` | mid | room | battery cells from electronics + steel alloy + carbon | clean hall with racks of cells, blue status lights |
+| `parts_works` | mid | room | rover parts from steel alloy + electronics + composite | assembly bay with a gantry and a wheel rack |
+| `fuel_rod_plant` | high | exterior, radius 8.0 | fuel rods from uranium ore (enrich → pellets → rods) | fenced bunker, centrifuge cascade hall, radiation trefoil, a hot cell window |
+| `he3_separator` | high | exterior, radius 7.0 | helium-3 canisters from helium-3 regolith | cold-trap tanks with frost, cryo pipes, a vacuum chamber |
+| `magnet_works` | high | room | rare-earth magnets from rare earths + steel alloy | furnace + press line, a large ring magnet on a stand |
+| `superconductor_lab` | high | room | superconductor from magnets + ceramics | cryostat drums, a white clean room, frost vents |
+| `graphene_reactor` | high | exterior, radius 6.0 | graphene from carbon + electronics | a vapour-deposition tower with a glowing quartz column |
+| `metamaterial_foundry` | high | room | metamaterial from exotic crystal + graphene | a dark hall with a violet field chamber (links to the crystal refinery) |
+
+Plus the two you built: `crystal_refinery` (exotic crystal → refined crystal, unstable) and `chemical_plant`
+(chemicals from ice + carbon, toxic). The recipes and numbers come with the crafting milestone; the ids and
+kinds above are fixed now. Furniture: 1–3 work places per size like the v3 industry rooms.
+
+## 2026-09-27 — Corridor links per room (Paul's rule, live for new links)
+
+- A room takes at most **S 4, M 6, L 7, XL 8** corridors. Airlocks and junctions keep their own rules.
+- New links on one room are at least `max(28°, door angle)` apart. Door angle = the chord of the door
+  housing (3.44 m + 0.3 m gap) at the wall radius (`radius − 0.32`).
+- API: `sim.place.max_links(room)`, `sim.place.link_min_angle(room)`, `sim.place.door_angle(radius)`.
+- New refusal code **`links_full`**: "This room has all the corridors it can take (S 4, M 6, L 7, XL 8)."
+  It comes before `door_blocked` and `ports_full`.
+- Old saves keep every link they have. Balance keys: `room_max_links` [4,6,7,8], `door_housing_m` 3.44,
+  `door_gap_m` 0.3.
+- For your door sectors: an XL room must hold 8 door slots at least `door_angle(radius)` apart, an L room
+  7, an M room 6, an S room 4. `content/door_blocked.json` stays the source for blocked angles.
+
+## 2026-09-27 — your 12 industry buildings are in content (V4 milestone 5)
+
+- Rooms with your counts unchanged (S–XL radius 6 / 7.5 / 9.6 / 11.7, work places 1 / 1 / 2 / 3, stands
+  1 / 2 / 2 / 3): `steel_mill`, `titanium_smelter`, `ceramics_kiln`, `carbon_works`, `battery_plant`,
+  `parts_works`, `magnet_works`, `superconductor_lab`, `metamaterial_foundry`. Remove `PROVISIONAL_DEF`
+  when you like: content matches it.
+- Exteriors (automatic, no staff): `fuel_rod_plant` 8.0, `he3_separator` 7.0, `graphene_reactor` 6.0; and
+  `chemical_plant` 9.0 and `crystal_refinery` 8.0 are placeable now (stage 0, automatic).
+- No new furniture or door needs.

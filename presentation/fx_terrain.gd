@@ -30,6 +30,10 @@ var ground_img: Image
 var ground_tex: ImageTexture
 var hazard_tex: ImageTexture
 var GN := 256
+# Ground texture window (1 m per pixel): the whole map up to 810 m; on the 2,560 m v4 map a
+# 1,024 m window round the start (footpaths, contact shadows, the walk overlay live there).
+var GG := 256
+var GO := Vector2i.ZERO
 var quality := 2
 var overlay_walk := false
 var overlay_mode := 0         # 0 none, 1 walk, 2 hazard
@@ -52,6 +56,9 @@ var chunks: Array = []        # [{i0, j0, i1, j1, aabb, lods: [MeshInstance3D|nu
 var _lod_clock := 0.0
 var _rock_grid := {}          # 8 m cell key -> [Vector2 centre, r]
 var lod_counts := [0, 0, 0, 0]
+var ring_mi: MeshInstance3D = null
+var crevice_mat: ShaderMaterial = null
+var _crev := {}                  # 8 m cell key -> [[a, b, half]] crevice segments (v4)   # V4: the crevice meshes (the terrain material without the cut)   # the far ring (hidden when the v4 land draws instead)
 # Structure pads (critic round 6): the terrain MESH never rises above a structure's base or a
 # corridor's floor. Each pad: {"c": Vector2, "r": float, "y": float} (disc) or
 # {"p0", "p1", "r", "y0", "y1"} (corridor capsule). The sim height field is not changed.
@@ -66,7 +73,10 @@ func build(s, instancer, q: int) -> void:
 	inst = instancer
 	quality = q
 	GN = int(sim.world.size)
-	splat_ppm = 2.0 if GN <= 320 else 1.0
+	splat_ppm = 2.0 if GN <= 320 else (1.0 if GN <= 1100 else 0.5)
+	GG = GN if GN <= 1100 else 1024
+	var wc: Vector2 = sim.world.center
+	GO = Vector2i.ZERO if GG == GN else Vector2i(clampi(int(wc.x) - GG / 2, 0, GN - GG), clampi(int(wc.y) - GG / 2, 0, GN - GG))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(sim.state.get("seed", 1001)) * 7919 + 17
 	_tab.resize(65536)
@@ -80,6 +90,7 @@ func build(s, instancer, q: int) -> void:
 	mat = ShaderMaterial.new()
 	mat.shader = SHADER
 	var t0: int = Time.get_ticks_usec()
+	_crevice_cells()
 	_build_mesh()
 	var t1: int = Time.get_ticks_usec()
 	_build_splat()
@@ -94,10 +105,14 @@ func build(s, instancer, q: int) -> void:
 	mat.set_shader_parameter("splat_texel", 1.0 / float(splat_img.get_width()))
 	mat.set_shader_parameter("ground", ground_tex)
 	mat.set_shader_parameter("map_size", Vector2(GN, GN))
+	mat.set_shader_parameter("ground_origin", Vector2(GO))
+	mat.set_shader_parameter("ground_size", float(GG))
 	mat.set_shader_parameter("tint", _planet_tint())
 	var t3: int = Time.get_ticks_usec()
 	_build_rocks()
 	_build_pebbles()
+	if int(sim.world.get("version")) >= 4 and not (sim.world.crevices as Array).is_empty():
+		_build_crevices()
 	var t4: int = Time.get_ticks_usec()
 	_preseed_paths()
 	var t5: int = Time.get_ticks_usec()
@@ -340,6 +355,8 @@ func _chunk_lod(c: Dictionary, lod: int) -> MeshInstance3D:
 				var cl = pcell.get(int(floor(vi * hs / 8.0)) * 4096 + int(floor(vj * hs / 8.0)))
 				if cl != null:
 					hv = minf(hv, _pad_limit(vi * hs, vj * hs, cl, grow))
+			if not _crev.is_empty():
+				hv = _crevice_fill(vi * hs, vj * hs, hv, grow)
 			verts[b * nx + a] = Vector3(vi * hs, hv, vj * hs)
 			norms[b * nx + a] = _norms[k]
 	var idx := PackedInt32Array()
@@ -348,12 +365,22 @@ func _chunk_lod(c: Dictionary, lod: int) -> MeshInstance3D:
 	for b in nz - 1:
 		for a in nx - 1:
 			var q: int = b * nx + a
-			idx[t] = q
-			idx[t + 1] = q + 1
-			idx[t + 2] = q + nx
-			idx[t + 3] = q + 1
-			idx[t + 4] = q + nx + 1
-			idx[t + 5] = q + nx
+			# V4 (critic round 18): split each quad along the diagonal with the smaller height
+			# change, so cliffs and crater walls have no saw-tooth of stretched triangles.
+			if absf(verts[q].y - verts[q + nx + 1].y) <= absf(verts[q + 1].y - verts[q + nx].y):
+				idx[t] = q
+				idx[t + 1] = q + nx + 1
+				idx[t + 2] = q + nx
+				idx[t + 3] = q
+				idx[t + 4] = q + 1
+				idx[t + 5] = q + nx + 1
+			else:
+				idx[t] = q
+				idx[t + 1] = q + 1
+				idx[t + 2] = q + nx
+				idx[t + 3] = q + 1
+				idx[t + 4] = q + nx + 1
+				idx[t + 5] = q + nx
 			t += 6
 	# Skirts: a strip hanging below each edge hides cracks against a coarser neighbour.
 	var depth: float = 0.8 + s * hs * 0.45
@@ -425,6 +452,9 @@ func update_lod(delta: float, cam: Camera3D) -> bool:
 	_lod_clock = 0.2
 	var eye: Vector3 = cam.global_position
 	var near: Array = [95.0, 200.0, 420.0] if quality >= 2 else [70.0, 150.0, 340.0]
+	# V4 (4 m grid): the same metres per vertex at the same distance as the 2 m maps.
+	var hk: float = float(sim.world.hstep) / 2.0
+	near = [near[0] * hk, near[1] * hk, near[2] * hk]
 	lod_counts = [0, 0, 0, 0]
 	for c in chunks:
 		var ab: AABB = c["aabb"]
@@ -450,15 +480,16 @@ func update_lod(delta: float, cam: Camera3D) -> bool:
 ## Four strips of hills and mesas round the map, to the horizon. The inner edge samples the
 ## map edge every 8 m; the chunk skirts hide the small steps.
 func _build_ring() -> void:
+	var steps: Array = RING_STEPS if GN <= 1100 else RING_STEPS + [224.0, 320.0, 448.0, 640.0]
 	var outer_neg: Array = []
 	var x := 0.0
-	for s in RING_STEPS:
+	for s in steps:
 		x -= s
 		outer_neg.push_front(x)
 	outer_neg.append(0.0)
 	var outer_pos: Array = [float(GN)]
 	x = float(GN)
-	for s in RING_STEPS:
+	for s in steps:
 		x += s
 		outer_pos.append(x)
 	var inner: Array = []
@@ -478,6 +509,7 @@ func _build_ring() -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.name = "Ring"
 	mesh_inst.add_child(mi)
+	ring_mi = mi
 
 func _ring_strip(st: SurfaceTool, xs: Array, zs: Array) -> void:
 	var nx: int = xs.size()
@@ -558,8 +590,59 @@ func _build_splat() -> void:
 		_paint_crater(data, sn, p, r, 0.28 if big else 0.55)
 		if not big:
 			_paint_streak(data, sn, p + wind * r * 1.2, wind, r * 5.0, r * 0.8, 0.13)
+	if int(sim.world.get("version")) >= 4:
+		_paint_v4(data, sn, seed)
 	splat_img = Image.create_from_data(sn, sn, false, Image.FORMAT_RGBA8, data)
 	splat_tex = ImageTexture.create_from_image(splat_img)
+
+## V4 (critic round 18): the deep craters get a bright rim lip, slumped terraces on the inner
+## wall (normal bends), a rayed debris apron and floor debris; SIM's crevices get a dark crack
+## core with rocky lips. Splat channels as in the shader header; B near 0 = crack.
+func _paint_v4(data: PackedByteArray, sn: int, seed: int) -> void:
+	var w = sim.world
+	for dc in w.deep_craters:
+		var c := Vector2(float(dc["x"]), float(dc["y"]))
+		var r: float = float(dc["r"])
+		var fr: float = float(dc.get("floor_r", r * 0.5)) / r
+		_paint(data, sn, c, r * 2.3, func(q: Vector2, px: Array):
+			var tt: float = q.distance_to(c) / r
+			var ang: float = atan2(q.y - c.y, q.x - c.x)
+			var nz: float = _vnoise(q.x * 0.06, q.y * 0.06, seed + 21)
+			# Rim lip: a pale band on the crest.
+			var lip: float = exp(-pow((tt - 1.0) / 0.05, 2.0))
+			px[2] = clampi(int(px[2] + lip * 55.0), 0, 255)
+			px[1] = maxi(px[1], int(lip * 120.0))
+			# Slumped terraces on the inner wall.
+			if tt > fr and tt < 0.97:
+				var wall: float = sin(PI * (tt - fr) / (0.97 - fr))
+				var steps: float = sin((tt - fr) / (0.97 - fr) * PI * 6.0 + nz * 2.5 + sin(ang * 5.0) * 0.6)
+				var v: int = clampi(int(128.0 + steps * 26.0 * wall), 0, 255)
+				if absf(v - 128) > absf(px[3] - 128):
+					px[3] = v
+				px[1] = maxi(px[1], int(wall * 70.0 * (0.5 + nz)))
+			# Rayed debris apron outside the rim.
+			if tt >= 1.0 and tt < 2.3:
+				var fall: float = 1.0 - (tt - 1.0) / 1.3
+				var ray: float = clampf(sin(ang * 19.0 + nz * 4.0) * 0.5 + 0.5, 0.0, 1.0)
+				px[1] = maxi(px[1], int(fall * fall * (60.0 + 120.0 * ray)))
+				px[2] = clampi(int(px[2] + fall * ray * 22.0), 0, 255)
+			# Floor debris.
+			if tt < fr:
+				px[1] = maxi(px[1], int(clampf(nz - 0.45, 0.0, 1.0) * 150.0)))
+	for cv in w.crevices:
+		var pts: Array = cv["pts"]
+		var half: float = float(cv["w"]) * 0.5
+		for k in pts.size() - 1:
+			var a: Vector2 = pts[k]
+			var b: Vector2 = pts[k + 1]
+			_paint(data, sn, (a + b) * 0.5, a.distance_to(b) * 0.5 + half + 6.0, func(q: Vector2, px: Array):
+				var d: float = q.distance_to(Geometry2D.get_closest_point_to_segment(q, a, b))
+				# Critic round 20: the terrain opens over the crack (B = 0 out to half + 1 m) and the
+				# crevice's own mesh (lips, walls, floor: _build_crevices) draws there.
+				if d < half + 1.0:
+					px[2] = 0
+				elif d < half + 5.0:
+					px[1] = maxi(px[1], int((1.0 - (d - half) / 5.0) * 150.0)))
 
 func _paint_crater(data: PackedByteArray, sn: int, p: Vector2, r: float, depth: float) -> void:
 	_paint(data, sn, p, r * 1.9, func(q: Vector2, px: Array):
@@ -645,15 +728,15 @@ func _paint_streak(data: PackedByteArray, sn: int, start: Vector2, dir: Vector2,
 
 # ---------------------------------------------------------------- ground (1 m per pixel)
 func _build_ground() -> void:
-	ground_data.resize(GN * GN * 4)
+	ground_data.resize(GG * GG * 4)
 	ground_data.fill(0)
-	_wear.resize(GN * GN)
+	_wear.resize(GG * GG)
 	_wear.fill(0.0)
-	ground_img = Image.create_from_data(GN, GN, false, Image.FORMAT_RGBA8, ground_data)
+	ground_img = Image.create_from_data(GG, GG, false, Image.FORMAT_RGBA8, ground_data)
 	ground_tex = ImageTexture.create_from_image(ground_img)
 
 func _upload() -> void:
-	ground_img.set_data(GN, GN, false, Image.FORMAT_RGBA8, ground_data)
+	ground_img.set_data(GG, GG, false, Image.FORMAT_RGBA8, ground_data)
 	ground_tex.update(ground_img)
 
 ## Contact shadow (B) and churned ground (A) from the structures. Only the rectangles that
@@ -670,7 +753,7 @@ func update_contact(blds: Dictionary) -> void:
 		var r: Rect2i = rc
 		for y in range(r.position.y, r.end.y):
 			for x in range(r.position.x, r.end.x):
-				var k: int = (y * GN + x) * 4
+				var k: int = (y * GG + x) * 4
 				ground_data[k + 2] = 0
 				ground_data[k + 3] = 0
 	_contact_rects = []
@@ -701,37 +784,41 @@ func _rect(x0: int, y0: int, x1: int, y1: int) -> void:
 		_contact_rects.append(Rect2i(x0, y0, x1 - x0 + 1, y1 - y0 + 1))
 
 func _stamp_disc(c: Vector2, r: float, fall: float, strength: float) -> void:
+	c -= Vector2(GO)
 	var x0: int = maxi(0, int(c.x - r - fall))
-	var x1: int = mini(GN - 1, int(c.x + r + fall) + 1)
+	var x1: int = mini(GG - 1, int(c.x + r + fall) + 1)
 	var y0: int = maxi(0, int(c.y - r - fall))
-	var y1: int = mini(GN - 1, int(c.y + r + fall) + 1)
+	var y1: int = mini(GG - 1, int(c.y + r + fall) + 1)
 	_rect(x0, y0, x1, y1)
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			var d: float = Vector2(x + 0.5, y + 0.5).distance_to(c)
 			var v: float = strength * (1.0 - smoothstep(r, r + fall, d))
-			var k: int = (y * GN + x) * 4 + 2
+			var k: int = (y * GG + x) * 4 + 2
 			ground_data[k] = maxi(ground_data[k], int(v * 255.0))
 
 func _stamp_capsule(p0: Vector2, p1: Vector2, r: float, fall: float, strength: float) -> void:
+	p0 -= Vector2(GO)
+	p1 -= Vector2(GO)
 	var x0: int = maxi(0, int(minf(p0.x, p1.x) - r - fall))
-	var x1: int = mini(GN - 1, int(maxf(p0.x, p1.x) + r + fall) + 1)
+	var x1: int = mini(GG - 1, int(maxf(p0.x, p1.x) + r + fall) + 1)
 	var y0: int = maxi(0, int(minf(p0.y, p1.y) - r - fall))
-	var y1: int = mini(GN - 1, int(maxf(p0.y, p1.y) + r + fall) + 1)
+	var y1: int = mini(GG - 1, int(maxf(p0.y, p1.y) + r + fall) + 1)
 	_rect(x0, y0, x1, y1)
 	for y in range(y0, y1 + 1):
 		for x in range(x0, x1 + 1):
 			var c := Vector2(x + 0.5, y + 0.5)
 			var d: float = c.distance_to(Geometry2D.get_closest_point_to_segment(c, p0, p1))
 			var v: float = strength * (1.0 - smoothstep(r * 0.6, r + fall, d))
-			var k: int = (y * GN + x) * 4 + 2
+			var k: int = (y * GG + x) * 4 + 2
 			ground_data[k] = maxi(ground_data[k], int(v * 255.0))
 
 func _stamp_dug(c: Vector2, r: float, strength: float) -> void:
+	c -= Vector2(GO)
 	var x0: int = maxi(0, int(c.x - r))
-	var x1: int = mini(GN - 1, int(c.x + r) + 1)
+	var x1: int = mini(GG - 1, int(c.x + r) + 1)
 	var y0: int = maxi(0, int(c.y - r))
-	var y1: int = mini(GN - 1, int(c.y + r) + 1)
+	var y1: int = mini(GG - 1, int(c.y + r) + 1)
 	_rect(x0, y0, x1, y1)
 	var seed: int = int(sim.state.get("seed", 1001))
 	for y in range(y0, y1 + 1):
@@ -741,7 +828,7 @@ func _stamp_dug(c: Vector2, r: float, strength: float) -> void:
 				continue
 			var nz: float = _tab[((y + seed) & 255) * 256 + (x & 255)]
 			var v: float = strength * (1.0 - d * d) * (0.55 + 0.45 * nz)
-			var k: int = (y * GN + x) * 4 + 3
+			var k: int = (y * GG + x) * 4 + 3
 			ground_data[k] = maxi(ground_data[k], int(v * 255.0))
 
 ## Walk overlay: the navigation grid, one cell per metre.
@@ -785,13 +872,13 @@ func _fill_walk() -> void:
 	if rev == _walk_rev:
 		return
 	_walk_rev = rev
-	var grid: AStarGrid2D = sim.nav.grid
+	var grid = sim.nav.grid
 	if grid == null:
-		return
-	var n: int = mini(GN, grid.region.size.x)
+		return   # v4 maps have no 1 m grid (sim.nav.coarse, 8 m); the overlay stays empty for now
+	var n: int = mini(GG, grid.region.size.x - GO.x)
 	for y in n:
 		for x in n:
-			ground_data[(y * GN + x) * 4 + 1] = 255 if grid.is_point_solid(Vector2i(x, y)) else 128
+			ground_data[(y * GG + x) * 4 + 1] = 255 if grid.is_point_solid(Vector2i(x + GO.x, y + GO.y)) else 128
 	_dirty = true
 
 # ---------------------------------------------------------------- footpaths
@@ -843,9 +930,11 @@ func _stamp_line(a: Vector2, b: Vector2, amount: float) -> void:
 		_add_wear(int(p.x), int(p.y) - 1, amount * 0.25)
 
 func _add_wear(x: int, y: int, amount: float) -> void:
-	if x < 0 or y < 0 or x >= GN or y >= GN:
+	x -= GO.x
+	y -= GO.y
+	if x < 0 or y < 0 or x >= GG or y >= GG:
 		return
-	var k: int = y * GN + x
+	var k: int = y * GG + x
 	_wear[k] = minf(1.0, _wear[k] + amount)
 	_active[k] = true
 
@@ -892,16 +981,32 @@ func _build_rocks() -> void:
 		var v: float = _tab[(i * 37) & 65535]
 		i += 1
 		var ids: Array = ["rock_%s" % ["a", "b", "c"][int(r["kind"]) % 3]]
-		if v < 0.18:
+		if int(r["kind"]) == 3:
+			# V4 boulders (ART-HAB boulder_a..f, 1 m nominal radius, origin at the base centre).
+			ids = ["boulder_%s" % ["a", "b", "c", "d", "e", "f"][i % 6], "rock_a"]
+		elif v < 0.18:
 			ids.push_front("rock_d")
 		elif v < 0.3:
 			ids.push_front("rock_e")
 		var tpl: Dictionary = Models.prop(ids, float(r["r"]))
 		var s: float = float(r["r"]) / 1.1
+		if int(r["kind"]) == 3 and Models.has_model(String(ids[0])):
+			s = float(r["r"])
 		var p := Vector2(float(r["x"]), float(r["y"]))
 		var xf := Transform3D(Basis(Vector3.UP, float(r.get("rot", 0.0))).scaled(Vector3(s, s * 0.9, s)), Vector3(p.x, height(p.x, p.y) - 0.12 * s, p.y))
 		rock_handles.append(inst.add(tpl, xf))
 	var rng := {"c": 4242}
+	if int(sim.world.get("version")) >= 4:
+		for dc in sim.world.deep_craters:
+			var cc := Vector2(float(dc["x"]), float(dc["y"]))
+			var fr: float = float(dc.get("floor_r", float(dc["r"]) * 0.5))
+			for k in 26:
+				var a: float = Rng.next_float(rng, "c") * TAU
+				var rr: float = sqrt(Rng.next_float(rng, "c")) * fr * 0.95
+				var p: Vector2 = cc + Vector2(cos(a), sin(a)) * rr
+				var s: float = 0.35 + pow(Rng.next_float(rng, "c"), 2.0) * 1.2
+				var tpl: Dictionary = Models.prop(["rock_%s" % ["a", "b", "c"][k % 3]], s)
+				rock_handles.append(inst.add(tpl, Transform3D(Basis(Vector3.UP, a).scaled(Vector3(s, s * 0.8, s)), Vector3(p.x, height(p.x, p.y) - 0.15 * s, p.y))))
 	for d in sim.state["deposits"]:
 		for k in 9:
 			var a: float = Rng.next_float(rng, "c") * TAU
@@ -936,14 +1041,16 @@ func _build_pebbles() -> void:
 	var seed: int = int(sim.state.get("seed", 1001))
 	var rng := {"c": Rng.stream_seed(seed, 9202)}
 	# Same density as v2 on the start map; 70 % of it on big maps (pebbles only show near the camera).
-	var count: int = int(round(4500.0 * float(GN * GN) / 65536.0 * (1.0 if GN <= 320 else 0.7)))
+	var count: int = int(round(4500.0 * float(GG * GG) / 65536.0 * (1.0 if GN <= 320 else 0.7)))
+	var plo := Vector2(GO) + Vector2(2.0, 2.0)
+	var phi := Vector2(GO) + Vector2(GG - 2.0, GG - 2.0)
 	var nch: int = chunks.size()
 	var per: Array = []           # [chunk][kind] -> Array of Transform3D
 	for c in nch:
 		per.append([[], [], [], []])
 	var center: Vector2 = sim.world.center
 	for i in count:
-		var p := Vector2(Rng.range_float(rng, "c", 2.0, GN - 2.0), Rng.range_float(rng, "c", 2.0, GN - 2.0))
+		var p := Vector2(Rng.range_float(rng, "c", plo.x, phi.x), Rng.range_float(rng, "c", plo.y, phi.y))
 		var k: int = Rng.range_int(rng, "c", 0, 2)
 		var near_rock: bool = _near_rock(p, 49.0)
 		# Sparser on the flattened landing zone, denser around rocks.
@@ -960,11 +1067,11 @@ func _build_pebbles() -> void:
 	# Stone patches (ART-B "pebbles", 2 x 2 m) round rocks, craters and at random.
 	if Models.has_model("pebbles"):
 		var guard := 0
-		var want: int = int(round(320.0 * float(GN * GN) / 65536.0))
+		var want: int = int(round(320.0 * float(GG * GG) / 65536.0))
 		var made := 0
 		while made < want and guard < want * 10:
 			guard += 1
-			var p := Vector2(Rng.range_float(rng, "c", 4.0, GN - 4.0), Rng.range_float(rng, "c", 4.0, GN - 4.0))
+			var p := Vector2(Rng.range_float(rng, "c", plo.x + 2.0, phi.x - 2.0), Rng.range_float(rng, "c", plo.y + 2.0, phi.y - 2.0))
 			var near: bool = _near_rock(p, 100.0)
 			if not near and Rng.next_float(rng, "c") > 0.35:
 				continue
@@ -1083,3 +1190,319 @@ func hide_pebbles_under(blds: Dictionary) -> void:
 						if q.distance_to(Geometry2D.get_closest_point_to_segment(q, p0, p1)) < r:
 							_peb_hidden[hk] = true
 							(_pebbles[e[0]]["mm"] as MultiMesh).set_instance_transform(e[1], Transform3D(Basis.from_scale(Vector3(0.0001, 0.0001, 0.0001)), o))
+
+# ---------------------------------------------------------------- crevices (V4, critic round 20)
+## SIM's crevices as their own mesh: a lip at ground level (1.5 m each side), vertical walls down
+## to the floor, the floor, and end caps, lofted along SIM's line every 2 m. The terrain opens over
+## the crack (splat B = 0, shader crack_cut), so no 4 m grid triangle stretches into it. Drawn with
+## a copy of the terrain material (world-space, so the lip meets the ground without a seam).
+func _build_crevices() -> void:
+	crevice_mat = mat.duplicate() as ShaderMaterial
+	crevice_mat.set_shader_parameter("crack_cut", 0.0)
+	mat.set_shader_parameter("crack_cut", 1.0)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var tris := 0
+	for cv in sim.world.crevices:
+		var src: Array = cv["pts"]
+		var half: float = float(cv["w"]) * 0.5
+		var dep: float = float(cv["d"])
+		# Resample every 2 m.
+		var q: Array = []
+		for k in src.size() - 1:
+			var a: Vector2 = src[k]
+			var b: Vector2 = src[k + 1]
+			var n: int = maxi(1, int(ceil(a.distance_to(b) / 2.0)))
+			for i in n:
+				q.append(a.lerp(b, float(i) / n))
+		q.append(src[-1])
+		var m: int = q.size()
+		if m < 2:
+			continue
+		var nrm: Array = []
+		for k in m:
+			var t2: Vector2 = ((q[mini(k + 1, m - 1)] as Vector2) - (q[maxi(k - 1, 0)] as Vector2)).normalized()
+			nrm.append(Vector2(-t2.y, t2.x))
+		# Ground height per side just outside the trench (SIM's trench is inside the crack), smoothed
+		# along the line so the lip and the wall top do not step.
+		var tops := {1.0: [], -1.0: []}
+		for s in [1.0, -1.0]:
+			var raw: Array = []
+			for k in m:
+				var qa: Vector2 = q[k]
+				var na: Vector2 = nrm[k]
+				raw.append(height(qa.x + na.x * (half + 4.5) * s, qa.y + na.y * (half + 4.5) * s) + 0.1)
+			var sm: Array = []
+			for k in m:
+				var acc := 0.0
+				var cnt := 0
+				for j in range(maxi(0, k - 2), mini(m, k + 3)):
+					acc += float(raw[j])
+					cnt += 1
+				sm.append(acc / cnt)
+			tops[s] = sm
+		var top: Array = []
+		for k in m:
+			top.append(minf(float(tops[1.0][k]), float(tops[-1.0][k])))
+		for k in m - 1:
+			for s in [1.0, -1.0]:
+				var e0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * half * s
+				var e1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * half * s
+				var o0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * (half + 1.6) * s
+				var o1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * (half + 1.6) * s
+				var y0: float = tops[s][k]
+				var y1: float = tops[s][k + 1]
+				var f0: float = float(top[k]) - dep
+				var f1: float = float(top[k + 1]) - dep
+				# lip (up)
+				tris += _quad2(st, Vector3(o0.x, y0, o0.y), Vector3(o1.x, y1, o1.y), Vector3(e1.x, y1, e1.y), Vector3(e0.x, y0, e0.y), Vector3.UP)
+				# wall (faces the crack centre)
+				var wn: Vector3 = Vector3(-(nrm[k] as Vector2).x * s, 0.0, -(nrm[k] as Vector2).y * s)
+				tris += _quad2(st, Vector3(e0.x, y0, e0.y), Vector3(e1.x, y1, e1.y), Vector3(e1.x, f1, e1.y), Vector3(e0.x, f0, e0.y), wn)
+			# floor
+			var l0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * half
+			var l1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * half
+			var r0: Vector2 = (q[k] as Vector2) - (nrm[k] as Vector2) * half
+			var r1: Vector2 = (q[k + 1] as Vector2) - (nrm[k + 1] as Vector2) * half
+			tris += _quad2(st, Vector3(l0.x, float(top[k]) - dep, l0.y), Vector3(l1.x, float(top[k + 1]) - dep, l1.y), Vector3(r1.x, float(top[k + 1]) - dep, r1.y), Vector3(r0.x, float(top[k]) - dep, r0.y), Vector3.UP)
+		# End caps: a wall across the crack and a lip half-disc beyond it.
+		for end in [[0, 1], [m - 1, m - 2]]:
+			var c0: Vector2 = q[end[0]]
+			var out: Vector2 = (c0 - (q[end[1]] as Vector2)).normalized()
+			var ne: Vector2 = nrm[end[0]]
+			var ye: float = maxf(float(tops[1.0][end[0]]), float(tops[-1.0][end[0]]))
+			var a0: Vector2 = c0 + ne * half
+			var b0: Vector2 = c0 - ne * half
+			tris += _quad2(st, Vector3(a0.x, ye, a0.y), Vector3(b0.x, ye, b0.y), Vector3(b0.x, ye - dep, b0.y), Vector3(a0.x, ye - dep, a0.y), Vector3(-out.x, 0, -out.y))
+			var seg := 8
+			for i in seg:
+				var t0: float = PI * float(i) / seg - PI * 0.5
+				var t1: float = PI * float(i + 1) / seg - PI * 0.5
+				var d0: Vector2 = out.rotated(t0)
+				var d1: Vector2 = out.rotated(t1)
+				var p0: Vector2 = c0 + d0 * (half + 1.6)
+				var p1: Vector2 = c0 + d1 * (half + 1.6)
+				tris += _quad2(st, Vector3(c0.x, ye, c0.y), Vector3(c0.x, ye, c0.y), Vector3(p1.x, ye, p1.y), Vector3(p0.x, ye, p0.y), Vector3.UP)
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = crevice_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	mi.name = "Crevices"
+	mesh_inst.add_child(mi)
+	timings["crevice_tris"] = tris
+
+## Two-sided quad a-b-c-d with normal n on the front (and -n on the back).
+func _quad2(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3) -> int:
+	for side in [1.0, -1.0]:
+		var nn: Vector3 = n * side
+		var order: Array = [a, b, c, a, c, d] if side > 0.0 else [a, c, b, a, d, c]
+		# Godot's front faces wind clockwise seen from the front: (b - a) x (c - a) points away from n
+		var fn: Vector3 = ((order[1] as Vector3) - (order[0] as Vector3)).cross((order[2] as Vector3) - (order[0] as Vector3))
+		if fn.dot(nn) > 0.0:
+			order = [order[0], order[2], order[1], order[3], order[5], order[4]]
+		for v in order:
+			st.set_normal(nn)
+			st.add_vertex(v)
+	return 4
+
+## The crevice segments by 8 m cell, so the terrain mesh can fill SIM's trench (the crevice has its
+## own mesh; a coarse terrain level would otherwise dip into the trench beyond the lips).
+func _crevice_cells() -> void:
+	_crev = {}
+	if int(sim.world.get("version")) < 4:
+		return
+	for cv in sim.world.crevices:
+		var pts: Array = cv["pts"]
+		var half: float = float(cv["w"]) * 0.5
+		for k in pts.size() - 1:
+			var a: Vector2 = pts[k]
+			var b: Vector2 = pts[k + 1]
+			var m: float = half + 40.0
+			for cx in range(int(floor((minf(a.x, b.x) - m) / 8.0)), int(floor((maxf(a.x, b.x) + m) / 8.0)) + 1):
+				for cz in range(int(floor((minf(a.y, b.y) - m) / 8.0)), int(floor((maxf(a.y, b.y) + m) / 8.0)) + 1):
+					var key: int = cx * 4096 + cz
+					if not _crev.has(key):
+						_crev[key] = []
+					(_crev[key] as Array).append([a, b, half])
+
+## Height of a terrain vertex near a crevice: at least the ground just outside the crack.
+func _crevice_fill(x: float, z: float, hv: float, grow: float) -> float:
+	var cl = _crev.get(int(floor(x / 8.0)) * 4096 + int(floor(z / 8.0)))
+	if cl == null:
+		return hv
+	var p := Vector2(x, z)
+	var w = sim.world
+	for e in cl:
+		var a: Vector2 = e[0]
+		var b: Vector2 = e[1]
+		var half: float = e[2]
+		var q: Vector2 = Geometry2D.get_closest_point_to_segment(p, a, b)
+		var d: float = p.distance_to(q)
+		if d > half + 4.5 + grow:
+			continue
+		var n: Vector2 = (p - q) / d if d > 0.01 else (b - a).normalized().orthogonal()
+		var o1: Vector2 = q + n * (half + 4.5)
+		hv = maxf(hv, w.height_at(o1.x, o1.y))
+	return hv
+
+# ---------------------------------------------------------------- V4 map layers
+## Map layers (V4 §5, §6; UI switches them with the names below): "radiation" (sim.world.rad),
+## "sun" (share of the day in sunlight, from SIM's horizon map and sun path), "resources"
+## (deposits by tier), "explored" (SIM's explored cells when SIM publishes them). "" = off.
+var layer := ""
+var _layer_tex := {}
+const TIER_COL := [Color(0.72, 0.72, 0.72), Color(0.72, 0.72, 0.72), Color(0.3, 0.9, 1.0), Color(1.0, 0.8, 0.25)]
+
+func set_layer(name: String) -> bool:
+	layer = name
+	var mode: int = {"radiation": 1, "sun": 2, "resources": 3, "explored": 4}.get(name, 0)
+	if mode == 0:
+		mat.set_shader_parameter("layer_mode", 0)
+		if crevice_mat != null:
+			crevice_mat.set_shader_parameter("layer_mode", 0)
+		return true
+	var tex: Texture2D = _layer_tex.get(name)
+	if tex == null or name == "resources" or name == "explored":
+		tex = _make_layer(name)
+		if tex == null:
+			mat.set_shader_parameter("layer_mode", 0)
+			return false
+		_layer_tex[name] = tex
+	for m in [mat, crevice_mat]:
+		if m != null:
+			m.set_shader_parameter("layer_tex", tex)
+			m.set_shader_parameter("layer_mode", mode)
+	return true
+
+func _make_layer(name: String) -> Texture2D:
+	var w = sim.world
+	match name:
+		"radiation":
+			var n: int = int(w.get("rad_side")) if w.get("rad_side") != null else 0
+			if n <= 1:
+				return null
+			var img := Image.create(n, n, false, Image.FORMAT_R8)
+			var rad: PackedFloat32Array = w.rad
+			for j in n:
+				for i in n:
+					var v: float = clampf((log(maxf(rad[j * n + i], 0.02) / 0.02) / log(10.0)) / 2.7, 0.0, 1.0)
+					img.set_pixel(i, j, Color(v, 0, 0))
+			return _map_tex(img, float(w.rad_cell) * (n - 1))
+		"sun":
+			var n2: int = int(w.get("hz_side")) if w.get("hz_side") != null else 0
+			if n2 <= 1:
+				return null
+			var bins: int = int(w.hz_bins)
+			var dl: float = float(sim.planet["daylight_seconds"])
+			var len: float = float(sim.bal["day_length"])
+			var suns: Array = []
+			for b in bins:
+				suns.append(w.sun_angles(dl * (float(b) + 0.5) / float(bins), dl, len))
+			var img2 := Image.create(n2, n2, false, Image.FORMAT_R8)
+			for j in n2:
+				for i in n2:
+					var acc := 0.0
+					for b in bins:
+						var hz: float = float(w.horizon[(j * n2 + i) * bins + b])
+						acc += clampf((float(suns[b]["elev_deg"]) - hz) / 4.0 + 0.5, 0.0, 1.0)
+					img2.set_pixel(i, j, Color(acc / bins, 0, 0))
+			return _map_tex(img2, float(w.hz_cell) * (n2 - 1))
+		"resources":
+			var cell := 4.0
+			var n3: int = int(ceil(float(GN) / cell)) + 1
+			var img3 := Image.create(n3, n3, false, Image.FORMAT_RGBA8)
+			img3.fill(Color(0, 0, 0, 0))
+			for d in sim.state["deposits"]:
+				var tier: int = clampi(int(d.get("tier", 1)), 1, 3)
+				var col: Color = TIER_COL[tier]
+				var c := Vector2(float(d["x"]), float(d["y"])) / cell
+				var r: float = (float(d["r"]) + 4.0) / cell
+				for j in range(maxi(0, int(c.y - r - 2)), mini(n3, int(c.y + r + 3))):
+					for i in range(maxi(0, int(c.x - r - 2)), mini(n3, int(c.x + r + 3))):
+						var t: float = Vector2(i, j).distance_to(c) / r
+						if t < 1.4:
+							var a: float = clampf(1.2 - t, 0.0, 1.0)
+							var old: Color = img3.get_pixel(i, j)
+							if a > old.a:
+								img3.set_pixel(i, j, Color(col.r, col.g, col.b, a))
+			return _map_tex(img3, cell * (n3 - 1))
+		"explored":
+			return _fog_image()
+	return null
+
+## A map-space texture whose texels sit at 0 .. span metres (span = map size for the shader's uv).
+func _map_tex(img: Image, span: float) -> Texture2D:
+	if absf(span - float(GN)) > 1.0:
+		img.resize(maxi(2, int(round(img.get_width() * float(GN) / span))), maxi(2, int(round(img.get_height() * float(GN) / span))), Image.INTERPOLATE_BILINEAR)
+	return ImageTexture.create_from_image(img)
+
+## SIM's explored cells (fog of war) as a texture, or null while SIM has none. Accepts
+## state.fog = {cell, side, data: PackedByteArray (0 unexplored .. 255 explored)} or
+## sim.world.explored_at(p) -> bool.
+var fog_rev := -1
+var _fog_img: Image
+var _fog_tex: ImageTexture
+var _fog_gain := 1.0
+var _fog_texel := 0.0
+func _fog_image() -> Texture2D:
+	_fog_gain = 1.0
+	_fog_texel = 0.0
+	# SIM milestone 7: sim.explore.fog() = {cell 16, n 160, bits (1 = explored), rev}; the cells tile
+	# the whole map, so texel centres sit where the shader's map uv puts them.
+	var ex = sim.get("explore")
+	if ex != null and (ex as Object).has_method("active") and ex.active():
+		var fg: Dictionary = ex.fog()
+		var nn: int = int(fg["n"])
+		var bits: PackedByteArray = fg["bits"]
+		fog_rev = int(fg.get("rev", 0))
+		# The 0/1 bits go up as they are (no per-cell script loop: it changes every game second
+		# while colonists walk outside); the shader scales by fog_gain and softens the 16 m edge.
+		_fog_gain = 255.0
+		_fog_texel = 1.0 / float(nn)
+		if absf(float(fg["cell"]) * nn - float(GN)) > 1.0:
+			return _map_tex(Image.create_from_data(nn, nn, false, Image.FORMAT_R8, bits), float(fg["cell"]) * (nn - 1))
+		if _fog_img == null or _fog_img.get_width() != nn:
+			_fog_img = Image.create_from_data(nn, nn, false, Image.FORMAT_R8, bits)
+			_fog_tex = ImageTexture.create_from_image(_fog_img)
+		else:
+			_fog_img.set_data(nn, nn, false, Image.FORMAT_R8, bits)
+			_fog_tex.update(_fog_img)
+		return _fog_tex
+	var fog = sim.state.get("fog")
+	if fog is Dictionary and (fog as Dictionary).has("data"):
+		var side: int = int(fog["side"])
+		var img := Image.create_from_data(side, side, false, Image.FORMAT_R8, fog["data"])
+		return _map_tex(img, float(fog["cell"]) * (side - 1))
+	if fog_debug != null:
+		return fog_debug
+	return null
+
+var fog_debug: Texture2D = null      # evidence only (world_view `fogtest`), until SIM publishes fog
+
+## SIM's fog changed (its rev): upload again. Called every frame by world_view (cheap check).
+var fog_ms := 0.0     # slowest fog upload (ms), for the perf check
+var fog_n := 0
+func fog_tick() -> void:
+	var ex = sim.get("explore")
+	if ex == null or not (ex as Object).has_method("active") or not ex.active():
+		return
+	var rv: int = int(ex.fog().get("rev", 0))
+	if rv != fog_rev:
+		var t0: int = Time.get_ticks_usec()
+		set_fog(true)
+		fog_ms = maxf(fog_ms, float(Time.get_ticks_usec() - t0) / 1000.0)
+		fog_n += 1
+		if layer == "explored":
+			set_layer("explored")
+
+## Fog of war on the ground (explored cells normal, the rest dim and hazed).
+func set_fog(on: bool) -> bool:
+	var tex: Texture2D = _fog_image() if on else null
+	for m in [mat, crevice_mat]:
+		if m != null:
+			m.set_shader_parameter("fog_on", 1.0 if tex != null else 0.0)
+			m.set_shader_parameter("fog_gain", _fog_gain)
+			m.set_shader_parameter("fog_texel", _fog_texel)
+			if tex != null:
+				m.set_shader_parameter("fog_tex", tex)
+	return tex != null

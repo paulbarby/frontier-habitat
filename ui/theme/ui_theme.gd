@@ -1,6 +1,6 @@
 extends RefCounted
-## Builds the one Theme of the interface (docs/AAA_DESIGN.md §1): glass panels with
-## chamfered corners and brackets, cyan accents, uppercase letter-spaced headings,
+## Builds the one Theme of the interface (docs/AAA_DESIGN.md §1, V4_DESIGN §7): glass panels in
+## metal frames (ui/theme/glass_frame.gd), metal-rimmed buttons (ui/theme/rim.gd), cyan accents, uppercase letter-spaced headings,
 ## tabular numbers. Controls pick a look with `theme_type_variation`:
 ##   PanelContainer: HudPanel, CardPanel, WellPanel, ModalPanel, ToastPanel, HeaderPanel, FlatPanel
 ##   Button: PrimaryButton, GhostButton, TabButton, NavButton, ChipButton, DangerButton, CardButton, SpeedButton, ListButton
@@ -34,46 +34,70 @@ static func flat(color: Color, margins: Array = [0, 0, 0, 0], radius: int = 0) -
 	return s
 
 ## Named panel looks, shared by the theme and by widgets that draw their own.
+## Version 4 (critic round 15 rules): hud, modal and toast panels are GlassFrame (metal frame over
+## glass); cards, wells and tooltips carry a thin metal rim (raised, or engraved for wells). The
+## v3 cyan corner brackets are gone: one frame language.
+static func glass_frame(kind: String, margins: Array) -> StyleBox:
+	var s = load("res://ui/theme/glass_frame.gd").new()
+	s.kind = kind
+	s.content_margin_left = margins[0]
+	s.content_margin_top = margins[1]
+	s.content_margin_right = margins[2]
+	s.content_margin_bottom = margins[3]
+	return s
+
+static func rimmed(fill_top: Color, fill_bottom: Color, chamfer: Array, margins: Array, w: float = 1.0, engraved: bool = false) -> StyleBox:
+	var s = fh(fill_top, fill_bottom, Color(0, 0, 0, 0), chamfer, margins)
+	s.rim = w
+	s.engraved = engraved
+	return s
+
+## The selected tab: lit glass with a 2 px accent line in `accent` (the family colour).
+static func tab_style(accent: Color) -> StyleBox:
+	var s = rimmed(Color(0.13, 0.30, 0.42, 0.78), Color(0.07, 0.18, 0.27, 0.85), [6, 0, 0, 0], [12, 7, 12, 7], 1.0)
+	s.top_line = accent
+	s.top_line_w = 2.0
+	s.inner_glow = Color(accent.r, accent.g, accent.b, 0.22)
+	return s
+
 static func panel_style(kind: String) -> StyleBox:
 	match kind:
 		"hud":
-			var s = fh(P.BG_TOP, P.BG, P.over_panel(P.CYAN, 0.30), [12, 0, 12, 0], [12, 10, 12, 10])
-			s.bracket = P.with_alpha(P.CYAN, 0.9)
-			s.bracket_len = 9.0
-			return s
+			return glass_frame("hud", [16, 12, 16, 12])
 		"card":
-			return fh(Color(0.085, 0.13, 0.21, 0.9), Color(0.06, 0.095, 0.16, 0.9), P.over_panel(P.CYAN, 0.18), [7, 0, 7, 0], [8, 6, 8, 6])
+			return rimmed(Color(0.085, 0.13, 0.21, 0.55), Color(0.06, 0.095, 0.16, 0.62), [7, 0, 7, 0], [9, 7, 9, 7], 1.0, true)
+		"card_button":
+			return rimmed(Color(0.085, 0.13, 0.21, 0.72), Color(0.06, 0.095, 0.16, 0.78), [7, 0, 7, 0], [9, 7, 9, 7], 2.0)
 		"card_hover":
-			var s = fh(Color(0.11, 0.18, 0.29, 0.94), Color(0.075, 0.125, 0.21, 0.94), P.over_panel(P.CYAN, 0.6), [7, 0, 7, 0], [8, 6, 8, 6])
-			s.glow = P.with_alpha(P.CYAN, 0.35)
-			s.glow_size = 5.0
+			var s = rimmed(Color(0.11, 0.18, 0.29, 0.82), Color(0.075, 0.125, 0.21, 0.86), [7, 0, 7, 0], [9, 7, 9, 7], 2.0)
+			s.inner_glow = P.with_alpha(P.CYAN, 0.35)
 			return s
 		"card_selected":
-			var s = fh(Color(0.10, 0.26, 0.34, 0.95), Color(0.06, 0.16, 0.23, 0.95), P.CYAN, [7, 0, 7, 0], [8, 6, 8, 6])
-			s.glow = P.with_alpha(P.CYAN, 0.45)
-			s.glow_size = 6.0
+			var s = rimmed(Color(0.10, 0.26, 0.34, 0.86), Color(0.06, 0.16, 0.23, 0.9), [7, 0, 7, 0], [9, 7, 9, 7], 2.0)
+			s.inner_glow = P.with_alpha(P.CYAN, 0.6)
 			return s
 		"well":
-			return fh(Color(0.02, 0.04, 0.075, 0.72), Color(0.02, 0.04, 0.075, 0.72), P.over_panel(P.CYAN, 0.12), [5, 0, 5, 0], [8, 6, 8, 6])
+			# A darker reading well behind lists and tables, sunk into the glass.
+			return rimmed(Color(0.015, 0.03, 0.06, 0.62), Color(0.015, 0.03, 0.06, 0.70), [5, 0, 5, 0], [9, 7, 9, 7], 1.0, true)
 		"modal":
-			var s = fh(Color(0.06, 0.10, 0.17, 0.95), Color(0.035, 0.06, 0.11, 0.95), P.over_panel(P.CYAN, 0.38), [18, 0, 18, 0], [0, 0, 0, 0])
-			s.bracket = P.CYAN
-			s.bracket_len = 16.0
-			s.bracket_width = 2.0
+			var s = glass_frame("window", [10, 10, 10, 12])
+			# Critic round 21, fix 3: a 14 px frosted border zone, the body at about 88 %.
+			s.tint_top = Color(0.09, 0.15, 0.24, 0.46)
+			s.tint_bottom = Color(0.05, 0.08, 0.14, 0.56)
+			s.frost_border = 14.0
+			s.body_tint = Color(0.035, 0.06, 0.11, 0.85)
 			return s
 		"toast":
-			var s = fh(Color(0.07, 0.12, 0.2, 0.94), Color(0.045, 0.075, 0.13, 0.94), P.over_panel(P.CYAN, 0.35), [8, 0, 8, 0], [12, 8, 14, 8])
-			s.accent = P.CYAN
-			s.accent_w = 3.0
+			var s = glass_frame("hud", [16, 9, 16, 9])
+			s.accent_left = P.CYAN
 			return s
 		"tooltip":
-			var s = fh(Color(0.07, 0.11, 0.19, 0.97), Color(0.045, 0.07, 0.12, 0.97), P.over_panel(P.CYAN, 0.5), [6, 0, 6, 0], [10, 8, 10, 8])
-			return s
+			return rimmed(Color(0.07, 0.11, 0.19, 0.95), Color(0.045, 0.07, 0.12, 0.96), [6, 0, 6, 0], [11, 9, 11, 9], 2.0)
 		"header":
-			return fh(P.HEADER, Color(0.07, 0.115, 0.19, 0.92), P.over_panel(P.CYAN, 0.3), [10, 0, 0, 0], [12, 6, 12, 6])
+			return rimmed(P.HEADER, Color(0.07, 0.115, 0.19, 0.92), [10, 0, 0, 0], [12, 6, 12, 6], 1.0)
 		"flat":
 			return fh(Color(0, 0, 0, 0), Color(0, 0, 0, 0), Color(0, 0, 0, 0), [0, 0, 0, 0], [0, 0, 0, 0])
-	return fh(P.BG_TOP, P.BG, P.over_panel(P.CYAN, 0.3))
+	return glass_frame("hud", [16, 12, 16, 12])
 
 static func _button_set(t: Theme, type: String, normal: StyleBox, hover: StyleBox, pressed: StyleBox, disabled: StyleBox) -> void:
 	t.set_stylebox("normal", type, normal)
@@ -134,44 +158,61 @@ static func build() -> Theme:
 	t.set_font("font", "Button", Fonts.get_font("body_sb"))
 	t.set_font_size("font_size", "Button", 14)
 	t.set_constant("h_separation", "Button", 8)
-	var bn = fh(Color(0.09, 0.15, 0.25, 0.92), Color(0.06, 0.105, 0.185, 0.92), P.over_panel(P.CYAN, 0.3), [6, 0, 6, 0], [12, 7, 12, 7])
-	var bh = fh(Color(0.12, 0.21, 0.34, 0.96), Color(0.08, 0.145, 0.25, 0.96), P.over_panel(P.CYAN, 0.7), [6, 0, 6, 0], [12, 7, 12, 7])
-	bh.glow = P.with_alpha(P.CYAN, 0.3)
-	bh.glow_size = 4.0
-	var bp = fh(Color(0.13, 0.42, 0.52, 0.96), Color(0.08, 0.28, 0.38, 0.96), P.CYAN, [6, 0, 6, 0], [12, 7, 12, 7])
-	bp.glow = P.with_alpha(P.CYAN, 0.4)
-	bp.glow_size = 5.0
-	var bd = fh(Color(0.05, 0.08, 0.13, 0.7), Color(0.05, 0.08, 0.13, 0.7), P.over_panel(P.TEXT_3, 0.3), [6, 0, 6, 0], [12, 7, 12, 7])
+	# Version 4 buttons (critic round 15 rules): a glass fill with a 2 px bevelled metal rim.
+	var bn = rimmed(Color(0.10, 0.16, 0.26, 0.72), Color(0.06, 0.10, 0.18, 0.80), [6, 0, 6, 0], [12, 7, 12, 7], 2.0)
+	var bh = rimmed(Color(0.13, 0.22, 0.35, 0.86), Color(0.08, 0.145, 0.25, 0.9), [6, 0, 6, 0], [12, 7, 12, 7], 2.0)
+	bh.inner_glow = P.with_alpha(P.CYAN, 0.3)
+	var bp = rimmed(Color(0.08, 0.28, 0.38, 0.92), Color(0.05, 0.18, 0.26, 0.94), [6, 0, 6, 0], [12, 7, 12, 7], 2.0, true)
+	bp.inner_glow = P.with_alpha(P.CYAN, 0.5)
+	var bd = rimmed(Color(0.05, 0.08, 0.13, 0.55), Color(0.05, 0.08, 0.13, 0.6), [6, 0, 6, 0], [12, 7, 12, 7], 2.0)
+	bd.rim_tint = Color(0.6, 0.6, 0.6, 1.0)
 	_button_set(t, "Button", bn, bh, bp, bd)
 	_button_colors(t, "Button", P.TEXT, Color.WHITE, Color.WHITE, P.TEXT_3)
+	# Drop-down lists (OptionButton) look like buttons; they are not a type variation of Button.
+	var on = bn.clone()
+	on.content_margin_right = 30   # room for the arrow
+	var oh = bh.clone()
+	oh.content_margin_right = 30
+	var op = bp.clone()
+	op.content_margin_right = 30
+	_button_set(t, "OptionButton", on, oh, op, bd)
+	_button_colors(t, "OptionButton", P.TEXT, Color.WHITE, Color.WHITE, P.TEXT_3)
+	t.set_font("font", "OptionButton", Fonts.get_font("body"))
+	t.set_font_size("font_size", "OptionButton", 14)
+	t.set_color("font_focus_color", "OptionButton", P.TEXT)
 
-	# Primary: the one main action of a screen.
+	# Primary: the one main action of a screen. It glows inside its rim; not a flat cyan block.
 	t.set_type_variation("PrimaryButton", "Button")
-	var pn = fh(Color(0.2, 0.78, 0.92, 0.95), Color(0.12, 0.58, 0.74, 0.95), P.CYAN, [8, 0, 8, 0], [16, 9, 16, 9])
-	var ph = fh(Color(0.36, 0.9, 1.0, 1.0), Color(0.2, 0.7, 0.86, 1.0), Color.WHITE, [8, 0, 8, 0], [16, 9, 16, 9])
-	ph.glow = P.with_alpha(P.CYAN, 0.55)
-	ph.glow_size = 7.0
-	var pp = fh(Color(0.1, 0.5, 0.62, 1.0), Color(0.08, 0.4, 0.52, 1.0), P.CYAN, [8, 0, 8, 0], [16, 9, 16, 9])
-	var pd = fh(Color(0.12, 0.2, 0.28, 0.7), Color(0.1, 0.16, 0.22, 0.7), P.over_panel(P.TEXT_3, 0.3), [8, 0, 8, 0], [16, 9, 16, 9])
+	var pn = rimmed(Color(0.07, 0.30, 0.40, 0.86), Color(0.04, 0.19, 0.28, 0.9), [8, 0, 8, 0], [16, 9, 16, 9], 2.0)
+	pn.inner_glow = P.with_alpha(P.CYAN, 0.75)
+	var ph = rimmed(Color(0.10, 0.40, 0.52, 0.92), Color(0.06, 0.26, 0.36, 0.94), [8, 0, 8, 0], [16, 9, 16, 9], 2.0)
+	ph.inner_glow = P.with_alpha(Color("9FF3FF"), 0.95)
+	ph.rim_tint = Color(1.15, 1.2, 1.25, 1.0)
+	var pp = rimmed(Color(0.05, 0.22, 0.30, 0.95), Color(0.04, 0.16, 0.22, 0.96), [8, 0, 8, 0], [16, 9, 16, 9], 2.0, true)
+	pp.inner_glow = P.with_alpha(P.CYAN, 0.9)
+	var pd = rimmed(Color(0.10, 0.15, 0.20, 0.55), Color(0.08, 0.12, 0.17, 0.6), [8, 0, 8, 0], [16, 9, 16, 9], 2.0)
+	pd.rim_tint = Color(0.6, 0.6, 0.6, 1.0)
 	_button_set(t, "PrimaryButton", pn, ph, pp, pd)
-	_button_colors(t, "PrimaryButton", P.TEXT_DARK, P.TEXT_DARK, P.TEXT_DARK, P.TEXT_3)
+	_button_colors(t, "PrimaryButton", Color("DDFBFF"), Color.WHITE, Color.WHITE, P.TEXT_3)
 	t.set_font("font", "PrimaryButton", Fonts.get_font("head"))
 	t.set_font_size("font_size", "PrimaryButton", 15)
 
 	# Ghost: no fill until hovered.
 	t.set_type_variation("GhostButton", "Button")
 	var gn = fh(Color(0, 0, 0, 0), Color(0, 0, 0, 0), Color(0, 0, 0, 0), [6, 0, 6, 0], [10, 6, 10, 6])
-	var gh = fh(Color(0.12, 0.2, 0.32, 0.7), Color(0.08, 0.14, 0.24, 0.7), P.over_panel(P.CYAN, 0.45), [6, 0, 6, 0], [10, 6, 10, 6])
-	var gp = fh(Color(0.1, 0.32, 0.42, 0.8), Color(0.07, 0.22, 0.3, 0.8), P.CYAN, [6, 0, 6, 0], [10, 6, 10, 6])
+	var gh = rimmed(Color(0.12, 0.2, 0.32, 0.6), Color(0.08, 0.14, 0.24, 0.65), [6, 0, 6, 0], [10, 6, 10, 6], 1.0)
+	var gp = rimmed(Color(0.1, 0.32, 0.42, 0.75), Color(0.07, 0.22, 0.3, 0.8), [6, 0, 6, 0], [10, 6, 10, 6], 1.0, true)
 	_button_set(t, "GhostButton", gn, gh, gp, gn)
 	_button_colors(t, "GhostButton", P.TEXT_2, Color.WHITE, P.CYAN, P.TEXT_3)
 
 	# Tab: selected = pressed (toggle mode).
 	t.set_type_variation("TabButton", "Button")
-	var tn = fh(Color(0.06, 0.1, 0.17, 0.55), Color(0.05, 0.085, 0.15, 0.55), P.over_panel(P.CYAN, 0.14), [6, 0, 0, 0], [12, 7, 12, 7])
-	var th = fh(Color(0.1, 0.17, 0.28, 0.85), Color(0.07, 0.12, 0.2, 0.85), P.over_panel(P.CYAN, 0.45), [6, 0, 0, 0], [12, 7, 12, 7])
-	var tp = fh(Color(0.1, 0.3, 0.4, 0.95), Color(0.06, 0.18, 0.27, 0.95), P.over_panel(P.CYAN, 0.8), [6, 0, 0, 0], [12, 7, 12, 7])
-	tp.top_line = P.CYAN
+	# Metal edges; the selected tab is lit glass with the accent line (screens and the inspector
+	# tint that line with the family colour, see tab_style()).
+	var tn = rimmed(Color(0.06, 0.1, 0.17, 0.45), Color(0.05, 0.085, 0.15, 0.5), [6, 0, 0, 0], [12, 7, 12, 7], 1.0)
+	tn.rim_tint = Color(0.8, 0.8, 0.8, 1.0)
+	var th = rimmed(Color(0.1, 0.17, 0.28, 0.72), Color(0.07, 0.12, 0.2, 0.75), [6, 0, 0, 0], [12, 7, 12, 7], 1.0)
+	var tp = tab_style(P.CYAN)
 	_button_set(t, "TabButton", tn, th, tp, tn)
 	_button_colors(t, "TabButton", P.TEXT_2, Color.WHITE, Color.WHITE, P.TEXT_3)
 	t.set_font("font", "TabButton", Fonts.get_font("head"))
@@ -179,49 +220,48 @@ static func build() -> Theme:
 
 	# Nav: square icon buttons of the right rail and the top bar.
 	t.set_type_variation("NavButton", "Button")
-	var nn = fh(Color(0.07, 0.12, 0.2, 0.86), Color(0.045, 0.075, 0.13, 0.86), P.over_panel(P.CYAN, 0.26), [7, 0, 7, 0], [6, 6, 6, 6])
-	var nh = fh(Color(0.12, 0.21, 0.34, 0.95), Color(0.08, 0.14, 0.24, 0.95), P.over_panel(P.CYAN, 0.75), [7, 0, 7, 0], [6, 6, 6, 6])
-	nh.glow = P.with_alpha(P.CYAN, 0.35)
-	nh.glow_size = 5.0
-	var np = fh(Color(0.12, 0.4, 0.5, 0.95), Color(0.07, 0.26, 0.35, 0.95), P.CYAN, [7, 0, 7, 0], [6, 6, 6, 6])
-	np.glow = P.with_alpha(P.CYAN, 0.45)
-	np.glow_size = 5.0
+	var nn = rimmed(Color(0.07, 0.12, 0.2, 0.74), Color(0.045, 0.075, 0.13, 0.8), [7, 0, 7, 0], [6, 6, 6, 6], 2.0)
+	var nh = rimmed(Color(0.12, 0.21, 0.34, 0.88), Color(0.08, 0.14, 0.24, 0.9), [7, 0, 7, 0], [6, 6, 6, 6], 2.0)
+	nh.inner_glow = P.with_alpha(P.CYAN, 0.4)
+	var np = rimmed(Color(0.10, 0.34, 0.44, 0.92), Color(0.06, 0.22, 0.30, 0.94), [7, 0, 7, 0], [6, 6, 6, 6], 2.0, true)
+	np.inner_glow = P.with_alpha(P.CYAN, 0.7)
 	_button_set(t, "NavButton", nn, nh, np, nn)
 	_button_colors(t, "NavButton", P.TEXT_2, Color.WHITE, Color.WHITE, P.TEXT_3)
 
 	# Speed: compact time controls.
 	t.set_type_variation("SpeedButton", "Button")
-	var sn = fh(Color(0.07, 0.12, 0.2, 0.0), Color(0.045, 0.075, 0.13, 0.0), P.over_panel(P.CYAN, 0.16), [5, 0, 5, 0], [6, 5, 6, 5])
-	var sh = fh(Color(0.12, 0.21, 0.34, 0.9), Color(0.08, 0.14, 0.24, 0.9), P.over_panel(P.CYAN, 0.6), [5, 0, 5, 0], [6, 5, 6, 5])
-	var sp = fh(Color(0.18, 0.62, 0.74, 0.95), Color(0.1, 0.42, 0.54, 0.95), P.CYAN, [5, 0, 5, 0], [6, 5, 6, 5])
-	sp.glow = P.with_alpha(P.CYAN, 0.4)
-	sp.glow_size = 4.0
+	var sn = fh(Color(0.07, 0.12, 0.2, 0.0), Color(0.045, 0.075, 0.13, 0.0), Color(0, 0, 0, 0), [5, 0, 5, 0], [6, 5, 6, 5])
+	var sh = rimmed(Color(0.12, 0.21, 0.34, 0.8), Color(0.08, 0.14, 0.24, 0.85), [5, 0, 5, 0], [6, 5, 6, 5], 1.0)
+	var sp = rimmed(Color(0.08, 0.30, 0.40, 0.92), Color(0.05, 0.2, 0.28, 0.94), [5, 0, 5, 0], [6, 5, 6, 5], 1.0, true)
+	sp.inner_glow = P.with_alpha(P.CYAN, 0.8)
 	_button_set(t, "SpeedButton", sn, sh, sp, sn)
-	_button_colors(t, "SpeedButton", P.TEXT_2, Color.WHITE, P.TEXT_DARK, P.TEXT_3)
+	_button_colors(t, "SpeedButton", P.TEXT_2, Color.WHITE, Color("DDFBFF"), P.TEXT_3)
 
 	# Chip: size chips S/M/L/XL and other small toggles.
 	t.set_type_variation("ChipButton", "Button")
-	var cn = fh(Color(0.07, 0.11, 0.18, 0.9), Color(0.07, 0.11, 0.18, 0.9), P.over_panel(P.CYAN, 0.22), [3, 0, 3, 0], [6, 2, 6, 2])
-	var chh = fh(Color(0.12, 0.2, 0.32, 0.95), Color(0.12, 0.2, 0.32, 0.95), P.over_panel(P.CYAN, 0.7), [3, 0, 3, 0], [6, 2, 6, 2])
-	var cp = fh(Color(0.24, 0.82, 0.96, 1.0), Color(0.16, 0.66, 0.8, 1.0), P.CYAN, [3, 0, 3, 0], [6, 2, 6, 2])
-	var cd = fh(Color(0.05, 0.07, 0.11, 0.7), Color(0.05, 0.07, 0.11, 0.7), P.over_panel(P.TEXT_3, 0.2), [3, 0, 3, 0], [6, 2, 6, 2])
+	var cn = rimmed(Color(0.07, 0.11, 0.18, 0.8), Color(0.07, 0.11, 0.18, 0.8), [3, 0, 3, 0], [6, 2, 6, 2], 1.0)
+	var chh = rimmed(Color(0.12, 0.2, 0.32, 0.9), Color(0.12, 0.2, 0.32, 0.9), [3, 0, 3, 0], [6, 2, 6, 2], 1.0)
+	var cp = rimmed(Color(0.08, 0.32, 0.42, 0.95), Color(0.05, 0.22, 0.3, 0.95), [3, 0, 3, 0], [6, 2, 6, 2], 1.0, true)
+	cp.inner_glow = P.with_alpha(P.CYAN, 0.85)
+	var cd = rimmed(Color(0.05, 0.07, 0.11, 0.6), Color(0.05, 0.07, 0.11, 0.6), [3, 0, 3, 0], [6, 2, 6, 2], 1.0)
+	cd.rim_tint = Color(0.6, 0.6, 0.6, 1.0)
 	_button_set(t, "ChipButton", cn, chh, cp, cd)
-	_button_colors(t, "ChipButton", P.TEXT_2, Color.WHITE, P.TEXT_DARK, P.TEXT_3)
+	_button_colors(t, "ChipButton", P.TEXT_2, Color.WHITE, Color("DDFBFF"), P.TEXT_3)
 	t.set_font("font", "ChipButton", Fonts.get_font("mono_b"))
 	t.set_font_size("font_size", "ChipButton", 12)
 
 	# Danger: removal and other destructive actions.
 	t.set_type_variation("DangerButton", "Button")
-	var dn = fh(Color(0.2, 0.07, 0.09, 0.9), Color(0.14, 0.05, 0.07, 0.9), P.over_panel(P.RED, 0.45), [6, 0, 6, 0], [12, 7, 12, 7])
-	var dh = fh(Color(0.36, 0.1, 0.12, 0.95), Color(0.24, 0.07, 0.09, 0.95), P.RED, [6, 0, 6, 0], [12, 7, 12, 7])
-	dh.glow = P.with_alpha(P.RED, 0.35)
-	dh.glow_size = 4.0
+	var dn = rimmed(Color(0.2, 0.07, 0.09, 0.8), Color(0.14, 0.05, 0.07, 0.85), [6, 0, 6, 0], [12, 7, 12, 7], 2.0)
+	dn.inner_glow = P.with_alpha(P.RED, 0.35)
+	var dh = rimmed(Color(0.36, 0.1, 0.12, 0.9), Color(0.24, 0.07, 0.09, 0.92), [6, 0, 6, 0], [12, 7, 12, 7], 2.0)
+	dh.inner_glow = P.with_alpha(P.RED, 0.75)
 	_button_set(t, "DangerButton", dn, dh, dh, bd)
 	_button_colors(t, "DangerButton", Color("FFC7C9"), Color.WHITE, Color.WHITE, P.TEXT_3)
 
-	# Card: a whole clickable card (build bar, research nodes, list rows).
+	# Card: a whole clickable card (build bar, research nodes). Raised metal rim.
 	t.set_type_variation("CardButton", "Button")
-	_button_set(t, "CardButton", panel_style("card"), panel_style("card_hover"), panel_style("card_selected"), panel_style("card"))
+	_button_set(t, "CardButton", panel_style("card_button"), panel_style("card_hover"), panel_style("card_selected"), panel_style("card_button"))
 	_button_colors(t, "CardButton", P.TEXT, Color.WHITE, Color.WHITE, P.TEXT_3)
 
 	# List row: flat until hovered.
@@ -252,8 +292,9 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "ScrollContainer", StyleBoxEmpty.new())
 
 	# ------------------------------------------------------------ line edit
-	var le = fh(Color(0.02, 0.04, 0.075, 0.85), Color(0.02, 0.04, 0.075, 0.85), P.over_panel(P.CYAN, 0.3), [5, 0, 5, 0], [10, 7, 10, 7])
-	var lf = fh(Color(0.03, 0.06, 0.1, 0.95), Color(0.03, 0.06, 0.1, 0.95), P.CYAN, [5, 0, 5, 0], [10, 7, 10, 7])
+	var le = rimmed(Color(0.02, 0.04, 0.075, 0.8), Color(0.02, 0.04, 0.075, 0.8), [5, 0, 5, 0], [10, 7, 10, 7], 1.0, true)
+	var lf = rimmed(Color(0.03, 0.06, 0.1, 0.92), Color(0.03, 0.06, 0.1, 0.92), [5, 0, 5, 0], [10, 7, 10, 7], 1.0, true)
+	lf.inner_glow = P.with_alpha(P.CYAN, 0.5)
 	t.set_stylebox("normal", "LineEdit", le)
 	t.set_stylebox("focus", "LineEdit", lf)
 	t.set_stylebox("read_only", "LineEdit", le)
@@ -297,13 +338,10 @@ static func build() -> Theme:
 	t.set_stylebox("fill", "ProgressBar", flat(P.CYAN, [0, 0, 0, 0], 2))
 	t.set_font("font", "ProgressBar", Fonts.get_font("mono"))
 	t.set_font_size("font_size", "ProgressBar", 11)
-	var sep := StyleBoxLine.new()
-	sep.color = P.LINE_SOFT
-	sep.thickness = 1
-	t.set_stylebox("separator", "HSeparator", sep)
-	var vsep := StyleBoxLine.new()
-	vsep.color = P.LINE_SOFT
-	vsep.thickness = 1
+	# Separators are engraved seams (critic round 15): a dark hairline and a light one.
+	var SeamLine = load("res://ui/theme/seam_line.gd")
+	t.set_stylebox("separator", "HSeparator", SeamLine.new())
+	var vsep = SeamLine.new()
 	vsep.vertical = true
 	t.set_stylebox("separator", "VSeparator", vsep)
 	t.set_constant("separation", "HSeparator", 8)

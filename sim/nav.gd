@@ -104,7 +104,7 @@ func rebuild() -> void:
 			continue
 		if b["kind"] == "link":
 			if b["def"] == "corridor":
-				_solid_capsule(b["p0"], b["p1"], CORRIDOR_R + BODY_R)
+				_solid_capsule(b["p0"], b["p1"], sim.corridor_r() + BODY_R)
 		elif b["def"] == "meridian":
 			var seg: Array = Ship.segment_of(b)
 			_solid_capsule(seg[0], seg[1], float(b["radius"]) + BODY_R)
@@ -122,7 +122,7 @@ func rebuild() -> void:
 			continue
 		if b["kind"] == "link":
 			if b["def"] == "corridor":
-				_weight_capsule(b["p0"], b["p1"], CORRIDOR_R + BODY_R + clear, cw)
+				_weight_capsule(b["p0"], b["p1"], sim.corridor_r() + BODY_R + clear, cw)
 		elif b["def"] == "meridian":
 			var seg2: Array = Ship.segment_of(b)
 			_weight_capsule(seg2[0], seg2[1], float(b["radius"]) + BODY_R + clear, cw)
@@ -340,14 +340,20 @@ func slot_pos(b: Dictionary, slot: int) -> Vector2:
 	return b["pos"] + Vector2(cos(a), sin(a)) * float(b["radius"]) * 0.6
 
 ## Outdoor access points of a structure or construction site that are walkable now.
+## V4: an access point is the centre of its walking cell. The centre of an open cell is at
+## least BODY_R outside every footprint and tube; a raw point could lie inside a
+## neighbour's corridor tube (seen in v31_outside_paths_clear with the 1.5 x rooms).
+func _cell_centre(p: Vector2) -> Vector2:
+	return Vector2(floor(p.x) + 0.5, floor(p.y) + 0.5)
+
 func access_points(b: Dictionary) -> Array:
 	var out: Array = []
 	if b["kind"] == "link":
 		var mid: Vector2 = (b["p0"] + b["p1"]) * 0.5
 		var n: Vector2 = (b["p1"] - b["p0"]).normalized().orthogonal()
-		var off: float = (CORRIDOR_R + _clear() + 1.0) if b["def"] == "corridor" else 1.0
+		var off: float = (sim.corridor_r() + _clear() + 1.0) if b["def"] == "corridor" else 1.0
 		for s in [1.0, -1.0]:
-			var p: Vector2 = mid + n * off * s
+			var p: Vector2 = _cell_centre(mid + n * off * s)
 			if is_walkable(p):
 				out.append(p)
 		if out.is_empty():
@@ -357,14 +363,15 @@ func access_points(b: Dictionary) -> Array:
 					out.append(q)
 		return out
 	if b["def"] == "meridian":
-		for p in sim.ship.access_candidates(b):
+		for p0 in sim.ship.access_candidates(b):
+			var p: Vector2 = _cell_centre(p0)
 			if is_walkable(p):
 				out.append(p)
 		return out
 	var r: float = float(b["radius"]) + _clear() + 1.0
 	for k in 8:
 		var a: float = float(b["rot"]) + k * TAU / 8.0 + 0.39
-		var p: Vector2 = b["pos"] + Vector2(cos(a), sin(a)) * r
+		var p: Vector2 = _cell_centre(b["pos"] + Vector2(cos(a), sin(a)) * r)
 		if is_walkable(p):
 			out.append(p)
 	return out

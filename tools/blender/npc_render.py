@@ -150,6 +150,10 @@ def add_props(kind):
         add_seat()
         add_box("DeskTop", (0.50, 0.0, 0.72), (0.56, 1.00, 0.04), (0.45, 0.36, 0.28))
         add_box("DeskLeg", (0.74, 0.0, 0.35), (0.06, 0.80, 0.70), (0.30, 0.32, 0.35))
+    elif kind in ("vseat", "vdoor", "vdoor_r"):
+        vehicle_props(kind)
+    elif kind in ("vstep", "vstep_r"):
+        step_props(kind)
     elif kind == "crate":
         s = 0.40
         ob = add_box("Crate", (0.0, 0.0, s / 2), (s, s, s), (0.55, 0.45, 0.30))
@@ -168,7 +172,47 @@ def _follow_crate(rig):
 PROP_FOR = {"sit_enter": "seat", "sit_idle": "seat", "sit_exit": "seat", "sit_eat": "desk", "sit_type": "desk",
             "lie_enter": "bed", "sleep": "bed", "lie_exit": "bed", "work_console": "console", "work_bench": "bench",
             "kneel_enter": "panel", "repair_kneel": "panel", "kneel_exit": "panel", "carry_idle": "crate",
-            "carry_walk": "crate"}
+            "carry_walk": "crate", "drive_sit": "vseat", "ride_sit": "vseat", "board": "vdoor", "alight": "vdoor",
+            "board_r": "vdoor_r", "alight_r": "vdoor_r", "step_up": "vstep", "step_down": "vstep",
+            "step_up_r": "vstep_r", "step_down_r": "vstep_r"}
+
+
+def step_props(kind):
+    """Ground frame stand-in of ART-B's small rover side: running board (top 0.50 m, outer edge 0.32 m from the ground
+    point), the cab side behind it, the front fender, the grab handle."""
+    import npc_anims as A
+    VS = A.VEHICLE
+    sg = -1.0 if kind == "vstep_r" else 1.0
+    so, O, gh = VS["step_offset"], VS["seat_offset"], VS["grab_handle"]
+    add_box("RunBoard", (-0.11, sg * -0.51, 0.48), (0.60, 0.38, 0.04), (0.36, 0.38, 0.42))
+    add_box("CabSide", (-0.30, sg * -0.95, 0.66), (1.50, 0.50, 0.32), (0.30, 0.33, 0.38))
+    add_box("Fender", (0.42, sg * -0.55, 0.62), (0.26, 0.40, 0.30), (0.24, 0.26, 0.30))
+    hz = gh[2] + O[2] + so[2]
+    add_box("VGrab", (gh[0], sg * (gh[1] + O[1] + so[1]), hz), (0.036, 0.036, 0.20), (0.75, 0.55, 0.20))
+
+
+def vehicle_props(kind):
+    """A stand-in cabin to the V4 vehicle seat contract (npc_anims.VEHICLE): seat, seat back behind the pack line,
+    dash with the two grips, grab handle; in the door frame also the cabin floor beyond the sill."""
+    import npc_anims as A
+    VS = A.VEHICLE
+    sg = -1.0 if kind == "vdoor_r" else 1.0
+    o = (0.0, 0.0, 0.0) if kind == "vseat" else (VS["seat_offset"][0], VS["seat_offset"][1] * sg, VS["seat_offset"][2])
+    if kind != "vseat":
+        fz, edge = VS["floor_z"], VS["floor_edge_y"] * sg
+        y0, y1 = (edge, edge - 0.95 * sg) if sg > 0 else (edge - 0.95 * sg, edge)
+        lo, hi = min(y0, y1), max(y0, y1)
+        add_box("CabinFloor", (-0.05, (lo + hi) / 2, fz / 2), (1.30, hi - lo, fz), (0.36, 0.38, 0.42))
+    sz, sb, sw = VS["seat_z"], VS["seat_back"], VS["seat_width"]
+    add_box("VSeat", (o[0] - sb, o[1], o[2] + sz - 0.03), (0.44, sw, 0.06), (0.24, 0.29, 0.37))
+    add_box("VSeatBase", (o[0] - sb, o[1], o[2] + (sz - 0.06) / 2), (0.30, sw - 0.1, sz - 0.06), (0.30, 0.32, 0.35))
+    add_box("VSeatBack", (o[0] + VS["pack_clear_x"] - 0.03, o[1], o[2] + sz + 0.30), (0.05, sw, 0.62), (0.24, 0.29, 0.37))
+    add_box("VDash", (o[0] + 0.48, o[1], o[2] + 0.70), (0.16, 0.56, 0.30), (0.30, 0.33, 0.38))
+    hh = VS.get("handle_half", 0.10)
+    for (x, y, z) in VS["grips"]:                       # vertical handles; the palm centre sits on the axis
+        add_box("VGrip", (o[0] + x, o[1] + y, o[2] + z), (0.036, 0.036, 2 * hh), (0.12, 0.12, 0.13))
+    gx, gy, gz = VS["grab_handle"]
+    add_box("VGrab", (o[0] + gx, o[1] + gy * sg, o[2] + gz), (0.036, 0.036, 2 * hh), (0.75, 0.55, 0.20))
 
 
 def import_astronaut(path):
@@ -322,6 +366,16 @@ def clip_camera(name):
         return (0.05, 0.0, 0.62), -70, 12, 4.8
     if name in ("collapse", "dead"):
         return (0.0, 0.15, 0.55), -50, 28, 5.6
+    if name in ("board", "alight"):
+        return (0.05, -0.26, 0.85), 35, 14, 5.8
+    if name in ("board_r", "alight_r"):
+        return (0.05, 0.26, 0.85), -35, 14, 5.8
+    if name in ("drive_sit", "ride_sit"):
+        return (-0.05, 0.0, 0.80), -40, 12, 4.6
+    if name in ("step_up", "step_down"):
+        return (0.05, -0.30, 0.95), 35, 12, 6.2
+    if name in ("step_up_r", "step_down_r"):
+        return (0.05, 0.30, 0.95), -35, 12, 6.2
     if name.startswith("sit"):
         return (-0.05, 0.0, 0.80), -70, 10, 5.0
     return (0.05, 0.0, 0.88), -60, 8, 5.1
@@ -475,7 +529,8 @@ def all_sheets(facts, clips_meta, meta):
     out = []
     order = ["idle", "idle_look", "walk", "run", "carry_idle", "carry_walk", "work_console", "work_bench", "talk",
              "injured_walk", "kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type",
-             "sit_exit", "lie_enter", "sleep", "lie_exit", "collapse", "dead", "cheer", "suit_swap"]
+             "sit_exit", "lie_enter", "sleep", "lie_exit", "collapse", "dead", "cheer", "suit_swap", "drive_sit",
+             "ride_sit", "board", "alight", "board_r", "alight_r", "step_up", "step_down", "step_up_r", "step_down_r"]
     variants = [v for v in ("suit", "indoor") if facts.get(v)]
     for v in variants:
         glb = os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % v)
@@ -501,6 +556,7 @@ def all_sheets(facts, clips_meta, meta):
         for v in variants:
             spec.append((v, os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % v), label, steps))
     out.append(transitions_sheet(spec, "transitions  s = suit  i = indoor"))
+    out.append(vehicle_sheet(clips_meta))
     if all(os.path.exists(os.path.join(N.MODEL_DIR, "astronaut_visitor_%s.glb" % v)) for v in ("suit", "indoor")):
         out.append(visitor_lineup())
         out.append(visitor_turnarounds())
@@ -606,7 +662,7 @@ def apply_look(meshes, variant, look, head=0, tone=3):
                 _material_rgb(m, HAIR_COLOURS[(tone + head * 3) % 4])
 
 
-LINEUP = [None, 0, 1, 2, 3, 4, 5, 6]
+LINEUP = [None, 0, 1, 2, 3, 4, 5, 6, 7]
 
 
 def _lineup_label(look):
@@ -632,7 +688,7 @@ def visitor_lineup():
     rows = []
     spacing = 0.95
     for variant in ("suit", "indoor"):
-        setup(1800, 520)
+        setup(1900, 500)
         figs = []
         for k, look in enumerate(LINEUP):
             rig, meshes = import_visitor_model(variant)
@@ -640,10 +696,10 @@ def visitor_lineup():
             figs.append(rig)
         for az, lab in ((-35, "front"), (145, "back")):
             _place_line(figs, az, spacing)
-            bpy.context.scene.render.resolution_x = 1800
-            bpy.context.scene.render.resolution_y = 520
+            bpy.context.scene.render.resolution_x = 1900
+            bpy.context.scene.render.resolution_y = 500
             clear_cameras()
-            camera((0.0, 0.0, 0.92), az, 8, 18.5, lens=85)
+            camera((0.0, 0.0, 0.92), az, 8, 21.0, lens=85)
             rows.append([("%s %s" % (variant, lab), render(os.path.join(TMP, "lineup_%s_%s.png" % (variant, lab))))])
         # game distance: the game camera (50 deg down), ortho, a 1.8 m figure = px pixels
         _place_line(figs, -40, spacing)
@@ -667,10 +723,12 @@ def visitor_lineup():
 VIS_CLOSE = {
     "suit": {"trader": ((0.10, 0.0, 1.10), -30, 10, 2.3), "tourist": ((0.10, 0.0, 1.25), -25, 8, 2.2),
              "medical": ((-0.15, 0.0, 1.45), 150, 12, 2.2), "science": ((-0.2, 0.1, 1.65), 140, 12, 2.4),
-             "inspector": ((0.0, 0.0, 1.62), 70, 22, 2.1)},
+             "inspector": ((0.0, 0.0, 1.62), 70, 22, 2.1),
+             "radiation": ((0.08, 0.0, 1.25), -30, 12, 2.2)},
     "indoor": {"trader": ((0.05, 0.0, 1.20), -35, 8, 2.0), "tourist": ((0.08, 0.0, 1.35), -30, 6, 1.9),
                "medical": ((0.05, 0.0, 1.35), -40, 8, 1.8), "science": ((0.05, 0.0, 1.20), -35, 8, 2.4),
-               "inspector": ((0.0, 0.0, 1.62), -35, 22, 1.5)},
+               "inspector": ((0.0, 0.0, 1.62), -35, 22, 1.5),
+               "radiation": ((0.06, 0.0, 1.40), -30, 8, 1.9)},
 }
 
 
@@ -709,4 +767,58 @@ def visitor_turnarounds():
             rows.append(row)
     out = os.path.join(N.ART_DIR, "visitors_turnaround.png")
     compose(rows, out, title="visitor kinds: four sides, attachment close-up, game size (tourist set 0)")
+    return out
+
+
+def vehicle_sheet(clips_meta):
+    """V4 vehicle clips, both variants: board and alight in the door frame with the next / previous seat pose placed
+    at seat_offset (it must match), and the two seat loops."""
+    import npc_anims as A
+    _tmpdir()
+    rows = []
+    O = A.VEHICLE["seat_offset"]
+    for variant in ("suit", "indoor"):
+        glb = os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % variant)
+        for clip, other, at in (("step_up", "idle", "after"), ("board", "ride_sit", "after"),
+                                ("alight", "ride_sit", "before"), ("step_down", "idle", "before")):
+            n = clips_meta.get(clip, {}).get("frames", 60)
+            setup(300, 380)
+            add_props(PROP_FOR[clip])
+            rig, objs = import_astronaut(glb)
+            show_head(objs, 1 if variant == "indoor" else 0)
+            tgt, az, el, dist = clip_camera(clip)
+            row = []
+            frames = [0, n // 5, 2 * n // 5, 3 * n // 5, 4 * n // 5, n]
+            seq = [(clip, f, (0.0, 0.0, 0.0)) for f in frames]
+            off = A.VEHICLE["step_offset"] if clip.startswith("step") else O
+            if at == "after":
+                seq.append((other, 0, off))
+            else:
+                seq.insert(0, (other, 0, off))
+            for k, (c, f, off) in enumerate(seq):
+                rig.location = off
+                set_clip(rig, c, f)
+                clear_cameras()
+                camera(tgt, az, el, dist, lens=85)
+                lab = "%s %s %d" % (variant[0], c, f) + (("  at %s" % ("step_offset" if clip.startswith("step") else
+                                                                       "seat_offset")) if c == other else "")
+                row.append((lab, render(os.path.join(TMP, "veh_%s_%s_%d.png" % (variant, clip, k)))))
+            rows.append(row)
+        setup(300, 380)
+        add_props("vseat")
+        rig, objs = import_astronaut(glb)
+        show_head(objs, 2 if variant == "indoor" else 0)
+        row = []
+        for clip in ("drive_sit", "ride_sit"):
+            n = clips_meta.get(clip, {}).get("frames", 120)
+            for k in range(3):
+                f = int(round(n * k / 3))
+                set_clip(rig, clip, f)
+                clear_cameras()
+                tgt, az, el, dist = clip_camera(clip)
+                camera(tgt, az, el, dist, lens=85)
+                row.append(("%s %s %d" % (variant[0], clip, f), render(os.path.join(TMP, "veh_%s_%s_%d.png" % (variant, clip, k)))))
+        rows.append(row)
+    out = os.path.join(N.ART_DIR, "vehicle_clips.png")
+    compose(rows, out, title="V4 vehicle clips: step_up, board, alight, step_down (next pose placed at its offset), seat loops")
     return out

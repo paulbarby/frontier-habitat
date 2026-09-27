@@ -1,0 +1,28 @@
+{
+  "round": 18,
+  "date": "2026-09-27",
+  "scope": "v4.0 terrain_v4 pilot (V4_DESIGN 1, 1.1). Evidence art/critic_input/render/121-124 (RENDER, placeholder land outside the old 810 m map). Judged: look and light, not exact placement.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "terrain_v4": {"consistency": 0.62, "appeal": 0.56, "style": 0.62, "score": 0.60, "pass": false, "provisional": true,
+      "what_works": [
+        "Horizon shadows exist and move with the sun: the deep crater floor is in shadow early and at dusk and lit at noon (122); the noon crater reads as a real bowl with shaded walls.",
+        "Crevice (12.9 m wide, 28 m deep) reads well: a dark jagged crack with depth (124).",
+        "The base on the crater floor stays visible at night through its bands and windows (123)."
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "Haze flattens everything. At 1,350 m and at 360 m the fog lifts the blacks to mid brown, so shadows, relief and the base all lose contrast (121 dusk: the crater disappears; 122 dusk; 124 boulders). Scale the fog with camera height (start fog at 1.5 x camera distance, max density 35% at the far edge) and never fog the terrain under the camera focus."},
+        {"owner": "RENDER", "fix": "Shadow reads as a flat stain: the horizon shadow is a uniform dark patch with a hard edge laid over flat-looking ground (121, 122 early). Keep direct sun shading (N dot L) and add the horizon term on top, soften the shadow edge by the penumbra (2-4 m at crater scale), and give the shadowed area a cool ambient (sky blue-grey, about #3A4250 at 25%) so crater floors read 'cold' as V4 1.1 asks. Now the floor is warm brown."},
+        {"owner": "RENDER / SIM", "fix": "Mountains: stretched vertical triangles and spike sheets on the range and the plateau cliff (art/critic/r18_range_crop.png, r18_plateau_crop.png). Raise the mesh resolution on steep cells (or triplanar-map the cliff faces), clamp single-vertex spikes, and use SIM's generator heights (not the placeholder)."},
+        {"owner": "RENDER", "fix": "Craters need form, not only shadow: a raised rim lip with a lit sunward edge, terraced or slumped inner walls, an ejecta apron and a few boulders on the floor. At 360 m the crater now reads as a smooth funnel."},
+        {"owner": "RENDER / ART-HAB", "fix": "Boulders: 4-20 m boulders read as small dark blobs on a slope (124). Use real rock meshes with lit tops, shadow cast on the ground and scale cues (a rover or a colonist marker in the shot); group them in fields of 30-80 with 3-4 giants."},
+        {"owner": "RENDER", "fix": "Detail texture on the new land (known gap): the terrain outside 810 m is a smooth smear next to the detailed colony ground. Extend the sand, gravel and rock layers and the slope-rock rule to the whole map."},
+        {"owner": "RENDER", "fix": "Rain-like streaks in 123 (weather in the staged save): hide weather in critic shots or make dust streaks read as dust (short, warm, soft), not rain."},
+        {"owner": "RENDER", "fix": "Base in the crater at night: brighter lamp pools on the crater floor (the lamps light only their base) so the base reads as an island of light in a dark bowl at 360 m."}
+      ]}
+  },
+  "notes": [
+    "FAIL 0.60 on the pilot: the light system is right in principle, but at the game cameras haze and flat shading hide the drama Paul asked for (massive craters with proper shadows, mountains to go around). The placeholder mountain mesh counts against it; re-rate on SIM's generator.",
+    "My crops: art/critic/r18_range_crop.png, r18_plateau_crop.png."
+  ]
+}

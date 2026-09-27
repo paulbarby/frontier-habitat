@@ -30,7 +30,7 @@ func setup(v) -> void:
 	mat.render_priority = 20
 	mmi.material_override = mat
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.custom_aabb = AABB(Vector3(-600, -100, -600), Vector3(1500, 400, 1500))
+	mmi.custom_aabb = AABB(Vector3(-700, -200, -700), Vector3(4000, 700, 4000))
 	add_child(mmi)
 
 ## list: [{pos: Vector3, icon: int, color: Color, progress: float, pulse: float}]

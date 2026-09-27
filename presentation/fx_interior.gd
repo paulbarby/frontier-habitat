@@ -84,7 +84,7 @@ func setup(v) -> void:
 	pool_mat.render_priority = 1
 	pools.material_override = pool_mat
 	pools.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	pools.custom_aabb = AABB(Vector3(-100, -60, -100), Vector3(1100, 260, 1100))
+	pools.custom_aabb = AABB(Vector3(-200, -200, -200), Vector3(3000, 600, 3000))
 	pools.name = "LightPools"
 	add_child(pools)
 	_pool_sig = ""

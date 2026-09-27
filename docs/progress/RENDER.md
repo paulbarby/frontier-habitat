@@ -667,3 +667,240 @@ Evidence: `art/critic_input/render/109`–`118` (index updated; 105–108 added 
   ART-HAB now uses the same rule and fitted every wall item under 1.396 m.
 - **Cut check after3: 28 of 28 room types pass** (was 20 of 28). Export pck 79.7 MB; `check` clean.
 - Evidence: `art/critic_input/render/119`, `120`.
+
+## 2026-09-27 — V4 milestone 1: terrain v4 + horizon shadows PILOT (placeholder land)
+
+SIM has not published the v4 world (no entry in `SIM-to-RENDER.md`). The pilot runs on a placeholder, as the
+coordinator asked. What RENDER needs from SIM is in `RENDER-to-SIM.md` (2026-09-27).
+
+**New: `presentation/terrain_v4.gd`.**
+- Placeholder land round the sim map (the sim map keeps its own heights, so every structure and body stands
+  where it did): 2,560 m, 4 m grid (641²), deterministic from the seed. Mountain ranges (smooth body plus
+  ridged crests, up to 189 m on seed 1001), 3 plateaus 33–44 m with a ramp toward the colony, 6 deep craters
+  (flat floor, steep slumped wall with gullies, raised rim; 42–117 m deep), 4 crevices (6.5–12.9 m wide,
+  24–35 m deep), 5 boulder fields (4–20 m boulders, the rock models). Blends into the sim map edge over 60–260 m.
+- Chunks 256 m, 4 levels of detail (4/8/16/32 m), skirts; quads inside the sim map are left out. Near chunks
+  cast real-time shadows. An apron of hills to about 1.5 km beyond the edge.
+- **Horizon map:** 8 m cells, 8 azimuths, upper-convex-hull sweep per direction; elevation angle in a byte;
+  2 RGBA8 textures. `sun_vis(x, z, dir)` and `sky_open(x, z)` on the CPU with the same numbers.
+- Build time (headless, this PC): generation 0.74 s, meshes 0.05 s, horizon 0.34 s, total 1.1–1.3 s.
+
+**Shader (`shaders/terrain.gdshader`).** A `light()` function that is Godot's own Burley diffuse and
+Schlick-GGX specular, with the horizon visibility on the key light only (the v3 terrain looks the same:
+the storehouse view of 2026-09-26, shot again on the same save: mean colour 106.6/72.0/47.4 against
+106.7/72.1/47.4, mean absolute difference 1.3 per channel, from colonists that moved). Sky openness darkens and cools deep floors
+(cold traps). Triplanar rock on slopes above 0.3 (crater walls, cliffs).
+
+**Objects in a shadowed crater.** world_view dims the key light by the sun visibility at the camera focus and
+the ambient by the sky openness, faded out between 90 m and 320 m camera distance; the terrain shader undoes
+both for itself (`key_comp`, `amb_comp`). The fog in a shadowed crater is dimmer and thinner.
+**Limit:** at close zoom an object on a sunlit rim seen from a shadowed floor is also dimmed.
+
+**Camera.** In v4: pan bounds = the 2,560 m land, zoom to 1,400 m, far plane 5,200 m, the haze thins faster
+with height (`fx_sky.fog_far`).
+
+**Evidence:** `art/critic_input/render/121`–`124`. The base in the crater (123) is **staged** view-side
+(`v4stage`); SIM's `showcase_v4` will replace it.
+
+**Performance (shoot --gpu, showcase_v3_late, speed 1):**
+
+| view | v4 off fps / draw calls | v4 on fps / draw calls |
+|---|---|---|
+| colony 110 m | 43 / 907 | 37 / 1,037 |
+| colony 250 m | 49 / 939 | 44 / 1,083 |
+| map 450 m | 53 / 952 | 50 / 1,104 |
+| overview 1,350 m | — | 54 / 968 |
+| crater 360 m | — | 60 / 298 |
+
+**Not met yet:** ≥ 50 fps at the colony (it was 43 before v4). The v4 terrain costs 5–6 fps and 130–150 draw
+calls near the colony. pck 80.2 MB (the pilot adds no textures).
+
+**Checks (after the change):** cut check 28/28; airlock all 0 (pump starts with a door over 5 % open 0/84,
+0/75); path check PASS ((a) 0, (b) 0.128 %, (c) 0, (d) 0). `check` clean (181 scripts).
+
+**Not done in this milestone:** crevices narrower than about 8 m (4 m grid; with SIM's grid or a crevice mesh);
+terrain decals on the v4 land (the splat covers the sim map only); vehicles, map layers, reactor effects.
+
+## 2026-09-27 — V4 terrain on SIM's generator; critic round 18 fixes
+
+**SIM's world.** fx_terrain draws `sim.world` on v4 maps (641² at 4 m, 100 chunks of 256 m); LOD distances
+scale with the grid step; splat 0.5 px/m over the whole map; the ground texture (paths, contact shadows, walk
+overlay) is a 1,024 m window round the start; pebbles in that window; the far ring reaches 2.3 km. The placeholder
+land is removed. The sun comes from `sim.world.sun_angles` (32° at noon) through `fx_sky.sun_fn`. New boot
+parameter `scenario=frontier` (and a 5th `newgame` argument) in `presentation/main.gd`.
+
+**Horizon, one format with SIM.** SIM's layout (13 day bearings, degrees, +1.5 m eye). The view bakes the same
+quantity once on the GPU (`shaders/horizon_bake.gdshader`, SubViewport, 8 m cells, 36 steps to 900 m) plus a
+sky-openness bin. Checked against SIM's map (`v4hz`): crater floor view/sim 32.4/34.4, 32.7/34.2, 33.9/31.9,
+33.1/32.4, 33.5/33.8°; plateau within 1.5°. Objects near the focus use SIM's own `sun_vis`.
+
+**Round-18 fixes.** (1) Depth haze on v4: begins at 1.5 × camera distance, 35 % at the far edge. (2) Sun shading
+kept, horizon on top, 1.5° soft (a few metres on a crater floor), blue-grey cast on horizon-shadowed ground.
+(3) Quads split on the diagonal with the smaller height change (no saw-tooth), rock strata on slopes > 0.4,
+far-distance macro that hides the 197 m texture repeat. (4) Deep craters painted: rim lip, slump terraces,
+rayed apron, floor debris; 26 cosmetic floor rocks (≤ 1.6 m) per crater. SIM asked to carry the form in the
+heights and to raise boulder counts (`RENDER-to-SIM.md`). (5) Boulders: SIM's kind-3 rocks cast shadows;
+still ART-B's small rocks scaled up; **ART-HAB asked for 4–6 boulder meshes**. (6) Detail on the whole map.
+(7) Dust motes: off in stills, dim in a shadowed crater. (8) Lamps and windows burn by day in a shadowed crater;
+staged base: six 5.0-energy lamps, 32 m range.
+
+**Other.** ART-HAB 4.0: room models at 1.5 × content radius are now drawn at record radius (`ROOM_MODEL_SCALE`,
+not airlock/junction); band cap offset −1.07. Airlock: walkers wait at a door under 80 % open
+(`fx_airlock.door_blocks`), doors hold for a body within 0.8 m.
+
+**Numbers.** View build on the frontier map 1.3 s (world gen 1.36 s, SIM). pck 70.8 MB (ART-HAB import settings).
+FPS (`shoot --gpu`): frontier new colony 60 (vsync) at 110 m, 1,300 m and the crater, 50–290 draw calls.
+v3 showcase_v3_late colony: **56 fps at 110 m, 60 at 250 m** with no Blender running (load 39 %, 3 Godot
+processes of other agents); 39–42 fps with Blender running (load 16–28 %). The 43 fps of the pilot was load.
+
+**Checks.** cut 28/28. Airlock all 0 (pump starts with a door over 5 % open 0/84, 0/75). Path check PASS
+((a) 0, (b) 0.084 %); one earlier run of the same code had (a) 16 (a body in a tube at a greenhouse wall);
+the next run 0: not deterministic, to trace.
+
+## 2026-09-27 — critic round 20 fixes, vehicles pilot, `_m` fallback
+
+**Terrain (round 20, pass 0.71).** Crater floor in horizon shadow by day: bounce light from the lit walls (26 %
+of the key, cool) plus a grey-blue cast; measured 15.5 % of the lit plain (linear; 52 vs 122 sRGB). Crevices:
+their own lofted mesh along SIM's lines (lips per side at the ground outside the trench, smoothed; vertical walls;
+floor; end caps; two-sided); the terrain opens over the crack (splat B = 0, `crack_cut`) and the terrain mesh
+fills SIM's trench under the lips. Gravel: a rotated 83 m and a 610 m macro sample break the honeycomb.
+Deposit rings on v4 only with the `resources` overlay (SIM asked for `deposits[i].known`). Boulders: ART-HAB's
+`boulder_a..f`. Horizon bake at 4 m cells. Zoom: the mouse wheel reaches 1,400 m in play (40 wheel steps in the
+web build: distance 62 → 1,400 m, far plane 5,200 m).
+
+**Vehicles pilot (`presentation/fx_vehicles.gd`, view-side until SIM publishes vehicles).** ART-B's models:
+suspension per wheel from the ground under each hub, body pitch/roll from four contact points, wheel spin by
+distance, steering from the yaw rate, dust from Dust_L/R, head/work spot lights at dusk, at night and in a
+shadowed crater (never hidden), hopper spool/flight/landing with legs, flames and ground dust, satellite orbit at
+420 m with sun-tracking wings, launch pad arms, ignition, lift-off. Crew: fx_npc puppets play ART-NPC's chain
+`step_up → board → drive_sit/ride_sit … alight → step_down` (right door `_r`), the body origin moved at each cut
+frame with no cross-fade; pressurised vehicles fade the crew at the hatch. The ten vehicle clips are now baked
+(`ALL_CLIPS`). Debug: `vdemo`, `vboard`, `vdrive`, `vhop`, `vlaunch`, `vfollow`, `vinfo`. Evidence 132.
+
+**Other.** `_m` fallback in `models.resolve`/`prop`. Culling boxes widened for 2,560 m (bodies, halos, interior
+pools, icons, particles). The one-off 16 wall samples: a body stepping aside in a corridor end into a room's wall
+band; `_step_aside` now refuses a point within 0.45 m of any room wall line.
+
+**Checks — changed by today's sim edits (not RENDER's).** cut 28/28. Airlock and path checks now differ after
+the 14:16–14:52 sim/content edits (cycles 84 → 111; scene_final wall hits at airlock 141, which is built during
+the run; furniture 0.24 %). The same failures with RENDER's walker rules off. Asked SIM (`RENDER-to-SIM.md`).
+
+## 2026-09-27 — checks green again; map layers, reactor effects, multi-base camera
+
+**Regressions fixed (red before features).** Causes: (1) SIM put the 1.5 × radii in `buildings.json` at 14:16,
+so RENDER's extra ×1.5 for room models drew every old-save room at 2/3 size — removed; (2) ART-HAB's airlock
+and junction files were briefly 5.1 / 6.0 / 3.75 m against content 3.4 / 4.0 / 2.5 — RENDER now reads the built
+wall radius and scales only when a file is the big build (ART-HAB has since restored the content radii);
+(3) SIM's new-game balance (answered by SIM: old saves keep v3 rules); (4) UI's `minimap.gd` had two lines joined
+(line 107) and stopped every script from compiling: one newline restored, UI told. Run-to-run noise removed from
+the gates: `sim.set_freeze_build(true)`, no wall-clock step cap (`main.step_cap_us`), a count-only plan budget
+(`npc.plan_budget_us`). The single 0.57 m/s "slide" was a body stepping aside in a doorway: the step-aside now
+moves at 0.25 m/s. Walker top speed 4.2 m/s on V4-rule games (SIM caps 4.0 / 3.5; the run clip rate follows the
+speed, no slide).
+
+**Checks (final):** path check PASS three runs in a row ((a) 0, (b) 0.075–0.086 %, (c) 0, (d) 0, (e) 152);
+airlock check all 0 (83 / 76 cycles; pump starts with a door over 5 % open 0/84, 0/77); cut check 28/28.
+
+**Map layers** (`fx_terrain.set_layer`, terrain shader): radiation, sun, resources, explored; fog of war from
+`state.fog` (staged cells for evidence). **Reactor effects** (`presentation/fx_reactor.gd`): warning / critical
+lamps from a parked light pool, steam, a red blast-radius ring; breach flash, fireball, debris, dust, shock ring,
+shake, scorched crater; radiation zones (new decal mode 7, rising motes). Staged with `rxdemo`. **Multi-base
+camera:** `jump_base(id)` / `base next` flies to a base's structures with a rise on long jumps. Deposit rings:
+per deposit by SIM's `surveyed`, labels name the kind. Evidence 133–135.
+
+**pck 94.6 MB (decimal) — at the 95 MB limit**, from ART-HAB's new building files (RENDER added no assets);
+ART-HAB asked to drop the M copies (the `_m` fallback is in).
+
+**Pending:** the 8-doorway XL / 4-doorway S case (when SIM and ART-HAB land it); SIM vehicles, meltdown, fog
+records; satellite map icon and reveal bands (UI).
+
+## 2026-09-27 — vehicles on SIM's records; links rule case; checks
+
+**SIM vehicles** (`sim.vehicles.list()`, `fx_vehicles._sync_sim`): each SIM vehicle gets ART-B's model
+(small_rover → rover_small, medium_rover → rover_medium, hopper). Rovers follow SIM's position smoothly (10 ticks
+a second) with heading, steering, suspension, wheel spin, dust and lights; the medium rover's ramp is down when
+parked. The hopper: SIM moves it straight at 25 m/s while `hopping`; the view draws the arc (22 % of the hop,
+25–80 m), flames, legs and ground dust, and a 1.5 s spool-down after landing. Crew: an agent who joins `crew`
+plays step_up → board → drive_sit/ride_sit (open rover) or fades in at the hatch (pressurised); one who leaves
+plays alight → step_down / fades out, then fx_npc draws them again (`vehicles.hides(aid)`; fx_npc skips every
+agent with `where == "vehicle"`). Charging / fuelling at a depot bay: a cyan pulse. A vehicle on order at a depot:
+a hologram of it at the first free bay, more solid with progress, sparks while it is worked. Checked headless with
+`tools/render_vehicle_sim.gd` (depot L, three vehicles, crew boarded by SIM, a drive and a hop) and in the web build
+(evidence 136). Every content def and size has a model (`tools/render_defs_probe.gd`: 139 def-sizes, 0 missing,
+0 rooms whose wall ring is off the content radius).
+
+**Links rule case:** `tools/render_doors_save.gd` builds `build/web_render/doors8.fhsave` (an XL habitat with 8
+corridors, an S habitat with 4). The cut check now also checks door kits on every room of its saves (kits =
+corridors, no two kits closer than the housing, wall segments hidden): XL 8 kits 45° apart (housing 17.3°), 16
+segments hidden; S 4 kits 90° apart (housing 38.4°). 0 failures; 7 old-save rooms whose links predate the rule are
+listed as legacy. `doors8.fhsave` is also a path-check save.
+
+**Checks:** path check PASS twice (3 saves, 550,104 samples: (a) 0, (b) 0.064–0.075 %, (c) 0, (d) 0, (e) 152);
+the last slide was a body starting to walk during a cross-fade: the pose machine now starts the walk at once when
+the body is moving over 0.3 m/s. Airlock check all 0. Cut check 37 types, 0 above the cut. pck 77.5 MB
+(ART-HAB's files trimmed).
+- UI's depot shot fixed: the 4.0 exteriors (depot, reactor, crystal refinery, chemical plant, launch pad, outpost
+  core, crevice bridge) never cut their roof away and their selection outline skips the roof (it drew as a cyan slab);
+  parked vehicles stand at ART-HAB's `Anchor_Bay_<i>` facing out; the order hologram too (evidence 137). SIM asked
+  to move its bays to the anchors. All three checks green after the change (path PASS, airlock all 0, cut 37 types /
+  doors 0 failures).
+
+## 2026-09-28 - SIM milestones 6-8 in the view (reactor, fog, POIs, satellite), perf on showcase_v4
+
+**Switched to SIM records** (tested on the rebuilt `content/saves/showcase_v4.fhsave`, `debug=1`):
+
+| Item | SIM record used | Result |
+|---|---|---|
+| Reactor stages | `sim.reactors.list()` stage per reactor | warning / critical lamps, steam, 60 m red ring |
+| Breach | log `reactor_breach` | explosion at the reactor, 60 m shock ring, crater; 140 m zone from `sim.reactors.zones()`, strength 0.5^(age / 2 days) |
+| Refinery | log `unstable_blast` | small explosion (14 m) |
+| Chemical plant | `zones()` kind `toxic` (log `toxic_leak`) | 30 m green hatch, runs out at `until` |
+| Fog | `sim.explore.fog()` bits + `rev` | uploaded on each rev change |
+| POIs (23) | `sim.explore.pois()` found / visited | look per kind, ring, light pillar, label, discovery pulse |
+| Satellite | `sim.explore.sats()` band, next_s, uplink | model + beacon glow at 420 m over the band, beam and scan line |
+| Launch | log `satellite_launched` (ents[0] = pad) | pad model plays ignition and lift-off, 40 s |
+
+**Faults found and fixed:**
+- `reactor_breach` and `unstable_blast` are logged with no entity. The first version put the explosion at map (0, 0). The view now uses the risky structure of that def that disappeared in the same sync. Request to SIM: add the id.
+- SIM's `reactor_stage breach` does not breach while the core has coolant (heat set to 100, then cooled before the stage check). Evidence uses `tools/render_v4_disaster_save.gd` (heat 130). Reported to SIM.
+- Fog edge showed the 16 m cells as steps. Now 5 taps in the terrain shader over +-1 cell.
+- Fog upload cost 34-37 ms, once per game second while colonists walk outside (GDScript loop over 25,600 cells + cubic resize). Now the bits go up as they are into a reused texture: 0.2 ms.
+- Vehicle spot lights stayed at full range with 0.0005 energy by day; each new object they reached cost a 100-150 ms web frame. They are now parked (range 0.001) when not wanted, and switch on only when dark > 0.25.
+- Deposit labels (~100 Label3D) were rebuilt each time a deposit was surveyed. Now only the two ring meshes are rebuilt.
+- Satellite at 420 m was a few pixels: beacon glow billboard added.
+- Rover body tilt capped at 24 deg and rests on a crest. The expedition rover in showcase_v4 is still parked on a 30 deg rim flank and reads as tipping. Request to SIM: flat parking spots.
+- Night warm-up now also draws the POI models (satellite, boulders, rocks, courier and trader ships).
+- `tools/render_export.mjs`: `godot.mjs check` exits 1 although every script parses ("checked 228 scripts, 0 failed"). Godot 4.4.1 crashes at exit (0xC0000005) on leaked GDScript cycles when models.gd and the UI theme scripts are loaded together. The export now reads the check's verdict line. Reported below; not RENDER's scripts alone.
+
+**Perf, showcase_v4, web build, GPU, 1600x900, machine idle (CPU 2-5 % before the run):**
+
+| View | avg fps | draw calls max | frames > 50 ms |
+|---|---|---|---|
+| overview 250 m, 120 s | 58.3 | 1,164 | 10 (all in the first 110 s after load, 60-150 ms engine-side; one 667 ms browser frame at g7321 when the satellite finds the derelict probe) |
+| colony 110 m, 60 s (after that) | 58.6 | 1,165 | 1 (50.1 ms) |
+| map 1,300 m, 30 s | 59.2 | 1,201 | 0 |
+
+- fps and draw calls meet the budget. **"No frame over 50 ms" is not met in the first ~2 minutes after a load.** Frozen view: 0 spikes; skipping `fx_vehicles` sync: 0 spikes in 62 s. Spots, crew, dust, builds, charging and the Lights node were tested one at a time: spots were 4 of 7; the other 3 (g7320, g7347, g7361, rover route stops) are not yet isolated.
+- pck: 78.5 MB (74.8 MiB).
+
+**Checks:** path PASS (550,104 samples: wall 0, furniture 0.075 %, outside 0, slide 0, teleport 0, void 130); airlock all 0 (31 and 38 cycles); cut 37 types, 0 above 1.45 m; doors 99 rooms, 0 missing or overlapping kits. `godot.mjs check`: 228 scripts, 0 failed, exit 1 (exit crash above).
+
+**Evidence:** `art/critic_input/render/138`-`141`.
+
+**New tools:** `render_v4_disaster_save.gd`, `render_v4_launch_save.gd`, `render_poi_list.gd`, `render_spike_probe.gd`, `render_check_bisect.gd`; `render_v4_showcase_probe.gd` takes a save path. Debug (`__fhr`): `simlog`, `skip <module>`, `vspots`, `vtest`, `v4state` now has `sat_xyz`, `cam`, `fog_ms`.
+
+## 2026-09-28 (later) - frame stalls on showcase_v4 (stopped for the usage pause)
+
+Cause (WebGL trace, `linkProgram` hook): every stall over 50 ms was a shader program compiled mid-game. The Compatibility renderer builds one program per material for each light mix (no light / omni / spot / both) and for each new material.
+
+Fixes:
+- `fx_sky.gd`: an always-on omni and spot (energy 0.0001, cover the whole map), so the light mix of an object does not change when a rover drives under a lamp or a head light turns on.
+- Load warm-up (`world_view._night_warmup`) also draws: all vehicle models, their dust and a spot (`fx_vehicles.warm_nodes`); every particle pool and a glow sprite (`fx_particles.prewarm`); a satellite with glow, beam and scan line (`fx_explore.warm_nodes`); the build hologram material; POI models.
+- Vehicle spot lights: parked (range 0) when off; on only when dark > 0.25.
+- Deposit ring meshes: the two nodes are kept and get the new mesh (no new instance when a deposit is found).
+
+Result, 120 s at the 250 m overview after the load cover, 3 runs with the final build: 0, 0 and 1 frame over 50 ms (max 50, 18, 67 ms). Program links in 120 s: 22 before, 0-1 now. The remaining one (1 run in 3) is an omni-only program of the ground decal shader at the moment a deposit is found (g7285); cause not found.
+
+Measurement tools added: `__fhr` `lights`, `nodelog on|get`, `simlog`, `skip`, `vtest`, `vspots`; `tools/render_vis_probe.gd`, `tools/render_spike_probe.gd`.
+
+Checks: path, airlock and cut checks were last run before these changes (all green); not re-run after them. `godot.mjs check`: 232 scripts, 0 failed.

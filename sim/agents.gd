@@ -58,7 +58,7 @@ func suit_cap() -> float:
 ## a["at"] = [that room, position, room of the next waypoint], valid only at that exact
 ## position: a body in a corridor may start from either end.
 func loc_of(a: Dictionary) -> Dictionary:
-	if a["where"] == "out":
+	if a["where"] == "out" or a["where"] == "vehicle":
 		return {"b": -1, "p": a["pos"]}
 	var at = a.get("at")
 	if at != null and (at as Array)[1] == a["pos"] and sim.state["buildings"].has(int(at[0])):
@@ -70,6 +70,8 @@ func loc_of(a: Dictionary) -> Dictionary:
 func breathable(a: Dictionary) -> bool:
 	if a["where"] == "out":
 		return false
+	if a["where"] == "vehicle":
+		return sim.vehicles.cabin_air(a)
 	return sim.util.building_supplied(a["bld"])
 
 ## Longest one-way walk (metres on foot) from an airlock that still leaves time for a short
@@ -90,7 +92,8 @@ func nearest_air_metres(p: Vector2) -> float:
 	return best
 
 func productivity(a: Dictionary) -> float:
-	var p := 1.0
+	# V4 rules: people work a little faster (balance.work_speed; 1.0 in saves before V4).
+	var p: float = float(sim.bal.get("work_speed", 1.0))
 	if float(a["morale"]) < float(sim.bal["morale_very_low"]):
 		p = float(sim.bal["productivity_very_low"])
 	elif float(a["morale"]) < float(sim.bal["morale_low"]):
@@ -134,6 +137,10 @@ func needs_tick() -> void:
 			if comp != null:
 				var st = astats.get(comp)
 				ok_air = st != null and bool(st["supplied"])
+			elif a["where"] == "vehicle" and sim.vehicles.cabin_air(a):
+				# V4: a pressurised cabin has air and suit ports.
+				ok_air = true
+				a["suit"] = minf(suit_cap(), float(a["suit"]) + dt)
 		if ok_air:
 			a["o2_grace"] = 0.0
 		else:
@@ -172,6 +179,8 @@ func _hurt(a: Dictionary, amount: float, cause: String) -> void:
 		_die(a, cause)
 
 func _die(a: Dictionary, cause: String) -> void:
+	if a["where"] == "vehicle":
+		sim.vehicles.alight(a)
 	a["health"] = 0.0
 	a["cause"] = cause
 	abort_plan(a, "died")
@@ -385,10 +394,15 @@ func _think(a: Dictionary) -> void:
 	var bal: Dictionary = sim.bal
 	if a["where"] == "lock":
 		return
+	if a["where"] == "vehicle":
+		_ride_think(a)
+		return
 	var cap: float = suit_cap()
 	a["rescue"] = false
 	# 1. Immediate survival: exposed and the air margin is gone -> go to supplied air.
-	if not breathable(a) and a["plan_kind"] != "safety":
+	# V4: an order the player confirmed despite the risk runs on (orders.gd).
+	var bold: bool = a.has("order") and sim.orders.confirmed(a)
+	if not bold and not breathable(a) and a["plan_kind"] != "safety":
 		var ret: float = _return_seconds(a)
 		a["return_secs"] = ret
 		if ret >= 1e8:
@@ -398,11 +412,13 @@ func _think(a: Dictionary) -> void:
 			if a["where"] != "out":
 				limit = maxf(limit, cap * 0.5)
 			if float(a["suit"]) <= limit:
+				if a.has("order"):
+					sim.orders.clear(a, "low suit air")
 				_start_safety(a)
 				return
 	# 1b. A shelter order (V3 hazards) brings everyone outside back in. Without an order a
 	# colonist hurt by a solar flare goes inside by itself.
-	if a["where"] == "out" and a["plan_kind"] != "safety":
+	if not bold and a["where"] == "out" and a["plan_kind"] != "safety":
 		if sim.hazards.sheltered() or (float(a["health"]) < sim.hazards.retreat_health() and sim.hazards.flare_active()):
 			_start_safety(a)
 			return
@@ -428,6 +444,10 @@ func _think(a: Dictionary) -> void:
 	if a["kind"] == "visitor":
 		_visitor_think(a)
 		return
+	# V4: a player order comes before the colonist's own choices (critical needs above
+	# still interrupt it).
+	if a.has("order") and sim.orders.think(a):
+		return
 	# 4. Ordinary needs, before new work is taken.
 	var trig: float = float(bal["need_trigger"])
 	if float(a["thirst"]) >= trig and _try_drink(a):
@@ -445,6 +465,30 @@ func _think(a: Dictionary) -> void:
 	if _wants_rec(a) and _try_rec(a):
 		return
 	_idle(a)
+
+## V4: a rider stays aboard. With air in reach, a critical need makes the rider get out and
+## the ordinary rules (eat, drink, sleep, heal) take over. An open vehicle turns back by
+## itself when suit air runs low (vehicles._air_guard).
+func _ride_think(a: Dictionary) -> void:
+	var crit: float = float(sim.bal["need_critical"])
+	if float(a["thirst"]) >= crit or float(a["hunger"]) >= crit or float(a["fatigue"]) >= crit or float(a["health"]) < 30.0:
+		var v: Dictionary = sim.vehicles.get_v(int(a.get("veh", -1)))
+		if v.is_empty() or (v["state"] != "driving" and sim.vehicles.near_air(v)):
+			sim.vehicles.alight(a)
+
+## V4 order "vehicle_board": walk to the vehicle and get in. false when there is no way.
+func order_board(a: Dictionary, vid: int) -> bool:
+	var v: Dictionary = sim.vehicles.get_v(vid)
+	if v.is_empty() or a["where"] == "lock":
+		return false
+	var p: Vector2 = sim.vehicles.board_point(v)
+	var to := {"b": -1, "p": p}
+	var r: Dictionary = sim.nav.plan(loc_of(a), to)
+	if not r["ok"]:
+		return false
+	abort_plan(a, "ordered")
+	_start_plan(a, "order", [{"op": "go", "to": to, "route": r, "rev": int(sim.state["rev"]["walk"])}, {"op": "ride", "v": vid}], "Going to %s" % v["name"])
+	return true
 
 func _return_seconds(a: Dictionary) -> float:
 	if a["where"] == "out":
@@ -668,7 +712,7 @@ func _bed_rooms() -> Array:
 	for bid in sim.topo.atmo_comp:
 		var b: Dictionary = blds[bid]
 		var beds: int = int(sim.bd(b).get("beds", 0))
-		if beds > 0 and b["def"] != "lander":
+		if beds > 0 and not bool(sim.bdef(b["def"]).get("core", false)):
 			_bed_list.append([int(bid), beds])
 	return _bed_list
 
@@ -676,17 +720,20 @@ func _assign_bed(a: Dictionary) -> int:
 	var blds: Dictionary = sim.state["buildings"]
 	var cur: int = int(a["bed"])
 	var cur_ok: bool = blds.has(cur) and blds[cur]["state"] == "active" and not bool(blds[cur]["demolish"]) and sim.util.building_supplied(cur)
-	if cur_ok and blds[cur]["def"] != "lander":
+	if cur_ok and not bool(sim.bdef(blds[cur]["def"]).get("core", false)):
 		return cur
 	var best := -1
 	var best_d := 1e18
 	var tick: int = int(sim.state["tick"])
 	var rooms: Array = [] if _full_tick == tick and _beds_tick != -1 else _bed_rooms()
 	var any_free := false
+	var my_base: int = sim.bases.base_of_agent(a) if sim.bases.count() > 1 else -1
 	for e in rooms:
 		var bid: int = e[0]
 		var beds: int = e[1]
 		var b: Dictionary = blds[bid]
+		if my_base != -1 and sim.bases.base_of(bid) != my_base:
+			continue
 		if b["state"] != "active" or bool(b["demolish"]):
 			continue
 		if not sim.util.building_supplied(bid) or beds_used(bid) >= beds:
@@ -705,11 +752,25 @@ func _assign_bed(a: Dictionary) -> int:
 	if cur_ok:
 		return cur
 	var lid: int = int(sim.state["lander_id"])
-	if blds.has(lid) and sim.util.building_supplied(lid) and beds_used(lid) < int(sim.bdef("lander")["beds"]):
+	if blds.has(lid) and sim.util.building_supplied(lid) and beds_used(lid) < int(sim.bdef("lander")["beds"]) and _core_near(a, lid):
 		_set_bed(a, lid)
 		return lid
+	# V4: an outpost core shelters the people of its base.
+	for bid in sim.bases.ids():
+		var cid: int = int(sim.bases.get_base(bid).get("core", -1))
+		if cid == lid or not blds.has(cid):
+			continue
+		if sim.util.building_supplied(cid) and beds_used(cid) < int(sim.bd(blds[cid]).get("beds", 0)) and _core_near(a, cid):
+			_set_bed(a, cid)
+			return cid
 	_set_bed(a, -1)
 	return -1
+
+## With several bases a colonist only takes a core bed at its own base.
+func _core_near(a: Dictionary, cid: int) -> bool:
+	if sim.bases.count() <= 1:
+		return true
+	return sim.bases.base_of(cid) == sim.bases.base_of_agent(a)
 
 func _try_sleep(a: Dictionary) -> bool:
 	var bed: int = _assign_bed(a)
@@ -783,13 +844,26 @@ func _try_work(a: Dictionary) -> bool:
 		if int(backoff[k]) <= tick:
 			backoff.erase(k)
 	var cands: Array = []
+	# V4: with several bases a colonist works at the base it is at (the others are
+	# kilometres away; a vehicle order moves people between bases).
+	var my_base: int = sim.bases.base_of_agent(a) if sim.bases.count() > 1 else -1
+	# V4: a work_at or survey order keeps the colonist to its structure or site (any role).
+	var ordered: bool = a.has("order")
 	for tid in tasks:
 		var t: Dictionary = tasks[tid]
 		if int(t["owner"]) != -1 or t["state"] != "open" or int(t["retry"]) > tick or backoff.has(tid):
 			continue
-		if t["role"] != "" and t["role"] != a["role"]:
-			continue
+		if ordered:
+			if not sim.orders.allows(a, t):
+				continue
+		else:
+			if t["role"] != "" and t["role"] != a["role"]:
+				continue
+			if my_base != -1 and sim.jobs.task_base(t) != my_base:
+				continue
 		var s: float = sim.jobs.score(t, a)
+		if ordered and s <= -1e8:
+			s = 0.0
 		if s > -1e8:
 			cands.append([s, tid])
 	cands.sort_custom(func(x, y): return x[0] > y[0] if x[0] != y[0] else x[1] < y[1])
@@ -910,8 +984,9 @@ func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 				goal = "Researching at %s" % b["name"]
 			return {"ok": true, "goal": goal, "steps": [
 				{"op": "go", "to": to, "route": r, "rev": rev}, {"op": "work", "kind": t["kind"], "b": b["id"]}]}
-		"upgrade":
+		"upgrade", "vbuild":
 			# Rooms are upgraded from inside, exterior structures from outside (suit air).
+			# V4: a vehicle is assembled outside at its depot (an exterior structure).
 			var b: Dictionary = blds[t["bld"]]
 			var inside: bool = b["kind"] == "room" and sim.topo.atmo_comp.has(b["id"])
 			var to := {}
@@ -929,8 +1004,9 @@ func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 				return {"ok": false, "reason": "no_path"}
 			if not _air_ok(a, r["legs"], 0.0 if inside else float(sim.bal["exterior_work_chunk_seconds"]), int(to["b"]), to["p"]):
 				return {"ok": false, "reason": "suit_range"}
-			return {"ok": true, "goal": "Upgrading %s" % b["name"], "steps": [
-				{"op": "go", "to": to, "route": r, "rev": rev}, {"op": "work", "kind": "upgrade", "b": b["id"]}]}
+			var ugoal: String = ("Upgrading %s" if t["kind"] == "upgrade" else "Building a vehicle at %s") % b["name"]
+			return {"ok": true, "goal": ugoal, "steps": [
+				{"op": "go", "to": to, "route": r, "rev": rev}, {"op": "work", "kind": t["kind"], "b": b["id"]}]}
 		"shipwork":
 			var b: Dictionary = blds[t["bld"]]
 			var p = sim.nav.best_access(b, a["pos"])
@@ -1173,6 +1249,9 @@ func _act_all(dt: float) -> void:
 			"study": _do_study(a, step, dt)
 			"tour": _do_tour(a, step, dt)
 			"board": _board.append(a)
+			"ride":
+				if not sim.vehicles.board(a, int(step["v"])):
+					_clear_plan(a)
 			"wait": _do_timed(a, float(step["t"]), dt, a["goal"], "")
 
 func _next_step(a: Dictionary) -> void:
@@ -1396,6 +1475,15 @@ func _do_work(a: Dictionary, step: Dictionary, dt: float) -> void:
 				wp *= float(sim.bal["technician_build_mult"])
 			sim.upgrades.add_work(b, wp)
 			if float(u["progress"]) >= float(u["work_total"]):
+				_finish_task(a)
+		"vbuild":
+			var vo: Dictionary = b.get("vorder", {})
+			if vo.is_empty() or vo["state"] != "work":
+				_finish_task(a)
+				return
+			if a["role"] == "technician":
+				wp *= float(sim.bal["technician_build_mult"])
+			if sim.vehicles.add_build_work(b, wp):
 				_finish_task(a)
 		"shipwork":
 			var kind: String = sim.ship.work_kind()
@@ -1655,7 +1743,7 @@ func _want_use(a: Dictionary) -> Array:
 				"tend":
 					var t: Dictionary = sim.state["tasks"].get(int(a["task"]), {})
 					return ["work", target, "stand", "work", int(t.get("tray", -1))] if inside else []
-				"upgrade", "repair", "maintain", "patch":
+				"upgrade", "repair", "maintain", "patch", "vbuild":
 					if inside:
 						return ["stand", bid, "stand", "repair", -1]
 					return ["service", target, "kneel", "repair", -1]

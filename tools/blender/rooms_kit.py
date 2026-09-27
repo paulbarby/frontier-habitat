@@ -43,6 +43,34 @@ PREVIEW_DIR = os.path.join(HERE, "previews", "rooms")
 CONTENT_BUILDINGS = os.path.join(ROOT, "content", "buildings.json")
 REPORT_JSON = os.path.join(HERE, "build_report.json")
 REPORT_MD = os.path.join(HERE, "build_report.md")
+# v4 pilot (docs/V4_DESIGN.md section 2, 3): FH_V4PILOT=1 builds rooms at R_SCALE x the content radius into
+# build/v4pilot/ (outside the game's assets, so the live game and its pck do not change until the roll-out)
+V4PILOT = bool(os.environ.get("FH_V4PILOT"))
+V3_BUILD = bool(os.environ.get("FH_V3"))        # FH_V3=1: the old 3.x rooms (v3 radii, no identity)
+R_SCALE = 1.0 if V3_BUILD else float(os.environ.get("FH_RSCALE", "1.5"))
+V4_UNSCALED = ("airlock", "junction", "corridor")   # coordinator 2026-09-27: excluded from the 1.5 x scale
+
+
+def v4_radius(tid, size, content_r):
+    """4.0 roll-out: every room is built at R_SCALE x its v3 radius (tools/blender/v3_radii.json, the content
+    before the roll-out), whatever content says now; the airlock and junction keep theirs."""
+    if tid in V4_UNSCALED or R_SCALE == 1.0:
+        return content_r
+    try:
+        import json as _j
+        v3 = _j.load(open(os.path.join(HERE, "v3_radii.json"), encoding="utf-8")).get(tid)
+    except OSError:
+        v3 = None
+    if not v3:
+        return content_r                # a 4.0 type: its radii are 4.0 radii already
+    base = v3[size] if isinstance(v3, list) else v3
+    return round(float(base) * R_SCALE, 3)
+V4STYLE = not V3_BUILD     # v4 identity (roof silhouettes, badges, stronger band)
+if V4PILOT:
+    MODEL_DIR = os.path.join(ROOT, "build", "v4pilot", "models")
+    THUMB_DIR = os.path.join(ROOT, "build", "v4pilot", "thumbs")
+    REPORT_JSON = os.path.join(ROOT, "build", "v4pilot", "build_report.json")
+    REPORT_MD = os.path.join(ROOT, "build", "v4pilot", "build_report.md")
 
 FLOOR_Z = 0.14          # top of the floor (same as v1 and the corridor)
 WALL_TOP = 1.40         # the round wall (Base) stops here; everything above is Roof
@@ -759,7 +787,7 @@ class Room:
             lo = windows[1]
         if band and bz > lo + 0.05:
             add(Rw, bz, wall)
-            add(Rw, bz + 0.20, band)
+            add(Rw, bz + (0.34 if V4STYLE else 0.20), band)       # 4.0: the family band made stronger
         add(Rw, D, wall)
         add(Rw + 0.04, D, coping)
         add(Rw + 0.04, D + parapet, coping)
@@ -1226,6 +1254,20 @@ def levels_dome(rm, cfg=None):
              band4=(17.5, 20.0), fins4=(44.0, 128.0), annex4=(21.0, -92.0), crown5=(73.0, 77.0), emblem5=(47.0, -12.0),
              beacon5="top", emblem_size=None, mod_size=None, annex_len=None, fin_n=None)
     c.update(cfg or {})
+    if V4STYLE:
+        # 4.0: the crown carries the family badge (rooms_identity): the level-5 crown ring and a crown beacon move
+        # down to a ring round it
+        if c["crown5"] and c["crown5"][0] > 58.0:
+            c["crown5"] = (52.0, 54.5)
+        if c["beacon5"] == "top":
+            pb, _ = rm.dpt(46.0, 150.0)
+            c["beacon5"] = (pb.x, pb.y, pb.z - 0.02)
+        elif c["beacon5"] and hypot(c["beacon5"][0], c["beacon5"][1]) < 0.45 * rm.Rw:
+            pb, _ = rm.dpt(46.0, 150.0)
+            c["beacon5"] = (pb.x, pb.y, pb.z - 0.02)
+        for key in ("mod3", "fins4", "emblem5", "ant", "annex4"):
+            if c[key] and c[key][0] > 58.0:
+                c[key] = (50.0,) + tuple(c[key][1:])
     R = rm.R
     sc = rm.sc
     if c["collar"]:
@@ -1787,6 +1829,12 @@ def check_interior(rm):
         flags.append("Interior passes the inner wall by %.2f m at %s" % (worst_r, wr))
     if worst_z > 0.02:
         flags.append("Interior passes the roof by %.2f m at %s" % (worst_z, wz))
+        if os.environ.get("FH_DEBUG_ROOF"):
+            for f, m in zip(rm.interior.faces, rm.interior.fmat):
+                zs_ = [rm.interior.verts[i].z for i in f]
+                if max(zs_) > rm.headroom(rm.interior.verts[f[0]].x, rm.interior.verts[f[0]].y) + 0.02:
+                    print("ROOFDBG", m, [tuple(round(c, 2) for c in rm.interior.verts[i]) for i in f][:4])
+                    break
     return flags
 
 

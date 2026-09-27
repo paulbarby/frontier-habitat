@@ -100,6 +100,8 @@ def ui_screen(p, w, h, glow="Screen", bars="LightStrip", seed=0):
 # --------------------------------------------------------------------------------------
 # The round wall in 32 segments
 # --------------------------------------------------------------------------------------
+# the family band on the wall (V4_DESIGN 3.3: stronger in 4.0, taller with a Neon pin line at its top)
+BAND_Z = (0.88, 1.26) if K.V4STYLE else (0.935, 1.125)
 PIPE_Z = (0.37, 0.45)
 PIPE_R = 0.025
 
@@ -120,7 +122,15 @@ def wall_profile_v3(Rw, Ri, band="Accent", band_proud=True, wall="Hull", kick="H
         add(Rw, windows[0], wall)
         add(Rw, windows[1], "WIN")
     if band:
-        if band_proud:
+        if band_proud and K.V4STYLE:
+            b0, b1 = BAND_Z
+            add(Rw, b0 - 0.02, wall)
+            add(Rw + 0.04, b0, band)
+            add(Rw + 0.04, b1 - 0.05, band)
+            add(Rw + 0.045, b1 - 0.02, "Neon")
+            add(Rw + 0.04, b1, band)
+            add(Rw, b1 + 0.015, band)
+        elif band_proud:
             add(Rw, 0.92, wall)
             add(Rw + 0.03, 0.935, band)
             add(Rw + 0.03, 1.125, band)

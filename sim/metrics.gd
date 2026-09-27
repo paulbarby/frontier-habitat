@@ -57,7 +57,7 @@ func _forecast() -> Dictionary:
 		if b["state"] != "active" or b["kind"] == "link":
 			continue
 		var def: Dictionary = sim.bd(b)
-		if b["def"] == "lander":
+		if bool(def.get("core", false)):
 			if sim.util.lander_supplied(b):
 				beds += int(def.get("beds", 0))
 			continue
@@ -121,7 +121,7 @@ func supplied_districts() -> int:
 			var def: Dictionary = sim.bd(blds[bid])
 			if (def.has("o2_out") or def.has("o2_bonus")) and blds[bid]["state"] == "active":
 				plant = true
-			if blds[bid]["def"] != "lander":
+			if not bool(def.get("core", false)):
 				beds += int(def.get("beds", 0))
 		if plant and beds > 0:
 			n += 1
@@ -232,7 +232,7 @@ func _tutorial(pr: Dictionary, f: Dictionary) -> void:
 				var ag: Dictionary = sim.state["agents"][aid]
 				if ag["state"] == "alive" and ag["kind"] != "visitor":
 					var bed: Dictionary = blds.get(ag["bed"], {})
-					if bed.is_empty() or bed["def"] == "lander":
+					if bed.is_empty() or bool(sim.bdef(bed["def"]).get("core", false)):
 						done = false
 		"food":
 			done = int(sim.state["stats"].get("cooked_total", 0)) >= 2

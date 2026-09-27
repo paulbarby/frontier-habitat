@@ -65,14 +65,22 @@ class Logo extends Control:
 		draw_arc(c, 34.0, -0.4 + t * 0.3, 2.2 + t * 0.3, 32, P.CYAN, 2.0, true)
 		draw_circle(c + Vector2(cos(2.2 + t * 0.3), sin(2.2 + t * 0.3)) * 34.0, 4.0, Color.WHITE)
 		# Words
-		draw_string(head, Vector2(128, 40), "COLONY MANAGEMENT  ·  FRONTIER SECTOR", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, P.with_alpha(P.CYAN, 0.9))
-		draw_string(big, Vector2(124, 104), "FRONTIER", HORIZONTAL_ALIGNMENT_LEFT, -1, 64, P.TEXT)
-		draw_string(big, Vector2(126, 160), "HABITAT", HORIZONTAL_ALIGNMENT_LEFT, -1, 48, P.CYAN)
+		draw_string(head, Vector2(128, 40), "COLONY MANAGEMENT  ·  FRONTIER SECTOR", HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(13), P.with_alpha(P.CYAN, 0.9))
+		draw_string(big, Vector2(124, 104), "FRONTIER", HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(64), P.TEXT)
+		draw_string(big, Vector2(126, 160), "HABITAT", HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(48), P.CYAN)
 		var w: float = big.get_string_size("HABITAT", HORIZONTAL_ALIGNMENT_LEFT, -1, 48).x
 		var bx: float = 126.0 + w + 16.0
-		draw_rect(Rect2(bx, 122, 56, 30), P.with_alpha(P.GOLD, 0.14), true)
-		draw_rect(Rect2(bx, 122, 56, 30), P.GOLD, false, 1.5)
-		draw_string(mono, Vector2(bx, 144), "2.0", HORIZONTAL_ALIGNMENT_CENTER, 56, 18, P.GOLD)
+		# Version badge as a brushed metal plate with a 2 px bevel and four rivets (critic round 15).
+		var br := Rect2(bx, 120, 68, 34)
+		draw_texture_rect(load("res://ui/theme/metal.gd").plate_tex(34), br, false)
+		load("res://ui/theme/rim.gd").bevel(get_canvas_item(), br, PackedFloat32Array([0, 0, 0, 0]), 2.0, true)
+		for rv in [Vector2(6, 6), Vector2(62, 6), Vector2(6, 28), Vector2(62, 28)]:
+			draw_circle(br.position + rv, 2.6, Color(0.05, 0.06, 0.08))
+			draw_circle(br.position + rv, 2.0, Color(0.62, 0.68, 0.75))
+			draw_circle(br.position + rv - Vector2(0.7, 0.7), 0.8, Color(1, 1, 1))
+		var vtxt: String = String(ProjectSettings.get_setting("application/config/version", "")).get_slice(".", 0) + "." + String(ProjectSettings.get_setting("application/config/version", "")).get_slice(".", 1)
+		draw_string(mono, Vector2(bx, 144), vtxt, HORIZONTAL_ALIGNMENT_CENTER, 68, P.fs(18), Color(0, 0, 0, 0.6))
+		draw_string(mono, Vector2(bx, 143), vtxt, HORIZONTAL_ALIGNMENT_CENTER, 68, P.fs(18), P.GOLD)
 		draw_line(Vector2(128, 178), Vector2(560, 178), P.with_alpha(P.CYAN, 0.5), 1.0)
 
 func _ready() -> void:
@@ -114,13 +122,13 @@ func _ready() -> void:
 	col.add_child(Kit.spacer())
 	_live = Kit.label("", "SmallLabel", 12, P.TEXT_3)
 	col.add_child(_live)
-	var foot: Label = Kit.label("Frontier Habitat 2.0  ·  Godot 4.4  ·  all models, code and text original", "SmallLabel", 11, P.TEXT_3)
+	var foot: Label = Kit.label("Frontier Habitat %s  ·  Godot 4.4  ·  all models, code and text original" % version_text(), "SmallLabel", 11, P.TEXT_3)
 	col.add_child(foot)
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.8)
 
 func _item(text: String, sub: String, icon: String, cb: Callable, primary: bool) -> Button:
-	var b: Button = Kit.button("", cb, "", "PrimaryButton" if primary else "CardButton")
+	var b: Button = Kit.button("", cb, "%s\n%s" % [text, sub], "PrimaryButton" if primary else "CardButton")
 	b.custom_minimum_size = Vector2(380, 58)
 	b.toggle_mode = false
 	var h: HBoxContainer = Kit.hbox(14)
@@ -128,12 +136,13 @@ func _item(text: String, sub: String, icon: String, cb: Callable, primary: bool)
 	h.offset_left = 16
 	h.offset_right = -12
 	b.add_child(h)
-	h.add_child(Kit.icon(icon, 22, P.TEXT_DARK if primary else P.CYAN))
+	# Version 4: the primary is dark glass that glows inside its rim, so its text is light.
+	h.add_child(Kit.icon(icon, 22, Color("DDFBFF") if primary else P.CYAN))
 	var v: VBoxContainer = Kit.vbox(-2)
 	v.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(v)
-	v.add_child(Kit.label(text.to_upper(), "TitleLabel", 17, P.TEXT_DARK if primary else P.TEXT))
-	v.add_child(Kit.label(sub, "SmallLabel", 12, Color(0.02, 0.1, 0.16, 0.85) if primary else P.TEXT_2))
+	v.add_child(Kit.label(text.to_upper(), "TitleLabel", 17, Color("DDFBFF") if primary else P.TEXT))
+	v.add_child(Kit.label(sub, "SmallLabel", 12, Color("A9DCE8") if primary else P.TEXT_2))
 	return b
 
 func _process(delta: float) -> void:
@@ -150,3 +159,7 @@ func refresh() -> void:
 
 func on_close() -> void:
 	pass
+
+## The game version from project.godot (application/config/version), e.g. "4.0.0".
+static func version_text() -> String:
+	return String(ProjectSettings.get_setting("application/config/version", "?"))

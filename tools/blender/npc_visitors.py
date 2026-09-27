@@ -32,7 +32,9 @@ from mathutils import Vector, Matrix                             # noqa: E402
 import npc_suit as SU                                            # noqa: E402
 import npc_indoor as IN                                          # noqa: E402
 
-KINDS = ["trader", "tourist", "medical", "science", "inspector"]
+KINDS = ["trader", "tourist", "medical", "science", "inspector", "radiation"]
+# look 7 is not a visitor: colonists wear it while they work in a radiation zone (V4_DESIGN section 4.2, 5)
+WORK_LOOKS = {"radiation": 7}
 
 # sRGB colours per look and material group.  suit groups: SuitMain (soft suit), SuitHard (HUT and helmet shells),
 # Pack (pack, gloves, boots, chest box), SuitAccent (stripes, patches: the role colour on colonists).
@@ -59,6 +61,9 @@ LOOKS = [
     dict(kind="inspector", set=0,
          suit=dict(SuitMain="#2A2C31", SuitHard="#2A2C31", Pack="#1D1F23", SuitAccent="#D9A93A"),
          indoor=dict(Jumpsuit="#1F2125", SuitAccent="#D9A93A")),
+    dict(kind="radiation", set=0,
+         suit=dict(SuitMain="#F2C230", SuitHard="#1E2024", Pack="#26282D", SuitAccent="#1E2024"),
+         indoor=dict(Jumpsuit="#F2C230", SuitAccent="#1E2024")),
 ]
 
 LOOK_NOTE = ("look code = (8 + v) * 64 + head * 8 + tone for a visitor with look v (index into looks); colonists keep "
@@ -91,8 +96,11 @@ def palette_json():
                 meshes=dict(suit=["Vis_%s" % k for k in KINDS],
                             indoor=["Vis_%s" % k for k in KINDS if k != "inspector"] +
                             ["Vis_inspector_h023", "Vis_inspector_h1"]),
+                work_looks=WORK_LOOKS,
                 note="Colonists keep their looks.  Tourists: pick the set (0..2) from a hash of the visitor id.  "
-                     "Every head can be used for every visitor.")
+                     "Every head can be used for every visitor.  Look 7 (radiation) is a colonist work look: the "
+                     "same look code rule ((8 + 7) * 64 + head * 8 + tone), used while the colonist works in a "
+                     "radiation zone (the role colour is replaced by the hazard black).")
 
 
 # --------------------------------------------------------------------------------------
@@ -428,8 +436,8 @@ def tourist_legs(p, s):
         (s_kn + 0.126, 0.071, 0.071, "SuitAccent"),
         (s_kn + 0.220, 0.064, 0.064, "SuitAccent"),
         (s_an - 0.090, 0.069, 0.069, "SuitAccent"),
-        (s_an - 0.030, 0.076, 0.076, "SuitAccent"),
-        (s_an - 0.012, 0.075, 0.075, "SuitAccent"),
+        (s_an - 0.058, 0.076, 0.076, "SuitAccent"),     # ends above the ankle blend; the boot cover overlaps it
+        (s_an - 0.045, 0.075, 0.075, "SuitAccent"),
     ]
     with p.w(leg_rule(s)):
         tube_path(p, [hip, kn, an], st, seg=10, ref=(1, 0, 0))
@@ -623,10 +631,98 @@ def service_cap(p, bun=False):
         p.box((0.0, 0.0, 0.0), (0.006, 0.030, 0.026), "VisGold", mats={"-x": None})
 
 
+_BODY_KD = {}
+
+
+def transfer_rule(variant, k=4):
+    """Weights copied from the k nearest vertices of the body mesh (inverse-distance mix): the attachment bends
+    exactly like the suit or jumpsuit under it."""
+    from mathutils import kdtree
+    if variant not in _BODY_KD:
+        if variant == "suit":
+            body = SU.build_suit_body()
+        elif variant == "head":
+            body = IN.build_head(0)                 # the face is the same on every head
+        else:
+            body = IN.build_indoor_parts()[0]
+        kd = kdtree.KDTree(len(body.verts))
+        for i, q in enumerate(body.verts):
+            kd.insert(q, i)
+        kd.balance()
+        ws = [N.limit_normalise(N.resolve_weights(r, q)) for r, q in zip(body.wrule, body.verts)]
+        _BODY_KD[variant] = (kd, ws)
+    kd, ws = _BODY_KD[variant]
+
+    def rule(q):
+        out = {}
+        found = kd.find_n(Vector(q), k)
+        tot = 0.0
+        for co, i, d in found:
+            wgt = 1.0 / max(d, 0.004)
+            tot += wgt
+            for bn, x in ws[i].items():
+                out[bn] = out.get(bn, 0.0) + x * wgt
+        return {bn: x / tot for bn, x in out.items()}
+    return rule
+
+
+def dosimeter(p, rings, z, y, clear):
+    """Chest dosimeter: a small dark case, a display and an amber alarm light, facing forward."""
+    c = Vector((surf_x(rings, z, y) + clear, y, z))
+    nrm = surf_normal(rings, z, y)
+    with p.at(T(*c), frame_matrix(nrm, (0, 0, 1))):
+        p.box((0.010, 0.0, 0.0), (0.020, 0.048, 0.064), "VisDark", mats={"-x": None})
+        p.box((0.0215, 0.0, 0.006), (0.003, 0.034, 0.030), "Screen", mats={"-x": None})
+        p.box((0.0215, 0.0, -0.022), (0.004, 0.012, 0.010), "LightAmber", mats={"-x": None})
+
+
+def hazard_bands(p, legs, z_list, mat="VisDark"):
+    for s in ("L", "R"):
+        hip, kn, an = side_vec(HIP_JOINT, s), side_vec(KNEE_JOINT, s), side_vec(ANKLE_JOINT, s)
+        shd = (an - kn).normalized()
+        with p.w(leg_rule(s)):
+            for t, r, dx in legs:
+                c = kn + shd * t + Vector((dx, 0.0, 0.0))
+                p.cyl(tuple(c - shd * 0.016), tuple(c + shd * 0.016), r, seg=10, mat=mat, cap0=False, cap1=False)
+
+
+def suit_radiation(p):
+    """Radiation suit (hazard yellow and black): shielded shoulders, a lead apron over the waist, a dosimeter on the
+    right chest, black bands on the shins."""
+    tr = transfer_rule("suit")
+    for s in ("L", "R"):
+        sy = 1.0 if s == "L" else -1.0
+        with p.w(tr):
+            p.hemi((-0.005, sy * 0.236, 1.428), 0.118, "VisDark", seg=8, rings=3, scale=(1.0, 0.9, 0.78), cap=False)
+    with p.w(tr):
+        z, y = 1.02, 0.0
+        x = max(surf_x(SR, zz, 0.0) for zz in (0.95, 0.975, 0.99, 1.012, 1.05, 1.09)) + 0.006
+        p.box((x + 0.006, 0.0, 1.035), (0.012, 0.22, 0.13), "VisGraphite", mats={"-x": None})   # waist only
+    with p.w(tr):
+        dosimeter(p, SR, 1.395, -0.105, 0.004)
+    hazard_bands(p, [(0.14, 0.090, -0.007)], None)
+
+
+def indoor_radiation(p):
+    """Radiation coverall for reactor rooms: dosimeter, lead apron, black shin bands, respirator."""
+    with p.w(transfer_rule("indoor")):
+        dosimeter(p, IR, 1.330, -0.085, 0.006)
+    with p.w(transfer_rule("indoor")):
+        x = 0.124                         # in front of the belt buckle (0.113) and the zip (0.122)
+        p.box((x + 0.006, 0.0, 1.000), (0.012, 0.23, 0.13), "VisGraphite", mats={"-x": None})
+    hazard_bands(p, [(0.16, 0.067, -0.006)], None)
+    with p.w(transfer_rule("head")):
+        c = IN.head_pt(-30.0, 0.0, 1.0) + Vector((0.012, 0.0, 0.004))       # over the mouth and nose
+        p.sphere(tuple(c), 0.040, "VisDark", seg=8, rings=3, scale=(0.75, 1.05, 0.95))
+        for sy in (1, -1):
+            a = c + Vector((0.012, sy * 0.034, -0.012))
+            p.cyl(tuple(a), tuple(a + Vector((0.020, sy * 0.012, -0.004))), 0.017, seg=8, mat="VisGraphite", cap0=False)
+
+
 SUIT_BUILD = dict(trader=suit_trader, tourist=suit_tourist, medical=suit_medical, science=suit_science,
-                  inspector=suit_inspector)
+                  inspector=suit_inspector, radiation=suit_radiation)
 INDOOR_BUILD = dict(trader=indoor_trader, tourist=indoor_tourist, medical=indoor_medical, science=indoor_science,
-                    inspector=indoor_inspector)
+                    inspector=indoor_inspector, radiation=indoor_radiation)
 
 
 def build_visitor_parts(variant):

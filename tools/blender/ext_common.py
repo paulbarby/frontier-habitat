@@ -101,6 +101,10 @@ MATERIALS = {
     "BeaconAmber": dict(color="#ffb020", rough=0.30, emit="#ffb020", emit_strength=3.0),
     "StatusGreen": dict(color="#5ee07a", rough=0.30, emit="#5ee07a", emit_strength=3.0),
     "Ember":      dict(color="#ff5a0a", rough=0.40, emit="#ff4a00", emit_strength=1.6),
+    # 4.0 (critic round 22): boulders in the terrain rock colour (rock_albedo #865c43, lit a step lighter) with a
+    # dust skirt in the sand colour (sand_albedo #a05c38)
+    "Rock":       dict(color="#a07458", rough=0.90),
+    "Dust":       dict(color="#a8683f", rough=0.95),
     "Plasma":     dict(color="#8fd8ff", rough=0.30, emit="#8fd8ff", emit_strength=5.0),
     # 3.0 (docs/V3_DESIGN.md section 7.3), the same values as build_assets.MATERIALS
     "LightStrip": dict(color="#eaf6ff", rough=0.30, emit="#eaf6ff", emit_strength=2.5),
@@ -974,6 +978,26 @@ def service_anchor(parts):
     return None
 
 
+def vc_gradient(objs, bottom=0.55, side=0.82):
+    """Sun-lit tops: multiply the baked corner colour by the face's facing (up 1.0, sideways `side`, down
+    `bottom`), so rocks read lit on top and dark underneath with one shared material."""
+    for ob in objs.values():
+        me = ob.data
+        attr = me.color_attributes.active_color or (me.color_attributes[0] if me.color_attributes else None)
+        if attr is None:
+            continue
+        cols = [0.0] * (len(attr.data) * 4)
+        attr.data.foreach_get("color", cols)
+        for poly in me.polygons:
+            nz = poly.normal.z
+            k = side + (1.0 - side) * nz if nz >= 0 else side + (side - bottom) * nz
+            for li in poly.loop_indices:
+                for c in range(3):
+                    cols[li * 4 + c] *= k
+        attr.data.foreach_set("color", cols)
+        me.update()
+
+
 def build_model(spec, builder):
     """spec keys: id, kind, footprint (m or None), accent (category or None), produce (hex or None),
     objects (expected top-level mesh names), anchors (expected empty names), budget (triangles),
@@ -1005,11 +1029,15 @@ def build_model(spec, builder):
     ao = dict(spec.get("ao", {}))
     occ = ao.pop("occluders", None) or default_occluders(list(objs.keys()))
     bake_ao(objs, occ, **ao)
+    if spec.get("vc_gradient"):
+        vc_gradient(objs, *spec["vc_gradient"])
     name = spec.get("file", spec["id"])
     os.makedirs(MODEL_DIR, exist_ok=True)
     path = os.path.join(MODEL_DIR, name + ".glb")
     export_glb_atomic(path)
     for extra in spec.get("also", []):
+        if spec["id"] == extra + "_m":
+            continue      # 4.0: no unsized copy of the M file (the game falls back to <id>_m, models.resolve)
         export_glb_atomic(os.path.join(MODEL_DIR, extra + ".glb"))
 
     flags = []

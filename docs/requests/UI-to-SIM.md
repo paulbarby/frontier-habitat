@@ -108,3 +108,88 @@ refusal. When you publish, I delete the copy. Also 1 and 2 of your answer (settl
 **Update 2026-09-25 (later):** found and used your `door_ranges` / `link_angle_ok_for` (the UI now asks
 `link_angle_ok_for` for every arc point, so the ring and your refusal always agree). No need for
 `blocked_sectors`; the ART-HAB copy is deleted. Settlers by person (`accept_idx`) and orbit `t_s`: in use.
+## 2026-09-27 — V4 helpers and SIM-driven screens: names I need (V4_DESIGN §5, §6)
+
+1. **Why is this colonist idle?** The UI now explains structures from `b.block` (all codes are mapped; an unknown
+   code is shown by name). For colonists it can only guess from `goal == "Idle"`, needs and `backoff`. Please add
+   `sim.agents.why(agent) -> {code, text}` (for example `no_job_for_role`, `jobs_unreachable`, `needs_first`,
+   `waiting_airlock`, `refused_order`) so the inspector says the real reason.
+2. **Fog of war** (milestone 7): `sim.explore.known(pos) -> bool` or a grid I can paint; the minimap and the
+   planner overlay "explored" use it.
+3. **Vehicles** (milestone 3): the list (`id, kind, pos, fuel/charge, cargo, seats, crew, wear, route`), the
+   range from a position (for the "vehicles" planner overlay), and the command names for board, drive, route.
+4. **Orders**: the command names and refusal codes for go to, board, drive, explore, survey, work at, stay,
+   return, job priorities and allowed jobs; and how an order in progress shows in the agent record.
+5. **Reactor**: the state record (temperature, coolant, fuel, phase warning/critical/breach, forecast seconds,
+   blast radius) and the commands SCRAM, cool, evacuate with their refusal codes.
+6. **Tech tree 4.0**: the new branches (vehicles, exploration, radiation, logistics, deep tech) come through
+   `research.json`; the codex and the research screen read them as they land. Nothing needed unless the record
+   shape changes.
+7. **Outpost Kit deploy tool**: I use `sim.bases.check_outpost(pos, rot)` for the preview and `deploy_outpost`;
+   please confirm the kit's inventory can be a vehicle hold once vehicles exist (you wrote "from milestone 3").
+## 2026-09-27 (later) — the shapes the UI screens use now (mock), for your v4 names
+
+The orders, vehicle and reactor screens are built against a mock with these shapes (`ui/v4_data.gd` header).
+If yours differ, tell me the real names and I switch the adapter; the screens do not change.
+- `sim.vehicles.list()` → `[{id, kind (small_rover|medium_rover|hopper|satellite), name, pos, charge 0..1, fuel 0..1,
+  range_m, cargo {item: n}, cargo_cap, seats, crew [agent ids], wear 0..100, state (parked|driving|charging|exploring|broken),
+  base, route (null | {from, to, load {item: n}, unload})}]`
+- `sim.orders.of(agent_id)` → `{kind, target, status (active|done|refused), reason, since}`; `sim.orders.priority(agent, job)` 0..3
+  with jobs `build, haul, produce, farm, cook, research, medical, repair`.
+- `sim.reactors.list()` → `[{id, name, pos, power_out, temp, temp_max, coolant 0..1, fuel_rods, phase (normal|warning|critical|breach),
+  next_phase_s, blast_r, zone_r, scram}]`
+- Commands: `order_give {agents, kind, target, force}` (refusal codes seen by the UI: `no_air`, `radiation`, `no_seat`, `busy`,
+  `not_in_base`), `order_cancel {agents}`, `set_priority {agent, job, value}`, `vehicle_order {id, kind, target}` (`out_of_range`),
+  `vehicle_route {id, from, to, load}` (`wrong_vehicle`), `vehicle_route_clear {id}`, `reactor_scram / reactor_cool / reactor_evacuate {id}`.
+## 2026-09-27 — vehicles switched to your live names; one debug command asked
+
+The vehicle screen, routes, the rover depot panel (Vehicles tab: bays, the build order with progress and Cancel,
+a Build button per kind) and the Outpost Kit from a vehicle's cargo now use your commands: `build_vehicle`,
+`cancel_vehicle`, `vehicle_board`, `vehicle_drive`, `vehicle_return`, `vehicle_stop`, `vehicle_alight`,
+`vehicle_cargo`, `vehicle_route {id, a, b, load, back}` / `{id, stop: true}`, `deploy_outpost` with `cargo_inv`.
+Orders and the reactor stay on the UI mock until you publish them. I see `sim/orders.gd` (kinds go, stay, return,
+board, work_at, survey; `agent.order`, `agent.jobs`): I will switch when it is in SIM-to-UI.md.
+
+**Asked:** a debug-only command to put a vehicle (and a finished depot) on the map, like the hazard and traffic
+debug commands (`debug_only` without debug), e.g. `debug_vehicle {kind, x, y, depot}` and
+`debug_building {def, x, y, rot, size}` (spawn_active). The web screenshots of the live vehicle screens need it;
+the UI does not write state itself.
+## 2026-09-27 — orders switched to your live names; one finding
+
+The orders window (Go to, Stay at, Stay here, Survey a hazard site, Work at, Return, Board, Cancel), the confirm
+step and the Priorities tab (your five categories, `set_jobs` and `clear`) now use `order`, `order_clear`,
+`sim.orders.check` (preview before sending, your STE texts shown as they are; "Confirm anyway" only when every
+refusal is `confirmable`), and `vehicle_explore {id, x, y, r: 150}`. The reactor stays on the UI mock.
+
+**Finding:** in a new Frontier game (paused, a few ticks run), `order {kind: "stay", x, y}` at the lander's own
+position, for a colonist who is inside the lander, is refused with `suit_range` ("The suit air is not enough to go
+there and come back."). `room_at` returns the lander (57) and `atmo_comp` has it. Staying in the room it is in
+should not need suit air. Test: `tools/ui/test_v4_screens.gd` prints a NOTE line when this happens.
+## 2026-09-27 — milestone 5 in the UI; two content additions asked
+
+The research tree shows all 82 projects in 16 lanes, the codex and crafting tree cover all 72 items with a tier,
+and "why stopped?" explains `level_low` (reads `recipe_of(b).min_level`) and `deposit_locked` (reads
+`sim.prod.deposit_info(d)` for the deposit under the mine).
+
+**Asked (content, not code):**
+1. `research.json` `branches` has 10 rows. The techs use 6 more: `mat`, `nuc`, `veh`, `explore`, `rad`, `deep`.
+   The UI adds names, colours and rows for them (`ui/data.gd BRANCH_EXTRA`: Materials, Nuclear, Vehicles,
+   Exploration, Radiation, Deep tech). Please add them to `branches` so there is one source.
+2. `items.json` has no tier. The UI computes one (`ui/data.gd TIER_SEED` for raw and base materials, then the
+   highest input tier over the cheapest recipe; basic 1, mid 2, high-end 3). Please add `"tier": 1|2|3` to each
+   material, component and pack. The UI reads `tier` first when it is there.
+
+## 2026-09-27 — milestones 6 to 8 in the UI; one finding in showcase_v4
+
+The UI mock is removed. The reactor window, the banner and the confirm steps use `sim.reactors.list()` and
+`reactor_scram`, `reactor_restart`, `reactor_cool`, `reactor_evacuate` (your refusal codes show as text:
+`too_hot`, `no_coolant`, `done`, `running`). Dose (`agent.dose`) is on the colonist card and in the colonists
+list. Points of interest (`sim.explore.pois()`, found ones only) are in Find, on the minimap and as tags in the
+3D view; the Survey order sends `{kind: "survey", poi}`. The minimap draws the fog (`sim.explore.fog()`, remade
+only when `rev` changes), the satellite (`sim.explore.sats()`) and its mapped bands. The launch pad has a
+Satellite tab with `build_satellite {pad}`.
+
+**Finding:** in `content/saves/showcase_v4.fhsave`, Comms Tower 1 and Launch pad 1 have `powered = false` at
+load and after 300 ticks, so `explore.uplink()` is false and Survey satellite 1 does not map (5 of 16 bands
+stay). The note says the save has "comms tower and battery". Test: `tools/ui/test_v4_live.gd` prints
+"NOTE satellite uplink at load: false".

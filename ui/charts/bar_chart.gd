@@ -41,8 +41,8 @@ func _draw_v(vmax: float) -> void:
 	var pr: Rect2 = plot_rect()
 	for t in nice_ticks(0.0, vmax, 4):
 		var y: float = pr.end.y - float(t) / vmax * pr.size.y
-		draw_line(Vector2(pr.position.x, y), Vector2(pr.end.x, y), P.GRID, 1.0)
-		draw_string(_mono, Vector2(2, y + 4), _f(float(t)), HORIZONTAL_ALIGNMENT_RIGHT, pad.x - 8.0, 10, P.TEXT_3)
+		draw_seam_h(pr.position.x, pr.end.x, y)
+		draw_string(_mono, Vector2(2, y + 4), _f(float(t)), HORIZONTAL_ALIGNMENT_RIGHT, pad.x - 8.0, P.fs(10), P.TEXT_3)
 	var n: int = categories.size()
 	var group_w: float = pr.size.x / float(n)
 	var bar_w: float = minf(28.0, group_w * 0.72 / float(series.size()))
@@ -66,7 +66,7 @@ func _draw_v(vmax: float) -> void:
 		if icons.size() > i and icons[i] != null:
 			draw_texture_rect(icons[i], Rect2(pr.position.x + group_w * (i + 0.5) - 8, pr.end.y + 4, 16, 16), false)
 		else:
-			draw_string(_font, Vector2(pr.position.x + group_w * i, pr.end.y + 15), lab, HORIZONTAL_ALIGNMENT_CENTER, group_w, 10, P.TEXT_3)
+			draw_string(_font, Vector2(pr.position.x + group_w * i, pr.end.y + 15), lab, HORIZONTAL_ALIGNMENT_CENTER, group_w, P.fs(10), P.TEXT_3)
 			# (centred inside its own group, so it never passes the right edge)
 	if hover_i >= 0:
 		var rows: Array = []
@@ -90,7 +90,7 @@ func _draw_h(vmax: float) -> void:
 		if icons.size() > i and icons[i] != null:
 			draw_texture_rect(icons[i], Rect2(8, y0 + row_h * 0.5 - 8, 16, 16), false)
 			tx = 30.0
-		draw_string(_font, Vector2(tx, y0 + row_h * 0.5 + 4), String(categories[i]), HORIZONTAL_ALIGNMENT_LEFT, label_w - tx - 6.0, 12, P.TEXT_2)
+		draw_string(_font, Vector2(tx, y0 + row_h * 0.5 + 4), String(categories[i]), HORIZONTAL_ALIGNMENT_LEFT, label_w - tx - 6.0, P.fs(12), P.TEXT_2)
 		var last := 0.0
 		for si in series.size():
 			var vals: Array = series[si].get("values", [])
@@ -107,7 +107,7 @@ func _draw_h(vmax: float) -> void:
 			var tx2: float = pr.position.x + float(target[i]) / vmax * pr.size.x
 			draw_line(Vector2(tx2, y0 + 2), Vector2(tx2, y0 + row_h - 2), Color(1, 1, 1, 0.8), 1.5)
 		var vals0: Array = series[0].get("values", [])
-		draw_string(_mono, Vector2(pr.position.x + last + 6.0, y0 + row_h * 0.5 + 4), _f(float(vals0[i]) if i < vals0.size() else 0.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, P.TEXT)
+		draw_string(_mono, Vector2(pr.position.x + last + 6.0, y0 + row_h * 0.5 + 4), _f(float(vals0[i]) if i < vals0.size() else 0.0), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11), P.TEXT)
 	if hover_i >= 0 and series.size() > 1:
 		var rows: Array = []
 		for s in series:

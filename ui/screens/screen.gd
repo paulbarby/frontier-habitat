@@ -32,6 +32,38 @@ var _subtitle_label: Label
 var _scroll: ScrollContainer     # holds `content`: a screen larger than the view scrolls
 var _hdr: Control
 var _last_vp := Vector2.ZERO
+var _fit_on := false             # the frame is sized to its content now (fits_content())
+var _hdr_row: HBoxContainer      # the title, tabs and extras (inside a sideways clip area)
+## Rich tooltips for the screen tabs ("Title\nwhat the page shows"), by "screen:tab".
+const TAB_TIPS := {
+	"research:tree": "Tree\nEvery research project by branch and tier. Click one to see it; the queue runs in order.",
+	"research:labs": "Labs and packs\nEach lab, its scientists, output and focus, and the research packs in stock.",
+	"dashboard:overview": "Overview\nThe headline numbers and their charts, and the alerts now.",
+	"dashboard:life": "Life support\nOxygen, water and power over time, per network.",
+	"dashboard:food": "Food\nCrops, dishes, spoilage and the nutrition of the colonists.",
+	"dashboard:industry": "Industry\nWhat each machine makes, and what waits for input or workers.",
+	"dashboard:population": "People\nColonists, roles, morale and health over time.",
+	"dashboard:research": "Research\nResearch points per day and the projects done.",
+	"dashboard:hazards": "Hazards\nForecast events, machines near failure and maintenance.",
+	"inventory:all": "All items\nEvery item in the colony.", "inventory:raw": "Raw resources\nOre, sand, ice and crystal.",
+	"inventory:material": "Materials\nSteel, glass, polymer, biomass.", "inventory:component": "Components\nParts for building, repair and the ship.",
+	"inventory:medical": "Medical\nMedicine and its shelf life.", "inventory:water": "Water\nWater cans in storage (network water is on the dashboard).",
+	"inventory:crop": "Crops\nHarvested crops and how long they keep.", "inventory:dish": "Dishes\nCooked food: one dish feeds one colonist for a day.",
+	"colonists:colonists": "Colonists\nEvery colonist: role, health, morale, nutrition, what they do and where.",
+	"colonists:priorities": "Priorities\nFor each colonist and kind of job: first, normal, last or never.",
+	"vehicles:vehicles": "Vehicles\nEvery vehicle: charge or fuel, cargo, crew, wear; give it orders.",
+	"vehicles:routes": "Routes\nMedium rovers that carry goods and people between two bases, again and again.",
+	"colonists:visitors": "Visitors\nTourists and other guests: their ship, when they leave, what they paid.",
+	"awards:colony": "This colony\nMedals earned by this colony.", "awards:device": "This device\nMedals earned by any colony on this device.",
+	"help:rules": "Rules\nHow the colony lives: air, water, power, food, work.", "help:keys": "Controls\nEvery key and mouse action.",
+	"help:mission": "Mission\nThe five chapters and the victory.",
+	"codex:item": "Items\nEvery item: where it comes from, what uses it, its crafting tree.",
+	"codex:structure": "Structures\nEvery structure: cost, power, workers, what it makes, what unlocks it.",
+	"codex:tech": "Research\nEvery research project: cost, what it needs and what it unlocks.",
+	"codex:hazard": "Hazards\nEvery hazard and what to do about it.",
+}
+var _frame_style                 # this screen's own GlassFrame: the title plate follows the header height
+var _hp: Control
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -44,7 +76,11 @@ func _ready() -> void:
 	var bb := BackBufferCopy.new()
 	bb.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
 	add_child(bb)
-	frame = Kit.panel("ModalPanel", true, [18, 0, 18, 0])
+	frame = Kit.panel("ModalPanel", true)
+	# Version 4: the header is a brushed title plate of the GlassFrame, as tall as the header.
+	_frame_style = load("res://ui/theme/ui_theme.gd").panel_style("modal")
+	_frame_style.accent = Color(accent.r, accent.g, accent.b, 0.85)
+	frame.add_theme_stylebox_override("panel", _frame_style)
 	if compact:
 		frame.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 		frame.custom_minimum_size = compact_size
@@ -88,6 +124,31 @@ func _ready() -> void:
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
 
+## Critic round 22: a screen (or one of its tabs) with little in it is sized to its content,
+## centred, instead of filling the view. Screens override this; lists in it use fit_scroll().
+func fits_content() -> bool:
+	return false
+
+## The width the header needs: the title block, every tab button and Close, with their gaps.
+func _hdr_width() -> float:
+	# The row's own minimum (it sits in a clip area, so the frame does not see it) + Close (38) and
+	# the gap (6) + the plate margins (22 + 14) + the frame's metal band and padding (about 40).
+	return (_hdr_row.get_combined_minimum_size().x if _hdr_row != null else 600.0) + 6.0 + 38.0 + 36.0 + 40.0
+
+## A list in a scroll area (Kit.well_scroll) as tall as its rows, up to max_h (then it scrolls).
+## For screens sized to their content: a scroll area alone measures no height.
+static func fit_scroll(well: Control, max_h: float = 520.0) -> void:
+	var sc: ScrollContainer = well if well is ScrollContainer else null
+	if sc == null:
+		for c in well.get_children():
+			if c is ScrollContainer:
+				sc = c
+	if sc == null or sc.get_child_count() == 0:
+		return
+	var inner: Control = sc.get_child(0)
+	sc.custom_minimum_size.y = minf(inner.get_combined_minimum_size().y + 4.0, max_h)
+	well.size_flags_vertical = Control.SIZE_FILL
+
 ## Window bounds: sizes this screen for a view of `vp` (each frame, from
 ## ui/hud/bounds_keeper.gd). Compact dialogs: at most the view width minus 16 px; the content
 ## area as tall as the content but no taller than the view allows (then it scrolls); centred.
@@ -95,8 +156,40 @@ func _ready() -> void:
 func fit_view(vp: Vector2) -> void:
 	if frame == null or _scroll == null:
 		return
+	if _hp != null and _frame_style != null:
+		var hh: float = _hp.size.y + 1.0
+		if absf(hh - _frame_style.header_h) > 0.5:
+			_frame_style.header_h = hh
+			frame.queue_redraw()
+	var fit: bool = not compact and fits_content()
+	if fit:
+		if not _fit_on:
+			_fit_on = true
+			frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		var cm: Vector2 = content.get_combined_minimum_size()
+		# At least as wide as the header needs (title, subtitle, every tab and Close): the tab strip
+		# clips instead of widening the frame.
+		var hw: float = _hdr_width() - 64.0 - 20.0
+		_scroll.custom_minimum_size = Vector2(minf(maxf(cm.x, hw), vp.x - 16.0 - 64.0 - 20.0), cm.y)
+		var excess2: float = frame.get_combined_minimum_size().y - (vp.y - 16.0)
+		if excess2 > 0.0:
+			_scroll.custom_minimum_size.y = maxf(40.0, _scroll.custom_minimum_size.y - excess2)
+		var sz2: Vector2 = frame.get_combined_minimum_size()
+		sz2.x = minf(sz2.x, vp.x - 16.0)
+		if not frame.size.is_equal_approx(sz2) or vp != _last_vp:
+			frame.size = sz2
+			frame.position = ((vp - sz2) * 0.5).floor()
+		_last_vp = vp
+		return
+	if _fit_on:
+		# Back to a full screen (another tab): margins again.
+		_fit_on = false
+		_scroll.custom_minimum_size = Vector2.ZERO
+		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_last_vp = Vector2.ZERO
 	if compact:
-		frame.custom_minimum_size = Vector2(minf(compact_size.x, vp.x - 16.0), 0.0)
+		# + 20: the version-4 metal band (10 px a side) sits inside the frame; the content keeps its width.
+		frame.custom_minimum_size = Vector2(minf(compact_size.x + 20.0, vp.x - 16.0), 0.0)
 		_scroll.custom_minimum_size.y = content.get_combined_minimum_size().y
 		var excess: float = frame.get_combined_minimum_size().y - (vp.y - 16.0)
 		if excess > 0.0:
@@ -116,12 +209,8 @@ func fit_view(vp: Vector2) -> void:
 
 func _hdrer() -> Control:
 	var hp := PanelContainer.new()
-	var st = load("res://ui/theme/ui_theme.gd").panel_style("header")
-	st.chamfer = PackedFloat32Array([18, 0, 0, 0])
-	st.header_line = Color(0, 0, 0, 0)
-	st.fill_top = Color(0.1, 0.16, 0.26, 0.6)
-	st.fill_bottom = Color(0.06, 0.1, 0.17, 0.3)
-	st.border = Color(0, 0, 0, 0)
+	_hp = hp
+	var st = load("res://ui/theme/ui_theme.gd").panel_style("flat")   # the frame draws the plate behind it
 	st.content_margin_left = 22
 	st.content_margin_right = 14
 	st.content_margin_top = 12
@@ -141,6 +230,7 @@ func _hdrer() -> Control:
 	var row: HBoxContainer = Kit.hbox(14)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hsc.add_child(row)
+	_hdr_row = row
 	if icon != "":
 		var ic: TextureRect = Kit.icon(icon, 30, accent)
 		row.add_child(ic)
@@ -161,6 +251,10 @@ func _hdrer() -> Control:
 		b.toggle_mode = true
 		b.set_pressed_no_signal(id == tab)
 		b.custom_minimum_size.y = 34
+		b.tooltip_text = String(TAB_TIPS.get("%s:%s" % [screen_name, id], "%s\nShows this page." % String(t2[1])))
+		var ts = load("res://ui/theme/ui_theme.gd").tab_style(accent)
+		b.add_theme_stylebox_override("pressed", ts)
+		b.add_theme_stylebox_override("hover_pressed", ts)
 		tabs_row.add_child(b)
 		_tab_buttons[id] = b
 	row.add_child(Kit.spacer())
@@ -170,11 +264,7 @@ func _hdrer() -> Control:
 		bar.add_child(close)
 	var v: VBoxContainer = Kit.vbox(0)
 	v.add_child(hp)
-	var line := ColorRect.new()
-	line.color = P.with_alpha(accent, 0.55)
-	line.custom_minimum_size.y = 1
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(line)
+	v.add_child(Kit.gap(0, 3))   # room for the seam and the accent line the frame draws under the plate
 	return v
 
 func set_subtitle(text: String) -> void:

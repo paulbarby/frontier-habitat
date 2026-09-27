@@ -21,6 +21,10 @@ const Models = preload("res://presentation/models.gd")
 const Instancer = preload("res://presentation/fx_instancer.gd")
 const FxSky = preload("res://presentation/fx_sky.gd")
 const FxTerrain = preload("res://presentation/fx_terrain.gd")
+const TerrainV4 = preload("res://presentation/terrain_v4.gd")
+const Vehicles = preload("res://presentation/fx_vehicles.gd")
+const Reactor = preload("res://presentation/fx_reactor.gd")
+const Explore = preload("res://presentation/fx_explore.gd")
 const Post = preload("res://presentation/fx_post.gd")
 const Particles = preload("res://presentation/fx_particles.gd")
 const Ghost = preload("res://presentation/fx_ghost.gd")
@@ -44,6 +48,36 @@ const HOLO_COLORS := {"blueprint": Color(0.35, 0.82, 1.0), "building": Color(1.0
 var sim
 var sky
 var terrain
+const NO_CUTAWAY := ["rover_depot", "fission_reactor", "crystal_refinery", "chemical_plant", "launch_pad", "outpost_core", "crevice_bridge"]
+const MODEL_RADIUS := {"airlock": {1: 5.1, 2: 6.0}, "junction": {-1: 3.75}}
+const ROOM_MODEL_SCALE := 1.0
+## Is the model file of def/size the 1.5x build (its wall ring well beyond the content radius)?
+var _big_cache := {}
+func _model_is_big(def_id: String, size: int) -> bool:
+	var k := "%s/%d" % [def_id, size]
+	if _big_cache.has(k):
+		return _big_cache[k]
+	var res: Dictionary = Models.resolve(def_id, size)
+	var big := false
+	if String(res["path"]) != "":
+		var tpl: Dictionary = Models._template_from_file(res["path"])
+		var wr := 0.0
+		for p in tpl["parts"]:
+			wr = maxf(wr, float(p.get("wall_r", 0.0)))
+		var d: Dictionary = sim.bdef(def_id)
+		var cr: float = float(d.get("radius", 3.0))
+		if size >= 0 and d.has("sizes") and (d["sizes"] as Dictionary).has("radius"):
+			cr = float(d["sizes"]["radius"][clampi(size, 0, 3)])
+		big = wr > cr * 1.15
+	_big_cache[k] = big
+	return big   # content radii are the model radii again (SIM 2026-09-27 14:16: 1.5 x in buildings.json)
+var vehicles                # fx_vehicles (V4 §8)
+var reactor                 # fx_reactor (V4 §4.2 disaster effects)
+var explore                 # fx_explore (V4 §5: POIs, satellites, launches)
+var _rx_h := -1
+var demo_rate := 0.0         # view-side demos (vdemo) run at this rate while the game is paused
+var v4 = null                # terrain_v4 (V4 pilot: placeholder planet + horizon map)
+var _stage: Array = []       # staged base in a crater (evidence only, view-side)
 var post
 var fx
 var ghost
@@ -130,6 +164,7 @@ func setup(s) -> void:
 	terrain.name = "Terrain"
 	add_child(terrain)
 	terrain.build(sim, inst, quality)
+	_setup_v4()
 	post = Post.new()
 	post.name = "Post"
 	add_child(post)
@@ -169,6 +204,18 @@ func setup(s) -> void:
 	traffic.name = "Traffic"
 	add_child(traffic)
 	traffic.setup(self)
+	vehicles = Vehicles.new()
+	vehicles.name = "Vehicles"
+	add_child(vehicles)
+	vehicles.setup(self)
+	reactor = Reactor.new()
+	reactor.name = "Reactor"
+	add_child(reactor)
+	reactor.setup(self)
+	explore = Explore.new()
+	explore.name = "Explore"
+	add_child(explore)
+	explore.setup(self)
 	interior = Interior.new()
 	interior.name = "InteriorLights"
 	add_child(interior)
@@ -212,41 +259,11 @@ func _build_heightmap() -> void:
 func _build_deposit_labels() -> void:
 	# All rings are one mesh in world space (one draw call, not one per deposit). The decal
 	# shader reads only UV, so the dash pattern is the same as with separate rings.
-	var src: Array = ring_mesh(0.96, 96).surface_get_arrays(0)
-	var sv: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
-	var suv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
-	var av := PackedVector3Array()
-	var auv := PackedVector2Array()
-	var an := PackedVector3Array()
 	var deps: Array = sim.state["deposits"]
-	for d in deps:
-		var r: float = float(d["r"]) + 1.2
-		var o := Vector3(float(d["x"]), 0, float(d["y"]))
-		for v in sv:
-			av.append(o + v * r)
-			an.append(Vector3.UP)
-		auv.append_array(suv)
-	if not av.is_empty() and suv.size() == sv.size():
-		var arrays: Array = []
-		arrays.resize(Mesh.ARRAY_MAX)
-		arrays[Mesh.ARRAY_VERTEX] = av
-		arrays[Mesh.ARRAY_NORMAL] = an
-		arrays[Mesh.ARRAY_TEX_UV] = auv
-		var am := ArrayMesh.new()
-		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		var ring := MeshInstance3D.new()
-		ring.mesh = am
-		ring.material_override = decal_material(Color(1.0, 0.7, 0.35, 0.55), 1, 40.0, 0.0)
-		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		ring.extra_cull_margin = 16.0
-		ring.name = "DepositRings"
-		ring.set_instance_shader_parameter("icolor", Color(1, 1, 1, 1))
-		ring.set_instance_shader_parameter("ipulse", 0.0)
-		add_child(ring)
-		_dep_rings.append(ring)
+	_build_deposit_rings()
 	for d in deps:
 		var lab := Label3D.new()
-		lab.text = "ORE"
+		lab.text = String(d.get("kind", "ore")).to_upper().replace("_", " ") if d.has("kind") else "ORE"
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lab.fixed_size = true
 		lab.pixel_size = 0.0007
@@ -256,8 +273,73 @@ func _build_deposit_labels() -> void:
 		lab.outline_modulate = Color(0.05, 0.03, 0.02, 0.8)
 		lab.position = to3(Vector2(d["x"], d["y"]), 1.6)
 		lab.name = "DepositLabel"
+		lab.set_meta("dep", d)
 		add_child(lab)
 		_dep_labels.append(lab)
+
+func _build_deposit_rings() -> void:
+	var src: Array = ring_mesh(0.96, 96).surface_get_arrays(0)
+	var sv: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
+	var suv: PackedVector2Array = src[Mesh.ARRAY_TEX_UV]
+	var deps: Array = sim.state["deposits"]
+	_build_ring_mesh(deps.filter(func(d): return _dep_known(d)), "DepositRings", sv, suv, 1.0)
+	_build_ring_mesh(deps.filter(func(d): return not _dep_known(d)), "DepositRingsUnknown", sv, suv, 0.0)
+	_dep_known_n = deps.filter(func(d): return _dep_known(d)).size()
+
+## SIM 2026-09-27: a deposit is known when surveyed (older maps: always).
+func _dep_known(d: Dictionary) -> bool:
+	return bool(d.get("surveyed", true))
+var _dep_known_n := -1
+var _dep_ring_nodes := {}
+var _dep_clock := 0.0
+
+## One mesh of dashed rings for `deps` (one draw call). known = 1 shows without the overlay.
+func _build_ring_mesh(deps: Array, nm: String, sv: PackedVector3Array, suv: PackedVector2Array, known: float) -> void:
+	var av := PackedVector3Array()
+	var auv := PackedVector2Array()
+	var an := PackedVector3Array()
+	for d in deps:
+		var r: float = float(d["r"]) + 1.2
+		var o := Vector3(float(d["x"]), 0, float(d["y"]))
+		for v in sv:
+			av.append(o + v * r)
+			an.append(Vector3.UP)
+		auv.append_array(suv)
+	if av.is_empty() and _dep_ring_nodes.has(nm) and is_instance_valid(_dep_ring_nodes[nm]):
+		(_dep_ring_nodes[nm] as MeshInstance3D).mesh = null
+	if not av.is_empty() and suv.size() == sv.size():
+		var arrays: Array = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = av
+		arrays[Mesh.ARRAY_NORMAL] = an
+		arrays[Mesh.ARRAY_TEX_UV] = auv
+		var am := ArrayMesh.new()
+		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		# The two ring nodes are kept and get the new mesh (a new instance made mid-game was at
+		# times not lit by fx_sky's always-on spot and compiled an omni-only program).
+		var ring: MeshInstance3D = _dep_ring_nodes.get(nm)
+		if ring != null and is_instance_valid(ring):
+			ring.mesh = am
+			var rab0: AABB = am.get_aabb()
+			ring.custom_aabb = AABB(rab0.position - Vector3(0, 200, 0), rab0.size + Vector3(0, 900, 0))
+			return
+		ring = MeshInstance3D.new()
+		_dep_ring_nodes[nm] = ring
+		ring.mesh = am
+		ring.material_override = decal_material(Color(1.0, 0.7, 0.35, 0.55), 1, 40.0, 0.0)
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ring.extra_cull_margin = 16.0
+		# A box with height: the flat (y = 0) mesh box was missed by fx_sky's always-on spot, and a
+		# rebuilt ring mesh (a deposit found) then compiled an omni-only program (67-83 ms web frame).
+		var rab: AABB = am.get_aabb()
+		ring.custom_aabb = AABB(rab.position - Vector3(0, 200, 0), rab.size + Vector3(0, 900, 0))
+		ring.name = nm
+		ring.set_meta("known", known)
+
+		ring.set_instance_shader_parameter("icolor", Color(1, 1, 1, 1))
+		ring.set_instance_shader_parameter("ipulse", 0.0)
+		add_child(ring)
+		_dep_rings.append(ring)
 
 # ---------------------------------------------------------------- shared materials
 ## A flat ring (outer radius 1, inner `inner`), draped on the terrain by the decal shader.
@@ -391,13 +473,15 @@ func sync(delta: float) -> void:
 	var wind: float = float(sim.state["env"].get("wind", 3.0))
 	var tp: int = Time.get_ticks_usec()
 	sky.update(t, day_len, daylight, delta, focus, camera_distance, wind)
+	_v4_light(focus)
 	post.apply(sky.grade, delta)
-	Models.set_night(sky.night)
+	Models.set_night(maxf(sky.night, v4_dark * 0.85))
 	Models.animate(_time)
 	tp = _prof("sky", tp)
 	_camera_range()
 	terrain.update_lod(delta, cam)
-	terrain.update_paths(sim_dt)
+	terrain.fog_tick()
+	if not _skip.has("paths"): terrain.update_paths(sim_dt)
 	tp = _prof("paths", tp)
 	_made_now = 0
 	_sync_buildings(delta)
@@ -407,7 +491,7 @@ func sync(delta: float) -> void:
 	if _made_now >= 20:
 		_boot_prewarm(cam)
 		tp = _prof("boot", tp)
-	airlock.sync(delta)
+	if not _skip.has("airlock"): airlock.sync(delta)
 	tp = _prof("airlock", tp)
 	if npc.sync(delta):
 		if not ameta.is_empty():
@@ -416,33 +500,50 @@ func sync(delta: float) -> void:
 	else:
 		_sync_agents(delta)
 	tp = _prof("agents", tp)
-	doors.sync(delta, _body_points())
-	interior.sync(delta, focus, sky.night)
+	if not _skip.has("doors"): doors.sync(delta, _body_points())
+	if not _skip.has("interior"): interior.sync(delta, focus, sky.night)
 	tp = _prof("doors", tp)
-	hazards.sync(delta, focus)
+	if not _skip.has("hazards"): hazards.sync(delta, focus)
 	tp = _prof("hazards", tp)
 	_sync_piles()
-	ship.sync(delta, sim_dt)
-	traffic.sync(delta)
+	if not _skip.has("ship"): ship.sync(delta, sim_dt)
+	if not _skip.has("traffic"): traffic.sync(delta)
+	if not _skip.has("vehicles"): vehicles.sync(delta)
+	if not _skip.has("reactor"): reactor.sync(delta)
+	if not _skip.has("explore"): explore.sync(delta)
+	_fly_step(delta)
 	_sync_selection(delta)
 	overlays.sync(delta)
 	tp = _prof("misc", tp)
 	_status_clock -= delta
 	if _status_clock <= 0.0:
 		_status_clock = 0.2
-		_sync_status()
+		if not _skip.has("status"): _sync_status()
 	_sites_clock -= delta
 	if _sites_clock <= 0.0:
 		_sites_clock = 1.0
-		_refresh_sites()
+		if not _skip.has("sites"): _refresh_sites()
 	tp = _prof("status", tp)
-	fx.sync(delta, sim_dt, cam, focus, wind, sky.night, sky.storm, sky.sun_dir)
+	if not _skip.has("fx"): fx.sync(delta, sim_dt, cam, focus, wind, sky.night, sky.storm, sky.sun_dir)
 	tp = _prof("fx", tp)
 	var show_words: bool = labels_visible and time_override < 0.0 and not _photo_mode()
+	# V4 (critic round 20): on the v4 map the deposit rings and words show only with the resource
+	# overlay (a survey will add per-deposit visibility when SIM publishes it).
+	# SIM: a deposit counts once surveyed; unsurveyed ones show only with the resource overlay.
+	var ov_res: bool = overlay in ["resources", "deposits"]
+	_dep_clock -= delta
+	if _dep_clock <= 0.0:
+		_dep_clock = 2.0
+		var kn: int = (sim.state["deposits"] as Array).filter(func(d): return _dep_known(d)).size()
+		if kn != _dep_known_n:
+			# Only the two ring meshes change (a label reads its deposit's surveyed flag live):
+			# rebuilding ~100 Label3D each time the fog found a deposit cost 120-150 ms frames.
+			_build_deposit_rings()
 	for lab in _dep_labels:
-		(lab as Label3D).visible = show_words and camera_distance < 55.0 and overlay == ""
+		var dk: bool = _dep_known(lab.get_meta("dep", {}))
+		(lab as Label3D).visible = show_words and camera_distance < 55.0 and ((overlay == "" and dk) or ov_res)
 	for rg in _dep_rings:
-		(rg as MeshInstance3D).visible = labels_visible and not _photo_mode()
+		(rg as MeshInstance3D).visible = labels_visible and not _photo_mode() and (float(rg.get_meta("known", 1.0)) > 0.5 or ov_res)
 	for id in _labels:
 		(_labels[id] as Label3D).visible = show_words
 	icons.visible = labels_visible and not _photo_mode()
@@ -588,13 +689,17 @@ func _night_warmup() -> void:
 		sp.global_transform = Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), at + Vector3(0, 150, 0))
 		# (both reach every structure in view: each material meets an omni and a spot once)
 		_warm_nodes = [om, sp]
+		_warm_om = om
+		_warm_sp = sp
 		# Models first used mid-game (a pile of bought goods, a supply pod, meteor props, a ship
 		# kind not on a pad yet): drawn once, tiny, in front of the camera (V3.1 stall trace).
 		_warm_handles = []
 		if cam != null:
 			var fwd: Vector3 = -cam.global_transform.basis.z
 			var wx := Transform3D(Basis.from_scale(Vector3(0.01, 0.01, 0.01)), cam.global_position + fwd * 3.0)
-			for f in ["crate_raw", "crate_material", "crate_component", "crate_medical", "crate_food", "crate", "supply_pod", "meteor_rock", "crater", "fragments", "meteor_turret"]:
+			for f in ["crate_raw", "crate_material", "crate_component", "crate_medical", "crate_food", "crate", "supply_pod", "meteor_rock", "crater", "fragments", "meteor_turret",
+					# V4 points of interest found mid-game (fx_explore: a satellite band finds a derelict probe, 66-133 ms)
+					"satellite", "boulder_a", "rock_a", "rock_b", "rock_c", "rock_f", "ship_courier", "ship_trader"]:
 				if Models.has_model(f):
 					_warm_handles.append(inst.add(Models.prop([f], 0.5, "exterior", "logistics"), wx))
 			for k in ["trader", "shuttle", "liner", "medical", "science", "courier"]:
@@ -603,6 +708,18 @@ func _night_warmup() -> void:
 					add_child(sn)
 					sn.global_transform = wx
 					_warm_nodes.append(sn)
+			# The build / blueprint hologram material (unshaded, transparent, both sides).
+			var gb := MeshInstance3D.new()
+			gb.mesh = BoxMesh.new()
+			gb.material_override = Models.ghost_material(Color(0.35, 0.9, 1.0, 0.28))
+			add_child(gb)
+			gb.global_transform = Transform3D(Basis.from_scale(Vector3(0.02, 0.02, 0.02)), cam.global_position + fwd * 3.0)
+			_warm_nodes.append(gb)
+			fx.prewarm(cam.global_position + fwd * 3.0)
+			if explore != null:
+				_warm_nodes.append_array(explore.warm_nodes(wx))
+			if vehicles != null:
+				_warm_nodes.append_array(vehicles.warm_nodes(Transform3D(Basis.from_scale(Vector3(0.01, 0.01, 0.01)), cam.global_position - cam.global_transform.basis.z * 3.0)))
 	# Hold the night until the sky is fully dark and every structure's Lights are on (at most
 	# 40 frames); the flame, dust and mist warm-up of fx_traffic runs in the same frames.
 	# (at least 1.3 s: the night lamp sites, helmet lamps and light pools refresh once a second)
@@ -611,6 +728,7 @@ func _night_warmup() -> void:
 	# First the sunset itself (the sun at the horizon: 108-150 ms of first-use work, UI trace),
 	# then full night.
 	time_override = 360.0 if _time - _warm_t0 < 0.6 else 420.0
+	_warm_lights(_warm_frames)
 	_warm_frames += 1
 	_night_warm -= 1
 	if _night_warm == 0:
@@ -627,6 +745,32 @@ func _night_warmup() -> void:
 		for hh in _warm_handles:
 			inst.remove(hh)
 		_warm_handles = []
+## The Compatibility renderer compiles a separate program for each material under each light
+## mix: base pass, omni only, spot only, both, and the additive passes of shadowed lights. The
+## warm-up lights change mix every frame so a rover driving under a base lamp, or a structure a
+## head light first reaches, finds its programs ready (showcase_v4 WebGL trace 2026-09-28: 22
+## program links at 30-290 ms each in the first 2 minutes).
+var _warm_om: OmniLight3D = null
+var _warm_sp: SpotLight3D = null
+func _warm_lights(f: int) -> void:
+	if not is_instance_valid(_warm_om) or not is_instance_valid(_warm_sp):
+		return
+	# 0 both, 1 omni, 2 spot, 3 shadowed omni, 4 shadowed spot, 5 both + omni shadow,
+	# 6 both + spot shadow, 7 none
+	# (fx_sky's always-on omni and spot put every object in the "both" mix; no shadowed omni or
+	# spot exists in the game, so the other mixes are not warmed any more)
+	var ph: int = 0
+	var om_on: bool = ph in [0, 1, 3, 5, 6]
+	var sp_on: bool = ph in [0, 2, 4, 5, 6]
+	_warm_om.visible = true
+	_warm_sp.visible = true
+	_warm_om.light_energy = 1.0 if om_on else 0.0
+	_warm_om.omni_range = 600.0 if om_on else 0.001
+	_warm_sp.light_energy = 1.0 if sp_on else 0.0
+	_warm_sp.spot_range = 600.0 if sp_on else 0.001
+	_warm_om.shadow_enabled = ph == 3 or ph == 5
+	_warm_sp.shadow_enabled = ph == 4 or ph == 6
+
 var boot_info := {}
 ## The load cover stays until the first-draw frames are over (shader compiles of a new colony):
 ## two frames in a row under 34 ms, at most 4 s. Stall counters restart when it lifts.
@@ -751,10 +895,28 @@ func _template(b: Dictionary) -> Dictionary:
 	if String(b["def"]) == "airlock" and float(b["radius"]) < 3.0 and Models.has_model("airlock_r28"):
 		return Models.status_tinted(Models.building("airlock_r28", -1, float(b["radius"]), float(b["radius"]), b["kind"], def.get("category", "logistics")))
 	var s_r: float = -1.0
+	# V4 (ART-HAB 2026-09-27, V1): every room model except the airlock and the junction is built at
+	# 1.5 x the content radius (content keeps the v3 numbers; SIM scales rooms on v4 maps). The
+	# model is drawn at record radius / its own radius, so old saves and v4 maps are both right.
+	var mk: float = ROOM_MODEL_SCALE if (String(b["kind"]) == "room" and not (String(b["def"]) in ["airlock", "junction"])) else 1.0
 	if size >= 0 and (def["sizes"] as Dictionary).has("radius"):
 		var ra: Array = def["sizes"]["radius"]
-		s_r = float(ra[clampi(size, 0, ra.size() - 1)])
-	var tb: Dictionary = Models.building(b["def"], size, float(b["radius"]), float(def.get("radius", b["radius"])), b["kind"], def.get("category", "logistics"), s_r)
+		s_r = float(ra[clampi(size, 0, ra.size() - 1)]) * mk
+	var m_r: float = float(def.get("radius", b["radius"])) * mk
+	# Model files whose built radius is not the content radius (ART-HAB 4.0 rebuilt the airlock at
+	# 5.1 / 6.0 m and the junction at 3.75 m; content keeps 3.4 / 4.0 and 2.5): draw them at the
+	# record radius from their real size.
+	var mr: Dictionary = MODEL_RADIUS.get(String(b["def"]), {})
+	if not mr.is_empty() and not _model_is_big(String(b["def"]), size):
+		mr = {}   # (ART-HAB is rebuilding them at the content radius: then no override)
+	if not mr.is_empty():
+		if mr.has(size):
+			s_r = float(mr[size])
+		if mr.has(-1):
+			m_r = float(mr[-1])
+	var tb: Dictionary = Models.building(b["def"], size, float(b["radius"]), m_r, b["kind"], def.get("category", "logistics"), s_r)
+	if mr.has(-1) and size < 0 and absf(float(b["radius"]) - m_r) > 0.05:
+		tb = Models._with_scale(tb, float(b["radius"]) / m_r)
 	# Airlock lights take their colour from the cycle (fx_airlock).
 	return Models.status_tinted(tb) if String(b["def"]) == "airlock" else tb
 
@@ -770,6 +932,11 @@ func _bxf(b: Dictionary) -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, -float(b["rot"])), to3(b["pos"], 0.02))
 
 var _mode_flips := {}
+var _nodelog: Array = []
+func _on_node_added(n: Node) -> void:
+	if _nodelog.size() < 400:
+		_nodelog.append("%.1f %s %s<%s" % [Time.get_ticks_msec() / 1000.0, n.get_class(), String(n.name).left(24), String(n.get_parent().name).left(20) if n.get_parent() != null else ""])
+var _skip := {}             # measurement only (__fhr "skip <module>"): modules not synced
 var _no_cutaway := false   # test only (__fhr "cutaway 0"): roofs stay on near the camera
 func _sync_buildings(delta: float) -> void:
 	var blds: Dictionary = sim.state["buildings"]
@@ -1000,6 +1167,10 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 		if b["kind"] != "link" or b["def"] == "corridor":
 			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0 and not _no_cutaway
 			var want: float = 1.0 if (near or _force_open_all or (selected_kind == "building" and selected_id == id)) else 0.0
+			# 4.0 exteriors whose roof is part of the silhouette (depot hangar, reactor, plants, pad):
+			# never cut away (UI shot 2026-09-27: the depot read as a plain box without it).
+			if String(b["def"]) in NO_CUTAWAY:
+				want = 0.0
 			var o: float = float(meta["open"])
 			if o != want:
 				meta["open"] = move_toward(o, want, delta * 3.5)
@@ -1665,7 +1836,8 @@ func _make_outline(id: int) -> Node3D:
 		# 2-3 stacked cyan rings on rooms, and the airlock's door, housing, status and *Top parts
 		# (hidden in the cutaway) drew as solid cyan slabs.
 		var body_part: bool = g == "Base" or g == "Roof" or (g.length() == 2 and g[0] == "L" and g[1].is_valid_int()) or g == "Rotor"
-		if not body_part or g in ["Rotor"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))):
+		# (a flat roof drew as a solid cyan slab on the 4.0 exteriors: their outline is the Base)
+		if not body_part or g in ["Rotor"] or (open and (g == "Roof" or (g.length() == 2 and g[0] == "L" and b["kind"] == "room"))) or (g == "Roof" and String(b["def"]) in NO_CUTAWAY):
 			continue
 		if g.length() == 2 and g[0] == "L" and int(g[1]) > lvl:
 			continue
@@ -1736,6 +1908,10 @@ func set_overlay(name: String) -> void:
 	if name == "hazard" and not hz_ok:
 		_log_once("hazard_overlay", "RENDER: hazard overlay needs sim.world.hazard_at(pos) or sim.hazards.zone_at(pos); not there yet")
 	overlays.set_mode(name if name in ["power", "water", "air"] else "")
+	# V4 map layers (UI buttons: radiation, sun, resources; explored with the fog).
+	var lay_ok: bool = terrain.set_layer(name if name in ["radiation", "sun", "resources", "explored"] else "")
+	if name in ["radiation", "sun", "resources", "explored"] and not lay_ok:
+		_log_once("layer_" + name, "RENDER: map layer %s needs SIM data that this map does not have" % name)
 
 ## The hazard zone field of V3 §1: sim.world.hazard_at(pos) (or sim.hazards.zone_at).
 func _hazard_fn() -> Callable:
@@ -1766,6 +1942,11 @@ func _camera_range() -> void:
 	r.max_distance = clampf(gn * 0.56, 200.0, 460.0)
 	if r.camera != null:
 		r.camera.far = maxf(1400.0, gn * 1.6 + 1300.0)
+	if gn > 1100:
+		# V4: the 2,560 m planet; the whole map fits at about 1,400 m.
+		r.max_distance = 1400.0
+		if r.camera != null:
+			r.camera.far = 5200.0
 
 # ---------------------------------------------------------------- placement ghost (§12)
 ## A holographic ghost of `def_id` at sim position `pos`, rotation `rot` (sim radians).
@@ -2050,6 +2231,164 @@ func debug_cmd(text: String) -> String:
 						best = minf(best, cp.distance_to(sim.state["buildings"][bid]["pos"]))
 					o2.append("%.0f,%.0f r%.1f near%.1f" % [cp.x, cp.y, float(c["r"]), best])
 			return str(o2)
+		"vdemo":
+			# Vehicles demo (view-side until SIM's vehicles exist): x z of the group centre.
+			demo_rate = 1.0
+			var cx: float = float(w[1]) if w.size() > 2 else float(sim.world.center.x) + 30.0
+			var cz: float = float(w[2]) if w.size() > 2 else float(sim.world.center.y) + 10.0
+			var out := []
+			for e in [["rover_small", Vector2(0, 0), 0.3], ["rover_medium", Vector2(0, 16), 0.0], ["hopper", Vector2(22, -6), 0.8], ["launch_pad", Vector2(-40, 30), 0.0], ["satellite", Vector2(0, 0), 0.0]]:
+				var p: Vector2 = Vector2(cx, cz) + e[1]
+				out.append(vehicles.add(e[0], Transform3D(Basis(Vector3.UP, e[2]), Vector3(p.x, h(p.x, p.y), p.y))))
+			return "vehicles %s" % str(out)
+		"vdrive":
+			return str(vehicles.drive_to(int(w[1]), Vector2(float(w[2]), float(w[3]))))
+		"vhop":
+			vehicles.hop_to(int(w[1]), Vector2(float(w[2]), float(w[3])))
+		"vboard":
+			vehicles.board(int(w[1]), int(w[2]))
+		"valight":
+			vehicles.alight(int(w[1]))
+		"vlaunch":
+			vehicles.launch(int(w[1]))
+		"camrange":
+			var rc = rig()
+			return "none" if rc == null else "distance %.0f target %.0f max %.0f far %.0f" % [rc.distance, rc.target_distance, rc.max_distance, rc.camera.far]
+		"reactor":
+			reactor.set_stage(int(w[1]), w[2] if w.size() > 2 else "")
+		"simlog":
+			# simlog [n]: the last n SIM log entries as "g<second> code" (matching frame spikes to events)
+			var lg: Array = sim.state.get("log", [])
+			var out := []
+			for i in range(maxi(0, lg.size() - (int(w[1]) if w.size() > 1 else 20)), lg.size()):
+				out.append("g%d %s" % [int(lg[i]["tick"]) / int(sim.bal["tick_hz"]), String(lg[i]["code"])])
+			return JSON.stringify(out)
+		"skip":
+			# Measurement only: skip <module> [0]: that view module does not sync (frame-spike bisect).
+			if w.size() > 2 and w[2] == "0":
+				_skip.erase(w[1])
+			elif w.size() > 1:
+				_skip[w[1]] = true
+			return str(_skip.keys())
+		"lights":
+			# Measurement only: every omni and spot light in the tree (shadowed first).
+			var out := []
+			for l in get_tree().root.find_children("*", "Light3D", true, false):
+				if l is DirectionalLight3D:
+					continue
+				var lr: float = (l as OmniLight3D).omni_range if l is OmniLight3D else (l as SpotLight3D).spot_range
+				out.append("%s sh%d vis%d e%.3f r%.1f y%.0f %s<%s" % ["O" if l is OmniLight3D else "S", int((l as Light3D).shadow_enabled), int((l as Node3D).is_visible_in_tree()), (l as Light3D).light_energy, lr, (l as Node3D).global_position.y, String(l.name).left(16), String(l.get_parent().name).left(16)])
+			out.sort()
+			return "%d %s" % [out.size(), str(out.slice(0, 60))]
+		"nodelog":
+			# Measurement only: nodelog on|get: every node added to the tree, with the time (s) and parent.
+			if w.size() > 1 and w[1] == "on":
+				_nodelog = []
+				if not get_tree().node_added.is_connected(_on_node_added):
+					get_tree().node_added.connect(_on_node_added)
+				return "on"
+			return JSON.stringify(_nodelog)
+		"vtest":
+			if w.size() > 2 and w[2] == "1":
+				vehicles.test_off.erase(w[1])
+			elif w.size() > 1:
+				vehicles.test_off[w[1]] = true
+			return str(vehicles.test_off.keys())
+		"vspots":
+			vehicles.spots_on = not (w.size() > 1 and w[1] == "0")
+		"launchtest":
+			return explore.test_launch(int(w[1]))
+		"v4state":
+			var o := {"pois": explore.stats, "reactor": reactor.stats, "vehicles": vehicles.stats, "fog_rev": terrain.fog_rev, "fog_ms": terrain.fog_ms, "fog_n": terrain.fog_n, "worst_ms": _worst_ms}
+			var rx = sim.get("reactors")
+			if rx != null:
+				o["reactors"] = (rx.list() as Array).map(func(r): return [r["id"], r["stage"], r["pos"]])
+				o["zones"] = (rx.zones() as Array).map(func(z): return [z["kind"], int(z["x"]), int(z["y"]), z["r"]])
+			var ex = sim.get("explore")
+			if ex != null and ex.active():
+				o["pois_found"] = (ex.pois() as Array).filter(func(p): return p["found"]).map(func(p): return [p["id"], p["kind"], int(p["x"]), int(p["y"]), p["visited"]])
+				o["sats"] = ex.sats()
+				var sx := []
+				for e in explore.sats.values():
+					var sp: Vector3 = (e["node"] as Node3D).global_position
+					sx.append([roundi(sp.x), roundi(sp.y), roundi(sp.z)])
+				o["sat_xyz"] = sx
+			var pads := []
+			for bid in sim.state["buildings"]:
+				if String(sim.state["buildings"][bid]["def"]) in ["launch_pad", "fission_reactor", "rover_depot", "outpost_core", "comms_tower", "chemical_plant", "crystal_refinery"]:
+					pads.append([bid, sim.state["buildings"][bid]["def"], sim.state["buildings"][bid]["pos"]])
+			o["key_buildings"] = pads
+			var rcam = rig()
+			if rcam != null:
+				var cp: Vector3 = rcam.camera.global_position
+				o["cam"] = [roundi(cp.x), roundi(cp.y), roundi(cp.z)]
+			return JSON.stringify(o)
+		"rxdemo":
+			# Evidence until SIM's meltdown exists: a fission reactor model at x z, then stages.
+			if w.size() > 3:
+				reactor.stage_at(-7, Vector2(float(w[1]), float(w[2])), 12.0, w[3])
+				if w[3] == "breach" and _rx_h >= 0:
+					inst.remove(_rx_h)
+					_rx_h = -1
+				return "stage %s" % w[3]
+			var pr := Vector2(float(w[1]), float(w[2]))
+			var tr: Dictionary = Models.building("fission_reactor", -1, 12.0, 12.0, "exterior", "utilities")
+			_rx_h = inst.add(tr, Transform3D(Basis(), Vector3(pr.x, h(pr.x, pr.y), pr.y)))
+			reactor.stage_at(-7, pr, 12.0, "")
+			return "reactor at %s" % str(pr)
+		"radzone":
+			reactor.add_zone("dbg%d" % reactor.zones.size(), Vector2(float(w[1]), float(w[2])), float(w[3]) if w.size() > 3 else 60.0)
+		"base":
+			return jump_base(-2 if (w.size() < 2 or w[1] == "next") else int(w[1]))
+		"layer":
+			set_overlay(w[1] if w.size() > 1 else "")
+			return "layer %s" % terrain.layer
+		"fogtest":
+			# Evidence only until SIM publishes explored cells: explored = 450 m round the start
+			# plus a 60 m band along a line to (x, z).
+			var cell := 8.0
+			var nf: int = int(ceil(float(sim.world.size) / cell)) + 1
+			var img := Image.create(nf, nf, false, Image.FORMAT_R8)
+			var c0: Vector2 = sim.world.center
+			var tgt := Vector2(float(w[1]), float(w[2])) if w.size() > 2 else c0 + Vector2(700, 300)
+			for j in nf:
+				for i in nf:
+					var p := Vector2(i, j) * cell
+					var d0: float = p.distance_to(c0) - 450.0
+					var d1: float = p.distance_to(Geometry2D.get_closest_point_to_segment(p, c0, tgt)) - 60.0
+					img.set_pixel(i, j, Color(clampf(1.0 - minf(d0, d1) / 30.0, 0.0, 1.0), 0, 0))
+			terrain.fog_debug = terrain._map_tex(img, cell * (nf - 1))
+			return "fog %s" % str(terrain.set_fog(true))
+		"vinfo":
+			return JSON.stringify(vehicles.info())
+		"vfollow":
+			var rf = rig()
+			var vid: int = int(w[1])
+			if rf != null and not vehicles.vehicles.has(vid):
+				rf.follow_fn = Callable()
+			if rf != null and vehicles.vehicles.has(vid):
+				var vn: Node3D = vehicles.vehicles[vid]["node"]
+				var lift: float = float(w[2]) if w.size() > 2 else 0.0
+				rf.follow_fn = func(): return vn.global_position + Vector3(0, lift, 0) if is_instance_valid(vn) else null
+		"vclear":
+			vehicles.clear()
+			demo_rate = 0.0
+		"v4stage":
+			return _v4_stage(int(w[1]) if w.size() > 1 else 0)
+		"v4scale":
+			return _v4_scale_cue(int(w[1]) if w.size() > 1 else 0)
+		"v4hz":
+			return v4.compare(float(w[1]), float(w[2])) if v4 != null else "not a v4 map"
+		"v4info":
+			if v4 == null:
+				return "not a v4 map"
+			var wv = sim.world
+			return JSON.stringify({"v4": v4.timings, "terrain": terrain.timings, "sun": sky.sun_now, "key": v4_key, "dark": v4_dark,
+				"deep_craters": (wv.deep_craters as Array).map(func(c): return [snappedf(float(c["x"]), 1), snappedf(float(c["y"]), 1), snappedf(float(c["r"]), 1), snappedf(float(c["depth"]), 1)]),
+				"plateaus": (wv.plateaus as Array).map(func(c): return [snappedf(float(c["x"]), 1), snappedf(float(c["y"]), 1), snappedf(float(c["r"]), 1), snappedf(float(c["h"]), 1)]),
+				"mountains": (wv.mountains as Array).map(func(c): return [snappedf((c["peak"] as Vector2).x, 1), snappedf((c["peak"] as Vector2).y, 1), snappedf(float(c["height"]), 1)]),
+				"crevices": (wv.crevices as Array).map(func(c): return [snappedf((c["pts"][0] as Vector2).x, 1), snappedf((c["pts"][0] as Vector2).y, 1), snappedf(float(c["w"]), 0.1), snappedf(float(c["d"]), 1)]),
+				"boulder_fields": (wv.boulder_fields as Array).map(func(c): return [snappedf(float(c["x"]), 1), snappedf(float(c["y"]), 1), snappedf(float(c["r"]), 1)])})
 		"cutcheck":
 			# cutcheck open: every room's cutaway opens (test staging). cutcheck: per room type, every
 			# drawn vertex (room, its doorway kits, its wall patches) above 1.45 m, by group; groups
@@ -2488,6 +2827,7 @@ func debug_cmd(text: String) -> String:
 				"glow": sky.env.glow_enabled = on
 				"fog": sky.env.fog_enabled = on
 				"particles": fx.visible = on
+				"dust": fx.field_on = on
 				"terrain": terrain.mesh_inst.visible = on
 				"pebbles":
 					for p in terrain._pebbles:
@@ -2536,3 +2876,172 @@ func _audio():
 	while m != null and not (m.get("audio") != null):
 		m = m.get_parent()
 	return m.get("audio") if m != null else null
+
+# ---------------------------------------------------------------- V4 terrain light
+## V4 maps (sim.world.version >= 4): the sim's sun, the horizon shadows (terrain_v4), a camera
+## range for the 2,560 m planet, depth haze that never covers the focus.
+func _setup_v4() -> void:
+	v4 = null
+	if int(sim.world.get("version")) < 4:
+		return
+	v4 = TerrainV4.new()
+	v4.name = "TerrainV4"
+	add_child(v4)
+	v4.setup(sim)
+	sky.sun_fn = Callable(v4, "sun_now")
+	sky.fog_far = true
+
+## The key light and the horizon (V4 1.1). The terrain shader applies the horizon per pixel.
+## Objects: the key light is dimmed by SIM's sun visibility at the camera focus and the ambient by
+## the sky openness there, faded out as the camera rises (at overview distance the terrain carries
+## the shadow); the terrain shader undoes both for itself (key_comp, amb_comp). In a shadowed
+## crater the base lamps and windows burn as at night.
+var v4_key := 1.0
+var v4_dark := 0.0
+func _v4_light(focus: Vector3) -> void:
+	if v4 == null or not v4.active:
+		return
+	var sun: Dictionary = sky.sun_now
+	if sun.is_empty():
+		return
+	var vis: float = v4.sun_vis(focus.x, focus.z, sun) if sky.key_is_sun else 1.0
+	var fade: float = smoothstep(90.0, 320.0, camera_distance)
+	v4_key = maxf(0.06, lerpf(vis, 1.0, fade))
+	sky.key.light_energy = maxf(sky.key.light_energy * v4_key, 0.002)
+	var open: float = v4.sky_open(focus.x, focus.z)
+	var amb: float = lerpf(open, 1.0, fade)
+	sky.env.ambient_light_energy *= maxf(amb, 0.45)
+	sky.env.ambient_light_color = (sky.env.ambient_light_color as Color).lerp(Color(0.52, 0.58, 0.72), (1.0 - amb) * 0.7)
+	v4_dark = clampf((1.0 - vis) * (1.0 - sky.night), 0.0, 1.0) if sky.key_is_sun else 0.0
+	sky.lamp_boost = v4_dark
+	fx.field_light = lerpf(0.25, 1.0, minf(v4_key, amb))
+	v4.apply_to(terrain.mat, sun, sky.key_is_sun, 1.0 / v4_key, 1.0 / maxf(amb, 0.45))
+	if terrain.crevice_mat != null:
+		v4.apply_to(terrain.crevice_mat, sun, sky.key_is_sun, 1.0 / v4_key, 1.0 / maxf(amb, 0.45))
+
+## Evidence only (view-side, like `ship inspector`): a small base with bright lamps on the floor of
+## a deep crater from SIM's map, and two figures by a giant boulder for scale. Nothing is written
+## to sim.state.
+func _v4_stage(which: int) -> String:
+	if v4 == null:
+		return "not a v4 map"
+	var cr: Array = sim.world.deep_craters
+	if cr.is_empty():
+		return "no deep crater"
+	var dc: Dictionary = cr[clampi(which, 0, cr.size() - 1)]
+	var c := Vector2(float(dc["x"]), float(dc["y"]))
+	for e in _stage:
+		if e is Node:
+			(e as Node).queue_free()
+		else:
+			inst.remove(int(e))
+	_stage = []
+	var plan: Array = [["habitat", Vector2(0, 0)], ["greenhouse", Vector2(19, 4)], ["workshop", Vector2(-6, 18)], ["research_lab", Vector2(-18, -6)], ["storehouse", Vector2(8, -19)]]
+	for e in plan:
+		var def: Dictionary = sim.bdef(e[0])
+		if def.is_empty():
+			continue
+		var rr: float = float(def.get("radius", 4.0))
+		if def.has("sizes") and (def["sizes"] as Dictionary).has("radius"):
+			rr = float(def["sizes"]["radius"][1])
+		var b := {"def": e[0], "kind": String(def.get("kind", "room")), "size": 1, "radius": rr}
+		var p: Vector2 = c + e[1]
+		_stage.append(inst.add(_template(b), Transform3D(Basis(Vector3.UP, 0.4), Vector3(p.x, h(p.x, p.y) + 0.05, p.y))))
+	# Lamp pools: six warm floods on masts round the base (real lights, debug only).
+	for k in 6:
+		var l := OmniLight3D.new()
+		var a: float = TAU * k / 6.0 + 0.3
+		var lp: Vector2 = c + Vector2(cos(a), sin(a)) * 16.0
+		l.position = Vector3(lp.x, h(lp.x, lp.y) + 6.0, lp.y)
+		l.light_color = Color(1.0, 0.84, 0.62)
+		l.light_energy = 5.0
+		l.omni_range = 32.0
+		l.omni_attenuation = 0.9
+		add_child(l)
+		_stage.append(l)
+	return "staged %d on crater %d at %.0f,%.0f floor %.1f m (r %.0f, depth %.0f)" % [_stage.size(), which, c.x, c.y, h(c.x, c.y), float(dc["r"]), float(dc["depth"])]
+
+## Two astronaut figures by the biggest boulder of a field, for scale (evidence only).
+func _v4_scale_cue(field: int) -> String:
+	var bf: Array = sim.world.boulder_fields
+	if bf.is_empty():
+		return "no boulder field"
+	var f: Dictionary = bf[clampi(field, 0, bf.size() - 1)]
+	var fc := Vector2(float(f["x"]), float(f["y"]))
+	var best: Dictionary = {}
+	for r in sim.world.rocks:
+		if int(r["kind"]) != 3:
+			continue
+		if Vector2(float(r["x"]), float(r["y"])).distance_to(fc) > float(f["r"]) + 12.0:
+			continue
+		if best.is_empty() or float(r["r"]) > float(best["r"]):
+			best = r
+	if best.is_empty():
+		return "no boulder in field"
+	var bp := Vector2(float(best["x"]), float(best["y"]))
+	var tpl: Dictionary = Models.prop(["astronaut_suit"], 0.4)
+	for k in 2:
+		var p: Vector2 = bp + Vector2(float(best["r"]) + 1.5 + k * 1.2, 0.8 * k)
+		_stage.append(inst.add(tpl, Transform3D(Basis(Vector3.UP, 1.2 + k), Vector3(p.x, h(p.x, p.y), p.y))))
+	return "figures by boulder r %.1f m at %.0f,%.0f" % [float(best["r"]), bp.x, bp.y]
+
+# ---------------------------------------------------------------- multi-base camera (V4 §2)
+## Fly the camera to a base (sim.bases): its structures' centre, zoomed to show them all.
+## id -2 = the next base after the one nearest the camera. UI may call this from a base list,
+## the Find window or a key. Returns the base name.
+var _fly := {}
+func jump_base(id: int) -> String:
+	var bs = sim.get("bases")
+	if bs == null:
+		return "no bases"
+	var ids: Array = bs.ids()
+	if ids.is_empty():
+		return "no bases"
+	if id == -2:
+		var here: int = bs.base_at(Vector2(_focus_now.x, _focus_now.z))
+		var k: int = ids.find(here)
+		id = int(ids[(k + 1) % ids.size()])
+	if not (id in ids):
+		return "no base %d" % id
+	var pts: Array = []
+	for bid in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][bid]
+		if b["kind"] == "link" or bs.base_of(int(bid)) != id:
+			continue
+		pts.append([b["pos"] as Vector2, float(b.get("radius", 3.0))])
+	var core: Dictionary = bs.core_of(id)
+	if pts.is_empty() and not core.is_empty():
+		pts.append([core["pos"] as Vector2, float(core.get("radius", 5.0))])
+	if pts.is_empty():
+		return "base %d has no structures" % id
+	var c := Vector2.ZERO
+	for p in pts:
+		c += p[0]
+	c /= float(pts.size())
+	var ext := 20.0
+	for p in pts:
+		ext = maxf(ext, (p[0] as Vector2).distance_to(c) + float(p[1]))
+	var r = rig()
+	if r == null:
+		return "no camera"
+	_fly = {"from": r.focus, "to": Vector3(c.x, h(c.x, c.y), c.y), "d0": float(r.target_distance), "d1": clampf(ext * 2.2, 60.0, 420.0), "t": 0.0,
+		"dur": clampf(Vector2(r.focus.x, r.focus.z).distance_to(c) / 900.0, 0.8, 2.2)}
+	r.follow_fn = Callable()
+	return "%s (%d structures)" % [bs.name_of(id), pts.size()]
+
+func _fly_step(delta: float) -> void:
+	if _fly.is_empty():
+		return
+	var r = rig()
+	if r == null:
+		_fly = {}
+		return
+	_fly["t"] = float(_fly["t"]) + delta
+	var u: float = clampf(float(_fly["t"]) / float(_fly["dur"]), 0.0, 1.0)
+	var e: float = u * u * (3.0 - 2.0 * u)
+	# Rise out and back in on a long jump, so the planet reads between the bases.
+	var hop: float = sin(PI * e) * clampf((_fly["from"] as Vector3).distance_to(_fly["to"]) * 0.35, 0.0, 600.0)
+	r.jump_to((_fly["from"] as Vector3).lerp(_fly["to"], e))
+	r.target_distance = lerpf(float(_fly["d0"]), float(_fly["d1"]), e) + hop
+	if u >= 1.0:
+		_fly = {}

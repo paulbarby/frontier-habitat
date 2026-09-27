@@ -1,0 +1,37 @@
+{
+  "round": 21,
+  "date": "2026-09-27",
+  "scope": "ui_theme on the full rollout. Evidence docs/shots/v4/ (118 shots + 5 contact sheets), contrast figures in docs/progress/UI.md (v4 milestone 2), my own tests in build/web_ui (14:14) with showcase_v3_late: default place, drag over goals, drag into the rail, drag low over the build bar, Find, close all.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "ui_theme": {"consistency": 0.80, "appeal": 0.76, "style": 0.76, "score": 0.77, "pass": true, "provisional": false, "was": 0.69,
+      "key_question": "Yes for the HUD and windows: frosted glass that shows the scene through it, brushed-metal bands with domed rivets, engraved seams, chamfered corners, a lit title plate with the family accent line (art/critic/r21_insp_crop.png, r21_hazard_crop.png). Full-screen panels (dashboard, colonists, research) read as dark metal-framed panels rather than glass, which serves readability; they are consistent but less 'glass'.",
+      "round_15_fixes_checked": {
+        "1 glass reads as glass + contrast": "landed: the scene shows through HUD glass by day and night; body text 8.9-10.8:1 measured, secondary 5.0-6.1:1 (UI.md).",
+        "2 nav rail kept clear": "landed: a window dragged into the rail moves left of it (my c_into_rail).",
+        "3 goals/hazard panels": "landed: they fold while a window covers them and come back (my b_over_goals, e_find).",
+        "4 rivets 8-9 px domed, 180 px": "landed: domed, readable at 1:1, calm rhythm.",
+        "5 brushed grain and lighter band": "landed.",
+        "6 stray square": "landed (gone).",
+        "7 12 px margin, wrap": "landed: long lines wrap in the inspector.",
+        "8 seams in the glass": "landed: hairlines under title plates and between tabs and content."
+      },
+      "rollout_rules_checked": {
+        "one frame language": "yes: no cyan brackets left on any screen in the sheets.",
+        "metal-rim buttons": "yes: rimmed glass buttons, primary glows inside the rim (menu Resume, title Continue).",
+        "tabs": "yes: metal-edged tabs, lit selected tab with the accent line.",
+        "list wells": "yes: colonists, inventory and trade tables are seam lists in a darker well.",
+        "charts": "yes: dashboard charts on dark wells with seam grid lines."
+      },
+      "fixes": [
+        {"owner": "UI", "fix": "At interface scale 125% the build bar overlaps the minimap panel: its left end covers the minimap's lower-right icons (art/critic/r21_s125_crop.png). Lay out the bottom row so the build bar starts right of the minimap at every scale (or shrink the build bar labels to icons at >= 115%)."},
+        {"owner": "UI", "fix": "A window dragged low stays partly off-screen and over the build bar until something else triggers the bounds keeper (my d_over_buildbar: y 700, height 528, still at y 700 two seconds later; moved to 364 only after Find opened). Clamp on drag end: the whole window inside the work area (above the build bar, below the top bar)."},
+        {"owner": "UI", "fix": "Full screens: let a little glass show - a 12-16 px frosted border zone inside the frame where the blurred scene shows, and the body at about 88% instead of opaque - so full screens read as the same glass family as the HUD while tables stay readable."},
+        {"owner": "UI", "fix": "1280x720 and 80%: inspector tab labels and TEXT_3 hints are small (11 px); at 80% keep text >= 12 px (scale the frame, not the text, below 90%)."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.77 (up from 0.69). Paul's brief is met on the HUD and windows; full screens are consistent but more metal than glass.",
+    "My evidence: art/critic/r21/*.png, r21_wm.png, r21_scale.png, crops r21_insp_crop.png, r21_hazard_crop.png, r21_s125_crop.png."
+  ]
+}

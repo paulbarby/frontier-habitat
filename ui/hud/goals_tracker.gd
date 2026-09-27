@@ -139,7 +139,8 @@ func _make_row(g: Dictionary) -> Dictionary:
 	top.add_child(icon)
 	var name: Label = Kit.label(String(g["name"]), "BodyStrong", 14)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name.clip_text = true
+	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
+	name.custom_minimum_size.x = 160
 	top.add_child(name)
 	var val: Label = Kit.num("", 12, P.TEXT_2)
 	top.add_child(val)
@@ -150,7 +151,8 @@ func _make_row(g: Dictionary) -> Dictionary:
 	bar_row.add_child(bar)
 	root.add_child(bar_row)
 	var info: Label = Kit.label("", "SmallLabel", 11, P.TEXT_2)
-	info.clip_text = true
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps, never clips (text floor, critic round 21)
+	info.custom_minimum_size.x = 200
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var info_row: HBoxContainer = Kit.hbox(0)
 	info_row.add_child(Kit.gap(23))

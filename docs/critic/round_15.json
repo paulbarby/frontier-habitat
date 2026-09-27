@@ -1,0 +1,39 @@
+{
+  "round": 15,
+  "date": "2026-09-27",
+  "scope": "v4.0 ui_theme pilot: HUD top bar and inspector window only (V4_DESIGN 7). Evidence docs/shots/ui4_*.png and my own shots from build/web_ui (09:22) with showcase_v3_late, dust storm, day and night, glass on and off, drag, agent inspector, research screen, Esc.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "ui_theme": {"consistency": 0.72, "appeal": 0.70, "style": 0.66, "score": 0.69, "pass": true, "provisional": true,
+      "what_works": [
+        "Metal reads close up: gunmetal band with bevel light and shadow, chamfered corners, engraved seams, brushed title plate with a family accent line (ui4_pilot_frame_closeup.png, ui4_pilot_bar_closeup.png).",
+        "Refined, not busy: calm palette, spaced caps headings, tabular numbers; the frame is thin and does not fight the content.",
+        "Text is readable over the dust storm by day and night (my r15_grid.png).",
+        "Version 4.0 on the title and in Settings -> About.",
+        "Window manager: the inspector drags by its header, keeps its place per window, Esc closes the last opened (research screen first, then inspector), glass on/off works; the blur costs about 0.2 ms."
+      ],
+      "fixes": [
+        {"owner": "UI", "fix": "It does not read as glass. With glass on, the panel is a near-opaque dark navy: nothing of the scene shows through, so the blur is invisible (art/critic/r15_crop_insp.png vs r15_crop_insp_off.png). Lower the body tint to about 70% opacity and lift it slightly (#101A2A at 0.70), keep the blur, add a top-left sheen gradient (8% white to 0) and a 1 px inner highlight on the top and left edges. Keep a darker 'reading well' (0.85) behind lists and tables so body text stays >= 4.5:1 contrast over the brightest scene (lit dome, day storm). Measure and report the contrast."},
+        {"owner": "UI", "fix": "Window placement covers a HUD essential: at its default place the inspector sits over the right nav rail, which is hidden behind it (visible only with glass off, r15_crop_insp_off.png; ui4_pilot_hud_inspector.png has no rail). Put the nav rail in the work-area exclusion (V4 7: stack without covering the HUD essentials) so windows open left of it and snap to its edge."},
+        {"owner": "UI", "fix": "Dragging a window over the goals and hazard panels lets it cover them (night_dragged, night_agent). Either keep windows out of those rects (snap to their edges) or let those panels fold to their header while a window overlaps them."},
+        {"owner": "UI", "fix": "Rivets read as dust dots at 1:1 (maker's note, confirmed). Make them 8-9 px at 100% scale, domed (highlight top-left, shadow bottom-right), and fewer: corners plus one every ~180 px instead of 96 px; the 96 px rhythm on the top bar reads like film sprockets."},
+        {"owner": "UI", "fix": "The brushed grain is invisible at 1:1; the band reads flat grey. Raise the grain contrast (directional streaks 6-8%) and lighten the band one step so it reads as metal against the dark glass."},
+        {"owner": "UI", "fix": "A stray square pixel sits on the left edge of the title plate (left of the flask icon, frame_closeup and hud_inspector). Remove it or make it a round rivet."},
+        {"owner": "UI", "fix": "Long lines run into the right frame ('... Maintain it before then.' touches the metal, r15_crop_insp.png). Keep a 12 px inner margin and wrap."},
+        {"owner": "UI", "fix": "Seams: carry the engraved seam into the glass as a hairline (1 px dark + 1 px light) between title plate and body and between tab row and content, so the 'seam lines' Paul asked for read at normal size, not only in the frame."}
+      ],
+      "rollout_rules": [
+        "One frame language on every panel: replace the v3 cyan corner brackets with the metal frame; never both on one screen.",
+        "Buttons: glass fill with a thin metal rim (2 px, bevelled); primary = family or cyan glow inside the rim, not a flat cyan block.",
+        "Tabs: metal tab edges, selected tab = lit glass with the family accent line (as the title plate).",
+        "Lists and tables: darker glass wells with seam separators, no box per row.",
+        "Charts: on a darker well, grid lines as faint seams.",
+        "Menus and title screen buttons: same button style; the title 4.0 badge in the metal plate style.",
+        "Scale: rivets, frame and seams scale with the interface scale; check at 80% and 125%."
+      ]}
+  },
+  "notes": [
+    "PASS 0.69, provisional: only two elements are in the new style; the rest of the UI (v3) was not judged.",
+    "My evidence: art/critic/r15/*.png, r15_grid.png, crops r15_crop_insp.png, r15_crop_insp_off.png."
+  ]
+}

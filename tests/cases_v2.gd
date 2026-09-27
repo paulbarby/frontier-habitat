@@ -56,7 +56,7 @@ func v2_content(t) -> void:
 	var g = H.empty_game(1001)
 	var sim = g.sim
 	var c: Dictionary = sim.content
-	t.eq(c["items"].size(), 37, "item types (34 of v2 + 3 research packs of v3)")
+	t.check(c["items"].size() >= 37, "item types: at least the 34 of v2 + 3 research packs of v3 (%d; v4 adds more)" % c["items"].size())
 	for id in c["items"]:
 		var info: Dictionary = sim.items.info(id)
 		t.check(String(info["name"]).length() > 1 and c["item_categories"].has(info["category"]), "item %s has a name and a known category" % id)
@@ -85,7 +85,7 @@ func v2_content(t) -> void:
 			t.check(c["recipes"].has(rid), "building %s recipe %s exists" % [id, rid])
 		if bool(d.get("levels", false)) and String(d.get("family", "")) != "":
 			t.check(sim.research.level_tech(id, 5) != "__none__" and c["techs"].has(sim.research.level_tech(id, 5)), "building %s has a level-5 tech" % id)
-	t.eq(c["techs"].size(), 45, "techs (29 of v2 + 16 of v3)")
+	t.eq(c["techs"].size(), 82, "techs (29 of v2 + 16 of v3 + 37 of v4)")
 	for id in c["techs"]:
 		for req in c["techs"][id].get("requires", []):
 			t.check(c["techs"].has(req), "tech %s requires known %s" % [id, req])
@@ -123,7 +123,7 @@ func v2_sizes(t) -> void:
 	var s: Dictionary = sim.sizes.def_for("habitat", 0)
 	var xl: Dictionary = sim.sizes.def_for("habitat", 3)
 	t.eq([int(s["beds"]), int(sim.sizes.def_for("habitat", 2)["beds"]), int(xl["beds"])], [4, 14, 22], "habitat beds S, L, XL")
-	t.eq(float(xl["radius"]), 8.5, "habitat XL radius")
+	t.eq(float(xl["radius"]), 12.75, "habitat XL radius (1.5 x the v3 8.5 since V4)")
 	t.eq(s["cost"], {"metal": 3, "polymer": 2}, "habitat S cost = M x 0.6, rounded")
 	t.eq(xl["cost"], {"metal": 13, "polymer": 10}, "habitat XL cost = M x 2.6, rounded")
 	t.near(float(xl["power"]), 2.3, 1e-9, "habitat XL power = M x 2.3")
@@ -147,13 +147,13 @@ func v2_sizes(t) -> void:
 	if bool(r["ok"]):
 		var b: Dictionary = sim.state["buildings"][r["id"]]
 		t.eq(int(b["size"]), 2, "record size")
-		t.eq(float(b["radius"]), 7.0, "record radius is the L radius")
+		t.eq(float(b["radius"]), 10.5, "record radius is the L radius")
 		t.eq(b["cost"], sim.sizes.def_for("habitat", 2)["cost"], "record cost is the L cost")
 		t.eq(b["cost"], {"metal": 9, "polymer": 7}, "L cost = M x 1.7, rounded")
 		t.near(float(b["work_total"]), 16.0 * 10.0 * 1.6, 1e-6, "construction work = units x 10 x work_mult")
 	# Size-dependent placement: an M greenhouse needs more room than an S one.
-	t.eq(sim.place.check_building("greenhouse", ctr + Vector2(0, -11), 0.0, -1, 0), "ok", "S greenhouse fits beside the lander")
-	t.eq(sim.place.check_building("greenhouse", ctr + Vector2(0, -11), 0.0, -1, 1), "overlap", "M greenhouse does not fit there")
+	t.eq(sim.place.check_building("greenhouse", ctr + Vector2(0, -13.5), 0.0, -1, 0), "ok", "S greenhouse fits beside the lander")
+	t.eq(sim.place.check_building("greenhouse", ctr + Vector2(0, -13.5), 0.0, -1, 1), "overlap", "M greenhouse does not fit there")
 	# Locked building.
 	t.eq(sim.place.check_building("fusion_reactor", ctr + Vector2(-30, -30), 0.0), "locked_research", "fusion reactor before research")
 	# Sized trays and tray offsets come from the effective definition.
@@ -711,7 +711,7 @@ func v2_migration(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 4, "migrated to schema 4 (through 2 and 3)")
+	t.eq(int(s["schema"]), 5, "migrated to schema 5 (through 2, 3 and 4)")
 	t.eq(int(s["map_size"]), 256, "an old save keeps its 256 m map")
 	var raw_left := 0
 	for iid in s["inventories"]:

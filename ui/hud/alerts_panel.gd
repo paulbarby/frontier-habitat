@@ -63,7 +63,26 @@ func _process(_delta: float) -> void:
 	elif position.y + size.y < floor_y - 170.0 and _max < MAX_CARDS:
 		_max += 1
 		_sig = ""
+	# Still too tall with one card (small view or large text): hide the "more" line and the
+	# card's "Do:" line, so the panel never covers the minimap (critic round 21 bottom row).
+	var over: bool = position.y + size.y > floor_y
+	if over and not _tight and (_max <= 1 or _cards.size() <= 1):
+		_set_tight(true)
+	elif over and _tight and _list.visible:
+		_list.visible = false        # last step: only the summary line ("1 warning · 2 notices")
+		Kit.fit(self)
+	elif _tight and position.y + size.y < floor_y - 90.0:
+		_list.visible = true
+		_set_tight(false)
 	visible = position.y + 40.0 < floor_y
+
+var _tight := false
+func _set_tight(on: bool) -> void:
+	_tight = on
+	_more.visible = _more.visible and not on
+	for c in _cards:
+		(c["act"] as Control).visible = not on
+	Kit.fit(self)
 
 func rebuild() -> void:
 	_sig = ""
@@ -74,6 +93,14 @@ func refresh() -> void:
 	# The gate (ui/hud/alert_gate.gd) gives a steady list: a stable order, and an alert that
 	# clears stays a short time as "cleared", so a key that goes on and off is one card.
 	var inc: Array = hud.watchers.gate.display(hud.main.sim.alerts.incidents()) if hud.watchers != null else hud.main.sim.alerts.incidents()
+	# Version 4 base filter (top bar): one base shows its own alerts and the colony-wide ones (base -1).
+	if hud.base_filter >= 0:
+		var keep: Array = []
+		for i in inc:
+			var ib: int = int(i["issue"].get("base", -1))
+			if ib == -1 or ib == hud.base_filter:
+				keep.append(i)
+		inc = keep
 	var live: Array = []
 	for i in inc:
 		if not bool(i.get("cleared", false)):
@@ -113,11 +140,12 @@ func refresh() -> void:
 		_cards = []
 		for i in shown:
 			var card: Dictionary = _make_card(i)
+			(card["act"] as Control).visible = not _tight
 			_list.add_child(card["root"])
 			_cards.append(card)
 	for k in mini(_cards.size(), shown.size()):
 		_update_card(_cards[k], shown[k])
-	_more.visible = inc.size() > shown.size()
+	_more.visible = inc.size() > shown.size() and not _tight
 	_more.text = "%s not shown. The dashboard lists every one." % Kit.plural(inc.size() - shown.size(), "more alert")
 
 func _make_card(i: Dictionary) -> Dictionary:
@@ -125,14 +153,7 @@ func _make_card(i: Dictionary) -> Dictionary:
 	var sev: int = int(issue["severity"])
 	var col: Color = P.sev(sev)
 	var card := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(col.r, col.g, col.b, 0.07)
-	st.border_color = Color(col.r, col.g, col.b, 0.9)
-	st.border_width_left = 3
-	st.content_margin_left = 9
-	st.content_margin_right = 6
-	st.content_margin_top = 6
-	st.content_margin_bottom = 6
+	var st = load("res://ui/theme/list_row.gd").make(col)   # v4 list row: signal bar + seam, no box
 	card.add_theme_stylebox_override("panel", st)
 	card.mouse_filter = Control.MOUSE_FILTER_PASS
 	var v: VBoxContainer = Kit.vbox(3)
@@ -176,7 +197,7 @@ func _make_card(i: Dictionary) -> Dictionary:
 				cl.custom_minimum_size.x = 270
 				row.add_child(cl)
 				cons_box.add_child(row)
-	return {"root": card, "left": left, "text": text}
+	return {"root": card, "left": left, "text": text, "key": key, "act": act}
 
 func _update_card(c: Dictionary, i: Dictionary) -> void:
 	var issue: Dictionary = i["issue"]

@@ -95,6 +95,7 @@ MATERIALS = {
     "Palette":    dict(color="#ffffff", rough=0.70),
     # 3.1 door and airlock status lights (RENDER switches their colour)
     "StatusGreen": dict(color="#5ee07a", rough=0.30, emit="#5ee07a", emit_strength=3.0),
+    "Ember":      dict(color="#ff5a0a", rough=0.40, emit="#ff4a00", emit_strength=1.6),   # 4.0: furnace glow
     "BeaconAmber": dict(color="#ffb020", rough=0.30, emit="#ffb020", emit_strength=3.0),
     # lounge seating (critic round 8): lighter than Cushion so it reads at the game camera; they merge into Palette
     "CushionLight": dict(color="#7d93b4", rough=0.90),

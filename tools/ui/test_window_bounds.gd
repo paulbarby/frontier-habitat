@@ -110,6 +110,44 @@ func _plan() -> void:
 		q(func(): main.hud.open_screen(nm), 6)
 		q(func(): set_size(Vector2i(800, 600)), 6)
 		q(func(): check("resize 1920x1080 -> 800x600 with %s open" % nm, outside()); main.hud.close_modal(), 3)
+	# Critic round 21, fix 1: the bottom row (minimap, build bar) never overlaps, at every
+	# interface scale, in a 1600x900 and a 1280x720 view.
+	for sz2 in [Vector2i(1600, 900), Vector2i(1280, 720)]:
+		for sc in [0.8, 1.0, 1.25, 1.4]:
+			var szc: Vector2i = sz2
+			var scc: float = sc
+			q(func(): set_size(szc); main._on_cmd("uiscale %s" % str(scc)), 20)
+			q(func():
+				var bad: Array = []
+				var mm: Rect2 = main.hud.minimap.get_global_rect()
+				var bb: Rect2 = main.hud.build_bar._tab_panel.get_global_rect()
+				if mm.grow(-0.5).intersects(bb):
+					bad.append("build bar %s overlaps the minimap %s" % [str(bb), str(mm)])
+				var al: Control = main.hud.alerts
+				if al.visible and al.get_global_rect().grow(-0.5).intersects(mm):
+					bad.append("alerts %s overlap the minimap %s" % [str(al.get_global_rect()), str(mm)])
+				var tb: Rect2 = main.hud.top_bar.get_global_rect()
+				if tb.grow(-0.5).intersects(main.hud.time_panel.get_global_rect()):
+					bad.append("top bar %s overlaps the time panel %s in view %s, factor %.2f" % [str(tb), str(main.hud.time_panel.get_global_rect()), str(vp()), root.content_scale_factor])
+				if not Rect2(Vector2.ZERO, vp()).grow(0.5).encloses(bb):
+					bad.append("build bar %s outside the view %s" % [str(bb), str(vp())])
+				check("%dx%d scale %d%%: bottom and top rows do not overlap%s" % [szc.x, szc.y, int(scc * 100.0), " (names hidden)" if main.hud.build_bar.compact else ""], bad), 1)
+	q(func(): main._on_cmd("uiscale 1"); set_size(Vector2i(1600, 900)), 8)
+	# Critic round 21, fix 2: a window dragged low ends fully inside the work area, off the build bar.
+	for target in [Vector2(500, 880), Vector2(1500, 890), Vector2(-300, 870)]:
+		var tg: Vector2 = target
+		q(func(): main._on_cmd("select research_lab"), 6)
+		q(func(): main._on_cmd("drag inspector %d %d" % [int(tg.x), int(tg.y)]), 3)
+		q(func():
+			var bad: Array = []
+			var r: Rect2 = main.hud.inspector.get_global_rect()
+			var wa: Rect2 = main.hud.wm.work_area()
+			if not wa.grow(0.5).encloses(r) and r.size.y <= wa.size.y:
+				bad.append("window %s not inside the work area %s" % [str(r), str(wa)])
+			if r.intersects(main.hud.build_bar._tab_panel.get_global_rect().grow(-0.5)):
+				bad.append("window %s over the build bar" % str(r))
+			check("drag low to %s: window inside the work area" % str(tg), bad)
+			main.hud.wm.forget("inspector"), 1)
 
 ## The structures farthest north-west, north-east, south-west and south-east.
 func _corner_buildings() -> Array:

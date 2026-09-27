@@ -143,13 +143,13 @@
   "world": {
     "door_slide": {
       "file": "door_slide.mp3",
-      "db": -8,
-      "class": "local"
+      "db": -14,
+      "class": "door"
     },
     "airlock_seal": {
       "file": "airlock_seal.mp3",
-      "db": -6,
-      "class": "local"
+      "db": -12,
+      "class": "door"
     },
     "airlock_pump": {
       "file": "airlock_pump.mp3",
@@ -219,7 +219,7 @@
     }
   },
   "world_rules": {
-    "_note": "Paul 2026-09-26: effect sounds only when zoomed in and close. local: zoom (camera distance to its focus) full <= zoom_full, silent >= zoom_off; source full within near_full of the focus, silent at near_off. big: every zoom; zoomed out (>= zoom_far) at far_gain of the level; full within near_full, silent at near_off. Metres.",
+    "_note": "Paul 2026-09-26: effect sounds only when zoomed in and close. local: zoom (camera distance to its focus) full <= zoom_full, silent >= zoom_off; source full within near_full of the focus, silent at near_off. big: every zoom; zoomed out (>= zoom_far) at far_gain of the level; full within near_full, silent at near_off. Metres. Paul 2026-09-27: door sounds (door_slide, airlock_seal) only right up close: class door, full at zoom <= 10 m, silent at 18 m; full within 3 m of the focus, silent at 8 m; 6 dB lower; one door sound at a time; the same door not again within 1.5 s.",
     "local": {
       "zoom_full": 20,
       "zoom_off": 35,
@@ -232,6 +232,14 @@
       "far_gain": 0.4,
       "near_full": 40,
       "near_off": 500
+    },
+    "door": {
+      "zoom_full": 10,
+      "zoom_off": 18,
+      "near_full": 3,
+      "near_off": 8,
+      "max_at_once": 1,
+      "repeat_s": 1.5
     }
   }
 }

@@ -17,6 +17,8 @@ const ITEMS := [
 	["inventory", "inventory", "Inventory\nEvery item: stock, trend, days of supply, spoilage. Key I."],
 	["colonists", "colonists", "Colonists\nEvery colonist: role, health, morale, nutrition, task. Key P."],
 	["awards", "awards", "Awards\nMedals of this colony and of this device. Key V."],
+	["vehicles", "rover", "Vehicles\nRovers, hoppers and the satellite: charge, cargo, crew, orders and routes between bases."],
+	["codex", "codex", "Codex\nEvery structure, item, research project and hazard: where it comes from, what uses it, crafting trees. Key K."],
 ]
 
 func _ready() -> void:
@@ -30,6 +32,8 @@ func _ready() -> void:
 		var name: String = it[0]
 		_add(name, it[1], it[2], func(): hud.toggle_screen(name))
 	add_child(Kit.gap(0, 6))
+	_add("advisor", "advisor", "Advisor\nWhat to do next: the biggest problems, the next goal steps, unused potential. Key N.", func(): hud.toggle_advisor())
+	_add("find", "search", "Find\nType a name or a type: the list shows every match; click one to go there. Key /.", func(): hud.toggle_find())
 	_add("overlay", "overlay", "Overlay\nShows the power, water, air or walking network. Key O. Right click turns it off.", func(): hud.cycle_overlay())
 	(_buttons["overlay"] as Button).gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_RIGHT:
@@ -59,13 +63,29 @@ func _add(name: String, icon: String, tip: String, cb: Callable) -> void:
 	b.add_child(dot)
 	_badges[name] = dot
 
+## The rail fits the view height: in a short view the buttons get smaller (46 px down to 32 px).
+var _side := 46.0
+func _process(_d: float) -> void:
+	var n := 0
+	for c in get_children():
+		if c is Button:
+			n += 1
+	var room: float = get_viewport_rect().size.y - offset_top - 8.0 - 6.0
+	var want: float = clampf(floorf(room / maxf(1.0, float(n)) - 6.0), 32.0, 46.0)
+	if absf(want - _side) >= 1.0:
+		_side = want
+		for c in get_children():
+			if c is Button:
+				(c as Button).custom_minimum_size = Vector2(_side, _side)
+		reset_size()
+
 func rebuild() -> void:
 	refresh()
 
 func refresh() -> void:
 	var open: String = hud.screen_name()
 	for n in _buttons:
-		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != ""))
+		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible))
 	var d = hud.data
 	# Research: an idle lab (no active project while research exists).
 	var r: Dictionary = d.research()

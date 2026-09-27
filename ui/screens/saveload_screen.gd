@@ -53,4 +53,4 @@ func build() -> void:
 	imp.add_child(Kit.button("Import a save file", func(): hud.main.import_save(), "Import\nLoads a .fhsave file. The file is checked before anything is replaced.", "", "import", 16))
 	var btns: HBoxContainer = Kit.hbox(8, BoxContainer.ALIGNMENT_END)
 	content.add_child(btns)
-	btns.add_child(Kit.button("Back", func(): host.close(self), "", "", "close", 14))
+	btns.add_child(Kit.button("Back", func(): host.close(self), "Back\nCloses this screen without saving or loading.", "", "close", 14))

@@ -28,8 +28,14 @@ func _ready() -> void:
 
 func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size)
+	# Version 4 draw-call budget: only filled, untextured rects, so the whole bar is one batch
+	# (an outline, a polygon or a line would each be a separate draw command).
 	draw_rect(r, track, true)
-	draw_rect(r, Color(color.r, color.g, color.b, 0.18), false, 1.0)
+	var ol := Color(color.r, color.g, color.b, 0.18)
+	draw_rect(Rect2(0, 0, size.x, 1), ol, true)
+	draw_rect(Rect2(0, size.y - 1, size.x, 1), ol, true)
+	draw_rect(Rect2(0, 0, 1, size.y), ol, true)
+	draw_rect(Rect2(size.x - 1, 0, 1, size.y), ol, true)
 	var v: float = clampf(value, 0.0, 1.0)
 	if segments > 0:
 		var gap := 3.0
@@ -50,12 +56,15 @@ func _draw() -> void:
 		if show_glow:
 			draw_rect(fr.grow(2.0), Color(color.r, color.g, color.b, 0.14), true)
 			draw_rect(fr.grow(1.0), Color(color.r, color.g, color.b, 0.2), true)
+		# Gradient fill, dark to bright, as 6 steps of rects (one batch with the rest).
 		var dark: Color = color.darkened(0.35)
-		var pts := PackedVector2Array([fr.position, Vector2(fr.end.x, fr.position.y), fr.end, Vector2(fr.position.x, fr.end.y)])
-		if PG.ok(pts, "glow_bar.gd:54"):
-			draw_polygon(pts, PackedColorArray([dark, color, color, dark]))
+		var steps := 6
+		for i in steps:
+			var x0: float = fr.size.x * float(i) / float(steps)
+			var x1: float = fr.size.x * float(i + 1) / float(steps)
+			draw_rect(Rect2(x0, 0.0, x1 - x0 + 0.5, fr.size.y), dark.lerp(color, (float(i) + 0.5) / float(steps)), true)
 		draw_rect(Rect2(fr.position, Vector2(fr.size.x, maxf(1.0, size.y * 0.25))), Color(1, 1, 1, 0.22), true)
 		draw_rect(Rect2(Vector2(fr.end.x - 2.0, 0.0), Vector2(2.0, size.y)), color.lightened(0.5), true)
 	if target >= 0.0 and target <= 1.0:
 		var x: float = size.x * target
-		draw_line(Vector2(x, -2.0), Vector2(x, size.y + 2.0), Color(1, 1, 1, 0.85), 1.5)
+		draw_rect(Rect2(x - 0.75, -2.0, 1.5, size.y + 4.0), Color(1, 1, 1, 0.85), true)

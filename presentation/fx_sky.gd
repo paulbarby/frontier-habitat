@@ -25,6 +25,11 @@ var _sky_clock := 0.0
 var _cam_dist := 60.0
 var reserved := 0                    # real lights taken by interiors (fx_interior)
 var aurora := 0.0                    # solar flare 0..1 (fx_hazards)
+var fog_far := false
+var sun_fn: Callable                 # V4: returns sim.world.sun_angles(t, daylight, day_len)
+var sun_now := {}                    # the last sun from sun_fn
+var key_is_sun := true
+var lamp_boost := 0.0                # V4: base lamps also burn by day in a shadowed crater (0..1)               # false while the planet-shine is the key light                 # V4 big world: the haze thins faster as the camera rises
 
 ## Sun elevation keyframes (degrees) -> palette. Colours are sRGB.
 const KEYS := [
@@ -88,7 +93,34 @@ func build() -> void:
 		add_child(l)
 		park(l)
 		_lamps.append(l)
+	# Two lights that reach every object on the map at no visible energy. The Compatibility
+	# renderer compiles one program per material for each light mix (none / omni / spot / both);
+	# with one omni and one spot always on every object, the mix never changes when a rover
+	# drives under a lamp or a head light turns on, and no program is compiled mid-game
+	# (showcase_v4 WebGL trace 2026-09-28: 22 links of 30-290 ms in the first 2 minutes).
+	always_omni = OmniLight3D.new()
+	always_omni.omni_range = 6000.0
+	always_omni.omni_attenuation = 0.0
+	always_omni.light_energy = 0.0001
+	always_omni.light_specular = 0.0
+	always_omni.shadow_enabled = false
+	always_omni.name = "AlwaysOmni"
+	add_child(always_omni)
+	always_omni.position = Vector3(1280, 3000, 1280)
+	always_spot = SpotLight3D.new()
+	always_spot.spot_range = 6000.0
+	always_spot.spot_angle = 45.0   # (a near-90 cone culled some draped decals: they got the omni-only program)
+	always_spot.spot_attenuation = 0.0
+	always_spot.light_energy = 0.0001
+	always_spot.light_specular = 0.0
+	always_spot.shadow_enabled = false
+	always_spot.name = "AlwaysSpot"
+	add_child(always_spot)
+	always_spot.transform = Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), Vector3(1280, 4000, 1280))
 	set_quality(quality)
+
+var always_omni: OmniLight3D
+var always_spot: SpotLight3D
 
 ## V3.1 stall trace: a light that turns visible for the first time costs a 100-150 ms frame in
 ## the web build (the sunset lamps). Lights are never hidden: an unused one is "parked" (no
@@ -158,6 +190,13 @@ func update(t: float, day_len: float, daylight: float, delta: float, focus: Vect
 	var hz: float = sin(h_ang)
 	var hv := Vector2(hx, hz).rotated(az_off)
 	sun_dir = Vector3(hv.x * cos(e), sin(e), hv.y * cos(e)).normalized()
+	# V4 maps: the sim's sun (sim.world.sun_angles; 32 deg at noon), the same path as the solar output.
+	if sun_fn.is_valid():
+		var sv: Dictionary = sun_fn.call(t, daylight, day_len)
+		sun_now = sv
+		e_deg = float(sv["elev_deg"])
+		elev = e_deg
+		sun_dir = (sv["dir"] as Vector3).normalized()
 	# --- palette --------------------------------------------------------------
 	var k: Dictionary = _palette(e_deg)
 	night = clampf(1.0 - smoothstep(-7.0, 5.0, e_deg), 0.0, 1.0)
@@ -208,6 +247,7 @@ func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void
 	var dir: Vector3
 	var col: Color
 	var energy: float
+	key_is_sun = sun_e >= moon_e
 	if sun_e >= moon_e:
 		dir = sun_dir
 		col = k["sun"]
@@ -235,7 +275,16 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 	var fog_d: float = lerpf(0.0026, 0.0019, night)
 	# 0.009 at full storm: about half fog at a normal camera distance, so the base stays readable.
 	# Zoomed far out over the big map the haze thins, so the whole map stays readable.
-	env.fog_density = lerpf(fog_d, 0.009, st) * clampf(120.0 / maxf(_cam_dist, 120.0), 0.22, 1.0)
+	var fk: float = clampf(120.0 / maxf(_cam_dist, 120.0), 0.22, 1.0)
+	env.fog_density = lerpf(fog_d, 0.009, st) * fk
+	if fog_far:
+		# V4 (critic round 18): depth haze that starts at 1.5 x the camera distance, so the ground
+		# being looked at is never fogged, and reaches at most 35 % at the far edge.
+		env.fog_mode = Environment.FOG_MODE_DEPTH
+		env.fog_depth_begin = _cam_dist * 1.5
+		env.fog_depth_end = _cam_dist * 1.5 + maxf(1400.0, _cam_dist * 3.0)
+		env.fog_depth_curve = 1.6
+		env.fog_density = lerpf(0.35, 0.8, st)
 	env.fog_sun_scatter = lerpf(0.28, 0.0, night)
 	env.glow_intensity = lerpf(0.4, 0.95, night)
 	env.tonemap_exposure = lerpf(1.0, 1.25, night)
@@ -308,5 +357,5 @@ func _update_lamps(delta: float, focus: Vector3, cam_dist: float) -> void:
 	for i in n:
 		var l: OmniLight3D = _lamps[i]
 		if not parked(l):
-			var tgt: float = maxf(float(l.get_meta("target", 0.0)) * night, 0.0005)
+			var tgt: float = maxf(float(l.get_meta("target", 0.0)) * maxf(night, lamp_boost), 0.0005)
 			l.light_energy = lerpf(l.light_energy, tgt, 1.0 - exp(-delta * 6.0))

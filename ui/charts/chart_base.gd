@@ -25,6 +25,7 @@ func _ready() -> void:
 	_mono = Fonts.get_font("mono")
 	_head = Fonts.get_font("head")
 	resized.connect(queue_redraw)
+	add_to_group("fs_redraw")   # redraw when the text floor changes (ui/text_floor.gd)
 	mouse_exited.connect(func():
 		hover = Vector2(-1, -1)
 		queue_redraw())
@@ -39,10 +40,15 @@ func plot_rect() -> Rect2:
 
 func draw_frame() -> void:
 	if show_bg:
-		draw_rect(Rect2(Vector2.ZERO, size), P.BG_DEEP, true)
-		draw_rect(Rect2(Vector2.ZERO, size).grow(-0.5), P.LINE_SOFT, false, 1.0)
+		# Version 4 (critic round 15): a darker glass well sunk into the panel: dark wash, an
+		# engraved edge (dark top and left, light bottom and right).
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.015, 0.03, 0.06, 0.62), true)
+		draw_rect(Rect2(0, 0, size.x, 1), Color(0, 0.02, 0.05, 0.7), true)
+		draw_rect(Rect2(0, 0, 1, size.y), Color(0, 0.02, 0.05, 0.7), true)
+		draw_rect(Rect2(0, size.y - 1, size.x, 1), Color(0.55, 0.66, 0.76, 0.35), true)
+		draw_rect(Rect2(size.x - 1, 0, 1, size.y), Color(0.55, 0.66, 0.76, 0.35), true)
 	if title != "":
-		draw_string(_head, Vector2(10, 17), title.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, P.TEXT_2)
+		draw_string(_head, Vector2(10, 17), title.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11), P.TEXT_2)
 
 ## Legend on the top-right: [[name, color], ...]
 func draw_legend(items: Array) -> void:
@@ -54,7 +60,7 @@ func draw_legend(items: Array) -> void:
 		var c: Color = items[i][1]
 		var w: float = _font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 		x -= w
-		draw_string(_font, Vector2(x, 16), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, P.TEXT_2)
+		draw_string(_font, Vector2(x, 16), name, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11), P.TEXT_2)
 		x -= 12.0
 		draw_rect(Rect2(x, 9, 8, 8), c, true)
 		x -= 12.0
@@ -114,17 +120,30 @@ func draw_tip(at: Vector2, head: String, rows: Array) -> void:
 	pos.y = clampf(pos.y, 4.0, maxf(4.0, size.y - h - 4.0))
 	var r := Rect2(pos, Vector2(w, h))
 	draw_rect(r, Color(0.035, 0.06, 0.11, 0.96), true)
-	draw_rect(r.grow(-0.5), P.LINE_STRONG, false, 1.0)
-	draw_string(_head, pos + Vector2(8, 15), head.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, P.CYAN)
+	# Metal rim, as the tooltips of the theme: light top and left, dark bottom and right.
+	draw_rect(Rect2(r.position, Vector2(r.size.x, 1)), Color(0.66, 0.72, 0.79), true)
+	draw_rect(Rect2(r.position, Vector2(1, r.size.y)), Color(0.66, 0.72, 0.79), true)
+	draw_rect(Rect2(r.position.x, r.end.y - 1, r.size.x, 1), Color(0.12, 0.15, 0.19), true)
+	draw_rect(Rect2(r.end.x - 1, r.position.y, 1, r.size.y), Color(0.12, 0.15, 0.19), true)
+	draw_string(_head, pos + Vector2(8, 15), head.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(11), P.CYAN)
 	var y: float = pos.y + 33.0
 	for row in rows:
 		var c: Color = row[2] if row.size() > 2 else P.TEXT
 		draw_rect(Rect2(pos.x + 8, y - 8, 7, 7), c, true)
-		draw_string(_font, Vector2(pos.x + 20, y), String(row[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, P.TEXT_2)
+		draw_string(_font, Vector2(pos.x + 20, y), String(row[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12), P.TEXT_2)
 		var vw: float = _mono.get_string_size(String(row[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-		draw_string(_mono, Vector2(pos.x + w - 8 - vw, y), String(row[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, P.TEXT)
+		draw_string(_mono, Vector2(pos.x + w - 8 - vw, y), String(row[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(12), P.TEXT)
 		y += 17.0
+
+## A grid line drawn as a faint engraved seam (critic round 15: "the grid as faint seams").
+func draw_seam_h(x0: float, x1: float, y: float, a: float = 1.0) -> void:
+	draw_rect(Rect2(x0, floorf(y), x1 - x0, 1), Color(0, 0.02, 0.05, 0.42 * a), true)
+	draw_rect(Rect2(x0, floorf(y) + 1.0, x1 - x0, 1), Color(0.6, 0.75, 0.9, 0.09 * a), true)
+
+func draw_seam_v(x: float, y0: float, y1: float, a: float = 1.0) -> void:
+	draw_rect(Rect2(floorf(x), y0, 1, y1 - y0), Color(0, 0.02, 0.05, 0.3 * a), true)
+	draw_rect(Rect2(floorf(x) + 1.0, y0, 1, y1 - y0), Color(0.6, 0.75, 0.9, 0.06 * a), true)
 
 func draw_empty(text: String = "No data yet.") -> void:
 	var r: Rect2 = plot_rect()
-	draw_string(_font, Vector2(r.position.x, r.get_center().y + 5), text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 13, P.TEXT_3)
+	draw_string(_font, Vector2(r.position.x, r.get_center().y + 5), text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, P.fs(13), P.TEXT_3)

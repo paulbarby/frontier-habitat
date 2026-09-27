@@ -88,7 +88,7 @@ func setup(d, id: String, size: int) -> void:
 	if d.has_sizes(id):
 		for s in 4:
 			var n: int = s
-			var c: Button = Kit.button(d.SIZE_NAMES[s], func(): _chip(n), "", "ChipButton")
+			var c: Button = Kit.button(d.SIZE_NAMES[s], func(): _chip(n), "Size %s\nPlace it in this size. Bigger sizes cost more and do more. Keys Z and X." % d.SIZE_NAMES[s], "ChipButton")
 			c.custom_minimum_size = Vector2(24, 20)
 			c.toggle_mode = true
 			c.sound = "tick"
@@ -181,6 +181,15 @@ func _costs_update(totals: Dictionary) -> void:
 	var pw: float = float(def.get("power", 0.0))
 	if pw > 0.0:
 		_stat.add_child(Kit.chip("power", "-" + Kit.fmt(pw), P.AMBER, "", true, 13))
+	# Long output names (milestone 5: "crystal lattice", "superconductor") do not fit the card:
+	# the output shows as its icon only; the tooltip names it.
+	if not ks.is_empty() and _stat.get_combined_minimum_size().x > 110.0:
+		var first: Control = _stat.get_child(0)
+		_stat.remove_child(first)
+		first.queue_free()
+		var only: Control = Kit.chip(ks[0], "", ks[2], String(ks[1]).capitalize(), true, 16)
+		_stat.add_child(only)
+		_stat.move_child(only, 0)
 
 ## The main output of a structure: [icon, text, colour] (empty when it has none).
 static func key_stat(d, def: Dictionary) -> Array:

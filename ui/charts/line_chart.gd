@@ -72,13 +72,13 @@ func _draw() -> void:
 		draw_rect(Rect2(pr.position.x, c, pr.size.x, a - c), b["color"], true)
 	for t in nice_ticks(y0, y1, 4):
 		var y: float = pr.end.y - (float(t) - y0) * ys
-		draw_line(Vector2(pr.position.x, y), Vector2(pr.end.x, y), P.GRID, 1.0)
-		draw_string(_mono, Vector2(2, y + 4), _f(float(t)), HORIZONTAL_ALIGNMENT_RIGHT, pad.x - 8.0, 10, P.TEXT_3)
+		draw_seam_h(pr.position.x, pr.end.x, y)
+		draw_string(_mono, Vector2(2, y + 4), _f(float(t)), HORIZONTAL_ALIGNMENT_RIGHT, pad.x - 8.0, P.fs(10), P.TEXT_3)
 	var dx0: float = x0 / ticks_per_day
 	var dx1: float = x1 / ticks_per_day
 	for t in nice_ticks(dx0, dx1, maxi(2, int(pr.size.x / 110.0))):
 		var x: float = pr.position.x + (float(t) * ticks_per_day - x0) * xs
-		draw_line(Vector2(x, pr.position.y), Vector2(x, pr.end.y), Color(P.GRID.r, P.GRID.g, P.GRID.b, 0.06), 1.0)
+		draw_seam_v(x, pr.position.y, pr.end.y, 0.6)
 		var lab: String
 		if dx1 - dx0 < 1.0:
 			# Short spans: the colony clock (06:00 at sunrise, as the time panel shows).
@@ -91,7 +91,7 @@ func _draw() -> void:
 		# Keep the label inside the chart: the last one right-aligns at the edge.
 		var lw: float = _font.get_string_size(lab, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
 		var lx: float = clampf(x - lw * 0.5, 2.0, size.x - lw - 4.0)
-		draw_string(_font, Vector2(lx, pr.end.y + 15), lab, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, P.TEXT_3)
+		draw_string(_font, Vector2(lx, pr.end.y + 15), lab, HORIZONTAL_ALIGNMENT_LEFT, -1, P.fs(10), P.TEXT_3)
 	draw_line(Vector2(pr.position.x, pr.end.y), Vector2(pr.end.x, pr.end.y), P.LINE_SOFT, 1.0)
 	# Series (stacked: each series sits on the sum of the ones before it, by sample index)
 	var base := PackedFloat32Array()
@@ -127,7 +127,7 @@ func _draw() -> void:
 	for r in refs:
 		var y: float = pr.end.y - (float(r["value"]) - y0) * ys
 		_dashed(Vector2(pr.position.x, y), Vector2(pr.end.x, y), r.get("color", P.TEXT_2))
-		draw_string(_font, Vector2(pr.end.x - 150, y - 4), String(r.get("label", "")), HORIZONTAL_ALIGNMENT_RIGHT, 148, 10, r.get("color", P.TEXT_2))
+		draw_string(_font, Vector2(pr.end.x - 150, y - 4), String(r.get("label", "")), HORIZONTAL_ALIGNMENT_RIGHT, 148, P.fs(10), r.get("color", P.TEXT_2))
 	# Hover
 	if pr.has_point(hover):
 		var hx: float = x0 + (hover.x - pr.position.x) / xs

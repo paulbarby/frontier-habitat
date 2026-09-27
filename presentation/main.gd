@@ -119,6 +119,8 @@ func _options_from_boot() -> Dictionary:
 		o["difficulty"] = String(boot["difficulty"])
 	if boot.has("hazards"):
 		o["hazards"] = String(boot["hazards"])
+	if boot.has("scenario"):
+		o["scenario"] = String(boot["scenario"])   # V4: "frontier" = the 2,560 m planet
 	if debug_mode():
 		o["debug"] = true
 	return o
@@ -180,6 +182,22 @@ func _on_cmd(text: String) -> String:
 				top.set_tab(w[1])
 			else:
 				hud.inspector.set_tab(w[1])
+		"rsearch":
+			# Research screen: type in the project search ("rsearch" alone clears it); Enter step.
+			var rs = hud.screens.top_screen()
+			if rs == null or not rs.has_method("goto_first_match"):
+				return "open research first"
+			rs._search.text = " ".join(w.slice(1))
+			rs.apply_search()
+			rs.goto_first_match()
+			return rs._match_label.text
+		"codexwide":
+			# Codex: Wide view on (1) or off (0); no argument toggles.
+			var cs = hud.screens.top_screen()
+			if cs == null or not cs.has_method("set_wide"):
+				return "open codex first"
+			cs.set_wide((w[1] != "0") if w.size() > 1 else not cs.wide)
+			return "wide %s" % str(cs.wide)
 		"open":
 			if w.size() < 2:
 				return "open <screen>"
@@ -235,6 +253,8 @@ func _on_cmd(text: String) -> String:
 				o["planet"] = w[2]
 			if w.size() > 3:
 				o["difficulty"] = w[3]
+			if w.size() > 4:
+				o["scenario"] = w[4]
 			start_new(int(w[1]) if w.size() > 1 else 1001, o)
 		"quality":
 			Settings.set_value("quality", clampi(int(w[1]), 0, 3))
@@ -504,6 +524,102 @@ func _on_cmd(text: String) -> String:
 						return "%.1f %.1f" % [q.x, q.y]
 				rr += 6.0
 			return "none"
+		# ---- version 4 window manager (docs/V4_DESIGN.md §7)
+		"closeall":
+			return str(close_all_windows())
+		"glass":
+			# glass on|off: the background blur behind panels (Settings: Glass blur).
+			Settings.set_value("glass", w.size() < 2 or w[1] != "off")
+			apply_settings()
+		"esc":
+			# esc: as the Esc key without a tool: the last window closes.
+			if hud.is_modal_open():
+				hud.close_modal()
+				return "screen"
+			return "window" if hud.wm.close_last() else "none"
+		"find":
+			# find [text]: opens the Find window with that text; returns the number of matches and the first ones.
+			hud.find.search(" ".join(w.slice(1)))
+			var names: Array = []
+			for r in hud.find.results.slice(0, 5):
+				names.append("%s #%d %s" % [r["name"], r["id"], r["status"]])
+			return "%d: %s" % [hud.find.results.size(), ", ".join(names)]
+		"order":
+			# order <kind> [x y]: gives the order to the order group, else the selected colonist.
+			var ids: Array = hud.orders.group.duplicate() if not hud.orders.group.is_empty() else ([view.selected_id] if view.selected_kind == "agent" else [])
+			var tgt = Vector2(float(w[2]), float(w[3])) if w.size() > 3 else null
+			if hud.orders.visible:
+				hud.orders._send(w[1] if w.size() > 1 else "stay", ids, tgt)   # through the window: its message and confirm step
+				return hud.orders._msg.text
+			var r: Dictionary = hud.v4.command("order_give", {"agents": ids, "kind": w[1] if w.size() > 1 else "stay", "target": tgt, "force": false})
+			return "%s refused %s" % [r["code"], str(r["refused"])]
+		"orders":
+			# orders: opens the orders window with the selected colonist.
+			hud.orders.open_for_selected()
+			return str(hud.orders.group)
+		"simcmd":
+			# simcmd <kind> <json payload>: a SIM command (debug only; SIM refuses its debug commands
+			# without debug). For screenshots with SIM's debug spawns (spawn_vehicle, place_finished).
+			if not debug_mode():
+				return "debug only"
+			var pl = JSON.parse_string(" ".join(w.slice(2))) if w.size() > 2 else {}
+			if typeof(pl) != TYPE_DICTIONARY:
+				return "bad json"
+			var cid = submit(w[1], pl)
+			if sim.cmds.results.has(cid):
+				return JSON.stringify(sim.cmds.results[cid])
+			return "submitted %s" % str(cid)
+		"reactor":
+			# reactor [scram|restart|cool|evacuate]: opens the reactor window, or acts on the first
+			# reactor (SIM commands). "reactor stage <ok|warning|critical|breach>": SIM's debug
+			# reactor_stage (debug=1 only).
+			hud.reactor_win.visible = true
+			var rs0: Array = hud.v4.reactors()
+			var res_txt := ""
+			if w.size() > 2 and w[1] == "stage" and not rs0.is_empty():
+				var cid = submit("reactor_stage", {"id": int(rs0[0]["id"]), "stage": w[2]})
+				res_txt = JSON.stringify(sim.cmds.results.get(cid, {"submitted": true})) + " "
+			elif w.size() > 1 and not rs0.is_empty():
+				var rr: Dictionary = hud.v4.command("reactor_" + w[1], {"id": int(rs0[0]["id"])})
+				res_txt = "%s %s " % [rr["code"], JSON.stringify(rr.get("result", {}))]
+			hud.reactor_win.refresh(true)
+			var rs: Array = hud.v4.reactors()
+			return res_txt + ("none" if rs.is_empty() else "%s %s heat %.1f next %s in %.0f s" % [rs[0]["name"], rs[0]["phase"], float(rs[0]["heat"]), str(rs[0].get("next_stage", "")), float(rs[0]["next_phase_s"])])
+		"advisor":
+			# advisor: opens the advisor window and returns its tips, one per line.
+			hud.advisor.visible = true
+			hud.advisor.refresh(true)
+			var lines: Array = []
+			for tp in hud.advisor.tips:
+				lines.append("%s: %s" % [tp["kind"], tp["title"]])
+			return "\n".join(lines)
+		"findlabels":
+			# findlabels off|all|<category>: the label layer of the Find window.
+			var which: String = "" if w.size() < 2 or w[1] == "off" else w[1]
+			hud.find_marks.set_labels(which)
+			var idx: int = hud.find._label_ids.find(which)
+			if idx >= 0:
+				hud.find._labels.select(idx)
+			return "labels " + (which if which != "" else "off")
+		"findmark":
+			# findmark <def>|off: marks every structure of that type on the map.
+			hud.find_marks.set_def("" if w.size() < 2 or w[1] == "off" else w[1])
+			return "%d marked" % hud.find_marks.marks.size()
+		"wm":
+			# wm: open windows, back to front, with their rects.
+			var parts: Array = []
+			for wid in hud.wm.open_ids():
+				parts.append("%s %s" % [wid, str(hud.wm._wins[wid]["win"].get_global_rect())])
+			return " | ".join(parts) if not parts.is_empty() else "none"
+		"drag":
+			# drag <id> <x> <y>: moves a window as a drag would (title bar kept in view), then snaps
+			# and remembers it.
+			if w.size() < 4 or not hud.wm._wins.has(w[1]):
+				return "drag <id> <x> <y>"
+			hud.wm.move_to(w[1], Vector2(float(w[2]), float(w[3])))
+			hud.wm.snap(w[1])
+			hud.wm.remember(w[1])
+			return str(hud.wm._wins[w[1]]["win"].get_global_rect())
 		"minimap":
 			# minimap zoom|whole
 			hud.minimap.set_zoomed(w.size() > 1 and w[1] == "zoom")
@@ -512,6 +628,10 @@ func _on_cmd(text: String) -> String:
 	return "ok"
 
 # ---------------------------------------------------------------- start, load, title
+## Wall-clock cap of the simulation steps in one frame (14 ms). The RENDER gates set it very
+## high so a run does the same steps every time (the cap made the path check differ run to run).
+var step_cap_us := 14000
+
 func start_new(seed_value: int, options: Dictionary = {}) -> void:
 	if on_title:
 		leave_title()
@@ -527,10 +647,14 @@ func _new_world(seed_value: int, options: Dictionary) -> void:
 	if debug_mode() and not options.has("debug"):
 		options = options.duplicate()
 		options["debug"] = true
+	var scen: String = String(options.get("scenario", "tutorial"))
+	if options.has("scenario"):
+		options = options.duplicate()
+		options.erase("scenario")
 	if options.is_empty() or hud.data.arg_count(sim, "new_game") < 3:
-		sim.new_game(seed_value)
+		sim.new_game(seed_value, scen) if scen != "tutorial" else sim.new_game(seed_value)
 	else:
-		sim.new_game(seed_value, "tutorial", options)
+		sim.new_game(seed_value, scen, options)
 	_after_world_change()
 
 func _after_world_change() -> void:
@@ -631,6 +755,13 @@ func apply_settings() -> void:
 	if view != null and view.has_method("set_quality"):
 		view.set_quality(int(Settings.get_value("quality")))
 	var sc: float = clampf(float(Settings.get_value("ui_scale")), 0.6, 2.0)
+	# Critic round 21, fix 1: a large interface scale in a small window would leave no room for
+	# the HUD. The scale is limited so the interface keeps a logical view of at least 1300 x 660
+	# (the top bar, time panel, minimap and build bar fit side by side).
+	var unscaled: Vector2 = get_viewport().get_visible_rect().size * get_tree().root.content_scale_factor
+	sc = clampf(minf(sc, minf(unscaled.x / 1300.0, unscaled.y / 660.0)), 0.6, 2.0)
+	if not get_viewport().size_changed.is_connected(_on_view_resized):
+		get_viewport().size_changed.connect(_on_view_resized)
 	if not is_equal_approx(get_tree().root.content_scale_factor, sc):
 		get_tree().root.content_scale_factor = sc
 	Glass.set_enabled(bool(Settings.get_value("glass")))
@@ -643,6 +774,15 @@ func apply_settings() -> void:
 			o.set("shake_enabled", _shake_on)
 	if audio != null:
 		audio.apply_volumes()
+
+## The view changed size: the interface-scale limit is checked again (apply_settings).
+var _resizing := false
+func _on_view_resized() -> void:
+	if _resizing:
+		return
+	_resizing = true
+	apply_settings.call_deferred()
+	(func(): _resizing = false).call_deferred()
 
 # ---------------------------------------------------------------- main loop
 func _process(delta: float) -> void:
@@ -663,7 +803,7 @@ func _process(delta: float) -> void:
 			sim.step()
 			_acc -= TICK
 			steps += 1
-			if Time.get_ticks_usec() - t0 > 14000:
+			if Time.get_ticks_usec() - t0 > step_cap_us:
 				break
 		_t_sim = float(Time.get_ticks_usec() - t0) / 1000.0
 		if steps > 0:
@@ -905,7 +1045,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		var mb: InputEventMouseButton = event
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			if tool != "select":
+			if cancel_pick():
+				pass
+			elif tool != "select":
 				cancel_tool()
 			else:
 				select("", -1)
@@ -926,7 +1068,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R: tool_rot = fposmod(tool_rot + deg_to_rad(15.0) * (-1.0 if k.shift_pressed else 1.0), TAU)
 			KEY_Z, KEY_BRACKETLEFT: set_tool_size(tool_size - 1)
 			KEY_X, KEY_BRACKETRIGHT: set_tool_size(tool_size + 1)
-			KEY_F: follow_selected()
+			KEY_F:
+				if k.ctrl_pressed or k.meta_pressed:
+					hud.toggle_find()   # version 4 Find (V4_DESIGN §3.4)
+				else:
+					follow_selected()
+			KEY_SLASH: hud.toggle_find()
+			KEY_N: hud.toggle_advisor()   # version 4 advisor (V4_DESIGN §6)
+			KEY_K: hud.toggle_screen("codex")   # version 4 codex (V4_DESIGN §6)
 			KEY_O: hud.cycle_overlay()
 			KEY_G: hud.toggle_screen("goals")
 			KEY_T: hud.toggle_screen("research")
@@ -937,10 +1086,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_H: hud.set_hud_visible(not hud.hud_visible())
 			KEY_F1: hud.toggle_screen("help")
 			KEY_ESCAPE:
-				if tool != "select":
+				# Shift+Esc closes every window (V4 window manager); Esc closes the last one first.
+				if cancel_pick():
+					pass
+				elif k.shift_pressed:
+					close_all_windows()
+				elif tool != "select":
 					cancel_tool()
 				elif hud.is_modal_open():
 					hud.close_modal()
+				elif hud.wm != null and hud.wm.close_last():
+					pass
 				elif hud.build_bar.is_open():
 					hud.build_bar.close_drawer()
 				elif view.selected_kind != "":
@@ -951,8 +1107,27 @@ func _unhandled_input(event: InputEvent) -> void:
 				if view.selected_kind == "building":
 					hud.ask_demolish(view.selected_id)
 
+## Point picking for orders (version 4): the next left click on the ground calls cb(point, pick)
+## instead of the tool; right click or Esc cancels. The hint shows until then.
+var pick_cb := Callable()
+func pick_point(hint: String, cb: Callable) -> void:
+	pick_cb = cb
+	hud.toast(hint, "info", "follow")
+
+func cancel_pick() -> bool:
+	if not pick_cb.is_valid():
+		return false
+	pick_cb = Callable()
+	hud.toast("Order cancelled.", "info")
+	return true
+
 func _left_click(shift: bool) -> void:
 	if hover_point == null:
+		return
+	if pick_cb.is_valid():
+		var cb: Callable = pick_cb
+		pick_cb = Callable()
+		cb.call(hover_point, hover_pick)
 		return
 	match tool:
 		"select":
@@ -996,6 +1171,12 @@ func select(kind: String, id: int) -> void:
 	view.select(kind, id)
 	rig.follow_fn = Callable()
 	hud.selection_changed()
+
+## Closes every window: the screens and the floating windows (V4_DESIGN §7).
+func close_all_windows() -> int:
+	var n: int = hud.screens.get_child_count() if hud.is_modal_open() else 0
+	hud.screens.close_all()
+	return n + (hud.wm.close_all() if hud.wm != null else 0)
 
 func follow_selected() -> void:
 	if view.selected_kind == "agent":

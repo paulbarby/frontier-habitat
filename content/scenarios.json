@@ -76,6 +76,37 @@
         1004,
         1005
       ]
+    },
+    "frontier": {
+      "name": "Frontier (version 4)",
+      "_note": "The v4 planet: 2,560 m, mountains, plateaus, deep craters, crevices, boulder fields (content/terrain_v4.json). The same crew and cargo as the first landing.",
+      "planet": "dry",
+      "map_size": 2560,
+      "colonists": [
+        "technician",
+        "technician",
+        "grower",
+        "grower",
+        "operator",
+        "operator",
+        "medic",
+        "scientist"
+      ],
+      "lander_cargo": {
+        "meals": 48,
+        "water": 64,
+        "metal": 120,
+        "polymer": 70,
+        "spare_parts": 8
+      },
+      "no_disaster_days": 5,
+      "tutorial_seeds": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005
+      ]
     }
   },
   "names": [

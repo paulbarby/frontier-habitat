@@ -188,8 +188,8 @@ def build_refinery(rm):
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
     D = 2.5
-    rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.5, parapet=0.14, wall="HullDark",
-                    deck="Frame")
+    rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - (0.62 if K.V4STYLE else 0.5),
+                    parapet=0.14, wall="HullDark", deck="Frame")
     ro = rm.roof
     cx, cy, a, b = -0.12 * Rw, 0.14 * Rw, 0.50 * Rw, 0.36 * Rw
     eave = D + (1.6, 1.9, 2.2, 2.4)[s]
@@ -376,6 +376,21 @@ def build_workshop(rm):
     if s >= 3:
         top = max(top, roof_crane(ro, 0.48 * Rw, 0.50 * Rw, D, boom=3.0, yaw=200.0, h=1.0))
         obst.append((0.48 * Rw, 0.50 * Rw, 0.9))
+    if K.V4STYLE:
+        # 4.0 identity, industry: two tall hazard-banded stacks and vent units by the hall, the gear badge
+        import rooms_identity as RI
+        for sx in (-0.30, 0.22):
+            x_, y_ = sx * Rw, 0.70 * Rw
+            top = max(top, RI.stack(ro, rm.lights, x_, y_, D, 5.5 + 0.5 * s, 0.42 + 0.04 * s))
+            obst.append((x_, y_, 0.7))
+        for (vx_, vy_) in ((0.80 * Rw, 0.02 * Rw), (0.72 * Rw, -0.30 * Rw)):
+            ro.box0(vx_, vy_, D, 0.9, 0.9, 0.55, "HullDark", mats={"-z": None})
+            fan_unit(ro, vx_, vy_, D + 0.55, 0.36)
+            obst.append((vx_, vy_, 0.7))
+        bx, by, br = -0.10 * Rw, -0.52 * Rw, 0.34 * Rw
+        RI.badge(ro, "industry", bx, by, br, lambda x_, y_: D + 0.02, lift=0.015)
+        rm.badge_done = True
+        obst.append((bx, by, br + 0.2))
     rm.top_z = max(rm.top_z, top)
     levels_podium(rm, auto_sites(rm, obst, D))
     # interior: benches, lathe, robot arm, parts rack, trolley

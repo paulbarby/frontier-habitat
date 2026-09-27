@@ -54,7 +54,7 @@ func windows() -> Array:
 
 ## Full-screen layers that are not windows (the door-sector overlay).
 static func _is_overlay(c: Control) -> bool:
-	return c.mouse_filter == Control.MOUSE_FILTER_IGNORE and c.get_script() != null and String(c.get_script().resource_path).ends_with("sector_overlay.gd")
+	return c.mouse_filter == Control.MOUSE_FILTER_IGNORE and c.get_script() != null and (String(c.get_script().resource_path).ends_with("sector_overlay.gd") or String(c.get_script().resource_path).ends_with("find_marks.gd"))
 
 func enforce() -> void:
 	var vp: Vector2 = hud.root.get_viewport_rect().size if hud != null and hud.root != null else Vector2.ZERO

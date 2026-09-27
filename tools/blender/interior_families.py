@@ -223,7 +223,7 @@ DECOR = {"tanks": d_tanks, "unit": d_unit, "plant": d_plant, "light": d_light_co
          "racks": d_rack_island, "pallets": d_pallets, "bottles": d_bottles, "planter": d_planter}
 
 
-def fill_decor(plan, kinds, max_n=None, walk=0.85, seed=0, step=0.7, align=None):
+def fill_decor(plan, kinds, max_n=None, walk=0.85, seed=0, step=0.7, align=None, avoid=(), avoid_r=1.0):
     """Place decor clusters (cycling `kinds`) in free floor: each cluster keeps `walk` metres to every other
     footprint.  max_n default: one cluster per 9 m2 of the r_max disc beyond what S has."""
     rng = random.Random(seed)
@@ -246,6 +246,8 @@ def fill_decor(plan, kinds, max_n=None, walk=0.85, seed=0, step=0.7, align=None)
         if hypot(x, y) > plan.r_max - need - 0.05:
             continue
         if plan.dist(x, y) < need + walk:
+            continue
+        if any(hypot(x - ax, y - ay) < need + avoid_r for (ax, ay) in avoid):
             continue
         yaw = align if align is not None else degrees(atan2(y, x)) + 90.0
         r = DECOR[kind](plan, x, y, yaw, k)
@@ -854,10 +856,12 @@ def cook_line(plan, x, y, yaw, L, cooktops=2, works=1):
         rect_at(plan, n, -0.37, 0.0, 0.40, L / 2 + 0.02, tag="cook")
 
 
-def mess_table(plan, x, y, yaw, nper, seat="Cushion"):
-    """Long table with nper chairs on each long side."""
+def mess_table(plan, x, y, yaw, nper, seat="Cushion", anchored=None):
+    """Long table with nper chairs on each long side; only the first `anchored` chairs get a Seat anchor (4.0:
+    more tables than the content's seats; the others are laid for show)."""
     n = plan.n
     L = 0.62 * nper + 0.3
+    left = 2 * nper if anchored is None else anchored
     with at(n, x, y, yaw):
         FU.table_rect(n, 0.42, L / 2, top="Hull", edge="Accent")
         for side in (-1, 1):
@@ -865,7 +869,9 @@ def mess_table(plan, x, y, yaw, nper, seat="Cushion"):
                 yy = -L / 2 + 0.46 + 0.62 * j
                 with n.at(T(side * 0.80, yy, 0), RZ(180.0 if side > 0 else 0.0)):
                     FU.chair(n, seat=seat)
-                    seat_anchor(plan, n, 0.0, 0.0)
+                    if left > 0:
+                        seat_anchor(plan, n, 0.0, 0.0)
+                        left -= 1
         rect_at(plan, n, 0.0, 0.0, 1.05, L / 2 + 0.05, tag="mess")
 
 
@@ -881,7 +887,7 @@ def kitchen(rm):
     # the galley's footprint (back 0.77 m behind gx) stays inside the door lanes (2026-09-25)
     gx = -(sqrt(max(0.3, (min(rmax, plan.lane_r()) - 0.02) ** 2 - (L / 2 + 0.02) ** 2)) - 0.77)
     cook_line(plan, gx, 0.0, 0.0, L, cooktops=(1, 2, 2, 3)[s], works=fu["work_slots"])
-    if s >= 2:                               # a prep island
+    if s >= 2 or (K.V4STYLE and K.R_SCALE > 1.0):     # a prep island (4.0: every size)
         ix = gx + 1.75
         with at(n, ix, 0.0, 0.0):
             bbox(n, -0.40, 0.40, -1.0, 1.0, F, F + 0.86, "Hull", bevel=0.02)
@@ -891,17 +897,29 @@ def kitchen(rm):
         plan.rect(ix, 0.0, 0.45, 1.05, 0.0, tag="island")
     spec = {0: [2], 1: [3], 2: [3, 2], 3: [3, 3, 2]}[s]
     x0 = (0.75, 1.0, 1.5, 0.75)[s]
-    if s >= 2:
+    if K.V4STYLE and K.R_SCALE > 1.0:
+        # 4.0 (critic round 17): three or more tables side by side; the content's seats are shared out among them
+        ntab = (2, 3, 4, 5)[s]
+        per = max(2, -(-fu["seats"] // (2 * ntab)))
+        xc = min(plan.r_max * 0.40, 2.6)
+        left = fu["seats"]
+        for j in range(ntab):
+            take = min(left, 2 * per)
+            mess_table(plan, xc, (j - (ntab - 1) / 2) * 2.45, 90.0, per, seat=("Cushion", "Fabric")[j % 2],
+                       anchored=take)
+            left -= take
+    elif s >= 2:
         # L / XL: the tables turn along X and stand side by side, inside r_max (the door lane, 2026-09-25)
         xc = (2.0, 2.3)[s - 2]
         for j, nper in enumerate(spec):
-            mess_table(plan, xc, (j - (len(spec) - 1) / 2) * 2.3, 90.0, nper, seat=("Cushion", "Fabric")[j % 2])
+            mess_table(plan, xc, (j - (len(spec) - 1) / 2) * 2.2, 90.0, nper, seat=("Cushion", "Fabric")[j % 2])
     else:
         for j, nper in enumerate(spec):
             mess_table(plan, x0 + max(2.25, plan.r_max * 0.36) * j, 0.0, 0.0, nper, seat=("Cushion", "Fabric")[j % 2])
     fill_decor(plan, ["racks", "planter", "cart"], seed=61 + s, align=0.0)
-    plan.wall_items(["fridge", "shelf", "fridge", "planter", "cab_box", "panel", "shelf", "tap"],
-                    wall_set(plan), open_every=3, seed=61 + s, depth_of=DEPTHS)
+    pattern = (["fridge", "shelf", "shelf", "fridge", "shelf", "cab_box", "tap", "shelf"] if K.V4STYLE   # pantry wall
+               else ["fridge", "shelf", "fridge", "planter", "cab_box", "panel", "shelf", "tap"])
+    plan.wall_items(pattern, wall_set(plan), open_every=4 if K.V4STYLE else 3, seed=61 + s, depth_of=DEPTHS)
     plan.stands(fu["stands"], [(gx + 1.0, L / 2 + 0.25, 180.0), (gx + 1.0, -L / 2 - 0.25, 180.0)])
     finish(plan)
 

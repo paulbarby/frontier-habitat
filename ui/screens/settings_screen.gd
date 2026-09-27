@@ -7,7 +7,7 @@ const Settings = preload("res://ui/settings.gd")
 
 func _init() -> void:
 	compact = true
-	compact_size = Vector2(760, 0)
+	compact_size = Vector2(880, 0)
 	pauses = true
 	icon = "settings"
 	title = "Settings"
@@ -37,7 +37,7 @@ func build() -> void:
 			Settings.set_value("quality", n)
 			hud.main.apply_settings()
 			for k in qbtns.size():
-				(qbtns[k] as Button).set_pressed_no_signal(k == n), "", "ChipButton")
+				(qbtns[k] as Button).set_pressed_no_signal(k == n), "%s quality\n%s" % [qnames[i], ["Fastest: no shadows, low detail.", "Shadows near the camera, medium detail.", "The designed look.", "Soft shadows and full detail. Needs a strong graphics card."][i]], "ChipButton")
 		b.toggle_mode = true
 		b.set_pressed_no_signal(i == q)
 		b.custom_minimum_size = Vector2(76, 30)
@@ -54,7 +54,7 @@ func build() -> void:
 	# Camera
 	var cam: VBoxContainer = card("Camera", "camera", P.CYAN)
 	left.add_child(card_panel(cam))
-	cam.add_child(_toggle("Pan when the mouse touches the screen edge", "edge_pan", ""))
+	cam.add_child(_toggle("Pan when the mouse touches the screen edge", "edge_pan", "Edge pan\nThe camera moves when the mouse touches the edge of the window."))
 	cam.add_child(_slider("Camera speed", "camera_speed", 0.5, 2.0, 0.1, func(v): return "%d%%" % int(roundf(v * 100.0))))
 	cam.add_child(_toggle("Camera shake", "camera_shake", "The camera shakes for quakes, impacts and landings. Off: it stays still."))
 	# Audio
@@ -70,13 +70,18 @@ func build() -> void:
 	var grid: GridContainer = Kit.grid(2, 14, 3)
 	k.add_child(grid)
 	for pair in [["W A S D, arrows", "move the camera"], ["Mouse wheel", "zoom"], ["Middle drag, Q E", "turn"], ["Space; 1 2 3", "pause; speed 1x 2x 4x"],
-			["R; Z X", "turn; size while placing"], ["Shift + click", "keep placing"], ["Esc; right click", "cancel; menu"], ["F", "follow a colonist"],
+			["R; Z X", "turn; size while placing"], ["Shift + click", "keep placing"], ["Esc; right click", "cancel; menu"], ["F", "follow a colonist"], ["/ or Ctrl+F", "find a structure"], ["N", "advisor"], ["K", "codex"], ["Shift+Esc", "close every window"],
 			["O", "overlay"], ["Delete", "remove the selection"], ["G T C I P V", "goals, research, colony, inventory, people, awards"], ["H", "hide the interface"]]:
 		grid.add_child(Kit.num(pair[0], 12, P.CYAN))
 		grid.add_child(Kit.label(pair[1], "", 12, P.TEXT_2))
+	# About (V4_DESIGN §7): the version.
+	var ab: VBoxContainer = card("About", "info", P.CYAN)
+	right.add_child(card_panel(ab))
+	ab.add_child(Kit.label("Frontier Habitat  ·  version %s" % String(ProjectSettings.get_setting("application/config/version", "?")), "BodyStrong", 14, P.TEXT))
+	ab.add_child(Kit.label("Godot %s, web build" % Engine.get_version_info().get("string", ""), "SmallLabel", 12, P.TEXT_2))
 	var btns: HBoxContainer = Kit.hbox(8, BoxContainer.ALIGNMENT_END)
 	content.add_child(btns)
-	btns.add_child(Kit.button("Back", func(): host.close(self), "", "PrimaryButton", "check", 14))
+	btns.add_child(Kit.button("Back", func(): host.close(self), "Back\nCloses the settings. Changes are already kept.", "PrimaryButton", "check", 14))
 
 func _toggle(text: String, key: String, tip: String) -> CheckButton:
 	var c := CheckButton.new()
@@ -95,6 +100,7 @@ func _slider(text: String, key: String, lo: float, hi: float, step: float, fmt: 
 	l.custom_minimum_size.x = 110
 	row.add_child(l)
 	var s := HSlider.new()
+	s.tooltip_text = "%s\nDrag to change. Kept on this device." % text
 	s.min_value = lo
 	s.max_value = hi
 	s.step = step

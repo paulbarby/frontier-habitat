@@ -387,7 +387,7 @@ func _fact_housing() -> Dictionary:
 			continue
 		pop += 1
 		var bed: Dictionary = blds.get(int(a["bed"]), {})
-		if not bed.is_empty() and bed["def"] != "lander":
+		if not bed.is_empty() and not bool(sim.bdef(bed["def"]).get("core", false)):
 			housed += 1
 	_facts["housing"] = {"pop": pop, "housed": housed}
 	return _facts["housing"]

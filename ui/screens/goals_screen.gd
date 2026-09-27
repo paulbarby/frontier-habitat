@@ -47,7 +47,8 @@ func build() -> void:
 	fh.add_child(Kit.head("Victory: %s" % String(vd.get("name", "Frontier established")), P.GOLD, 13, "head_wide"))
 	var vl: Label = Kit.label(("Achieved. " + String(vd.get("desc", ""))) if d.victory() else "Complete all five chapters to win. You can play on after the victory.", "DimLabel", 13, P.TEXT_2)
 	vl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vl.clip_text = true
+	vl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
+	vl.custom_minimum_size.x = 300
 	fh.add_child(vl)
 	_rebuild()
 
@@ -78,6 +79,7 @@ func _rebuild() -> void:
 		var b: Button = Kit.button("", func():
 			chapter = ii
 			_rebuild(), "", "CardButton")
+		b.tooltip_text = "%s\nChapter %d: %s. Click to see its goals." % [String(ch.get("name", "")), i + 1, {"done": "done", "active": "the chapter now", "locked": "locked until the chapters before it are done"}[state]]
 		b.toggle_mode = true
 		b.set_pressed_no_signal(i == chapter)
 		b.custom_minimum_size = Vector2(300, 74)

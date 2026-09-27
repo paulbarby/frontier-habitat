@@ -105,6 +105,24 @@ func play_oneshot(c: String) -> void:
 	_start(c, "oneshot")
 	oneshot_next = "hold" if c == "collapse" else ""
 
+## V4 vehicle crews (fx_vehicles): a clip chosen by the caller, played as it is ("script"
+## phase: no pose logic). `cut` = a hand-over at an exact cut frame (step_up -> board -> seat
+## loop): no cross-fade, because the caller moves the body origin on the same frame.
+var script_loop := false
+func force(c: String, looping: bool, cut: bool = false) -> void:
+	if not clips.has(c):
+		return
+	if cur == c and phase == "script":
+		return
+	_start(c, "script")
+	script_loop = looping
+	if cut:
+		fade = 0.0
+		prev = ""
+
+func script_done() -> bool:
+	return phase == "script" and not script_loop and cur_t >= clip_len(cur) - 0.0001
+
 ## Ends a one-shot now (a body faded out while it played, V3.1 airlock).
 func end_oneshot() -> void:
 	if phase == "oneshot":
@@ -202,6 +220,9 @@ func advance(dt: float) -> void:
 				_finish()
 		"hold":
 			cur_t = clip_len(cur)
+		"script":
+			cur_t += dt
+			cur_t = fposmod(cur_t, clip_len(cur)) if script_loop else minf(cur_t, clip_len(cur))
 		"loop":
 			_loop_step(dt)
 	# Carry clip time: synced to the walk phase while moving, free-running when still.
@@ -271,6 +292,11 @@ func _loop_step(dt: float) -> void:
 		# Idle <-> walk <-> run by ground speed (with hysteresis).
 		var moving: bool = speed > (WALK_STOP if loco else WALK_START)
 		target = "loco" if moving else resolve_loop(idle_clip, "stand")
+	# A body that is already moving starts walking even while a cross-fade runs (a standing clip
+	# on a moving body reads as a slide; path check 2026-09-27).
+	if target == "loco" and not loco and not can and speed > 0.3:
+		_start_loco()
+		return
 	if can:
 		if target == "loco" and not loco:
 			_start_loco()

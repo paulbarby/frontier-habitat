@@ -29,7 +29,8 @@ if HERE not in sys.path:
 import rooms_kit as K        # noqa: E402
 
 BUILDERS = {}
-_MODULES = ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links")
+_MODULES = ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
+            "rooms_v4ind")
 for _m in _MODULES:
     try:
         mod = __import__(_m)
@@ -41,7 +42,10 @@ for _m in _MODULES:
 ORDER = ["habitat", "greenhouse", "kitchen", "storehouse", "oxygen_plant", "research_lab", "mine", "refinery",
          "polymer_plant", "workshop", "medical", "lounge", "airlock", "junction", "corridor",
          "glassworks", "electronics_fab", "fabricator", "fungus_farm", "algae_bioreactor", "water_recycler",
-         "atmo_processor", "bio_lab", "cantina", "cold_storage", "research_assembler"]
+         "atmo_processor", "bio_lab", "cantina", "cold_storage", "research_assembler",
+         # 4.0 industry (SIM 2026-09-27)
+         "steel_mill", "titanium_smelter", "ceramics_kiln", "carbon_works", "battery_plant", "parts_works",
+         "magnet_works", "superconductor_lab", "metamaterial_foundry"]
 FAMILY = {
     "habitat": "habitat", "lounge": "habitat", "cantina": "habitat", "medical": "habitat", "bio_lab": "habitat",
     "storehouse": "habitat", "cold_storage": "habitat",
@@ -51,6 +55,9 @@ FAMILY = {
     "mine": "industry", "refinery": "industry", "polymer_plant": "industry", "workshop": "industry",
     "glassworks": "industry", "electronics_fab": "industry", "fabricator": "industry",
     "airlock": "links", "junction": "links", "corridor": "links",
+    "steel_mill": "industry", "titanium_smelter": "industry", "ceramics_kiln": "industry", "carbon_works": "industry",
+    "battery_plant": "industry", "parts_works": "industry", "magnet_works": "industry",
+    "superconductor_lab": "industry", "metamaterial_foundry": "industry",
 }
 # 3.0 (docs/V3_DESIGN.md section 7): builders with the detailed interiors and wall segments.  A v3 builder may
 # raise NotImplementedError for a size it does not make yet; that size then uses the v2 builder.
@@ -71,6 +78,17 @@ AIRLOCK_RADII = {"m": 3.4, "l": 4.0}   # proposed to SIM (docs/requests/ART-HAB-
 OVERHANG_PARTS = ("Porch", "PorchTop")      # 3.1: the airlock porch stands outside the footprint (the entrance itself)
 
 
+def _v4_provisional():
+    try:
+        import rooms_v4ind as RV
+        return {tid: RV.PROVISIONAL_DEF for tid in RV.V4_ROOMS}
+    except ModuleNotFoundError:
+        return {}
+
+
+V4_PROVISIONAL = _v4_provisional()
+
+
 def jobs(buildings, only=None, sizes=None):
     out = []
     for tid in ORDER:
@@ -81,20 +99,22 @@ def jobs(buildings, only=None, sizes=None):
         if tid == "corridor" and "--v2" not in sys.argv:
             continue            # 3.0: tools/blender/interior_links.py builds corridor.glb (+ doorway, rib, patch)
         bdef = buildings.get(tid, {})
+        if not bdef and tid in V4_PROVISIONAL:
+            bdef = V4_PROVISIONAL[tid]            # 4.0 rooms SIM has named but not put in content yet
         radii = bdef.get("sizes", {}).get("radius")
         if radii and tid not in ("airlock", "junction", "corridor"):
             for s, key in enumerate(K.SIZE_KEYS):
                 if sizes and key not in sizes:
                     continue
-                out.append(dict(tid=tid, size=s, key=key, R=float(radii[s]), file="%s_%s" % (tid, key),
-                                also=[tid] if s == 1 else [], bdef=bdef, single=False))
+                out.append(dict(tid=tid, size=s, key=key, R=K.v4_radius(tid, s, float(radii[s])), file="%s_%s" % (tid, key),
+                                also=[], bdef=bdef, single=False))    # 4.0: no <tid>.glb copy (models.resolve)
         elif tid == "airlock" and radii:
             # content has the M / L airlock (SIM, 2026-09-25): airlock_m (+ airlock.glb) and airlock_l
             for s_, key in ((1, "m"), (2, "l")):
                 if sizes and key not in sizes:
                     continue
-                out.append(dict(tid=tid, size=s_, key=key, R=float(radii[s_]), file="airlock_" + key,
-                                also=[tid] if key == "m" else [], bdef=bdef, single=True))
+                out.append(dict(tid=tid, size=s_, key=key, R=K.v4_radius(tid, s_, float(radii[s_])), file="airlock_" + key,
+                                also=[], bdef=bdef, single=True))
             if not sizes or "m" in sizes:
                 # airlocks of old saves keep R 2.8 (coordinator 2026-09-25): the new design at 2.8 m, 2 riders
                 out.append(dict(tid=tid, size=1, key="r28", R=AIRLOCK_R_OLD, file="airlock_r28", also=[], bdef=bdef,
@@ -102,8 +122,8 @@ def jobs(buildings, only=None, sizes=None):
         else:
             if sizes and "m" not in sizes:
                 continue
-            out.append(dict(tid=tid, size=1, key="", R=float(bdef.get("radius", 1.2)), file=tid, also=[], bdef=bdef,
-                            single=True))
+            out.append(dict(tid=tid, size=1, key="", R=K.v4_radius(tid, 1, float(bdef.get("radius", 1.2))), file=tid,
+                            also=[], bdef=bdef, single=True))
             if tid == "airlock" and not radii:
                 # 3.1 (decision 2026-09-25): M and L airlocks; radii proposed to SIM until content has them
                 for s_, key, R_ in ((1, "m", AIRLOCK_RADII["m"]), (2, "l", AIRLOCK_RADII["l"])):
@@ -112,12 +132,20 @@ def jobs(buildings, only=None, sizes=None):
     return out
 
 
+def tray_scale(job):
+    """4.0: while content still has the v3 radius, the tray offsets scale with the room (R / content R)."""
+    radii = job["bdef"].get("sizes", {}).get("radius")
+    cr = float(radii[job["size"]]) if radii else float(job["bdef"].get("radius", job["R"]))
+    return job["R"] / cr if cr > 0 else 1.0
+
+
 def expected_trays(job):
     bdef = job["bdef"]
+    k = tray_scale(job)
     offs = bdef.get("sizes", {}).get("tray_offsets")
     if offs:
-        return [tuple(o) for o in offs[job["size"]]]
-    return [tuple(o) for o in bdef.get("tray_offsets", [])]
+        return [(o[0] * k, o[1] * k) for o in offs[job["size"]]]
+    return [(o[0] * k, o[1] * k) for o in bdef.get("tray_offsets", [])]
 
 
 DOOR_BLOCKED = os.path.join(K.ROOT, "docs", "requests", "ART-HAB-door_blocked.json")
@@ -137,6 +165,37 @@ LANE_LISTED = {
 
 # Minimum free door angle (coordinator 2026-09-25): S >= 120 deg, M and larger >= 180 deg.  Airlocks are the
 # exception (only the suit-room side is free).  SIM refuses new links at the blocked angles.
+DOOR_SLOTS_MIN = {"s": 4, "m": 6, "l": 7, "xl": 8, "": 6}     # Paul 2026-09-27 (coordinator: L 7)
+DOOR_SPACING_M = 3.44 + 0.30                                    # door housing width + 0.3 m, along the wall
+
+
+def door_slots(spans, Rw, res=0.5):
+    """Most doorways the room can take: points on the free angles (not in `spans`, the blocked model angles) at
+    least the housing spacing apart (2 asin(3.74 / 2 Rw)), round the whole circle.  Returns (count, spacing)."""
+    from math import asin, degrees as _deg
+    step = 2.0 * _deg(asin(min(0.999, DOOR_SPACING_M / (2.0 * Rw))))
+    n = int(round(360.0 / res))
+    free = [True] * n
+    for a0, a1 in spans:
+        k0, k1 = int(round(a0 / res)), int(round(a1 / res))
+        for k in range(k0, k1 + 1):
+            free[k % n] = False
+    jump = int(step / res + 0.999)
+    best = 0
+    for k0 in [k for k in range(n) if free[k]][::2]:
+        cnt, k = 1, k0 + jump
+        while k <= k0 + n - jump:
+            if free[k % n]:
+                cnt += 1
+                k += jump
+            else:
+                k += 1
+        best = max(best, cnt)
+        if (best + 1) * step > 360.0 + 1e-6:
+            break
+    return best, step
+
+
 AIRLOCK_STRUCTURE = {"chamberfloor", "chamber", "pump", "partition"}     # the chamber side: may block door lanes
 LANE_MIN_FREE = {"s": 120.0, "m": 180.0, "l": 180.0, "xl": 180.0, "": 180.0}
 DOOR_BLOCKED_CONTENT = os.path.join(K.ROOT, "content", "door_blocked.json")   # what the sim reads (authorised)
@@ -157,7 +216,10 @@ def write_door_blocked(rows):
     for r in rows:
         v = r.get("v3") or {}
         if "door_blocked" in v:
-            for key in [r["id"]] + list(r.get("also") or []):      # the size-M copy (habitat.glb, airlock.glb ...)
+            keys = [r["id"]] + list(r.get("also") or [])
+            if r.get("size") == "m":
+                keys.append(r["type"])          # SIM reads the plain <def> key for size M (no file copy in 4.0)
+            for key in keys:
                 old[key] = dict(blocked=[list(x) for x in v["door_blocked"]], free_deg=v["door_free_deg"],
                                 min_lane_m=v["door_clear_min"])
     changed = sorted(k for k, v in old.items() if before.get(k) != v.get("blocked"))
@@ -237,6 +299,7 @@ def build_one(job):
     bdef = job["bdef"]
     cat = bdef.get("category", "logistics")
     rm = K.Room(job["tid"], job["size"], job["R"], cat, bdef, single=job["single"])
+    rm.tray_scale = tray_scale(job)
     built_v3 = False
     if job["tid"] in V3_BUILDERS and "--v2" not in sys.argv:
         try:
@@ -254,7 +317,7 @@ def build_one(job):
         flags += cut_top_check(rm, objs)
     stats = {p.name: K.part_stats(p) for p in rm.parts() if p.faces}
     tris = sum(s["tris"] for s in stats.values())
-    budget = (V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]]
+    budget = int((V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]] * (1.4 if K.R_SCALE > 1.0 else 1.0))   # v4: 2.25x floor
     if job["tid"] == "corridor":
         budget = 1200
     if tris > budget:
@@ -378,15 +441,22 @@ def build_one(job):
             row["v3"]["door_clear_min"] = worst
             row["v3"]["door_lane_hits"] = getattr(rm.plan, "lane_hits", {})
             row["v3"]["door_lane_ring"] = getattr(rm.plan, "lane_ring", None)
+            if K.V4STYLE and K.R_SCALE > 1.0 and getattr(rm.plan, "v4_patch", None) is not None:
+                row["v3"]["v4_empty_patch"] = round(rm.plan.v4_patch, 2)
+                if rm.plan.v4_patch > 2.5 + 0.2:
+                    flags.append("v4 density: an empty patch %.1f m wide (> 2.5 m)" % rm.plan.v4_patch)
             row["v3"]["door_lane_hit_angles"] = {t: sorted(v) for t, v in getattr(rm.plan, "lane_hit_angles", {}).items()}
-            need = LANE_MIN_FREE.get(job["key"], LANE_MIN_FREE["m"])
-            free_ = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
+            # Paul 2026-09-27: corridor links per size (S 4, M 6, L 7, XL 8) at the door-housing spacing
+            slots, step = door_slots(spans, rm.R - 0.32)
+            row["v3"]["door_slots"] = slots
+            row["v3"]["door_slot_deg"] = round(step, 1)
+            need = DOOR_SLOTS_MIN.get(job["key"], DOOR_SLOTS_MIN["m"])
             loose = set(getattr(rm.plan, "lane_hits", {})) - AIRLOCK_STRUCTURE
             if job["tid"] == "airlock" and loose:
                 flags.append("airlock door lanes blocked by furniture %s (only the chamber may block)" % sorted(loose))
-            if job["tid"] != "airlock" and free_ < need:
-                flags.append("door lanes: %.0f deg free < %d (coordinator minimum for size %s); blocked by %s"
-                             % (free_, need, job["key"] or "m", row["v3"]["door_lane_hits"]))
+            if job["tid"] not in ("airlock", "junction") and slots < need:
+                flags.append("door slots: %d < %d for size %s (spacing %.1f deg); blocked by %s"
+                             % (slots, need, job["key"] or "m", step, row["v3"]["door_lane_hits"]))
             row["v3"]["door_free_deg"] = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
     print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s%s" % (job["file"], tris, budget, radius, job["R"],
                                                               row["seconds"], "; ".join(flags) or "ok",
@@ -585,7 +655,8 @@ def main():
                                                         info["ao_max"],
                                                         ("  tray err %.4f" % info["tray_err"]) if info["tray_err"] is not None else ""))
     write_reports(rows)
-    write_door_blocked(rows)
+    if not K.V4PILOT:
+        write_door_blocked(rows)          # the pilot never touches content/
     if "--no-thumbs" not in argv or "--review" in argv:
         import rooms_render
         done = [j for j in todo if any(r["id"] == j["file"] for r in rows)]

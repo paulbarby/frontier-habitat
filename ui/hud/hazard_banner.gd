@@ -21,7 +21,7 @@ var _ev_id = null
 
 func _ready() -> void:
 	theme_type_variation = "ToastPanel"
-	Glass.attach(self, [10, 0, 10, 0])
+	Glass.attach(self)
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	custom_minimum_size.x = 460
 	mouse_filter = Control.MOUSE_FILTER_IGNORE

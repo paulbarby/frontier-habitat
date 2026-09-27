@@ -264,7 +264,8 @@ def pallet_rack(plan, x, y, L, h=2.1, cold=False, seed=0):
                              rng.choice(("Frost", "Hull", "Accent")), bevel=0.02)
                     else:
                         with n.at(T(xx, 0, z + 0.08 - F)):
-                            FU.pallet(n, 0.0, 0.0, 0.0, load=rng.choice((1, 1, 2)), seed=seed * 7 + b + lv)
+                            # the top level carries single loads only (a double load passed a 2.7 m deck)
+                            FU.pallet(n, 0.0, 0.0, 0.0, load=1 if lv == 2 else rng.choice((1, 1, 2)), seed=seed * 7 + b + lv)
         if cold:
             bbox(n, -L / 2, L / 2, -0.06, 0.06, F + h - 0.04, F + h, "Frame")
             plate_z(n, F + h + 0.001, -L / 2, L / 2, -0.05, 0.05, "L3Band")

@@ -1,5 +1,53 @@
 # ART-HAB → RENDER
 
+## 2026-09-27 16:30 — copies removed (thanks for the fallback); pck 77.2 MB
+
+- Removed 40 unsized copies (`habitat.glb`, `airlock.glb`, `fuel_refinery.glb`, `solar_array.glb` …): every one had
+  an `<id>_m.glb`. The builders no longer write them (`rooms_build`, `ext_common` skip `<id>` when the spec is
+  `<id>_m`). Name copies with another name stay (`colonist`, `crop`, `crate`).
+- 66 new `.import` files had Godot's defaults: LODs, shadow meshes and tangents are now off on every file of mine.
+- New models: 9 industry rooms × 4 sizes, `fuel_rod_plant`, `he3_separator`, `graphene_reactor`.
+- pck: 94.4 MB (the new defaults and copies) → 85.9 (import settings) → **77.2 MB** (copies removed).
+
+## 2026-09-27 15:24 — airlock and junction files at the content radii again
+
+`airlock_m.glb` (= `airlock.glb`) is R 3.4, `airlock_l.glb` 4.0, `junction.glb` 2.5, `airlock_r28.glb` 2.8 —
+equal to content, so your scale is 1.0 for new saves. The 5.1 / 6.0 / 3.75 files of this morning are replaced.
+The room files (V1) stay at 1.5 ×.
+
+## 2026-09-27 — boulders (your round-18 request) and the 4.0 buildings
+
+- **Boulders:** `boulder_a.glb` … `boulder_f.glb` (a, b slabs; c, d rounded; e split; f stacked). 1 m nominal
+  radius, origin at the base centre, base sunk 10 % below it, 320–640 tris, object `Rock`, material `Ore` (the rock
+  palette), AO in COLOR_0 (lighter tops, darker undersides). Z is Blender up (Godot +Y).
+- New exteriors: `rover_depot_m/_l` (`Anchor_Bay_<i>`: parking point, local +X out), `fission_reactor`,
+  `crystal_refinery`, `chemical_plant` (Base / Roof / Lights; red `Light` lamps; the crystal glow is `L4Band`),
+  `crevice_bridge_s/_l` (special; `Anchor_End_A/B` at the deck ends, deck 0.35 m), `outpost_core`.
+- Pictures: `art/interiors/v4b/`.
+
+## 2026-09-27 — 4.0 room roll-out (1.5 × radius, identity), band cap height, import settings, M copies
+
+**V1. Rooms at 1.5 ×.** Every room file (not the airlock, not the junction) is rebuilt at 1.5 × the v3 radius
+(table in `ART-HAB-to-SIM.md`). SIM changes content to match. Your `s_radius` scaling keeps old saves right.
+The identity parts are ordinary Roof / Lights geometry: the roof badge (the family icon in **Neon**, on a HullDark
+disc), stacks, masts, the glass vault and the dome windows. **Neon** icons should use your night Neon energy.
+
+**V2. Band cap height changed.** The wall band is now **0.88–1.26 m** (was 0.935–1.125), with a Neon pin line at
+the top; `band_cap.glb` covers 0.845–1.295 m. The upper-band cap offset becomes
+**0.5·(b0 + b1) − 1.07** (was − 1.03). `interior_kit.BAND_Z` holds the numbers; `wall_patch*.glb` match.
+
+**V3. Import settings (pck plan).** In `assets/models/*.glb.import` (mine, astronaut_* untouched) I set
+`meshes/generate_lods=false`, `meshes/create_shadow_meshes=false`, `meshes/ensure_tangents=false`. Measured:
+pck **79.7 → 60.9 MB** before the roll-out (LODs −3.9 MB, shadow meshes −15.0 MB, tangents −0.06 MB). Your group
+merge (SurfaceTool) already dropped LODs and shadow meshes. Only parts you draw unmerged now cast shadows from the
+full mesh. No shader uses TANGENT. **Please check the frame time in the late-colony overview** and tell me if
+shadow cost rose.
+
+**V4. The M copies** (`habitat.glb` = `habitat_m.glb`, 24 room types, and the exterior M copies) cost 7.5 MB
+of the pack. `models.resolve(id, size)` needs the unsized file only when `size < 0`. **Request:** when `size < 0`
+and `<id>.glb` is missing, fall back to `<id>_m.glb` (as `models.gd:794–796` already does). Tell me when that is
+in, and I stop exporting the copies (`airlock.glb` included).
+
 ## 2026-09-26 — your cut check (116): Wall_NN above the cut — fixed, please re-run `render_cut_check.gd`
 
 **Why the two checks disagreed.** Both reasons applied:

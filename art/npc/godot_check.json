@@ -1,7 +1,7 @@
 {
   "clips_shared_bake": true,
   "failures": [],
-  "generated": "2026-09-25T09:53:12",
+  "generated": "2026-09-27T00:29:14",
   "limits": {
     "bone_deg_per_frame": 15.0,
     "fps": 30,
@@ -2432,10 +2432,10 @@
       },
       "ok": true,
       "status": "glb",
-      "triangles": 8712
+      "triangles": 8868
     },
     "suit": {
-      "bake_ms": 87.1,
+      "bake_ms": 61.7,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",
@@ -2522,7 +2522,7 @@
       },
       "ok": true,
       "status": "glb",
-      "triangles": 7345
+      "triangles": 7505
     }
   }
 }

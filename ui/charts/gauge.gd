@@ -42,9 +42,9 @@ func _draw() -> void:
 		var ta: float = a0 + span * clampf((target - vmin) / (vmax - vmin), 0.0, 1.0)
 		draw_line(c + Vector2(cos(ta), sin(ta)) * (r - th - 3.0), c + Vector2(cos(ta), sin(ta)) * (r + 3.0), P.TEXT, 2.0)
 	var vt: String = value_text if value_text != "" else fmt(value)
-	draw_string(Fonts.get_font("mono_b"), Vector2(0, c.y + 22), vt, HORIZONTAL_ALIGNMENT_CENTER, size.x, 18, col)
+	draw_string(Fonts.get_font("mono_b"), Vector2(0, c.y + 22), vt, HORIZONTAL_ALIGNMENT_CENTER, size.x, P.fs(18), col)
 	if label != "":
-		draw_string(_font, Vector2(0, c.y + 38), label, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, P.TEXT_2)
+		draw_string(_font, Vector2(0, c.y + 38), label, HORIZONTAL_ALIGNMENT_CENTER, size.x, P.fs(11), P.TEXT_2)
 
 func _zone_color(v: float) -> Color:
 	for z in zones:

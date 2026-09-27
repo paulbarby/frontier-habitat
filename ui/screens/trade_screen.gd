@@ -51,16 +51,16 @@ func build() -> void:
 	var lp: PanelContainer = card_panel(lb)
 	lp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cols.add_child(lp)
-	_rows_b = Kit.vbox(4)
+	_rows_b = Kit.seam_list(4)
 	lb.add_child(_cols_head(["Item", "Price", "On board", "In colony", "Buy"]))
-	lb.add_child(Kit.scroll(_rows_b))
+	lb.add_child(Kit.well_scroll(_rows_b))
 	var rb: VBoxContainer = card("Sell to the ship", "trend_up", P.GOLD)
 	var rp: PanelContainer = card_panel(rb)
 	rp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cols.add_child(rp)
-	_rows_s = Kit.vbox(4)
+	_rows_s = Kit.seam_list(4)
 	rb.add_child(_cols_head(["Item", "Price", "It wants", "Free here", "Sell"]))
-	rb.add_child(Kit.scroll(_rows_s))
+	rb.add_child(Kit.well_scroll(_rows_s))
 	# Footer
 	var foot: PanelContainer = Kit.panel("WellPanel", false)
 	content.add_child(foot)

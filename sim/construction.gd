@@ -97,6 +97,9 @@ func spawn_active(def_id: String, pos: Vector2, rot: float, size: int = 1) -> Di
 
 # ---------------------------------------------------------------- per-second flow
 func tick_second() -> void:
+	# Test tools (RENDER checks): options.freeze_build stops every construction change.
+	if bool(sim.state.get("options", {}).get("freeze_build", false)):
+		return
 	var blds: Dictionary = sim.state["buildings"]
 	for id in blds.keys():
 		if not blds.has(id):
@@ -124,7 +127,7 @@ func _someone_on_site(b: Dictionary) -> bool:
 	if waited >= int(sim.bal.get("site_clear_wait_s", 60)):
 		b.erase("site_wait")
 		return false
-	var r: float = (1.2 if tube else float(b["radius"])) + 0.71
+	var r: float = (sim.corridor_r() if tube else float(b["radius"])) + 0.71
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive" or a["where"] != "out":
@@ -289,7 +292,7 @@ func occupants(bid: int) -> Array:
 		if int(a["bld"]) == bid and a["where"] != "out":
 			out.append(aid)
 		elif not b.is_empty() and b["kind"] == "link" and a["where"] == "in":
-			if Geometry2D.get_closest_point_to_segment(a["pos"], b["p0"], b["p1"]).distance_to(a["pos"]) < 1.4:
+			if Geometry2D.get_closest_point_to_segment(a["pos"], b["p0"], b["p1"]).distance_to(a["pos"]) < 1.4 + (sim.corridor_r() - 1.2):
 				out.append(aid)
 	return out
 
@@ -302,6 +305,7 @@ func _try_finish_demolition(b: Dictionary) -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	var drop: Vector2 = drop_point(b)
 	sim.upgrades.drop_for_removal(b)
+	sim.vehicles.drop_order(b, false)
 	var pile: int = sim.inv.create_inv("g", 0, "pile", 100000, drop)
 	for res in b["cost"]:
 		var back: int = int(floor(int(b["cost"][res]) * float(sim.bal["demolish_refund_fraction"])))
@@ -328,6 +332,41 @@ func _try_finish_demolition(b: Dictionary) -> void:
 					_try_finish_demolition(l)
 	_remove_record(b)
 	sim.log_event("demolished", "%s was removed. Half of its materials were recovered." % b["name"], [])
+
+## V4 disasters: a structure destroyed at once (an explosion). Its contents are lost (ledger
+## "destroyed"), nothing is salvaged, its links go with it, and its people are not asked.
+func destroy(b: Dictionary, cause: String) -> void:
+	var blds: Dictionary = sim.state["buildings"]
+	if not blds.has(b["id"]):
+		return
+	sim.upgrades.drop_for_removal(b)
+	sim.vehicles.drop_order(b, false)
+	for key in ["inv_in", "inv_out", "inv_fill", "inv_site"]:
+		if int(b.get(key, -1)) != -1 and sim.inv.exists(int(b[key])):
+			sim.inv.release_for_inventory(int(b[key]))
+			var inv: Dictionary = sim.inv.get_inv(int(b[key]))
+			for res in inv.get("items", {}).keys():
+				sim.inv.destroy(int(b[key]), res, int(inv["items"][res]), cause)
+			sim.state["inventories"].erase(int(b[key]))
+	# Piles inside the room go with it.
+	for inv_id in sim.state["inventories"].keys():
+		var pi: Dictionary = sim.state["inventories"].get(inv_id, {})
+		if not pi.is_empty() and pi["ot"] == "g" and int(pi["oid"]) == int(b["id"]):
+			sim.inv.release_for_inventory(int(inv_id))
+			for res in pi["items"].keys():
+				sim.inv.destroy(int(inv_id), res, int(pi["items"][res]), cause)
+			sim.state["inventories"].erase(inv_id)
+	if b["kind"] != "link":
+		for lid in sim.topo.links_of.get(b["id"], []).duplicate():
+			if blds.has(lid):
+				var l: Dictionary = blds[lid]
+				if l["state"] == "blueprint" or l["state"] == "building":
+					cancel_blueprint(lid)
+				else:
+					destroy(l, cause)
+	var name: String = b["name"]
+	_remove_record(b)
+	sim.log_event("destroyed", "%s was destroyed by %s." % [name, cause], [], 3)
 
 func _remove_record(b: Dictionary) -> void:
 	var blds: Dictionary = sim.state["buildings"]

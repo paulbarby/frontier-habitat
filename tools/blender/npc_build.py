@@ -136,6 +136,13 @@ def write_meta(meta):
     doc["collapse_ends_on"] = "dead frame 0 (on the ground); dead is the lie-state loop after collapse"
     doc["pose_rest"] = {k: {"clip": v[0], "frame": v[1]} for k, v in A.POSE_STATE_REST.items()}
     doc["visitors"] = V.palette_json()
+    doc["vehicle_seat"] = dict(A.VEHICLE, note=(
+        "Seat frame (drive_sit, ride_sit): origin on the cabin floor, facing forward; seat top seat_z, seat centre "
+        "seat_back behind the origin (as the chair).  Door frame (board, alight): origin on the ground beside the "
+        "vehicle, facing forward.  seat_offset = the seat-frame origin in the door frame (board, alight: seat on the "
+        "right; board_r, alight_r: the mirror, y > 0).  board ends on ride_sit frame 0 moved by seat_offset: at its "
+        "cut_frame (the last frame) move the body origin to the seat anchor.  alight starts on the same pose: at its "
+        "cut_frame (0) move the body origin from the seat anchor to the door point."))
     tmp = ANIMS_JSON + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=1)

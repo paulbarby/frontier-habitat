@@ -23,16 +23,15 @@ func _ready() -> void:
 	var tier: String = String(aw.get("tier", "bronze"))
 	var col: Color = P.TIER.get(tier, P.GOLD)
 	var st = UiTheme.panel_style("modal")
-	st.bracket = col
-	st.border = P.over_panel(col, 0.6)
+	st.accent_left = col
 	st.glow = P.with_alpha(col, 0.3)
-	st.glow_size = 8.0
-	st.content_margin_left = 14
+	st.shadow = Color(0, 0, 0, 0)
+	st.content_margin_left = 18
 	st.content_margin_right = 20
-	st.content_margin_top = 8
-	st.content_margin_bottom = 8
+	st.content_margin_top = 12
+	st.content_margin_bottom = 12
 	add_theme_stylebox_override("panel", st)
-	Glass.attach(self, [18, 0, 18, 0])
+	Glass.attach(self)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(460, 0)
 	var h: HBoxContainer = Kit.hbox(14)

@@ -14,7 +14,7 @@ extends SceneTree
 
 const Nav = preload("res://presentation/fx_nav.gd")
 const DT := 1.0 / 30.0
-const SAVES := ["res://content/saves/showcase_v3_late.fhsave", "res://build/web_render/scene_final.fhsave"]
+const SAVES := ["res://content/saves/showcase_v3_late.fhsave", "res://build/web_render/scene_final.fhsave", "res://build/web_render/doors8.fhsave"]
 const LOCO := ["walk", "run", "carry_walk", "injured_walk"]
 
 var main
@@ -58,8 +58,16 @@ func _next_save() -> bool:
 		return _next_save()
 	main._import_bytes(FileAccess.get_file_as_bytes(path))
 	main.set_speed(4)
+	main.step_cap_us = 1 << 30
+	# SIM 2026-09-27: a stable save for the gate (no structure starts, finishes or is removed).
+	if main.sim.has_method("set_freeze_build"):
+		main.sim.set_freeze_build(true)
 	if "noyield" in label:
 		main.view.npc.door_yield = false
+	# Deterministic: the plan budget counts plans only (the wall-clock budget made runs differ).
+	main.view.npc.plan_budget_us = 1 << 30
+	if "nogate" in label:
+		main.view.npc.door_gate = false
 	main.rig.target_distance = 60.0
 	main.rig.distance = 60.0
 	var c: Vector2 = Vector2.ZERO
@@ -315,7 +323,7 @@ func _sample() -> void:
 					var dl: Array = cur.get_or_add("d_detail", [])
 					if dl.size() < 40:
 						var lp0: Vector3 = last_logic.get(id, rec["pos"])
-						dl.append("%s %s gs %.2f logical %.2f m/s off %s->%s pz %s speed %.2f tgt %.2f wp %d fade %.2f" % [clip, mode, gs, Vector2(rec["pos"].x - lp0.x, rec["pos"].z - lp0.z).length() / DT / gr, str(last_off.get(id, Vector3.ZERO)), str((rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)), str(pz), float(rec.get("speed", 0.0)), (rec["pos"] as Vector3).distance_to(rec.get("tval", rec["pos"])), (rec.get("wp", []) as Array).size(), float(rec.get("fade", 1.0))])
+						dl.append("id %d f %d sm %s/%s busy %s | %s %s gs %.2f logical %.2f m/s off %s->%s pz %s speed %.2f tgt %.2f wp %d fade %.2f" % [int(id), frames, rec["sm"].cur, rec["sm"].phase, str(rec["sm"].is_busy()), clip, mode, gs, Vector2(rec["pos"].x - lp0.x, rec["pos"].z - lp0.z).length() / DT / gr, str(last_off.get(id, Vector3.ZERO)), str((rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)), str(pz), float(rec.get("speed", 0.0)), (rec["pos"] as Vector3).distance_to(rec.get("tval", rec["pos"])), (rec.get("wp", []) as Array).size(), float(rec.get("fade", 1.0))])
 		last_logic[id] = rec["pos"]
 		last_off[id] = (rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)
 		last[id] = p

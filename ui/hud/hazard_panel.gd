@@ -149,14 +149,7 @@ func _make_card(r: Dictionary) -> Dictionary:
 	var d = hud.data
 	var col: Color = _col(r)
 	var card := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(col.r, col.g, col.b, 0.07)
-	st.border_color = Color(col.r, col.g, col.b, 0.9)
-	st.border_width_left = 3
-	st.content_margin_left = 9
-	st.content_margin_right = 6
-	st.content_margin_top = 5
-	st.content_margin_bottom = 6
+	var st = load("res://ui/theme/list_row.gd").make(col)   # v4 list row: signal bar + seam, no box
 	card.add_theme_stylebox_override("panel", st)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var pos = r["pos"]
@@ -178,7 +171,8 @@ func _make_card(r: Dictionary) -> Dictionary:
 	var eta: Label = Kit.num("", 14, col, true)
 	top.add_child(eta)
 	var place: Label = Kit.label(d.place_text(pos), "SmallLabel", 12, P.TEXT_2)
-	place.clip_text = true
+	place.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
+	place.custom_minimum_size.x = 200
 	v.add_child(place)
 	var row: HBoxContainer = Kit.hbox(6)
 	v.add_child(row)

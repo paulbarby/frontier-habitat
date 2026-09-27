@@ -17,11 +17,12 @@ const DAY_TICKS := 6000
 
 ## Offsets (metres from the lander) of the reference layout. Custom layouts reuse these
 ## places because the reference layout proves they are legal on every tutorial seed.
+## The v3 slots x 1.5: rooms are 1.5 x the v3 radius since V4 (balance.layout_scale).
 const SLOT := {
-	"A1": Vector2(8, -14), "B1": Vector2(1, -14), "W1": Vector2(24, -24), "R1": Vector2(24, -31.5),
-	"O1": Vector2(18, -11), "L1": Vector2(16, 0), "H1": Vector2(30, 0), "A2": Vector2(8, -22),
-	"A3": Vector2(16, -22), "B2": Vector2(1, -19.5), "S1": Vector2(30, -14.5), "K1": Vector2(30, 14),
-	"G1": Vector2(15.5, 16),
+	"A1": Vector2(8, -14) * 1.5, "B1": Vector2(1, -14) * 1.5, "W1": Vector2(24, -24) * 1.5, "R1": Vector2(24, -31.5) * 1.5,
+	"O1": Vector2(18, -11) * 1.5, "L1": Vector2(16, 0) * 1.5, "H1": Vector2(30, 0) * 1.5, "A2": Vector2(8, -22) * 1.5,
+	"A3": Vector2(16, -22) * 1.5, "B2": Vector2(1, -19.5) * 1.5, "S1": Vector2(30, -14.5) * 1.5, "K1": Vector2(30, 14) * 1.5,
+	"G1": Vector2(15.5, 16) * 1.5,
 }
 
 ## Power, water, oxygen plant and airlock of the reference layout, in the same order.

@@ -26,12 +26,16 @@ from mathutils import Vector, Matrix, Quaternion   # noqa: E402
 VARIANTS = ["suit", "indoor"]
 ALL_CLIPS = ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
              "kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit",
-             "lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap"]
+             "lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap",
+             "drive_sit", "ride_sit", "board", "alight", "board_r", "alight_r", "step_up", "step_down",
+             "step_up_r", "step_down_r"]
+STEP_CLIPS = {"step_up": (-1, 1.0), "step_down": (0, 1.0), "step_up_r": (-1, -1.0), "step_down_r": (0, -1.0)}
+VEHICLE_DOOR = {"board": (-1, 1.0), "alight": (0, 1.0), "board_r": (-1, -1.0), "alight_r": (0, -1.0)}
 LOCOMOTION = {"walk", "run", "carry_walk", "injured_walk"}
 LOOPS = {"idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk",
-         "repair_kneel", "sit_idle", "sit_eat", "sit_type", "sleep", "injured_walk", "dead"}
+         "repair_kneel", "sit_idle", "sit_eat", "sit_type", "sleep", "injured_walk", "dead", "drive_sit", "ride_sit"}
 REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep", 0), "kneel": ("repair_kneel", 0),
-        "dead": ("dead", 0)}
+        "dead": ("dead", 0), "vehicle": ("ride_sit", 0)}
 ENTER_EXIT = {"kneel_enter": ("stand", "kneel"), "kneel_exit": ("kneel", "stand"),
               "sit_enter": ("stand", "sit"), "sit_exit": ("sit", "stand"),
               "lie_enter": ("stand", "lie"), "lie_exit": ("lie", "stand"),
@@ -41,7 +45,7 @@ MATERIALS = {"suit": {"SuitMain", "SuitAccent", "Visor", "Pack", "Light"},
 BUDGET = {"suit": 7000, "indoor": 6000}
 STEP_LIMIT_DEG = 15.0
 HEADS = ["Head_0", "Head_1", "Head_2", "Head_3"]
-VIS_KINDS = ["trader", "tourist", "medical", "science", "inspector"]
+VIS_KINDS = ["trader", "tourist", "medical", "science", "inspector", "radiation"]
 VIS_MESHES_BY = {"suit": ["Vis_%s" % k for k in VIS_KINDS],
                  "indoor": ["Vis_%s" % k for k in VIS_KINDS if k != "inspector"] +
                  ["Vis_inspector_h023", "Vis_inspector_h1"]}
@@ -358,6 +362,189 @@ def box_count(co, lo, hi):
 
 
 # --------------------------------------------------------------------------------------
+def handle_dist(p, c, half):
+    """Distance from p to a vertical handle axis through c (+- half)."""
+    z = min(max(p.z, c.z - half), c.z + half)
+    return (p - Vector((c.x, c.y, z))).length
+
+
+ROVER = "vehicle_rover_small.glb"
+
+
+def rover_fit(evals, check):
+    """The crew clips on ART-B's small rover (read-only use of its GLB and anchors): suit vertices inside a vehicle
+    mesh deeper than 1 cm (face-interior closest-point test, as ART-B's vehicle_fit.py); the seat cushion front edge
+    is soft to 3 cm (the chair rule)."""
+    from mathutils.bvhtree import BVHTree
+    path = os.path.join(N.MODEL_DIR, ROVER)
+    if not os.path.exists(path) or "suit" not in evals:
+        check("rover fit (%s)" % ROVER, True, "no rover file: not checked", info=True)
+        return
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.gltf(filepath=path)
+    by = {o.name.split(".")[0]: o for o in bpy.data.objects}
+    for o in bpy.data.objects:                       # open the doors as ART-B's loader does
+        n = o.name.split(".")[0]
+        if n.startswith("Door_") and o.get("stow_deg") is not None:
+            o.matrix_basis = o.matrix_basis @ Matrix.Rotation(math.radians(float(o["stow_deg"])), 4, "X")
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    verts, polys, owner = [], [], []
+    for o in bpy.data.objects:
+        n = o.name.split(".")[0]
+        if o.type != "MESH" or n.startswith(("Light", "Cargo")):
+            continue
+        me = o.evaluated_get(dg).to_mesh()
+        off = len(verts)
+        verts += [o.matrix_world @ q.co for q in me.vertices]
+        polys += [[off + i for i in f.vertices] for f in me.polygons]
+        owner += [n] * len(me.polygons)
+    bvh = BVHTree.FromPolygons(verts, polys)
+
+    def origin(name):
+        return by[name].matrix_world.translation.copy() if name in by else None
+    jobs = []
+    for i, (door, step) in (("1", ("board", "step_up")), ("2", ("board_r", "step_up_r"))):
+        seat, bd, gr = origin("Seat_" + i), origin("Anchor_Board_" + i), origin("Anchor_Ground_" + i)
+        if seat is None or bd is None:
+            continue
+        jobs += [("drive_sit" if i == "1" else "ride_sit", seat), (door, bd), (door.replace("board", "alight"), bd)]
+        if gr is not None:
+            jobs += [(step, gr), (step.replace("up", "down"), gr)]
+    seats = [origin(n) for n in ("Seat_1", "Seat_2") if origin(n) is not None]
+
+    handles = [by[n].matrix_world.translation.copy() for n in by if n.startswith(("Anchor_Grab_", "Anchor_Grip_"))]
+
+    def at_handle(q):                            # the gloved hand wrapped round a handle reaches 7 cm from its axis
+        return any((Vector((q.x, q.y, 0)) - Vector((h.x, h.y, 0))).length <= 0.07 and abs(q.z - h.z) <= 0.16
+                   for h in handles)
+
+    def in_cushion(q):
+        for st in seats:
+            d = q - st
+            if -0.54 <= d.x <= -0.04 and abs(d.y) <= 0.27 and 0.38 <= d.z <= 0.50:
+                return True
+        return False
+    ev = evals["suit"]
+    for c, org in jobs:
+        if c not in ev:
+            continue
+        worst, deep, where = 0, 0.0, None
+        for r in ev[c][::3]:
+            bad = 0
+            for q in r["all"][::2]:
+                pv = org + Vector(q)
+                loc, nrm, idx, d = bvh.find_nearest(pv, 0.25)
+                if loc is None:
+                    continue
+                sd = (pv - loc).dot(nrm)
+                if sd < -0.01 and -sd >= 0.8 * d:
+                    if (in_cushion(loc) and -sd <= 0.03) or at_handle(loc):
+                        continue
+                    bad += 1
+                    if -sd > deep:
+                        deep, where = -sd, "%s at %s (clip frame %s), normal %s" % (
+                            owner[idx], tuple(round(x, 2) for x in loc), tuple(round(x, 2) for x in q),
+                            tuple(round(x, 2) for x in nrm))
+            worst = max(worst, bad)
+        check("rover_small: %s never inside the rover (1 cm; cushion edge soft to 3 cm)" % c, worst == 0,
+              "%d vertices (every 2nd) at worst, deepest %.3f m in %s" % (worst, deep, where))
+
+
+def vehicle_checks(v, ev, vs, check):
+    """V4 vehicle seat: seat loops in the seat frame, board / alight in the door frame (see astronaut_anims.json
+    vehicle_seat)."""
+    sz, sb, sw = vs["seat_z"], vs["seat_back"], vs["seat_width"]
+    fz, edge = vs["floor_z"], vs["floor_edge_y"]
+    O = Vector(vs["seat_offset"])
+    loops = ("ride_sit", "drive_sit")
+    for c in loops:
+        co = ev[c][0]["all"]
+        m = (co[:, 0] > -sb - 0.22) & (co[:, 0] < -0.15) & (np.abs(co[:, 1]) < sw / 2 - 0.02)
+        low = float(co[m, 2].min())
+        check("%s: %s rests on the vehicle seat (top %.2f m, +/- 1.5 cm)" % (v, c, sz), sz - 0.015 <= low <= sz + 0.015,
+              "lowest body point over the seat %.3f m" % low)
+    inside = max(box_count(r["all"], (-sb - 0.22, -sw / 2 + 0.02, sz - 0.06), (-sb + 0.19, sw / 2 - 0.02, sz - 0.02))
+                 for c in loops for r in ev[c])
+    check("%s: seat loops never more than 2 cm into the seat" % v, inside == 0, "%d vertices at worst" % inside)
+    feet = []
+    for c in loops:
+        for r in ev[c]:
+            co = r["all"]
+            m = (co[:, 0] > -0.20) & (co[:, 0] < 0.30) & (co[:, 2] < 0.25)
+            feet.append(float(co[m, 2].min()) if m.any() else 9.0)
+    check("%s: seat loops keep the feet on the cabin floor (lowest point -0.01..0.02 m)" % v,
+          -0.01 <= min(feet) and max(feet) <= 0.02, "lowest point %.3f..%.3f m" % (min(feet), max(feet)))
+    top = max(r["zmax"] for c in loops for r in ev[c])
+    check("%s: seated top below the headroom line %.2f m (the roof goes above it)" % (v, vs["headroom_z"]),
+          top <= vs["headroom_z"], "highest point %.3f m" % top)
+    back = min(float(r["all"][:, 0].min()) for c in loops for r in ev[c])
+    check("%s: seated body in front of x %.2f m (seat back / pack notch line)" % (v, vs["pack_clear_x"]),
+          back >= vs["pack_clear_x"], "rearmost point x %.3f m" % back)
+    half = vs.get("handle_half", 0.10)
+    worst, travel = 0.0, 0.0
+    for s, g in zip("LR", vs["grips"]):
+        pts = [r["head"]["prop." + s] for r in ev["drive_sit"]]
+        worst = max(worst, max(handle_dist(q, Vector(g), half) for q in pts))
+        arr = np.array([q[:] for q in pts])
+        travel = max(travel, float(np.linalg.norm(arr.max(axis=0) - arr.min(axis=0))))
+    check("%s: drive_sit palms on the fixed control handles (<= 2 cm from the axis)" % v, worst <= 0.02,
+          "worst %.3f m" % worst)
+    check("%s: drive_sit hand travel <= 2 cm (fixed handles)" % v, travel <= 0.02, "%.3f m" % travel)
+    r0 = ev["ride_sit"][0]
+    for c, (fr, sgn) in VEHICLE_DOOR.items():
+        o = Vector((O.x, O.y * sgn, O.z))
+        a = ev[c][fr]
+        d, bn, _ = pose_diff(a, r0)
+        dp = (a["head"]["hips"] - (r0["head"]["hips"] + o)).length
+        which = "end" if fr == -1 else "start"
+        check("%s: %s %s = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)" % (v, c, which),
+              d <= 1.0 and dp <= 0.005, "worst %.3f deg (%s), hips %.4f m" % (d, bn, dp))
+        other = 0 if fr == -1 else -1
+        d, bn, dp = pose_diff(ev[c][other], ev["idle"][0])
+        check("%s: %s %s on the stand rest pose (<= 1 deg)" % (v, c, "start" if other == 0 else "end"),
+              d <= 1.0 and dp <= 0.005, "worst %.3f deg, hips %.4f m" % (d, dp))
+        # the cabin floor (y beyond the sill) and the seat are solid
+        worst_floor, worst_seat = 0, 0
+        for r in ev[c]:
+            co = r["all"]
+            ys = co[:, 1] * sgn
+            m = (ys < edge - 0.03) & (co[:, 2] < fz - 0.02) & (co[:, 0] > -0.75) & (co[:, 0] < 0.60)
+            worst_floor = max(worst_floor, int(m.sum()))
+            lo = (o.x - sb - 0.22, o.y - sw / 2 + 0.02, o.z + sz - 0.06)
+            hi = (o.x - sb + 0.19, o.y + sw / 2 - 0.02, o.z + sz - 0.02)
+            if sgn < 0:
+                lo, hi = (lo[0], min(lo[1], hi[1]), lo[2]), (hi[0], max(lo[1], hi[1]), hi[2])
+            worst_seat = max(worst_seat, box_count(co, lo, hi))
+        check("%s: %s never goes through the cabin floor (%.2f m, beyond the sill) or the seat" % (v, c, fz),
+              worst_floor == 0 and worst_seat == 0, "%d floor, %d seat vertices at worst" % (worst_floor, worst_seat))
+    gh = Vector(vs["grab_handle"]) + O
+    for c, s in (("board", "R"), ("alight", "L")):
+        near = min(handle_dist(r["head"]["prop." + s], gh, half) for r in ev[c])
+        check("%s: %s %s palm on the grab handle (<= 2 cm from its axis)" % (v, c, "right" if s == "R" else "left"),
+              near <= 0.02, "%.3f m" % near)
+    # step_up / step_down: ground point <-> door point on the running board (step_offset)
+    so = Vector(vs["step_offset"])
+    for c, (fr, sgn) in STEP_CLIPS.items():
+        if c not in ev:
+            continue
+        o = Vector((so.x, so.y * sgn, so.z))
+        a = ev[c][fr]
+        d, bn, _ = pose_diff(a, ev["idle"][0])
+        dp = (a["head"]["hips"] - (ev["idle"][0]["head"]["hips"] + o)).length
+        check("%s: %s %s = stand rest moved by step_offset (<= 1 deg, 5 mm)" % (v, c, "end" if fr == -1 else "start"),
+              d <= 1.0 and dp <= 0.005, "worst %.3f deg, hips %.4f m" % (d, dp))
+        other = 0 if fr == -1 else -1
+        d, bn, dp = pose_diff(ev[c][other], ev["idle"][0])
+        check("%s: %s %s on the stand rest pose at the ground point (<= 1 deg)" % (v, c, "start" if other == 0 else "end"),
+              d <= 1.0 and dp <= 0.005, "worst %.3f deg, hips %.4f m" % (d, dp))
+        g = gh + o
+        g = Vector((g.x, g.y if sgn > 0 else -(gh.y + so.y), g.z)) if sgn < 0 else g
+        s = "R" if sgn > 0 else "L"
+        near = min(handle_dist(r["head"]["prop." + s], g, half) for r in ev[c])
+        check("%s: %s palm on the grab handle (<= 2 cm from its axis)" % (v, c), near <= 0.02, "%.3f m" % near)
+
+
 def run(renders):
     t0 = time.time()
     meta_path = os.path.join(N.MODEL_DIR, "astronaut_anims.json")
@@ -560,6 +747,9 @@ def run(renders):
             inside = max(box_count(r["all"], (-sb - 0.22, -0.23, sz - 0.06), (-sb + 0.19, 0.23, sz - 0.02))
                          for c in ("sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit") if c in ev for r in ev[c])
             check("%s: no body more than 2 cm into the seat, front 3 cm edge soft (sit clips)" % v, inside == 0, "%d vertices at worst" % inside)
+        vs = meta.get("vehicle_seat", {})
+        if vs and all(c in ev for c in ("ride_sit", "drive_sit") + tuple(VEHICLE_DOOR)) and "idle" in ev:
+            vehicle_checks(v, ev, vs, check)
         if "sleep" in ev:
             bz, bb = fur.get("bed_z", 0.55), fur.get("bed_back", 0.55)
             co = ev["sleep"][0]["all"]
@@ -702,8 +892,9 @@ def run(renders):
     groups_ok = all(set(L.get("suit", {})) == {"SuitMain", "SuitHard", "Pack", "SuitAccent"} and
                     set(L.get("indoor", {})) == {"Jumpsuit", "SuitAccent"} and
                     L.get("mesh") == "Vis_%s" % L.get("kind") for L in looks)
-    check("astronaut_anims.json visitors: 5 kinds, tourist 3 sets, colour groups and mesh per look",
-          kinds == sorted(VIS_KINDS) and tsets == [0, 1, 2] and groups_ok and len(looks) == 7 and
+    check("astronaut_anims.json looks: 5 visitor kinds + radiation (look 7), tourist 3 sets, groups, meshes",
+          kinds == sorted(VIS_KINDS) and tsets == [0, 1, 2] and groups_ok and len(looks) == 8 and
+          vm.get("work_looks", {}).get("radiation") == 7 and looks[7]["kind"] == "radiation" and
           vm.get("meshes") == {k: VIS_MESHES_BY[k] for k in ("suit", "indoor")},
           "%d looks, kinds %s, tourist sets %s" % (len(looks), kinds, tsets))
 
@@ -728,6 +919,14 @@ def run(renders):
     bad = [c for c in ALL_CLIPS if c not in clips_meta]
     check("astronaut_anims.json lists every clip", not bad, "missing %s" % bad if bad else "%d clips" % len(ALL_CLIPS))
     check("astronaut_anims.json fps 30", meta.get("fps") == 30, str(meta.get("fps")))
+    vs = meta.get("vehicle_seat", {})
+    ok = bool(vs) and all(clips_meta.get(c, {}).get("cut_frame") is not None and "seat_offset" in clips_meta.get(c, {})
+                          for c in VEHICLE_DOOR)
+    check("astronaut_anims.json vehicle_seat and board/alight cut frames and seat offsets", ok,
+          "; ".join("%s cut %s offset %s" % (c, clips_meta.get(c, {}).get("cut_frame"),
+                                             clips_meta.get(c, {}).get("seat_offset")) for c in VEHICLE_DOOR))
+
+    rover_fit(evals, check)
 
     sheets = []
     if renders:
