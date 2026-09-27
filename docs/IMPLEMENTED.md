@@ -167,3 +167,22 @@ world generation 207 ms; web pck 62.3 MB (v2: 32.4 MB). Tests: 60 / 60.
   people will see the kitchen buffer swing.
 - The reference driver repairs its own layout when the terrain refuses a spot. That is
   deliberate (a seed is not a promise), but it means the demo is not identical on every seed.
+
+## Version 4.0 preview (`docs/V4_DESIGN.md`, released as a preview 28 September 2026)
+
+Built: 2,560 m planet with terrain features, horizon sun and radiation; fog of war, 23 points of
+interest, finds, satellite; multi-base with Outpost Kits; rover depot, small and medium rovers,
+hopper, routes; colonist orders and job priorities; 72 items, 46 recipes, 82 techs in three tiers;
+fission reactor with a deterministic meltdown, crystal refinery and chemical plant risks,
+radiation dose; 1.5x rooms with family roof identity; 12 new industry buildings; glass-and-metal
+interface with window manager, Find, Advisor, Codex, overlays, tech tree, vehicle, orders and
+reactor screens; version 4.0.0 in the menu.
+
+Measured: tests 106/106; audio probe PASS (-23.6 dBFS); pck 78.3 MB; showcase_v4 overview
+58-60 fps, draw calls <= 1,201; worst sim tick 16-20 ms in 900 s; tick 1.74 ms at 100 colonists +
+6 vehicles. Critic round 22: all v4 subjects pass (mean 0.76 over 32 subjects).
+
+Open (preview): round-22 RENDER polish (radiation zone look, breach size, fog edge, POI models,
+hopper dust, crevice wall pattern); one 67-100 ms frame at the first deposit find in about 1 run
+in 3; rover body tilt cap 24 deg (target 15); 40 ms processing per frame at speed 4 on a new
+Frontier game not investigated; nobody has played it by hand.

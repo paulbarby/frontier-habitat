@@ -1,8 +1,15 @@
-# Frontier Habitat 3.1
+# Frontier Habitat 4.0 (preview)
 
 ![Frontier Habitat key art](art/key_art.png)
 
 **Play in the browser:** https://paulbarby.github.io/frontier-habitat/
+
+**Version 4.0 preview** adds a 2,560 m planet (mountains, plateaus, deep dark craters with real shadows, crevices, boulder fields, radiation), fog of war with 23 points of interest, several bases founded with Outpost Kits, a rover depot with small and medium rovers, a hopper and a satellite, colonist orders (go, board, explore, survey, work at) and job priorities, 72 items / 46 recipes / 82 techs in basic, mid and high-end tiers, a fission reactor that can melt down and destroy a base, 1.5x larger rooms that read by family from the overview, and a new glass-and-metal interface with Find, Advisor, Codex and overlays. It is a preview: visual polish from the last critic round is still open (see docs/IMPLEMENTED.md). Contract: docs/V4_DESIGN.md.
+
+| | |
+|---|---|
+| ![v4 showcase](art/screenshots/v4_01_showcase.png) | ![Vehicles](art/screenshots/v4_02_vehicles.png) |
+| ![Reactor](art/screenshots/v4_03_reactor.png) | ![Tech tree](art/screenshots/v4_04_tech_tree.png) |
 
 **Version 3.1** adds visiting ships and visitors: six ship kinds land on an upgraded pad
 (traders with a trade screen and credits, immigrant shuttles where you choose each settler,
