@@ -13,6 +13,7 @@ const Models = preload("res://presentation/models.gd")
 const KIND_COL := {"wreck": Color(1.0, 0.62, 0.3), "derelict_probe": Color(0.4, 0.85, 1.0), "meteorite_field": Color(0.95, 0.45, 0.35),
 	"cave": Color(0.7, 0.55, 1.0), "anomaly": Color(1.0, 0.4, 0.95), "rich_deposit": Color(1.0, 0.82, 0.3)}
 const ORBIT_H := 420.0
+const POI_MODEL := {"wreck": "poi_wreck", "derelict_probe": "poi_probe", "cave": "poi_cave", "meteorite_field": "poi_meteorites", "anomaly": "poi_anomaly"}
 
 var view
 var sim
@@ -90,14 +91,48 @@ func _make_poi(p: Dictionary) -> Dictionary:
 		var tpl: Dictionary = Models.prop(ids, s)
 		var xf := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3(0, 0, 1), tilt), Vector3(pos.x, view.h(pos.x, pos.y) - sink, pos.y)).scaled_local(Vector3(s, s, s))
 		(e["handles"] as Array).append(view.inst.add(tpl, xf))
+	# Critic round 22: a readable model or mark 6-12 m across. ART-HAB's poi_* models when present
+	# (authored at size), else the procedural look below; a ground mark under every POI.
+	var mark: MeshInstance3D = view.decal_ring(1.0, 0.001, 48, Color(col.r, col.g, col.b, 0.75) if kind == "anomaly" else Color(0.07, 0.05, 0.04, 0.85), 9 if kind == "anomaly" else 5)
+	mark.position = Vector3(c.x, y, c.y)
+	mark.scale = Vector3(6.0, 1, 6.0)
+	add_child(mark)
+	e["mark"] = mark
+	var art: String = String(POI_MODEL.get(kind, ""))
+	if art != "" and Models.has_model(art):
+		var ayaw: float = rng.randf() * TAU
+		if kind == "cave":
+			# The cave mouth is the model's +X (ART-HAB): turn it toward the approach, the nearest base
+			# (lander or outpost core).
+			var home := Vector2(-1, -1)
+			for b in sim.state["buildings"].values():
+				if String(b["def"]) in ["lander", "outpost_core"]:
+					var bp: Vector2 = b["pos"]
+					if home.x < 0.0 or bp.distance_to(c) < home.distance_to(c):
+						home = bp
+			if home.x >= 0.0:
+				var dv: Vector2 = (home - c).normalized()
+				ayaw = atan2(-dv.y, dv.x)
+		# On a slope the model stands on the highest ground under its 10 m footprint (not buried).
+		var hi: float = y
+		for k in 8:
+			var aa: float = TAU * float(k) / 8.0
+			hi = maxf(hi, view.h(c.x + cos(aa) * 4.0, c.y + sin(aa) * 4.0))
+		add.call([art], c, 1.0, ayaw, 0.0, -(hi - y) * 0.7)
+		kind = "art"
 	match kind:
+		"art":
+			pass
 		"wreck":
 			add.call(["ship_courier", "ship_trader"], c, 0.8, rng.randf() * TAU, deg_to_rad(18.0), 1.6)
 			for k in 7:
 				var q: Vector2 = c + Vector2(rng.randf_range(-14, 14), rng.randf_range(-14, 14))
 				add.call(["fragments", "rock_c"], q, rng.randf_range(0.5, 1.1), rng.randf() * TAU, 0.0, 0.1)
 		"derelict_probe":
-			add.call(["satellite"], c, 1.0, rng.randf() * TAU, deg_to_rad(35.0), 0.6)
+			add.call(["satellite"], c, 2.6, rng.randf() * TAU, deg_to_rad(35.0), 1.2)
+			for k in 5:
+				var qp: Vector2 = c + Vector2(rng.randf_range(-7, 7), rng.randf_range(-7, 7))
+				add.call(["fragments", "rock_c"], qp, rng.randf_range(0.5, 0.9), rng.randf() * TAU, 0.0, 0.1)
 		"meteorite_field":
 			for k in 9:
 				var q2: Vector2 = c + Vector2(rng.randf_range(-22, 22), rng.randf_range(-22, 22))
@@ -115,7 +150,10 @@ func _make_poi(p: Dictionary) -> Dictionary:
 				var a: float = TAU * float(k) / 5.0
 				add.call(["boulder_a", "rock_a"], c + Vector2(cos(a), sin(a)) * 7.5, rng.randf_range(1.6, 3.0), a, 0.0, 0.3)
 		"anomaly":
-			add.call(["fragments", "meteor_rock"], c, 2.2, 0.0, 0.0, 0.2)
+			add.call(["fragments", "meteor_rock"], c, 3.4, 0.0, 0.0, 0.3)
+			for k in 4:
+				var a2: float = TAU * float(k) / 4.0 + 0.4
+				add.call(["rock_f", "meteor_rock"], c + Vector2(cos(a2), sin(a2)) * 4.5, 1.6, a2, deg_to_rad(20.0), 0.4)
 			view.fx.emitter_set("poi_%d" % int(p["id"]), "pulse", Vector3(c.x, y + 1.5, c.y), 1.0)
 		"rich_deposit":
 			for k in 8:
@@ -200,12 +238,13 @@ func _sync_sats(ex, _delta: float) -> void:
 		node.global_transform = Transform3D(Basis().scaled(Vector3(3.0, 3.0, 3.0)), Vector3(x, ORBIT_H, z))
 		var ground: float = view.h(clampf(x, 0.0, size), clampf(z, 0.0, size))
 		var beam: MeshInstance3D = e["beam"]
-		beam.visible = not done and bool(s.get("uplink", true))
+		# Critic round 23: no beam and no square frame; a soft light band slides along the strip.
+		beam.visible = false
 		beam.global_transform = Transform3D(Basis().scaled(Vector3(1.0, (ORBIT_H - ground), 1.0)), Vector3(x, (ORBIT_H + ground) * 0.5, z))
 		var line: MeshInstance3D = e["line"]
-		line.visible = beam.visible
+		line.visible = not done and bool(s.get("uplink", true))
 		line.position = Vector3(x, ground, z)
-		line.scale = Vector3(size / float(nb) * 0.5, 1, size / float(nb) * 0.5)
+		line.scale = Vector3(size / float(nb) * 0.35, 1, size / float(nb) * 0.55)
 	for id in sats.keys():
 		if not seen.has(id):
 			for k in ["node", "beam", "line"]:
@@ -254,7 +293,7 @@ func _make_sat() -> Dictionary:
 	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(beam)
 	# The scan line: a flowing band across the strip being mapped (north-south at the satellite).
-	var line: MeshInstance3D = view.decal_ring(1.0, 0.97, 4, Color(0.35, 0.9, 1.0, 0.9), 2, 1.0, 1.0)
+	var line: MeshInstance3D = view.decal_ring(1.0, 0.001, 48, Color(0.62, 0.92, 1.0, 0.55), 9)
 	add_child(line)
 	return {"node": node, "beam": beam, "line": line}
 

@@ -586,3 +586,33 @@ Deep Scan the deposits in it are surveyed too. Logs `satellite_launched`, `satel
 - **Parking**: vehicles now stop on ground of 10 deg or less (`park_slope_deg` 10). showcase_v4 rebuilt.
 - **reactor_stage**: each command sets exactly the stage it names at once (row and record, with its log);
   `breach` explodes in the same tick from any stage. Test `v4_reactor_stage_debug` (normal -> breach in one command).
+
+## 2026-09-28 — the outside colonist "in a corridor" on the Frontier save
+
+- The tube at (1328.3, 1301.7) is **Corridor 8 (id 547), a blueprint** in `frontier_game.fhsave`: a planned
+  corridor, not built. With `set_freeze_build(true)` it stays a plan for your whole run. A plan is open ground
+  until work starts (the walking grids close a corridor from state "building" on), so walking over it is by
+  design. Please skip `state == "blueprint"` corridors in `render_path_check.gd` (SIM's `outside_problems` does).
+  Replaying your save for a game day (with and without freeze_build) shows no body in a built tube.
+- Hardened anyway: built corridor tubes now also close the coarse 8 m long-walk grid (every cell the tube can
+  touch), and a long walk's first and last straight stretches are walked on the fine grid wherever they cross a
+  closed cell. The rover grid is unchanged (vehicles use depot bays inside bases).
+- Test `v31_outside_paths_clear_frontier`: 4 days of the reference campaign on the Frontier map, no body outside
+  in a structure or a built tube, every straight stretch of every outside walk clear of built tubes, and every
+  built tube closed on the coarse grid.
+
+## 2026-09-28 — rovers never drive through a corridor; depot bays stay open
+
+- Built corridor tubes close the rover grid (half a rover's width added). A drive's first and last straight
+  stretches must also clear every tube and structure. A drive that finds no way returns code `no_route`; the
+  vehicle does not move, `block` = `no_route`, and the row has `block_text` "No route: the way is blocked"
+  (log `vehicle_stopped` once). The check is bounded: closed areas of the rover grid are found once per change
+  (a fill of at most 6,000 cells), so a closed-in start or end fails at once (no whole-map search).
+- A driving vehicle plans the rest of its way again when structures change (never through a new tube).
+- Placement refuses, with code `depot_blocked` "This would block the rover depot.": a corridor or structure on a
+  bay's taxi stretch or 6 m in front of a bay door; anything that would cut every bay of a depot from open ground
+  (planned structures count as built); and a new depot whose bay doors face something already there.
+- A depot closed in already (an old save) is left as it is: its vehicles say "no route", other placements near it
+  are not refused for it, and the game goes on.
+- showcase_v4 rebuilt (the depot faces open ground; the route rover drives its route). Test
+  `v4_rover_tubes_and_blocks`.

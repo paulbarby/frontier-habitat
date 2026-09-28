@@ -40,6 +40,7 @@ func tests() -> Array:
 		["long_v4_perf_100_colonists_6_vehicles", long_v4_perf],
 		["long_v4_tick_max", long_v4_tick_max],
 		["v4_reactor_stage_debug", v4_reactor_stage_debug],
+		["v4_rover_tubes_and_blocks", v4_rover_tubes_and_blocks],
 	]
 
 static func _fresh_world(sim, seed_value: int):
@@ -1767,6 +1768,9 @@ func v4_showcase(t) -> void:
 	var alive0: int = sim.alive_count()
 	sim.run_seconds(130.0)
 	t.check(int(sim.explore.sats()[0]["bands_done"]) >= bands0 + 2, "the satellite maps new bands (%d -> %d)" % [bands0, int(sim.explore.sats()[0]["bands_done"])])
+	for row in sim.vehicles.list():
+		if not (row["route"] as Dictionary).is_empty():
+			t.check(String(row["block"]) != "no_route" and (int(row["route"].get("trips", 0)) >= 1 or row["state"] == "driving"), "the route rover drives its route (no closed-in bay): %s" % str(row["route"]))
 	t.eq(sim.inv.audit(), {}, "ledger after a minute")
 	t.eq(sim.alive_count(), alive0, "nobody died in the minute")
 	var cl: Dictionary = H.clone_by_save(sim)
@@ -1842,5 +1846,105 @@ func v4_reactor_stage_debug(t) -> void:
 	t.eq(H.log_entries(sim, "reactor_breach").size(), 1, "the breach is logged")
 	t.eq(H.log_entries(sim, "reactor_warning").size(), 1, "no warning after the breach")
 	t.eq(sim.inv.audit(), {}, "ledger")
+	g.dispose()
+	t.done()
+
+## Rovers never drive through a built corridor tube (Paul: bodies through structures); a
+## placement that would close a depot's bays in is refused; a drive with no way stops at once
+## with its reason (no long search); a depot already closed in (an old save) says "no route" and
+## the game goes on.
+func v4_rover_tubes_and_blocks(t) -> void:
+	var g = H.Game.new(1001, false)
+	var sim = g.sim
+	sim.new_game(1001, "frontier", {"debug": true})
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	var lander: Dictionary = sim.state["buildings"][int(sim.state["lander_id"])]
+	var dp: Vector2 = _spot(sim, "rover_depot", lander["pos"], 60.0, 120.0, 2)
+	var did: int = int(g.cmd("place_finished", {"def": "rover_depot", "x": dp.x, "y": dp.y, "size": 2})["id"])
+	var d: Dictionary = sim.state["buildings"][did]
+	var v: Dictionary = sim.vehicles.get_v(int(g.cmd("spawn_vehicle", {"kind": "medium_rover", "depot": did})["id"]))
+	var drv: Dictionary = {}
+	for aid in sim.state["agents"]:
+		if drv.is_empty():
+			drv = sim.state["agents"][aid]
+	H.put_outside(sim, drv, sim.vehicles.board_point(v), sim.agents.suit_cap())          # test set-up
+	t.check(sim.vehicles.board(drv, int(v["id"])), "the driver gets in")
+	# A corridor across the straight way out: two habitats either side of the line, joined.
+	var ex: Vector2 = sim.vehicles.bays(d)[2]["exit"]
+	var goal: Vector2 = _drive_target(sim, ex + Vector2(160, 0), 1.0)
+	if goal.x < 0.0:
+		goal = _drive_target(sim, ex, 160.0)
+	var mid: Vector2 = ex.lerp(goal, 0.5)
+	var side: Vector2 = (goal - ex).normalized().orthogonal()
+	var errs: Array = []
+	var h1: Dictionary = H.spawn(sim, "habitat", mid + side * 17.0 - sim.world.center, 0.0, errs)
+	var h2: Dictionary = H.spawn(sim, "habitat", mid - side * 17.0 - sim.world.center, 0.0, errs)
+	var tube: Dictionary = {}
+	if errs.is_empty():
+		tube = H.link_now(sim, "corridor", int(h1["id"]), int(h2["id"]), errs)
+	if not t.check(errs.is_empty() and not tube.is_empty(), "a corridor across the way (%s)" % str(errs)):
+		g.dispose()
+		t.done()
+		return
+	g.run(2)
+	t.check(bool(g.cmd("vehicle_drive", {"id": int(v["id"]), "x": goal.x, "y": goal.y})["ok"]), "drive past it")
+	var worst := 1e9
+	var steps := 0
+	while v["state"] == "driving" and steps < 4000:
+		g.step()
+		steps += 1
+		worst = minf(worst, Geometry2D.get_closest_point_to_segment(v["pos"], tube["p0"], tube["p1"]).distance_to(v["pos"]))
+	t.eq(v["state"], "parked", "it arrived")
+	t.check(worst > sim.corridor_r() + 1.0, "it never came into the tube (closest %.1f m from its axis)" % worst)
+	# No way: a mountain inside; the drive is refused at once with the reason, the rover stays.
+	var peak := Vector2(-1, -1)
+	for mt in sim.world.mountains:
+		for q in mt["pts"]:
+			if peak.x < 0.0 and not sim.nav.rover_ok(q) and sim.nav._rover_end(q) == null:
+				peak = q
+	if t.check(peak.x > 0.0, "a closed mountain point"):
+		var p0: Vector2 = v["pos"]
+		var t0: int = Time.get_ticks_usec()
+		var r: Dictionary = g.cmd("vehicle_drive", {"id": int(v["id"]), "x": peak.x, "y": peak.y})
+		var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0
+		t.eq(r["code"], "no_route", "no route")
+		t.eq(sim.vehicles.list()[0]["block_text"], "No route: the way is blocked", "with the reason")
+		t.check((v["pos"] as Vector2) == p0 and v["state"] == "parked", "the rover does not move")
+		t.check(ms < 20.0, "the refusal is quick (%.1f ms)" % ms)
+	# Placement: a corridor right across all bay doors is refused.
+	var hp1: Vector2 = dp + Vector2(float(d["radius"]) + 3.0, 18.0).rotated(float(d["rot"]))
+	var hp2: Vector2 = dp + Vector2(float(d["radius"]) + 3.0, -18.0).rotated(float(d["rot"]))
+	var e2: Array = []
+	var a1: Dictionary = H.spawn(sim, "junction", hp1 - sim.world.center, 0.0, e2)
+	var a2: Dictionary = H.spawn(sim, "junction", hp2 - sim.world.center, 0.0, e2)
+	if t.check(e2.is_empty(), "two junctions beside the depot doors (%s)" % str(e2)):
+		t.eq(sim.place.check_link("corridor", int(a1["id"]), int(a2["id"]))["code"], "depot_blocked", "a corridor across the bay doors is refused")
+		t.eq(sim.place.REASONS["depot_blocked"], "This would block the rover depot.", "with its text")
+	# An old save with a closed-in depot: the corridor was there first, the depot was added
+	# without the check (test set-up); the rover says "no route" and the game goes on.
+	var dp2: Vector2 = _spot(sim, "rover_depot", lander["pos"], 150.0, 260.0, 1)
+	var j1: Dictionary = H.spawn(sim, "junction", dp2 + Vector2(12.0, 17.0) - sim.world.center, 0.0, e2)
+	var j2: Dictionary = H.spawn(sim, "junction", dp2 + Vector2(12.0, -17.0) - sim.world.center, 0.0, e2)
+	var tb2: Dictionary = {}
+	if e2.is_empty():
+		tb2 = H.link_now(sim, "corridor", int(j1["id"]), int(j2["id"]), e2)
+	if t.check(e2.is_empty() and not tb2.is_empty(), "a corridor where the doors will be (%s)" % str(e2)):
+		var d2: Dictionary = sim.build.spawn_active("rover_depot", dp2, 0.0, 1)            # test set-up: bypasses placement
+		sim.topo.mark_dirty()
+		g.run(2)
+		t.check(not sim.nav._apron_open({"pos": dp2, "bays": sim.vehicles.bays(d2)}), "the depot is closed in")
+		t.eq(sim.place.check_building("solar_array", sim.place.snap_pos(dp2 + Vector2(-40, 0)), 0.0), "ok", "building near a depot that was closed in before is still allowed")
+		sim.vehicles.alight_all(v)
+		var bay2: Dictionary = sim.vehicles.bays(d2)[0]
+		v["pos"] = bay2["pos"]                                                                # test set-up: parked in its bay
+		v["bay"] = 0
+		v["depot"] = int(d2["id"])
+		H.put_outside(sim, drv, sim.vehicles.board_point(v), sim.agents.suit_cap())
+		sim.vehicles.board(drv, int(v["id"]))
+		t.eq(g.cmd("vehicle_drive", {"id": int(v["id"]), "x": goal.x, "y": goal.y})["code"], "no_route", "a closed-in depot: no route")
+		t.eq(String(v["block"]), "no_route", "it says why")
+		g.run(600)
+		t.eq(v["pos"], bay2["pos"], "it stayed in its bay")
+	t.eq(sim.inv.audit(), {}, "the game goes on (ledger)")
 	g.dispose()
 	t.done()

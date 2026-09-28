@@ -33,6 +33,7 @@ const REASONS := {
 	"ship": "The Meridian takes no corridor or cable.",
 	"overlap_ship": "Overlaps the wreck of the Meridian.",
 	"door_blocked": "The door would open onto equipment. Choose another side of the room.",
+	"depot_blocked": "This would block the rover depot.",
 }
 
 func _init(s) -> void:
@@ -150,6 +151,15 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 			open += 1
 	if open == 0:
 		return "blocked_entrance"
+	# V4: a rover depot's bays must stay reachable (rovers never drive through a structure or a
+	# tube); a new depot must not stand closed in either.
+	if sim.nav.has_method("depot_cut"):
+		var nd := {}
+		if bool(base.get("depot", false)):
+			var probe := {"pos": pos, "rot": rot, "radius": r, "def": def_id, "size": size, "level": 1, "id": -1}
+			nd = {"pos": pos, "radius": r, "bays": sim.vehicles.bays(probe)}
+		if sim.nav.depot_cut({"c": pos, "r": r}, nd):
+			return "depot_blocked"
 	return "ok"
 
 func _terrain_blocked(p: Vector2) -> bool:
@@ -345,6 +355,9 @@ func check_link(def_id: String, a_id: int, b_id: int) -> Dictionary:
 	var dh: float = absf(sim.world.height_at(p0.x, p0.y) - sim.world.height_at(p1.x, p1.y))
 	if dh / maxf(1.0, length) > 0.4:
 		return {"code": "slope"}
+	# V4: a rover depot's bays must stay reachable (rovers never drive through a tube).
+	if sim.nav.has_method("depot_cut") and sim.nav.depot_cut({"p0": p0, "p1": p1}):
+		return {"code": "depot_blocked"}
 	var n10: int = maxi(1, int(ceil(length / 10.0)))
 	return {"code": "ok", "p0": p0, "p1": p1, "length": length, "cost": _scaled(bal["corridor_cost_per_10m"], n10)}
 

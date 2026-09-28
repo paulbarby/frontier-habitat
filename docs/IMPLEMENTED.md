@@ -186,3 +186,13 @@ Open (preview): round-22 RENDER polish (radiation zone look, breach size, fog ed
 hopper dust, crevice wall pattern); one 67-100 ms frame at the first deposit find in about 1 run
 in 3; rover body tilt cap 24 deg (target 15); 40 ms processing per frame at speed 4 on a new
 Frontier game not investigated; nobody has played it by hand.
+
+### 4.0 final pass (28 September 2026, after the preview)
+Round-22 and round-23 critic fixes landed (radiation stain, breach 2x with dust column, soft fog
+edge, 5 point-of-interest models, hopper dust and glow, crevice walls and round ends, satellite
+scan band, rover tilt cap 15 deg, depot detail, logistics crane and light roof, outpost ring deck
+and flag, window sizes, 12 px tech-tree text). Rovers no longer drive through built corridor
+tubes; placement protects depot bays. Worst sim tick 17.7-19.8 ms in 900 s of showcase_v4.
+Critic round 23: all 32 subjects pass, mean 0.76. Tests 108/108; UI tests pass (bounds 79/79);
+audio probe PASS; pck 78.5 MB. Still open: one 83 ms frame in about 1 of 3 showcase loads (one
+shader built mid-game, not identified); nobody has played it by hand.

@@ -15,6 +15,8 @@ extends SceneTree
 const Nav = preload("res://presentation/fx_nav.gd")
 const DT := 1.0 / 30.0
 const SAVES := ["res://content/saves/showcase_v3_late.fhsave", "res://build/web_render/scene_final.fhsave", "res://build/web_render/doors8.fhsave"]
+## label "v4": the v4 map (critic round 22): showcase_v4 and a Frontier game (render_frontier_save.gd).
+const SAVES_V4 := ["res://content/saves/showcase_v4.fhsave", "res://build/web_render/frontier_game.fhsave"]
 const LOCO := ["walk", "run", "carry_walk", "injured_walk"]
 
 var main
@@ -50,9 +52,10 @@ func _initialize() -> void:
 
 func _next_save() -> bool:
 	save_i += 1
-	if save_i >= SAVES.size():
+	var list: Array = SAVES_V4 if label.begins_with("v4") else SAVES
+	if save_i >= list.size():
 		return false
-	var path: String = SAVES[save_i]
+	var path: String = list[save_i]
 	if not FileAccess.file_exists(path):
 		print("missing save ", path)
 		return _next_save()
@@ -108,7 +111,32 @@ func _process(_delta: float) -> bool:
 	frames += 1
 	if frames > 30:
 		_sample()
+		if frames % 5 == 0:
+			_vehicles_vs_tubes()
 	return false
+
+## (g) a vehicle drawn on the ground across a BUILT corridor tube (SIM makes built tubes block rovers).
+## Counted every 5th frame: the vehicle centre within 1.2 m + half its track of the tube line.
+func _vehicles_vs_tubes() -> void:
+	var vx = main.view.get("vehicles")
+	if vx == null:
+		return
+	var blds: Dictionary = main.sim.state["buildings"]
+	for r in vx.vehicles.values():
+		if float(r.get("hgt", 0.0)) > 1.0 or not r.has("sim_id"):
+			continue
+		var q: Vector2 = r["pos"]
+		for bid in blds:
+			var b: Dictionary = blds[bid]
+			if b["kind"] != "link" or b["def"] != "corridor" or String(b.get("state", "")) == "blueprint":
+				continue
+			var a0: Vector2 = b["p0"]
+			var ab: Vector2 = (b["p1"] as Vector2) - a0
+			var t: float = clampf((q - a0).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+			if q.distance_to(a0 + ab * t) < 1.2 + float(r.get("track", 1.5)) * 0.5:
+				cur["g_vehicle_tube"] = int(cur.get("g_vehicle_tube", 0)) + 1
+				_bump(cur.get_or_add("g_by_vehicle", {}), "%s:%s" % [String(r["kind"]), String(b.get("state", ""))])
+				break
 
 func _dump_grid(rid: int) -> void:
 	var view = main.view
@@ -170,6 +198,7 @@ func _finish_save() -> void:
 	print("%s: samples %d, (a) wall %d, (b) furniture %d (%.3f %% of %d inside), (c) outside %d, (d) slide %d, teleport %d, (e) void %d" % [
 		cur["save"], s, cur["a_wall"], cur["b_furniture"], cur["b_furniture_pct"], cur["inside_samples"], cur["c_outside_intrusion"], cur["d_slide"], cur["d_teleport"], cur["e_void"]])
 	print("   (f) body pairs under 0.40 m: doorway %d, corridor %d" % [int(cur.get("f_overlap_door", 0)), int(cur.get("f_overlap_tube", 0))])
+	print("   (g) vehicle across a built tube: %d samples %s" % [int(cur.get("g_vehicle_tube", 0)), str(cur.get("g_by_vehicle", {}))])
 
 ## Which model parts (group/material) cover a local point in the furniture height band.
 func _who(tpl: Dictionary, q: Vector2) -> Array:
@@ -300,13 +329,22 @@ func _sample() -> void:
 		var mode: String = rec["mode"]
 		var pz: Dictionary = rec["sm"].pose()
 		var clip: String = pz["a"]
+		if label.contains("trace") and int(id) == 2183 and frames >= 135 and frames <= 160 and last.has(id):
+			print("TR f%d d %.2f mode %s clip %s fade %.2f tick %d rate %.2f far %s" % [frames, Vector2(p.x - (last[id] as Vector3).x, p.z - (last[id] as Vector3).z).length(), mode, clip, float(rec.get("fade", 1.0)), int(main.sim.state["tick"]), float(main.view.game_rate), str(rec.get("far", "-"))])
 		# Slides and jumps.
 		if last.has(id):
 			var lp: Vector3 = last[id]
 			var dist: float = Vector2(p.x - lp.x, p.z - lp.z).length()
-			if dist > 1.5 and float(rec.get("fade", 1.0)) >= 0.999 and float(last_fade.get(id, 1.0)) >= 0.999:
+			var far_step: bool = bool(rec.get("far", false))
+			if dist > 1.5 and far_step and dist < 2.4:
+				# A far or off-screen body is updated every 3rd frame by design (fx_npc): at speed 4 a
+				# V4 runner (4.2 m/s) moves 1.68 m in that step. Not a teleport; counted apart.
+				cur["d_far_step"] = int(cur.get("d_far_step", 0)) + 1
+			elif dist > 1.5 and float(rec.get("fade", 1.0)) >= 0.999 and float(last_fade.get(id, 1.0)) >= 0.999:
 				cur["d_teleport"] = int(cur["d_teleport"]) + 1
 				_bump(cur["d_by_clip"], "jump:" + mode + ":" + String(a["where"]) + (":off" if (rec.get("off", Vector3.ZERO) as Vector3).length() > 0.3 else ""))
+				if int(cur["d_teleport"]) <= 25 and label.contains("dbg"):
+					print("JUMP f%d id %d where %s mode %s clip %s %.1f m from %s to %s | sim pos %s task %s veh %s" % [frames, int(id), String(a["where"]), mode, clip, dist, str(Vector2(lp.x, lp.z).round()), str(Vector2(p.x, p.z).round()), str((a["pos"] as Vector2).round()), str(a.get("task", {}).get("kind", "") if a.get("task") is Dictionary else a.get("task")), str(a.get("vehicle", a.get("veh", "-")))])
 			elif dist <= 1.5 and dist > 0.05 and minf(float(rec.get("fade", 1.0)), float(last_fade.get(id, 1.0))) <= 0.001:
 				# A short move while fully faded out (an airlock rider faded into the chamber): unseen.
 				cur["d_fade_short"] = int(cur.get("d_fade_short", 0)) + 1
@@ -402,6 +440,9 @@ func _sample() -> void:
 				var what := ""
 				for bid in blds:
 					var b: Dictionary = blds[bid]
+					# A planned structure (blueprint) is open ground (SIM 2026-09-28; SIM's own check skips it).
+					if String(b.get("state", "")) == "blueprint":
+						continue
 					if b["kind"] == "link":
 						if b["def"] != "corridor":
 							continue
@@ -426,6 +467,8 @@ func _sample() -> void:
 				if what != "":
 					cur["c_outside_intrusion"] = int(cur["c_outside_intrusion"]) + 1
 					_bump(cur["c_by_what"], what + ":" + mode)
+					if label.contains("dbg"):
+						print("OUTSIDE f%d id %d in %s mode %s clip %s at %s | sim pos %s where %s" % [frames, int(id), what, mode, clip, str(Vector2(p.x, p.z)), str(a["pos"]), String(a["where"])])
 		elif where == "in" and in_room < 0:
 			# Inside, not in a room: must be in a corridor tube.
 			var ok := false

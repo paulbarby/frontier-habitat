@@ -375,10 +375,10 @@ func _place(r: Dictionary, moved: float) -> void:
 	var hr: float = _h(p3 - left * ht)
 	# On a crest (a crater rim) the body rests on the high middle, not the mean of the ends.
 	var y: float = maxf((hf + hb + hl + hr) * 0.25, _h(p3) - 0.15)
-	# The body tilts at most 24 deg (the suspension takes the rest); a steeper slope is SIM's
+	# The body tilts at most 15 deg (critic round 22) (the suspension takes the rest); a steeper slope is SIM's
 	# parking spot, not a pose (RENDER-to-SIM 2026-09-28).
-	var pitch: float = clampf(atan2(hf - hb, hw * 2.0), -0.42, 0.42)
-	var roll: float = clampf(atan2(hl - hr, ht * 2.0), -0.42, 0.42)
+	var pitch: float = clampf(atan2(hf - hb, hw * 2.0), -0.26, 0.26)
+	var roll: float = clampf(atan2(hl - hr, ht * 2.0), -0.26, 0.26)
 	if String(r["kind"]).begins_with("rover"):
 		var k: float = 0.35 if moved > 0.0 else 1.0
 		r["y"] = lerpf(float(r["y"]), y, k)
@@ -480,6 +480,7 @@ func _hop(r: Dictionary, dt: float) -> void:
 		var pp: Vector2 = r["pos"]
 		gdp.global_position = Vector3(pp.x, view.h(pp.x, pp.y) + 0.2, pp.y)
 		gdp.emitting = near_ground
+	_hop_ground(r, thrust)
 
 ## Satellite: a straight orbit track over the map at 420 m, 30 m/s, wings to the sun.
 func _orbit(r: Dictionary, dt: float) -> void:
@@ -536,6 +537,31 @@ func _launch(r: Dictionary, dt: float) -> void:
 		var gdp: CPUParticles3D = r["gdust"]
 		gdp.global_position = (r["node"] as Node3D).global_position + Vector3(0, 0.3, 0)
 		gdp.emitting = thrust > 0.2 and up < 60.0
+
+## Hopper near the ground (critic round 22): a warm landing glow on the ground under the thrusters
+## and a lit dust ring blown out from it, readable from 150 m. Strength by thrust and height.
+func _hop_ground(r: Dictionary, thrust: float) -> void:
+	var hgt: float = float(r["hgt"])
+	var k: float = clampf(thrust, 0.0, 1.0) * (1.0 - smoothstep(4.0, 45.0, hgt))
+	var pp: Vector2 = r["pos"]
+	var gy: float = view.h(pp.x, pp.y)
+	var g: MeshInstance3D = r.get("glow")
+	if g == null:
+		g = view.decal_ring(1.0, 0.001, 48, Color(1.0, 0.86, 0.62, 1.0), 9)
+		add_child(g)
+		r["glow"] = g
+	g.visible = k > 0.02
+	if g.visible:
+		var rad: float = 10.0 + hgt * 0.4
+		g.position = Vector3(pp.x, gy, pp.y)
+		g.scale = Vector3(rad, 1, rad)
+		g.set_instance_shader_parameter("icolor", Color(1, 1, 1, clampf(k * 1.4, 0.0, 1.0)))
+	var key := "hopdust_%d" % int(r["id"])
+	if k > 0.15 and hgt < 20.0:
+		view.fx.emitter_set(key, "dust_ring", Vector3(pp.x, gy + 0.3, pp.y), clampf(k * 1.5, 0.3, 1.5))
+		view.fx.emitter_radius(key, 3.0 + hgt * 0.2)
+	else:
+		view.fx.emitter_stop(key)
 
 func launch(id: int) -> void:
 	if vehicles.has(id):
@@ -854,6 +880,7 @@ func _sim_hop(r: Dictionary, delta: float, dt: float) -> void:
 		var pp: Vector2 = r["pos"]
 		gdp.global_position = Vector3(pp.x, view.h(pp.x, pp.y) + 0.2, pp.y)
 		gdp.emitting = thrust > 0.1 and float(r["hgt"]) < 18.0
+	_hop_ground(r, thrust)
 	if not test_off.has("charge"):
 		_charging(r, row)
 

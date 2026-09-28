@@ -718,3 +718,9 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
 - Debug reveal / find timing: reveal 0.06–2.1 ms natively (r 100–4,000), tick 1.2–2.9 ms, satellite band 1.4 ms;
   `long_v4_tick_max` also times a 1,000 m reveal that finds a POI (1.3 ms). Full suite 106 of 106 (849 s):
   campaign hull 24.6, perf 1.864 ms (70 col), v4 1.736 ms (100 col + 6 vehicles), worst tick 19.5 ms.
+- RENDER Frontier path check: the crossing was a blueprint corridor (design; RENDER to skip blueprints). Built tubes now
+  close the coarse long-walk grid; long walks walk their end stretches on the fine grid. Test
+  `v31_outside_paths_clear_frontier`. Full suite 107 of 107 (990 s): worst tick 17.7 ms, v4 perf 1.932 ms.
+- Rovers: built tubes close the rover grid; clear end stretches; bounded no-route (closed rover areas);
+  replan on change; placement code `depot_blocked` (bay aprons, depot cut-off, new depot facing structures);
+  showcase_v4 rebuilt; test `v4_rover_tubes_and_blocks`. Full suite 108 of 108 (753 s), worst tick 19.8 ms.

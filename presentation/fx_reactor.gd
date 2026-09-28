@@ -26,6 +26,13 @@ var _shock: MeshInstance3D
 var _shock_t := -1.0
 var _shock_r := 60.0
 var stats := {"reactors": 0, "zones": 0}
+var _shock2: MeshInstance3D
+var _shock2_t := -1.0
+var _column_key := ""
+var _column_t := -1.0
+func _column_pos() -> Vector3:
+	var e: Dictionary = view.fx.emitters.get(_column_key, {})
+	return e.get("pos", Vector3.ZERO)
 
 func setup(v) -> void:
 	view = v
@@ -63,17 +70,27 @@ func add_zone(key: String, pos: Vector2, r: float, kind: String = "rad", k: floa
 	var y: float = view.h(pos.x, pos.y)
 	if not zones.has(key):
 		var col: Color = Color(1.0, 0.86, 0.18, 0.9) if kind == "rad" else Color(0.5, 1.0, 0.3, 0.9)
+		# Critic round 22: the zone is a ground stain (mode 8) with a soft breathing edge; the hard
+		# hatched ring (mode 7) shows only with the radiation layer on or a warning (someone inside).
 		var d: MeshInstance3D = view.decal_ring(r, 0.001, 96, col, 7)
 		d.position = Vector3(pos.x, y, pos.y)
 		d.scale = Vector3(r, 1, r)
+		d.visible = false
 		add_child(d)
+		var stain_col: Color = Color(0.4, 0.38, 0.1, 1.0) if kind == "rad" else Color(0.24, 0.4, 0.12, 1.0)
+		var st: MeshInstance3D = view.decal_ring(r, 0.001, 96, stain_col, 8)
+		st.position = Vector3(pos.x, y, pos.y)
+		st.scale = Vector3(r, 1, r)
+		add_child(st)
 		var key2 := "rad_%s" % key
 		view.fx.emitter_set(key2, "rad_motes" if kind == "rad" else "smoke", Vector3(pos.x, y + 0.5, pos.y), 1.0)
 		view.fx.emitter_radius(key2, r * 0.8)
-		zones[key] = {"pos": Vector3(pos.x, y, pos.y), "r": r, "decal": d, "emitter": key2, "kind": kind}
+		zones[key] = {"pos": Vector3(pos.x, y, pos.y), "r": r, "decal": d, "stain": st, "emitter": key2, "kind": kind}
 	var z: Dictionary = zones[key]
 	var kk: float = clampf(k, 0.15, 1.0)
 	(z["decal"] as MeshInstance3D).set_instance_shader_parameter("icolor", Color(1, 1, 1, kk))
+	if z.get("stain") != null:
+		(z["stain"] as MeshInstance3D).set_instance_shader_parameter("icolor", Color(1, 1, 1, clampf(0.35 + kk * 0.65, 0.0, 1.0)))
 	view.fx.emitter_set(String(z["emitter"]), "rad_motes" if String(z["kind"]) == "rad" else "smoke", (z["pos"] as Vector3) + Vector3(0, 0.5, 0), kk)
 	z["seen"] = true
 
@@ -81,6 +98,8 @@ func drop_zone(key: String) -> void:
 	if not zones.has(key):
 		return
 	(zones[key]["decal"] as Node).queue_free()
+	if zones[key].get("stain") != null:
+		(zones[key]["stain"] as Node).queue_free()
 	view.fx.emitter_stop(String(zones[key]["emitter"]))
 	zones.erase(key)
 
@@ -250,8 +269,31 @@ func sync(delta: float) -> void:
 		if not view.sky.parked(l2):
 			view.sky.park(l2)
 	_update_flash(delta)
+	_zone_rings(delta)
 	stats["reactors"] = stages.size()
 	stats["zones"] = zones.size()
+
+## The hard ring of a zone: with the radiation layer on, or while a colonist is inside it (a
+## warning). Checked twice a second.
+var _ring_clock := 0.0
+func _zone_rings(delta: float) -> void:
+	_ring_clock -= delta
+	if _ring_clock > 0.0:
+		return
+	_ring_clock = 0.5
+	var layer: bool = String(view.get("overlay")) in ["radiation", "rad"]
+	var outs: Array = []
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and a["where"] == "out":
+			outs.append(a["pos"])
+	for z in zones.values():
+		var c: Vector3 = z["pos"]
+		var inside := false
+		for p in outs:
+			if Vector2(c.x, c.z).distance_to(p) < float(z["r"]):
+				inside = true
+				break
+		(z["decal"] as MeshInstance3D).visible = layer or inside or bool(z.get("force_ring", false))
 
 ## The blast: flash, fireball, debris, dust, shock ring, shake, scorched crater.
 ## blast = the destruction radius (the shock ring runs out to it); size scales the fireball.
@@ -262,7 +304,15 @@ func _explode(c3: Vector3, blast: float, size: float = 1.0) -> void:
 	_flash.omni_range = maxf(40.0, blast * 1.8)
 	_flash.light_energy = 40.0 * size
 	_flash_t = 0.0
-	view.fx.burst("fire", c3 + Vector3(0, 3.0, 0), int(220 * size), r * 0.8)
+	# Critic round 22: the fireball twice the size (count and spread), a dust column for ~9 s and
+	# a second, slower shock ring out to twice the blast radius.
+	view.fx.burst("fire", c3 + Vector3(0, 3.0 * size, 0), int(440 * size), r * 1.6, 0.0, 2.0 if size >= 0.9 else 1.0)
+	view.fx.burst("fire", c3 + Vector3(0, 12.0 * size, 0), int(200 * size), r * 1.2, 0.0, 1.8 if size >= 0.9 else 1.0)
+	if size >= 0.9:
+		_column_key = "rx_column_%d_%d" % [int(c3.x), int(c3.z)]
+		view.fx.emitter_set(_column_key, "dust_column", c3 + Vector3(0, 2.0, 0), 1.6)
+		view.fx.emitter_radius(_column_key, r * 0.9)
+		_column_t = 0.0
 	view.fx.burst("debris", c3 + Vector3(0, 2.0, 0), int(360 * size), r * 0.6)
 	view.fx.burst("impact_dust", c3, int(380 * size), r * 1.2)
 	view.fx.burst("sparks", c3 + Vector3(0, 4.0, 0), int(300 * size), r)
@@ -274,6 +324,12 @@ func _explode(c3: Vector3, blast: float, size: float = 1.0) -> void:
 	_shock.position = c3
 	_shock_r = blast
 	_shock_t = 0.0
+	if _shock2 == null:
+		_shock2 = view.decal_ring(1.0, 0.8, 128, Color(0.95, 0.72, 0.5, 0.8), 0)
+		add_child(_shock2)
+	_shock2.position = c3
+	_shock2.visible = false
+	_shock2_t = 0.0 if size >= 0.9 else -1.0
 	var rg = view.rig()
 	if rg != null and rg.has_method("shake"):
 		rg.shake(2.0)
@@ -295,3 +351,19 @@ func _update_flash(delta: float) -> void:
 		_shock.visible = u < 1.0
 		if u >= 1.0:
 			_shock_t = -1.0
+	# The second ring: starts 0.6 s later, slow (5 s), out to twice the blast radius.
+	if _shock2_t >= 0.0 and _shock2 != null:
+		_shock2_t += delta
+		var u2: float = clampf((_shock2_t - 0.6) / 5.0, 0.0, 1.0)
+		var rr2: float = lerpf(4.0, _shock_r * 2.0, 1.0 - pow(1.0 - u2, 1.6))
+		_shock2.scale = Vector3(rr2, 1, rr2)
+		_shock2.set_instance_shader_parameter("icolor", Color(1, 1, 1, 0.85 * (1.0 - u2)))
+		_shock2.visible = _shock2_t > 0.6 and u2 < 1.0
+		if u2 >= 1.0:
+			_shock2_t = -1.0
+	if _column_t >= 0.0:
+		_column_t += delta
+		view.fx.emitter_set(_column_key, "dust_column", _column_pos(), clampf(1.6 - _column_t / 7.0, 0.2, 1.6))
+		if _column_t > 9.0:
+			view.fx.emitter_stop(_column_key)
+			_column_t = -1.0

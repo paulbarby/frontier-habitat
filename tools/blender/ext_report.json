@@ -3707,12 +3707,12 @@
    "id": "outpost_core",
    "kind": "special",
    "footprint": 4.5,
-   "tris": 1452,
-   "tris_base": 1452,
+   "tris": 1492,
+   "tris_base": 1492,
    "budget": 7000,
    "tris_by_object": {
-    "Base": 1282,
-    "Lights": 170
+    "Base": 1298,
+    "Lights": 194
    },
    "bbox_min": [
     -4.3,
@@ -3722,12 +3722,12 @@
    "bbox_max": [
     4.3,
     3.795,
-    6.62
+    7.54
    ],
    "max_radius": 4.342,
    "max_radius_overhang": 0.0,
    "max_radius_free": {},
-   "file_size": 83664,
+   "file_size": 84076,
    "objects": [
     "Anchor_Bed_0",
     "Anchor_Bed_1",
@@ -3755,7 +3755,208 @@
    ],
    "color0": true,
    "flags": [],
-   "seconds": 0.2,
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "poi_anomaly",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 380,
+   "tris_base": 380,
+   "budget": 2500,
+   "tris_by_object": {
+    "Base": 278,
+    "Lights": 102
+   },
+   "bbox_min": [
+    -4.672,
+    -4.351,
+    0.0
+   ],
+   "bbox_max": [
+    4.187,
+    4.519,
+    6.172
+   ],
+   "max_radius": 4.895,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 22816,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Dust",
+    "L4Band",
+    "Rock",
+    "Trim"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "poi_cave",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 1254,
+   "tris_base": 1254,
+   "budget": 3000,
+   "tris_by_object": {
+    "Base": 1254
+   },
+   "bbox_min": [
+    -6.006,
+    -5.58,
+    -0.744
+   ],
+   "bbox_max": [
+    5.47,
+    5.865,
+    4.503
+   ],
+   "max_radius": 6.295,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 123872,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Dust",
+    "Rock",
+    "Rubber"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.4,
+   "also": []
+  },
+  {
+   "id": "poi_meteorites",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 928,
+   "tris_base": 928,
+   "budget": 2500,
+   "tris_by_object": {
+    "Base": 880,
+    "Lights": 48
+   },
+   "bbox_min": [
+    -5.125,
+    -5.768,
+    -0.195
+   ],
+   "bbox_max": [
+    4.578,
+    4.295,
+    1.751
+   ],
+   "max_radius": 5.768,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 91224,
+   "objects": [
+    "Base",
+    "Lights"
+   ],
+   "materials": [
+    "Dust",
+    "Ember",
+    "Frame",
+    "Rock",
+    "Rubber"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.1,
+   "also": []
+  },
+  {
+   "id": "poi_probe",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 362,
+   "tris_base": 362,
+   "budget": 2500,
+   "tris_by_object": {
+    "Base": 362
+   },
+   "bbox_min": [
+    -3.533,
+    -3.772,
+    -0.542
+   ],
+   "bbox_max": [
+    3.349,
+    5.729,
+    4.748
+   ],
+   "max_radius": 5.896,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 22856,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Dust",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Metal",
+    "Rock",
+    "Solar"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
+   "also": []
+  },
+  {
+   "id": "poi_wreck",
+   "kind": "prop",
+   "footprint": null,
+   "tris": 454,
+   "tris_base": 454,
+   "budget": 2500,
+   "tris_by_object": {
+    "Base": 454
+   },
+   "bbox_min": [
+    -5.452,
+    -4.568,
+    -2.126
+   ],
+   "bbox_max": [
+    4.764,
+    4.545,
+    3.515
+   ],
+   "max_radius": 5.537,
+   "max_radius_overhang": 0.0,
+   "max_radius_free": {},
+   "file_size": 28348,
+   "objects": [
+    "Base"
+   ],
+   "materials": [
+    "Dust",
+    "Frame",
+    "Hazard",
+    "Hull",
+    "HullDark",
+    "Rock",
+    "Rubber"
+   ],
+   "color0": true,
+   "flags": [],
+   "seconds": 0.3,
    "also": []
   },
   {

@@ -376,7 +376,16 @@ func drive_to(v: Dictionary, p: Vector2) -> String:
 	var a: Vector2 = from_bay["exit"] if not from_bay.is_empty() else v["pos"]
 	var b: Vector2 = to_bay["exit"] if not to_bay.is_empty() else p
 	var r: Dictionary = sim.nav.vehicle_path(a, b, String(k.get("move", "rover")), float(k.get("hop_m", 400.0)))
+	# The taxi through a bay door must be clear too (a tube built across it in an old save).
+	if bool(r["ok"]) and sim.nav.has_method("taxi_clear"):
+		if (not from_bay.is_empty() and not sim.nav.taxi_clear(from_bay["pos"], from_bay["exit"])) or (not to_bay.is_empty() and not sim.nav.taxi_clear(to_bay["pos"], to_bay["exit"])):
+			r = {"ok": false}
 	if not bool(r["ok"]):
+		# The way is closed (a structure or a tube in it, or a closed-in bay): the vehicle does not
+		# move and says why. It never drives through.
+		if String(v.get("block", "")) != "no_route":
+			sim.log_event("vehicle_stopped", "%s: %s." % [v["name"], _why_text("no_route")], [int(v["id"])], 1)
+		v["block"] = "no_route"
 		return "no_route"
 	var pts: Array = (r["pts"] as Array).duplicate()
 	if not from_bay.is_empty():
@@ -384,6 +393,7 @@ func drive_to(v: Dictionary, p: Vector2) -> String:
 	if not to_bay.is_empty():
 		pts.append(p)
 	v["path"] = pts
+	v["plan_rev"] = int(sim.state["rev"]["walk"])
 	# Taxi segments (bay <-> apron) are driven slowly; a hopper does not fly them.
 	v["taxi_a"] = 1 if not from_bay.is_empty() else 0
 	v["taxi_b"] = pts.size() - 1 if not to_bay.is_empty() else -1
@@ -477,8 +487,12 @@ func _stop(v: Dictionary, why: String) -> void:
 	v["dest"] = null
 	sim.log_event("vehicle_stopped", "%s stopped: %s." % [v["name"], _why_text(why)], [], 1)
 
+static func _sentence(t: String) -> String:
+	return t.substr(0, 1).to_upper() + t.substr(1) if t != "" else t
+
 static func _why_text(why: String) -> String:
 	match why:
+		"no_route": return "No route: the way is blocked"
 		"no_charge": return "the battery is empty"
 		"no_fuel": return "out of rocket fuel"
 		"no_driver": return "nobody drives it"
@@ -558,6 +572,14 @@ func tick_second() -> void:
 		var v: Dictionary = get_v(vid)
 		if v["state"] == "driving":
 			v["idle_s"] = 0
+			# Structures changed while it drives: plan the rest again (never through a new tube).
+			if int(v.get("plan_rev", -1)) != int(sim.state["rev"]["walk"]) and v["dest"] != null and String(kind_of(v).get("move", "")) != "hopper":
+				var dest: Vector2 = v["dest"]
+				if drive_to(v, dest) != "ok":
+					v["state"] = "parked"
+					v["path"] = []
+					v["dest"] = null
+				continue
 			_air_guard(v)
 			continue
 		_air_guard(v)
@@ -615,7 +637,8 @@ func _route_second(v: Dictionary) -> void:
 			if drive_to(v, dest) == "ok":
 				r["leg"] = "to_b" if leg == "load_a" else "to_a"
 			else:
-				v["block"] = "route: " + ("no driver" if (v["crew"] as Array).is_empty() else "no route")
+				if (v["crew"] as Array).is_empty():
+					v["block"] = "no_driver"
 		"to_a", "to_b":
 			if v["state"] == "parked":
 				r["leg"] = "load_b" if leg == "to_b" else "load_a"
@@ -832,7 +855,7 @@ func list() -> Array:
 		var v: Dictionary = get_v(vid)
 		var k: Dictionary = kind_of(v)
 		out.append({"id": int(v["id"]), "kind": v["kind"], "name": v["name"], "pos": v["pos"], "rot": float(v["rot"]),
-			"state": v["state"], "block": v["block"], "charge": float(v["charge"]), "charge_cap": charge_cap(v),
+			"state": v["state"], "block": v["block"], "block_text": _sentence(_why_text(String(v["block"]))) if String(v["block"]) != "" else "", "charge": float(v["charge"]), "charge_cap": charge_cap(v),
 			"fuel": float(v["fuel"]), "fuel_cap": float(k.get("fuel_cap", 0.0)), "wear": float(v["wear"]),
 			"crew": (v["crew"] as Array).duplicate(), "seats": seats(v), "cargo": (sim.inv.get_inv(int(v["cargo"])).get("items", {}) as Dictionary).duplicate(),
 			"cargo_inv": int(v["cargo"]), "dest": v["dest"], "path": (v["path"] as Array).duplicate(), "pi": int(v["pi"]),

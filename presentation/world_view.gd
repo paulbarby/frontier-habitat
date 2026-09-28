@@ -305,7 +305,7 @@ func _build_ring_mesh(deps: Array, nm: String, sv: PackedVector3Array, suv: Pack
 			av.append(o + v * r)
 			an.append(Vector3.UP)
 		auv.append_array(suv)
-	if av.is_empty() and _dep_ring_nodes.has(nm) and is_instance_valid(_dep_ring_nodes[nm]):
+	if av.is_empty() and _dep_ring_nodes.has(nm) and is_instance_valid(_dep_ring_nodes[nm]) and (_dep_ring_nodes[nm] as Node).is_inside_tree():
 		(_dep_ring_nodes[nm] as MeshInstance3D).mesh = null
 	if not av.is_empty() and suv.size() == sv.size():
 		var arrays: Array = []
@@ -317,8 +317,11 @@ func _build_ring_mesh(deps: Array, nm: String, sv: PackedVector3Array, suv: Pack
 		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 		# The two ring nodes are kept and get the new mesh (a new instance made mid-game was at
 		# times not lit by fx_sky's always-on spot and compiled an omni-only program).
-		var ring: MeshInstance3D = _dep_ring_nodes.get(nm)
-		if ring != null and is_instance_valid(ring):
+		var old = _dep_ring_nodes.get(nm)
+		var ring: MeshInstance3D = null
+		if old != null and is_instance_valid(old) and (old as Node).is_inside_tree():
+			ring = old
+		if ring != null:
 			ring.mesh = am
 			var rab0: AABB = am.get_aabb()
 			ring.custom_aabb = AABB(rab0.position - Vector3(0, 200, 0), rab0.size + Vector3(0, 900, 0))
@@ -699,7 +702,8 @@ func _night_warmup() -> void:
 			var wx := Transform3D(Basis.from_scale(Vector3(0.01, 0.01, 0.01)), cam.global_position + fwd * 3.0)
 			for f in ["crate_raw", "crate_material", "crate_component", "crate_medical", "crate_food", "crate", "supply_pod", "meteor_rock", "crater", "fragments", "meteor_turret",
 					# V4 points of interest found mid-game (fx_explore: a satellite band finds a derelict probe, 66-133 ms)
-					"satellite", "boulder_a", "rock_a", "rock_b", "rock_c", "rock_f", "ship_courier", "ship_trader"]:
+					"satellite", "boulder_a", "rock_a", "rock_b", "rock_c", "rock_f", "ship_courier", "ship_trader",
+					"poi_wreck", "poi_probe", "poi_cave", "poi_meteorites", "poi_anomaly"]:
 				if Models.has_model(f):
 					_warm_handles.append(inst.add(Models.prop([f], 0.5, "exterior", "logistics"), wx))
 			for k in ["trader", "shuttle", "liner", "medical", "science", "courier"]:
@@ -716,6 +720,10 @@ func _night_warmup() -> void:
 			gb.global_transform = Transform3D(Basis.from_scale(Vector3(0.02, 0.02, 0.02)), cam.global_position + fwd * 3.0)
 			_warm_nodes.append(gb)
 			fx.prewarm(cam.global_position + fwd * 3.0)
+			var wdec: MeshInstance3D = decal_ring(1.0, 0.5, 16, Color(1, 1, 1, 0.01), 1)
+			add_child(wdec)
+			wdec.global_position = cam.global_position + fwd * 30.0
+			_warm_nodes.append(wdec)
 			if explore != null:
 				_warm_nodes.append_array(explore.warm_nodes(wx))
 			if vehicles != null:
@@ -723,7 +731,7 @@ func _night_warmup() -> void:
 	# Hold the night until the sky is fully dark and every structure's Lights are on (at most
 	# 40 frames); the flame, dust and mist warm-up of fx_traffic runs in the same frames.
 	# (at least 1.3 s: the night lamp sites, helmet lamps and light pools refresh once a second)
-	if _night_warm == 1 and (float(sky.night) < 0.97 or _time - _warm_t0 < 1.3) and _time - _warm_t0 < 3.0:
+	if _night_warm == 1 and (float(sky.night) < 0.97 or _time - _warm_t0 < 1.3 or _warm_frames < 34) and _time - _warm_t0 < 4.0:
 		_night_warm = 2
 	# First the sunset itself (the sun at the horizon: 108-150 ms of first-use work, UI trace),
 	# then full night.
@@ -738,6 +746,9 @@ func _night_warmup() -> void:
 		_cover_hold = 0.0
 		time_override = _warm_restore
 		_warm_restore = -2.0
+		if sky.always_omni != null:
+			sky.always_omni.visible = true
+			sky.always_spot.visible = true
 		for nd in _warm_nodes:
 			if is_instance_valid(nd):
 				(nd as Node).queue_free()
@@ -770,6 +781,13 @@ func _warm_lights(f: int) -> void:
 	_warm_sp.spot_range = 600.0 if sp_on else 0.001
 	_warm_om.shadow_enabled = ph == 3 or ph == 5
 	_warm_sp.shadow_enabled = ph == 4 or ph == 6
+	# The first-deposit stall (1 run in 3: a ground decal drawn with the omni only, 67-100 ms):
+	# for the last 12 warm-up frames fx_sky's always-on spot and omni take turns off, so the
+	# omni-only, spot-only and no-light programs of everything in view are made under the cover.
+	if sky.always_omni != null and sky.always_spot != null:
+		var q: int = ((f - 20) / 3) % 4 if f >= 20 and f < 32 else 0
+		sky.always_omni.visible = q != 2 and q != 3
+		sky.always_spot.visible = q != 1 and q != 3
 
 var boot_info := {}
 ## The load cover stays until the first-draw frames are over (shader compiles of a new colony):
@@ -2829,6 +2847,10 @@ func debug_cmd(text: String) -> String:
 				"particles": fx.visible = on
 				"dust": fx.field_on = on
 				"terrain": terrain.mesh_inst.visible = on
+				"crevices":
+					var cn = terrain.mesh_inst.get_node_or_null("Crevices")
+					if cn != null:
+						cn.visible = on
 				"pebbles":
 					for p in terrain._pebbles:
 						(p["mmi"] as MultiMeshInstance3D).visible = on

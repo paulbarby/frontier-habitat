@@ -11,6 +11,7 @@ func tests() -> Array:
 	return [
 		["v31_airlock_phases", v31_airlock_phases],
 		["v31_outside_paths_clear", v31_outside_paths_clear],
+		["v31_outside_paths_clear_frontier", v31_outside_paths_clear_frontier],
 		["v31_traffic_schedule_deterministic", v31_schedule],
 		["v31_trader_trade_and_credits", v31_trade],
 		["v31_liner_visitors_beds_and_fees", v31_liner],
@@ -452,13 +453,54 @@ static func outside_problems(sim) -> Array:
 ## The reference campaign with hazards: no body outside is ever inside a structure, a
 ## corridor tube or a blocked path cell (V3_1_DESIGN 4.2).
 func v31_outside_paths_clear(t) -> void:
+	_outside_paths_clear(t, false)
+
+## The same on the Frontier (2,560 m) map (RENDER path check, 2026-09-28): four days of the
+## reference campaign; also every straight stretch of every outside walk (fine windows and the
+## coarse 8 m long-walk segments after string-pulling) keeps clear of every built corridor tube.
+func v31_outside_paths_clear_frontier(t) -> void:
+	_outside_paths_clear(t, true)
+
+## Straight stretches of outside walks that pass through a built corridor tube.
+static func route_tube_problems(sim) -> Array:
+	var out: Array = []
+	var tubes: Array = []
+	for id in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][id]
+		if b["kind"] == "link" and b["def"] == "corridor" and b["state"] != "blueprint":
+			tubes.append(b)
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		var route: Dictionary = a.get("route", {})
+		if a["state"] != "alive" or route.is_empty():
+			continue
+		for leg in route.get("legs", []):
+			if leg["m"] != "out":
+				continue
+			var pts: Array = leg.get("pts", [])
+			for i in range(1, pts.size()):
+				var p0: Vector2 = pts[i - 1]
+				var p1: Vector2 = pts[i]
+				var n: int = maxi(1, int(ceil(p0.distance_to(p1) / 0.5)))
+				for k in range(1, n):
+					var q: Vector2 = p0.lerp(p1, float(k) / n)
+					for b in tubes:
+						if Geometry2D.get_closest_point_to_segment(q, b["p0"], b["p1"]).distance_to(q) < sim.corridor_r():
+							out.append("tick %d: %s's walk %s -> %s crosses %s" % [int(sim.state["tick"]), a["name"], str(p0), str(p1), b["name"]])
+							return out
+	return out
+
+func _outside_paths_clear(t, frontier: bool) -> void:
 	var g = H.Game.new(1001, false)
+	if frontier:
+		g.sim.new_game(1001, "frontier")
 	g.ref = Reference.new(g.sim, "all")
 	var sim = g.sim
 	var bad: Array = []
 	var samples := 0
 	var outside := 0
-	while g.tick() < 8 * 6000:
+	var days: int = 4 if frontier else 8
+	while g.tick() < days * 6000:
 		g.step()
 		if g.tick() % 5 == 0:
 			samples += 1
@@ -467,8 +509,21 @@ func v31_outside_paths_clear(t) -> void:
 					outside += 1
 			if bad.size() < 8:
 				bad.append_array(outside_problems(sim))
+			if frontier and bad.size() < 8 and g.tick() % 50 == 0:
+				bad.append_array(route_tube_problems(sim))
 	t.eq(bad.slice(0, 8), [], "no body outside inside a structure, a tube or a blocked cell")
 	t.check(outside > 1000, "people walked outside (%d body samples)" % outside)
+	if frontier:
+		# Long walks: coarse cells round every built corridor are closed.
+		var open_tube := 0
+		for id in sim.state["buildings"]:
+			var l: Dictionary = sim.state["buildings"][id]
+			if l["kind"] == "link" and l["def"] == "corridor" and l["state"] == "active":
+				for s in 11:
+					var q: Vector2 = (l["p0"] as Vector2).lerp(l["p1"], s / 10.0)
+					if sim.nav.coarse_open_at(q):
+						open_tube += 1
+		t.eq(open_tube, 0, "every corridor tube is closed on the coarse long-walk grid")
 	# The grid: cells whose centre is within the footprint + BODY_R (0.3 m) are solid; the band
 	# of nav_clearance beyond that is weighted (or solid for a neighbour).
 	var clear: float = float(sim.bal["nav_clearance"])

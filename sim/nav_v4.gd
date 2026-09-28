@@ -27,6 +27,11 @@ const ROVER_CLEAR := 4.0       # metres a rover keeps from a boulder
 ## fails at once instead of an A* search over the whole window (25 ms each; three of them in
 ## one colonist's choice of work made 76 ms ticks in showcase_v4).
 const POCKET_CAP := 3000
+## Rover grid (V4 frame budget and "rovers never cross a tube"): half a rover's width, the fill
+## cap for closed rover areas (8 m cells: 6,000 cells is 6 % of the map), and the apron test cap.
+const VEH_HALF := 1.6
+const ROVER_CAP := 6000
+const APRON_CAP := 400
 
 var coarse: AStarGrid2D
 var rover: AStarGrid2D
@@ -38,6 +43,11 @@ var wins: Array = []                 # [{x0, y0, grid, b: PackedInt32Array, w: P
 var _use := 0
 var _world_v4 = null
 var _cpaths := {}                    # coarse paths per pair of cells
+var _tubes: Array = []               # built corridor tubes [[p0, p1]] (rover end checks)
+var _discs: Array = []               # built structures [[pos, radius]] (rover end checks)
+var _rcc := PackedInt32Array()       # rover-grid areas (union-find ids per cell; 0 = unknown)
+var _rup: Array = [0]
+var _rpocket := {}
 
 func _init(s) -> void:
 	super(s)
@@ -317,6 +327,45 @@ func rebuild() -> void:
 	_cstruct = PackedInt32Array()
 	_rstruct = PackedInt32Array()
 	var blds: Dictionary = sim.state["buildings"]
+	# Corridor tubes close coarse (long-walk) cells too (RENDER path check, 2026-09-28): every cell
+	# whose square can touch the tube (axis distance <= tube + body + half an 8 m cell diagonal).
+	# Not the rover grid: a base's corridors would close the way to its depot bays.
+	var reach: float = sim.corridor_r() + BODY_R + COARSE * 0.7072
+	for id in blds:
+		var l: Dictionary = blds[id]
+		if l["kind"] != "link" or l["def"] != "corridor" or l["state"] == "blueprint":
+			continue
+		var p0: Vector2 = l["p0"]
+		var p1: Vector2 = l["p1"]
+		var lx0: int = maxi(0, int(floor((minf(p0.x, p1.x) - reach) / COARSE)))
+		var lx1: int = mini(cn - 1, int(floor((maxf(p0.x, p1.x) + reach) / COARSE)))
+		var ly0: int = maxi(0, int(floor((minf(p0.y, p1.y) - reach) / COARSE)))
+		var ly1: int = mini(cn - 1, int(floor((maxf(p0.y, p1.y) + reach) / COARSE)))
+		for y in range(ly0, ly1 + 1):
+			for x in range(lx0, lx1 + 1):
+				var cc := Vector2((x + 0.5) * COARSE, (y + 0.5) * COARSE)
+				if Geometry2D.get_closest_point_to_segment(cc, p0, p1).distance_to(cc) <= reach:
+					var q := Vector2i(x, y)
+					if not coarse.is_point_solid(q):
+						coarse.set_point_solid(q, true)
+						_cstruct.append(y * cn + x)
+	# Built tubes close the rover grid as well (a rover never drives through a corridor), with half
+	# a rover's width; a depot's bays stay reachable because placement refuses what would close
+	# them in (depot_cut).
+	_tubes = []
+	_discs = []
+	var rreach: float = sim.corridor_r() + VEH_HALF + COARSE * 0.7072
+	for id in blds:
+		var l2: Dictionary = blds[id]
+		if l2["kind"] == "link":
+			if l2["def"] == "corridor" and l2["state"] != "blueprint":
+				_tubes.append([l2["p0"], l2["p1"]])
+				_close_capsule(rover, l2["p0"], l2["p1"], rreach, _rstruct)
+		elif l2["state"] != "blueprint":
+			_discs.append([l2["pos"], float(l2["radius"])])
+	_rcc = PackedInt32Array()
+	_rup = [0]
+	_rpocket = {}
 	for id in blds:
 		var b: Dictionary = blds[id]
 		if b["state"] == "blueprint" or b["kind"] == "link":
@@ -415,7 +464,7 @@ func _nearest_in(w: Dictionary, p: Vector2, max_r: int):
 func path_out(a: Vector2, b: Vector2) -> Dictionary:
 	_ensure_world()
 	if absf(a.x - b.x) > FAR_WALK or absf(a.y - b.y) > FAR_WALK:
-		return _coarse_path(coarse, a, b)
+		return _long_walk(a, b)
 	var w = _window_for(a, b)
 	if w == null:
 		return _coarse_path(coarse, a, b)
@@ -520,6 +569,27 @@ func _area_root(w: Dictionary, id: int) -> int:
 		id = nxt
 	return r
 
+## A long walk: the coarse path (8 m cells; corridors and structures close their cells). Its
+## first and last straight stretches start and end at exact points, which may lie in closed
+## cells near a base: where such a stretch crosses a closed cell it is walked on a fine window
+## instead (from the end point to the nearest coarse point), so no part of a long walk crosses
+## a corridor tube or a structure.
+func _long_walk(a: Vector2, b: Vector2) -> Dictionary:
+	var r: Dictionary = _coarse_path(coarse, a, b)
+	if not bool(r["ok"]):
+		return r
+	var pts: Array = r["pts"]
+	if pts.size() >= 2 and not _coarse_line(coarse, a, pts[1]):
+		var head: Dictionary = path_out(a, pts[1])
+		if bool(head["ok"]):
+			pts = (head["pts"] as Array) + pts.slice(2)
+	var n: int = pts.size()
+	if n >= 2 and not _coarse_line(coarse, pts[n - 2], b):
+		var tail: Dictionary = path_out(pts[n - 2], b)
+		if bool(tail["ok"]):
+			pts = pts.slice(0, n - 2) + (tail["pts"] as Array)
+	return {"ok": true, "pts": pts, "len": _length(pts), "coarse": true}
+
 ## A path on an 8 m grid (walking far, or driving): cell centres, straightened where the
 ## line stays on open cells, with the exact end points.
 func _coarse_path(g: AStarGrid2D, a: Vector2, b: Vector2) -> Dictionary:
@@ -594,7 +664,283 @@ func vehicle_path(a: Vector2, b: Vector2, kind: String = "rover", hop_m: float =
 			pts.append(Vector2((q.x + 0.5) * COARSE, (q.y + 0.5) * COARSE))
 		pts.append(b)
 		return {"ok": true, "pts": pts, "len": _length(pts), "hops": n}
-	return _coarse_path(rover, a, b)
+	return _rover_path(a, b)
+
+## Closes every cell of g whose centre is within reach of the segment; the indices go to `log`.
+func _close_capsule(g: AStarGrid2D, p0: Vector2, p1: Vector2, reach: float, log: PackedInt32Array) -> void:
+	var x0: int = maxi(0, int(floor((minf(p0.x, p1.x) - reach) / COARSE)))
+	var x1: int = mini(cn - 1, int(floor((maxf(p0.x, p1.x) + reach) / COARSE)))
+	var y0: int = maxi(0, int(floor((minf(p0.y, p1.y) - reach) / COARSE)))
+	var y1: int = mini(cn - 1, int(floor((maxf(p0.y, p1.y) + reach) / COARSE)))
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			var cc := Vector2((x + 0.5) * COARSE, (y + 0.5) * COARSE)
+			if Geometry2D.get_closest_point_to_segment(cc, p0, p1).distance_to(cc) <= reach:
+				var q := Vector2i(x, y)
+				if not g.is_point_solid(q):
+					g.set_point_solid(q, true)
+					log.append(y * cn + x)
+
+## A straight rover stretch from a to b clear of every built tube and structure (half a rover's
+## width); `skip_disc` is a structure centre the stretch may leave (a depot's own bay).
+func _rover_clear(a: Vector2, b: Vector2) -> bool:
+	var tr: float = sim.corridor_r() + VEH_HALF
+	for t in _tubes:
+		if _seg_seg_distance(a, b, t[0], t[1]) < tr:
+			return false
+	for d in _discs:
+		if Geometry2D.get_closest_point_to_segment(d[0], a, b).distance_to(d[0]) < float(d[1]) + VEH_HALF - 0.01 and (d[0] as Vector2).distance_to(a) > float(d[1]) + 0.5:
+			return false
+	return true
+
+static func _seg_seg_distance(a0: Vector2, a1: Vector2, b0: Vector2, b1: Vector2) -> float:
+	if Geometry2D.segment_intersects_segment(a0, a1, b0, b1) != null:
+		return 0.0
+	return minf(minf(Geometry2D.get_closest_point_to_segment(a0, b0, b1).distance_to(a0), Geometry2D.get_closest_point_to_segment(a1, b0, b1).distance_to(a1)),
+		minf(Geometry2D.get_closest_point_to_segment(b0, a0, a1).distance_to(b0), Geometry2D.get_closest_point_to_segment(b1, a0, a1).distance_to(b1)))
+
+## The rover cell a drive starts or ends at for point p: the nearest open cell (rings up to
+## reach) whose straight stretch from p is clear of tubes and structures; null when none.
+func _rover_end(p: Vector2, reach: int = 4):
+	var c := Vector2i(clampi(int(p.x / COARSE), 0, cn - 1), clampi(int(p.y / COARSE), 0, cn - 1))
+	for r in range(0, reach + 1):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var q := Vector2i(c.x + dx, c.y + dy)
+				if q.x < 0 or q.y < 0 or q.x >= cn or q.y >= cn or rover.is_point_solid(q):
+					continue
+				if _rover_clear(p, Vector2((q.x + 0.5) * COARSE, (q.y + 0.5) * COARSE)):
+					return q
+	return null
+
+## The closed-area id of rover cell c (as _area_of for walking windows, on the whole rover grid).
+func _rover_area(c: Vector2i) -> int:
+	if _rcc.is_empty():
+		_rcc.resize(cn * cn)
+	var idx: int = c.y * cn + c.x
+	if _rcc[idx] != 0:
+		return _rroot(_rcc[idx])
+	var id: int = _rup.size()
+	_rup.append(id)
+	var q := PackedInt32Array([idx])
+	_rcc[idx] = id
+	var head := 0
+	var met := false
+	while head < q.size():
+		if q.size() >= ROVER_CAP:
+			met = true
+			break
+		var k: int = q[head]
+		head += 1
+		var x: int = k % cn
+		var y: int = k / cn
+		for d in 4:
+			var nx: int = x + (1 if d == 0 else (-1 if d == 1 else 0))
+			var ny: int = y + (1 if d == 2 else (-1 if d == 3 else 0))
+			if nx < 0 or ny < 0 or nx >= cn or ny >= cn:
+				continue
+			var nk: int = ny * cn + nx
+			var m: int = _rcc[nk]
+			if m == id:
+				continue
+			if m != 0:
+				met = true
+				var r1: int = _rroot(id)
+				var r2: int = _rroot(m)
+				if r1 != r2:
+					_rup[maxi(r1, r2)] = mini(r1, r2)
+				continue
+			if rover.is_point_solid(Vector2i(nx, ny)):
+				continue
+			_rcc[nk] = id
+			q.append(nk)
+	var root: int = _rroot(id)
+	if not met:
+		_rpocket[root] = true
+	return root
+
+func _rroot(id: int) -> int:
+	var r: int = id
+	while int(_rup[r]) != r:
+		r = int(_rup[r])
+	while int(_rup[id]) != r:
+		var nxt: int = int(_rup[id])
+		_rup[id] = r
+		id = nxt
+	return r
+
+## A rover drive: {"ok", "pts", "len"} or {"ok": false, "blocked": true} when the way is closed.
+## No drive crosses a built tube or structure; a start or end closed in fails at once (no search
+## over the whole map: that was a 23 ms tick).
+func _rover_path(a: Vector2, b: Vector2) -> Dictionary:
+	var ca = _rover_end(a)
+	var cb = _rover_end(b)
+	if ca == null or cb == null:
+		return {"ok": false, "blocked": true}
+	var ra: int = _rover_area(ca)
+	var rb: int = _rover_area(cb)
+	if ra != rb and (_rpocket.has(ra) or _rpocket.has(rb)):
+		return {"ok": false, "blocked": true}
+	var key: int = ((int(ca.x) * cn + int(ca.y)) * cn + int(cb.x)) * cn + int(cb.y) + (1 << 40)
+	var smooth = _cpaths.get(key)
+	if smooth == null:
+		var raw: PackedVector2Array = rover.get_point_path(ca, cb)
+		smooth = [] if raw.is_empty() else _coarse_smooth(rover, raw)
+		if _cpaths.size() >= 2000:
+			_cpaths = {}
+		_cpaths[key] = smooth
+	if (smooth as Array).is_empty():
+		return {"ok": false, "blocked": true}
+	var pts: Array = (smooth as Array).duplicate()
+	pts.push_front(a)
+	pts.append(b)
+	return {"ok": true, "pts": pts, "len": _length(pts)}
+
+## Would a new tube (p0, p1) or structure disc (c, r) close in a rover depot's bays? Every depot
+## within reach is tested: each bay's taxi stretch (bay -> apron exit) must stay clear, and some
+## bay's exit must still reach open ground (a fill of APRON_CAP rover cells). `new_depot` is
+## {pos, rot, radius, bays} for a depot being placed. Deterministic; the grid is restored.
+func depot_cut(shape: Dictionary, new_depot: Dictionary = {}) -> bool:
+	_ensure_world()
+	var depots: Array = []
+	for d in sim.vehicles.depots():
+		depots.append({"pos": d["pos"], "bays": sim.vehicles.bays(d)})
+	if not new_depot.is_empty():
+		depots.append(new_depot)
+	if depots.is_empty():
+		return false
+	var centre: Vector2 = shape.get("c", (shape.get("p0", Vector2.ZERO) as Vector2).lerp(shape.get("p1", Vector2.ZERO), 0.5))
+	var near := false
+	for d in depots:
+		if (d["pos"] as Vector2).distance_to(centre) < 220.0 or d == new_depot:
+			near = true
+	if not near:
+		return false
+	# Every bay door keeps its apron: nothing new on the taxi stretch or 6 m beyond the exit
+	# (like an airlock porch), even while other bays stay open.
+	for d in depots:
+		for bay in d["bays"]:
+			var b0: Vector2 = bay["pos"]
+			var b1: Vector2 = (bay["exit"] as Vector2) + ((bay["exit"] as Vector2) - b0).normalized() * 6.0
+			if shape.has("p0"):
+				if _seg_seg_distance(b0, b1, shape["p0"], shape["p1"]) < sim.corridor_r() + VEH_HALF + 1.0:
+					return true
+			elif d != new_depot and Geometry2D.get_closest_point_to_segment(shape["c"], b0, b1).distance_to(shape["c"]) < float(shape["r"]) + VEH_HALF + 1.0:
+				return true
+	# A new depot: its own bay aprons must be clear of what stands (or is planned) already.
+	if not new_depot.is_empty():
+		var others: Array = []
+		for id in sim.state["buildings"]:
+			var ob: Dictionary = sim.state["buildings"][id]
+			if ob["kind"] == "link":
+				if ob["def"] == "corridor":
+					others.append({"p0": ob["p0"], "p1": ob["p1"]})
+			elif (ob["pos"] as Vector2).distance_to(new_depot["pos"]) < 80.0:
+				others.append({"c": ob["pos"], "r": float(ob["radius"])})
+		for bay in new_depot["bays"]:
+			var n0: Vector2 = bay["pos"]
+			var n1: Vector2 = (bay["exit"] as Vector2) + ((bay["exit"] as Vector2) - n0).normalized() * 6.0
+			for o in others:
+				if o.has("p0"):
+					if _seg_seg_distance(n0, n1, o["p0"], o["p1"]) < sim.corridor_r() + VEH_HALF + 1.0:
+						return true
+				elif Geometry2D.get_closest_point_to_segment(o["c"], n0, n1).distance_to(o["c"]) < float(o["r"]) + VEH_HALF + 1.0:
+					return true
+	# Planned structures and corridors will stand there too: they count as built here.
+	var closed := PackedInt32Array()
+	var tubes0: Array = _tubes
+	var discs0: Array = _discs
+	_tubes = _tubes.duplicate()
+	_discs = _discs.duplicate()
+	var rreach: float = sim.corridor_r() + VEH_HALF + COARSE * 0.7072
+	var blds: Dictionary = sim.state["buildings"]
+	for id in blds:
+		var pb: Dictionary = blds[id]
+		if pb["state"] != "blueprint":
+			continue
+		if pb["kind"] == "link":
+			if pb["def"] == "corridor" and (pb["p0"] as Vector2).distance_to(centre) < 300.0:
+				_tubes.append([pb["p0"], pb["p1"]])
+				_close_capsule(rover, pb["p0"], pb["p1"], rreach, closed)
+		elif (pb["pos"] as Vector2).distance_to(centre) < 300.0:
+			_discs.append([pb["pos"], float(pb["radius"])])
+			_close_capsule(rover, pb["pos"], pb["pos"], float(pb["radius"]) + 2.0 + COARSE * 0.5, closed)
+	# A depot already closed in (an old save) does not make every new placement near it wrong:
+	# only a change from reachable to closed counts.
+	var before := {}
+	for i in depots.size():
+		var d0: Dictionary = depots[i]
+		if d0 == new_depot or (d0["pos"] as Vector2).distance_to(centre) < 220.0:
+			before[i] = true if d0 == new_depot else _apron_open(d0)
+	if shape.has("p0"):
+		_tubes.append([shape["p0"], shape["p1"]])
+		_close_capsule(rover, shape["p0"], shape["p1"], rreach, closed)
+	else:
+		_discs.append([shape["c"], float(shape["r"])])
+		_close_capsule(rover, shape["c"], shape["c"], float(shape["r"]) + 2.0 + COARSE * 0.5, closed)
+	if not new_depot.is_empty():
+		_close_capsule(rover, new_depot["pos"], new_depot["pos"], float(new_depot["radius"]) + 2.0 + COARSE * 0.5, closed)
+	var cut := false
+	for i in depots.size():
+		if not before.has(i) or not bool(before[i]):
+			continue
+		if not _apron_open(depots[i]):
+			cut = true
+			break
+	for k in closed:
+		rover.set_point_solid(Vector2i(k % cn, k / cn), false)
+	_tubes = tubes0
+	_discs = discs0
+	return cut
+
+## True when the taxi stretch of a depot bay (bay -> apron exit) crosses no built tube.
+func taxi_clear(bay: Vector2, exit: Vector2) -> bool:
+	_ensure_world()
+	return _rover_clear_taxi(bay, exit)
+
+## True when some bay of depot d ({pos, bays}) has a clear taxi and an exit that reaches open
+## ground (APRON_CAP rover cells).
+func _apron_open(d: Dictionary) -> bool:
+	for bay in d["bays"]:
+		if not _rover_clear_taxi(bay["pos"], bay["exit"]):
+			continue
+		var c0 = _rover_end(bay["exit"])
+		if c0 != null and _fill_reaches(c0, APRON_CAP):
+			return true
+	return false
+
+func _rover_clear_taxi(bay: Vector2, exit: Vector2) -> bool:
+	var tr: float = sim.corridor_r() + VEH_HALF
+	for t in _tubes:
+		if _seg_seg_distance(bay, exit, t[0], t[1]) < tr:
+			return false
+	return true
+
+## True when a fill from cell c on the rover grid reaches `cap` cells.
+func _fill_reaches(c: Vector2i, cap: int) -> bool:
+	var seen := {c.y * cn + c.x: true}
+	var q := PackedInt32Array([c.y * cn + c.x])
+	var head := 0
+	while head < q.size():
+		if q.size() >= cap:
+			return true
+		var k: int = q[head]
+		head += 1
+		var x: int = k % cn
+		var y: int = k / cn
+		for d in 4:
+			var nx: int = x + (1 if d == 0 else (-1 if d == 1 else 0))
+			var ny: int = y + (1 if d == 2 else (-1 if d == 3 else 0))
+			if nx < 0 or ny < 0 or nx >= cn or ny >= cn:
+				continue
+			var nk: int = ny * cn + nx
+			if seen.has(nk) or rover.is_point_solid(Vector2i(nx, ny)):
+				continue
+			seen[nk] = true
+			q.append(nk)
+	return false
 
 ## True when a rover can stand at p (an open rover cell).
 func rover_ok(p: Vector2) -> bool:

@@ -62,6 +62,19 @@ varying vec3 wpos;
 varying vec3 wnrm;
 varying float v_sun;             // horizon visibility of the key light (fragment -> light)
 
+// Crevice walls (critic round 22): rough rock noise on the lofted wall mesh (crevice_mat only).
+uniform float wall_rough = 0.0;
+float h3(vec3 q) {
+	return fract(sin(dot(q, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+}
+float vnoise3(vec3 x) {
+	vec3 i = floor(x);
+	vec3 f = fract(x);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
+		mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
+
 float hz_fetch(vec2 cuv, float b) {
 	float tile = floor(b / 4.0);
 	float ch = b - tile * 4.0;
@@ -177,7 +190,13 @@ void fragment() {
 	// V4 horizon: sun visibility for the key light, and how much sky a point sees (deep crater
 	// floors: little sky, a cold grey tint, darker ambient).
 	v_sun = 1.0;
-	if (hz_on > 0.5) {
+	// Crevice mesh (wall_rough): the 4 m horizon cells alternate inside / outside the trench along a
+	// wall and drew vertical light and dark stripes (critic round 22, "picket fence"). The wall and
+	// floor take the sun from the shadow map only, and a fixed dimming for the narrow sky.
+	if (wall_rough > 0.5) {
+		ao *= 0.72;
+	}
+	if (hz_on > 0.5 && wall_rough < 0.5) {
 		vec2 cuv2 = clamp((p / hz_cell + 0.5) / hz_side, vec2(0.5 / hz_side), vec2(1.0 - 0.5 / hz_side));
 		float b0 = clamp(floor(sun_bin), 0.0, hz_bins - 2.0);
 		float hz_deg = mix(hz_fetch(cuv2, b0), hz_fetch(cuv2, b0 + 1.0), clamp(sun_bin - b0, 0.0, 1.0)) * 100.0 - 10.0;
@@ -199,8 +218,17 @@ void fragment() {
 	if (slope > 0.4) {
 		float st = smoothstep(0.4, 0.7, slope);
 		float band = sin(wpos.y * 1.9 + mA.r * 7.0 + mB.g * 3.0);
-		alb *= 1.0 + band * 0.09 * st;
-		nxy += vec2(0.0, band * 0.22 * st);
+		alb *= 1.0 + band * 0.09 * st * (1.0 - wall_rough * 0.6);
+		nxy += vec2(0.0, band * 0.22 * st * (1.0 - wall_rough * 0.6));
+	}
+	if (wall_rough > 0.0) {
+		float rn = vnoise3(wpos * 0.42) * 0.55 + vnoise3(wpos * 1.5) * 0.3 + vnoise3(wpos * 4.1) * 0.15;
+		alb *= mix(1.0, 0.68 + 0.6 * rn, wall_rough);
+		vec2 bump = vec2(vnoise3(wpos * 0.8 + vec3(3.1, 0.0, 1.7)), vnoise3(wpos * 0.8 + vec3(7.7, 2.3, 0.0))) - 0.5;
+		bump += (vec2(vnoise3(wpos * 2.6 + vec3(1.3)), vnoise3(wpos * 2.6 + vec3(5.9))) - 0.5) * 0.5;
+		// The ground's normal maps are sampled in plan (xz): on a vertical wall they smear into
+		// vertical stripes. The wall uses the rock bump only.
+		nxy = bump * 1.1;
 	}
 	// Crevices (splat B near 0): a dark crack from SIM's crevice lines.
 	float crack = smoothstep(0.1, 0.015, sp.b) * inside;
@@ -263,12 +291,26 @@ void fragment() {
 	if (fog_on > 0.5 && inside > 0.5) {
 		float ex = texture(fog_tex, cuv).r;
 		if (fog_texel > 0.0) {
-			ex = (ex * 2.0 + texture(fog_tex, cuv + vec2(fog_texel, 0.0)).r + texture(fog_tex, cuv - vec2(fog_texel, 0.0)).r
-				+ texture(fog_tex, cuv + vec2(0.0, fog_texel)).r + texture(fog_tex, cuv - vec2(0.0, fog_texel)).r) / 6.0;
+			// Critic round 22: blur over 2-3 cells (13 taps), so the 16 m cells do not show as steps.
+			float s = ex * 4.0;
+			for (int i = 0; i < 4; i++) {
+				float an = float(i) * 1.5707963;
+				vec2 d1 = vec2(cos(an), sin(an)) * fog_texel * 1.2;
+				vec2 d2 = vec2(cos(an + 0.785398), sin(an + 0.785398)) * fog_texel * 1.9;
+				vec2 d3 = vec2(cos(an), sin(an)) * fog_texel * 2.6;
+				s += texture(fog_tex, cuv + d1).r * 2.0 + texture(fog_tex, cuv + d2).r * 1.2 + texture(fog_tex, cuv + d3).r * 0.8;
+			}
+			ex = s / 20.0;
 		}
 		ex = min(ex * fog_gain, 1.0);
 		vec3 g = vec3(dot(alb, vec3(0.3, 0.59, 0.11)));
-		alb = mix(mix(g, vec3(0.34, 0.33, 0.38), 0.4) * 0.45, alb, smoothstep(0.1, 0.9, ex));
+		// Unexplored: grey and dim, but the relief still reads (0.62, was 0.45).
+		vec3 fogged = mix(g, vec3(0.34, 0.33, 0.38), 0.3) * 0.62;
+		float ek = smoothstep(0.1, 0.9, ex);
+		alb = mix(fogged, alb, ek);
+		// A warm rim along the edge of the explored ground.
+		float rim = smoothstep(0.08, 0.45, ex) * (1.0 - smoothstep(0.45, 0.85, ex));
+		alb += vec3(1.0, 0.58, 0.28) * rim * 0.22;
 	}
 
 	// Hazard zones (V3 1): meteor red, wind cyan, quake violet; only above-average risk
@@ -289,6 +331,10 @@ void fragment() {
 
 	vec3 t = normalize(vec3(1.0, 0.0, 0.0) - n * n.x);
 	vec3 bt = normalize(vec3(0.0, 0.0, 1.0) - n * n.z);
+	if (wall_rough > 0.5 && abs(n.y) < 0.8) {
+		t = normalize(cross(vec3(0.0, 1.0, 0.0), n));
+		bt = normalize(cross(n, t));
+	}
 	float nz = sqrt(clamp(1.0 - dot(nxy, nxy), 0.0, 1.0));
 	vec3 nw = normalize(t * nxy.x + bt * nxy.y + n * nz);
 	NORMAL = normalize((VIEW_MATRIX * vec4(nw, 0.0)).xyz);

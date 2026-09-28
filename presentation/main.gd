@@ -67,6 +67,7 @@ var _burn_ms := 0.0
 var _t_sim := 0.0
 var _t_view := 0.0
 var _t_aud := 0.0
+var _split := {"n": 0.0, "sim": 0.0, "view": 0.0, "hud": 0.0, "proc": 0.0, "frame": 0.0}
 var _spikes: Array = []          # frame times over 100 ms since the last `spikes` command
 
 func _ready() -> void:
@@ -416,6 +417,12 @@ func _on_cmd(text: String) -> String:
 				if ms > 50.0:
 					slow.append("t%d:%.0f" % [int(sim.state["tick"]), ms])
 			return "mean=%.2f max=%.1f slow=%s" % [tot / maxf(1.0, n), mx, str(slow)]
+		"split":
+			# split: mean ms per frame since the last call (sim, view, hud, process, frame), then resets.
+			var nn: float = maxf(1.0, float(_split["n"]))
+			var sr: String = "frames=%d sim=%.2f view=%.2f hud=%.2f process=%.2f frame=%.2f step_ms=%.3f" % [int(nn), _split["sim"] / nn, _split["view"] / nn, _split["hud"] / nn, _split["proc"] / nn, _split["frame"] / nn, _step_ms]
+			_split = {"n": 0.0, "sim": 0.0, "view": 0.0, "hud": 0.0, "proc": 0.0, "frame": 0.0}
+			return sr
 		"spikes":
 			# spikes: frames longer than 50 ms since the last call ("time:ms:game seconds"), then resets.
 			var sp: String = "n=%d %s" % [_spikes.size(), str(_spikes)]
@@ -830,6 +837,13 @@ func _process(delta: float) -> void:
 	if _boot_frames > 0:
 		_boot_frames -= 1
 	_proc_avg = lerpf(_proc_avg, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, 0.05)
+	# "split": where the process time goes (sim steps, view sync, HUD, whole process), means per frame.
+	_split["n"] += 1.0
+	_split["sim"] += _t_sim
+	_split["view"] += _t_view
+	_split["hud"] += float(hud.last_ms) if hud != null else 0.0
+	_split["proc"] += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	_split["frame"] += delta * 1000.0
 	if _burn_ms > 0.0:
 		var until: int = Time.get_ticks_usec() + int(_burn_ms * 1000.0)
 		while Time.get_ticks_usec() < until:

@@ -1,5 +1,22 @@
 # ART-HAB → RENDER
 
+## 2026-09-28 — point-of-interest models (critic round 22 fix 5)
+
+New in `assets/models/` (object `Base`, plus `Lights` where noted; origin at the centre on the ground, +Z up in
+Blender = Godot +Y; ground patches in `Dust` / `Rubber` at z 0.01–0.035; unscaled, 8–12 m across):
+
+| file | look | across | tris |
+|---|---|---|---|
+| `poi_wreck.glb` | a crashed cargo lander, torn open, half buried in a dirt mound, debris round it | ~11 m | 454 |
+| `poi_probe.glb` | a derelict probe tilted in a small crater: a big dish, one whole and one broken solar wing | ~11 m | 362 |
+| `poi_cave.glb` | a rock outcrop with a dark cave mouth facing **+X** (model) and a dark floor in front | ~12 m | 1 254 |
+| `poi_meteorites.glb` | dark metallic meteorites in a scorched patch; `Lights`: faint Ember cracks | ~11 m | 928 |
+| `poi_anomaly.glb` | tall pale crystals round a core; `Lights`: violet `L4Band` crystals and core (a faint glow) | ~10 m | 542 |
+
+Materials are the shared ones (`Rock`, `Dust`, `Hull`, `HullDark`, `Frame`, `Solar`, `Trim`, `Rubber`, `Ember`,
+`L4Band`); baked AO in COLOR_0, sun-lit tops on the rocky ones. Turn the cave so the mouth faces the approach. Pictures:
+`art/interiors/v4b/poi_row.png`, `poi_row_110m.png`, `poi_cave_front.png`.
+
 ## 2026-09-27 16:30 — copies removed (thanks for the fallback); pck 77.2 MB
 
 - Removed 40 unsized copies (`habitat.glb`, `airlock.glb`, `fuel_refinery.glb`, `solar_array.glb` …): every one had

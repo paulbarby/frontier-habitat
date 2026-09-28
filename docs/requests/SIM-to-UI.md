@@ -534,3 +534,19 @@ reveal() itself 0.06 ms (r 100) to 2.1 ms (r 4,000); the whole tick with the com
 not the reveal: most likely it was the old 50–78 ms walk-search ticks (now fixed: worst tick in 900 s of showcase_v4
 16–20 ms), or several sim ticks run in one web frame to catch up. If it comes back with the current build, send me
 the tick number and the command.
+
+## 2026-09-28 — rovers never drive through a corridor; depot bays stay open
+
+- Built corridor tubes close the rover grid (half a rover's width added). A drive's first and last straight
+  stretches must also clear every tube and structure. A drive that finds no way returns code `no_route`; the
+  vehicle does not move, `block` = `no_route`, and the row has `block_text` "No route: the way is blocked"
+  (log `vehicle_stopped` once). The check is bounded: closed areas of the rover grid are found once per change
+  (a fill of at most 6,000 cells), so a closed-in start or end fails at once (no whole-map search).
+- A driving vehicle plans the rest of its way again when structures change (never through a new tube).
+- Placement refuses, with code `depot_blocked` "This would block the rover depot.": a corridor or structure on a
+  bay's taxi stretch or 6 m in front of a bay door; anything that would cut every bay of a depot from open ground
+  (planned structures count as built); and a new depot whose bay doors face something already there.
+- A depot closed in already (an old save) is left as it is: its vehicles say "no route", other placements near it
+  are not refused for it, and the game goes on.
+- showcase_v4 rebuilt (the depot faces open ground; the route rover drives its route). Test
+  `v4_rover_tubes_and_blocks`.

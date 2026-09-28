@@ -1,0 +1,66 @@
+{
+  "round": 23,
+  "date": "2026-09-28",
+  "scope": "final v4.0 round: re-rate reactor_and_disaster, exploration, vehicles, room_identity, terrain_v4, ui_theme after the round-22 fixes. Evidence art/critic_input/render/142-144, art/interiors/v4b/, docs/shots/ui7_*; my own shots from build/web_render (09-28 18:11): showcase_v4 debug=1 (base jumps, reactor stage breach sequence 0.6/2/6/18 s, zone at 300 m and night, fog at 900 m) and a Frontier game (two crevices, two boulder fields).",
+  "pass_mark": 0.65,
+  "subjects": {
+    "reactor_and_disaster": {"consistency": 0.76, "appeal": 0.72, "style": 0.74, "score": 0.74, "pass": true, "was": 0.70,
+      "round_22_fixes_checked": {
+        "radiation zone as a ground stain": "landed: soft olive stain, hard ring only with the layer (142, my zone_300, zone_night). It carries a regular spiral swirl pattern that still reads a little graphic.",
+        "bigger breach": "landed: 2x fireball, dust column visible for about 6 s, second slow ring (142, my breach_0/2/6).",
+        "warning ring 3-4 px": "landed (142).",
+        "reactor stage command": "landed: 'reactor stage breach' fired at once in my run."
+      },
+      "fixes": [
+        {"owner": "RENDER", "fix": "Replace the spiral swirl in the radiation stain with irregular noise (two octaves) so it reads as fallout, not a pattern."}
+      ]},
+    "exploration": {"consistency": 0.76, "appeal": 0.72, "style": 0.74, "score": 0.74, "pass": true, "was": 0.70,
+      "round_22_fixes_checked": {
+        "fog edge blurred with a warm rim, relief under the fog": "landed (143, my fog_900).",
+        "POI models": "landed: anomaly, cave (mouth to the nearest base), meteorites, wreck, derelict probe, each with a 12 m ground mark (144, v4b/poi_*). At 110 m the models are small, but with the mark they read as places."
+      },
+      "fixes": [
+        {"owner": "RENDER", "fix": "The satellite scan draws as a flat cyan square frame and a pale cylinder beam on the ground (art/critic/r23_stray_crop.png, also seen in round 22). It reads as debug geometry. Draw the scan band as a soft moving light strip across the ground and fade the beam at the ground."}
+      ]},
+    "vehicles": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "was": 0.75,
+      "round_22_fixes_checked": {
+        "hopper dust ring and ground glow": "landed (143, hopper take-off and landing frames).",
+        "body tilt <= 15 deg / park on <= 10 deg": "not verified: no shot of a vehicle on a slope in the evidence or my runs."
+      },
+      "fixes": [{"owner": "RENDER", "fix": "Supply one shot of the expedition rover parked near the crater rim to close the tilt fix."}]},
+    "room_identity": {"consistency": 0.80, "appeal": 0.76, "style": 0.78, "score": 0.78, "pass": true, "was": 0.76,
+      "round_22_fixes_checked": {
+        "depot detail": "landed: roof ribs, bay frames with hazard stripes and status lights, annex, accent band (v4b/rover_depot_l, _m).",
+        "logistics light roof and crane": "light roof landed: at 250 m logistics (light discs, purple badge) and industry (dark discs, stacks) now differ (my art/critic/r23_b1_crop.png). The crane is too small to see at 250 m.",
+        "outpost ring deck and flag": "ring deck with rails landed in game (my r23_outpost_crop.png); the flag and mast do not read at 110 m."
+      },
+      "label_free_test": "Real colony at 250 m by day: 8 of 8 families named (was 6 of 8). By night: 7 of 8 (logistics and storage badges dim).",
+      "fixes": [{"owner": "ART-HAB", "fix": "Outpost flag: 2x size and a mast light so the second base reads from 110 m."}]},
+    "terrain_v4": {"consistency": 0.78, "appeal": 0.76, "style": 0.78, "score": 0.77, "pass": true, "was": 0.75,
+      "round_22_fixes_checked": {
+        "crevice walls": "landed: rocky lips, no picket-fence ribs (143, my crev577, crev160). The ends are square boxes; round them.",
+        "boulders": "landed: terracotta rock with lit tops, cast shadows and a dust skirt (my bould1901, bould963)."
+      }},
+    "ui_theme": {"consistency": 0.82, "appeal": 0.78, "style": 0.78, "score": 0.79, "pass": true, "was": 0.77,
+      "round_22_fixes_checked": {
+        "windows sized to content": "landed: routes, vehicles and priorities fit (ui7_*).",
+        "tech-tree text 12 px, locked text brighter": "landed (ui7_tech_tree_12px)."
+      }}
+  },
+  "notes": [
+    "No FAIL. All six re-rated subjects rose.",
+    "My evidence: art/critic/r23/*.png; grids r23_grid.png, r23_terrain.png, r23_v4b.png, r23_ui.png; crops r23_outpost_crop.png, r23_b1_crop.png, r23_breach_crop.png, r23_stray_crop.png. The 'reveal' command was unknown in __fh.cmd in my build; I judged discovery from 143-144."
+  ],
+  "latest_scores": {
+    "npc_suit": [0.82, 5], "npc_indoor": [0.72, 5], "npc_animation": [0.78, 5],
+    "npc_interaction": [0.73, 13], "npc_ingame": [0.77, 22],
+    "interior_habitat": [0.79, 7], "interior_comfort": [0.75, 7], "interior_medical": [0.75, 7], "interior_food": [0.76, 7],
+    "interior_industry": [0.76, 7], "interior_science": [0.73, 7], "interior_life": [0.77, 7], "interior_logistics": [0.77, 7],
+    "interior_links": [0.71, 7], "interior_ingame": [0.76, 22], "doorways": [0.79, 8], "interior_lighting": [0.75, 13],
+    "hazard_props": [0.70, 7], "hazard_visuals": [0.70, 8],
+    "doors": [0.79, 22], "doorway_decals": [0.80, 13], "airlock": [0.78, 22], "npc_paths": [0.76, 22],
+    "ships": [0.80, 14], "landing_pad": [0.75, 12], "visitors": [0.78, 14],
+    "ui_theme": [0.79, 23], "vehicles": [0.76, 23], "room_identity": [0.78, 23], "terrain_v4": [0.77, 23],
+    "reactor_and_disaster": [0.74, 23], "exploration": [0.74, 23]
+  }
+}

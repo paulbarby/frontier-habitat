@@ -31,6 +31,8 @@ const KINDS := {
 	"devil": {"add": false, "cap": 320, "per": 40, "life": 3.2, "dir": Vector3(0, 1, 0), "spread": 0.22, "speed": [3.0, 8.0], "gravity": Vector3(0, -0.4, 0), "size": [0.7, 4.0], "c0": Color(0.64, 0.46, 0.32, 0.42), "c1": Color(0.7, 0.52, 0.38, 0.0), "wind": 0.8, "r": 2.5},
 	# V4 radiation zone (fx_reactor): slow, faint green-yellow motes rising over the zone.
 	"rad_motes": {"add": true, "cap": 360, "per": 30, "life": 4.0, "dir": Vector3(0, 1, 0), "spread": 0.3, "speed": [0.2, 0.6], "gravity": Vector3(0, 0.05, 0), "size": [0.08, 0.2], "c0": Color(0.75, 1.0, 0.35, 0.85), "c1": Color(0.9, 1.0, 0.4, 0.0), "wind": 0.2, "r": 10.0, "spawn": 1},
+	# V4 breach (critic round 22): a tall dust column that rises for 8-10 s over a reactor blast.
+	"dust_column": {"add": false, "cap": 480, "per": 110, "life": 9.0, "dir": Vector3(0, 1, 0), "spread": 0.14, "speed": [4.0, 10.0], "gravity": Vector3(0, -0.3, 0), "size": [5.0, 22.0], "c0": Color(0.36, 0.27, 0.2, 0.9), "c1": Color(0.62, 0.48, 0.36, 0.0), "wind": 0.35, "r": 6.0},
 	"site_dust": {"add": false, "cap": 240, "per": 8, "life": 3.2, "dir": Vector3(0, 0.3, 0), "spread": 0.6, "speed": [0.3, 0.9], "gravity": Vector3(0, -0.05, 0), "size": [0.5, 2.0], "c0": Color(0.66, 0.47, 0.33, 0.38), "c1": Color(0.72, 0.55, 0.4, 0.0), "wind": 0.5, "r": 1.0, "spawn": 1},
 }
 
@@ -234,7 +236,7 @@ func prewarm(pos: Vector3) -> void:
 		_lamp_sig = "warm"
 
 ## One-shot particles (dust puff, sparks shower).
-func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float = 0.0) -> void:
+func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float = 0.0, inten: float = 1.0) -> void:
 	if not KINDS.has(kind):
 		return
 	var pool: Dictionary = _pool(kind)
@@ -247,7 +249,7 @@ func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float 
 		var slot: int = pool["burst_i"]
 		pool["burst_i"] = lo + ((slot - lo + 1) % maxi(1, cap - lo))
 		mm.set_instance_transform(slot, xf)
-		mm.set_instance_custom_data(slot, Color(_rng.randf(), 1.0, _now - _rng.randf() * 0.1, yaw))
+		mm.set_instance_custom_data(slot, Color(_rng.randf(), inten, _now - _rng.randf() * 0.1, yaw))
 
 ## Construction sites: sparks at the build line, dust at the base.
 func site_start(id: int, origin: Vector3, radius: float) -> void:

@@ -136,3 +136,11 @@ door side. Tell me when it is in; RENDER then drops its own override.
 
 1. `reactor_breach` and `unstable_blast` are logged with `ents = []` (`sim/reactors.gd` `_breach_reactor` and `_unstable_second`). The view needs the structure to place the explosion. RENDER now uses the risky structure of that def that disappeared in the same sync, but please log `[int(b["id"])]` as the first entity, as `toxic_leak` and `satellite_launched` do.
 2. `showcase_v4.fhsave`: expedition rover (view id 2) is parked at (1933, 752) on the crater rim flank; the ground under it is 30 deg nose-up, 7.5 deg roll. It reads as a rover tipping over. RENDER now caps the body tilt at 24 deg, but a parking spot (and a stop at the end of a route) should be on ground under about 15 deg. Can `nearest_walkable` for a vehicle stop prefer a flat cell?
+
+
+## 2026-09-28 - an outside colonist walks through a corridor (Frontier game)
+
+- `tools/render_path_check.gd v4` on `build/web_render/frontier_game.fhsave` (`tools/render_frontier_save.gd 2 1001`: new `frontier` game, reference campaign `all`, 2 days): colonist 98, `where = out`, SIM position (1328.3, 1301.7) then (1331.8, 1301.1) is inside a corridor tube (2 samples, 7 frames apart). The drawn body follows SIM's path, so the crossing is in SIM's route.
+- Request: outside routes should not cross a corridor tube on the v4 map (or tell RENDER if a crossing point exists by design, and where, so the view can draw a step-over).
+- For information: on `showcase_v4` the path check is clean (wall 0, outside 0, slide 0, teleport 0).
+- Critic round 22 asked whether the 40 ms average processing at speed 4 on a new Frontier game is the sim. It is not: measured per frame at speed 4 on a new Frontier game, the sim steps take 0.19 ms, the view 1.24 ms, the HUD 0.08 ms (GPU build, 60 fps). The 40 ms figure is Godot's whole-frame process time; with software WebGL (SwiftShader) it is 700 ms. No action for SIM.

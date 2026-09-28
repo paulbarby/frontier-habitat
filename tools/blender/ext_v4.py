@@ -629,10 +629,12 @@ def build_outpost(spec):
         x3, y3, _ = polar(rh - 0.2, a_)
         b.cyl((x_, y_, zf - 0.42), (x3 * 0.9, y3 * 0.9, zf - 1.1), 0.05, seg=5, mat="Frame")
     fx, fy = polar(rd1 - 0.1, 200.0)[:2]
-    b.vcyl(fx, fy, zf - 0.30, zf + 5.2, 0.05, seg=6, mat="Metal")
-    b.sphere((fx, fy, zf + 5.25), 0.07, "Frame", seg=6, rings=3)
-    b.box((fx, fy - 0.62, zf + 4.8), (0.02, 1.2, 0.7), "Accent")
-    lt.sphere((fx, fy, zf + 5.35), 0.07, "BeaconAmber", seg=6, rings=3)
+    # critic round 23: the flag twice as large (2.4 x 1.4 m) and a lamp on the mast top
+    b.vcyl(fx, fy, zf - 0.30, zf + 6.0, 0.07, seg=6, mat="Metal")
+    b.box((fx, fy + 1.25, zf + 5.1), (0.03, 2.4, 1.4), "Accent")
+    b.box((fx, fy + 1.25, zf + 5.1), (0.035, 2.44, 0.12), "Frame")
+    b.vcyl(fx, fy, zf + 6.0, zf + 6.08, 0.14, seg=8, mat="Frame")
+    lt.sphere((fx, fy, zf + 6.2), 0.14, "BeaconAmber", seg=8, rings=4)
     # beacon mast and the folded solar wing
     b.vcyl(-0.6, 0.9, zf + hh + 0.6, zf + hh + 2.4, 0.05, seg=6, mat="Frame")
     lt.sphere((-0.6, 0.9, zf + hh + 2.5), 0.12, "BeaconAmber", seg=8, rings=4)
@@ -758,6 +760,137 @@ def build_graphene(spec):
 
 
 # ======================================================================================
+# POINTS OF INTEREST (critic round 22 fix 5, for RENDER): 6-12 m, readable from 110-250 m
+# ======================================================================================
+def scorch(p, r, seed, z=0.01, mat="Rubber", n=20):
+    """A jagged flat patch on the ground (scorch, spill or shadow), fan from the centre."""
+    rng = random.Random(seed)
+    ids = []
+    for k in range(n):
+        a = 2 * pi * k / n
+        rr = r * rng.uniform(0.7, 1.05)
+        ids.append(p.v((rr * cos(a), rr * sin(a), z)))
+    c = p.v((0.0, 0.0, z))
+    for k in range(n):
+        p.f([c, ids[k], ids[(k + 1) % n]], mat)
+
+
+def build_poi_wreck(spec):
+    """A crashed cargo lander, broken open and half buried, debris round it."""
+    b = Part("Base")
+    scorch(b, 5.2, 3, mat="Dust")
+    scorch(b, 3.6, 4, z=0.02, mat="Rubber")
+    with b.at(T(0.3, 0.0, 1.1), RY(-16.0), RZ(8.0)):
+        # the hull: a drum lying on its side, one end torn open (dark inside)
+        with b.at(RY(90.0)):
+            b.lathe([(1.6, -2.8), (1.6, 1.4)], "Hull", seg=12, caps=False)
+            b.lathe([(1.55, 1.4), (1.55, -2.8)], "HullDark", seg=12, caps=False)
+            b.lathe([(1.62, -1.0), (1.62, -0.6)], "Hazard", seg=12, caps=False)
+            b.lathe([(0.0, -2.8), (1.6, -2.8), (1.3, -3.4), (0.4, -3.6), (0.0, -3.62)], "Hull", seg=12)
+        # torn plates sticking out of the open end
+        for k in range(5):
+            a = radians(72.0 * k + 10.0)
+            b.poly([(1.4, 1.55 * cos(a), 1.55 * sin(a)), (1.4, 1.55 * cos(a + 0.5), 1.55 * sin(a + 0.5)),
+                    (2.2, 1.9 * cos(a + 0.3), 1.9 * sin(a + 0.3))], "Hull")
+            b.poly([(2.2, 1.9 * cos(a + 0.3), 1.9 * sin(a + 0.3)), (1.4, 1.55 * cos(a + 0.5), 1.55 * sin(a + 0.5)),
+                    (1.4, 1.55 * cos(a), 1.55 * sin(a))], "HullDark")
+        # a broken landing leg and an engine bell
+        b.cyl((-2.0, 1.2, -1.0), (-3.4, 2.6, -2.2), 0.12, seg=6, mat="Frame")
+        with b.at(T(-3.8, 0.0, 0.0), RY(90.0)):
+            b.lathe([(0.3, 0.0), (0.9, 0.9)], "Frame", seg=10, caps=False)
+    # the dirt mound where it dug in, and scattered debris
+    stone(b, (2.6, 0.2, -0.2), (1.8, 2.2, 0.9), 71, rough=0.25, sub=1, mat="Rock")
+    rng = random.Random(9)
+    for k in range(9):
+        x_, y_ = rng.uniform(-5.0, 5.0), rng.uniform(-4.5, 4.5)
+        if hypot(x_, y_) < 2.4:
+            continue
+        with b.at(T(x_, y_, 0.08), RZ(rng.uniform(0, 360)), RY(rng.uniform(-30, 30))):
+            b.box((0, 0, 0), (rng.uniform(0.4, 1.0), rng.uniform(0.3, 0.7), 0.06), rng.choice(("Hull", "HullDark", "Frame")))
+    b.box((3.6, -2.4, 0.3), (0.6, 0.6, 0.6), "Hazard", bevel=0.05)
+    return [b]
+
+
+def build_poi_probe(spec):
+    """An old derelict probe, tilted in a small crater: a body, a big dish, two solar wings (one broken)."""
+    b = Part("Base")
+    scorch(b, 3.8, 11, mat="Dust")
+    b.lathe([(3.2, 0.0), (2.6, 0.25), (1.6, 0.05), (0.0, -0.1)], "Rock", seg=16, caps=False)
+    with b.at(T(0.0, 0.0, 0.9), RY(18.0), RZ(25.0), S(1.4, 1.4, 1.4)):
+        b.lathe([(0.0, 0.0), (0.9, 0.0), (0.9, 1.3), (0.6, 1.6), (0.0, 1.65)],
+                lambda k, i: ("Frame", "HullDark", "Frame", "Frame")[k], seg=8)
+        b.lathe([(0.92, 0.55), (0.92, 0.75)], "Hazard", seg=8, caps=False)
+        with b.at(T(0.0, 0.0, 1.7), RY(-35.0)):
+            b.lathe([(0.0, 0.0), (1.1, 0.25), (1.6, 0.6), (1.55, 0.64), (0.0, 0.08)], "Hull", seg=16)
+            b.vcyl(0, 0, 0.05, 0.9, 0.04, seg=4, mat="Frame")
+        for sy, broken in ((1, False), (-1, True)):
+            with b.at(T(0.0, sy * 0.9, 0.8), RX(-sy * (8.0 if not broken else 38.0))):
+                b.beam((0, 0, 0), (0, sy * 0.5, 0), 0.08, 0.08, "Frame")
+                ln = 2.8 if not broken else 1.6
+                b.box((0.0, sy * (0.5 + ln / 2), 0.02), (1.3, ln, 0.04), "Solar", mats={"-z": None})
+                b.box((0.0, sy * (0.5 + ln / 2), -0.01), (1.36, ln + 0.06, 0.03), "Frame")
+        b.cyl((0.4, 0.0, 1.4), (1.8, 0.4, 3.2), 0.02, seg=4, mat="Metal", cap0=False)
+    b.box((1.8, -1.6, 0.12), (0.8, 1.2, 0.03), "Solar")
+    return [b]
+
+
+def build_poi_cave(spec):
+    """A dark cave mouth in a rock outcrop: three big stones round an opening facing +X, a dark sloping floor."""
+    b = Part("Base")
+    scorch(b, 6.0, 21, mat="Dust")
+    stone(b, (-1.0, 2.7, -0.3), (2.6, 1.6, 2.7), 81, rough=0.22, facets=0.6, sub=2, mat="Rock")
+    stone(b, (-1.0, -2.7, -0.3), (2.6, 1.6, 2.5), 83, rough=0.22, facets=0.6, sub=2, mat="Rock")
+    stone(b, (-1.3, 0.0, 2.2), (2.2, 3.0, 1.3), 87, rough=0.20, facets=0.5, sub=2, mat="Rock")
+    stone(b, (-4.0, 0.0, 0.0), (2.0, 3.2, 2.8), 89, rough=0.22, sub=1, mat="Rock")
+    # the mouth: a dark arch-shaped block (the shadowed opening) and a dark floor in front of it
+    n = 8
+    arch = [(1.6 * cos(pi * k / n), 0.05 + 2.3 * sin(pi * k / n)) for k in range(n + 1)]
+    b.prism_x(arch, 0.2, 0.95, "Rubber")
+    b.poly([(2.2, -1.5, 0.035), (2.2, 1.5, 0.035), (0.9, 1.5, 0.035), (0.9, -1.5, 0.035)], "Rubber")
+    stone(b, (3.2, 1.8, 0.0), (0.6, 0.5, 0.4), 91, rough=0.25, sub=1, mat="Rock")
+    stone(b, (3.6, -1.6, 0.0), (0.5, 0.45, 0.35), 93, rough=0.25, sub=1, mat="Rock")
+    return [b]
+
+
+def build_poi_meteorites(spec):
+    """A cluster of dark metallic meteorites in a scorched patch, a faint hot glow in the cracks of the big one."""
+    b, lt = Part("Base"), Part("Lights")
+    scorch(b, 5.5, 31, mat="Dust")
+    scorch(b, 4.2, 32, z=0.02, mat="Rubber")
+    rng = random.Random(33)
+    big = [(0.0, 0.0, 1.3), (2.4, 1.3, 0.8), (-2.2, 1.6, 0.7), (1.6, -2.3, 0.75), (-1.8, -1.9, 0.6),
+           (3.4, -0.6, 0.45), (-3.3, -0.2, 0.5)]
+    for k, (x_, y_, r) in enumerate(big):
+        stone(b, (x_, y_, 0.0), (r, r * rng.uniform(0.8, 1.0), r * 0.75), 101 + k, rough=0.30, facets=0.7,
+              sub=1 if r < 1.0 else 2, mat="Frame")
+        b.lathe([(r * 1.9, 0.01), (r * 1.2, 0.18), (r * 0.9, 0.03)], "Rock", seg=10, caps=False) if k == 0 else None
+    for k in range(4):
+        a = rng.uniform(0, 2 * pi)
+        lt.box((0.9 * cos(a), 0.9 * sin(a), 0.6), (0.5, 0.05, 0.3), "Ember")
+    return [b, lt]
+
+
+def build_poi_anomaly(spec):
+    """A strange crystalline formation: tall faceted crystals round a pale core, a faint violet glow."""
+    b, lt = Part("Base"), Part("Lights")
+    scorch(b, 4.8, 41, mat="Dust")
+    b.lathe([(3.6, 0.0), (2.8, 0.35), (1.8, 0.45), (0.0, 0.5)], "Rock", seg=14)
+    rng = random.Random(43)
+    for k in range(9):
+        a = 40.0 * k + rng.uniform(-8, 8)
+        rr = rng.uniform(0.4, 2.2)
+        x_, y_, _ = polar(rr, a)
+        h = rng.uniform(2.0, 5.5) * (1.2 if rr < 1.0 else 1.0)
+        w = rng.uniform(0.28, 0.5)
+        with b.at(T(x_, y_, 0.35), RZ(rng.uniform(0, 60)), RY(rng.uniform(-16, 16)), RX(rng.uniform(-16, 16))):
+            (lt if k % 3 == 0 else b).lathe([(w, 0.0), (w, h * 0.75), (0.0, h)], "L4Band" if k % 3 == 0 else "Trim",
+                                            seg=6, smooth=False)
+    b.sphere((0.0, 0.0, 1.0), 0.6, "Trim", seg=10, rings=5)
+    lt.sphere((0.0, 0.0, 1.0), 0.45, "L4Band", seg=8, rings=4)
+    return [b, lt]
+
+
+# ======================================================================================
 MODELS = [dict(id="boulder_" + v, kind="prop", footprint=None, accent=None, budget=1400, objects=["Rock"],
                ao=dict(dist=0.8, samples=24), vc_gradient=(0.50, 0.80), builder=build_boulder, zmin=-0.30)
           for v in "abcdef"] + [
@@ -785,6 +918,16 @@ MODELS = [dict(id="boulder_" + v, kind="prop", footprint=None, accent=None, budg
          objects=["Base", "Lights"], service=False, ao=dict(dist=1.2, samples=24), builder=build_he3),
     dict(id="graphene_reactor", kind="exterior", footprint=6.0, accent="industry", budget=7000,
          objects=["Base", "Lights"], service=False, ao=dict(dist=1.2, samples=24), builder=build_graphene),
+    dict(id="poi_wreck", kind="prop", footprint=None, accent=None, budget=2500, objects=["Base"],
+         ao=dict(dist=1.0, samples=24), builder=build_poi_wreck, zmin=-3.0),
+    dict(id="poi_probe", kind="prop", footprint=None, accent=None, budget=2500, objects=["Base"],
+         ao=dict(dist=1.0, samples=24), builder=build_poi_probe, zmin=-0.8),
+    dict(id="poi_cave", kind="prop", footprint=None, accent=None, budget=3000, objects=["Base"],
+         ao=dict(dist=1.4, samples=24), vc_gradient=(0.55, 0.82), builder=build_poi_cave, zmin=-1.5),
+    dict(id="poi_meteorites", kind="prop", footprint=None, accent=None, budget=2500, objects=["Base", "Lights"],
+         ao=dict(dist=1.0, samples=24), vc_gradient=(0.55, 0.82), builder=build_poi_meteorites, zmin=-1.0),
+    dict(id="poi_anomaly", kind="prop", footprint=None, accent=None, budget=2500, objects=["Base", "Lights"],
+         ao=dict(dist=1.0, samples=24), builder=build_poi_anomaly, zmin=-0.5),
     dict(id="outpost_core", kind="special", footprint=4.5, accent="logistics", budget=7000,
          objects=["Base", "Lights"], anchors=["Anchor_Bed_0", "Anchor_Bed_1", "Anchor_Bed_2", "Anchor_Bed_3",
                                               "Anchor_Stand_0", "Anchor_Stand_1", "Anchor_Ramp"],

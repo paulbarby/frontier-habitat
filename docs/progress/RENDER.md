@@ -904,3 +904,66 @@ Result, 120 s at the 250 m overview after the load cover, 3 runs with the final 
 Measurement tools added: `__fhr` `lights`, `nodelog on|get`, `simlog`, `skip`, `vtest`, `vspots`; `tools/render_vis_probe.gd`, `tools/render_spike_probe.gd`.
 
 Checks: path, airlock and cut checks were last run before these changes (all green); not re-run after them. `godot.mjs check`: 232 scripts, 0 failed.
+
+## 2026-09-28 - round-22 polish, perf split, first-deposit stall, final checks
+
+**Round 22 (RENDER list):**
+1. Radiation / toxic zone: a ground stain (decal mode 8: blotchy fill, breathing soft edge). The hard hatched ring (mode 7) shows only with the radiation layer on or while a colonist is inside the zone.
+2. Breach: fire particles at 2x size and 2x spread, a second fire burst higher up, a dust column (`dust_column`, ~9 s), a second slow shock ring (0.6 s delay, 5 s, to 2x the blast radius).
+3. Warning ring (mode 6) and zone ring (mode 7): at least 3-4 px at any zoom (screen-space width).
+4. Fog: 13-tap blur over 2-3 cells, warm rim at the edge, unexplored ground at 0.62 brightness (was 0.45) so relief reads.
+5. POIs: a 12 m ground mark under each (dark scorch; a soft glow for the anomaly); probe x2.6 with debris; anomaly x3.4 with four crystal rocks. `poi_wreck`, `poi_probe`, `poi_cave`, `poi_meteorites`, `poi_anomaly` are used automatically when ART-HAB delivers them (not in `assets/models` yet); they are in the load warm-up list.
+6. Hopper: a warm ground glow (mode 9) under the thrusters (strength by thrust and height, 10 m + 0.4 x height) and a `dust_ring` emitter below 20 m.
+7. Crevice walls: cause of the "picket fence" was the terrain's cut edge (2 m splat texels) above the lip, casting stripes of shadow, plus the plan-sampled normal maps on vertical walls. Fixes: cut zone to half + 3 m, lip to half + 5 m at the local maximum ground height, horizon lookup skipped on the crevice mesh, wall tangent frame and 3-octave rock noise (`wall_rough`).
+8. Zoom on Frontier: works in normal play. New Frontier game, web build: `zoom 60/600/1300` -> camera distance 60/600/1300; mouse wheel 8 notches in -> 389 m, 14 out -> 1,400 m (max).
+9. Path check on v4: `tools/render_path_check.gd v4` (showcase_v4 + `build/web_render/frontier_game.fhsave` from `tools/render_frontier_save.gd 2 1001`). Far or off-screen bodies step every 3rd frame by design; at V4 run speed that is 1.66 m and was counted as a teleport - now counted apart (`d_far_step`). Result: wall 0, slide 0, teleport 0, furniture 0.115 %, void 3, **outside 2** (Frontier game: colonist 98, `where = out`, SIM position inside a corridor tube for 2 samples; reported to SIM).
+10. Body tilt cap 15 deg (0.26 rad).
+
+**40 ms average processing (critic) - measured, not the sim.** `split` command (means per frame), web GPU build:
+
+| Game | Speed | sim | view | HUD | process (Godot) | frame |
+|---|---|---|---|---|---|---|
+| new Frontier | 1 | 0.05 | 1.27 | 0.07 | 6.11 | 16.66 |
+| new Frontier | 4 | 0.19 | 1.24 | 0.08 | 6.30 | 16.67 |
+| Frontier day 2 | 4 | 0.50 | 2.40 | 0.11 | 15.01 | 16.69 |
+| showcase_v4 | 4 | 0.85 | 3.99 | 0.15 | 19.87 | 16.69 |
+| new Frontier, SwiftShader | 4 | 1.21 | 2.10 | 0.59 | 705 | 133 |
+
+The Godot "process" figure includes engine work outside our scripts (it falls from 29 to 16 ms with the UI hidden; the view frozen changes it by 0). With GPU WebGL every case holds 60 fps. The critic's 40 ms is most likely a software-WebGL or loaded machine; SIM is 0.2-0.9 ms. Told SIM: no action.
+
+**First-deposit stall:** the last 12 warm-up frames switch fx_sky's always-on spot and omni off in turn (omni-only, spot-only, none) with a ground decal in view; warm-up held to at least 34 frames. Deposit ring nodes reused, stale-node error fixed.
+
+**Stall table (120 s after the load cover, 250 m overview, GPU):**
+
+| Save | Runs | Frames > 50 ms | Max ms | Mid-game shader links |
+|---|---|---|---|---|
+| showcase_v4 | 3 | 0, 0, 1 | 33, 50, 83 | 0, 0, 1 |
+| Frontier game (day 2) | 2 | 0, 0 | 50, 50 | 1, 1 |
+| new Frontier game | 1 | 0 | 17 | 0 |
+
+The one remaining stall (1 run in 3 on showcase_v4, 83 ms at 70.8 s) is still one mid-game program link; not found yet.
+
+**Checks (this build):** path PASS (550,104 samples, wall 0, furniture 0.069 %, outside 0, slide 0, teleport 0, void 130); airlock all 0 (31 and 38 cycles); cut 37 types 0 above 1.45 m, doors 99 rooms 0 bad. v4 path check: see item 9 (outside 2, SIM route). `godot.mjs check` 232 scripts 0 failed. pck 78.7 MB.
+
+**Evidence:** `art/critic_input/render/142_v4_reactor_disaster_r22.png`, `143_v4_exploration_r22.png`.
+
+## 2026-09-28 - ART-HAB POI models in game
+
+- `poi_wreck`, `poi_probe`, `poi_cave`, `poi_meteorites`, `poi_anomaly` load through `fx_explore.POI_MODEL` at their authored size (7-11.5 m footprint, `tools/render_poi_models.gd`).
+- Cave: the mouth (+X) turns toward the nearest lander or outpost core. On a slope a model stands on the high ground of its footprint (raised by 0.7 x the rise), not buried.
+- Warm-up: the five are in the load warm-up list. WebGL trace on showcase_v4: no shader program linked when the wreck and probe were revealed mid-game.
+- Evidence `art/critic_input/render/144_v4_poi_models_110m.png` (all five at 110 m).
+- v4 path check re-run waits on SIM's answer about the corridor crossing (`RENDER-to-SIM.md`, 2026-09-28).
+
+## 2026-09-28 - critic round 23 items
+
+1. Radiation / toxic stain (decal mode 8) and the zone hatch (mode 7): world-space 2D value noise (`vn2`), no polar pattern, no spiral.
+2. Satellite scan: the beam and the square flowing frame are gone; a soft light band (mode 9, 0.35 x 0.55 of the band width) slides along the strip under the satellite.
+3. Expedition rover at the crater rim: SIM now parks it at (1919, 760); body pitch 8.2 deg, roll 3.3 deg; view cap 15 deg.
+4. Crevice ends: a half-circle end (curved wall, half-disc floor, lip ring) instead of the flat end wall.
+
+Evidence `art/critic_input/render/145_v4_round23_fixes.png`.
+Checks: `check` 235 scripts 0 failed; path PASS (550,104 samples, wall 0, furniture 0.080 %, outside 0, slide 0, teleport 0); airlock all 0; cut 37 types 0, doors 99 rooms 0 bad. v4 path check unchanged (outside 2 in the Frontier game): SIM has not yet reported the corridor-crossing fix; re-run then.
+
+- v4 path check after SIM's answer (a planned corridor is open ground): the check now skips blueprints, as SIM's does. `render_path_check.gd v4`: PASS (115,951 samples, wall 0, furniture 0.114 %, outside 0, slide 0, teleport 0, void 3).
+- New (g) count in the path check: a ground vehicle drawn within 1.2 m + half its track of a BUILT corridor tube, every 5th frame. showcase_v4 and the Frontier game: 0 samples now. SIM's rover-blocking change has not landed; re-run `render_path_check.gd v4` when it does.

@@ -639,10 +639,13 @@ func _paint_v4(data: PackedByteArray, sn: int, seed: int) -> void:
 				var d: float = q.distance_to(Geometry2D.get_closest_point_to_segment(q, a, b))
 				# Critic round 20: the terrain opens over the crack (B = 0 out to half + 1 m) and the
 				# crevice's own mesh (lips, walls, floor: _build_crevices) draws there.
-				if d < half + 1.0:
+				# Critic round 22: B = 0 out to half + 3 m. With half + 1 m the 2 m splat texels left
+				# tongues of terrain reaching inside the wall line; the crevice lip (to half + 5 m, above
+				# the ground) now covers the whole cut edge.
+				if d < half + 3.0:
 					px[2] = 0
-				elif d < half + 5.0:
-					px[1] = maxi(px[1], int((1.0 - (d - half) / 5.0) * 150.0)))
+				elif d < half + 8.0:
+					px[1] = maxi(px[1], int((1.0 - (d - half - 3.0) / 5.0) * 150.0)))
 
 func _paint_crater(data: PackedByteArray, sn: int, p: Vector2, r: float, depth: float) -> void:
 	_paint(data, sn, p, r * 1.9, func(q: Vector2, px: Array):
@@ -1199,6 +1202,7 @@ func hide_pebbles_under(blds: Dictionary) -> void:
 func _build_crevices() -> void:
 	crevice_mat = mat.duplicate() as ShaderMaterial
 	crevice_mat.set_shader_parameter("crack_cut", 0.0)
+	crevice_mat.set_shader_parameter("wall_rough", 1.0)
 	mat.set_shader_parameter("crack_cut", 1.0)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1232,14 +1236,23 @@ func _build_crevices() -> void:
 				var qa: Vector2 = q[k]
 				var na: Vector2 = nrm[k]
 				raw.append(height(qa.x + na.x * (half + 4.5) * s, qa.y + na.y * (half + 4.5) * s) + 0.1)
+			# Critic round 22 ("picket fence"): the lip is the local MAX of the ground (then smoothed),
+			# not its mean. With the mean, the raised terrain stood above the lip in places and its
+			# scalloped cut edge cast vertical stripes of shadow down the far wall.
+			var mx: Array = []
+			for k in m:
+				var hi := -1e9
+				for j in range(maxi(0, k - 3), mini(m, k + 4)):
+					hi = maxf(hi, float(raw[j]))
+				mx.append(hi + 0.2)
 			var sm: Array = []
 			for k in m:
 				var acc := 0.0
 				var cnt := 0
 				for j in range(maxi(0, k - 2), mini(m, k + 3)):
-					acc += float(raw[j])
+					acc += float(mx[j])
 					cnt += 1
-				sm.append(acc / cnt)
+				sm.append(maxf(acc / cnt, float(raw[k]) + 0.2))
 			tops[s] = sm
 		var top: Array = []
 		for k in m:
@@ -1248,8 +1261,8 @@ func _build_crevices() -> void:
 			for s in [1.0, -1.0]:
 				var e0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * half * s
 				var e1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * half * s
-				var o0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * (half + 1.6) * s
-				var o1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * (half + 1.6) * s
+				var o0: Vector2 = (q[k] as Vector2) + (nrm[k] as Vector2) * (half + 5.0) * s
+				var o1: Vector2 = (q[k + 1] as Vector2) + (nrm[k + 1] as Vector2) * (half + 5.0) * s
 				var y0: float = tops[s][k]
 				var y1: float = tops[s][k + 1]
 				var f0: float = float(top[k]) - dep
@@ -1271,18 +1284,24 @@ func _build_crevices() -> void:
 			var out: Vector2 = (c0 - (q[end[1]] as Vector2)).normalized()
 			var ne: Vector2 = nrm[end[0]]
 			var ye: float = maxf(float(tops[1.0][end[0]]), float(tops[-1.0][end[0]]))
-			var a0: Vector2 = c0 + ne * half
-			var b0: Vector2 = c0 - ne * half
-			tris += _quad2(st, Vector3(a0.x, ye, a0.y), Vector3(b0.x, ye, b0.y), Vector3(b0.x, ye - dep, b0.y), Vector3(a0.x, ye - dep, a0.y), Vector3(-out.x, 0, -out.y))
-			var seg := 8
+			# Critic round 23: a rounded end. The crack closes in a half circle (radius = half width)
+			# beyond the last point: a curved wall, a half-disc floor and a lip ring round it.
+			var fy: float = float(top[end[0]]) - dep
+			var seg := 10
 			for i in seg:
 				var t0: float = PI * float(i) / seg - PI * 0.5
 				var t1: float = PI * float(i + 1) / seg - PI * 0.5
 				var d0: Vector2 = out.rotated(t0)
 				var d1: Vector2 = out.rotated(t1)
-				var p0: Vector2 = c0 + d0 * (half + 1.6)
-				var p1: Vector2 = c0 + d1 * (half + 1.6)
-				tris += _quad2(st, Vector3(c0.x, ye, c0.y), Vector3(c0.x, ye, c0.y), Vector3(p1.x, ye, p1.y), Vector3(p0.x, ye, p0.y), Vector3.UP)
+				var w0: Vector2 = c0 + d0 * half
+				var w1: Vector2 = c0 + d1 * half
+				var p0: Vector2 = c0 + d0 * (half + 5.0)
+				var p1: Vector2 = c0 + d1 * (half + 5.0)
+				var dm: Vector2 = (d0 + d1).normalized()
+				# wall (faces the crack), lip ring (up), floor wedge (up)
+				tris += _quad2(st, Vector3(w0.x, ye, w0.y), Vector3(w1.x, ye, w1.y), Vector3(w1.x, fy, w1.y), Vector3(w0.x, fy, w0.y), Vector3(-dm.x, 0, -dm.y))
+				tris += _quad2(st, Vector3(p0.x, ye, p0.y), Vector3(p1.x, ye, p1.y), Vector3(w1.x, ye, w1.y), Vector3(w0.x, ye, w0.y), Vector3.UP)
+				tris += _quad2(st, Vector3(c0.x, fy, c0.y), Vector3(c0.x, fy, c0.y), Vector3(w1.x, fy, w1.y), Vector3(w0.x, fy, w0.y), Vector3.UP)
 	var mi := MeshInstance3D.new()
 	mi.mesh = st.commit()
 	mi.material_override = crevice_mat
