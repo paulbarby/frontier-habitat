@@ -550,3 +550,27 @@ the tick number and the command.
   are not refused for it, and the game goes on.
 - showcase_v4 rebuilt (the depot faces open ground; the route rover drives its route). Test
   `v4_rover_tubes_and_blocks`.
+
+## 2026-09-28 — every lock explained (Paul was stuck on the workshop)
+
+- **`sim.place.lock_info(def_id, size = 1)`** → `{locked, kind ("stage" | "research" | "size" | "unknown" | ""), text,
+  stage, tech}`. `text` is plain STE with the requirement and the progress now, for example
+  "Unlocks at stage Stable outpost: 8 colonists (now 6), 1 day with safe reserves (now 0.4)." or
+  "Research Rover Parts first." or "Research Structural Engineering first for size L." Show it on a locked
+  build button and in the placement hint. `sim.place.stage_text(i)` gives the stage sentence alone.
+- The refusal texts use it: `sim.place.reason_text("locked" | "locked_research" | "no_size")` now returns the
+  lock text of the structure checked last (the preview's `check_building`), and a refused `place_building`
+  command result has `text` (the same sentence). You need no change for the toast; the build menu can call
+  `lock_info` directly.
+- Balance: the **workshop** (spare parts) is open from the landing (was stage 2, Growing settlement). Old games
+  get it at once.
+
+## 2026-09-28 — "Output blocked" popping in and out (Paul)
+
+SIM side, measured on a Frontier game and in `v3_alert_output_blocked_300s_frontier`: the key `output_blocked` is
+stable (one key for all machines; the text and entity list change, the key does not), it is raised after 20 s and
+cleared only after 30 s without the condition, on every map and rule set. What did flip every few seconds was the
+issue's `live` field: false for each moment a carrier took one unit and the buffer was not full. From now on `live`
+stays true until the condition has been gone for 10 s (`balance.alerts.live_hold`), so a short drop no longer shows
+as "clearing". If the panel still blinks, it is the UI's own list handling of the text change (the machine list in
+the text can change while the key stays).

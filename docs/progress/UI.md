@@ -736,3 +736,40 @@ additions this round are scripts and seven small SVG icons, so the growth is fro
 - Tests: `test_v4_live` +4 checks (Routes and Priorities fit, header not cut, Colonists tab full again).
 - Shots: `docs/shots/ui7_tech_tree_12px.png`, `ui7_vehicles_fit.png`, `ui7_routes_fit.png`,
   `ui7_priorities_fit.png`, `ui7_colonists_full.png`.
+
+## 2026-09-28 — every lock explained; steady alert entries; the rail as one strip
+
+- **Locks (Paul stuck on the workshop).** Root cause on the UI side: `ui/data.gd building_unlocked` checked the
+  colony stage only when research was absent, SIM checks it always, so a stage-locked card looked unlocked
+  and placement then said only "This structure is not unlocked yet." Now `data.lock_info(def, size)` uses SIM's
+  `sim.place.lock_info` (text with progress) and adds the card line: "Needs stage Stable outpost (safe
+  reserves 0.0/1.0 days)" (first unmet condition) or "Needs research: Rover Parts" (+ unmet prerequisites in
+  the full text). `data.stage_conditions(i)` reads the stage rules as sim/metrics.gd.
+  - Build card: lock icon + the reason on two lines where the output and size chips were; tooltip and the
+    click toast have the full text. Drawer line: "N locked (the card says what unlocks it …)".
+  - Placement hint: the full requirement (wraps at 520 px).
+  - Codex structure entry: "How to unlock": the stage (reached, or its conditions with ✓/→ and values now),
+    the research as a link, "Unlocked: you can build it."
+  - Advisor: an item needed now (a repair, maintenance, a blueprint's materials) with none in the colony:
+    maker locked → "No spare parts, and the workshop that makes it is locked. To unlock it: <SIM text> Or buy
+    some from a trader ship or salvage …"; maker unlocked but not built → "build a workshop …".
+  - Test `tools/ui/test_locks.gd` (54 cards, 35 locked, every locked card has a line and a full text; UI and
+    SIM agree on every card; stage and research lines; hint; codex; advisor both cases).
+- **Flickering "Output blocked".** Two UI causes found and fixed; one SIM-side behaviour noted.
+  1. Alerts panel fit: it dropped its last card at the minimap and took it back with 170 px free; a card taller
+     than that came back, overflowed and left again. Now a card comes back only when the room it needs is
+     free (mean card height; the cut card's height for 5 holds) and not within 6 s of a cut; tight mode the
+     same (the height it saved). Counter `max_changes`.
+  2. Alert gate: output blocked (a known flapper) was held only 10 s after its FIRST clear, so the first flap
+     made it leave and come back. It is now held 180 s from the first clear (as after a flap).
+  - SIM side (for SIM): in showcase_v4 the `output_blocked` issue itself comes and goes while the mine's buffer
+    is full part of the time (seen at 60 s, gone at 120 s, back at 180 s): the mine runs a batch between.
+  - Test `tools/ui/test_alert_steady.gd`: 600 s, a powered mine in showcase_v4 with its buffer kept full,
+    emptied by 4 every 45 s and refilled 20 s later: the entry never leaves the gate list, never leaves the
+    screen while the set of alerts is the same, the list never reorders, the card count does not change in
+    570 s (and settles with the goals open).
+- **Right rail** (`ui/hud/nav_rail.gd`): one glass strip in the HUD metal frame (rivets), rail buttons with the
+  metal rim and bevel (shared baked styles), hover: brighter glass + cyan inner glow + brighter rim; selected:
+  lit glass, strong glow and a cyan accent bar on the left; engraved seams group screens | vehicles, codex |
+  advisor, find, overlay | menu. Shots `docs/shots/ui8_rail_day.png`, `ui8_rail_night.png`.
+- Shots: `ui8_build_locks.png`, `ui8_place_hint_lock.png`.

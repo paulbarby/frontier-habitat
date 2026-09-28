@@ -20,6 +20,17 @@ var _more: Label
 var _sig := ""
 var _cards: Array = []
 var _open := {}          # issue key -> consequences expanded
+# Fit hysteresis (Paul, 2026-09-28: "Output blocked" popped in and out every few seconds). The panel
+# dropped its last card when it reached the minimap and took it back when 170 px were free; a card
+# taller than that came back, overflowed and went again, over and over. Now a card comes back only
+# when the room it needed is free, and not within HOLD_S of the cut; the same for the tight mode.
+const HOLD_S := 6.0
+var hold_s := HOLD_S     # tests shorten it (a test runs 600 game seconds in a few real seconds)
+var _cut_h := 0.0        # height the last removed card needed
+var _cut_t := -100.0     # time of the last cut (engine seconds)
+var _tight_gain := 0.0   # height the tight mode saved (the "Do:" lines and the "more" line)
+var _tight_t := -100.0
+var max_changes := 0     # tests: how often the number of cards changed
 
 func _ready() -> void:
 	theme_type_variation = "HudPanel"
@@ -57,24 +68,43 @@ func _process(_delta: float) -> void:
 	var g: Control = hud.goals
 	position.y = g.position.y + g.size.y + 8.0
 	var floor_y: float = hud.minimap.position.y - 8.0
-	if position.y + size.y > floor_y and _max > 1 and _cards.size() > 1:
+	var now: float = float(Time.get_ticks_msec()) / 1000.0
+	var free: float = floor_y - (position.y + size.y)
+	if free < 0.0 and _max > 1 and _cards.size() > 1:
+		var last: Control = _cards[_cards.size() - 1]["root"]
+		_cut_h = clampf(last.size.y + 14.0, 40.0, 260.0)   # a card measured mid-layout can be huge
+		_cut_t = now
 		_max -= 1
+		max_changes += 1
 		_sig = ""
-	elif position.y + size.y < floor_y - 170.0 and _max < MAX_CARDS:
+	elif _max < MAX_CARDS and _more.visible and free > _room_for_one(now) + 16.0 and now - _cut_t > hold_s:
 		_max += 1
+		max_changes += 1
 		_sig = ""
 	# Still too tall with one card (small view or large text): hide the "more" line and the
 	# card's "Do:" line, so the panel never covers the minimap (critic round 21 bottom row).
 	var over: bool = position.y + size.y > floor_y
 	if over and not _tight and (_max <= 1 or _cards.size() <= 1):
+		var before: float = size.y
+		_tight_t = now
 		_set_tight(true)
+		_tight_gain = clampf(before - size.y, 20.0, 200.0)
 	elif over and _tight and _list.visible:
 		_list.visible = false        # last step: only the summary line ("1 warning · 2 notices")
 		Kit.fit(self)
-	elif _tight and position.y + size.y < floor_y - 90.0:
+	elif _tight and free > _tight_gain + 16.0 and now - _tight_t > hold_s:
 		_list.visible = true
 		_set_tight(false)
 	visible = position.y + 40.0 < floor_y
+
+## The room one more card needs: the mean height of the cards shown (at least 60 px); for 30 s (5 holds)
+## after a cut, at least the height of the card that was cut.
+func _room_for_one(now: float) -> float:
+	var h := 0.0
+	for c in _cards:
+		h += (c["root"] as Control).size.y + 6.0
+	var mean: float = maxf(60.0, h / maxf(1.0, float(_cards.size())))
+	return maxf(mean, _cut_h) if now - _cut_t < hold_s * 5.0 else mean
 
 var _tight := false
 func _set_tight(on: bool) -> void:

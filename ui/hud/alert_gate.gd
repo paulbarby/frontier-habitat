@@ -57,7 +57,10 @@ func update(incidents: Array, now: float, quiet: bool = false) -> Array:
 		var rec: Dictionary = _live[k]
 		_cleared[k] = now
 		if bool(rec["root"]):
-			var hold: float = FLAP_HOLD if _flapped.has(k) else maxf(0.0, MIN_SHOW - (now - float(rec["first"])))
+			# A known flapper (output blocked: machines fill and empty their buffers all the time) is
+			# held for FLAP_HOLD from its FIRST clear too: with MIN_SHOW only, the first flap made it
+			# leave and come back (Paul, 2026-09-28, "Output blocked at 1 machine: Mine 1").
+			var hold: float = FLAP_HOLD if (_flapped.has(k) or MERGED_CODES.has(k)) else maxf(0.0, MIN_SHOW - (now - float(rec["first"])))
 			if hold > 0.0:
 				_held[k] = {"issue": rec["issue"], "cons": rec["cons"], "first": rec["first"], "until": now + hold}
 		_live.erase(k)

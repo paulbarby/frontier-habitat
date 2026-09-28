@@ -44,11 +44,101 @@ func _init(s) -> void:
 func _dc() -> float:
 	return sim.corridor_r() - 1.2
 
+## The sentence for a refusal code. For a lock (stage, research, size) it names what is needed and
+## the progress, for the structure checked last by check_building (the placement preview and the
+## place_building command check first).
 func reason_text(code: String) -> String:
+	if (code == "locked" or code == "locked_research" or code == "no_size") and _last_def != "":
+		var li: Dictionary = lock_info(_last_def, _last_size)
+		if bool(li["locked"]):
+			return String(li["text"])
 	return REASONS.get(code, code)
+
+var _last_def := ""
+var _last_size := 1
+
+## Why a structure (at a size) cannot be built yet, in plain words, with the progress now:
+## {locked (bool), kind ("stage" | "research" | "size" | "unknown" | ""), text, stage, tech}.
+## Examples: "Unlocks at stage Growing settlement: 20 colonists (now 16), morale 60 (now 62),
+## 3 days without a death (now 5)." / "Research Rover Parts first."
+func lock_info(def_id: String, size: int = 1) -> Dictionary:
+	var out := {"locked": false, "kind": "", "text": "", "stage": -1, "tech": ""}
+	if not sim.content["buildings"].has(def_id):
+		out["locked"] = true
+		out["kind"] = "unknown"
+		out["text"] = "This structure does not exist."
+		return out
+	var base: Dictionary = sim.bdef(def_id)
+	var need: int = int(base.get("stage", 0))
+	var now: int = int(sim.state["progress"]["stage"])
+	if need > now and not sim.unlocked_all():
+		out["locked"] = true
+		out["kind"] = "stage"
+		out["stage"] = need
+		out["text"] = stage_text(need)
+		return out
+	var tech: String = ""
+	if not sim.research.building_unlocked(def_id):
+		tech = String(base.get("research", ""))
+	else:
+		var al: Dictionary = sim.sizes.allowed(def_id, size)
+		if not bool(al["ok"]):
+			out["locked"] = true
+			out["kind"] = "size"
+			if String(al["code"]) == "locked_research":
+				out["tech"] = String(al["research"])
+				out["text"] = "Research %s first for size %s." % [_tech_name(String(al["research"])), sim.sizes.size_name(size)]
+			else:
+				out["text"] = "This structure is not made in size %s. Sizes: %s." % [sim.sizes.size_name(size), ", ".join(sim.sizes.sizes_of(def_id).map(func(z): return sim.sizes.size_name(z)))]
+			return out
+	if tech != "":
+		out["locked"] = true
+		out["kind"] = "research"
+		out["tech"] = tech
+		out["text"] = "Research %s first." % _tech_name(tech)
+	return out
+
+func _tech_name(tech: String) -> String:
+	return String(sim.content["techs"].get(tech, {}).get("name", tech))
+
+## "Unlocks at stage <name>: <each condition> (now <value>)." for stage index i.
+func stage_text(i: int) -> String:
+	var stages: Array = sim.bal["stages"]
+	if i >= stages.size():
+		return "This structure comes in a later version of the game."
+	var s: Dictionary = stages[i]
+	var f: Dictionary = sim.metrics.forecast()
+	var pr: Dictionary = sim.state["progress"]
+	var day_ticks: float = float(sim.bal["day_length"]) * float(sim.bal["tick_hz"])
+	var tick: int = int(sim.state["tick"])
+	var since: float = float(tick - int(pr["last_death_tick"])) / day_ticks if int(pr["last_death_tick"]) >= 0 else float(tick) / day_ticks
+	var parts: Array = []
+	if s.has("pop"):
+		parts.append("%d colonists (now %d)" % [int(s["pop"]), int(f["pop"])])
+	if s.has("safe_reserve_days"):
+		parts.append("%s %s with safe reserves (now %.1f)" % [_num(float(s["safe_reserve_days"])), "day" if float(s["safe_reserve_days"]) == 1.0 else "days", float(pr["safe_ticks"]) / day_ticks])
+	if s.has("morale"):
+		parts.append("morale %d (now %d)" % [int(s["morale"]), int(round(sim.metrics.avg_morale()))])
+	if s.has("no_death_days"):
+		parts.append("%s days without a death (now %.1f)" % [_num(float(s["no_death_days"])), since])
+	if s.has("districts"):
+		parts.append("%d districts with their own air (now %d)" % [int(s["districts"]), sim.metrics.supplied_districts()])
+	if s.has("meal_days"):
+		parts.append("%s days of meals in store (now %.1f)" % [_num(float(s["meal_days"])), float(f["meal_days"])])
+	var txt: String = "Unlocks at stage %s" % String(s["name"])
+	if i > int(pr["stage"]) + 1:
+		txt += " (stage %d; the colony is at stage %d)" % [i, int(pr["stage"])]
+	return txt + (": " + ", ".join(parts) + "." if not parts.is_empty() else ".")
+
+static func _num(x: float) -> String:
+	return str(int(x)) if x == floor(x) else "%.1f" % x
 
 ## The same sentence with the missing research named, for the placement hint.
 func reason_detail(def_id: String, size: int, code: String) -> String:
+	if code == "locked" or code == "locked_research" or code == "no_size":
+		var li: Dictionary = lock_info(def_id, size)
+		if bool(li["locked"]):
+			return String(li["text"])
 	if code != "locked_research":
 		return reason_text(code)
 	var tech: String = ""
@@ -72,6 +162,8 @@ static func snap_pos(p: Vector2) -> Vector2:
 func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -1, size: int = 1) -> String:
 	if not sim.content["buildings"].has(def_id):
 		return "unknown"
+	_last_def = def_id
+	_last_size = size
 	var base: Dictionary = sim.bdef(def_id)
 	var bal: Dictionary = sim.bal
 	if int(base.get("stage", 0)) > int(sim.state["progress"]["stage"]) and not sim.unlocked_all():

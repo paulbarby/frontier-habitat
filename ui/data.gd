@@ -338,19 +338,143 @@ func building_research(def_id: String) -> String:
 	return String(bdef(def_id).get("research", ""))
 
 ## {ok, reason} — can the player place this structure now?
+## {ok, reason (one line), full (every requirement, with progress), tech, stage}. See lock_info().
 func building_unlocked(def_id: String) -> Dictionary:
+	var li: Dictionary = lock_info(def_id, 1)
+	return {"ok": bool(li["ok"]), "reason": String(li["short"]), "full": String(li["full"]), "tech": String(li.get("tech", "")), "stage": int(li.get("stage", -1))}
+
+## Why a structure cannot be built yet, and how far the colony is (Paul, 2026-09-28: "This structure
+## is not unlocked yet." gave no hint). The same gates as SIM placement.gd check_building: the
+## colony stage (always, as SIM), then the research. When SIM has lock_info(def_id, size) its text
+## is used; until then the UI reads the stage conditions (balance stages, as sim/metrics.gd _stage).
+## Returns {ok, kind ("stage" | "research" | ""), short (one line), full (all lines), tech, stage,
+## conditions: [{text, have, need, ok}]}.
+func lock_info(def_id: String, size: int = 1) -> Dictionary:
+	var out := {"ok": true, "kind": "", "short": "", "full": "", "tech": "", "stage": -1, "conditions": []}
+	var s = main.sim if main != null else null
+	if s == null or bool(st().get("flags", {}).get("unlock_all", false)):
+		return out
+	# SIM's own (2026-09-28): sim.place.lock_info(def_id, size) -> {locked, kind, text, stage, tech}.
+	var pl = s.get("place")
+	if pl != null and pl is Object and (pl as Object).has_method("lock_info"):
+		var r = pl.lock_info(def_id, size)
+		if typeof(r) == TYPE_DICTIONARY and (r as Dictionary).has("locked"):
+			return _norm_lock(r, def_id)
 	var def: Dictionary = bdef(def_id)
-	if bool(st().get("flags", {}).get("unlock_all", false)):
-		return {"ok": true, "reason": ""}
+	var lines: Array = []
+	var stage: int = int(def.get("stage", 0))
+	var cur: int = int(st().get("progress", {}).get("stage", 0))
+	var stages: Array = bal().get("stages", [])
+	if stage > cur and stage < stages.size():
+		out["ok"] = false
+		out["kind"] = "stage"
+		out["stage"] = stage
+		var sname: String = String(stages[stage]["name"])
+		var conds: Array = stage_conditions(cur + 1)
+		out["conditions"] = conds
+		var first: String = ""
+		for c in conds:
+			if not bool(c["ok"]):
+				first = String(c["text"])
+				break
+		var away: String = (" (%s)" % first) if first != "" and stage == cur + 1 else ((" (%d stages away)" % (stage - cur)) if stage > cur + 1 else "")
+		out["short"] = "Needs stage %s%s" % [sname, away]
+		var cl: Array = []
+		for c in conds:
+			cl.append(("✓ " if bool(c["ok"]) else "• ") + String(c["text"]))
+		lines.append("Unlocks at the colony stage %s. The colony is at %s." % [sname, String(stages[cur]["name"]) if cur < stages.size() else str(cur)])
+		if stage == cur + 1:
+			lines.append("To reach it: " + "; ".join(cl) + ".")
+		else:
+			lines.append("Next stage, %s: %s." % [String(stages[cur + 1]["name"]), "; ".join(cl)])
 	var tech: String = String(def.get("research", ""))
 	if tech != "" and not tech_done(tech):
-		return {"ok": false, "reason": "Needs research: %s." % tech_name(tech), "tech": tech}
-	var stage: int = int(def.get("stage", 0))
-	if stage > int(st()["progress"]["stage"]) and not research_available():
-		var stages: Array = bal().get("stages", [])
-		var sname: String = String(stages[stage]["name"]) if stage < stages.size() else str(stage)
-		return {"ok": false, "reason": "Unlocks at stage: %s." % sname}
-	return {"ok": true, "reason": ""}
+		out["tech"] = tech
+		if bool(out["ok"]):
+			out["ok"] = false
+			out["kind"] = "research"
+			out["short"] = "Needs research: %s" % tech_name(tech)
+		var tl: String = "Research %s (research screen, key T)." % tech_name(tech)
+		var req: Array = []
+		for rq in techs().get(tech, {}).get("requires", []):
+			if not tech_done(String(rq)):
+				req.append(tech_name(String(rq)))
+		if not req.is_empty():
+			tl += " It needs %s first." % ", ".join(req)
+		lines.append(tl)
+	out["full"] = "\n".join(lines)
+	return out
+
+## SIM's lock row -> the UI's: SIM's text is the full line (it has the progress); the card's one line
+## is made here (the first unmet stage condition, or the research name).
+func _norm_lock(r: Dictionary, def_id: String) -> Dictionary:
+	var out := {"ok": not bool(r.get("locked", false)), "kind": String(r.get("kind", "")), "short": "", "full": String(r.get("text", "")),
+		"tech": String(r.get("tech", "")), "stage": int(r.get("stage", -1)), "conditions": []}
+	if bool(out["ok"]):
+		return out
+	var stages: Array = bal().get("stages", [])
+	var cur: int = int(st().get("progress", {}).get("stage", 0))
+	match String(out["kind"]):
+		"stage":
+			var sg: int = int(out["stage"])
+			var sname: String = String(stages[sg]["name"]) if sg >= 0 and sg < stages.size() else "?"
+			var conds: Array = stage_conditions(cur + 1)
+			out["conditions"] = conds
+			var first := ""
+			for c in conds:
+				if not bool(c["ok"]):
+					first = String(c["text"])
+					break
+			out["short"] = "Needs stage %s%s" % [sname, (" (%s)" % first) if first != "" and sg == cur + 1 else ((" (%d stages away)" % (sg - cur)) if sg > cur + 1 else "")]
+		"research":
+			out["short"] = "Needs research: %s" % tech_name(String(out["tech"]))
+			var req: Array = []
+			for rq in techs().get(String(out["tech"]), {}).get("requires", []):
+				if not tech_done(String(rq)):
+					req.append(tech_name(String(rq)))
+			if not req.is_empty():
+				out["full"] += " It needs %s first." % ", ".join(req)
+		"size":
+			out["short"] = ("Size needs research: %s" % tech_name(String(out["tech"]))) if String(out["tech"]) != "" else "Not made in this size"
+		_:
+			out["short"] = String(out["full"]).get_slice(".", 0)
+	if String(out["short"]) == "":
+		out["short"] = "Not unlocked yet"
+	if String(out["full"]) == "":
+		out["full"] = String(out["short"]) + "."
+	return out
+
+## The conditions of colony stage i, with the colony's values now (sim/metrics.gd _stage).
+func stage_conditions(i: int) -> Array:
+	var stages: Array = bal().get("stages", [])
+	if i < 0 or i >= stages.size() or main.sim == null:
+		return []
+	var s = main.sim
+	var sd: Dictionary = stages[i]
+	var out: Array = []
+	var f: Dictionary = s.metrics.forecast() if "metrics" in s and s.metrics != null else {}
+	var pr: Dictionary = st().get("progress", {})
+	var day_ticks: float = float(bal().get("day_length", 600.0)) * float(bal().get("tick_hz", 10))
+	if sd.has("pop"):
+		var have: int = int(f.get("pop", 0))
+		out.append({"text": "%d/%d colonists" % [have, int(sd["pop"])], "have": have, "need": int(sd["pop"]), "ok": have >= int(sd["pop"])})
+	if sd.has("safe_reserve_days"):
+		var hd: float = float(pr.get("safe_ticks", 0)) / maxf(1.0, day_ticks)
+		out.append({"text": "safe reserves %.1f/%s days" % [hd, str(sd["safe_reserve_days"])], "have": hd, "need": float(sd["safe_reserve_days"]), "ok": hd >= float(sd["safe_reserve_days"])})
+	if sd.has("morale"):
+		var m: float = float(s.metrics.avg_morale()) if s.metrics.has_method("avg_morale") else 0.0
+		out.append({"text": "morale %d/%d" % [int(m), int(sd["morale"])], "have": m, "need": float(sd["morale"]), "ok": m >= float(sd["morale"])})
+	if sd.has("no_death_days"):
+		var ld: int = int(pr.get("last_death_tick", -1))
+		var dd: float = float(int(st().get("tick", 0)) - (ld if ld >= 0 else 0)) / maxf(1.0, day_ticks)
+		out.append({"text": "%.1f/%s days without a death" % [minf(dd, 99.0), str(sd["no_death_days"])], "have": dd, "need": float(sd["no_death_days"]), "ok": dd >= float(sd["no_death_days"])})
+	if sd.has("districts"):
+		var dn: int = int(s.metrics.supplied_districts()) if s.metrics.has_method("supplied_districts") else 0
+		out.append({"text": "%d/%d supplied districts" % [dn, int(sd["districts"])], "have": dn, "need": int(sd["districts"]), "ok": dn >= int(sd["districts"])})
+	if sd.has("meal_days"):
+		var md: float = float(f.get("meal_days", 0.0))
+		out.append({"text": "meals %.1f/%s days" % [md, str(sd["meal_days"])], "have": md, "need": float(sd["meal_days"]), "ok": md >= float(sd["meal_days"])})
+	return out
 
 # ---------------------------------------------------------------- sizes and levels
 func has_sizes(def_id: String) -> bool:

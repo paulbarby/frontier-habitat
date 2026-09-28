@@ -41,6 +41,7 @@ func tests() -> Array:
 		["long_v4_tick_max", long_v4_tick_max],
 		["v4_reactor_stage_debug", v4_reactor_stage_debug],
 		["v4_rover_tubes_and_blocks", v4_rover_tubes_and_blocks],
+		["v4_locks_explained", v4_locks_explained],
 	]
 
 static func _fresh_world(sim, seed_value: int):
@@ -1946,5 +1947,52 @@ func v4_rover_tubes_and_blocks(t) -> void:
 		g.run(600)
 		t.eq(v["pos"], bay2["pos"], "it stayed in its bay")
 	t.eq(sim.inv.audit(), {}, "the game goes on (ledger)")
+	g.dispose()
+	t.done()
+
+## Paul was stuck (no spare parts): the workshop is buildable from the landing; and every lock
+## says what it needs and the progress now, in the refusal text too.
+func v4_locks_explained(t) -> void:
+	var g = H.empty_game(1001)
+	var sim = g.sim
+	t.eq(int(sim.state["progress"]["stage"]), 0, "a new game is at stage Landing")
+	var spot := Vector2(-1, -1)
+	for r in [30.0, 40.0, 50.0, 60.0]:
+		for k in 24:
+			var p: Vector2 = sim.place.snap_pos(sim.world.center + Vector2.RIGHT.rotated(k * TAU / 24.0) * r)
+			if spot.x < 0.0 and sim.place.check_building("workshop", p, 0.0) == "ok":
+				spot = p
+	t.check(spot.x > 0.0, "a workshop can be placed at stage Landing")
+	t.check(sim.research.recipe_unlocked("spares"), "and it makes spare parts at once")
+	# Every lock of every structure and size names its requirement.
+	var bad: Array = []
+	var kinds := {}
+	for def_id in sim.content["buildings"]:
+		var base: Dictionary = sim.content["buildings"][def_id]
+		if base.get("kind", "") == "link" or not bool(base.get("buildable", true)):
+			continue
+		for size in [0, 1, 2, 3]:
+			var li: Dictionary = sim.place.lock_info(def_id, size)
+			if not bool(li["locked"]):
+				continue
+			kinds[li["kind"]] = true
+			var txt: String = String(li["text"])
+			if txt == "" or not (txt.begins_with("Unlocks at stage") or txt.begins_with("Research ") or txt.begins_with("This structure is not made in size") or txt.contains("later version")):
+				bad.append("%s %d: '%s'" % [def_id, size, txt])
+			if li["kind"] == "research" and not txt.contains(String(sim.content["techs"][li["tech"]]["name"])):
+				bad.append("%s: the tech is not named" % def_id)
+	t.eq(bad, [], "every lock has a text that names its requirement")
+	t.check(kinds.has("stage") and kinds.has("research") and kinds.has("size"), "stage, research and size locks all seen: %s" % str(kinds.keys()))
+	var lp: Dictionary = sim.place.lock_info("landing_pad", 1)
+	t.eq(lp["kind"], "stage", "the landing pad waits for a stage")
+	t.check(String(lp["text"]).contains("Stable outpost") and String(lp["text"]).contains("8 colonists (now 8)"), "with the stage name and the progress: %s" % lp["text"])
+	var ro: Dictionary = sim.place.lock_info("parts_works", 1)
+	t.eq(ro["text"], "Research Rover Parts first.", "a research lock names the tech")
+	# The refusal text of a command and of the preview.
+	var r: Dictionary = g.cmd("place_building", {"def": "landing_pad", "x": spot.x, "y": spot.y, "rot": 0.0})
+	t.eq(r["code"], "locked", "placing the landing pad is refused")
+	t.eq(r.get("text", ""), lp["text"], "the refusal carries the explanation")
+	sim.place.check_building("parts_works", spot, 0.0)
+	t.eq(sim.place.reason_text("locked_research"), "Research Rover Parts first.", "the preview text names the tech")
 	g.dispose()
 	t.done()

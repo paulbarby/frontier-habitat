@@ -109,6 +109,9 @@ func frame() -> void:
 		reason = "Valid spot. Click to place." if tool == "place" else "Click to build."
 	Kit.set_icon(_state_icon, "sev_ok" if ok else "sev_critical", 16, P.GREEN if ok else P.RED)
 	_state.text = reason
+	# A long reason (a lock with its requirements) wraps instead of widening the hint.
+	_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if reason.length() > 70 else TextServer.AUTOWRAP_OFF
+	_state.custom_minimum_size.x = 520.0 if reason.length() > 70 else 0.0
 	_state.add_theme_color_override("font_color", P.GREEN if ok else P.RED)
 	var w: String = String(info.get("warning", ""))
 	_warn.visible = w != ""

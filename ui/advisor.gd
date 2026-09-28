@@ -39,6 +39,7 @@ static func tips(hud) -> Array:
 	if pop > 0 and float(k["water"]["days"]) < 2.0:
 		out.append({"kind": "problem", "icon": "water", "color": P.AMBER, "title": "Water for %.1f days." % float(k["water"]["days"]),
 			"text": "Do: build a water extractor or a recycler, with a reservoir on the same network.", "focus": null})
+	out.append_array(needed_but_locked(hud))
 	if float(k["power"]["net"]) < 0.0:
 		out.append({"kind": "problem", "icon": "power", "color": P.AMBER, "title": "Power use is %.1f P above generation." % -float(k["power"]["net"]),
 			"text": "Do: build solar or wind, and batteries for the night.", "focus": null})
@@ -94,3 +95,65 @@ static func tips(hud) -> Array:
 
 static func _num(v: float) -> String:
 	return ("%d" % int(v)) if absf(v - roundf(v)) < 0.01 else ("%.1f" % v)
+
+## An item the colony needs now (a repair or a maintenance, a blueprint waiting for materials) that
+## it has none of, and that no unlocked structure can make: says exactly how to unlock the maker
+## (colony stage with progress, or the research) and the other ways to get it (a trader, salvage).
+## Paul, 2026-09-28: machines broke, no spare parts, and the workshop was locked with no hint.
+static func needed_but_locked(hud) -> Array:
+	var out: Array = []
+	var s = hud.main.sim
+	var d = hud.data
+	var need := {}          # item -> first structure id that needs it
+	var hz = s.get("hazards")
+	for id in s.state["buildings"]:
+		var b: Dictionary = s.state["buildings"][id]
+		var it := ""
+		if String(b.get("state", "")) == "broken" and hz != null and hz.has_method("repair_item"):
+			it = String(hz.repair_item(b))
+		elif hz != null and hz.has_method("wants_maintenance") and bool(hz.wants_maintenance(b)):
+			it = "spare_parts"
+		elif String(b.get("block", "")).begins_with("materials:"):
+			it = String(b["block"]).substr(10)
+		if it != "" and not need.has(it):
+			need[it] = int(id)
+	for it in need:
+		if d.total_of(String(it)) > 0:
+			continue
+		# Structures that make it (their recipes' outputs).
+		var makers: Array = []
+		for def_id in s.content["buildings"]:
+			var bd: Dictionary = s.content["buildings"][def_id]
+			var r = bd.get("recipes", bd.get("recipe", null))
+			var list: Array = r if typeof(r) == TYPE_ARRAY else ([r] if typeof(r) == TYPE_STRING else [])
+			for rid in list:
+				if (d.recipes().get(String(rid), {}).get("outputs", {}) as Dictionary).has(it):
+					makers.append(String(def_id))
+					break
+		var unlocked: Array = []
+		for m in makers:
+			if bool(d.lock_info(m, 1)["ok"]):
+				unlocked.append(m)
+		var others: Array = []
+		if (s.content.get("trade", {}).get("sells", []) as Array).has(it):
+			others.append("buy some from a trader ship (Traffic panel)")
+		others.append("salvage: remove a structure you do not need (half its materials come back)")
+		var iname: String = d.item_name(String(it)).to_lower()
+		if makers.is_empty():
+			continue
+		if unlocked.is_empty():
+			var m0: String = makers[0]
+			var li: Dictionary = d.lock_info(m0, 1)
+			out.append({"kind": "problem", "icon": "lock", "color": P.AMBER,
+				"title": "No %s, and the %s that makes it is locked." % [iname, String(d.bdef(m0).get("name", m0)).to_lower()],
+				"text": "To unlock it: %s Or %s." % [String(li["full"]).replace("\n", " "), " or ".join(others)], "focus": need[it]})
+		else:
+			var built := false
+			for id in s.state["buildings"]:
+				if unlocked.has(String(s.state["buildings"][id]["def"])):
+					built = true
+			if not built:
+				var m1: String = unlocked[0]
+				out.append({"kind": "problem", "icon": "build", "color": P.AMBER, "title": "No %s in the colony." % iname,
+					"text": "Do: build a %s and set it to make %s. Or %s." % [String(d.bdef(m1).get("name", m1)).to_lower(), iname, " or ".join(others)], "focus": need[it]})
+	return out

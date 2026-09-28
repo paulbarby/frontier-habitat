@@ -300,11 +300,35 @@ func _structure(id: String) -> void:
 		facts.append("works by itself")
 	facts.append({"room": "pressurised room", "exterior": "outdoor structure", "special": "special structure", "link": "link"}.get(String(b.get("kind", "")), String(b.get("kind", ""))))
 	s1.add_child(Kit.wrap(", ".join(facts).capitalize() + ".", 14, P.TEXT))
+	# How to unlock (Paul, 2026-09-28): the colony stage with its conditions and progress, and the
+	# research with a link. Both gates as SIM placement (stage first, then research).
 	var tech: String = String(b.get("research", ""))
+	var stage: int = int(b.get("stage", 0))
+	var su: VBoxContainer = _section("How to unlock", "unlock")
+	var li: Dictionary = hud.data.lock_info(id, 1)
+	var stages: Array = hud.main.sim.bal.get("stages", [])
+	var cur: int = int(hud.main.sim.state.get("progress", {}).get("stage", 0))
+	if stage > 0 and stage < stages.size():
+		var sname: String = String(stages[stage]["name"])
+		if stage <= cur:
+			su.add_child(Kit.label("Colony stage %s: reached." % sname, "", 14, P.GREEN))
+		else:
+			su.add_child(Kit.label("Colony stage %s (the colony is at %s)." % [sname, String(stages[cur]["name"])], "", 14, P.AMBER))
+			var conds: Array = hud.data.stage_conditions(cur + 1)
+			if stage > cur + 1:
+				su.add_child(Kit.label("Next stage, %s, needs:" % String(stages[cur + 1]["name"]), "", 13, P.TEXT_2))
+			for c in conds:
+				var row: HBoxContainer = Kit.hbox(6)
+				row.add_child(Kit.icon("check" if bool(c["ok"]) else "arrow_right", 12, P.GREEN if bool(c["ok"]) else P.AMBER))
+				row.add_child(Kit.label(String(c["text"]), "", 13, P.TEXT if not bool(c["ok"]) else P.TEXT_2))
+				su.add_child(row)
 	if tech != "":
-		_links(s1, "Unlocked by", [[hud.data.tech_name(tech), "tech", tech]])
-	else:
-		s1.add_child(Kit.label("Available from the start.", "", 14, P.TEXT_2))
+		var done: bool = hud.data.tech_done(tech)
+		_links(su, "Research (done):" if done else "Research:", [[hud.data.tech_name(tech), "tech", tech]])
+	if stage <= 0 and tech == "":
+		su.add_child(Kit.label("Available from the start.", "", 14, P.TEXT_2))
+	elif bool(li.get("ok", true)):
+		su.add_child(Kit.label("Unlocked: you can build it.", "", 13, P.GREEN))
 	var r = b.get("recipes", b.get("recipe", null))
 	var list: Array = r if typeof(r) == TYPE_ARRAY else ([r] if typeof(r) == TYPE_STRING else [])
 	if not list.is_empty():

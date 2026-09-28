@@ -46,6 +46,9 @@ func _merge(found: Dictionary) -> void:
 	var hz: int = int(sim.bal["tick_hz"])
 	var cfg: Dictionary = sim.bal.get("alerts", {})
 	var clear_ticks: int = int(float(cfg.get("clear_after", 30)) * hz)
+	# V4 (Paul: a notice popped in and out every few seconds): an alert whose condition drops out
+	# for a moment stays "live"; it shows as clearing only after live_hold seconds without it.
+	var hold_ticks: int = int(float(cfg.get("live_hold", 10)) * hz)
 	var raise_after: Array = cfg.get("raise_after", [20, 20, 5, 0])
 	for key in found:
 		var tr = track.get(key)
@@ -63,7 +66,7 @@ func _merge(found: Dictionary) -> void:
 		if not track.has(key):
 			issues.erase(key)
 		elif not found.has(key):
-			issues[key]["live"] = false
+			issues[key]["live"] = tick - int(track[key]["last"]) < hold_ticks
 	for key in found:
 		var f: Dictionary = found[key]
 		f["live"] = true

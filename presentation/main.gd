@@ -1008,6 +1008,12 @@ func _update_place() -> void:
 		info["reason"] = String(sa.get("text", "This size is locked."))
 	elif not tool_ok:
 		info["reason"] = _reason(code)
+		if code in ["locked", "locked_research"]:
+			# The full requirement with the colony's progress (ui/data.gd lock_info), not SIM's bare
+			# "This structure is not unlocked yet." (Paul was stuck on it, 2026-09-28).
+			var li: Dictionary = d.lock_info(tool_def, tool_size)
+			if String(li.get("full", "")) != "":
+				info["reason"] = String(li["full"]).replace("\n", " ")
 	info["ok"] = tool_ok
 	# Builders walk from an airlock with air and must get back on one suit.
 	var reach: float = sim.agents.suit_reach_metres()

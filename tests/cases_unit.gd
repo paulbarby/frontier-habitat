@@ -211,8 +211,9 @@ func unit_placement_reasons(t) -> void:
 		t.eq(r["code"], "overlap_rock", "battery on a rock outcrop")
 		seen.append(r["code"])
 
-	r = _place(g, "workshop", c + Vector2(-20, 14))
-	t.eq(r["code"], "locked", "workshop before its stage is reached")
+	# (V4: the workshop is open from the landing, so the landing pad (stage 1) shows the stage lock.)
+	r = _place(g, "landing_pad", c + Vector2(-20, 14))
+	t.eq(r["code"], "locked", "landing pad before its stage is reached")
 	seen.append(r["code"])
 	r = _place(g, "lander", c + Vector2(-20, 14))
 	t.check(not bool(r["ok"]), "the lander is not buildable")

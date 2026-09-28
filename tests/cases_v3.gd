@@ -22,6 +22,7 @@ const LAB := [
 func tests() -> Array:
 	return [
 		["v3_alert_output_blocked_300s", v3_alert_flicker],
+		["v3_alert_output_blocked_300s_frontier", v3_alert_output_blocked_300s_frontier],
 		["v3_map_810_world_features", v3_map_world],
 		["v3_buildable_area_all_seeds", v3_buildable],
 		["v3_budgets_world_gen_and_nav", v3_budgets],
@@ -46,7 +47,9 @@ func tests() -> Array:
 # ---------------------------------------------------------------- set-up helpers
 func _custom(t, steps: Array, seed_value: int = 1001, opts: Dictionary = {}) -> Dictionary:
 	var g = H.empty_game(seed_value)
-	if not opts.is_empty():
+	if bool(opts.get("frontier", false)):
+		g.sim.new_game(seed_value, "frontier")
+	elif not opts.is_empty():
 		g.sim.new_game(seed_value, "tutorial", opts)
 	var res: Dictionary = H.layout(g.sim, H.CORE_STEPS + steps)
 	for e in res["errors"]:
@@ -78,7 +81,15 @@ func _ready_base(g) -> void:
 ## V3_DESIGN section 2: a harvester whose output a carrier empties every few seconds for
 ## 300 s raises output_blocked once and never clears it in between.
 func v3_alert_flicker(t) -> void:
-	var c: Dictionary = _custom(t, BASE)
+	_alert_flicker(t, false)
+
+## The same on the Frontier (2,560 m) map with the V4 rules (Paul saw the notice pop in and out);
+## the alert also stays live (not "clearing") while the buffer only drops out for a moment.
+func v3_alert_output_blocked_300s_frontier(t) -> void:
+	_alert_flicker(t, true)
+
+func _alert_flicker(t, frontier: bool) -> void:
+	var c: Dictionary = _custom(t, BASE, 1001, {"frontier": true} if frontier else {})
 	var g = c["g"]
 	var sim = g.sim
 	var ids: Dictionary = c["ids"]
@@ -105,6 +116,7 @@ func v3_alert_flicker(t) -> void:
 	var toggles := 0
 	var last: String = String(rh["block"])
 	var per_machine := 0
+	var dims := 0
 	for s in 300:
 		if s % 5 == 0:
 			sim.inv.move(int(rh["inv_out"]), pile, "silicate", 1)      # a carrier takes one unit
@@ -114,6 +126,8 @@ func v3_alert_flicker(t) -> void:
 				toggles += 1
 				last = String(rh["block"])
 		var on: bool = sim.state["issues"].has("output_blocked")
+		if on and not bool(sim.state["issues"]["output_blocked"].get("live", true)):
+			dims += 1
 		if on and not was:
 			raised += 1
 		if was and not on:
@@ -126,6 +140,7 @@ func v3_alert_flicker(t) -> void:
 	t.eq(raised, 1, "output_blocked was raised once")
 	t.eq(cleared, 0, "it never cleared in between")
 	t.eq(per_machine, 0, "no per-machine blocked alert exists")
+	t.eq(dims, 0, "it stays live (never shown as clearing) while the buffer only drops out for a moment")
 	var issue: Dictionary = sim.state["issues"].get("output_blocked", {})
 	t.check(not issue.is_empty() and (issue["entities"] as Array).has(int(rh["id"])), "the one alert lists the harvester")
 	t.note("%d block changes in 300 s, alert raised %d time" % [toggles, raised])

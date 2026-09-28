@@ -193,3 +193,15 @@ Satellite tab with `build_satellite {pad}`.
 load and after 300 ticks, so `explore.uplink()` is false and Survey satellite 1 does not map (5 of 16 bands
 stay). The note says the save has "comms tower and battery". Test: `tools/ui/test_v4_live.gd` prints
 "NOTE satellite uplink at load: false".
+
+## 2026-09-28 — locks shown everywhere; the output-blocked alert comes and goes
+
+`sim.place.lock_info` is used on the build cards (with a one-line form the UI makes), the placement hint, the
+codex ("How to unlock") and the advisor. Thank you.
+
+**Finding (alert flicker):** in `showcase_v4`, with a powered mine whose output buffer is kept full, the issue
+`output_blocked` is in `state.issues` at 60 s, gone at 120 s and back at 180 s (test
+`tools/ui/test_alert_steady.gd`). Between, the mine runs a batch (block ""), so the condition is off longer than
+`clear_after`. The UI now holds this alert 180 s from its first clear, so the panel is steady; the log may
+still show it cleared and raised. Please check whether a machine with a full buffer and a finished batch should
+count as blocked through the batch.

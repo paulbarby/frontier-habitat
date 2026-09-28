@@ -3,7 +3,9 @@ const PG = preload("res://ui/poly_guard.gd")
 ## One building card of the build bar: thumbnail (assets/thumbs/<id>_<size>.png, then
 ## <id>.png, then the category icon), name, cost chips (red when the colony does not have
 ## them free), power and main output, and the S/M/L/XL size chips with per-size numbers.
-## A lock covers a structure that research has not unlocked yet.
+## A lock covers a structure that is not unlocked yet: the lock icon and a one-line reason on the
+## card ("Needs stage Growing settlement (16/20 colonists)", "Needs research: Rover Parts"); the
+## tooltip has every requirement with the colony's progress (ui/data.gd lock_info).
 
 const P = preload("res://ui/theme/palette.gd")
 const Kit = preload("res://ui/kit.gd")
@@ -34,7 +36,10 @@ var def_id := ""
 var data
 var size_sel := 1
 var locked := false
-var lock_text := ""
+var lock_text := ""        # one line (the card)
+var lock_full := ""        # every requirement (the tooltip)
+var _reason: Label
+var _chip_row: HBoxContainer
 var _thumb: TextureRect
 var _name: Label
 var _costs: HBoxContainer
@@ -85,6 +90,17 @@ func setup(d, id: String, size: int) -> void:
 	v.add_child(_stat)
 	var chips: HBoxContainer = Kit.hbox(3, BoxContainer.ALIGNMENT_CENTER)
 	v.add_child(chips)
+	_chip_row = chips
+	# Locked: the reason in place of the output and the size chips (two lines at most).
+	_reason = Kit.label("", "SmallLabel", 11, P.AMBER)
+	_reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reason.max_lines_visible = 2
+	_reason.custom_minimum_size = Vector2(110, 38)   # two lines (an autowrap label measures no height of its own)
+	_reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reason.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_reason.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_reason.visible = false
+	v.add_child(_reason)
 	if d.has_sizes(id):
 		for s in 4:
 			var n: int = s
@@ -146,6 +162,15 @@ func refresh_state(totals: Dictionary) -> void:
 	var u: Dictionary = data.building_unlocked(def_id)
 	locked = not bool(u["ok"])
 	lock_text = String(u.get("reason", ""))
+	lock_full = String(u.get("full", lock_text))
+	if locked and lock_text == "":
+		lock_text = "Not unlocked yet"
+	if _reason != null:
+		_reason.text = lock_text
+		_reason.visible = locked
+		_stat.visible = not locked
+		if _chip_row != null:
+			_chip_row.visible = not locked
 	disabled = false
 	modulate = Color(1, 1, 1, 0.55) if locked else Color.WHITE
 	for s in _chips.size():
@@ -286,7 +311,9 @@ func _make_custom_tooltip(_for_text: String) -> Object:
 	v.add_child(desc)
 	if locked:
 		var lk := Label.new()
-		lk.text = "LOCKED. " + lock_text
+		lk.text = "LOCKED. " + (lock_full if lock_full != "" else lock_text)
+		lk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lk.custom_minimum_size.x = 330
 		lk.add_theme_color_override("font_color", P.AMBER)
 		lk.add_theme_font_size_override("font_size", 13)
 		v.add_child(lk)

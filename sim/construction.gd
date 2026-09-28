@@ -23,7 +23,7 @@ func place_building(def_id: String, pos: Vector2, rot: float, size: int = 1) -> 
 	rot = sim.place.snap_rot(rot)
 	var code: String = sim.place.check_building(def_id, pos, rot, -1, size)
 	if code != "ok":
-		return {"ok": false, "code": code}
+		return {"ok": false, "code": code, "text": sim.place.reason_detail(def_id, size, code)}
 	var def: Dictionary = sim.sizes.def_for(def_id, size)
 	var b: Dictionary = _new_record(def_id, def, def["cost"], int(def.get("size", 1)))
 	b["pos"] = pos

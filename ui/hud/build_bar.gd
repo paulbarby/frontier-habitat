@@ -240,7 +240,7 @@ func _free_x() -> Vector2:
 func _pick(def_id: String, size: int) -> void:
 	var card = _cards.get(def_id)
 	if card != null and card.locked:
-		hud.toast("%s is locked. %s" % [hud.data.bdef(def_id).get("name", def_id), card.lock_text], "warn", "lock")
+		hud.toast("%s is locked. %s" % [hud.data.bdef(def_id).get("name", def_id), card.lock_full.replace("\n", " ") if card.lock_full != "" else card.lock_text], "warn", "lock")
 		card.set_pressed_no_signal(false)
 		return
 	size_sel[def_id] = size
@@ -271,7 +271,7 @@ func refresh() -> void:
 		card.set_pressed_no_signal(m.tool == "place" and m.tool_def == id)
 		if card.locked:
 			locked += 1
-	_drawer_sub.text = ("%s, %d locked by research. Red costs are not in storage." % [Kit.plural(_cards.size(), "structure"), locked]) if locked > 0 else ("%s. Red costs are not in storage." % Kit.plural(_cards.size(), "structure"))
+	_drawer_sub.text = ("%s, %d locked (the card says what unlocks it; hover for all of it). Red costs are not in storage." % [Kit.plural(_cards.size(), "structure"), locked]) if locked > 0 else ("%s. Red costs are not in storage." % Kit.plural(_cards.size(), "structure"))
 
 func tabs_top() -> float:
 	return _tab_panel.position.y

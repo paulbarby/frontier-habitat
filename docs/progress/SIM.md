@@ -724,3 +724,10 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
 - Rovers: built tubes close the rover grid; clear end stretches; bounded no-route (closed rover areas);
   replan on change; placement code `depot_blocked` (bay aprons, depot cut-off, new depot facing structures);
   showcase_v4 rebuilt; test `v4_rover_tubes_and_blocks`. Full suite 108 of 108 (753 s), worst tick 19.8 ms.
+- Locks: `place.lock_info` / `stage_text` with requirement and progress; refusal texts and the place_building
+  result use it. Workshop stage 2 -> 0 (spare parts from the landing). Audit: no other repair, maintenance or
+  survival structure or recipe had a stage gate (landing_pad stage 1 is traffic; crevice_bridge not in this
+  version). Electrical faults need electronics, which come from research (Electronics fab, ind_2), not a stage.
+  Test `v4_locks_explained`; cases_unit uses the landing pad for the stage lock now.
+- Alert blinking: key stable and hysteresis applied on every map; `live` now holds 10 s (`alerts.live_hold`) so a
+  momentary drop does not show as clearing. Test `v3_alert_output_blocked_300s_frontier` (also checks `live`).
