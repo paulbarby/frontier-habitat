@@ -192,6 +192,19 @@ func _on_cmd(text: String) -> String:
 			rs.apply_search()
 			rs.goto_first_match()
 			return rs._match_label.text
+		"storage":
+			# storage <def> : read only, for screenshots and tests: "id used/cap full|free" of each
+			# structure of that type (ui/storage.gd summary).
+			var S = load("res://ui/storage.gd")
+			var outs: Array = []
+			for sid in sim.state["buildings"]:
+				var sb: Dictionary = sim.state["buildings"][sid]
+				if w.size() > 1 and String(sb["def"]) != w[1]:
+					continue
+				var sm: Dictionary = S.summary(sim, sb)
+				if int(sm["cap"]) > 0:
+					outs.append("%d %d/%d %s" % [int(sid), int(sm["used"]), int(sm["cap"]), "full" if bool(sm["full"]) else "free"])
+			return ", ".join(outs)
 		"codexwide":
 			# Codex: Wide view on (1) or off (0); no argument toggles.
 			var cs = hud.screens.top_screen()

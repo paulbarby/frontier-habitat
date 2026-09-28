@@ -42,6 +42,7 @@ func tests() -> Array:
 		["v4_reactor_stage_debug", v4_reactor_stage_debug],
 		["v4_rover_tubes_and_blocks", v4_rover_tubes_and_blocks],
 		["v4_locks_explained", v4_locks_explained],
+		["v4_inventory_contents", v4_inventory_contents],
 	]
 
 static func _fresh_world(sim, seed_value: int):
@@ -1995,4 +1996,69 @@ func v4_locks_explained(t) -> void:
 	sim.place.check_building("parts_works", spot, 0.0)
 	t.eq(sim.place.reason_text("locked_research"), "Research Rover Parts first.", "the preview text names the tech")
 	g.dispose()
+	t.done()
+
+## Storage on every structure (Paul): sim.inventory.contents(x) for stores, cores, the depot,
+## machine buffers, kitchens, labs and vehicle cargo; sim.inventory.by_structure(base) for the
+## list; all rows together are exactly the colony's stock by the ledger.
+func v4_inventory_contents(t) -> void:
+	var dec: Dictionary = Persistence.decode(FileAccess.get_file_as_bytes("res://content/saves/showcase_v4.fhsave"))
+	var sim = H.Sim.new()
+	sim.load_state(dec["state"])
+	sim.run_seconds(30.0)
+	var rows: Array = sim.inventory.by_structure(-1)
+	var sum := {}
+	for row in rows:
+		for r in row["items"]:
+			sum[r] = int(sum.get(r, 0)) + int(row["items"][r])
+	var ledger := {}
+	for r in sim.state["ledger"]:
+		var l: Dictionary = sim.state["ledger"][r]
+		var n: int = int(l["created"]) - int(l["consumed"]) - int(l["destroyed"])
+		if n != 0:
+			ledger[r] = n
+	var diff: Array = []
+	for r in ledger:
+		if int(sum.get(r, 0)) != int(ledger[r]):
+			diff.append("%s: rows %d, ledger %d" % [r, int(sum.get(r, 0)), int(ledger[r])])
+	for r in sum:
+		if int(sum[r]) != 0 and not ledger.has(r):
+			diff.append("%s: rows %d, ledger 0" % [r, int(sum[r])])
+	t.eq(diff, [], "the rows add up to the colony stock by the ledger")
+	t.eq(sim.inv.audit(), {}, "and the ledger balances")
+	# Each kind of structure.
+	var seen := {}
+	for id in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][id]
+		var c: Dictionary = sim.inventory.contents(b)
+		var key: String = String(b["def"])
+		if key in ["storehouse", "cold_storage", "lander", "outpost_core", "rover_depot"]:
+			if c["capacity"] > 0 and c["used"] <= c["capacity"] and c["full"] == (c["used"] >= c["capacity"]):
+				seen[key] = true
+		elif key == "kitchen" and (c["buffers"]["in_cap"] > 0 or c["buffers"]["out_cap"] > 0):
+			seen[key] = true
+		elif key == "research_assembler" and c["buffers"]["out_cap"] > 0:
+			seen[key] = true
+		elif key == "refinery" and c["buffers"]["in_cap"] > 0 and c["buffers"]["out_cap"] > 0:
+			seen[key] = true
+		for row in rows:
+			if row["kind"] == "structure" and int(row["id"]) == int(id):
+				if row["items"] != c["all"]:
+					seen["mismatch"] = "%s %s %s" % [b["name"], str(row["items"]), str(c["all"])]
+	for key in ["storehouse", "lander", "outpost_core", "rover_depot", "kitchen", "research_assembler", "refinery"]:
+		t.check(seen.has(key), "contents() works for %s" % key)
+	t.check(not seen.has("mismatch"), "each row equals its structure's contents: %s" % str(seen.get("mismatch", "")))
+	var v: Dictionary = sim.vehicles.get_v(int(sim.vehicles.list()[0]["id"]))
+	var vc: Dictionary = sim.inventory.contents(v)
+	t.eq(int(vc["capacity"]), int(sim.vehicles.kind_of(v)["cargo"]), "a vehicle's cargo capacity")
+	var lc: Dictionary = sim.inventory.contents(sim.state["buildings"][int(sim.state["lander_id"])])
+	t.check(lc["items"].has("meals") and float(lc["spoil"].get("meals", -1.0)) != -1.0 or not lc["items"].has("meals"), "spoilage times where food spoils")
+	# One base only.
+	var camp: Array = sim.inventory.by_structure(2)
+	var ok := true
+	for row in camp:
+		if row["kind"] == "structure" and sim.bases.base_of(int(row["id"])) != 2:
+			ok = false
+	t.check(ok and camp.size() >= 1, "by_structure(2) lists only the camp's structures (%d rows)" % camp.size())
+	sim.dispose()
 	t.done()

@@ -129,3 +129,9 @@ them, no newline). `check` failed on 22 scripts and main.gd would not compile, s
 split the line (one newline, one tab indent); nothing else changed. Please look at it in case the merge dropped
 more than the newline. The map-layer buttons you added (radiation, sun, resources) are what RENDER will draw next;
 the 3D layers will switch with `view.set_overlay(name)` using the same three names.
+
+
+## 2026-09-28 - FULL tag and storage fill (RENDER)
+
+- RENDER draws the FULL tag in the world (world_view status badges, same style as WORN / BROKEN): over a storehouse or cold storage whose store (`inv_out`, role `store`) is 98 % full or more, and over a machine with block `output_blocked`. Text "FULL" under 75 m or when selected; the icon (output-blocked) up to 180 m. UI: please do not draw a second world tag; the panels are yours.
+- Racks: the crates baked in the Interior of `storehouse_*` and `cold_storage_*` are split into a "Stock" group at load and shown in proportion to `total / cap` of the store, bay by bay. No new anchors needed from ART-HAB. One extra MultiMesh per model size.

@@ -152,3 +152,26 @@ Asked of RENDER (the 3D layers, when you have room):
 4. Later, when SIM publishes them: `"explored"` (fog of war, milestone 7) and `"vehicles"` (vehicle ranges).
    I will add the names to the overlay list and the minimap when the SIM data exists; the 3D layer is yours.
 Until you draw them, `set_overlay` with these names just shows no network lines (it does not error).
+## 2026-09-28 — a "FULL" status tag on full storage (Paul)
+
+Paul asked to see, on the map, which storage is full. The status tags over structures (WORN, BROKEN, …) are
+yours (`presentation/world_view.gd` `_status_for`), so please add one tag:
+
+- code `storage_full`, text `FULL`, colour `#FF5A5F` (the UI's red for 95 % and more), after the other
+  checks (a broken or unpowered structure keeps its own tag), for an **active** structure whose **store**
+  is full: storehouse, cold storage, lander, outpost core, depot store. Test: SIM's
+  `sim.inventory.contents(b)` → `full` (it uses the store; a machine without a store uses its output
+  buffer, which already has your `output_blocked` tag). The UI's same test is
+  `preload("res://ui/storage.gd").is_full(sim, b)` if that is easier to call.
+- Check at the same rate as the other tags (it changes slowly).
+
+The UI shows the same state in the inspector (FULL badge and bar) and in the Inventory screen's By structure
+tab. Tell me in RENDER-to-UI.md when it is in.
+
+## 2026-09-28 — FULL tag: one threshold for the tag and the panels
+
+Thank you for the FULL tag (RENDER-to-UI 2026-09-28). I draw no world tag. One point, so the tag and the
+panels agree: the UI shows FULL (inspector badge, Storage bar, By structure tab) only when the store is at
+100 % (`sim.inventory.contents(b).full`, used >= capacity); from 95 % the bar is red, from 80 % amber. Your tag
+starts at 98 %. Please use `contents(b).full` (or `used >= capacity`) for the text "FULL", so a player who
+sees FULL on the map finds FULL in the panel. The colour can stay yours.

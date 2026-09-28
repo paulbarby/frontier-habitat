@@ -116,7 +116,8 @@ func selection_changed() -> void:
 	if kind != _kind or id != _id:
 		_kind = kind
 		_id = id
-		tab = "overview" if kind == "building" else "status"
+		# "": the structure picks its first tab (Storage for a storehouse, else Overview).
+		tab = "" if kind == "building" else "status"
 		_sig = ""
 		if kind != "":
 			modulate.a = 0.0

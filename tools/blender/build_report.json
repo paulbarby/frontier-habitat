@@ -99619,12 +99619,12 @@
    "type": "cold_storage",
    "size": "s",
    "footprint": 5.4,
-   "tris": 8902,
+   "tris": 10098,
    "budget": 14000,
    "tris_by_object": {
     "Base": 280,
     "Roof": 1802,
-    "Interior": 1186,
+    "Interior": 2382,
     "L2": 60,
     "L3": 118,
     "L4": 208,
@@ -99835,12 +99835,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 822560,
+   "file_size": 910528,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.7,
-   "ao_rays": 880992,
+   "seconds": 4.4,
+   "ao_rays": 1002336,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -100133,7 +100133,7 @@
       5
      ],
      "Interior": [
-      7,
+      8,
       5
      ],
      "L2": [
@@ -100199,7 +100199,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 8902,
+    "tris": 10098,
     "rmax": 5.300000233301922,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -100429,12 +100429,12 @@
    "type": "cold_storage",
    "size": "m",
    "footprint": 6.75,
-   "tris": 10718,
+   "tris": 12518,
    "budget": 21000,
    "tris_by_object": {
     "Base": 360,
     "Roof": 2058,
-    "Interior": 2182,
+    "Interior": 3982,
     "L2": 60,
     "L3": 118,
     "L4": 228,
@@ -100679,12 +100679,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 970144,
+   "file_size": 1102536,
    "color0": true,
    "also": [],
    "flags": [],
    "seconds": 4.8,
-   "ao_rays": 1063200,
+   "ao_rays": 1245600,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -101140,7 +101140,7 @@
       5
      ],
      "Interior": [
-      10,
+      11,
       5
      ],
      "L2": [
@@ -101206,7 +101206,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 10718,
+    "tris": 12518,
     "rmax": 6.650000220776064,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -101470,12 +101470,12 @@
    "type": "cold_storage",
    "size": "l",
    "footprint": 8.7,
-   "tris": 13628,
+   "tris": 16852,
    "budget": 30799,
    "tris_by_object": {
     "Base": 580,
     "Roof": 2814,
-    "Interior": 3630,
+    "Interior": 6854,
     "L2": 200,
     "L3": 118,
     "L4": 228,
@@ -101733,12 +101733,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1155608,
+   "file_size": 1392736,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.7,
-   "ao_rays": 1371456,
+   "seconds": 6.1,
+   "ao_rays": 1697856,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -102599,7 +102599,7 @@
       5
      ],
      "Interior": [
-      9,
+      10,
       5
      ],
      "L2": [
@@ -102664,7 +102664,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 13628,
+    "tris": 16852,
     "rmax": 8.60000030296505,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -102941,12 +102941,12 @@
    "type": "cold_storage",
    "size": "xl",
    "footprint": 10.8,
-   "tris": 18330,
+   "tris": 22694,
    "budget": 42000,
    "tris_by_object": {
     "Base": 652,
     "Roof": 3334,
-    "Interior": 7722,
+    "Interior": 12086,
     "L2": 220,
     "L3": 118,
     "L4": 228,
@@ -103222,12 +103222,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1491032,
+   "file_size": 1812592,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.2,
-   "ao_rays": 1838880,
+   "seconds": 8.9,
+   "ao_rays": 2281248,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -104250,7 +104250,7 @@
       5
      ],
      "Interior": [
-      12,
+      13,
       5
      ],
      "L2": [
@@ -104315,7 +104315,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 18330,
+    "tris": 22694,
     "rmax": 10.700000384116551,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,

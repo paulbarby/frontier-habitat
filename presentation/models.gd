@@ -249,12 +249,192 @@ static func _parse(root: Node3D, key: String) -> Dictionary:
 	# Outdoor hazard props reuse room material names (crater rim = Wood): no interior fill.
 	if not (fname.begins_with("crater") or fname.begins_with("meteor_rock") or fname.begins_with("fragments")):
 		_interior_materials(parts)
+	# Storage rooms (Paul 2026-09-28): the crates on the racks become their own "Stock" group, drawn
+	# in proportion to the fill level (fx: world_view._sync_stock).
+	if fname.begins_with("storehouse") or fname.begins_with("cold_storage"):
+		parts = _split_stock(parts)
 	parts = _shadow_proxies(parts)
 	var groups := {}
 	for p in parts:
 		groups[p["group"]] = true
 	return {"key": key, "parts": parts, "anchors": anchors, "aabb": aabb, "scale": 1.0, "groups": groups, "rotor_axis": rotor_axis}
 
+## Storage fill (Paul 2026-09-28). The racks' crates are baked into the Interior mesh by ART-HAB.
+## They are found as connected pieces: a crate body is a box 0.3-0.8 m on every side; bands, lids
+## and labels inside a body's box belong to it. The crates move to a "Stock" part whose vertices
+## carry their fill rank in UV2.x (bottom shelves first, spread over the racks); the interior
+## shader collapses a crate whose rank is at or above the room's fill (INSTANCE_CUSTOM.r).
+static func _split_stock(parts: Array) -> Array:
+	var out: Array = []
+	for p in parts:
+		if p["group"] != "Interior" or not (p["mesh"] is ArrayMesh):
+			out.append(p)
+			continue
+		var mesh: ArrayMesh = p["mesh"]
+		var surf: Array = []          # per surface: {arrays, comps}
+		var bodies: Array = []        # {aabb, s, c}
+		for s in mesh.get_surface_count():
+			var arr: Array = mesh.surface_get_arrays(s)
+			var comps: Array = _components(arr[Mesh.ARRAY_VERTEX], arr[Mesh.ARRAY_INDEX])
+			surf.append({"arr": arr, "comps": comps})
+			for ci in comps.size():
+				var sz: Vector3 = (comps[ci]["aabb"] as AABB).size
+				if sz.x >= 0.3 and sz.x <= 0.8 and sz.z >= 0.3 and sz.z <= 0.8 and sz.y >= 0.3 and sz.y <= 0.8:
+					bodies.append({"aabb": comps[ci]["aabb"], "s": s, "c": ci})
+		if bodies.size() < 4:
+			out.append(p)
+			continue
+		# Fill order: bay by bay (a rack bay fills bottom to top before the next one starts), the bays
+		# in a spread order, so a half-full room reads half full from the cutaway camera above.
+		bodies.sort_custom(func(a, b):
+			var ca: Vector3 = (a["aabb"] as AABB).get_center()
+			var cb: Vector3 = (b["aabb"] as AABB).get_center()
+			var ha: float = fposmod(sin(snappedf(ca.x, 1.3) * 12.9898 + snappedf(ca.z, 1.1) * 78.233) * 43758.5, 1.0)
+			var hb: float = fposmod(sin(snappedf(cb.x, 1.3) * 12.9898 + snappedf(cb.z, 1.1) * 78.233) * 43758.5, 1.0)
+			if absf(ha - hb) > 1e-6:
+				return ha < hb
+			return ca.y < cb.y)
+		var n: int = bodies.size()
+		var rank_of := {}             # "s:c" -> rank
+		for i in n:
+			rank_of["%d:%d" % [bodies[i]["s"], bodies[i]["c"]]] = (float(i) + 0.5) / float(n)
+		# Small pieces inside a body's box join that body.
+		for s in surf.size():
+			var comps: Array = surf[s]["comps"]
+			for ci in comps.size():
+				var k := "%d:%d" % [s, ci]
+				if rank_of.has(k):
+					continue
+				var ab: AABB = comps[ci]["aabb"]
+				if ab.size.x > 0.8 or ab.size.y > 0.8 or ab.size.z > 0.8:
+					continue
+				var cc: Vector3 = ab.get_center()
+				for b in bodies:
+					if (b["aabb"] as AABB).grow(0.04).has_point(cc):
+						rank_of[k] = rank_of["%d:%d" % [b["s"], b["c"]]]
+						break
+		var keep := ArrayMesh.new()
+		var stock := ArrayMesh.new()
+		for s in surf.size():
+			var arr: Array = surf[s]["arr"]
+			var comps: Array = surf[s]["comps"]
+			var t_keep := PackedInt32Array()
+			var t_stock := PackedInt32Array()
+			var r_stock := PackedFloat32Array()
+			for ci in comps.size():
+				var k := "%d:%d" % [s, ci]
+				if rank_of.has(k):
+					t_stock.append_array(PackedInt32Array(comps[ci]["tris"]))
+					for _t in (comps[ci]["tris"] as Array).size():
+						r_stock.append(float(rank_of[k]))
+				else:
+					t_keep.append_array(PackedInt32Array(comps[ci]["tris"]))
+			var mat: Material = mesh.surface_get_material(s)
+			if not t_keep.is_empty():
+				keep.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _sub_arrays(arr, t_keep, PackedFloat32Array()))
+				keep.surface_set_material(keep.get_surface_count() - 1, mat)
+			if not t_stock.is_empty():
+				stock.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _sub_arrays(arr, t_stock, r_stock))
+				var sm: Material = mat
+				if mat is ShaderMaterial and (mat as ShaderMaterial).shader == _int_shader:
+					sm = (mat as ShaderMaterial).duplicate()
+					(sm as ShaderMaterial).set_shader_parameter("stock", true)
+					sm.resource_name = "Stock" + mat.resource_name
+					_fill_mats.append(sm)
+				stock.surface_set_material(stock.get_surface_count() - 1, sm)
+		var p1: Dictionary = p.duplicate()
+		p1["mesh"] = keep
+		out.append(p1)
+		var p2: Dictionary = p.duplicate()
+		p2["mesh"] = stock
+		p2["group"] = "Stock"
+		p2["custom"] = true
+		p2["shadow"] = false
+		p2["stock_n"] = n
+		out.append(p2)
+	return out
+
+## Connected pieces of a surface (triangles sharing a vertex position): [{tris, aabb}].
+static func _components(v: PackedVector3Array, idx: PackedInt32Array) -> Array:
+	var ntri: int = (idx.size() if idx.size() > 0 else v.size()) / 3
+	var key := {}
+	var rep := PackedInt32Array()
+	rep.resize(v.size())
+	for i in v.size():
+		var q := Vector3i(roundi(v[i].x * 1000.0), roundi(v[i].y * 1000.0), roundi(v[i].z * 1000.0))
+		if not key.has(q):
+			key[q] = i
+		rep[i] = key[q]
+	var parent := PackedInt32Array()
+	parent.resize(v.size())
+	for i in v.size():
+		parent[i] = i
+	for t in ntri:
+		var a: int = _uf_find(parent, rep[idx[t * 3] if idx.size() > 0 else t * 3])
+		for k in [1, 2]:
+			var b: int = _uf_find(parent, rep[idx[t * 3 + k] if idx.size() > 0 else t * 3 + k])
+			if a != b:
+				parent[b] = a
+	var comp := {}
+	for t in ntri:
+		var r: int = _uf_find(parent, rep[idx[t * 3] if idx.size() > 0 else t * 3])
+		var v0: Vector3 = v[idx[t * 3] if idx.size() > 0 else t * 3]
+		if not comp.has(r):
+			comp[r] = {"tris": [], "aabb": AABB(v0, Vector3.ZERO)}   # (an Array: a packed array in a dictionary is copied on append)
+		(comp[r]["tris"] as Array).append(t)
+		var ab: AABB = comp[r]["aabb"]
+		for k in 3:
+			ab = ab.expand(v[idx[t * 3 + k] if idx.size() > 0 else t * 3 + k])
+		comp[r]["aabb"] = ab
+	return comp.values()
+
+static func _uf_find(parent: PackedInt32Array, x: int) -> int:
+	while parent[x] != x:
+		parent[x] = parent[parent[x]]
+		x = parent[x]
+	return x
+
+## The arrays of a subset of triangles (reindexed). ranks: per triangle, written to UV2.x.
+static func _sub_arrays(arr: Array, tris: PackedInt32Array, ranks: PackedFloat32Array) -> Array:
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+	var remap := {}
+	var order := PackedInt32Array()
+	var vrank := PackedFloat32Array()
+	var new_idx := PackedInt32Array()
+	for ti in tris.size():
+		var t: int = tris[ti]
+		for k in 3:
+			var vi: int = idx[t * 3 + k] if idx.size() > 0 else t * 3 + k
+			if not remap.has(vi):
+				remap[vi] = order.size()
+				order.append(vi)
+				vrank.append(ranks[ti] if not ranks.is_empty() else 0.0)
+			new_idx.append(remap[vi])
+	var out: Array = []
+	out.resize(Mesh.ARRAY_MAX)
+	for a in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TANGENT, Mesh.ARRAY_COLOR, Mesh.ARRAY_TEX_UV]:
+		var src = arr[a]
+		if src == null:
+			continue
+		if a == Mesh.ARRAY_TANGENT:
+			var tg := PackedFloat32Array()
+			for vi in order:
+				for c in 4:
+					tg.append((src as PackedFloat32Array)[vi * 4 + c])
+			out[a] = tg
+			continue
+		var dst = src.duplicate()
+		dst.resize(order.size())
+		for i in order.size():
+			dst[i] = src[order[i]]
+		out[a] = dst
+	if not ranks.is_empty():
+		var uv2 := PackedVector2Array()
+		for r in vrank:
+			uv2.append(Vector2(r, 0.0))
+		out[Mesh.ARRAY_TEX_UV2] = uv2
+	out[Mesh.ARRAY_INDEX] = new_idx
+	return out
 ## Several meshes of one group (not animated about their own pivot) become ONE mesh with
 ## one surface per material: fewer draw calls for every copy of the model.
 static func _merge_groups(parts: Array) -> Array:

@@ -1,5 +1,12 @@
 # ART-HAB → RENDER
 
+## 2026-09-28 — cold storage totes for your stock fill
+
+`cold_storage_s/_m/_l/_xl.glb`: every rack bay level now carries two insulated totes (white Hull / Frost body
+0.42 m high, a blue `WaterBlue` lid and front band inside the body's box), each a separate connected piece of 0.3–0.8 m
+in the Interior, like the storehouse crates. Counted with your `_split_stock` rule (position-merged components):
+S 32, M 57, L 94, XL 145 bodies (storehouse S 40 for comparison).
+
 ## 2026-09-28 — point-of-interest models (critic round 22 fix 5)
 
 New in `assets/models/` (object `Base`, plus `Lights` where noted; origin at the centre on the ground, +Z up in

@@ -3,6 +3,7 @@ extends RefCounted
 ## and registers bindings for the numbers that change every refresh.
 
 const P = preload("res://ui/theme/palette.gd")
+const Storage = preload("res://ui/storage.gd")
 const Kit = preload("res://ui/kit.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 const BuildCard = preload("res://ui/widgets/build_card.gd")
@@ -176,7 +177,12 @@ func building(b: Dictionary) -> void:
 		_ship(b)
 		_footer_building(b, base)
 		return
-	var tabs: Array = [["overview", "Overview"]]
+	# Paul, 2026-09-28: what every structure holds, and whether it is full. A storehouse, cold storage
+	# or the lander opens on its Storage view; other holders show Storage on the Overview tab.
+	var store_first: bool = _is_store(b) and b["state"] == "active"
+	var tabs: Array = [["storage", "Storage"], ["overview", "Overview"]] if store_first else [["overview", "Overview"]]
+	if b["state"] == "active" and Storage.summary(s, b)["full"]:
+		insp.add_badge(Kit.badge("FULL", P.RED))
 	var producer: bool = def.has("recipe") or def.has("recipes") or bool(def.get("research_lab", false)) or bool(def.get("automatic", false)) or def.has("gen_solar") or def.has("gen_wind") or def.has("gen_const")
 	if producer and b["state"] == "active":
 		tabs.append(["production", "Output"])
@@ -205,8 +211,122 @@ func building(b: Dictionary) -> void:
 		"stats": _stats(b, def)
 		"vehicles": _depot(b)
 		"satellite": _pad(b)
+		"storage": _storage(b)
 		_: _overview(b, def)
+	if insp.tab != "storage" and not store_first and b["state"] == "active" and insp.tab in ["", "overview"]:
+		_storage(b)
 	_footer_building(b, base)
+
+# ---------------------------------------------------------------- storage (Paul, 2026-09-28)
+func _is_store(b: Dictionary) -> bool:
+	for h in Storage.holders(_sim(), b):
+		if String(h["role"]) == "store":
+			return true
+	return false
+
+## The Storage section: per holder (input, stored, output, supplies) a capacity bar with used /
+## capacity and %, coloured by fill (cyan, amber from 80 %, red from 95 %), a FULL badge, and one
+## line per item: tier stripe, icon, name, amount, reserved units, the time to the next spoiled
+## unit (not in cold storage). Updates in place; the item lines are made again when they change.
+func _storage(b: Dictionary) -> void:
+	var s = _sim()
+	var hs: Array = Storage.holders(s, b)
+	if hs.is_empty():
+		return
+	var cold: bool = Storage.is_cold(s, b)
+	var sec: VBoxContainer = _section("Storage", "inventory")
+	sec.name = "StorageSection"
+	var bid: int = int(b["id"])
+	for h in hs:
+		_storage_block(sec, int(h["inv"]), String(h["title"]), cold, bid)
+	if cold:
+		sec.add_child(Kit.label("Cold storage: food here does not spoil.", "SmallLabel", 12, P.CYAN))
+	elif String(hs[0]["role"]) == "store":
+		sec.add_child(Kit.label("Reserved units are kept for construction, orders or a carrier on the way.", "SmallLabel", 12, P.TEXT_3))
+
+func _storage_block(sec: VBoxContainer, inv_id: int, title: String, cold: bool, bid: int = -1) -> void:
+	var s = _sim()
+	var d = _d()
+	var box: VBoxContainer = Kit.vbox(3)
+	box.set_meta("inv", inv_id)
+	sec.add_child(box)
+	var head: HBoxContainer = Kit.hbox(8)
+	box.add_child(head)
+	var tl: Label = Kit.head(title, P.TEXT_2, 11)
+	head.add_child(tl)
+	var num: Label = Kit.num("", 13, P.TEXT)
+	num.name = "Used"
+	num.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(num)
+	var full: Control = Kit.badge("FULL", P.RED)
+	full.name = "Full"
+	head.add_child(full)
+	var bar = Kit.bar(0.0, P.CYAN, 7.0)
+	box.add_child(bar)
+	var incoming: Label = Kit.label("", "SmallLabel", 12, P.TEXT_3)
+	box.add_child(incoming)
+	var rows: VBoxContainer = Kit.vbox(1)
+	rows.name = "Items"
+	box.add_child(rows)
+	var sig := [""]
+	var upd := func():
+		if not s.inv.exists(inv_id):
+			return
+		var ct: Dictionary = Storage.contents(s, s.state["buildings"].get(bid, {})) if bid != -1 else {}
+		var inf: Dictionary = Storage.info(s, inv_id, cold, ct.get("spoil", {}))
+		var col: Color = Storage.level_color(int(inf["level"]))
+		num.text = "%d / %d  (%d%%)" % [int(inf["used"]), int(inf["cap"]), int(roundf(float(inf["frac"]) * 100.0))]
+		num.add_theme_color_override("font_color", col if int(inf["level"]) > 0 else P.TEXT)
+		full.visible = bool(inf["full"])
+		bar.value = clampf(float(inf["frac"]), 0.0, 1.0)
+		bar.color = col
+		incoming.text = ("%d more on the way in." % int(inf["incoming"])) if int(inf["incoming"]) > 0 else ""
+		incoming.visible = incoming.text != ""
+		var sg := ""
+		for it in inf["items"]:
+			sg += "%s:%d:%d:%d|" % [it["id"], int(it["n"]), int(it["reserved"]), int(float(it["spoil_s"]) / 30.0)]
+		if sg == sig[0]:
+			return
+		sig[0] = sg
+		Kit.clear(rows)
+		if (inf["items"] as Array).is_empty():
+			rows.add_child(Kit.label("Empty.", "SmallLabel", 12, P.TEXT_3))
+			return
+		for it in inf["items"]:
+			rows.add_child(_storage_row(it))
+	upd.call()
+	insp.bind(upd)
+
+func _storage_row(it: Dictionary) -> Control:
+	var d = _d()
+	var id: String = String(it["id"])
+	var h: HBoxContainer = Kit.hbox(6)
+	h.set_meta("item", id)
+	var tr: int = d.item_tier(id)
+	var stripe := ColorRect.new()
+	stripe.custom_minimum_size = Vector2(3, 16)
+	stripe.color = load("res://ui/data.gd").TIER_COLOR.get(tr, Color(0, 0, 0, 0)) if tr > 0 else Color(0, 0, 0, 0)
+	stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(stripe)
+	h.add_child(Kit.icon(Icons.item(id), 16, d.item_color(id)))
+	var nm: Label = Kit.label(d.item_name(id), "", 13, P.TEXT)
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.clip_text = true
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	h.add_child(nm)
+	if int(it["reserved"]) > 0:
+		h.add_child(Kit.label("%d reserved" % int(it["reserved"]), "SmallLabel", 12, P.AMBER))
+	if float(it.get("spoil_s", -1.0)) >= 0.0:
+		var sp: float = float(it["spoil_s"])
+		h.add_child(Kit.label("spoils in %s" % Kit.clock(sp), "SmallLabel", 12, P.AMBER if sp < 120.0 else P.TEXT_3))
+	var n: Label = Kit.num("%d" % int(it["n"]), 13, P.TEXT)
+	n.custom_minimum_size.x = 34
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(n)
+	h.tooltip_text = "%s%s\n%d here: %d free, %d reserved.%s" % [d.item_name(id), (" (%s)" % d.tier_name(tr).to_lower()) if tr > 0 else "", int(it["n"]), int(it["free"]), int(it["reserved"]),
+		(" The next unit spoils in %s (a unit at a time; cold storage stops it)." % Kit.clock(float(it["spoil_s"]))) if float(it.get("spoil_s", -1.0)) >= 0.0 else ""]
+	h.mouse_filter = Control.MOUSE_FILTER_PASS
+	return h
 
 # ---------------------------------------------------------------- launch pad: survey satellite (SIM milestone 7)
 func _is_pad(b: Dictionary) -> bool:
@@ -676,12 +796,7 @@ func _production(b: Dictionary, def: Dictionary) -> void:
 				bar.value = 0.0
 				lab.text = BLOCK_TEXT.get(s.prod.machine_block(bb), "Idle."))
 	_rates(b, def)
-	for key in ["inv_in", "inv_out"]:
-		if int(b.get(key, -1)) != -1 and s.inv.exists(int(b[key])):
-			var inv: Dictionary = s.inv.get_inv(b[key])
-			var title: String = {"in": "Input buffer", "out": "Output buffer", "store": "Stored"}.get(inv.get("role", ""), "Stock")
-			var sec4: VBoxContainer = _section("%s  %d / %d" % [title, s.inv.total(b[key]), int(inv.get("cap", 0))], "inventory")
-			sec4.add_child(_items_row(inv.get("items", {})))
+	_storage(b)
 
 ## The tech that unlocks recipe `rid` ("" = none): content research unlocks.recipes.
 func recipe_tech(rid: String) -> String:

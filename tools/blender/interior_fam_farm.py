@@ -260,8 +260,17 @@ def pallet_rack(plan, x, y, L, h=2.1, cold=False, seed=0):
                 xx = -L / 2 + bay * (b + 0.5)
                 if rng.random() < 0.82:
                     if cold:
-                        bbox(n, xx - bay * 0.4, xx + bay * 0.4, -0.40, 0.40, z + 0.08, z + 0.55,
-                             rng.choice(("Frost", "Hull", "Accent")), bevel=0.02)
+                        # insulated totes (RENDER fill, 2026-09-28): each a separate 0.3-0.8 m body with its lid and
+                        # band inside its box, so models._split_stock finds them as crates
+                        tw = min(0.60, bay * 0.42)
+                        for sx_ in (-1, 1):
+                            tx = xx + sx_ * (tw / 2 + 0.03)
+                            body = ("Hull", "Frost")[(b + lv + (sx_ > 0)) % 2]
+                            bbox(n, tx - tw / 2, tx + tw / 2, -0.32, 0.32, z + 0.08, z + 0.50, body, bevel=0.02)
+                            bbox(n, tx - tw / 2 + 0.03, tx + tw / 2 - 0.03, -0.29, 0.29, z + 0.50, z + 0.53,
+                                 "WaterBlue")
+                            plate_y(n, -0.322, tx - tw / 2 + 0.05, tx + tw / 2 - 0.05, z + 0.28, z + 0.34, "WaterBlue",
+                                    facing=-1)
                     else:
                         with n.at(T(xx, 0, z + 0.08 - F)):
                             # the top level carries single loads only (a double load passed a 2.7 m deck)

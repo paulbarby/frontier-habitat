@@ -773,3 +773,31 @@ additions this round are scripts and seven small SVG icons, so the growth is fro
   lit glass, strong glow and a cyan accent bar on the left; engraved seams group screens | vehicles, codex |
   advisor, find, overlay | menu. Shots `docs/shots/ui8_rail_day.png`, `ui8_rail_night.png`.
 - Shots: `ui8_build_locks.png`, `ui8_place_hint_lock.png`.
+
+## 2026-09-28 — storage everywhere (Paul: "show if they are full … and what is stored")
+
+- `ui/storage.gd`: holders of a structure (input, store, output, supplies), per holder used / capacity / %,
+  incoming, FULL (used >= capacity), level (amber from 80 %, red from 95 %), items with reserved units and the
+  time to the next spoiled unit (SIM `sim.inventory.contents(b).spoil`; none in cold storage or input buffers).
+- Inspector: a Storage section on every structure that holds items. Storehouse, cold storage and the lander
+  open on a Storage tab (the inspector now starts a new structure on its first tab); other holders show it
+  on Overview (and on Output for machines, in place of the old buffer lines). Per holder: title, "16 / 16
+  (100%)", FULL badge, bar, "N more on the way in", one line per item (tier stripe, icon, name, reserved,
+  spoils in m:ss, amount; the tooltip has free/reserved). A FULL badge in the header when a store or an
+  output buffer is full. Vehicles screen: cargo fill bar and FULL.
+- Inventory screen, tab "By structure": SIM `sim.inventory.by_structure(base)` rows (structures, vehicles,
+  "Carried", "On the ground"): base, fill bar and %, FULL, top 4 items; sort fullest first or by name; base
+  filter; click a row: the camera goes there and selects it.
+- Map FULL tag: RENDER's (RENDER-to-UI 2026-09-28). Asked RENDER to use `contents(b).full` (100 %), not 98 %,
+  so the tag and the panels agree. The UI draws no world tag.
+- **Web fault found and fixed:** the first switch to the new tab made the web build fault ("memory access out
+  of bounds"): the inventory screen's `_update()` still wrote the freed item-row labels of the last tab. The
+  tab now drops them. Found by bisecting in the web build (desktop showed nothing).
+- The shutdown crash came back while I bisected with a temporary `static var` in inventory_screen.gd (it
+  extends screen.gd): the same cause as on 2026-09-28. Removed; check exits 0 again.
+- Debug read command `storage <def>` (used/capacity/full per structure) for screenshots.
+- Test `tools/ui/test_storage.gd` (showcase_v4): all 19 holders show a Storage section whose totals, FULL
+  and item lines match SIM; stores open on Storage; a full machine shows "Output 12 / 12 (100%)" + FULL and a
+  header FULL; By structure lists 16 rows fullest first with the full machine flagged, filters by base,
+  sorts by name, a click selects; the last tab's rows are dropped; vehicle cargo shows its fill.
+- Shots: `docs/shots/ui9_storage_storehouse.png`, `ui9_storage_full_machine.png`, `ui9_storage_by_structure.png`.

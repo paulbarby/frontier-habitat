@@ -574,3 +574,22 @@ issue's `live` field: false for each moment a carrier took one unit and the buff
 stays true until the condition has been gone for 10 s (`balance.alerts.live_hold`), so a short drop no longer shows
 as "clearing". If the panel still blinks, it is the UI's own list handling of the text change (the machine list in
 the text can change while the key stays).
+
+## 2026-09-28 — storage on every structure (Paul)
+
+`sim.inventory` is the same object as `sim.inv`.
+
+- **`sim.inventory.contents(x)`**, x = a building record or a vehicle record (`sim.vehicles.get_v(id)`) →
+  `{capacity, used, free, full, items {item: n}, reserved {item: n},
+    buffers {in {…}, out {…}, in_cap, out_cap, in_used, out_used},
+    other {fill, site, upgrade, build, ship, trade, floor: {item: n}} (only the ones it has),
+    spoil {item: seconds until the next unit spoils}, cold (bool), all {item: n}}`.
+  `capacity/used/items/reserved` are its store: storehouse, cold storage, lander, outpost core, depot store,
+  or a vehicle's cargo; a machine without a store shows its output buffer there. Machine buffers (kitchens with
+  their ingredients and dishes, research assemblers with packs, refineries, …) are in `buffers`. `floor` = ground
+  piles inside a room. `spoil` only where the item spoils (not in cold storage, not in input buffers).
+- **`sim.inventory.by_structure(base_id = -1)`** → one row per structure or vehicle with an inventory, then
+  "On the ground" (`kind` "ground", id -1) and "Carried" (`kind` "carried", id -2):
+  `[{id, name, def, kind ("structure" | "vehicle" | "ground" | "carried"), base, capacity, used, full,
+  items {item: n}}]`. With a base id, only that base (vehicles and piles by where they are). All rows together
+  are every unit in the world; test `v4_inventory_contents` checks that against the ledger.

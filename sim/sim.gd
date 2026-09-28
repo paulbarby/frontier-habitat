@@ -61,6 +61,7 @@ var planet: Dictionary
 var state: Dictionary
 var world
 var inv
+var inventory      # the same object as inv (the UI's name for it)
 var topo
 var nav
 var place
@@ -100,6 +101,7 @@ func _init() -> void:
 	content = _content_cache
 	bal = content["balance"]
 	inv = InventorySys.new(self)
+	inventory = inv
 	topo = Topology.new(self)
 	nav = Nav.new(self)
 	place = Placement.new(self)
@@ -136,6 +138,7 @@ func dispose() -> void:
 		if s != null:
 			s.sim = null
 	inv = null
+	inventory = null
 	topo = null
 	nav = null
 

@@ -522,6 +522,7 @@ func sync(delta: float) -> void:
 	if _status_clock <= 0.0:
 		_status_clock = 0.2
 		if not _skip.has("status"): _sync_status()
+		_sync_stock()
 	_sites_clock -= delta
 	if _sites_clock <= 0.0:
 		_sites_clock = 1.0
@@ -568,7 +569,7 @@ var _made_now := 0
 var _force_open_all := false
 ## Groups that stand above the cut on purpose: furniture inside the room (shelves, tanks,
 ## racks: seen through the open roof) and wall items hidden by doorways.
-const CUT_ALLOWED := ["Interior", "Tall"]
+const CUT_ALLOWED := ["Interior", "Stock", "Tall"]
 func _cut_check() -> Dictionary:
 	var out := {}
 	var blds: Dictionary = sim.state["buildings"]
@@ -1488,7 +1489,7 @@ func _cable_post_tpl() -> Dictionary:
 
 # ---------------------------------------------------------------- status: icons and the few labels that matter
 const ICON := {"no_power": 0, "no_water": 1, "no_air": 2, "broken": 3, "output_blocked": 4, "deposit_empty": 5, "materials": 6,
-	"suit_range": 7, "off": 8, "building": 9, "unreachable": 7, "no_reservoir": 1, "demolish": 11, "alert": 10, "wear": 3}
+	"suit_range": 7, "off": 8, "building": 9, "unreachable": 7, "full": 4, "no_reservoir": 1, "demolish": 11, "alert": 10, "wear": 3}
 const ICON_COLOR := {"no_power": Color("ffb547"), "no_water": Color("3ee0ff"), "no_air": Color("ff5a5f"), "broken": Color("ff5a5f"),
 	"output_blocked": Color("ffb547"), "deposit_empty": Color("ffb547"), "materials": Color("3ee0ff"), "suit_range": Color("ff5a5f"),
 	"off": Color("9aa3ad"), "building": Color("ffd166"), "unreachable": Color("ff5a5f"), "no_reservoir": Color("ffb547"), "demolish": Color("ff5a5f"), "alert": Color("ffb547")}
@@ -1527,12 +1528,15 @@ func _status(b: Dictionary) -> Dictionary:
 	match blk:
 		"no_water": return {"code": "no_water"}
 		"no_reservoir": return {"code": "no_reservoir"}
-		"output_blocked": return {"code": "output_blocked"}
+		"output_blocked": return {"code": "output_blocked", "text": "FULL", "color": Color("ffb547")}
 		"deposit_empty": return {"code": "deposit_empty"}
 	if b["kind"] == "room" and not sim.util.building_supplied(b["id"]):
 		return {"code": "no_air"}
 	if bool(b.get("breach", false)):
 		return {"code": "no_air", "text": "HULL BREACH"}
+	# Storage full (Paul 2026-09-28): a FULL tag, as WORN and BROKEN.
+	if _stock_full(b):
+		return {"code": "full", "text": "FULL", "color": Color("ffb547")}
 	# Worn machines above the forecast share of their failure threshold (V3 §4.3).
 	var w2: Dictionary = _wear_of(int(b["id"]))
 	if not w2.is_empty() and float(w2.get("fail_at", 100.0)) > 0.0 and float(w2.get("w", 0.0)) >= float(w2.get("fail_at", 100.0)) * 0.75:
@@ -1540,6 +1544,47 @@ func _status(b: Dictionary) -> Dictionary:
 	return {}
 
 const FAULT_COLOR := {"mechanical": Color("ff9f1c"), "electrical": Color("3ee0ff"), "seal": Color("a78bfa")}
+
+## Share of a storage structure's store in use, 0..1 (-1 = not a store). SIM's contents(b)
+## (SIM-to-UI.md: capacity, used, full), only for structures whose inv_out is a store (contents
+## scans every inventory, so it is not called for other structures). Cached 1 s per structure.
+var _fill_cache := {}
+func _stock_fill(b: Dictionary) -> float:
+	var iid: int = int(b.get("inv_out", -1))
+	if iid < 0 or String(sim.inv.get_inv(iid).get("role", "")) != "store":
+		return -1.0
+	var c = _fill_cache.get(int(b["id"]))
+	if c != null and _time - float(c[1]) < 1.0:
+		return float(c[0])
+	var f := -1.0
+	var ct: Dictionary = sim.inventory.contents(b) if sim.get("inventory") != null else {}
+	if not ct.is_empty() and int(ct.get("capacity", 0)) > 0:
+		f = 1.0 if bool(ct.get("full", false)) else clampf(float(ct["used"]) / float(ct["capacity"]), 0.0, 1.0)
+	_fill_cache[int(b["id"])] = [f, _time, bool(ct.get("full", false))]
+	return f
+
+## SIM's own full flag (contents(b).full), the rule the panels use.
+func _stock_full(b: Dictionary) -> bool:
+	if _stock_fill(b) < 0.0:
+		return false
+	var c = _fill_cache.get(int(b["id"]))
+	return c != null and (c as Array).size() > 2 and bool(c[2])
+## The racks' crates of every storage room follow its fill level (models.gd "Stock" group).
+func _sync_stock() -> void:
+	for id in bmeta:
+		var meta: Dictionary = bmeta[id]
+		if not (meta.get("tpl", {}).get("groups", {}) as Dictionary).has("Stock"):
+			continue
+		var b: Dictionary = sim.state["buildings"].get(id, {})
+		var f: float = maxf(_stock_fill(b), 0.0) if not b.is_empty() else 0.0
+		if b.get("state", "") != "active":
+			f = 0.0
+		if absf(float(meta.get("stock_f", -1.0)) - f) > 0.004:
+			meta["stock_f"] = f
+			inst.set_group_custom(int(meta["h"]), "Stock", Color(f, 0, 0, 1))
+	stats_stock = {}
+
+var stats_stock := {}
 
 func _wear_of(bid: int) -> Dictionary:
 	var hz = sim.state.get("hazards", {})

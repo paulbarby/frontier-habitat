@@ -154,6 +154,23 @@ func _show(id: int) -> void:
 	_fact(g, "Cargo", "%d of %d" % [used, int(v.get("cargo_cap", 0))])
 	_fact(g, "Crew", "%d of %d seats" % [(v.get("crew", []) as Array).size(), int(v.get("seats", 0))])
 	_fact(g, "Wear", "%d%%" % int(float(v.get("wear", 0.0))))
+	# Cargo as storage (Paul, 2026-09-28): a capacity bar coloured by fill, FULL, the items with reserved units.
+	var S = load("res://ui/storage.gd")
+	var ci: int = int(v.get("cargo_inv", -1))
+	if ci != -1 and hud.main.sim.inv.exists(ci):
+		var inf: Dictionary = S.info(hud.main.sim, ci, false)
+		var ch: HBoxContainer = Kit.hbox(8)
+		ch.name = "CargoStorage"
+		ch.add_child(Kit.head("Cargo", P.TEXT_2, 11))
+		var cn: Label = Kit.num("%d / %d  (%d%%)" % [int(inf["used"]), int(inf["cap"]), int(roundf(float(inf["frac"]) * 100.0))], 13, S.level_color(int(inf["level"])) if int(inf["level"]) > 0 else P.TEXT)
+		cn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ch.add_child(cn)
+		if bool(inf["full"]):
+			ch.add_child(Kit.badge("FULL", P.RED))
+		_detail.add_child(ch)
+		var cb = Kit.bar(clampf(float(inf["frac"]), 0.0, 1.0), S.level_color(int(inf["level"])), 7.0)
+		cb.custom_minimum_size.x = 300
+		_detail.add_child(cb)
 	if not cargo.is_empty():
 		var f := HFlowContainer.new()
 		f.add_theme_constant_override("h_separation", 10)

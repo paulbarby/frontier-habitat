@@ -26,8 +26,16 @@ instance uniform float room_r = 0.0;
 
 varying vec3 lpos;
 
+// Storage fill (Paul 2026-09-28): a Stock surface (the racks' crates, models.gd _split_stock)
+// carries each crate's fill rank in UV2.x; a crate at or above the room's fill (INSTANCE_CUSTOM.r,
+// 0..1) collapses to a point and is not drawn.
+uniform bool stock = false;
+
 void vertex() {
 	lpos = VERTEX;
+	if (stock && UV2.x >= INSTANCE_CUSTOM.r) {
+		VERTEX = vec3(0.0);
+	}
 }
 
 void fragment() {

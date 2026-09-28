@@ -731,3 +731,4 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
   Test `v4_locks_explained`; cases_unit uses the landing pad for the stage lock now.
 - Alert blinking: key stable and hysteresis applied on every map; `live` now holds 10 s (`alerts.live_hold`) so a
   momentary drop does not show as clearing. Test `v3_alert_output_blocked_300s_frontier` (also checks `live`).
+- Storage API: `sim.inventory.contents(x)` and `by_structure(base)`; test `v4_inventory_contents` (rows = ledger).

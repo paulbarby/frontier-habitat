@@ -967,3 +967,14 @@ Checks: `check` 235 scripts 0 failed; path PASS (550,104 samples, wall 0, furnit
 
 - v4 path check after SIM's answer (a planned corridor is open ground): the check now skips blueprints, as SIM's does. `render_path_check.gd v4`: PASS (115,951 samples, wall 0, furniture 0.114 %, outside 0, slide 0, teleport 0, void 3).
 - New (g) count in the path check: a ground vehicle drawn within 1.2 m + half its track of a BUILT corridor tube, every 5th frame. showcase_v4 and the Frontier game: 0 samples now. SIM's rover-blocking change has not landed; re-run `render_path_check.gd v4` when it does.
+
+## 2026-09-28 - storage: FULL tag and rack fill (Paul)
+
+- FULL tag (world_view status badges, as WORN / BROKEN, amber): storehouse or cold storage at >= 98 % of its store (`inv_out`, role `store`: total / cap), and a machine with block `output_blocked`. RENDER draws the world tag; UI does the panels (`RENDER-to-UI.md`).
+- Rack fill: `models.gd _split_stock` finds the crates baked in the Interior of `storehouse_*` and `cold_storage_*` (connected pieces 0.3-0.8 m; bands and lids join their crate) and moves them to a "Stock" group, rank per crate in UV2.x (bay by bay, bays in a spread order). `interior.gdshader` collapses crates at or above the room's fill (INSTANCE_CUSTOM.r, set by `world_view._sync_stock` from total / cap). Crates found: storehouse S 40, M 123, L 146, XL 199; cold storage M 7, XL 25; cold storage S and L have no crate-sized pieces (nothing to fill; ask ART-HAB if wanted). No per-slot anchors needed. Draw calls: one extra MultiMesh per model size.
+- Fill from SIM's `sim.inventory.contents(b)` (`full`, else `used / capacity`), only for structures whose `inv_out` is a store, cached 1 s per structure (`contents` scans every inventory). Shots: `146a_storehouse_empty.png`, `146b_storehouse_full.png`.
+- Cut check: "Stock" is allowed like "Interior" (the top-shelf crates, 1.57 m, were already in Interior).
+- Evidence `art/critic_input/render/146_storage_fill_and_full_tag.png` (`tools/render_stock_save.gd` writes empty / half / full saves).
+- Checks: `check` 238 scripts 0 failed; path PASS; v4 path PASS; airlock all 0; cut 0 above, doors 0 bad.
+
+- FULL tag now uses SIM `contents(b).full` only (the panels' rule, 100 %). Cold storage with ART-HAB totes fills visibly: S 32, M 57, L 94, XL 145 totes (`147_cold_storage_fill.png`).

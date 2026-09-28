@@ -1,11 +1,44 @@
 {
-  "date": "2026-09-28T18:36:06",
+  "date": "2026-09-28T21:58:07",
   "fps": 30,
-  "label": "v4",
+  "label": "run",
   "minutes_per_save": 10.0,
   "pass": true,
   "saves": {
-    "frontier_game.fhsave": {
+    "doors8.fhsave": {
+      "a_by_mode": {
+
+      },
+      "a_by_room": {
+
+      },
+      "a_wall": 0,
+      "b_by_room": {
+
+      },
+      "b_furniture": 0,
+      "b_furniture_pct": 0.0,
+      "c_by_what": {
+
+      },
+      "c_outside_intrusion": 0,
+      "d_by_clip": {
+
+      },
+      "d_slide": 0,
+      "d_teleport": 0,
+      "e_by_mode": {
+
+      },
+      "e_void": 0,
+      "frames": 4500,
+      "game_minutes": 10.0,
+      "inside_samples": 14868,
+      "outside_samples": 0,
+      "samples": 50628,
+      "save": "doors8.fhsave"
+    },
+    "scene_final.fhsave": {
       "a_by_mode": {
 
       },
@@ -14,30 +47,24 @@
       },
       "a_wall": 0,
       "b_by_mode": {
-        "to_anchor:idle:logical_blocked:pblk:habitat:q-1:wp0": 2,
-        "to_anchor:idle:logical_blocked:pblk:habitat:q0:wp29": 1,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp0": 3,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp17": 1,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp21": 1,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp29": 1,
-        "to_anchor:walk:logical_blocked:pblk:habitat:q0:wp58": 3,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp1": 9,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp2": 2,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp3": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp4": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp5": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp6": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:kitchen:q0:wp30": 1
+        "follow:run:logical_blocked:pblk:airlock:q0:wp1": 15,
+        "follow:run:logical_blocked:pblk:airlock:q0:wp8": 3,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp1": 4,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp1": 2,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp22": 3,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp23": 6,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp24": 3,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp0": 3
       },
       "b_by_room": {
-        "habitat": 27,
-        "kitchen": 1
+        "airlock": 36,
+        "habitat": 3
       },
-      "b_furniture": 28,
-      "b_furniture_pct": 0.096,
+      "b_furniture": 39,
+      "b_furniture_pct": 0.066,
       "b_zone": {
-        "door<3": 1,
-        "room": 27
+        "door<1.5": 36,
+        "room": 3
       },
       "c_by_what": {
 
@@ -46,9 +73,160 @@
       "d_by_clip": {
 
       },
-      "d_fade_short": 1,
-      "d_hidden_jump": 82,
-      "d_hidden_min_m": 1.52,
+      "d_fade_short": 37,
+      "d_far_step": 43,
+      "d_hidden_jump": 88,
+      "d_hidden_min_m": 2.63,
+      "d_slide": 0,
+      "d_teleport": 0,
+      "e_by_mode": {
+        "follow::suit:lander:1.0:": 15,
+        "follow::suit:lander:1.0:stand": 6,
+        "follow::suit:lander:2.0:": 41,
+        "follow::suit:lander:2.0:stand": 3,
+        "to_anchor::suit:lander:1.0:stand": 35,
+        "to_anchor::suit:lander:2.0:stand": 30
+      },
+      "e_void": 130,
+      "f_by": {
+        "door:MM:airlock:follow-follow": 364,
+        "door:MM:room:follow-follow": 42,
+        "door:Ms:airlock:follow-follow": 2035,
+        "door:Ms:airlock:follow-leaving": 38,
+        "door:Ms:airlock:follow-to_anchor": 26,
+        "door:Ms:room:follow-follow": 8,
+        "door:sM:airlock:follow-follow": 2193,
+        "door:sM:airlock:leaving-follow": 31,
+        "door:sM:airlock:to_anchor-follow": 43,
+        "door:sM:room:follow-follow": 1,
+        "door:ss:airlock:follow-follow": 6562,
+        "door:ss:airlock:follow-leaving": 160,
+        "door:ss:airlock:follow-to_anchor": 64,
+        "door:ss:airlock:leaving-follow": 129,
+        "door:ss:airlock:to_anchor-follow": 71,
+        "door:ss:room:follow-follow": 3,
+        "tube:MM:room:follow-follow": 26
+      },
+      "f_detail": [
+        "f350 236 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 238 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 240 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 242 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 244 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 246 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 248 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 250 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 252 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 254 (479.88, 435.1) in goal room | 256 (479.89, 435.48) lock goal suit",
+        "f350 256 (479.89, 435.48) lock goal suit | 280 (479.88, 435.1) in goal room",
+        "f350 256 (479.89, 435.48) lock goal suit | 284 (479.88, 435.1) in goal room"
+      ],
+      "f_overlap_door": 11770,
+      "f_overlap_tube": 26,
+      "frames": 4500,
+      "game_minutes": 10.0,
+      "inside_samples": 59180,
+      "outside_samples": 45916,
+      "samples": 204456,
+      "save": "scene_final.fhsave"
+    },
+    "showcase_v3_late.fhsave": {
+      "a_by_mode": {
+
+      },
+      "a_by_room": {
+
+      },
+      "a_wall": 0,
+      "b_by_mode": {
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp1": 7,
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp10": 1,
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp16": 1,
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp17": 2,
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp19": 3,
+        "follow:idle:logical_blocked:pblk:airlock:q0:wp2": 10,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp0": 6,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp16": 2,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp17": 1,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp19": 6,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp2": 2,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp47": 2,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp50": 1,
+        "follow:idle:logical_blocked:slot:pblk:airlock:q0:wp66": 1,
+        "follow:idle_look:logical_blocked:pblk:airlock:q0:wp13": 1,
+        "follow:idle_look:logical_blocked:slot:pblk:airlock:q0:wp13": 2,
+        "follow:run:logical_blocked:pblk:airlock:q0:wp1": 12,
+        "follow:run:logical_blocked:pblk:airlock:q0:wp23": 2,
+        "follow:run:logical_blocked:pblk:airlock:q0:wp38": 3,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp1": 2,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp13": 2,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp14": 1,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp23": 1,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp25": 4,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp29": 3,
+        "follow:run:logical_blocked:slot:pblk:airlock:q0:wp32": 1,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp1": 8,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp10": 1,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp2": 5,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp31": 1,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp5": 3,
+        "follow:walk:logical_blocked:pblk:airlock:q0:wp50": 1,
+        "follow:walk:logical_blocked:pblk:habitat:q0:wp13": 2,
+        "follow:walk:logical_blocked:pblk:habitat:q0:wp19": 4,
+        "follow:walk:logical_blocked:pblk:kitchen:q0:wp15": 3,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp1": 4,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp13": 3,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp2": 1,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp23": 3,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp47": 3,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp50": 5,
+        "follow:walk:logical_blocked:slot:pblk:airlock:q0:wp66": 1,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp13": 1,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp16": 6,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp17": 3,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp18": 3,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp19": 2,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp21": 9,
+        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp23": 6,
+        "to_anchor:idle:logical_blocked:pblk:habitat:q-1:wp0": 3,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp0": 24,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp18": 1,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp19": 1,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp22": 1,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp35": 1,
+        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp39": 1,
+        "to_anchor:run:logical_blocked:slot:pblk:airlock:q0:wp45": 1,
+        "to_anchor:walk:logical_blocked:pblk:habitat:q0:wp15": 3,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp1": 1,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp18": 10,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp19": 5,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp22": 6,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp24": 6,
+        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp39": 3
+      },
+      "b_by_room": {
+        "airlock": 119,
+        "habitat": 102,
+        "kitchen": 3
+      },
+      "b_furniture": 224,
+      "b_furniture_pct": 0.1,
+      "b_zone": {
+        "door<1.5": 133,
+        "door<3": 36,
+        "room": 55
+      },
+      "c_by_what": {
+
+      },
+      "c_outside_intrusion": 0,
+      "d_by_clip": {
+
+      },
+      "d_fade_short": 28,
+      "d_far_step": 27,
+      "d_hidden_jump": 374,
+      "d_hidden_min_m": 1.73,
       "d_slide": 0,
       "d_teleport": 0,
       "e_by_mode": {
@@ -56,117 +234,62 @@
       },
       "e_void": 0,
       "f_by": {
-        "door:MM:airlock:follow-follow": 60,
-        "door:MM:room:follow-follow": 13,
-        "door:MM:room:follow-to_anchor": 3,
-        "door:MM:room:to_anchor-follow": 3,
-        "door:Ms:airlock:follow-follow": 5,
-        "door:Ms:room:follow-follow": 4,
-        "door:sM:airlock:follow-follow": 1,
-        "door:sM:room:follow-follow": 1,
-        "door:ss:room:follow-follow": 1,
-        "tube:MM:airlock:follow-follow": 3,
-        "tube:MM:room:follow-follow": 6,
-        "tube:MM:room:to_anchor-follow": 7
+        "door:MM:airlock:follow-follow": 233,
+        "door:MM:room:follow-follow": 771,
+        "door:MM:room:follow-to_anchor": 56,
+        "door:MM:room:to_anchor-follow": 65,
+        "door:MM:room:to_anchor-to_anchor": 16,
+        "door:Ms:airlock:follow-follow": 519,
+        "door:Ms:airlock:follow-leaving": 3,
+        "door:Ms:airlock:follow-to_anchor": 5,
+        "door:Ms:room:follow-follow": 125,
+        "door:Ms:room:follow-to_anchor": 7,
+        "door:Ms:room:to_anchor-follow": 25,
+        "door:sM:airlock:follow-follow": 738,
+        "door:sM:airlock:leaving-follow": 3,
+        "door:sM:airlock:to_anchor-follow": 6,
+        "door:sM:room:at_anchor-follow": 6,
+        "door:sM:room:follow-follow": 149,
+        "door:sM:room:follow-to_anchor": 6,
+        "door:sM:room:to_anchor-follow": 8,
+        "door:ss:airlock:follow-follow": 11046,
+        "door:ss:airlock:follow-leaving": 12,
+        "door:ss:airlock:follow-to_anchor": 12,
+        "door:ss:airlock:leaving-follow": 27,
+        "door:ss:airlock:to_anchor-follow": 27,
+        "door:ss:room:at_anchor-follow": 1,
+        "door:ss:room:follow-follow": 29,
+        "tube:MM:airlock:follow-follow": 9,
+        "tube:MM:airlock:to_anchor-follow": 1,
+        "tube:MM:room:follow-follow": 473,
+        "tube:MM:room:follow-to_anchor": 34,
+        "tube:MM:room:to_anchor-follow": 39,
+        "tube:MM:room:to_anchor-to_anchor": 3,
+        "tube:Ms:room:to_anchor-follow": 3,
+        "tube:sM:room:follow-follow": 4
       },
       "f_detail": [
-        "f350 92 (1303.07, 1279.99) in goal room | 94 (1302.81, 1280.0) lock goal chamber",
-        "f650 84 (1302.56, 1279.98) in goal - | 90 (1302.74, 1280.05) lock goal suit",
-        "f950 88 (1302.36, 1280.11) in goal - | 90 (1302.17, 1279.86) in goal -"
+        "f50 25 (431.52, 420.17) in goal - | 33 (431.55, 420.32) in goal -",
+        "f200 12124 (400.3, 417.7) in goal - | 12566 (400.64, 417.82) in goal -",
+        "f250 23 (435.01, 440.48) in goal - | 12126 (434.9, 440.71) in goal -",
+        "f250 27 (429.16, 419.76) in goal - | 2379 (428.9, 419.85) in goal -",
+        "f250 12331 (437.12, 384.78) in goal - | 12461 (437.01, 384.87) in goal -",
+        "f350 2377 (422.17, 405.24) in goal - | 3751 (422.17, 405.0) in goal room",
+        "f350 2377 (422.17, 405.24) in goal - | 12461 (422.17, 405.0) in goal room",
+        "f350 3751 (422.17, 405.0) in goal room | 12122 (422.51, 404.88) in goal -",
+        "f350 3751 (422.17, 405.0) in goal room | 12461 (422.17, 405.0) in goal room",
+        "f350 12122 (422.51, 404.88) in goal - | 12461 (422.17, 405.0) in goal room",
+        "f350 12323 (436.95, 384.76) in goal - | 12465 (437.11, 384.84) in goal -",
+        "f400 3751 (422.17, 405.0) in goal room | 12461 (422.17, 405.0) in goal room"
       ],
-      "f_overlap_door": 91,
-      "f_overlap_tube": 16,
+      "f_overlap_door": 13895,
+      "f_overlap_tube": 566,
       "frames": 4500,
       "game_minutes": 10.0,
-      "inside_samples": 29157,
-      "outside_samples": 3595,
-      "samples": 35760,
-      "save": "frontier_game.fhsave"
-    },
-    "showcase_v4.fhsave": {
-      "a_by_mode": {
-
-      },
-      "a_by_room": {
-
-      },
-      "a_wall": 0,
-      "b_by_mode": {
-        "follow:run:logical_blocked:pblk:airlock:q0:wp1": 4,
-        "follow:walk:logical_blocked:pblk:habitat:q0:wp12": 1,
-        "follow:walk:logical_blocked:pblk:habitat:q0:wp19": 3,
-        "follow:walk:logical_blocked:pblk:habitat:q0:wp20": 1,
-        "follow:walk:logical_blocked:pblk:habitat:q0:wp8": 1,
-        "follow:walk:logical_blocked:slot:pblk:habitat:q0:wp22": 1,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp0": 3,
-        "to_anchor:idle:logical_blocked:slot:pblk:habitat:q0:wp24": 1,
-        "to_anchor:walk:logical_blocked:pblk:habitat:q0:wp20": 7,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp1": 29,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp16": 10,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp2": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp22": 9,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp24": 7,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp3": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:habitat:q0:wp5": 1,
-        "to_anchor:walk:logical_blocked:slot:pblk:kitchen:q0:wp30": 1
-      },
-      "b_by_room": {
-        "airlock": 4,
-        "habitat": 76,
-        "kitchen": 1
-      },
-      "b_furniture": 81,
-      "b_furniture_pct": 0.122,
-      "b_zone": {
-        "door<1.5": 4,
-        "door<3": 5,
-        "room": 72
-      },
-      "c_by_what": {
-
-      },
-      "c_outside_intrusion": 0,
-      "d_by_clip": {
-
-      },
-      "d_far_step": 108,
-      "d_hidden_jump": 161,
-      "d_hidden_min_m": 6.29,
-      "d_slide": 0,
-      "d_teleport": 0,
-      "e_by_mode": {
-        "to_anchor::suit:outpost_core:2.0:stand": 3
-      },
-      "e_void": 3,
-      "f_by": {
-        "door:MM:airlock:follow-follow": 12,
-        "door:MM:room:follow-follow": 129,
-        "door:MM:room:follow-to_anchor": 5,
-        "door:Ms:room:follow-follow": 80,
-        "door:sM:airlock:follow-follow": 2,
-        "door:sM:room:follow-follow": 15,
-        "door:sM:room:follow-to_anchor": 1,
-        "door:ss:room:follow-follow": 22,
-        "tube:MM:airlock:follow-follow": 7,
-        "tube:MM:room:follow-follow": 20,
-        "tube:MM:room:follow-to_anchor": 1
-      },
-      "f_detail": [
-        "f900 2188 (1325.97, 1272.68) in goal - | 2192 (1325.86, 1272.88) in goal room",
-        "f1100 2181 (1327.7, 1295.14) in goal - | 2183 (1327.74, 1294.79) in goal -",
-        "f1800 98 (1329.39, 1299.2) in goal - | 2170 (1329.05, 1299.22) in goal -",
-        "f3650 2170 (1301.26, 1304.22) in goal - | 2179 (1301.65, 1304.14) in goal -",
-        "f3900 94 (1301.17, 1304.16) in goal - | 2179 (1300.87, 1304.2) in goal -",
-        "f4050 96 (1284.57, 1304.16) in goal - | 98 (1284.63, 1303.8) in goal -"
-      ],
-      "f_overlap_door": 266,
-      "f_overlap_tube": 28,
-      "frames": 4500,
-      "game_minutes": 10.0,
-      "inside_samples": 66245,
-      "outside_samples": 2078,
-      "samples": 80191,
-      "save": "showcase_v4.fhsave"
+      "inside_samples": 223454,
+      "outside_samples": 27853,
+      "samples": 295020,
+      "save": "showcase_v3_late.fhsave"
     }
   },
   "speed": 4,
@@ -178,14 +301,14 @@
   },
   "total": {
     "a_wall": 0,
-    "b_furniture": 109,
-    "b_furniture_pct": 0.114,
+    "b_furniture": 263,
+    "b_furniture_pct": 0.088,
     "c_outside_intrusion": 0,
     "d_slide": 0,
     "d_teleport": 0,
-    "e_void": 3,
-    "inside_samples": 95402,
-    "samples": 115951
+    "e_void": 130,
+    "inside_samples": 297502,
+    "samples": 550104
   },
-  "wall_ms": 72336
+  "wall_ms": 167127
 }

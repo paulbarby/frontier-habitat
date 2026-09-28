@@ -294,6 +294,151 @@ func totals() -> Dictionary:
 				out[res]["carried"] += int(inv["items"][res])
 	return out
 
+# ---------------------------------------------------------------- per structure (V4, UI)
+## What a structure or a vehicle holds, for its panel (Paul: "full or not, and what is stored").
+## x = a building record or a vehicle record (sim.vehicles.get_v).
+## {capacity, used, free, full, items {item: n}, reserved {item: n},        (its store: a
+##   storehouse, cold storage, the lander, an outpost core, a depot store; a vehicle's cargo;
+##   else a machine's output buffer)
+##  buffers {in {item: n}, out {item: n}, in_cap, out_cap, in_used, out_used}, (machine buffers)
+##  other {fill, site, upgrade, build, ship, trade, floor: {item: n}} (only the ones it has;
+##   floor = ground piles inside a room),
+##  spoil {item: seconds until the next unit spoils} (items that spoil where they are),
+##  cold (bool), all {item: n} (everything above together)}
+func contents(x: Dictionary) -> Dictionary:
+	var out := {"capacity": 0, "used": 0, "free": 0, "full": false, "items": {}, "reserved": {},
+		"buffers": {"in": {}, "out": {}, "in_cap": 0, "out_cap": 0, "in_used": 0, "out_used": 0},
+		"other": {}, "spoil": {}, "cold": false, "all": {}}
+	if x.is_empty():
+		return out
+	var is_vehicle: bool = x.has("cargo") and not x.has("def")
+	var id: int = int(x["id"])
+	var mine: Array = []
+	for inv_id in sim.state["inventories"]:
+		var inv: Dictionary = sim.state["inventories"][inv_id]
+		if is_vehicle:
+			if inv["ot"] == "v" and int(inv["oid"]) == id:
+				mine.append(inv)
+		elif (inv["ot"] == "b" and int(inv["oid"]) == id) or (inv["ot"] == "g" and int(inv["oid"]) == id):
+			mine.append(inv)
+	if not is_vehicle:
+		out["cold"] = bool(sim.bdef(x["def"]).get("cold", false))
+	var main := {}
+	for inv in mine:
+		if inv["role"] == "store" or inv["role"] == "vcargo":
+			main = inv
+	if main.is_empty():
+		for inv in mine:
+			if inv["role"] == "out":
+				main = inv
+	var day: float = float(sim.bal["day_length"])
+	var names := {"fill": "fill", "site": "site", "upg": "upgrade", "vbuild": "build", "ship": "ship", "trade": "trade", "pile": "floor", "box": "floor"}
+	for inv in mine:
+		var items: Dictionary = (inv["items"] as Dictionary).duplicate()
+		for r in items:
+			out["all"][r] = int(out["all"].get(r, 0)) + int(items[r])
+		match String(inv["role"]):
+			"in":
+				out["buffers"]["in"] = items
+				out["buffers"]["in_cap"] = int(inv["cap"])
+				out["buffers"]["in_used"] = total(int(inv["id"]))
+			"out":
+				out["buffers"]["out"] = items
+				out["buffers"]["out_cap"] = int(inv["cap"])
+				out["buffers"]["out_used"] = total(int(inv["id"]))
+			"store", "vcargo":
+				pass
+			_:
+				var key: String = String(names.get(String(inv["role"]), String(inv["role"])))
+				var o: Dictionary = out["other"].get(key, {})
+				for r in items:
+					o[r] = int(o.get(r, 0)) + int(items[r])
+				out["other"][key] = o
+		# Spoilage: where it spoils (stores, output buffers, fill ports, piles; not cold rooms).
+		var role: String = inv["role"]
+		if not out["cold"] and (role == "store" or role == "out" or role == "pile" or role == "fill") and bool(sim.state.get("options", {}).get("spoilage", true)):
+			var acc: Dictionary = inv.get("spoil", {})
+			for r in items:
+				var shelf: float = sim.items.shelf_days(r)
+				var free: int = int(items[r]) - int(inv["held_out"].get(r, 0))
+				if shelf <= 0.0 or free <= 0:
+					continue
+				var left: float = ceilf(float(int(round(shelf * day)) - int(acc.get(r, 0))) / float(free))
+				out["spoil"][r] = minf(float(out["spoil"].get(r, 1e18)), maxf(0.0, left))
+	if not main.is_empty():
+		out["capacity"] = int(main["cap"])
+		out["used"] = total(int(main["id"]))
+		out["free"] = maxi(0, int(main["cap"]) - int(out["used"]))
+		out["full"] = int(out["used"]) >= int(main["cap"])
+		out["items"] = (main["items"] as Dictionary).duplicate()
+		out["reserved"] = (main["held_out"] as Dictionary).duplicate()
+	return out
+
+## The inventory list: one row per structure or vehicle that holds anything, plus "ground" (piles
+## outdoors), "carried" (what people carry) and ship/trade holds, for one base (-1 = all).
+## [{id, name, def, kind ("structure" | "vehicle" | "ground" | "carried"), base, capacity, used,
+##   full, items {item: n} (everything it holds)}], structures first by id. The items of all rows
+## together are every unit in the world (the ledger's balance).
+func by_structure(base_id: int = -1) -> Array:
+	var rows := {}
+	var ground := {}
+	var carried := {}
+	var blds: Dictionary = sim.state["buildings"]
+	var many: bool = sim.bases.count() > 1
+	for inv_id in sim.state["inventories"]:
+		var inv: Dictionary = sim.state["inventories"][inv_id]
+		var items: Dictionary = inv["items"]
+		var ot: String = inv["ot"]
+		var oid: int = int(inv["oid"])
+		var key := ""
+		var bb := -1
+		if (ot == "b" or ot == "g") and oid != 0 and blds.has(oid):
+			key = "b%d" % oid
+			bb = sim.bases.base_of(oid)
+		elif ot == "v":
+			key = "v%d" % oid
+			bb = sim.bases.base_at(position_of(int(inv_id))) if many else (int(sim.bases.ids()[0]) if sim.bases.count() == 1 else -1)
+		elif ot == "a":
+			key = "carried"
+			var a: Dictionary = sim.state["agents"].get(oid, {})
+			bb = sim.bases.base_of_agent(a) if not a.is_empty() else -1
+		else:
+			key = "ground"
+			bb = sim.bases.base_at(position_of(int(inv_id))) if many else (int(sim.bases.ids()[0]) if sim.bases.count() == 1 else -1)
+		if base_id != -1 and bb != base_id:
+			continue
+		var bucket: Dictionary
+		if key == "carried":
+			bucket = carried
+		elif key == "ground":
+			bucket = ground
+		else:
+			if not rows.has(key):
+				if key.begins_with("b"):
+					var b: Dictionary = blds[oid]
+					rows[key] = {"id": oid, "name": b["name"], "def": b["def"], "kind": "structure", "base": bb, "items": {}}
+				else:
+					var v: Dictionary = sim.vehicles.get_v(oid)
+					rows[key] = {"id": oid, "name": String(v.get("name", "Vehicle")), "def": String(v.get("kind", "")), "kind": "vehicle", "base": bb, "items": {}}
+			bucket = rows[key]["items"]
+		for r in items:
+			bucket[r] = int(bucket.get(r, 0)) + int(items[r])
+	var out: Array = []
+	var keys: Array = rows.keys()
+	keys.sort_custom(func(p, q): return (0 if String(p).begins_with("b") else 1) * 100000000 + int(String(p).substr(1)) < (0 if String(q).begins_with("b") else 1) * 100000000 + int(String(q).substr(1)))
+	for k in keys:
+		var row: Dictionary = rows[k]
+		var c: Dictionary = contents(blds[row["id"]] if row["kind"] == "structure" else sim.vehicles.get_v(int(row["id"])))
+		row["capacity"] = c["capacity"]
+		row["used"] = c["used"]
+		row["full"] = c["full"]
+		out.append(row)
+	if not ground.is_empty():
+		out.append({"id": -1, "name": "On the ground", "def": "", "kind": "ground", "base": base_id, "capacity": 0, "used": 0, "full": false, "items": ground})
+	if not carried.is_empty():
+		out.append({"id": -2, "name": "Carried", "def": "", "kind": "carried", "base": base_id, "capacity": 0, "used": 0, "full": false, "items": carried})
+	return out
+
 ## Returns {} when the books balance, else a description of each mismatch.
 func audit() -> Dictionary:
 	var world := {}
