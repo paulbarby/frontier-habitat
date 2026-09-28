@@ -14,6 +14,7 @@
 //   --steps  JSON list of steps: {"cmd": "text"} calls window.__fh.cmd(text);
 //            {"wait": seconds}; {"shot": "path.png"}; {"eval": "js expression"} prints the result.
 //   --console  print the page console to stdout
+//   --throttle kbit/s  slow the network while loading; --early 2,10,30  extra shots N s after navigation
 import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -85,7 +86,12 @@ await send('Runtime.enable');
 await send('Page.enable');
 await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
 const url = `http://127.0.0.1:${port}/index.html${QUERY ? '?' + QUERY : ''}`;
+const THROTTLE = Number(opt('throttle', '0'));
+if (THROTTLE > 0) { await send('Network.enable'); await send('Network.emulateNetworkConditions', { offline: false, latency: 20, downloadThroughput: THROTTLE * 1024 / 8, uploadThroughput: THROTTLE * 1024 / 8 }); }
 await send('Page.navigate', { url });
+const EARLY = opt('early', '') ? opt('early', '').split(',').map(Number) : [];
+for (let i = 0; i < EARLY.length; i++) { await sleep(EARLY[i] - (i ? EARLY[i - 1] : 0)); await shot((OUT || 'early.png').replace(/.png$/, '_early' + EARLY[i] + 's.png')); }
+if (THROTTLE > 0) await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
 const t0 = Date.now();
 let ready = false;
 while ((Date.now() - t0) / 1000 < WAIT) {

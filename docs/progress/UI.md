@@ -801,3 +801,15 @@ additions this round are scripts and seven small SVG icons, so the growth is fro
   header FULL; By structure lists 16 rows fullest first with the full machine flagged, filters by base,
   sorts by name, a click selects; the last tab's rows are dropped; vehicle cargo shows its fill.
 - Shots: `docs/shots/ui9_storage_storehouse.png`, `ui9_storage_full_machine.png`, `ui9_storage_by_structure.png`.
+
+## 2026-09-29 — the game drives the web loading screen
+
+- `presentation/main.gd` (web only): `_ready` first sets `window.__fh.loaded = false` and reports 0.05
+  "Loading the colony" (so the shell waits for the game's own end mark, not its 1.5 s guess). Each frame
+  `_web_load_step()` reports "Building the planet" (0.30-0.55, first frames) and, while RENDER's load cover
+  warms the shaders, "Preparing graphics" (0.55-0.95 from the cover's hold time and fast frames). When the
+  cover lifts (the first real frame) it sets `window.__fh.loaded = true` and calls `__fh_load(1)`; the shell
+  fades out. Without a cover it ends after 240 frames. Desktop: nothing.
+- Check (`tools/shoot.mjs --gpu --throttle 150000 --early …`): 5.5 s download 66 %, 6.3 s "Preparing graphics"
+  95 %, 6.9 s 99 %, 7.2 s the title screen, with no black frame between. Sheet: `docs/shots/ui10_loader_sequence.png`
+  (order of the tiles: 5.5, 6.3, 6.6, 6.9, 6.0, 7.2, 7.5, 7.8 s).

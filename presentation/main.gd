@@ -69,8 +69,16 @@ var _t_view := 0.0
 var _t_aud := 0.0
 var _split := {"n": 0.0, "sim": 0.0, "view": 0.0, "hud": 0.0, "proc": 0.0, "frame": 0.0}
 var _spikes: Array = []          # frame times over 100 ms since the last `spikes` command
+# Web loading screen (Paul, 2026-09-29; the shell is templates/web_shell.src.html): the game reports
+# its start-up to window.__fh_load(0..1, stage) and sets window.__fh.loaded when the first real frame
+# shows (RENDER's load cover has lifted), so the loader fades straight onto the game.
+var _load_done := false
+var _load_frames := 0
+var _load_cover_seen := false
+var _load_last := -1
 
 func _ready() -> void:
+	_web_load(0.05, "Loading the colony", true)
 	# Smallest desktop window. The browser canvas has no limit; the bounds keeper
 	# (ui/hud/bounds_keeper.gd) keeps every window inside any view, tested down to 800 x 600.
 	get_window().min_size = Vector2i(800, 600)
@@ -874,6 +882,47 @@ func _process(delta: float) -> void:
 		_t_aud = float(Time.get_ticks_usec() - ta0) / 1000.0
 	Boot.set_state(_hook, _boot_frames == 0, int(sim.state["tick"]), sim.util.day_number())
 	Boot.set_extra(_hook, _fps, "title" if on_title and hud.screen_name() == "title" else hud.screen_name())
+	_web_load_step()
+
+## Web only. Reports a start-up stage to the loading screen of the HTML shell (0..1 of the game's part,
+## which the shell shows as 90-100 %). first: also sets window.__fh.loaded = false, so the shell waits
+## for the game's own end mark instead of its 1.5 s guess.
+func _web_load(p: float, stage: String, first: bool = false) -> void:
+	if not OS.has_feature("web"):
+		return
+	var pc: int = int(p * 100.0)
+	if pc == _load_last and not first:
+		return
+	_load_last = pc
+	var js: String = "window.__fh_load && window.__fh_load(%.3f, %s);" % [clampf(p, 0.0, 1.0), JSON.stringify(stage)]
+	if first:
+		js = "window.__fh = window.__fh || {ready:false, tick:0, day:0, last:'', fps:0, title:''}; window.__fh.loaded = false; " + js
+	JavaScriptBridge.eval(js, true)
+
+## Once a frame until the game is visible: "Building the planet" while the first frames build the
+## world, "Preparing graphics" while RENDER's load cover warms the shaders (its hold time and fast
+## frames give the progress), then loaded = true when the cover lifts (the first real frame). A start
+## without a cover ends after 240 frames.
+func _web_load_step() -> void:
+	if _load_done or not OS.has_feature("web") or view == null:
+		return
+	_load_frames += 1
+	var wc = view.get("_warm_cover")
+	if wc != null:
+		_load_cover_seen = true
+	var lifted: bool = _load_cover_seen and wc == null
+	if lifted or (not _load_cover_seen and _load_frames > 240) or _load_frames > 3600:
+		_load_done = true
+		if _hook != null:
+			_hook["fh"].loaded = true
+		_web_load(1.0, "Ready")
+		return
+	if wc != null:
+		var hold: float = float(view.get("_cover_hold"))
+		var fast: int = int(view.get("_cover_fast"))
+		_web_load(0.55 + 0.4 * clampf(maxf(hold / 4.0, float(fast) / 20.0), 0.0, 1.0), "Preparing graphics")
+	else:
+		_web_load(0.3 + 0.25 * clampf(float(_load_frames) / 40.0, 0.0, 1.0), "Building the planet")
 
 func _demo_drive() -> void:
 	if _demo == null:

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>$GODOT_PROJECT_NAME</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: #140f0d;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+/* Frontier Habitat loading screen (templates/web_shell.src.html, built by tools/make_shell.mjs). */
+#fh-loader {
+	position: fixed;
+	inset: 0;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	background: #140f0d url("@BG@") center / cover no-repeat;
+	font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+	transition: opacity 0.6s ease;
+}
+
+#fh-loader::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(10, 8, 7, 0.15) 0%, rgba(10, 8, 7, 0.10) 45%, rgba(10, 8, 7, 0.85) 100%);
+}
+
+#fh-loader.done {
+	opacity: 0;
+	pointer-events: none;
+}
+
+#fh-title {
+	position: absolute;
+	top: 11vh;
+	left: 0;
+	right: 0;
+	text-align: center;
+	letter-spacing: 0.32em;
+	font-weight: 700;
+	font-size: clamp(28px, 5.2vw, 64px);
+	text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75);
+}
+
+#fh-title small {
+	display: block;
+	margin-top: 0.6em;
+	font-size: 0.28em;
+	letter-spacing: 0.45em;
+	font-weight: 600;
+	color: #9fd8e6;
+}
+
+#fh-panel {
+	position: relative;
+	width: min(640px, calc(100vw - 32px));
+	margin-bottom: 9vh;
+	padding: 18px 22px 16px;
+	box-sizing: border-box;
+	background: rgba(18, 24, 30, 0.62);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border: 2px solid #5b6570;
+	border-radius: 6px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* rivets */
+#fh-panel::before, #fh-panel::after {
+	content: "";
+	position: absolute;
+	top: 6px;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 35%, #e3e8ec, #6d7780 70%);
+}
+
+#fh-panel::before { left: 6px; }
+#fh-panel::after { right: 6px; }
+
+#fh-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	margin-bottom: 10px;
+}
+
+#fh-stage {
+	font-size: 15px;
+	letter-spacing: 0.06em;
+	color: #e8eef2;
+}
+
+#fh-pct {
+	font-size: 26px;
+	font-weight: 700;
+	color: #5ee0f0;
+	font-variant-numeric: tabular-nums;
+}
+
+#fh-bar {
+	height: 12px;
+	border-radius: 6px;
+	background: rgba(0, 0, 0, 0.55);
+	border: 1px solid #3c454e;
+	overflow: hidden;
+}
+
+#fh-fill {
+	height: 100%;
+	width: 0%;
+	background: linear-gradient(90deg, #2aa6c0, #5ee0f0);
+	box-shadow: 0 0 12px rgba(94, 224, 240, 0.6);
+	transition: width 0.25s linear;
+}
+
+#fh-detail {
+	margin-top: 9px;
+	display: flex;
+	justify-content: space-between;
+	font-size: 12px;
+	color: #a9b6bf;
+	font-variant-numeric: tabular-nums;
+}
+
+#fh-error {
+	display: none;
+	margin-top: 10px;
+	font-size: 13px;
+	color: #ffb3a8;
+	white-space: pre-line;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="fh-loader">
+			<div id="fh-title">FRONTIER HABITAT<small>VERSION @VERSION@</small></div>
+			<div id="fh-panel">
+				<div id="fh-row"><span id="fh-stage">Preparing the download</span><span id="fh-pct">0%</span></div>
+				<div id="fh-bar"><div id="fh-fill"></div></div>
+				<div id="fh-detail"><span id="fh-bytes">&nbsp;</span><span id="fh-tip">Tip: press / in the game to find any room.</span></div>
+				<div id="fh-error"></div>
+			</div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const loader = document.getElementById('fh-loader');
+	const stageEl = document.getElementById('fh-stage');
+	const pctEl = document.getElementById('fh-pct');
+	const fillEl = document.getElementById('fh-fill');
+	const bytesEl = document.getElementById('fh-bytes');
+	const errEl = document.getElementById('fh-error');
+	const tipEl = document.getElementById('fh-tip');
+	const tips = ['Tip: press / in the game to find any room.', 'Tip: N opens the Advisor, K the Codex.', 'Tip: the lander air ends on day 3. Build air first.', 'Tip: the best finds lie in dangerous places.', 'Tip: a reactor warns you before it melts down.'];
+	let tipI = 0;
+	const tipTimer = setInterval(() => { tipI = (tipI + 1) % tips.length; tipEl.textContent = tips[tipI]; }, 5000);
+
+	// 0-85 %: download (engine and game data). 85-90 %: engine start. 90-100 %: the game builds
+	// its first screen. The game may report its own progress with window.__fh_load(0..1, text)
+	// and marks the end with window.__fh.loaded = true; without that, the title screen or a
+	// ready game ends the loader.
+	let shown = 0;
+	let finished = false;
+	function show(p, stage) {
+		p = Math.max(shown, Math.min(100, p));
+		shown = p;
+		pctEl.textContent = Math.floor(p) + '%';
+		fillEl.style.width = p.toFixed(1) + '%';
+		if (stage) {
+			stageEl.textContent = stage;
+		}
+	}
+	function mb(n) {
+		return (n / 1048576).toFixed(1);
+	}
+	function finish() {
+		if (finished) {
+			return;
+		}
+		finished = true;
+		clearInterval(tipTimer);
+		show(100, 'Ready');
+		setTimeout(() => {
+			loader.classList.add('done');
+			setTimeout(() => loader.remove(), 700);
+		}, 250);
+	}
+	function fail(err) {
+		console.error(err);
+		stageEl.textContent = 'The game could not start';
+		errEl.style.display = 'block';
+		errEl.textContent = (err instanceof Error) ? err.message : String(err || 'An unknown error occurred.');
+	}
+	window.__fh_load = function (p, text) {
+		if (!finished) {
+			show(90 + 10 * Math.max(0, Math.min(1, Number(p) || 0)), text || null);
+			if (p >= 1) {
+				finish();
+			}
+		}
+	};
+
+	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+	if (missing.length !== 0) {
+		fail('This browser is missing features the game needs:\n' + missing.join('\n') + '\nUse a current Chrome, Edge or Firefox.');
+		return;
+	}
+
+	show(0, 'Downloading the game');
+	engine.startGame({
+		'onProgress': function (current, total) {
+			if (current > 0 && total > 0) {
+				show(85 * current / total, 'Downloading the game');
+				bytesEl.textContent = mb(current) + ' / ' + mb(total) + ' MB';
+			} else {
+				bytesEl.textContent = current > 0 ? mb(current) + ' MB' : ' ';
+			}
+		},
+	}).then(() => {
+		bytesEl.textContent = ' ';
+		show(88, 'Starting the engine');
+		const t0 = performance.now();
+		const poll = setInterval(() => {
+			if (finished) {
+				clearInterval(poll);
+				return;
+			}
+			const fh = window.__fh;
+			const secs = (performance.now() - t0) / 1000;
+			if (fh && fh.loaded) {
+				clearInterval(poll);
+				finish();
+				return;
+			}
+			// Without game reports, move slowly towards 99 % while the first screen builds.
+			if (shown < 99) {
+				show(Math.min(99, 90 + 9 * (1 - Math.exp(-secs / 6))), shown < 90.5 ? 'Building the colony' : null);
+			}
+			if (fh && (fh.ready || fh.title) && !('loaded' in fh)) {
+				// Older builds without the loaded flag: allow the first frames to draw.
+				if (!fh.__seen) {
+					fh.__seen = performance.now();
+				} else if (performance.now() - fh.__seen > 1500) {
+					clearInterval(poll);
+					finish();
+				}
+			}
+			if (secs > 90) {
+				clearInterval(poll);
+				finish();
+			}
+		}, 100);
+	}, fail);
+}());
+		</script>
+	</body>
+</html>
