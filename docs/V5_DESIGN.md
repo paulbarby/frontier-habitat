@@ -32,11 +32,12 @@ the one exception: it is written in a tabloid voice); report honestly, including
   quality high; draw calls ≤ 1,700; no frame over 50 ms in 120 s after load.
 - **Follow view** (§3) inside the dome with 30 people in view ≥ 45 fps.
 - Sim tick ≤ 3.0 ms median at 110 people + social systems; no single tick over 12 ms.
-- **`index.pck` ≤ 95 MB (hard: GitHub refuses files over 100 MB).** It is 78.7 MB now: 16 MB of
-  room for all of 5.0. Allocation: ART-NPC ≤ +6 MB, ART-HAB ≤ +4 MB, ART-B (dome) ≤ +4 MB,
-  UI ≤ +1 MB, reserve 1.3 MB. Vertex colours and small shared atlases (faces ≤ 512 px per variant,
-  hair/cloth trim sheets ≤ 1024 px shared); mesh compression on import; no unused LOD/shadow meshes.
-  Every art agent reports its size effect.
+- **`index.pck` ≤ 200 MB (soft), 300 MB (hard).** Changed by Paul, 29 September 2026: v5 does not
+  have to go on GitHub, so the 100 MB GitHub file limit no longer applies. The hard limit is browser
+  memory: the web build holds the whole pck in RAM. It is 78.7 MB now. Allocation: ART-NPC ≤ +50 MB,
+  ART-HAB ≤ +25 MB, ART-B (dome) ≤ +30 MB, UI ≤ +5 MB, reserve ~10 MB. Quality first, but no waste:
+  shared materials, mesh compression, no unused LOD/shadow meshes. Faces up to 1024 px per variant.
+  Every art agent reports its size effect. Load time is shown by the loading screen.
 - Save schema 6. Schema 5, 4, 3 and 2 saves load: old colonists get a deterministic appearance,
   skills from role and days worked, no relationships, rank "crew", and one commander chosen by
   seniority.
