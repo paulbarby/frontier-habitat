@@ -5,6 +5,152 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-09-30 — PAUSED (Paul) during critic round 33 fixes
+
+- **Done (built, 0 flags, verify ok, not yet imported/exported):** own badges (shopping bag, mortarboard, red
+  shield, amber padlock); new silhouettes (retail striped canopy + lit signs + billboard; academy schoolhouse + clock
+  tower; security black drum, red band, red deck ring, lattice comms mast with red beacon; jail orange band, raised
+  perimeter wall, 4 guard towers with floodlights); lit glow rings; security command post (dais desk, monitor wall,
+  dispatch, lockers, holding cell); denser retail/academy/jail (fitting booth all sizes, group tables, jail S yard
+  strip); executive bed set; a ceiling light per room in tube and block; block balconies on floor 1, bigger
+  penthouse pools and parasols, lit eave bands. Identity shots 110/250 m day/night re-rendered; interior renders
+  of retail_m, academy_m, security_office_m, jail_s, residence_tube_executive_l, apartment_block_m floors rendered
+  but **not reviewed**.
+- **Half-done:** Godot import + `glb_import_params` for changed files, check, export and pck measure; progress and
+  request notes for round 33 (RENDER: more Light anchors are a soft fill; SIM: jail S Yard_0).
+- **Next step:** review the renders above, then `node tools/godot.mjs import`, import params, `check`, `export
+  build/web_art_hab`, measure pck, write the round-33 report.
+
+## 2026-09-29 (4) — v5: the civic modules (retail, park, academy, security office, jail), all sizes
+
+- `tools/blender/rooms_v5civ.py` (exteriors) and `interior_v5civ.py` (interiors); 14 files, 0 flags, verify ok.
+
+| type | sizes | exterior | interior |
+|---|---|---|---|
+| retail | S M L | shop windows all round, striped awnings, a lit sign pylon, skylights | sections on coloured floors (clothes, snacks, gadgets, gifts), till counter with a queue line, gondola rows, clothes rails with mannequins, display tables, promo bins, fitting booth (L), fridges and bottle shelves on the wall |
+| park | M L XL | lattice glass dome, crown hub, lamp ring; badge on a plate over the crown | lawn, a gravel jogging loop and cross paths, trees, flower beds, bush clumps, benches, lamp posts; pond with a fountain (L, XL), wedding arch (L, XL) |
+| academy | S M L | clerestory windows, an observatory dome with a telescope, the science mast | student desks in rows facing a teacher board, teacher desk, instructor console (L), holo globe, science corner (lab bench), children's reading rug, shelf islands |
+| security_office | S M | armoured drum with slit windows, a watch tower with a blue/amber light bar, a radio mast with a beacon and a dish | front desk with a response line, monitor console (M), briefing table, lockers, a holding cell, map table, equipment racks, gear crates |
+| jail | S M L | dark heavy drum with barred slit windows, a guard tower with a searchlight, a roof fence with floodlight masts | 2 / 4 / 8 barred cells (bunk, WC, basin), guard console, visiting table, day-room tables; at L a fenced yard with a hoop |
+
+- New family `civic`: shield badge icon (`rooms_identity.ICONS`), accent **#34569c** (`build_assets.ACCENTS`) —
+  proposed to RENDER (models.gd colour table) and SIM.
+- Anchors follow `furniture` counts (Seat / Work / Stand) with SIM's names as aliases at the same points:
+  `Counter`, `Browse_<i>`, `Jog_<i>`, `Wedding`, `Class_<i>`, `Teach`, `Console_<i>`, `Desk_<i>`, `Locker_<i>`,
+  `Cell_<i>`, `Guard`, `Yard_<i>`.
+- A greedy filler (`interior_v5civ.fill`) closes empty patches with type-fitting items; every file ≤ 2.5 m.
+- pck: civic 5.24 MB (14 models + thumbnails). **My v5 total 11.23 MB** (budget 25). Export `build/web_art_hab`
+  101.3 MB with all agents (v5 limit 200 soft / 300 hard). Godot check 258 scripts, 0 failed.
+
+Renders: `art/interiors/{retail_m,park_l,academy_m,security_office_m,jail_l,jail_s,retail_l}.png`, `_exterior` for
+the first five; identity `v4_identity_v5civic_{110m,250m}` (+ `_night_`).
+
+Not tested: in the game; RENDER's use of the alias anchors; the park's jogging loop with real walkers.
+
+## 2026-09-29 (3) — v5: the apartment block (XXL, 3 floors)
+
+- `tools/blender/rooms_v5apt.py` (exterior, plan constants) and `interior_v5apt.py` (three floors). A stepped round
+  block: floor 0 radius 20 with unit yards; floor 1 steps in to 15.4 (garden terrace with rails, planters, loungers
+  at every living-room door); floor 2 (two penthouses) steps in to 11 under a flat roof, with a glass-roofed terrace
+  (plunge pools, loungers, dining sets, planters) on the floor-1 roof; the lift and stair core rises through the roof
+  as a lit crown carrying the house badge.
+- Plan per floor: core (glass lift shaft, 16-step spiral stair), lift lobby ring, five shared rooms (floor 0 lobby
+  with mail lockers, laundry, gym, play room, bike store; floor 1 library, laundry, hobby room, play room, lounge),
+  round street with light lines, five family units between five spokes (parents' room, children's room with bunk,
+  bath, living with kitchenette, table, pendant, sofa group), yards on floor 0. Penthouses: master bedroom with
+  headboard wall and en-suite bath, living/dining/kitchen with lounge and reading corner, two more bedrooms, terrace
+  door.
+- Pipeline: `F<k>_` objects (`rooms_kit.floor_of`, own game group, own AO set, palette merge), cut check per floor,
+  per-floor density and stand-point checks (`rm.floor_flags`), `FloorPlan` (shared anchor numbering, anchors lifted
+  to the floor), budget 60,000 × floors; `interior_render.py --only floors` renders each floor's cutaway.
+- Result: 0 flags; 144,855 tris (budget 180,000); empty patch 2.68 m on each floor; door slots 32 (need 6); anchors
+  Bed 26, Seat 16, Stand 6, Unit 12, Lift 3, Door 6, Light 12.
+- pck: `apartment_block_m.scn` 2.48 MB + thumbnail 0.06 MB. My v5 total so far **≈ 6.0 MB** (tube 3.45 + block 2.54).
+  Export `build/web_art_hab` 94.8 MB (all agents). Godot check 257 scripts, 0 failed.
+
+Not tested: in the game (RENDER floor hiding, per-floor nav, lift use); the terrace furniture and upper-floor rooms
+from the follow view.
+
+## 2026-09-29 (2) — v5: residence tube critic 27 fixes; sizes M and XL; content defs back
+
+- **Content:** SIM's v5 defs are back in `content/buildings.json` (18:31, identical to my copy). The fallback
+  (`v5_defs_snapshot.json` and the loader branch) is removed: content is the only source again.
+- **Critic 27 fixes:**
+  1. Empty ring → per-unit **yards** behind every cell (lawn for family, wood deck for executive; planter borders,
+     a patio table and chairs or two loungers, a sandpit, a tree) and **corner lawns** beside the street ends.
+     Largest empty patch now 2.16–2.63 m (all six files ≤ 2.7 m, the build gate).
+  2. Executive: wood floors in every room except the bath, rugs, framed wall art (3 per unit), bookcases, an
+     upholstered headboard wall with reading lights, a plant per room, a pendant lamp over the dining table.
+  3. Night: pendant lamps with lamp anchors over every family and dining table; the street edge lines are
+     LightStrip.
+  4. Vault: HullDark foot band, seam lines between the ribs, larger porch lamps (Light) under the canopies and on
+     the end walls; the executive ridge has a lit strip.
+  5. Executive at 250 m: a gold stripe (L5Gold) along both sides of the vault; the terrace fills the −Y deck (pergola,
+     cushioned loungers, low table, planters, bollard lamps). Lamps, ridge strip and terrace are in a `PorchTop`
+     part (a known group, hidden with the roof in the cutaway), so the Roof group stays at ≤ 6 surfaces.
+  6. Children's rooms: striped rug, red toy chest with coloured fronts, a small desk and stool from size L.
+  7. 250 m night shot: `art/interiors/v4_identity_v5res_night_250m.png` (and `_night_110m`).
+- **Sizes M and XL** built (Family and Executive). All six files: 0 flags, verify ok.
+
+| file | tris / budget | empty patch | door slots |
+|---|---|---|---|
+| residence_tube_m | 23,014 / 24,000 | 2.16 | 14 |
+| residence_tube_executive_m | 22,142 / 24,000 | 2.41 | 14 |
+| residence_tube_l | 33,204 / 35,200 | 2.63 | 17 |
+| residence_tube_executive_l | 28,756 / 35,200 | 2.63 | 17 |
+| residence_tube_xl | 38,996 / 48,000 | 2.37 | 21 |
+| residence_tube_executive_xl | 36,166 / 48,000 | 2.63 | 21 |
+
+pck: residence tube total **3.45 MB** (6 models 3.12, 6 thumbnails 0.33); export `build/web_art_hab` 91.5 MB with
+all agents' work. Godot check 256 scripts, 0 failed.
+
+Renders: `residence_tube_{m,l,xl}.png` and `_exterior`, executive likewise; L also `_night`, `_anchors`;
+identity day and night at 110 / 250 m.
+
+Not tested: in the game (RENDER variant lookup, nav grids); the yards are open to the aisle ring (no back doors
+from the units: the back rooms have no free wall for one).
+
+## 2026-09-29 — v5.0 (V5_DESIGN §7): residence tube pilot (L, family + executive)
+
+What landed:
+- `tools/blender/rooms_v5.py` — exterior. A half-cylinder vault (radius 0.48 Rw, 16 segments) along model X on a
+  2.55 m drum; Frame ribs every ~1.9 m, heavier end ribs; flat end walls with a glazed centre and mullions; a glazed
+  porch (drum glass) and a sloped canopy with lamps at each end (0° / 180°); flat side decks. The house badge is
+  drawn flat and wrapped onto the vault (no stretch), turned −35° for the game camera. Family: small windows in every
+  other bay, skylights and vent units on the decks. Executive: ribbon windows in every bay, a lit ridge skylight,
+  larger end glazing, a roof terrace (wood deck, planters, loungers, rail) on the −Y deck.
+- `tools/blender/interior_v5.py` — interior. A street along X from porch to porch; cells on both sides; low unit
+  walls (1.30 m, in Interior). Family unit: kitchenette, family table (4 chairs, 2 seats), parents' room (two beds),
+  children's room (bunk bed, toy chest, rug, toys; desk at XL). Executive unit: bedroom (two beds, wardrobes, rug),
+  en-suite bath (tub, shower, WC, basin), office (desk, chair, shelves), lounge (sofa, coffee table, rug, media wall,
+  floor lamp, plant, sideboard), dining table, kitchenette. Commons cells: family play room + laundry; executive
+  residents' lounge (bar, stools, armchairs). Garden strips (planters, benches, trees) behind the cells; entry
+  corners (door mats, benches with coat hooks, mail lockers, plants) at the porches.
+- `rooms_build.py`: `size_list` honoured; variants → one file per variant (`<id>_<size>`, `<id>_executive_<size>`),
+  furniture per variant; door-slot minimum from `sizes.max_links`; v5 triangle budget = v3 × 1.6.
+- `rooms_kit.load_buildings`: fallback `tools/blender/v5_defs_snapshot.json` for v5 ids that content lacks (SIM's
+  defs left `content/buildings.json` at 18:30).
+- `interior_render.py`, `rooms_v4shots.py`: variant file names.
+
+Checks (both files): 0 flags; verify ok; radius 10.90 / 11.00; door slots 17 (need 5), no blocked angles; empty
+patch 2.63 m; cut check ok. Family L 30,946 tris, Executive L 27,296 (budget 35,200).
+Anchors: family Bed 9, Seat 6, Stand 3, Unit 3, Door 5; executive Bed 4, Seat 6, Stand 2, Unit 2, Door 5.
+
+pck: `build/web_art_hab` 86.0 MB at 18:50 (other agents' v5 work included). Mine: residence_tube_l.scn 0.525 MB,
+residence_tube_executive_l.scn 0.475 MB, 2 thumbnails 0.107 MB = **+1.11 MB** (budget +25 MB). Import params set
+(no LOD, no shadow meshes, no tangents). Godot check 256 scripts, 0 failed.
+
+Renders (`art/interiors/`): `residence_tube_l.png`, `_exterior`, `_night`, `_anchors`;
+`residence_tube_executive_l.png`, `_exterior`, `_night`, `_anchors`; `v4_identity_v5res_110m.png`, `_250m.png`
+(game camera, with habitat L and lounge L beside them).
+
+Not tested: the files in the running game (RENDER has no variant lookup yet, no nav grid bake); people walking the
+unit doors (RENDER planner clearance 0.30 m vs 0.84 m inner doors); M and XL (not built yet, layouts written);
+night renders only looked at in Blender.
+
+Next: CRITIC pilot rating → fixes → M, XL → apartment block (floors, lift/stair core, floor groups with RENDER) →
+retail, park, academy, security office, jail.
+
 ## 2026-09-28 — critic round 22 fixes 1–4
 
 - Rover depot: bay portal frames with hazard stripes and green status lamps, an Accent band round the walls, roof

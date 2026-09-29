@@ -1,0 +1,24 @@
+{
+  "_note": "V5 section 4.3: The Regolith Rag. Headline templates per story kind, in tabloid voice (never explicit). Slots: {a} {b} {place} {n} {base}. STARTER SET for the API stubs; the full set (>= 200 headlines) comes with the social log milestone.",
+  "masthead": "THE REGOLITH RAG",
+  "tagline": "All the dirt that is fit to print",
+  "headlines": {
+    "couple": ["LOVE IN THE AIRLOCK: {a} AND {b} ARE AN ITEM!", "SPARKS FLY AT THE {place}!"],
+    "date": ["{a} AND {b} SPOTTED ON A DATE AT THE {place}", "DINNER FOR TWO UNDER THE DOME"],
+    "breakup": ["IT IS OVER! {a} DUMPS {b}", "TEARS IN THE CORRIDOR"],
+    "affair": ["CHEAT SHEET! {a} CAUGHT WITH {b}", "SECRET TRYST IN THE {place}"],
+    "fight": ["PUNCH-UP AT THE {place}!", "{a} AND {b} COME TO BLOWS"],
+    "arrest": ["BEHIND BARS: {a} ARRESTED", "SECURITY SWOOP ON {a}"],
+    "promotion": ["{a} MOVES UP! NEW CAPTAIN NAMED", "RISING STAR: {a}"],
+    "protest": ["FED UP! CREW MARCH ON THE {place}", "WE WANT MORE! {n} PROTEST"],
+    "wedding": ["WEDDING BELLS FOR {a} AND {b}", "I DO! UNDER THE DOME"],
+    "new_building": ["NEW {place} OPENS ITS DOORS", "BUILT IT! THE {place} IS READY"],
+    "death": ["COLONY MOURNS {a}", "A SAD DAY ON {base}"],
+    "ship": ["SHIP AHOY! TRADERS LAND", "VISITORS FLOCK TO THE COLONY"],
+    "quiet": ["QUIET DAY ON THE FRONTIER", "NOTHING TO SEE HERE (OR IS THERE?)"]
+  },
+  "columns": {
+    "gossip": ["Which captain was seen leaving the lounge at dawn? Our lips are sealed.", "Word is somebody is sweet on a trader."],
+    "ads": ["FRESH TOMATOES at the greenhouse. Ask nicely.", "LOST: one wrench. Answers to 'Wrenchy'."]
+  }
+}

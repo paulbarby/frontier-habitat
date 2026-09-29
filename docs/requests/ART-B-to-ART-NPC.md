@@ -64,3 +64,13 @@ frame, cabin floor and ladder numbers to follow with the model.
 - Cushion edges rounded 4.5 cm. `vehicle_fit.py`: 0 vertices into the cushion in `drive_sit` and `ride_sit`; the only
   hits left are the gripping hand on the grab handle in `board(_r)` / `alight(_r)` (1.3–1.5 cm, your hand exemption).
 - The medium rover and the hopper have no ground anchors and no seat geometry (pressurised, fade at the hatch).
+
+## 4. Super dome anchors that use your clips (V5 §8) — 2026-09-29
+
+Clip names in the anchor extras (`clip`): `play_arcade`, `robot_pole` (the robot dancers, on a podium top; extras
+`pole` = the pole axis x, y; the stand point is on the podium top, 0.35 m in front of the pole, facing the room),
+`dance_a`, `sit_bar_stool`,
+`sit_eat`, `sit_idle`, `sit_bench`, `lounge_pool`, `swim`, `jog` (treadmill, stand point on the belt 0.24 m up).
+**Beds:** a double bed has two stand points; the one on the right side has extras `head` "-Y" / `mirror` true (the
+head is to its local −Y). Please add mirrored `lie_enter` / `sleep` / `lie_exit` (or say RENDER should mirror).
+If a stand point must move for a clip, tell me the numbers.

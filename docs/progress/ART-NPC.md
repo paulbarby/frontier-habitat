@@ -223,3 +223,45 @@ mine and can change). Night readability of the radiation suit is not checked.
 191 scripts, 0 failed. Imported size +0.11 MB (1,341,337 bytes in all).
 
 **Not tested:** the chain in the game (RENDER).
+
+## v5.0 — 2026-09-29 — people pilot (V5_DESIGN §1, §12)
+
+- **Pilot delivered:** `people_m1.glb`, `people_f1.glb` in outfits `uniform_engineering` and `casual_a`;
+  `people_manifest.json` (5.0-pilot) and `npc_pairs.json` (hug).
+- **Builders (new):** `tools/blender/people_build.py`, `people_face.py` (modelled head, eyelids, mouth, teeth, eyes,
+  ears), `people_textures.py` (1024 px face bake, eye atlas, hair strands), `people_hair.py` (crop m1, bob with
+  fringe f1), `people_body.py` (torso, limbs, five-finger hands, shoes), `people_outfits.py`, `people_anims.py`
+  (retarget per height, blink and jaw overlays, 6 new clips), `people_mesh.py`, `people_render.py`,
+  `people_verify.py` (called from `npc_verify`).
+- `npc_common.py`: `extend_skeleton()` / `EXTRA_FK` for jaw and lids (only people builds use them).
+- **Fixes today:** hug and laugh right-hand direction had the wrong side sign (wrist bent back; 22–25° per frame).
+  Now max 14.48° in all people clips.
+- **Sheets:** `art/people/people_closeup.png` (1.5 m follow distance, 3 angles), `people_outfits.png`,
+  `people_faces.png`, `people_clips.png` (6 new clips, hug as a pair).
+- **Triangles LOD0:** m1 11.8k, f1 15.8k per person (budget 24k).
+- **Size:** +2.91 MB imported for the pilot.
+- **Checked:** `npc_verify` 441/0; `npc_check.gd` PASS 165; `godot.mjs check` 257/0.
+- **Not done / not tested:** m2 m3 f2 f3 c1 c2, other outfits, the remaining ≥ 24 new clips, robot dancers, LOD1,
+  RENDER loader, ClothTint mode, in-game view. Hug bodies overlap > 2 cm at the hold (144 sampled vertices; soft
+  cloth contact, information only).
+- **Known weak points for CRITIC:** faces still read stylised-mannequin; hands keep one open pose; casual tee
+  shoulders are puffy; uniform shoulders are blocky; laugh mouth interior is simple.
+
+## v5.0 — 2026-09-29 — PAUSED (Paul)
+
+- **Done:** people pilot (m1, f1) delivered, CRITIC round 31: closeup 0.59 FAIL, outfits 0.61 FAIL, animation 0.67 pass.
+  People variants stopped (MPFB decision).
+- **Robot dancer (half-done):** `tools/blender/robot_build.py`, `robot_anims.py`, `robot_render.py`, `robot_verify.py`
+  (called by `npc_verify`). `assets/models/robot_dancer.glb` (0.81 MB, 14,884 tris, v3 skeleton) and
+  `robot_manifest.json` exist. Clips: robot_idle, robot_dance_a/b/c, robot_pole. Sheets: `art/npc/robot_turnaround.png`,
+  `robot_clips.png` (older build). `npc_verify`: 453 passed, 2 failed (both robot): a step of 22.6 deg in
+  `robot_dance_c` (foot.R f23) and 96 vertices of the right arm inside the pole in `robot_pole` (f164, release path).
+  Not yet: Godot import / npc_check, RENDER request, re-render.
+- **Clip plan (retarget list of all v5 clips):** not started.
+- **MPFB:** nothing downloaded, nothing installed. Download list prepared (official pages, sizes by HEAD request):
+  MPFB 2.0.17 42.9 MB (sha256 4f0a879d...9a87, from extensions.blender.org); CC0 packs from files2.makehumancommunity.org:
+  system_assets 280.7 MB, skins01 104.2 MB, skins02 76.1 MB, hair01 227.8 MB, shirts01 24.5 MB, pants01 21.9 MB,
+  suits01 42.6 MB, suits02 192.5 MB, shoes01 83.0 MB, dress01 46.6 MB, eyebrows01 11.5 MB, eyelashes01 3.5 MB.
+  Waiting for Paul's own approval (an approval relayed by another agent is not consent for a download).
+- **Next step:** fix the 2 robot failures (dance_c right-foot passe lift speed; robot_pole right-arm release path
+  clear of the pole), Godot import + npc_check, re-render, RENDER request; then the clip plan; MPFB after approval.

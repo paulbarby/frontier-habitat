@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "date": "2026-09-29",
+  "scope": "v5.0 follow_view PILOT (RENDER), in-game web evidence: art/critic_input/render/150_v5_follow_view_pilot.png (12 tiles, v3 astronaut models); my own unstaged run in build/web_render (09-29 18:47), showcase_v3_late, speed 1: 8 colonists followed with 'agent n' + 'shoulder', 5 frames each 0.8 s apart, 'followinfo' logged (art/critic/r29/*.png, r29_grid.png). Rubric v5_rubrics.md 3.4.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "follow_view": {"consistency": 0.66, "appeal": 0.64, "style": 0.70, "score": 0.67, "pass": true, "provisional": true,
+      "what_works": [
+        "It follows smoothly: in my run 8 of 8 colonists were followed through rooms, corridors and airlocks with no jump; cam-to-body distance held at 3.0 m.",
+        "The cutaway opens the rooms the person and the camera are in ('open' 2-4 rooms), so interiors read from behind the shoulder.",
+        "Bubbles: glass style with name, 1-2 lines and an emote icon; stacked, never overlapping in any tile; readable at 1600x900 (tiles 2, 7, 8). SIM's real talks drive them in the v3_late save.",
+        "The newer build already dims the HUD and shows the follow card (name, rank, role, satisfaction, doing, File / Next / Switch / Exit).",
+        "Performance measured by RENDER: 47.5 fps and 1,080 draw calls indoors (budget >= 45 fps)."
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "Camera height and distance are not the section 3 spec: measured 3.0 m from the body and 2.25 m above the feet (about 0.45 m above the head), so the view looks down on the top of the head. Use 0.55 m right, 1.9 m back, eye height + 0.15 m (about 1.85 m above the floor for a 1.80 m person), and a pitch of 8-12 deg down."},
+        {"owner": "RENDER", "fix": "Framing: the person is centred and takes the lower middle third; the head covers what they look at. Put the person on the left third (right shoulder) with look room ahead, head at about 40% of the screen height from the top."},
+        {"owner": "RENDER", "fix": "Wall and prop collision: tile 4 shows the camera pressed against a ship hull (the whole view is the hull and sand). Sphere-cast from the head to the camera and pull in, and hide props between camera and person (tile 1: the stove back wall fills half the view)."},
+        {"owner": "RENDER / UI", "fix": "In follow view the inspector stays open on the right third (my run) and hazard toasts sit over the scene. Collapse the inspector to the follow card, and move toasts to the top edge while following."},
+        {"owner": "RENDER", "fix": "Bubbles: raise the line text to 14 px and the name to 12 px (now about 12 / 9 px), add a 1 px metal rim to match the V4 theme, and keep the tail pointing at the speaker's head (tile 8's tail points past the speaker)."},
+        {"owner": "RENDER", "fix": "Bubbles in 5 of my 8 follows showed 0 bubbles for 4 s (talks 0-2 nearby). Fine for the rule, but let the followed person's own last line persist 6 s after it is said so the view has voice."},
+        {"owner": "RENDER / SIM", "fix": "Frame-time spikes: 18 frames over 50 ms in 20 s (SIM tick spikes). V5 section 0: no frame over 50 ms in 120 s. Needs SIM's tick budget fix before final."}
+      ],
+      "depends_on_new_people": [
+        "Close-up quality at 1.5 m (faces, hands, cloth): the astronaut models are not the V5 people; appeal is capped by them now.",
+        "Outfit rule in view (uniform on shift, casual off shift).",
+        "Paired clips in the frame (talk, hug, argue).",
+        "Indoor colonists read as the suit variant with helmets off; the new variants will change the silhouette the camera frames."
+      ],
+      "not_yet": ["floors and the floor cutaway", "the dome gallery case", "the 30-people crowd case"]}
+  },
+  "notes": [
+    "PASS 0.67, provisional, with the v3 models. The camera spec and collision are the main fixes; the rest waits for the new people and the dome."
+  ]
+}

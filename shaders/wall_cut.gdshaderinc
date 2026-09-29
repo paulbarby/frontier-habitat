@@ -35,7 +35,18 @@ void vertex() {
 	}
 }
 
+// V5 follow view (critic round 29): surfaces closer to the camera than near_fade.y dither out, so a
+// wall or a machine right in front of the over-the-shoulder camera does not fill the view.
+uniform vec2 near_fade = vec2(0.0, 0.001);
+
 void fragment() {
+	if (near_fade.y > 0.01) {
+		float nf = smoothstep(near_fade.x, near_fade.y, length(VERTEX));
+		float ign = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));
+		if (nf < ign) {
+			discard;
+		}
+	}
 	vec3 c = albedo.rgb;
 	float a = albedo.a;
 	if (use_tex) {

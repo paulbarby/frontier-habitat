@@ -123,11 +123,99 @@
     "titanium_smelter_s",
     "titanium_smelter_xl"
    ]
+  },
+  {
+   "at": "2026-09-29 18:24",
+   "rooms": [
+    "residence_tube_executive_l",
+    "residence_tube_l"
+   ]
+  },
+  {
+   "at": "2026-09-29 18:40",
+   "rooms": [
+    "residence_tube",
+    "residence_tube_executive_m",
+    "residence_tube_executive_xl",
+    "residence_tube_m",
+    "residence_tube_xl"
+   ]
+  },
+  {
+   "at": "2026-09-29 19:08",
+   "rooms": [
+    "apartment_block",
+    "apartment_block_m"
+   ]
+  },
+  {
+   "at": "2026-09-29 19:23",
+   "rooms": [
+    "academy",
+    "academy_l",
+    "academy_m",
+    "academy_s",
+    "jail",
+    "jail_l",
+    "jail_m",
+    "jail_s",
+    "park",
+    "park_l",
+    "park_m",
+    "park_xl",
+    "security_office",
+    "security_office_m",
+    "security_office_s"
+   ]
+  },
+  {
+   "at": "2026-09-29 19:24",
+   "rooms": [
+    "retail",
+    "retail_l",
+    "retail_m",
+    "retail_s"
+   ]
+  },
+  {
+   "at": "2026-09-29 19:49",
+   "rooms": [
+    "security_office_s"
+   ]
   }
  ],
  "generator": "tools/blender/rooms_build.py",
  "lane_m": 0.9,
  "rooms": {
+  "academy": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "academy_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "academy_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "academy_s": {
+   "blocked": [
+    [
+     1.5,
+     20.5
+    ],
+    [
+     339.5,
+     358.5
+    ]
+   ],
+   "free_deg": 322.0,
+   "min_lane_m": 0.68
+  },
   "airlock": {
    "blocked": [
     [
@@ -240,6 +328,16 @@
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
+  },
+  "apartment_block": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "apartment_block_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
   },
   "atmo_processor": {
    "blocked": [],
@@ -566,6 +664,67 @@
    "free_deg": 360.0,
    "min_lane_m": 1.04
   },
+  "jail": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "jail_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "jail_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "jail_s": {
+   "blocked": [
+    [
+     148.5,
+     149.5
+    ],
+    [
+     150.5,
+     151.5
+    ],
+    [
+     152.5,
+     153.5
+    ],
+    [
+     154.5,
+     155.5
+    ],
+    [
+     156.5,
+     157.5
+    ],
+    [
+     202.5,
+     203.5
+    ],
+    [
+     204.5,
+     205.5
+    ],
+    [
+     206.5,
+     207.5
+    ],
+    [
+     208.5,
+     209.5
+    ],
+    [
+     210.5,
+     211.5
+    ]
+   ],
+   "free_deg": 350.0,
+   "min_lane_m": 0.78
+  },
   "kitchen": {
    "blocked": [],
    "free_deg": 360.0,
@@ -746,6 +905,26 @@
    "free_deg": 360.0,
    "min_lane_m": 1.04
   },
+  "park": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "park_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "park_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "park_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
   "parts_works": {
    "blocked": [],
    "free_deg": 360.0,
@@ -870,6 +1049,192 @@
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04
+  },
+  "residence_tube": {
+   "blocked": [
+    [
+     36.5,
+     40.5
+    ],
+    [
+     41.5,
+     44.5
+    ],
+    [
+     135.5,
+     138.5
+    ],
+    [
+     139.5,
+     143.5
+    ],
+    [
+     216.5,
+     220.5
+    ],
+    [
+     221.5,
+     224.5
+    ],
+    [
+     315.5,
+     318.5
+    ],
+    [
+     319.5,
+     323.5
+    ]
+   ],
+   "free_deg": 332.0,
+   "min_lane_m": 0.91
+  },
+  "residence_tube_executive_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "residence_tube_executive_m": {
+   "blocked": [
+    [
+     36.5,
+     40.5
+    ],
+    [
+     41.5,
+     44.5
+    ],
+    [
+     135.5,
+     138.5
+    ],
+    [
+     139.5,
+     143.5
+    ],
+    [
+     216.5,
+     220.5
+    ],
+    [
+     221.5,
+     224.5
+    ],
+    [
+     315.5,
+     318.5
+    ],
+    [
+     319.5,
+     323.5
+    ]
+   ],
+   "free_deg": 332.0,
+   "min_lane_m": 0.91
+  },
+  "residence_tube_executive_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "residence_tube_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "residence_tube_m": {
+   "blocked": [
+    [
+     36.5,
+     40.5
+    ],
+    [
+     41.5,
+     44.5
+    ],
+    [
+     135.5,
+     138.5
+    ],
+    [
+     139.5,
+     143.5
+    ],
+    [
+     216.5,
+     220.5
+    ],
+    [
+     221.5,
+     224.5
+    ],
+    [
+     315.5,
+     318.5
+    ],
+    [
+     319.5,
+     323.5
+    ]
+   ],
+   "free_deg": 332.0,
+   "min_lane_m": 0.91
+  },
+  "residence_tube_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "retail": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "retail_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "retail_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "retail_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "security_office": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "security_office_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "security_office_s": {
+   "blocked": [
+    [
+     144.5,
+     160.5
+    ],
+    [
+     165.5,
+     194.5
+    ],
+    [
+     199.5,
+     215.5
+    ],
+    [
+     228.5,
+     273.5
+    ]
+   ],
+   "free_deg": 254.0,
+   "min_lane_m": 0.71
   },
   "steel_mill": {
    "blocked": [],

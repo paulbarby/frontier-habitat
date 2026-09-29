@@ -1,0 +1,37 @@
+{
+  "round": 25,
+  "date": "2026-09-29",
+  "scope": "v5.0 regolith_rag PILOT (UI), in-game web evidence: docs/shots/ui11_rag_top.png, ui11_rag_middle.png, ui11_rag_bottom.png, ui11_rag_back_issue.png (1600x900) and my own headless shots from build/web_ui (09-29 18:24), showcase_v4, 1280x720: rag, ragscroll 700, rag 3, rag 1 (art/critic/r25/*.png, r25_grid.png). Rubric: docs/critic/v5_rubrics.md section 3.5.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "regolith_rag": {"consistency": 0.74, "appeal": 0.66, "style": 0.72, "score": 0.71, "pass": true, "provisional": true,
+      "provisional_because": "the photo is a placeholder (RENDER photo() not built) and the content is SIM stub data; the score is for the UI layout and frame.",
+      "what_works": [
+        "Every section of V5 4.3 is present: red masthead THE REGOLITH RAG with issue number, day and price, the strap line 'All the dirt that is fit to print', a kicker tag, a huge lead headline, a lead photo with a caption, by-line, three smaller stories, a gossip column (The Dust-Up), Couple Watch, Feud Watch, the commander approval poll, small ads, and the Serious News strip in plain STE.",
+        "It reads as a newspaper at a glance: cream paper, bold condensed capitals, black rules, serif italic body text, a red kicker. The tabloid voice lands ('Love in the airlock', 'Answers to Wrenchy').",
+        "Integration: it sits in the V4 glass-and-metal window with a title-bar issue picker (back issues work: rag 1, rag 3 show other issues); the paper is a clean well inside the frame; names are underlined links (5 per issue).",
+        "Readable at 1600x900 and at 1280x720: headline, body and column text are clear."
+      ],
+      "ui_gaps": [
+        {"fix": "The window covers the Alerts panel without folding it: the alert text is cut at the window edge at 1600x900 and 1280x720 (V4 rule: covered HUD panels fold). Add the Rag window to the fold rule, or open it right of the left panels.", "priority": 1},
+        {"fix": "At 1280x720 the masthead and a 3-line lead headline fill the whole first view; the photo and the stories start below the fold. Cap the lead headline at 2 lines at view heights under 800 px (auto-fit the font size 40-64 px) and shrink the masthead band by 30% there.", "priority": 2},
+        {"fix": "Paper looks flat: add a subtle newsprint texture (grain and faint fibre, 3-5% contrast), a halftone dot screen on the photo, and a thin double rule under the masthead. The page should feel printed, not a cream panel.", "priority": 3},
+        {"fix": "Empty right column: after the poll, the pull-quote 'THE RAG KNOWS.' floats over a large empty area. Let the right column carry the gossip column or a second story when the lead is short, so the page has no hole wider than 1/3 of a column.", "priority": 4},
+        {"fix": "Poll trend glyph: a red '=' beside 61% is unexplained. Use an arrow up / arrow down / dash with a word ('no change', '+4 since yesterday').", "priority": 5},
+        {"fix": "Name links need a hover state (colour and a small follow icon) and a tooltip ('Click: select. Shift-click: follow').", "priority": 6},
+        {"fix": "Layout variety: every issue uses the same template (lead + three equal columns). Add 2-3 layouts chosen by story mix (big photo lead; two-lead split; 'SPECIAL EDITION' for riots) so a back-issue flick feels like different papers.", "priority": 7},
+        {"fix": "Small ads: two boxes leave the row half empty; fill with 3-4 ads or widen them to the row.", "priority": 8}
+      ],
+      "content_gaps_not_ui": [
+        {"owner": "SIM", "gap": "Building completions dominate the smaller stories and share one template ('NEW UTILITY CABLE 16 OPENS ITS DOORS' - a cable has no doors). Rank people stories above buildings, and give buildings their own headline templates by type."},
+        {"owner": "SIM", "gap": "Story bodies are one line and repeat across issues ('Our spies saw them together.' on every lead). Two to four sentences per lead, drawn from the event (place, time, witnesses, a quote)."},
+        {"owner": "SIM", "gap": "The poll shows 61% in every back issue; it should move with satisfaction day by day."},
+        {"owner": "SIM", "gap": "The gossip column has two lines; Couple and Feud Watch one entry each. Needs 3-5 items per box from the social log."},
+        {"owner": "RENDER", "gap": "The lead photo is a placeholder silhouette. Needs photo() with the real people, outfits and pose (V5 4.4)."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.71, provisional. The UI shell is sound; most of what holds it down is data (SIM) and the photo (RENDER).",
+    "Tone check: nothing explicit; no children in any story seen."
+  ]
+}

@@ -119,6 +119,11 @@ func entries(kind: String) -> Array:
 				var br: String = String(t.get("branch", ""))
 				out.append({"id": String(tid), "kind": kind, "name": String(t.get("name", tid)), "cat": "Tier %d · %s" % [int(t.get("tier", 1)), String(branches.get(br, {}).get("name", br.capitalize()) if typeof(branches.get(br)) == TYPE_DICTIONARY else br.capitalize())],
 					"desc": String(t.get("desc", "")), "icon": "research", "fallback_icon": "research", "color": P.VIOLET})
+		"society":
+			# Version 5 (V5 §5, §6, §10): ranks, skills, discipline, unrest, traits, and the Easter eggs
+			# that were found (hidden until then).
+			for e in society_entries():
+				out.append(e)
 		"hazard":
 			var Data = load("res://ui/data.gd")
 			for hk in Data.HAZARD:
@@ -126,6 +131,31 @@ func entries(kind: String) -> Array:
 				out.append({"id": String(hk), "kind": kind, "name": String(h["name"]), "cat": "Hazard", "desc": String(h["advice"]),
 					"icon": String(h["icon"]), "fallback_icon": "sev_warning", "color": P.AMBER})
 	out.sort_custom(func(a, b): return String(a["name"]).naturalnocasecmp_to(String(b["name"])) < 0)
+	return out
+
+const SOCIETY := [
+	["ranks", "Ranks", "People", "people", "Each base has a Base Commander; each department (Industry, Science, Food, Maintenance, Security) a Captain and up to 2 First Hands. The rest are Specialists, Crew or Trainees by skill. Leaders speed up their department. Appoint them in the Crew window (key U): drag a person onto a rank. A rank expects a home: the commander and the captains an executive unit."],
+	["skills", "Skills", "People", "research", "11 skills from 0 to 100, shown as levels 1 to 5: Novice, Trained, Skilled, Expert, Master. A higher level works faster (Novice x0.7, Master x1.4) and makes fewer mistakes. Skills grow with work and at the academy; they fall a little when not used for long."],
+	["satisfaction", "Satisfaction", "People", "morale", "0 to 100: needs, food, housing, leisure, friends, work, fairness, safety and freedom. The personnel file shows each part and its reason. Low satisfaction makes attitudes worse."],
+	["attitude", "Attitude", "People", "trend_down", "-100 to 100: how a person treats work and rules. Bad (-30 and below): slow work, long breaks, backtalk. Very bad (-70 and below): protests and fights. It follows satisfaction, traits, the captain, friends and discipline."],
+	["discipline", "Reviews and discipline", "People", "orders", "Reviews (Excellent to Poor) and actions: praise, bonus leisure, gifts, warnings, extra shifts, ration cuts, confinement, demotion and jail. Each shows its expected effect before you confirm. Punishment works now and costs later: friends see it, and unfair punishment raises unrest."],
+	["unrest", "Unrest", "Society", "people", "0 to 100 per base, from low satisfaction and bad attitudes, punishments, unmet entitlements, deaths and food cuts. Grumbling from 25, slowdown (work -15 %) from 40, protest from 55, strike from 70, riot from 85. Answer with the demand, a leisure day, a party, amnesty, a new captain, arrests or a lockdown."],
+	["security", "Security and jail", "Society", "shelter", "Security officers patrol, stop fights and take arrested people to jail. One officer for about 12 people. A jail holds 2, 4 or 8 prisoners; without one, arrested people are confined to their quarters."],
+	["relationships", "Relationships", "Society", "heart", "People become friends, rivals or enemies at work, at meals and in leisure places. Adults can fall in love, date, move in together and marry; affairs and break-ups make news in The Regolith Rag (key J). Crushes stay secret until the Rag or a speech bubble tells."],
+	["follow", "Over the shoulder", "Society", "follow", "Select a person and press V: the camera goes behind them and you see what people say. Tab: the next person. Esc: back."],
+]
+const EGGS := {"dance": ["Dance Floor Director", "In the over-the-shoulder view, the old code makes the person dance, and their friends join in."],
+	"arcade": ["Prism Shift", "A neon tunnel racer on an arcade cabinet in the gaming lounge. Some colonists are champions."],
+	"dev": ["The dev in the dome", "A tourist named P. Barby once visited the super dome. He said he made the place."]}
+
+func society_entries() -> Array:
+	var out: Array = []
+	for s in SOCIETY:
+		out.append({"id": String(s[0]), "kind": "society", "name": String(s[1]), "cat": String(s[2]), "desc": String(s[4]), "icon": String(s[3]), "fallback_icon": "people", "color": P.CYAN})
+	var found: Dictionary = hud.eggs_found() if hud.has_method("eggs_found") else {}
+	for k in EGGS:
+		if found.has(k):
+			out.append({"id": "egg_" + String(k), "kind": "society", "name": String(EGGS[k][0]), "cat": "Secret (found)", "desc": String(EGGS[k][1]), "icon": "sparkle", "fallback_icon": "sparkle", "color": P.GOLD})
 	return out
 
 static func _cat_icon(cat: String) -> String:

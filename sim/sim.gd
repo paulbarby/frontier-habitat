@@ -51,6 +51,9 @@ const Orders = preload("res://sim/orders.gd")
 const DebugCmds = preload("res://sim/debug_cmds.gd")
 const Reactors = preload("res://sim/reactors.gd")
 const Explore = preload("res://sim/explore.gd")
+const People = preload("res://sim/people.gd")
+const Social = preload("res://sim/social.gd")
+const Floors = preload("res://sim/floors.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -90,6 +93,9 @@ var orders
 var debug
 var reactors
 var explore
+var people
+var social
+var floors
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -130,11 +136,14 @@ func _init() -> void:
 	debug = DebugCmds.new(self)
 	reactors = Reactors.new(self)
 	explore = Explore.new(self)
+	people = People.new(self)
+	social = Social.new(self)
+	floors = Floors.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -293,6 +302,9 @@ func default_immigration() -> Dictionary:
 ## save (boot params load= and debug=1). It is written into the state, so it is saved.
 func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	state = s
+	# The v5 people and social caches are derived from the old state.
+	people.reset()
+	social.reset()
 	if bool(opts.get("debug", false)):
 		if not state.has("options"):
 			state["options"] = {}
@@ -321,6 +333,7 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	explore.ensure()
 	if nav.has_method("prewarm"):
 		nav.prewarm()
+	people.prewarm()
 	util.power_stats = {}
 	util.water_stats = {}
 	util.atmo_stats = {}
@@ -456,10 +469,14 @@ func seconds() -> float:
 func step() -> void:
 	state["tick"] = int(state["tick"]) + 1
 	var tick: int = int(state["tick"])
-	var second: bool = tick % int(bal["tick_hz"]) == 0
+	# The once-a-second work is spread over the ticks of the second (V5 budget: no tick over
+	# 12 ms). Each system keeps a period of one second; only its phase differs. Systems that
+	# test "tick % (N * tick_hz) == 0" inside keep phase 0.
+	var hz: int = int(bal["tick_hz"])
+	var phase: int = tick % hz
 	cmds.apply_pending()
 	util.env_tick()
-	if second:
+	if phase == 0:
 		hazards.tick_second()
 		traffic.tick_second()
 	if bool(state["topo_dirty"]):
@@ -468,30 +485,41 @@ func step() -> void:
 	util.water_tick()
 	util.atmo_tick()
 	agents.needs_tick()
-	if second:
+	if phase == _phase_of(1, hz):
 		build.tick_second()
 		upgrades.tick_second()
+	if phase == _phase_of(2, hz):
 		vehicles.tick_second()
 		reactors.tick_second()
+	if phase == _phase_of(3, hz):
 		explore.tick_second()
 		ship.tick_second()
+	if phase == _phase_of(4, hz):
 		jobs.tick_second()
 	agents.think_tick()
 	agents.locks_tick()
 	agents.act_tick()
 	vehicles.tick()
 	ship.tick()
-	if second:
+	if phase == _phase_of(5, hz):
 		prod.crops_second()
 		prod.auto_second()
 		prod.spoil_second()
 		prod.wear_second()
+	if phase == _phase_of(6, hz):
 		agents.morale_second()
+	if phase == _phase_of(7, hz):
 		research.tick_second()
-		alerts.tick_second()
-		metrics.tick_second()
 		goals.tick_second()
 		awards.tick_second()
+	if phase == _phase_of(8, hz):
+		alerts.tick_second()
+	if phase == 0:
+		metrics.tick_second()
+
+## The tick of the second on which a group of once-a-second systems runs (0 .. tick_hz - 1).
+func _phase_of(k: int, hz: int) -> int:
+	return k % hz
 
 func run_seconds(secs: float) -> void:
 	var n: int = int(secs * float(bal["tick_hz"]))

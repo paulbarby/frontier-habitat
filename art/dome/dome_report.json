@@ -1,0 +1,249 @@
+{
+ "dome_shell": {
+  "file": "dome_shell.glb",
+  "tris": 24412,
+  "tris_by_top": {
+   "Dome": 8860,
+   "Foundation": 1968,
+   "Gates": 1872,
+   "Promenade": 11712
+  },
+  "materials": [
+   "Accent",
+   "Glass",
+   "Light",
+   "LightRed",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "StatusGreen",
+   "WindowAmber"
+  ],
+  "n_materials": 10,
+  "n_nodes": 61,
+  "n_mesh_nodes": 8,
+  "anchors": 25,
+  "kb": 1618,
+  "seconds": 1.5
+ },
+ "dome_floor1": {
+  "file": "dome_floor1.glb",
+  "tris": 52064,
+  "tris_by_top": {
+   "Floor_1": 52064
+  },
+  "materials": [
+   "Accent",
+   "CabinWindow",
+   "Glass",
+   "Light",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "Screen",
+   "SignAmber",
+   "SignCyan",
+   "SignGreen",
+   "SignMagenta",
+   "Window",
+   "WindowAmber",
+   "WindowCool",
+   "WindowCream"
+  ],
+  "n_materials": 16,
+  "n_nodes": 94,
+  "n_mesh_nodes": 27,
+  "anchors": 66,
+  "kb": 3453,
+  "seconds": 3.3
+ },
+ "dome_floor2": {
+  "file": "dome_floor2.glb",
+  "tris": 61386,
+  "tris_by_top": {
+   "Floor_2": 61386
+  },
+  "materials": [
+   "Accent",
+   "ArcadeScreen",
+   "CabinWindow",
+   "Glass",
+   "Light",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "Screen",
+   "SignAmber",
+   "SignCyan",
+   "SignGreen",
+   "SignMagenta",
+   "Window",
+   "WindowAmber",
+   "WindowCool",
+   "WindowCream"
+  ],
+  "n_materials": 18,
+  "n_nodes": 149,
+  "n_mesh_nodes": 30,
+  "anchors": 118,
+  "kb": 4106,
+  "seconds": 3.3
+ },
+ "dome_floor3": {
+  "file": "dome_floor3.glb",
+  "tris": 43476,
+  "tris_by_top": {
+   "Floor_3": 43476
+  },
+  "materials": [
+   "Accent",
+   "CabinWindow",
+   "Glass",
+   "Light",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "Screen",
+   "SignAmber",
+   "Window",
+   "WindowAmber",
+   "WindowCool",
+   "WindowCream",
+   "WindowRose",
+   "WindowTV"
+  ],
+  "n_materials": 16,
+  "n_nodes": 268,
+  "n_mesh_nodes": 27,
+  "anchors": 240,
+  "kb": 2928,
+  "seconds": 3.8
+ },
+ "dome_floor4": {
+  "file": "dome_floor4.glb",
+  "tris": 23016,
+  "tris_by_top": {
+   "Floor_4": 23016
+  },
+  "materials": [
+   "Accent",
+   "CabinWindow",
+   "Glass",
+   "Light",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "Screen",
+   "SignAmber",
+   "SignCyan",
+   "SignGreen",
+   "SignMagenta",
+   "Window",
+   "WindowAmber",
+   "WindowCool",
+   "WindowCream",
+   "WindowRose",
+   "WindowTV"
+  ],
+  "n_materials": 19,
+  "n_nodes": 268,
+  "n_mesh_nodes": 27,
+  "anchors": 240,
+  "kb": 1628,
+  "seconds": 1.4
+ },
+ "dome_floor5": {
+  "file": "dome_floor5.glb",
+  "tris": 37226,
+  "tris_by_top": {
+   "Floor_5": 31514,
+   "Floor_Roof": 5712
+  },
+  "materials": [
+   "Accent",
+   "CabinWindow",
+   "Glass",
+   "Light",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "Screen",
+   "SignAmber",
+   "SignCyan",
+   "SignGreen",
+   "SignMagenta",
+   "Window",
+   "WindowAmber",
+   "WindowCool",
+   "WindowCream",
+   "WindowRose"
+  ],
+  "n_materials": 18,
+  "n_nodes": 212,
+  "n_mesh_nodes": 24,
+  "anchors": 186,
+  "kb": 2538,
+  "seconds": 3.4
+ },
+ "dome_atrium": {
+  "file": "dome_atrium.glb",
+  "tris": 14424,
+  "tris_by_top": {
+   "Atrium": 11848,
+   "Lift_0": 80,
+   "Lift_1": 80,
+   "Lift_2": 80,
+   "Lift_3": 80,
+   "Lifts": 2256
+  },
+  "materials": [
+   "Accent",
+   "Glass",
+   "Light",
+   "LightStrip",
+   "Palette",
+   "Plant",
+   "PlantDark",
+   "SignAmber",
+   "SignCyan",
+   "SignMagenta",
+   "Water"
+  ],
+  "n_materials": 11,
+  "n_nodes": 87,
+  "n_mesh_nodes": 9,
+  "anchors": 66,
+  "kb": 964,
+  "seconds": 1.1
+ },
+ "dome_scaffold": {
+  "file": "dome_scaffold.glb",
+  "tris": 53076,
+  "tris_by_top": {
+   "Crane": 946,
+   "Scaffold_1": 10130,
+   "Scaffold_2": 10130,
+   "Scaffold_3": 10130,
+   "Scaffold_4": 10130,
+   "Scaffold_5": 10130,
+   "Site": 1480
+  },
+  "materials": [
+   "Light",
+   "LightRed",
+   "Palette",
+   "WindowCream"
+  ],
+  "n_materials": 4,
+  "n_nodes": 17,
+  "n_mesh_nodes": 10,
+  "anchors": 0,
+  "kb": 3638,
+  "seconds": 0.5
+ }
+}

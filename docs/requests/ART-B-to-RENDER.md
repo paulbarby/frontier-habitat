@@ -217,3 +217,178 @@ Deck top at 0.50 m. Footprint radius 6.0 (proposed to ART-HAB / SIM in `ART-B-to
 
 **Renders** (`art/vehicles/`): `<id>_turnaround.png`, `<id>_poses.png` (every motion above applied with these rules),
 `<id>_night.png` (spot lights on the `Light_*` roles), `<id>_scale.png` (suit colonists). **Not tested in the game.**
+
+## 5. v5.0 super dome — PILOT files, groups, floors, materials (V5 §7, §8) — 2026-09-29
+
+**Files** (all share one origin: the dome centre on the ground; no offsets or rotations between them). Contract in
+`tools/blender/dome_common.py`; summary in `assets/models/dome_manifest.json` (floors, groups, stages, venues, anchors).
+
+| file | top-level nodes | tris |
+|---|---|---|
+| `dome_shell.glb` | `Foundation`, `Promenade`, `Gates`, `Dome` | 17 526 |
+| `dome_floor1.glb` | `Floor_1` (Struct_1, Shell_1, Lamps_1, Venue_<id> + VenueLamps_<id> × 12) | 12 498 |
+| `dome_floor2.glb` … `dome_floor4.glb` | `Floor_2` … `Floor_4` (Struct, Shell, Lamps) | 8 640 / 9 216 / 9 216 |
+| `dome_floor5.glb` | `Floor_5`, `Floor_Roof` | 12 360 |
+| `dome_atrium.glb` | `Atrium`, `Lifts`, `Lift_0` … `Lift_3` | 6 890 |
+
+Imported size (`.godot/imported/*.scn`): **1.83 MB** in total (my allocation is now +30 MB).
+
+**Floors (Blender Z = Godot Y):** floor tops L1 0.30, L2 5.30, L3 9.50, L4 13.70, L5 17.90, roof 22.10; slab 0.35.
+The slab of level n (n ≥ 2) is in `Floor_<n>`: its underside (with the downlights) is the ceiling of level n−1.
+**Floor cutaway:** viewing floor k → hide `Floor_<n>` for n > k, `Floor_Roof`, `Dome` (and optionally `Lifts`).
+`art/dome/pilot_cutaway_L1.png` is exactly that rule for k = 1.
+
+**Group meaning / build stages** (node extras `stage`): `Foundation` → `Floor_<n>/Struct_<n>` (level_n) →
+`Floor_Roof` → `Dome` → fit-out (`Shell_<n>`, `Lamps_<n>`, `Atrium`, `Promenade`, then `Venue_<id>` one by one).
+`Gates` and `Lifts` (shafts) come with the structure. There is no separate scaffold mesh yet (next step).
+
+**Lifts:** `Lift_<i>` (i = 0..3) are the cabs, rest at L1. Move them along local +Y (Godot) to `extras.stops`
+(metres above rest: 0, 5.0, 9.2, 13.4, 17.6, 21.8), `speed_mps` 1.5. Doors face the gallery (+X local = outwards).
+
+**Materials** (new names in bold; the others you already handle):
+| material | use |
+|---|---|
+| `Glass` | dome panels, balustrades, shop fronts, lift glass. **Double-sided** in these files (seen from inside and outside) |
+| **`Water`** | pool surface, fountain (alpha 0.78, emission #3AB8E8 × 0.35): please give it your water look and a night glow |
+| **`SignCyan` `SignMagenta` `SignAmber` `SignGreen`** | shop sign letters, bottle shelf strips, stage lights (emission 3.0, like Neon) |
+| `LightStrip` | the gallery edge strips (rings of light at night) |
+| `Light` | downlights under every slab, dome node lights (1 per geodesic vertex), lamp posts, pool lights |
+| `CabinWindow` | outer windows, shop back walls, unit windows (night curve as the ships) |
+| `Screen` | shop screens, directory boards |
+
+**Draw calls:** 58 mesh nodes in the 7 files; the groups are already merged per floor / per venue, so one dome is
+about 58 × (materials per node, 2–6) surfaces before your per-group merge. Please keep `Glass` in its own sorted
+pass (large transparent dome).
+
+**Anchors** (all carry extras `floor`, `height`): `Anchor_Gate_<i>` / `Anchor_GateIn_<i>` (12 gates),
+`Anchor_Venue_<id>` (door point in the colonnade, +X into the venue), `Anchor_Work_<id>_<k>`, `Anchor_Seat_<id>_<k>`,
+`Anchor_Lift_<i>_<floor>` (floor 6 = roof), `Anchor_Unit_<floor>_<sector>` (L3–L5), `Anchor_Lounger_<k>`,
+`Anchor_Swim_<k>` (at the water line), `Anchor_SlideTop/End`, `Anchor_Lifeguard`, `Anchor_Bench_<k>`,
+`Anchor_Stage`, `Anchor_Plaza_<k>`, `Anchor_Crown`. Full list in the manifest.
+
+**Arcade screen (V5 §4.5):** comes with the gaming lounge (after the pilot): the Prism Shift cabinet screen will be
+its own material **`ArcadeScreen`** on a quad with UV 0..1, for your attract-loop shader.
+
+Renders: `art/dome/pilot_overview_day.png`, `pilot_overview_night.png`, `pilot_atrium_pool.png`,
+`pilot_gallery_L1.png`, `pilot_cutaway_L1.png` (Blender, not the game). **Not tested in the game.**
+
+## 6. Super dome after critic round 24 — glass, window tones, lights — 2026-09-29
+
+1. **Glass (fix 3, please match in the game).** `Glass` is now #9CC9DC, alpha 0.22, double-sided. The Blender
+   preview adds a fresnel term: opacity 0.18 facing the camera → 0.62 at grazing angles (Layer Weight, blend 0.35),
+   roughness 0.04, reflecting the sky. Please give the dome glass the same: a faint tint, 25–40 % sky reflection at
+   grazing angles, and check its sort order against the ring building (it covers everything).
+2. **New emissive materials** (register them for the night curve like `CabinWindow`):
+   `WindowAmber` (#FFB45E, 0.75), `WindowCream` (#FFF1D6, 0.6), `WindowCool` (#B8DCFF, 0.6). Windows now mix
+   `CabinWindow`, `Window`, these three, and 12–26 % dark glass (Palette). The dome joint lights are `WindowAmber`.
+3. **Light anchors** (real lights, your choice of count; extras role / colour / cone / range):
+   `Light_Lamp_P0..23` (promenade lamp posts, warm), `Light_Lamp_A0..5` (atrium lamp posts, warm #FFC88A),
+   `Light_Pool_0..3` (under the pool water, cyan #38D8FF, aim up). The pool's underwater lenses are `SignCyan`.
+4. **Floor lines** on the outer face: `SignMagenta` (L1), `SignCyan` (L2), `LightStrip` (L3, L5), `SignAmber` (L4).
+   L2 carries the outward venue signs and 4 neon billboards (`Screen` panels framed in the Sign colours).
+5. `Water` is now #1D78A8, alpha 0.58, emission #38D8FF × 0.55; the pool is 1.6 m deep with a tile grid.
+
+## 7. Super dome: L2 venues, accommodation, construction stages, round 26 glass — 2026-09-29
+
+**New / changed files:** `dome_floor2.glb` (13 venues), `dome_floor3..5.glb` (units and hotel rooms, `Unit_<floor>_<s>`
+nodes under `Floor_<n>`), `dome_scaffold.glb` (new). Full list and the stage table: `assets/models/dome_manifest.json`.
+
+1. **PRISM SHIFT cabinet (V5 4.5):** node `ArcadeScreen_PrismShift` (child of `Floor_2`), one quad, material
+   **`ArcadeScreen`** (#05060A, emission #FF4FD8 × 0.5 as a stand-in), **TEXCOORD_0 = 0..1**: u to the player's right,
+   v up. Please put your attract-loop shader on it. The player stands at `Anchor_ArcadePrism_arcade_0` (extras
+   egg prism_shift, clip play_arcade). The other 8 cabinets use `Screen`.
+2. **Club** (`Venue_club`, L2 sectors 13–18): LED dance floor tiles (Sign materials), 3 podiums with chrome poles, light
+   rig with coloured lamps, LED wall (`Screen`), DJ booth, 4 booths, bar, disco ball. Anchors: `Anchor_Dancer_club_<k>`
+   (robot dancers on the podium tops, 0.35 m in front of the pole; extras pole [x, y] = the pole axis, clip robot_pole), `Anchor_DJ_club_0`,
+   `Anchor_Dance_club_<k>`, `Anchor_Booth_club_<k>`, `Anchor_Seat_club_<k>` (bar stools), `Anchor_Stage_club_0`,
+   `Anchor_Work_club_0` (bartender), **`Anchor_Bouncer_club_0`** (outside the door, extras adults_only). The club's
+   outer windows are blacked out.
+3. **Gym:** `Anchor_Gym_gym_<k>` with extras machine (treadmill: clip jog, stands on the belt at +0.24 m; bike; weights).
+4. **Units (L3–L5):** `Anchor_Unit_<floor>_<s>` (door), `Anchor_Bed_<floor>_<s>_<k>` (ART-NPC bed rule; extras
+   `head` "+Y" or "-Y" — on the right side of a double bed the stand point is mirrored, `mirror` true),
+   `Anchor_Seat_...` (clip sit_eat at tables), `Anchor_Desk_...`. L3 = 24 hotel rooms; L4 = 24 family units; L5 = 6
+   executive (2 sectors) + 12 hotel rooms.
+5. **Construction (`dome_scaffold.glb`):** `Site` (fence, cabins, stacks, 4 flood masts), `Scaffold_1..5`, `Crane`
+   with **`Crane_Jib`** (turn about its local Y in Godot; extras jib_length 30, hook_height 38). `Dome` now has two
+   stages: `Dome_Frame` (stage dome_frame) then `Dome_Glass` + `Dome_Lights` (dome_glass). The manifest lists what to
+   show and hide at each stage (`build_stages`). Picture: `art/dome/build_stages.png`.
+6. **Round 26 glass (please match):** by day a fresnel sky reflection (opacity 0.14 facing → 0.72 grazing, specular
+   1.0); **by night an emissive rim at grazing angles**: emission colour #FFB873 × fresnel × 0.8, so the shell shows the
+   city lights. Geometry added: a `LightStrip` ring at the crown and along the dome foot (in `Dome_Lights`).
+7. **New emissive materials:** `WindowRose` (#FFB0D0, 0.6), `WindowTV` (#5A8CFF, 0.85): coloured and TV-blue rooms on
+   L3–L5. L2 has a second (upper) neon band all round (`Sign*` strips + the L2 venue names).
+8. **Seats beside tables:** café, restaurant and food-court seat anchors now stand 0.45 m from the table centre on the
+   chair side, facing the table (critic round 26: no body in a table top).
+
+## 8. Super dome after critic round 28 — day glass spec, racer cabinet — 2026-09-29
+
+1. **Day glass (fix 7), the exact numbers I use in the Blender preview, please match in the game shader:**
+   - base tint #9CC9DC; opacity = mix(0.12, 0.85, F) with F = Schlick-like facing term: `F = pow(1 - dot(N, V), 2.2)`
+     (Blender Layer Weight "Facing", blend 0.45); roughness 0.03; specular 1.0;
+   - reflection = sky colour (horizon #C79E85 → zenith #5C6B8F) × F; this gives 25–40 % reflection at the grazing
+     edge of the dome silhouette and almost none facing the camera;
+   - night: add emission #FFB873 × F × 0.8 (the city light caught at grazing angles);
+   - both faces (the material is double-sided); sort after the ring building.
+2. **PRISM SHIFT is now a sit-down racer** (`Venue_arcade`, room centre, screen towards the entrance). The screen node
+   `ArcadeScreen_PrismShift` is a 1.0 × 0.6 m quad, tilted 8° back, UV 0..1 as before. The player uses **drive_sit**:
+   `Anchor_ArcadePrism_arcade_0` is the stand point, the wheel is at the drive_sit grip height. Floor underglow
+   `SignCyan` / `SignMagenta`.
+3. **Arcade:** 14 upright cabinets (6 on the back wall, 2 back-to-back blocks of 4) + the racer; prize counter with
+   `PRIZES` sign; neon floor (Sign strips on the carpet); sofas and stools.
+4. **Club:** raised DJ riser with steps, a light truss with 12 spot cans (coloured lenses, aimed at the dance floor
+   centre — good spots for your light cones), acoustic back-wall panels with neon seams, two booths facing the stage,
+   4 cocktail tables, a back bar with lit bottles and pendants, a bouncer lectern, and an **ADULTS ONLY / 21+** sign on
+   the front beside the door.
+5. **Upper floors:** balconies on every third unit are now 1.7 m deep with planters, a table and a lamp; about 7 % of
+   the L3–L5 windows use `Light` (very bright rooms).
+
+## 9. FINAL day-glass spec + round 32 changes — 2026-09-29 (critic round 32, fix 5)
+
+This replaces the glass numbers in §6.1, §7.6 and §8.1. I read `shaders/dome_glass.gdshader` and list only the
+differences. Source of truth for every number: `glass_preview()` in `tools/blender/dome_render.py`.
+
+**Correction.** §8.1 gave `F = pow(1 - dot(N, V), 2.2)` and §6/§7 gave the rim colour as #FFB873. Both were my
+errors. Blender's Layer Weight "Facing" with blend 0.45 is `F = 1 - pow(|N·V|, 0.9)` (nearly linear), and the rim
+colour is linear (1.0, 0.72, 0.45) = sRGB **#FFDDB3**.
+
+| Term | Game now | Blender preview (the renders CRITIC scored) | Change |
+|---|---|---|---|
+| Opacity curve | `pow(1-ndv, 3)`, 0.14 → 0.72 | `F = 1 - pow(ndv, 0.9)`; `mix(0.12, 0.85, F)` | use F for ALPHA; `alpha_face` 0.12, `alpha_graze` 0.85 |
+| Sky reflection weight | `fres * 1.25` (Schlick, F0 0.04) | Principled specular, F0 about 0.08, times the alpha above | keep Schlick for the colour mix, F0 **0.08** |
+| Tint | #9CC9DC × 0.55 | base colour linear (0.55, 0.72, 0.80) = sRGB **#C4DEE8**, lit | `tint` #C4DEE8, keep × 0.55 unshaded |
+| Night rim | `rim_color * fres * 1.1`, sRGB #FFB873 | emission (1.0, 0.72, 0.45) linear × `mix(0.12, 0.85, F)` × 0.8 | `rim_color` source_color **vec3(1.0, 0.867, 0.702)**; rim = rim_color × A × 0.8 × night |
+| Sky colours | the game sky | stand-in gradient only | keep the game sky |
+| Roughness / glint | glint pow 220 | roughness 0.03 | keep |
+| Sides, sort | cull_disabled, priority −2, no depth write | double-sided | keep |
+
+Drop-in for the fragment (everything else in the file stays):
+
+```glsl
+float ndv = clamp(dot(n, v), 0.0, 1.0);
+float F = 1.0 - pow(ndv, 0.9);                        // Blender Layer Weight Facing, blend 0.45
+float A = mix(alpha_face, alpha_graze, F);            // 0.12 -> 0.85
+float fres = 0.08 + 0.92 * pow(1.0 - ndv, 5.0);       // Schlick, F0 0.08 (Specular IOR Level 1.0)
+vec3 col = mix(tint * mix(0.55, 0.12, night), sky, clamp(fres * 1.25, 0.0, 1.0)) + sun_color * glint * 3.0;
+vec3 rim = rim_color * A * 0.8 * night * (0.55 + 0.45 * low);   // keep your low-dome and crown terms
+ALBEDO = col + rim;
+ALPHA = clamp(A + glint * 0.6, 0.0, 0.95);
+```
+
+Expected result: the shell reads as glass across the whole silhouette (not only the rim). Facing the camera at 12 %
+opacity the ring building shows through clearly. Check it against `art/dome/overview_250_day.png` and
+`overview_250_night.png`. If the ring building is too hazy in game, lower `alpha_graze` to 0.72 first; do not change F.
+
+**Round 32 model changes (all in the files now, imported, `check` 258 scripts, 0 failed):**
+
+1. **Hotel rooms (L3, L5):** 108 new anchors `Anchor_Lamp_<floor>_<s>_<k>` (72 on L3, 36 on L5) (extras role `lamp`, colour #FFB45E,
+   range_m 3.0, optional true): two bedside lamps and one floor lamp per room. They are good spots for a small warm
+   OmniLight when the player views that floor at night; the lamp shades are `WindowAmber`. Two new `Anchor_Seat_...`
+   per room (armchairs in the middle lounge set).
+2. **Balconies (every third unit, L3–L5):** a `WindowAmber` strip on the rail top (0.10 m) and one on the slab edge,
+   and `SignAmber` planter lights. They need the night emission curve only; no light nodes.
+3. **Club front:** the double door has a lit `SignMagenta` frame; the ADULTS ONLY / 21+ sign is larger (0.18 m / 0.24 m
+   letters) and sits beside the door, clear of the frame. Picture: `art/dome/L2_club_door.png`.
+4. **RESTAURANT (L1)** sign moved 11° away from the lift: clear of the lift frame and the palm from the atrium view.
+
+Sizes after this round: imported `.scn` total 7.74 MB (8 files); glb 21.4 MB on disk. Merged template: 119 surfaces
+(your probe, `merged`), unchanged.

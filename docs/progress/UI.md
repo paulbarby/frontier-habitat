@@ -832,3 +832,125 @@ additions this round are scripts and seven small SVG icons, so the growth is fro
   and the inspector's OUT OF REACH / TOO FAR badge tooltip (reason + "Fix: …"). The 3D tag is RENDER's.
 - Test `tools/ui/test_reach.gd` (Frontier: a plan 250 m out; a copy next to the lander; SIM rows for no_path
   and no_air; the badge tooltip and the Materials line).
+
+## 2026-09-29 — v5 — PILOT: "The Regolith Rag" window
+
+- `ui/hud/rag_window.gd` (window manager, id "rag"; key J; nav rail button; debug `rag [n]`, `ragscroll px`):
+  a tabloid page in the glass-and-metal window. Newsprint paper (tiled noise texture made at run time, no
+  file), red masthead band "THE REGOLITH RAG" with issue, day, price; black strap with SIM's tagline; the
+  lead story (kicker chip, huge condensed headline, 540×405 photo with a black caption bar, byline, drop-cap
+  body); stories in rows of three columns with rules; boxed columns THE DUST-UP (gossip), COUPLE WATCH,
+  FEUD WATCH; the RAG POLL box (big %, change, bar, commander); SMALL ADS (4 boxed ads; ship arrivals from the
+  traffic forecast when SIM gives fewer); the SERIOUS NEWS strip in the game's own glass style and STE text.
+  Back issues: the header's list (SIM keeps up to 30). Every name is a link: click selects the person
+  (follow comes with the follow HUD).
+- Fonts (OFL, +0.13 MB): Manrope 800 condensed to 80 % (`Fonts.rag_size(px)`, per-size variations so the weight
+  and the tight spacing hold), Source Serif 4 400 / italic / 600 for the newsprint.
+- `ui/widgets/rag_photo.gd`: RENDER's `view.photo(agents, place, pose)` when it lands; until then a grainy
+  flash-shot placeholder with two silhouettes posed by the pose hint.
+- `ui/v5_data.gd`: v5 adapter; SIM's `sim.social.rag_issues()` is live (stub) and mapped by `norm_rag()`;
+  `ui/mock_rag.gd` (preview issues) is only used when SIM has no social system.
+- Version 5.0.0 in project.godot (the title menu reads it).
+- Test `tools/ui/test_rag.gd` PASS (16): every page part, names link and select, every issue inside the view.
+- Shots: `docs/shots/ui11_rag_top.png`, `ui11_rag_middle.png`, `ui11_rag_bottom.png`, `ui11_rag_back_issue.png`.
+- Not tested: the web build at 1280×720 (headless only); the photo from RENDER (not there yet).
+- Next: follow HUD, personnel file, org chart, social tab, unrest, academy, housing, floors, palette, codex, eggs.
+
+## 2026-09-29 — v5 — critic round 25 fixes (Rag) and the people UI
+
+Critic round 25 (regolith_rag 0.71), all 8 UI points:
+1. A window that covers the alerts panel folds it (`alerts_panel.gd fold_set`, used by the window manager).
+2. At 1280×720 (logical height < 800) the Rag is compact: masthead 46 px, lead headline fit to 2 lines,
+   the photo starts above the fold. Checked in the web build with `shoot.mjs --size 1280x720`.
+3. Newsprint grain and fibres, halftone dots on the photo, a double rule under the masthead.
+4. The right column is filled: quote of the day, INSIDE TODAY with page numbers, "THE RAG KNOWS."
+5. The poll trend is in words: "▲ UP n POINTS", "▼ DOWN n POINTS", "— NO CHANGE".
+6. Name links: pointing-hand cursor and a tooltip on hover.
+7. Three layouts by story mix: standard, special edition (black masthead, red strap, full-width photo),
+   quiet (small photo). Debug `raglayout <standard|special|quiet|auto>`.
+8. Small ads: 4 in each issue (SIM ads, ship arrivals, house ads).
+Shots: `docs/shots/ui12_rag_1600_top.png`, `ui12_rag_1600_bottom.png`, `ui12_rag_special.png`,
+`ui12_rag_quiet.png`, `ui12_rag_1280_top.png`, `ui12_rag_1280_bottom.png`. Test `test_rag.gd` PASS (20).
+
+People UI (V5 §3–§7, §10), all in the v4 window manager and inside the view:
+- **Follow view** (RENDER's camera): key V / Shoulder / Follow buttons; Tab next, Esc exit. Follow card
+  `ui/hud/follow_hud.gd` (name, rank, mood, satisfaction, doing, talking with, last 3 lines; File, Next, Switch,
+  Exit). The rest of the HUD dims to 0.28; the inspector stays hidden; the time controls stay.
+- **Bubble style**: `ui/theme/bubble_style.gd` → `view.bubbles.ui_style()`.
+- **Konami code** in the follow view: egg "dance" (`egg` command, `view.egg_dance` if present); the device
+  profile keeps found eggs; toast "SECRET FOUND".
+- **Personnel file** `ui/hud/person_window.gd` (id "person"): File tab (portrait, facts, satisfaction with 9
+  parts and reasons, attitude, skills with levels, recent lines), Social tab (relationship web + list; an
+  unknown crush is hidden), Review tab (4 grades, 9 actions; each with its predicted effect on two lines,
+  green/red, "(estimate)" when it is the UI's table; confirm first; SIM's answer or "not yet" shown).
+- **Crew screen** `ui/screens/crew_screen.gd` (key U, nav rail): Org chart (commander + 5 departments;
+  drag a person onto a slot → confirm → `appoint`), Housing (every home, beds, "wants family/executive" in red;
+  drop → `set_home`), Academy (courses, students, enrol form → `enrol`).
+- **Unrest**: top-bar KPI (stage, value, causes in the tooltip; click opens Crew); banner
+  `ui/hud/unrest_banner.gd` at protest, strike and riot (demand, 7 responses with confirm → `unrest_response`;
+  it pulses in a riot). Debug `unrest <stage|off> [value]` (UI view only).
+- **Floor selector** `ui/hud/floor_selector.gd` (multi-storey structure selected; PgUp/PgDn). The cutaway waits
+  for RENDER's `set_view_floor`.
+- **Palette**: Civic tab (security office, jail, super dome); XXL / XXXXL labels in gold with a size tooltip,
+  kept on a locked card under the lock reason. `Data.size_word()` in the hint, inspector and find window.
+- **Codex**: People tab (ranks, skills, satisfaction, attitude, discipline, unrest, security, relationships,
+  follow) and found eggs only.
+- Requests: `docs/requests/UI-to-SIM.md` (7 commands, `people.predict`, `education.students`, unrest finding),
+  `docs/requests/UI-to-RENDER.md` (`set_view_floor`, `egg_dance`, `photo`).
+- Test `tools/ui/test_v5_people.gd` PASS (34).
+- Shots: `docs/shots/ui13_person_file.png`, `ui13_person_social.png`, `ui13_person_review.png`,
+  `ui13_follow_hud.png`, `ui13_crew_org.png`, `ui13_crew_housing.png`, `ui13_crew_academy.png`,
+  `ui13_unrest_protest.png`, `ui13_unrest_riot.png`, `ui13_palette_civic.png`, `ui13_codex_people.png`.
+- Not tested: drag and drop with a real mouse (the test calls the drop); the floor cutaway, the dance and the
+  photo (RENDER APIs not there); every SIM command answers "not yet" (SIM has no `cmd_*` yet); unrest from SIM
+  does not reach protest (finding sent), so the banner shots use the debug stage.
+- Finding: SIM's unrest stub peaks at about 37 with every colonist unhappy.
+- Suite: 21 UI tests, 20 PASS. `test_ships_ui` fails 1 check (landing pad not powered after SIM's 18:04–18:31 changes; finding sent). `test_wm` failed once: the alerts panel had become a snap target; it now folds but is no snap target (PASS).
+- Also: the inspector stays hidden in the follow view (test check added); the review actions show the effect on a second line (green/red); a locked XXL / XXXXL card keeps its size label.
+
+## 2026-09-29 — v5 — critic rounds 29 and 30 (follow view, social UI, Rag)
+
+Rag (round 30: 0.75):
+- Special edition: the lead headline is 2 lines at most (as on the other layouts); test checks the laid-out
+  line count on all three layouts.
+- Quiet day: the "SLOW NEWS DAY" kicker; a smaller lead (46 px headline, 300 px photo); the gossip column
+  takes 6 items; a WHO SAID IT? puzzle box (3 real lines from colonists, the names in another order, the
+  answers at the foot). An issue with a cold lead (heat under 0.25) and 2 stories or fewer is quiet too.
+
+Social UI (round 30: 0.71):
+1. Reading glass (about 88 %) behind lists, tables and graphs: `ui_theme.gd` style `reading_hud`; used by
+   the personnel file and the build drawer (every palette tab, Civic included).
+2. The personnel file opens in the inspector's place (top right); the inspector hides while the file of its
+   person shows. The first-frame width (822 px) is fixed: the file settles to its content (540 px) and is
+   placed again.
+3. The discipline confirm has headed lines: ON <PERSON> (attitude, satisfaction), ON OTHERS (the effect and
+   who sees it: friends and partner by name), RISK, and UNFAIR (red) when the person's attitude is 0 or more
+   (the UI's rule until SIM's `predict` gives `unfair`). Debug `person ask <action>` shows it.
+4. Unrest banner: its own frame by stage: protest amber, strike orange, riot red on a dark red body with a
+   beating border and glow. A riot shows "DAMAGE: … · INJURED: …" (SIM fields `damage`, `injured`; "not
+   reported yet" until they exist).
+5. Every response shows its effect under the button (UI estimate, marked so in the tooltip).
+6. Crew: 13 px body text on the person chips (not the 10 px mono chip font), 30 px rows, a mood face per
+   person (new icons `mood_0` .. `mood_4`); the department columns reach the bottom (the Crew slot fills);
+   Housing adds beds by quality (beds, used, free) and "Waiting for a better home"; Academy adds the crew's
+   skill table (levels 1-5 by colour).
+7. Satisfaction: the 9 parts in one column, each on a 0-100 track with the 50 mark, worst first, with its
+   reason beside it.
+
+Follow view (round 29: 0.67): the follow card has the inspector's rows (Health, Fed, Water, Rested) and
+its mood face; the inspector stays closed. Toasts move to the top edge, centred, two at most, while following.
+
+- Tests: `test_v5_people.gd` PASS (45), `test_rag.gd` PASS (22).
+- Requests: `UI-to-SIM.md` (unrest `damage`/`injured`, `response_effect`, `predict.unfair`).
+
+## 2026-09-29 — PAUSED (Paul)
+
+- Done: every critic round 29/30 UI fix above is in code; `check` clean (258 scripts); `test_v5_people` PASS (45),
+  `test_rag` PASS (22), `test_window_bounds` PASS; the other suite runs were stopped for the pause.
+- Half-done: no web export and no shots of round 30 yet (`build/web_ui` is the older build). The steps file is
+  ready: scratchpad `r30shots.json` (ui14_rag_special, rag_quiet, person_file, person_social,
+  discipline_confirm, follow_card, unrest_protest/riot, crew_org/housing/academy, palette_civic).
+- Next: run the rest of the UI suite (test_wm, test_theme_v4, test_tooltips_clip, test_v4_screens, test_bases_ui,
+  test_find, test_locks), export to build/web_ui, take the ui14 shots, view them, report to the coordinator.
+- Open outside UI: `test_ships_ui` fails 1 check (landing pad not powered after SIM's 18:04–18:31 changes; in
+  UI-to-SIM.md).

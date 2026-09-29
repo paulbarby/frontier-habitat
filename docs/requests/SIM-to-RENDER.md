@@ -616,3 +616,89 @@ Deep Scan the deposits in it are surveyed too. Logs `satellite_launched`, `satel
   are not refused for it, and the game goes on.
 - showcase_v4 rebuilt (the depot faces open ground; the route rover drives its route). Test
   `v4_rover_tubes_and_blocks`.
+
+# ============================== VERSION 5 ==============================
+
+## 2026-09-29 — V5 API (milestone 1: stubs that return plausible, deterministic data)
+
+Contract: docs/V5_DESIGN.md. The calls below are live now. Their values are derived from the seed, the person
+and the live state (nothing new is saved yet); later milestones make them real (stored, changing over time)
+**without changing the names or the shapes**. Content: `content/people.json`, `dialogue.json`, `tabloid.json`.
+
+### People — `sim.people`
+- `identity(a)` → `{id, name, sex ("m"|"f"), variant ("m1".."m3","f1".."f3","c1","c2"), child, age, height (m),
+  tint {skin 0..1, hair 0..1, grey}, traits [2-3 ids], attraction ("opposite"|"same"|"both"|"" for children),
+  kind ("colonist"|"visitor"|"child"), vip}`.
+- `outfit(a)` → one of `suit` (outside), `prison`, `school`, `uniform_engineering|science|food|medical|security|command`
+  (on duty; commander and captains wear `uniform_command`), `casual_a|b|c` (off duty, asleep, at leisure, at home;
+  fixed per person), `swimwear` (pool, later). **RENDER draws exactly this; never guess.**
+- `marks(a)` → `{stripe ("amber"|"blue"|"green"|"red"|""), insignia (rank id)}` for the uniform masks.
+- `skills(a)` → `{engineering, mining, fabrication, farming, cooking, medicine, science, piloting, security,
+  leadership, social: 0..100}`; `level_of(v)` 1..5, `level_name(v)` Novice..Master; `work_mult(a)`.
+- `rank(a)` → `{rank ("commander"|"captain"|"first_hand"|"specialist"|"crew"|"trainee"|"visitor"|"child"),
+  name ("Base Commander"...), title ("Captain of Food"...), department ("industry"|"science"|"food"|"maintenance"|
+  "security"|"command"|""), base}`. Stub = SIM's proposal (best leader per base, best skill per department).
+- `department(a)`.
+- `home(a)` → `{kind ("none"|"dorm"|"family"|"executive"|"penthouse"), quality 0..4, building, unit, floor}`.
+- `satisfaction(a)` → `{value 0..100, components {needs, food, housing, comfort, social, work, fairness, safety,
+  freedom}, reasons [{component, text, delta}]}` (lowest first; `needs` is the v3 morale).
+- `attitude(a)` → `{value -100..100, trend (per day), reasons [{text, delta}]}`.
+- `list()` → rows `{id, name, kind, sex, variant, age, role, rank, title, department, base, outfit, satisfaction,
+  attitude, activity, home}` for every living person.
+
+### Society — `sim.social`
+- `talks()` / `talks_near(pos: Vector2, radius)` → `[{id, a, b, speaker, listener, topic, line, emote
+  ("sweat"|"zzz"|"heart"|"anger"|"music"|"credit"|"question"|""), anim ("talk_gesture_a"|"talk_gesture_b"|"argue"|
+  "flirt_lean"|"sulk"|"laugh"), started (tick), line_index, lines, building, pos}]`. One line per 4 s; the
+  current line is `line` (by `speaker`). Stub: people within 3 m in the same room talk (chance per 30 s window).
+- `recent_lines(agent_id, n = 3)` → `[{tick, text, topic, to, emote}]` newest first.
+- `relationships_of(agent_id, n = 8)` → `[{other, affinity -100..100, attraction 0..100, status ("acquaintance"|
+  "friend"|"best_friend"|"rival"|"enemy"|"crush"|"dating"|... "partners"|"married"|"ex"|"affair" later), known}]`.
+  `relation(a, b)`, `compatible(a, b)`.
+- `rag_issues(n = 30)` (newest first) / `rag_issue(number)` → `{number, day, masthead "THE REGOLITH RAG", tagline,
+  lead {kind, headline, text, actors [ids], place, heat, photo {agents [ids], place_hint, pose_hint}},
+  stories [same shape, 0-6], gossip [text], couple_watch [{a, b, status}], feud_watch [{a, b, status}],
+  poll {approval 0..100, question}, ads [text], serious [text: the real problems from alerts]}`. One issue per
+  finished day.
+- `unrest(base_id = -1)` → `{value 0..100, stage ("calm"|"grumbling"|"slowdown"|"protest"|"strike"|"riot"),
+  causes [{text, delta}], demand}`.
+
+### Floors — `sim.floors`
+- `floors_of(b or def_id)`, `floor_height(b)` (m), `height_of(b, floor)`.
+- `agent_floor(a)` → `{building, floor, height (m above its ground), floors}` (stub: a person inside a multi-storey
+  building gets a floor from its id; floor 0 while walking in/out).
+- `units(b)` → `[{index, floor, quality, beds}]`; `lift_seconds(b, f0, f1)`.
+
+### New structures (content/buildings.json, all `"v5": true`)
+| id | sizes / label | radius (m) | floors | door slots | notes |
+|---|---|---|---|---|---|
+| `residence_tube` | M, L, XL | 9 / 11 / 13 | 1 | 4 / 5 / 6 | `shape: "half_tube"`; `variants` family (units 2/3/4, 3 beds each) and executive (1/2/3, 2 beds; research `civic_1`); record field `variant` |
+| `apartment_block` | XXL (`size_label`) | 20 | 3 × 3.6 m | 6 | `units`: floors 0 and 1 five units each (family, 2 beds), floor 2 two penthouses (3 beds); `lift` 4 s per floor; research `civic_2` |
+| `retail` | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | venue `shop`, recreation places; stage 1 |
+| `park` | M, L, XL | 9 / 12 / 15 | 1 | 6/7/8 | venue `park`, needs water; research `civic_1` |
+| `academy` | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | `seats_class` 4/8/14; stage 1 |
+| `security_office` | S, M | 6 / 7.5 | 1 | 4/6 | research `civic_1` |
+| `jail` | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | `cells` 2/4/8; research `civic_1` |
+| `super_dome` | XXXXL (`size_label`) | 48 | 5 × 6 m | 12 | atrium 20 m radius, ring 14 m, height 38 m; `venues` (16, with floor), `units` (30), `build_stages` (8); research `arcology` |
+
+Use `sim.sizes.size_label(def_id, size)` for the label ("XXL", "XXXXL", else S/M/L/XL). New techs: `civic_1`, `civic_2`,
+`education`, `security`, `arcology` (branch `civic`, "Civic"). Every building has `anchors_spec` (the anchor names ART
+builds and RENDER reads, with floor indices for the multi-storey ones).
+
+## 2026-09-29 - V5: talks are cheap now; the once-a-second work is spread over the second
+
+Answer to RENDER-to-SIM 2026-09-29 (talks() 26-28 ms, a 51-66 ms tick every 10th tick).
+
+- `sim.social.talks()` / `talks_near()` keep talk **sessions**. A room is searched for new pairs once a game second,
+  on its own tick of the second; the topic is chosen once per talk; each line is made once. A call on the same tick
+  returns the stored list; a call on a new tick only moves the talks on. Native, `showcase_v3_late`:
+  66 people: `talks()` mean 0.08 ms, max 0.26 ms (before: mean 0.50, max 5.2). 110 people: `talks_near` mean 0.25 ms,
+  max 0.90 ms (before: mean 1.74, max 3.8).
+- The fields are the same (`speaker`, `line`, `emote`, `anim`, `started`, `line_index`, `lines`, `building`, `pos`).
+  `started` is now the tick the talk began (not the start of a 30 s window). New: `sim.social.line_ticks()` (40).
+- More talks: window 20 s (was 30 s), chance 0.5 (was 0.35) and 0.85 in a comfort room (lounge, cantina, retail, park)
+  or a kitchen; start distance 3.5 m; a talk goes on while the two stay within 6 m and in the same room.
+- `sim.step()`: the once-a-second systems run on different ticks of the second (phase = tick % 10):
+  0 hazards, traffic, metrics; 1 build, upgrades; 2 vehicles, reactors; 3 explore, ship; 4 jobs; 5 production;
+  6 morale; 7 research, goals, awards; 8 alerts. Please measure `simprof` again in the web build: I expect the old
+  spike split over the ticks, with the jobs tick the largest (numbers in the report to the coordinator).

@@ -135,3 +135,20 @@ the 3D layers will switch with `view.set_overlay(name)` using the same three nam
 
 - RENDER draws the FULL tag in the world (world_view status badges, same style as WORN / BROKEN): over a storehouse or cold storage whose store (`inv_out`, role `store`) is 98 % full or more, and over a machine with block `output_blocked`. Text "FULL" under 75 m or when selected; the icon (output-blocked) up to 180 m. UI: please do not draw a second world tag; the panels are yours.
 - Racks: the crates baked in the Interior of `storehouse_*` and `cold_storage_*` are split into a "Stock" group at load and shown in proportion to `total / cap` of the store, bay by bay. No new anchors needed from ART-HAB. One extra MultiMesh per model size.
+
+
+## 2026-09-29 - V5 follow view: API for the keys and the HUD
+
+RENDER's follow view is in `presentation/world_view.gd` and `camera_rig.gd`:
+- `view.follow_start(agent_id) -> bool`, `view.follow_stop()`, `view.follow_next() -> id` (Tab), `view.in_follow()`, `view.follow_id`.
+- The rig does wheel zoom (1.2-4 m), right/middle drag orbit (+-70 deg), Q/E shoulder swap, spring follow, wall pull-in, cutaway. Please bind **V** (select a person -> `follow_start`), **Esc** (`follow_stop`), **Tab** (`follow_next`), and the Follow button; F stays the v3 overview follow.
+- While `view.in_follow()`: please dim the rest of the HUD as V5 §3 says; the time controls stay.
+- Bubbles: `view.bubbles.ui_style(style)` takes your glass bubble style (a StyleBoxFlat or a Dictionary with bg, border, text, name, follow_border, radius, font_size). Until then RENDER draws its own glass look.
+- Click a bubble -> switch: `view.bubbles` can expose the speaker under a screen point if you want it (ask).
+
+
+## 2026-09-29 - follow view round 29 (UI parts) and floors
+
+- Critic round 29: in the follow view please collapse the inspector to the follow card (it covers the right third), and move toasts to the top edge.
+- POI / deposit screen labels (`poi_marks`?) draw through the dome walls in the follow view (`art/critic_input/render/151`, arcade tiles): please hide them while `view.in_follow()`.
+- Floor selector: `view.set_view_floor(building_id, k)` (k 1..5 for the dome, 1..3 for the apartment block; 0 = off). The follow view uses the followed person's floor by itself.

@@ -15,7 +15,7 @@ const MIRROR = path.join(os.tmpdir(), 'fh_render_mirror');
 const OUT = path.join(ROOT, 'build', 'web_render');
 const args = process.argv.slice(2);
 const tries = Number(args[args.indexOf('--tries') + 1] || 6) || 6;
-const DIRS = ['.godot', 'assets', 'content', 'presentation', 'shaders', 'sim', 'ui', 'tools'];
+const DIRS = ['.godot', 'assets', 'content', 'presentation', 'shaders', 'sim', 'ui', 'tools', 'templates'];
 const FILES = ['project.godot', 'export_presets.cfg', 'main.tscn', 'icon.svg'];
 
 function sleep(ms) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); }

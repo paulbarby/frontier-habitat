@@ -157,7 +157,7 @@ func _match(q: String) -> Array:
 			continue
 		var st: Array = hud.inspector.sections.status_of(b)
 		var district: String = s.topo.district_name(b["pos"]) if b.has("pos") else ""
-		var size_txt: String = hud.data.SIZE_NAMES[clampi(hud.data.size_of(b), 0, 3)] if hud.data.has_sizes(def_id) else ""
+		var size_txt: String = hud.data.size_word(def_id, hud.data.size_of(b))
 		out.append({"id": int(id), "def": def_id, "name": name, "cat": cat, "district": district, "base": base_name, "size": size_txt, "status": String(st[0]), "color": st[1], "pos": b.get("pos", Vector2.ZERO)})
 	out.sort_custom(func(a, b2): return String(a["name"]).naturalnocasecmp_to(String(b2["name"])) < 0)
 	# Points of interest after the structures, nearest first.

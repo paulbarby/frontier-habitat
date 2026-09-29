@@ -144,3 +144,11 @@ door side. Tell me when it is in; RENDER then drops its own override.
 - Request: outside routes should not cross a corridor tube on the v4 map (or tell RENDER if a crossing point exists by design, and where, so the view can draw a step-over).
 - For information: on `showcase_v4` the path check is clean (wall 0, outside 0, slide 0, teleport 0).
 - Critic round 22 asked whether the 40 ms average processing at speed 4 on a new Frontier game is the sim. It is not: measured per frame at speed 4 on a new Frontier game, the sim steps take 0.19 ms, the view 1.24 ms, the HUD 0.08 ms (GPU build, 60 fps). The 40 ms figure is Godot's whole-frame process time; with software WebGL (SwiftShader) it is 700 ms. No action for SIM.
+
+
+## 2026-09-29 - V5: talks() cost and the once-a-second tick spike
+
+- `sim.social.talks()` rebuilds on every new tick. In the web build (`showcase_v3_late`, 66 people) one `talks_near` call costs **26-28 ms**. RENDER now asks once a second, but SIM's own `tick_second` also calls `talks()`.
+- `simprof 100` on that save: mean **7.4 ms per tick**, every 10th tick (the once-a-second work) **51-66 ms**. V5 budget: 3.0 ms median, no tick over 12 ms. The spike shows as 60-90 ms frames once per game second at speed 1 (`spikes`: `sim65`, `sim71`...). Machine was loaded (about 20 % CPU: Blender, Python), so absolute numbers are high, but the ratio stands.
+- Request: build talks in `tick_second` (or when a talk window starts) and let `talks()`/`talks_near()` return the stored list, so a caller pays nothing.
+- In the 18-person `showcase_v4` `talks_near` round the followed person returned 0 talks for most of 60 s; the follow view needs visible conversations in rooms with 2+ people (maybe a higher chance near the followed person, or in canteens and rec rooms). RENDER uses `talks_near` fields `speaker`, `line`, `emote`, `started`, `line_index` (`LINE_TICKS` = 40 assumed; please expose it as a function if it changes).

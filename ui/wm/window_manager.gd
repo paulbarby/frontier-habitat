@@ -35,9 +35,9 @@ func _init() -> void:
 ## over them, and open again when it leaves. Each has `collapsed` and `_toggle()`.
 func foldable() -> Array:
 	var out: Array = []
-	for k in ["goals", "hazard", "traffic"]:
+	for k in ["goals", "alerts", "hazard", "traffic"]:
 		var p = hud.get(k) if hud != null else null
-		if p != null and is_instance_valid(p) and p.visible and "collapsed" in p and p.has_method("_toggle"):
+		if p != null and is_instance_valid(p) and p.visible and "collapsed" in p and (p.has_method("fold_set") or p.has_method("_toggle")):
 			out.append(p)
 	return out
 
@@ -75,14 +75,22 @@ func _process(_delta: float) -> void:
 		if hit and not _folded.has(p):
 			if not p.collapsed:
 				_folded[p] = own
-				p._toggle()
+				_fold(p, true)
 		elif not hit and _folded.has(p):
 			_folded.erase(p)
 			if p.collapsed:
-				p._toggle()
+				_fold(p, false)
 	for p in _folded.keys():
 		if not is_instance_valid(p):
 			_folded.erase(p)
+
+## Folds or opens a HUD panel: fold_set(on) when it has one (the alerts panel, whose _toggle(key)
+## opens a card's consequences), else _toggle().
+func _fold(p, on: bool) -> void:
+	if p.has_method("fold_set"):
+		p.fold_set(on)
+	elif p.collapsed != on:
+		p._toggle()
 
 ## Names of the HUD panels folded now under a window (tests).
 func folded_names() -> Array:
@@ -195,6 +203,8 @@ func snap(id: String) -> void:
 			ys.append_array([orr.position.y, orr.end.y])
 	# The goals, hazard and traffic panels are snap targets too (their unfolded edges).
 	for p in foldable():
+		if p == hud.get("alerts"):
+			continue   # the alerts panel folds but is no snap target: its height changes with every alert
 		var pr: Rect2 = _folded.get(p, (p as Control).get_global_rect())
 		xs.append(pr.end.x + 8.0)
 		ys.append(pr.end.y + 8.0)

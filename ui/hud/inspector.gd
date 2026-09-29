@@ -163,6 +163,14 @@ func refresh() -> void:
 			_kind = ""
 			_id = -1
 		return
+	# The over-the-shoulder view (V5 §3) has its own card; the inspector stays hidden until it ends.
+	if hud.follow_hud != null and hud.follow_hud.visible:
+		visible = false
+		return
+	# The personnel file of this person takes the inspector's place (critic round 30, fix 2).
+	if kind == "agent" and hud.person != null and hud.person.visible and int(hud.person.agent_id) == id:
+		visible = false
+		return
 	visible = true
 	_fit_height()
 	Kit.fit(self)

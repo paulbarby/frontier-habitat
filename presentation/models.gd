@@ -104,6 +104,8 @@ static func _scene(path: String) -> PackedScene:
 ## 2.8 m in a save made before the 3.4 m airlock) draws its sized model scaled to the record,
 ## so the drawn walls match the simulation footprint, doors and corridor ends.
 static func building(def_id: String, size: int, radius: float, m_radius: float, kind: String, category: String, s_radius: float = -1.0) -> Dictionary:
+	if def_id == "super_dome" and has_model("dome_shell"):
+		return dome_template()
 	var r: Dictionary = resolve(def_id, size)
 	if r["path"] != "":
 		var key: String = r["path"]
@@ -143,6 +145,115 @@ static func _with_scale(tpl: Dictionary, s: float) -> Dictionary:
 	out["key"] = "%s@%.3f" % [tpl["key"], s]
 	return out
 
+# ---------------------------------------------------------------- V5 super dome (ART-B §5-7)
+## The seven dome files share one origin (the dome centre). They are joined into one template; the
+## floor, dome and crane nodes are split one level down so every venue, floor part, stage part and
+## lift cab is its own group ("D_<top>" or "D_<top>__<child>"): world_view shows and hides them for
+## the build stages and the floor cutaway and moves the lift cabs and the crane jib.
+const DOME_FILES := ["dome_shell", "dome_floor1", "dome_floor2", "dome_floor3", "dome_floor4", "dome_floor5", "dome_atrium", "dome_scaffold"]
+## merged = true: the finished dome (V5 §0 draw-call budget): the fit-out of each floor is ONE group
+## (D_Floor_<n>__Fit), the atrium/promenade/gates one group (D_Fit), no site, crane or scaffold.
+## The floor cutaway still works per floor; the lift cabs stay separate.
+static func dome_template(merged: bool = false) -> Dictionary:
+	var key := "dome:composite" + (":merged" if merged else "")
+	if _templates.has(key):
+		return _templates[key]
+	var root := Node3D.new()
+	for f in DOME_FILES:
+		var ps: PackedScene = _scene("res://assets/models/%s.glb" % f)
+		if ps == null:
+			continue
+		var inst: Node = ps.instantiate()
+		for top in inst.get_children():
+			if not (top is Node3D):
+				continue
+			var tn: String = String(top.name)
+			if tn.begins_with("Anchor_"):
+				var an := Node3D.new()
+				an.name = tn
+				an.transform = (top as Node3D).transform
+				root.add_child(an)
+				continue
+			if merged and (tn == "Site" or tn == "Crane" or tn.begins_with("Scaffold_")):
+				continue
+			var split: bool = tn.begins_with("Floor_") or tn == "Dome" or tn == "Crane"
+			if not split:
+				var cp: Node3D = (top as Node3D).duplicate()
+				cp.name = "D_" + tn
+				if merged and tn in ["Atrium", "Promenade", "Gates", "Foundation", "Lifts"]:
+					cp.name = "D_Fit" + str(root.get_child_count())
+				root.add_child(cp)
+				continue
+			# The top's own meshes (if any) stay as D_<top>; each child becomes D_<top>__<child>.
+			var own: Node3D = (top as Node3D).duplicate()
+			for c in own.get_children():
+				if c is Node3D:
+					own.remove_child(c)
+					c.free()
+			own.name = "D_" + tn
+			root.add_child(own)
+			for c in top.get_children():
+				if not (c is Node3D):
+					continue
+				var cn: String = String(c.name)
+				var cc: Node3D = (c as Node3D).duplicate()
+				if cn.begins_with("Anchor_"):
+					cc.name = cn
+				elif merged and tn.begins_with("Floor_"):
+					cc.name = "D_%s__Fit%d" % [tn, root.get_child_count()]
+				elif merged and tn == "Dome" and not cn.begins_with("Dome_Glass"):
+					cc.name = "D_Dome__Solid%d" % root.get_child_count()
+				else:
+					cc.name = "D_%s__%s" % [tn, cn]
+				cc.transform = (top as Node3D).transform * (c as Node3D).transform
+				root.add_child(cc)
+		inst.free()
+	var jib = root.get_node_or_null("D_Crane__Crane_Jib")
+	var jib_xf: Transform3D = (jib as Node3D).transform if jib != null else Transform3D.IDENTITY
+	var tpl: Dictionary = _parse(root, key)
+	tpl["jib_pivot"] = jib_xf
+	root.free()
+	# Dome glass: fresnel sky reflection by day, a warm rim at night (world_view sets night / sun).
+	var gmat: ShaderMaterial = null
+	var amat: ShaderMaterial = null
+	for p in tpl["parts"]:
+		var mesh: Mesh = p["mesh"]
+		if not (mesh is ArrayMesh):
+			continue
+		for s in mesh.get_surface_count():
+			var m: Material = mesh.surface_get_material(s)
+			if m == null:
+				continue
+			var nm: String = m.resource_name
+			if nm == "Glass" and String(p["group"]).begins_with("D_Dome"):
+				if gmat == null:
+					gmat = ShaderMaterial.new()
+					gmat.shader = load("res://shaders/dome_glass.gdshader")
+					gmat.resource_name = "DomeGlass"
+					gmat.render_priority = -2
+				(mesh as ArrayMesh).surface_set_material(s, gmat)
+				p["shadow"] = false
+			elif String(p["group"]).begins_with("D_Floor") and m is BaseMaterial3D and not nm.begins_with("Sign") and nm != "LightStrip" and nm != "Screen" and nm != "ArcadeScreen":
+				# Venues, galleries and units under the ring roof: the interior fill light of the rooms
+				# (they were dark in the web build, the sun does not reach under the slabs).
+				(mesh as ArrayMesh).surface_set_material(s, interior_material(m))
+			elif nm == "ArcadeScreen":
+				if amat == null:
+					amat = ShaderMaterial.new()
+					amat.shader = load("res://shaders/prism_shift_screen.gdshader")
+					amat.resource_name = "ArcadeScreen"
+				(mesh as ArrayMesh).surface_set_material(s, amat)
+	tpl["dome_glass"] = gmat
+	tpl["arcade"] = amat
+	_templates[key] = tpl
+	return tpl
+
+## Floor of a group name: F<n>_... -> n (1..9), else 0.
+static func floor_of_group(g: String) -> int:
+	if g.length() > 3 and g[0] == "F" and g[1].is_valid_int() and g[2] == "_":
+		return int(g[1])
+	return 0
+
 static func _template_from_file(path: String) -> Dictionary:
 	if _templates.has(path):
 		return _templates[path]
@@ -157,9 +268,26 @@ static func _template_from_file(path: String) -> Dictionary:
 		return _templates[path]
 	_templates[path] = _parse(root as Node3D, path)
 	root.free()
+	for g in (_templates[path].get("groups", {}) as Dictionary):
+		if floor_of_group(String(g)) > 0:
+			_templates[path]["has_floors"] = true
+			break
 	return _templates[path]
 
 static func group_of(n: String) -> String:
+	# V5 super dome (dome_template): every node keeps its own group, prefixed D_.
+	# V5 multi-storey rooms (ART-HAB F<n>_ prefix): the group of floor n is F<n>_ + the plain group.
+	if n.length() > 3 and n[0] == "F" and n[1].is_valid_int() and n[2] == "_":
+		return n.substr(0, 3) + group_of(n.substr(3))
+	if n.begins_with("D_"):
+		var fi: int = n.find("__Fit")
+		if fi > 0:
+			return n.substr(0, fi) + "__Fit"
+		if n.begins_with("D_Fit"):
+			return "D_Fit"
+		if n.begins_with("D_Dome__Solid"):
+			return "D_Dome__Solid"
+		return n
 	if n.begins_with("Wall_") and n.length() >= 7 and n.substr(5, 2).is_valid_int():
 		return "Walls"
 	# V3.1 (ART-HAB D2, R3): the upper wall skin hides like the wall; decals per segment by
@@ -1014,6 +1142,10 @@ static func lib_material(src: Material, has_col: bool) -> Material:
 	d.resource_name = sm.resource_name
 	d.vertex_color_use_as_albedo = has_col
 	d.vertex_color_is_srgb = false
+	# V5 follow view: near-camera dither (Models.near_fade), off (0 .. 0.001 m) until the follow view.
+	d.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_DITHER
+	d.distance_fade_min_distance = _near_fade.x
+	d.distance_fade_max_distance = _near_fade.y
 	var n: String = sm.resource_name
 	if n == "Glass":
 		if d.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED:
@@ -1025,6 +1157,24 @@ static func lib_material(src: Material, has_col: bool) -> Material:
 		_night.append({"mat": d, "base": maxf(0.2, d.emission_energy_multiplier), "name": n})
 	_lib[key] = d
 	return d
+
+## V5 follow view (critic round 29): everything nearer the camera than max dithers out (min..max m).
+## (0, 0.001) = off. The shader variant exists from the start (no compile when the view starts).
+static var _near_fade := Vector2(0.0, 0.001)
+static func near_fade(mn: float, mx: float) -> void:
+	var v := Vector2(mn, maxf(mx, mn + 0.001))
+	if v == _near_fade:
+		return
+	_near_fade = v
+	for k in _lib:
+		var m = _lib[k]
+		if m is BaseMaterial3D:
+			(m as BaseMaterial3D).distance_fade_min_distance = v.x
+			(m as BaseMaterial3D).distance_fade_max_distance = v.y
+	for coll in [_int_mats.values(), _wall_mats.values(), _tint_mats.values()]:
+		for m in coll:
+			if m is ShaderMaterial:
+				(m as ShaderMaterial).set_shader_parameter("near_fade", v)
 
 ## Windows and lamps: dim by day, bright at night. `f` 0 = full day, 1 = night.
 static func set_night(f: float) -> void:

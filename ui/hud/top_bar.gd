@@ -64,7 +64,7 @@ func _ready() -> void:
 		["pop", "people", P.CATEGORY["housing"], 78], ["o2", "o2", P.CATEGORY["life_support"], 94],
 		["water", "water", Color("3AA0D8"), 84], ["power", "power", P.GOLD, 98],
 		["energy", "energy", P.CATEGORY["utilities"], 88], ["food", "food", P.CATEGORY["food"], 96],
-		["morale", "morale", P.CATEGORY["comfort"], 80], ["research", "research", P.VIOLET, 92],
+		["morale", "morale", P.CATEGORY["comfort"], 80], ["unrest", "people", Color("FF8A3D"), 84], ["research", "research", P.VIOLET, 92],
 		["credits", "credits", P.GOLD, 78],
 	]
 	for s in specs:
@@ -96,7 +96,7 @@ func _fit() -> void:
 ## Critic round 21 (bottom and top rows never overlap): when the bar would reach the time panel
 ## (large interface scale, small window), the least urgent numbers hide first; they come back when
 ## there is room. Their values stay on the dashboard.
-const DROP_ORDER := ["credits", "research", "morale", "energy"]
+const DROP_ORDER := ["credits", "research", "morale", "energy", "unrest"]
 var _dropped := 0
 func _process(_d: float) -> void:
 	if hud == null or hud.time_panel == null:
@@ -117,6 +117,9 @@ func _on_kpi(key: String) -> void:
 		"o2", "water", "power", "energy": page = "life"
 		"food": page = "food"
 		"pop", "morale": page = "population"
+		"unrest":
+			hud.open_screen("crew")
+			return
 		"research": page = "research"
 		"credits":
 			# Credits: the trade screen when a ship to trade with is landed.
@@ -262,6 +265,19 @@ func refresh() -> void:
 	km.tip_lines = [["Average", "%d of 100" % int(m)], ["Mood", _morale_word(m)]]
 	km.tip_note = "Low morale slows work. Food variety, taste, recreation and comfort raise it."
 	km.series_key = "morale"
+	# Unrest (version 5, V5 §6.4): per base with the top bar's base filter; the causes in the tooltip.
+	var ku = _k["unrest"]
+	var u: Dictionary = hud.v5.unrest(hud.base_filter) if hud.v5 != null else {}
+	ku.visible = not u.is_empty()
+	if ku.visible:
+		var uv: float = float(u["value"])
+		var stage: String = String(u.get("stage", "calm"))
+		ku.set_value("%d" % int(uv), stage, 2 if uv >= 55.0 else (1 if uv >= 25.0 else 0), 99, false)
+		ku.tip_title = "Unrest"
+		ku.tip_lines = [["Unrest", "%d of 100" % int(uv)], ["Stage", stage.capitalize()]]
+		for c in u.get("causes", []):
+			ku.tip_lines.append(["  " + String(c["text"]), "+%d" % int(float(c["delta"]))])
+		ku.tip_note = "Grumbling from 25, slowdown from 40, protest from 55, strike from 70, riot from 85. Better food, rest, housing and fair treatment lower it. Click: the crew."
 	# Research
 	var r: Dictionary = k["research"]
 	var kr = _k["research"]

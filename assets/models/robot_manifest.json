@@ -1,0 +1,96 @@
+{
+ "version": "5.0",
+ "file": "robot_dancer.glb",
+ "mesh": "Robot_dancer",
+ "triangles": 14884,
+ "skeleton": {
+  "bones": [
+   "root",
+   "hips",
+   "spine",
+   "chest",
+   "neck",
+   "head",
+   "shoulder.L",
+   "upper_arm.L",
+   "forearm.L",
+   "hand.L",
+   "prop.L",
+   "thigh.L",
+   "shin.L",
+   "foot.L",
+   "toe.L",
+   "shoulder.R",
+   "upper_arm.R",
+   "forearm.R",
+   "hand.R",
+   "prop.R",
+   "thigh.R",
+   "shin.R",
+   "foot.R",
+   "toe.R"
+  ],
+  "note": "The v3 skeleton at 1.80 m (the astronaut rig: same names, parents and bind).  The v3 astronaut clips also play on it."
+ },
+ "materials": {
+  "RobotChrome": "plain chrome (metallic 1, roughness 0.13): needs the room's reflection probe / sky",
+  "RobotJoint": "plain graphite",
+  "RobotTrim": "plain",
+  "RobotVisor": "plain, black glass",
+  "RobotLight": "emissive (strength 3.0): tint per dancer / pulse with the club light show if you like (a mode-1 style tint on the emission)"
+ },
+ "vertex_color": "COLOR_0.r = baked ambient occlusion (as v3)",
+ "clips": {
+  "robot_idle": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "loop": true,
+   "kind": "loop",
+   "note": "servo idle between shows"
+  },
+  "robot_dance_a": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "loop": true,
+   "kind": "loop",
+   "bpm": 120,
+   "note": "popping: hits on the beat, holds"
+  },
+  "robot_dance_b": {
+   "frames": 120,
+   "duration_s": 4.0,
+   "loop": true,
+   "kind": "loop",
+   "bpm": 120,
+   "note": "liquid arm wave hand to hand, body roll"
+  },
+  "robot_dance_c": {
+   "frames": 240,
+   "duration_s": 8.0,
+   "loop": true,
+   "kind": "loop",
+   "bpm": 120,
+   "note": "pirouette, arm circle and squat, isolations, bow; stays within 0.3 m of the origin"
+  },
+  "robot_pole": {
+   "frames": 240,
+   "duration_s": 8.0,
+   "loop": true,
+   "kind": "loop",
+   "note": "acrobatic: grip, a tucked spin once round the pole, land, lean, release, V pose; needs the pole at pole_local"
+  }
+ },
+ "chain": "Every robot clip is a loop that starts and ends on the same pose (the stand pose at the origin, facing +X).  Play any clip after any other at a loop end with no blend (cut); within one clip the seam is exact.",
+ "anchor": {
+  "name": "Anchor_Dancer_* (ART-B, the Club)",
+  "origin": "the stand point on the podium top, 0.35 m in front of the pole, facing the room (+X)",
+  "pole_local": [
+   -0.35,
+   0.0
+  ],
+  "pole_radius_m": 0.045,
+  "podium_top_local_z": 0.0,
+  "note": "robot_pole needs the pole at pole_local (the anchor extras 'pole' is the pole axis in world x, y; it is 0.35 m behind the stand point).  The other clips stay within 0.6 m of the origin (the podium radius is 0.80 m)."
+ },
+ "style": "A machine: chrome, visible ball joints, a light-bar face, no human anatomy.  Performance and acrobatic dance moves; nothing sexual."
+}

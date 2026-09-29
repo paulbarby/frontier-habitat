@@ -1,0 +1,54 @@
+{
+  "round": 28,
+  "date": "2026-09-29",
+  "scope": "super_dome full build, Blender-only, provisional. Evidence art/dome/overview_250_day.png, overview_250_night.png, pilot_atrium_night.png, pilot_gallery_L1.png, L2_cutaway.png, L2_club.png, L2_arcade_room.png, L2_arcade_prism.png, L3_hotel_rooms.png, L4_cutaway_units.png, build_stages.png. Rubric v5_rubrics.md 3.9, including the section 0 tone check.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "super_dome": {"consistency": 0.80, "appeal": 0.72, "style": 0.76, "score": 0.76, "pass": true, "provisional": true, "was": 0.74,
+      "tone_check_club": {
+        "result": "PASS for the set.",
+        "detail": "The Club (L2_club.png, L2_cutaway.png) is a dance floor with coloured light tiles, three podiums with chrome poles, a mirror ball, a lit bar and lounge booths. No human dancers, no sexual imagery, no signage beyond the venue name. The robot dancers (ART-NPC) are not in the evidence, so their tone is not checked yet. No bouncer, door or 'adults only' sign is visible; V5 section 8 asks for a bouncer at the door and section 0 says children never enter the club.",
+        "required": "Show a bouncer post and an 'ADULTS ONLY' sign at the club door; rate the robot dancers when ART-NPC delivers them."
+      },
+      "round_26_fixes_checked": {
+        "1 break the L3-L5 grid, neon round the ring": "landed partly: windows now vary in width and colour (amber, cream, cool blue, dark) and several neon bands (magenta, cyan, green, amber) run round L1-L2 (art/critic/r28_night_crop.png). No balconies or planters on the upper floors; the upper floors still read as an even grid from the side.",
+        "2 night glass": "landed: the shell now has a warm glow and the lit edge ring; it reads as glass at night (overview_250_night.png).",
+        "3 day glass reflection": "partly: the glass reads light and clear, with a faint sky tint; still no visible fresnel reflection at the grazing edge.",
+        "4 signs": "NOT landed, and the cause is not the column: the sign font has no letter B and a broken P. 'BARBER' renders as 'AR ER', 'BOOKS' as 'OOKS', 'PRISM SHIFT' as 'FRISM SHIFT' (r28_signs_crop.png, L2_arcade_prism.png, pilot_atrium_night.png).",
+        "5 venue goods": "partly: the L2 cutaway shows shelves with coloured goods (toys, books, shoes, gifts); the L1 cafe goods are still plain boxes.",
+        "6 pool": "landed: lane lines and a dark lane edge.",
+        "7 in-game evidence": "not yet (RENDER)."
+      },
+      "venue_quality": {
+        "atrium_night": "the best image: escalators, neon shop signs on two levels, pool with lanes, palms, warm lamps. It reads as a mall and a resort.",
+        "L2_cutaway": "good from above: food court, gym, toys, books, shoes, game zone with arcade cabinets and VR rings, the Club with dance floor and booths.",
+        "club_close": "mood lighting works; the geometry is bare: flat grey walls, a box bar, a blank wall of cyan panels, large empty floor. Needs booths in view, a DJ booth, a stage backdrop and ceiling truss lights.",
+        "arcade_close": "cabinets read as arcade machines with neon; the Prism Shift cabinet has a flat pink screen (RENDER's shader is still to come) and the marquee glyphs are broken. The room is a large empty purple floor with one pool table and one bench.",
+        "L3_hotel_rooms": "weakest part: huge rooms with a bed, a desk and a chair on bare floor; blank walls. Estimate 0.60 on its own.",
+        "L4_units": "good from above: a full ring of furnished homes with beds, sofas and tables in varied colours.",
+        "build_stages": "good: foundation with a site crane, level structure with scaffold, the dome frame, finished. Each stage reads."
+      },
+      "gap_to_paul_aim": {
+        "aim": "a glittering city under glass",
+        "night_overview_250m": "Nearly there: a warm glass shell over a ring of multicoloured windows and neon bands, a bright atrium. The last step: sparkle and variety on the upper floors (balconies, a few very bright windows, moving light such as the lifts) and the city lights reflected in the glass. Estimate 0.76 (0.80 = glitters).",
+        "day_overview_250m": "Reads as a domed city with colourful neon at street level. Estimate 0.72.",
+        "inside": "The atrium and the L1/L2 galleries now feel like a mall and a resort. Estimate 0.76. Hotel rooms, the club and the arcade at close range pull it down."
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Sign font: add the missing letter B and fix P (BARBER, BOOKS, PRISM SHIFT are wrong). Render every sign string in one test sheet so no glyph is missing."},
+        {"owner": "ART-B", "fix": "Hotel rooms (L3): fill each room: headboard bed with bedside lamps, a lounge chair and side table, wardrobe, TV on the wall, a rug, a wall picture, a window with curtains, a bathroom pod door. Target: no empty floor patch wider than 2 m."},
+        {"owner": "ART-B", "fix": "Club close-up: a DJ booth with decks on a raised stage, a light truss with spotlights over the floor, lounge booths along the wall in view, a textured back wall (acoustic panels or a LED wall pattern), and a bouncer post with an ADULTS ONLY sign at the door."},
+        {"owner": "ART-B", "fix": "Arcade: 10-14 cabinets in rows (not 6 along one wall), a prize counter, a neon floor pattern, seating; give the Prism Shift cabinet a distinct shape (sit-down racer cabinet with a seat) so it stands out before RENDER's screen shader."},
+        {"owner": "ART-B", "fix": "Upper floors outside: balconies or planters on every third unit and 3-5 very bright windows per side, so the ring sparkles at 250 m."},
+        {"owner": "ART-B", "fix": "L1 cafe: cakes, cups and a menu board instead of plain boxes (round-26 fix 5, still open)."},
+        {"owner": "ART-B / RENDER", "fix": "Day glass: a fresnel reflection at the grazing edge (round-26 fix 3, still partly open)."},
+        {"owner": "RENDER", "fix": "In-game: the 250 m night shot with glow, draw calls, fps in the follow view inside the dome, and the arcade screen shader. The final score needs this."},
+        {"owner": "ART-NPC", "fix": "Deliver the robot dancers for the tone check (chrome, visible joints, light-bar face, performance style)."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.76 (was 0.74), provisional. Tone check PASS for the set; robot dancers not yet in evidence.",
+    "The broken sign font is a new finding: in round 26 I attributed BARBER to a column; the letter B is missing from the font.",
+    "My crops: art/critic/r28_signs_crop.png, r28_night_crop.png."
+  ]
+}

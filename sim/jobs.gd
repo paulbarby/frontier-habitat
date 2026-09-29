@@ -45,7 +45,8 @@ func tick_second() -> void:
 	_gen_operate()
 	_gen_tend()
 	_gen_demolish()
-	if int(sim.state["tick"]) % (10 * int(sim.bal["tick_hz"])) == 0:
+	# Every 10 s (the jobs run on their own tick of the second: sim.gd step()).
+	if (int(sim.state["tick"]) / int(sim.bal["tick_hz"])) % 10 == 0:
 		_clean_piles()
 
 func _index() -> void:

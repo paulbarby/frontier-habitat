@@ -1,0 +1,68 @@
+{
+  "_note": "Version 5 (docs/V5_DESIGN.md sections 1, 2, 5, 6): identity, looks, traits, skills, ranks and outfits of people. sim/people.gd reads this file. Everything a person has is chosen from the seed and the person's id (deterministic).",
+  "variants": {
+    "m1": {"sex": "m", "height": 1.80, "build": "athletic"},
+    "m2": {"sex": "m", "height": 1.92, "build": "broad"},
+    "m3": {"sex": "m", "height": 1.70, "build": "slim"},
+    "f1": {"sex": "f", "height": 1.68, "build": "athletic"},
+    "f2": {"sex": "f", "height": 1.75, "build": "slim"},
+    "f3": {"sex": "f", "height": 1.62, "build": "curvy"},
+    "c1": {"sex": "m", "height": 1.35, "build": "child", "child": true},
+    "c2": {"sex": "f", "height": 1.32, "build": "child", "child": true}
+  },
+  "tint": {
+    "_note": "0..1 parameters for RENDER's vertex-colour tint: skin from light to dark, hair from black through brown and red to blond and grey (grey only over 55).",
+    "skin": [0.0, 1.0],
+    "hair": [0.0, 0.85],
+    "hair_grey_age": 55
+  },
+  "age": {"adult": [21, 64], "child": [6, 12]},
+  "traits": ["ambitious", "lazy", "romantic", "jealous", "hot-headed", "calm", "loyal", "gossip", "shy", "charming", "honest", "greedy", "funny", "pious", "party-animal", "workaholic"],
+  "trait_conflicts": [["lazy", "workaholic"], ["hot-headed", "calm"], ["shy", "charming"], ["shy", "party-animal"], ["honest", "greedy"], ["loyal", "jealous"]],
+  "attraction": {
+    "_note": "Who a person can be attracted to (adults only): chance of each rule.",
+    "opposite": 0.82, "same": 0.10, "both": 0.08
+  },
+  "skills": ["engineering", "mining", "fabrication", "farming", "cooking", "medicine", "science", "piloting", "security", "leadership", "social"],
+  "skill_levels": {
+    "_note": "0..100 shown as levels 1..5; work speed by level (V5 section 5.2).",
+    "names": ["Novice", "Trained", "Skilled", "Expert", "Master"],
+    "from": [0, 20, 40, 60, 80],
+    "work_mult": [0.7, 0.85, 1.0, 1.2, 1.4]
+  },
+  "role_skills": {
+    "technician": ["engineering", "fabrication"],
+    "operator": ["mining", "fabrication"],
+    "grower": ["farming", "cooking"],
+    "medic": ["medicine", "science"],
+    "scientist": ["science", "medicine"],
+    "security": ["security", "social"],
+    "visitor": ["social", "piloting"]
+  },
+  "start_skill": {"_note": "A new colonist: role skills from..to, other skills 0..to_other; +per_day for each day worked (cap).", "role_from": 25, "role_to": 55, "other_to": 25, "per_day": 1.2, "cap": 90},
+  "departments": {
+    "industry": {"name": "Industry", "roles": ["operator"], "skill": "fabrication", "uniform": "uniform_engineering", "stripe": "amber"},
+    "science": {"name": "Science", "roles": ["scientist", "medic"], "skill": "science", "uniform": "uniform_science", "stripe": "blue"},
+    "food": {"name": "Food", "roles": ["grower"], "skill": "farming", "uniform": "uniform_food", "stripe": "green"},
+    "maintenance": {"name": "Maintenance", "roles": ["technician"], "skill": "engineering", "uniform": "uniform_engineering", "stripe": "amber"},
+    "security": {"name": "Security", "roles": ["security"], "skill": "security", "uniform": "uniform_security", "stripe": "red"}
+  },
+  "role_uniform": {"technician": "uniform_engineering", "operator": "uniform_engineering", "scientist": "uniform_science", "grower": "uniform_food", "medic": "uniform_medical", "security": "uniform_security"},
+  "ranks": {
+    "_note": "V5 section 5.1. bonus: work speed bonus to the department (commander: the whole base), from the leader's leadership skill (x skill/100).",
+    "commander": {"name": "Base Commander", "per_base": 1, "bonus": 0.10, "entitlement": "executive"},
+    "captain": {"name": "Captain", "per_department": 1, "bonus": 0.08, "entitlement": "executive"},
+    "first_hand": {"name": "First Hand", "per_department": 2, "bonus": 0.04, "entitlement": "family"},
+    "specialist": {"name": "Specialist", "skill_from": 60},
+    "crew": {"name": "Crew", "skill_from": 25},
+    "trainee": {"name": "Trainee", "skill_from": 0}
+  },
+  "outfits": ["uniform_engineering", "uniform_science", "uniform_food", "uniform_medical", "uniform_security", "uniform_command", "casual_a", "casual_b", "casual_c", "swimwear", "prison", "school", "suit"],
+  "housing_quality": {"none": 0, "dorm": 1, "family": 2, "executive": 3, "penthouse": 4},
+  "name_sex": {
+    "Asha": "f", "Tomas": "m", "Lin": "f", "Marek": "m", "Yara": "f", "Ike": "m", "Sol": "m", "Petra": "f", "Noor": "f", "Dmitri": "m",
+    "Esme": "f", "Rafael": "m", "Kaito": "m", "Ines": "f", "Bram": "m", "Freya": "f", "Jonas": "m", "Mila": "f", "Oren": "m", "Saskia": "f",
+    "Teo": "m", "Wren": "f", "Zofia": "f", "Calla": "f", "Emeka": "m", "Hana": "f", "Idris": "m", "Juno": "f", "Kofi": "m", "Lena": "f",
+    "Milo": "m", "Nadia": "f", "Otis": "m", "Pia": "f", "Quinn": "m", "Rosa": "f", "Stellan": "m", "Tala": "f", "Uma": "f", "Viktor": "m"
+  }
+}

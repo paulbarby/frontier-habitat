@@ -1,0 +1,33 @@
+{
+  "round": 27,
+  "date": "2026-09-29",
+  "scope": "v5.0 residences PILOT: residence tube L, Family and Executive (ART-HAB). Blender renders + game-camera identity shots, provisional. Evidence art/interiors/residence_tube_l{,_exterior,_night,_anchors}.png, residence_tube_executive_l{,_exterior,_night,_anchors}.png, v4_identity_v5res_110m.png, v4_identity_v5res_250m.png; ART-HAB log (v5). Apartment block not built. Rubric v5_rubrics.md 3.7.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "residences": {"consistency": 0.76, "appeal": 0.68, "style": 0.74, "score": 0.73, "pass": true, "provisional": true,
+      "room_identity": {
+        "110 m": "Pass: the half-cylinder vault with ribs, the fan window in the end wall and the house badge read as housing and clearly differ from the habitat dome (house badge, dome) and the lounge (heart, glass dome). Family and Executive differ by the roof terrace and the ribbon windows (v4_identity_v5res_110m.png).",
+        "250 m": "Pass by day: the tube silhouette reads as a different family from the dome at about 40 px (art/critic/r27_250_crop.png). Family vs Executive at 250 m: only the terrace hints at it. Night at 250 m not supplied."
+      },
+      "what_works": [
+        "Contract silhouette: a half-cylinder vault with ribs, end walls with glazing, porches at both ends, side decks; the house badge wrapped on the vault.",
+        "Interiors read as homes: a street from porch to porch, family units with a parents' room, a children's room with bunks and toys, kitchenette and family table; executive units with bedroom, en-suite bath (tub, shower, WC), office, lounge with sofa and media wall, dining table.",
+        "Cutaway rule: unit walls are 1.30 m, so the layout reads from above; the vault lifts off cleanly.",
+        "Anchors on free floor (anchors renders); counts match the log (family Bed 9, executive Bed 4).",
+        "Budget: family 30,946 and executive 27,296 triangles (budget 35,200); +1.11 MB."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "The tube sits in the middle of a round drum, so the interior is a rectangular block in a large round room with a ring of empty tile (about 40% of the floor) and benches along the drum wall. It reads as a building inside a hall, not as a tube home. Either fit the footprint to the tube (a stadium/rectangular pad with rounded ends; the drum only as a low plinth) or use the ring for gardens and private yards per unit (planters, a small patio with a table per unit, a play corner) so no empty tile band is wider than 2.5 m."},
+        {"owner": "ART-HAB", "fix": "Executive does not look premium enough: same grey tile, same furniture family, bare grey office rooms. Give executive units wood floors in every room, rugs, wall art and a bookcase, a larger bed with a headboard, pendant lamps, a plant in each room, and a warmer light temperature; the office needs a real desk with two screens and a chair of a different class."},
+        {"owner": "ART-HAB", "fix": "Night: rooms are dim and grey (residence_tube_l_night, executive night). Add warm lamp pools at every bed, table and sofa (Anchor_Lamp) and a soft light strip along the street, so homes glow at night; the street should read as a lit lane."},
+        {"owner": "ART-HAB", "fix": "Vault exterior: a plain 16-facet grey shell with pale yellow bands. Add seam lines between ribs, a darker base band, the porch canopy lamps visible from above, and for Executive a lit ridge skylight that reads at 250 m (the log says it exists; it does not read in the renders)."},
+        {"owner": "ART-HAB", "fix": "Family vs Executive at 250 m: make the terrace larger and lit (loungers, a pergola, planters), and give the Executive vault a different accent (warm wood or a second band colour) so the two read apart without the terrace."},
+        {"owner": "ART-HAB", "fix": "Children's rooms: the bunks read; add colour (a rug with a pattern, a toy box in a bright colour, a small desk) so a child's room reads as such from the cutaway camera."},
+        {"owner": "ART-HAB / RENDER", "fix": "Evidence for the final: 250 m by night, the game cutaway in a real colony, and the follow view inside one family unit and one executive unit (people at the table, in the bunks)."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.73, provisional. Identity passes at 110 m and 250 m by day; the main weakness is the empty drum ring around the tube and an executive variant that is larger but not richer.",
+    "My crops: art/critic/r27_exec_crop.png, r27_250_crop.png; grids r27_family.png, r27_exec.png."
+  ]
+}

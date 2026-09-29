@@ -321,3 +321,42 @@ Sheets:
 - **Not tested:** the chain in the game.
 - Please add to `npc_check.gd`: `step_up -> board -> ride_sit` and `alight -> step_down`, with the origin moved at each
   cut.
+
+
+## 2026-09-29 — v5.0 people, PILOT (V5_DESIGN §1): build against `people_manifest.json`
+
+The pilot is ready for CRITIC. Structure and names are final unless a later dated section says otherwise. The
+`astronaut_*` files are unchanged; your current code does not break.
+
+- **Files:** `assets/models/people_<variant>.glb`, one per variant. Pilot: `people_m1.glb` (1.80 m), `people_f1.glb`
+  (1.68 m). Index: `assets/models/people_manifest.json` (`variants`, `outfits`, `draw`, `clips`, `furniture`).
+- **Skeleton:** v3 (24 bones, same names, parents, bind directions) + `jaw` and `lids` under `head` = 26 bones. Each
+  variant's rig is the v3 rig scaled by height / 1.80, applied (no scale keys, the root never moves).
+- **Draw rule per person:** show `Head_<v>`, `Hair_<v>` and ONE `Outfit_<id>`; hide every other `Outfit_*`. The outfit
+  mesh includes the visible skin (forearms, hands), so no body mesh is under it.
+- **Materials / tint:**
+  - `SkinFace` (head): skin tone as v3 mode 2; the face texture multiplies (base colour factor is white).
+  - `Skin` (arms, hands in the outfit meshes): v3 mode 2.
+  - `Hair`: v3 mode 3; the strand texture multiplies.
+  - `SuitAccent`: department colour, v3 mode 1 (the uniform stripe).
+  - **`ClothTint`: NEW. Please add a mode for a per-person clothes colour** (f1 casual tee now; more outfits later).
+    Until then it keeps its own colour (navy).
+  - All others plain: Eye (textured), Mouth, LipInner, Teeth, Coverall, Cotton, Denim, Leather, Sole, Rubber, Metal,
+    Nail. `COLOR_0.r` = baked AO, as v3.
+- **Clips (30 in each file):** the 24 v3 clips (same names, frames, pose states) + `talk_gesture_a` (120 f loop),
+  `laugh` (stand → stand), `argue` (loop), `hug` (paired, stand → stand), `sit_bar_stool` (150 f loop, new pose state
+  **`stool`**), `dance_a` (120 f loop). Frames and pose states per clip: `people_manifest.json` → `clips`.
+  - Seats, beds, desks and consoles keep their world heights in every variant (the clips are retargeted per height).
+  - Bar stool: `furniture.bar_stool` (seat 0.76 m, footrest 0.30 m, counter at x 0.33 m, z 1.07 m).
+  - Vehicle clips are NOT in the people files: people wear the suit outside (astronaut files).
+- **Face:** `jaw` and `lids` are keyed in the clips (blinks everywhere, jaw in talk / talk_gesture_a / argue / laugh).
+  Do not override them.
+- **Pairs:** `assets/models/npc_pairs.json`. `hug`: both partners play `hug` at the same start time; partner B at
+  0.30 m along A's forward axis, facing A (180°). Distance is for two 1.80 m people; scale by the mean variant scale.
+- **Triangles LOD0 per person on screen:** m1 11,834 / 11,634; f1 15,798 / 15,332 (budget 24k). **No LOD1 yet**
+  (after the critic pilot).
+- **Size (imported, `.godot/imported`):** +2,906,768 bytes for the pilot (m1 1.38 MB, f1 1.53 MB, 1024 px face
+  textures embedded). `assets/models/people_tex/` has a `.gdignore` (no double import).
+- **Checked:** `npc_verify` 441 passed, 0 failed (includes per-variant people checks). `npc_check.gd` PASS (165 tests).
+  `godot.mjs check` 257 scripts, 0 failed.
+- **Not tested:** people in the game (no loader yet), tint modes on the new materials, the hug placement in the game.

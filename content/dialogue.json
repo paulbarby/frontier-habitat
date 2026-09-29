@@ -1,0 +1,28 @@
+{
+  "_note": "V5 section 4.1: conversation lines. topic -> list of templates. A template is a string or {text, trait} (a trait-flavoured variant: used first when the speaker has that trait). Slots: {other} {building} {resource} {captain} {days} {base} {place}. STARTER SET for the API stubs (milestone 1); the full set (>= 600 templates, >= 25 topics) comes with the conversation milestone.",
+  "emotes": {"hungry": "sweat", "tired": "zzz", "romance": "heart", "angry": "anger", "happy": "music", "money": "credit", "question": "question"},
+  "topics": {
+    "air": ["The air feels thin in here.", "Is the oxygen plant keeping up?", {"text": "I can taste the scrubbers. Not good.", "trait": "honest"}],
+    "food": ["Food stores are low again.", "When did you last eat a real meal?", {"text": "If I see one more potato I will scream.", "trait": "funny"}],
+    "power": ["The lights keep dimming.", "We need more batteries before night."],
+    "hungry": ["I am starving.", "My stomach is making noises.", {"text": "Somebody feed me, please.", "trait": "lazy"}],
+    "tired": ["I need sleep. Now.", "I could sleep on this floor.", {"text": "One more shift and I drop.", "trait": "workaholic"}],
+    "work": ["Busy day at the {building}.", "{captain} wants the job done by tonight.", {"text": "I could run this place better.", "trait": "ambitious"}],
+    "overwork": ["Three shifts in a row. Again.", "Nobody here gets a break."],
+    "housing": ["My bunk is too small.", "I want a real room, not a dorm."],
+    "rank": ["Did you hear who got promoted?", {"text": "That promotion should have been mine.", "trait": "jealous"}],
+    "gossip": ["Did you see {other} at the bar last night?", {"text": "Oh, I have news. Big news.", "trait": "gossip"}],
+    "romance": ["You look nice today, {other}.", {"text": "Want to see the park with me later?", "trait": "romantic"}, {"text": "Um. Hi. Nice weather. Inside.", "trait": "shy"}],
+    "leisure": ["The lounge was fun yesterday.", "Anyone up for a game later?", {"text": "Party tonight. Tell everyone.", "trait": "party-animal"}],
+    "hazard": ["Did you feel that quake?", "Stay inside when the storm comes."],
+    "death": ["I still think about {other}.", "We lost a good one."],
+    "ship": ["A ship is coming in.", "Maybe the traders have coffee."],
+    "research": ["The lab finished something new.", "Science keeps us alive out here."],
+    "small_talk": ["How is it going?", "Long day.", "Did you see the sunrise?", {"text": "Why did the rover cross the crater? Nobody knows.", "trait": "funny"}],
+    "complaint": ["This place is a mess.", {"text": "I am not taking orders from {captain} much longer.", "trait": "hot-headed"}],
+    "praise": ["Good job on the {building}.", "Thanks for the help today."],
+    "visitor": ["First time on this planet?", "Where do you come from?"],
+    "visitor_says": ["Nice colony you have here.", "Is there a bar in this place?", "The view from the dome is something."],
+    "child": ["Can we go to the park?", "School was boring today.", "I want to be a pilot."]
+  }
+}

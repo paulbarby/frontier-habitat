@@ -62,7 +62,7 @@ func _sync_pois(ex, delta: float) -> void:
 		var ring: MeshInstance3D = e["ring"]
 		ring.set_instance_shader_parameter("icolor", Color(1, 1, 1, 0.45) if visited else Color(1, 1, 1, 1))
 		var pil: MeshInstance3D = e["pillar"]
-		pil.visible = not visited
+		pil.visible = not visited and not view.in_follow()
 		if not visited:
 			var k: float = 0.6 + 0.4 * sin(float(view._time) * 1.7 + float(id))
 			(pil.material_override as StandardMaterial3D).albedo_color = Color(col.r, col.g, col.b, (0.22 + 0.25 * night) * k)
@@ -76,7 +76,7 @@ func _sync_pois(ex, delta: float) -> void:
 				(rr as Node).queue_free()
 				e.erase("reveal")
 		if e.has("lab"):
-			(e["lab"] as Label3D).visible = view.labels_visible and float(view.camera_distance) < 260.0
+			(e["lab"] as Label3D).visible = view.labels_visible and float(view.camera_distance) < 260.0 and not view.in_follow() and not view.rig().in_shoulder()
 	stats["pois"] = pois.size()
 
 func _make_poi(p: Dictionary) -> Dictionary:

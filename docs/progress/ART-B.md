@@ -230,3 +230,106 @@ estimate). Godot import done; `check` 187 scripts, 0 failed. Not tested in the r
 Tris: medium 8 406 (8 mats), hopper 6 446 (8 mats). Moved nodes: medium Light_Work*, hopper Thruster_Hover_* (RENDER
 item 4 updated). Size: the five .scn total 0.55 MB (pck ≈ 80.3 MB, estimate). `check` 189 scripts, 0 failed.
 Not tested in the running game.
+
+## 2026-09-29 — v5.0: super dome PILOT (V5 §8)
+
+- New scripts: `tools/blender/dome_common.py` (contract, sizes, materials, helpers, build + check), `dome_shell.py`,
+  `dome_floors.py`, `dome_atrium.py`, `dome_build.py` (all files + `assets/models/dome_manifest.json`),
+  `dome_render.py` (renders to `art/dome/`). 7 files `assets/models/dome_*.glb`, 76 k tris in total.
+- Shell: frequency-10 geodesic glass dome (r 48, h 38) with a white frame and a light at every node; plinth,
+  promenade with planters, trees, benches and lamps; 12 gate blocks. L1: 12 venues with glass fronts, fascia, lit
+  signs on plates, and interiors (shelves, tables, bar, beds, racks, screens), 4 passages, colonnade. L2–L5: generic
+  fit-out (lit shop fronts on L2; unit fronts with furniture on L3–L5), gallery rails, light strips; roof garden.
+  Atrium: plaza, pool with loungers, umbrellas, slide and lifeguard chair, fountain, park strip, event stage;
+  4 glass lifts with movable cabs.
+- Floors are separate top-level groups (`Floor_1..5`, `Floor_Roof`); anchors carry floor and height.
+- Size: imported `.scn` total 1.83 MB. Godot import done; `check` 249 scripts, 0 failed.
+- Requests: `ART-B-to-RENDER.md` item 5, `ART-B-to-SIM.md` (v5 section).
+- Not done yet (after the pilot): L2 venues (gaming lounge + Prism Shift cabinet, Club, gym, …), accommodation
+  split and interiors, ramps/stairs, construction scaffold stages, per-venue fit-out stage visuals.
+- Not tested: anything in the running game (draw calls, glass sorting, floor cutaway, lifts); night glare
+  (the Blender 5.2 compositor call failed; the night render has no bloom).
+
+## 2026-09-29 — v5.0: super dome, critic round 24 fixes 1–8
+
+1. Night facade: windows in 5 tones (3 warm, cream, cool) with 12–26 % dark; lit floor lines on the outer face
+   (magenta, cyan, white, amber); L1 venue names in neon on the L2 spandrel facing the promenade; 4 neon billboards.
+2. Frame: struts 60 % of the width (r 0.09), graphite; joint lights at about every second node, smaller, amber.
+3. Glass: tint #9CC9DC alpha 0.22; the renders add a fresnel reflection and a sky gradient (RENDER asked to match,
+   `ART-B-to-RENDER.md` item 6).
+4. Signs: hung under the L2 slab edge at r 19.9 (the slab edge no longer cuts them from above), double-sided,
+   shifted clear of the lifts. "CREDIT" reads correctly.
+5. Pool: cyan underwater lenses and `Light_Pool_*` anchors; warm atrium lamps with `Light_Lamp_*` anchors.
+6. Venues filled by type, goods in every window (produce crates, cake stands, bottles, screens, mannequins,
+   pharmacy boxes, gifts); grocery 5 shelf rows + a lit fridge wall; pharmacy shelves; barber basins and mirrors;
+   hotel rug, luggage and neon; wall shelves in clothing and the small shops.
+7. Colony benches (slats, graphite frame) everywhere; leaf-crown trees and deck palms; the pastel flower planks are
+   leaf beds with blossoms.
+8. Pool 1.6 m deep, tile grid on the floor, a dark tile band at the water line, water #1D78A8 alpha 0.58.
+Renders (Blender, with a bloom pass): `art/dome/overview_250_day.png`, `overview_250_night.png`,
+`pilot_overview_day/night.png`, `pilot_atrium_pool.png`, `pilot_atrium_night.png`, `pilot_gallery_L1.png`,
+`pilot_cutaway_L1.png`. Size: see the report. Not tested in the game.
+
+## 2026-09-29 — v5.0: super dome L2 venues, accommodation, build stages, critic round 26 fixes
+
+- **L2 (`dome_floor2.glb`, `tools/blender/dome_l2.py`):** 13 venues. GAME ZONE: 9 arcade cabinets, the PRISM SHIFT
+  cabinet (stencilled marquee, prism side art, screen node `ArcadeScreen_PrismShift` with material `ArcadeScreen` and
+  UV 0..1), 4 VR pods, a pool table, sofas, attendant counter. CLUB: closed front with neon trim, double door,
+  canopy, rope posts, bouncer point; LED dance floor, stage with LED wall and light rig, 3 podiums with chrome poles
+  (robot dancer anchors), DJ booth, 4 booths, bar with stools, disco ball; dark lining; outer windows blacked out.
+  GYM: 6 treadmills, 4 bikes, 2 weight benches, mats, mirror wall. Food court (3 stalls with menu boards, 6 tables),
+  beauty, shoes, books, toys, jewels, travel, flowers, tailor, and one TO LET unit.
+- **L3–L5 (`tools/blender/dome_units.py`):** 24 hotel rooms (L3), 24 family units (L4), 6 executive units + 12 hotel
+  rooms (L5): fronts with doors, plates, varied windows, planters or benches; interiors with beds, sofas, tables,
+  kitchenettes, bath pods, screens with content; anchors for doors, beds (ART-NPC rule, mirrored right side), seats,
+  desks.
+- **Construction (`tools/blender/dome_stages.py`, `dome_scaffold.glb`):** site (fence, cabins, stacks, flood masts),
+  scaffold per level with netting, a tower crane with a turning jib; dome frame and dome glass are separate stages.
+  Stage table in the manifest; picture `art/dome/build_stages.png`.
+- **Escalators:** 4 stacked escalators with glass sides and bridges to the galleries (`Lifts/Escalators`,
+  `Anchor_Escalator_<k>_<0|1>`).
+- **Round 26:** L3–L5 grid broken (3 window patterns, balconies with planters on every third unit, TV-blue and rose
+  rooms); a second neon band on L2 all round with the L2 names; glass: stronger fresnel by day and an emissive rim at
+  night in the preview, lit rings at the crown and the dome foot (RENDER asked to match, item 7); HOTEL / BARBER
+  signs clear; blade signs at every door; product boxes with labels, cups, cake cases, menu boards, screen content;
+  pool 1.0–2.0 m with a darker deep end, tile grid, lane ropes; seat anchors beside the tables.
+- Size: 253 k tris in 8 files; imported `.scn` 6.1 MB (allocation +30 MB). `check` 256 scripts, 0 failed.
+- Renders: `art/dome/overview_250_{day,night}.png`, `pilot_atrium_night.png`, `pilot_gallery_L1.png`,
+  `L2_cutaway.png`, `L2_club.png`, `L2_arcade_room.png`, `L2_arcade_prism.png`, `L3_hotel_rooms.png`,
+  `L4_cutaway_units.png`, `build_stages.png`.
+- Not tested: the game (draw calls, glass sorting, cutaway, lifts, jib, the ArcadeScreen shader). Requests: RENDER
+  item 7, ART-NPC item 4, SIM (v5 section 2).
+
+## 2026-09-29 — v5.0: super dome, critic round 28 fixes 1–7
+
+1. Font: the letter B was missing (BARBER, BOOKS, BAR). Added; `tools/blender/dome_signs_test.py` renders every sign
+   string: `art/dome/sign_test_sheet.png` (no missing glyphs).
+2. Hotel rooms (36): headboard bed with bedside tables and lamps, throw, rug, picture, TV on a cabinet, wardrobe,
+   desk + chair + desk lamp, lounge chair + side table + floor lamp by the window, curtains, bathroom with a door,
+   luggage rack, plant. Stand points for the bed (outer side normal, inner side mirrored), desk, chair.
+3. Club: raised DJ riser with steps, a light truss with 12 spot cans, acoustic back-wall panels with neon seams, two
+   booths facing the stage, 4 cocktail tables, back bar with lit bottles and pendants, bouncer lectern, ADULTS ONLY /
+   21+ sign by the door; dark wall lining.
+4. Arcade: 14 upright cabinets (a wall row + two back-to-back blocks), PRISM SHIFT as a sit-down racer (bucket seat,
+   wheel at the drive_sit grip height, big UV screen, prism panels, wide marquee, underglow), prize counter with
+   plush shelves and a PRIZES sign, neon floor, sofas and stools, dark wall lining.
+5. Upper floors: balconies 1.7 m deep with planters, table and lamp (every third unit); ~7 % very bright windows.
+6. Café: tiered cakes, croissants and cups in the windows, menu boards behind the glass, a chalkboard A-frame outside.
+7. Day glass: spec for RENDER in `ART-B-to-RENDER.md` item 8; preview fresnel 0.12 → 0.85.
+Size: 282 k tris, imported `.scn` 6.9 MB. `check` 257 scripts, 0 failed. Not tested in the game.
+
+## 2026-09-29 — v5 super dome, critic round 32 fixes (score 0.79)
+
+1. RESTAURANT sign (L1): `SIGN_SHIFT` 4 → 11°. Clear of the lift frame and the palm trunk in `pilot_atrium_pool.png`.
+2. Club door render `art/dome/L2_club_door.png`: bouncer, lectern, both rope lines, lit door frame (new), ADULTS ONLY /
+   21+ sign (larger, moved clear of the frame). Added the `+` glyph to `ship_common.GLYPHS` (it was missing: "21" only).
+3. Hotel rooms: striped and squared quilt, two pillows + cushions, patterned rug (border, field, medallion, stripes),
+   a middle lounge set (2 armchairs, coffee table, round rug, cups), `WindowAmber` lamp shades, 108 `Anchor_Lamp_*`
+   (role lamp). Renders: `L3_hotel_room_inside.png`, `L3_hotel_room_night.png`.
+4. Balconies: `WindowAmber` strips on the rail top and slab edge, `SignAmber` planter lights. Evidence:
+   `overview_250_night.png` and the crop `overview_250_night_balconies.png`.
+5. Day glass: FINAL spec in `docs/requests/ART-B-to-RENDER.md` §9, with a drop-in fragment. Corrects two errors of
+   mine in §6–§8 (the fresnel exponent and the rim colour conversion).
+Size: 256 k tris (dome, excluding the 53 k scaffold), imported `.scn` 7.74 MB (was 6.85). Merged template 119
+surfaces. `import` OK; `check` 258 scripts, 0 failed. Not tested: the game view of any of this; the §9 shader change
+(RENDER's file, not mine).

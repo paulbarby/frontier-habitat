@@ -47,6 +47,14 @@ func _process(_delta: float) -> void:
 	if rb != null and (rb as Control).visible:
 		top = maxf(top, (rb as Control).get_global_rect().end.y + 10.0)
 	_box.offset_top = top
+	var fh = hud.get("follow_hud")
+	var following: bool = fh != null and (fh as Control).visible
+	if following:
+		var vw: float = get_viewport_rect().size.x
+		_box.offset_right = -(vw - 360.0) * 0.5
+		_box.offset_top = 8.0
+	for i in _box.get_child_count():
+		(_box.get_child(i) as CanvasItem).visible = (not following) or i < 2
 
 func push(text: String, kind: String = "info", icon: String = "") -> void:
 	if text == "":

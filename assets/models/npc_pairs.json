@@ -1,0 +1,13 @@
+{
+ "note": "Paired clips: both partners play the clip with the same start time (sync_s); partner B stands at distance_m along partner A's forward axis and faces A (facing_deg 180).  Distances are for two 1.80 m people; scale by the mean of the two variant scales.",
+ "pairs": {
+  "hug": {
+   "clip_a": "hug",
+   "clip_b": "hug",
+   "distance_m": 0.3,
+   "facing_deg": 180.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.0
+  }
+ }
+}

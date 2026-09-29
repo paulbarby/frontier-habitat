@@ -30,6 +30,7 @@ def main():
     radii = []
     for f in files:
         tid, key = f.rsplit("_", 1)
+        tid = IR.base_tid(tid)          # 5.0: variant files (residence_tube_executive_l)
         s_ = K.SIZE_KEYS.index(key)
         radii.append(K.v4_radius(tid, s_, float(b[tid]["sizes"]["radius"][s_])))
     # a 2 x N/2 cluster with 6 m between walls (a corridor's length)

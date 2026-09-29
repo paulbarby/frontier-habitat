@@ -91,9 +91,11 @@ func _process(_delta: float) -> void:
 		_tight_gain = clampf(before - size.y, 20.0, 200.0)
 	elif over and _tight and _list.visible:
 		_list.visible = false        # last step: only the summary line ("1 warning · 2 notices")
+		_list_hidden_tight = true
 		Kit.fit(self)
 	elif _tight and free > _tight_gain + 16.0 and now - _tight_t > hold_s:
-		_list.visible = true
+		_list_hidden_tight = false
+		_list.visible = not collapsed
 		_set_tight(false)
 	visible = position.y + 40.0 < floor_y
 
@@ -106,6 +108,16 @@ func _room_for_one(now: float) -> float:
 	var mean: float = maxf(60.0, h / maxf(1.0, float(_cards.size())))
 	return maxf(mean, _cut_h) if now - _cut_t < hold_s * 5.0 else mean
 
+## Folded by the window manager while a window covers the panel (V5 critic round 25): only the
+## summary line shows ("2 critical · 1 warning"); it opens again when the window leaves.
+var collapsed := false
+func fold_set(on: bool) -> void:
+	collapsed = on
+	_list.visible = not on and not (_tight and _list_hidden_tight)
+	_more.visible = _more.visible and not on
+	Kit.fit(self)
+
+var _list_hidden_tight := false
 var _tight := false
 func _set_tight(on: bool) -> void:
 	_tight = on
@@ -175,7 +187,7 @@ func refresh() -> void:
 			_cards.append(card)
 	for k in mini(_cards.size(), shown.size()):
 		_update_card(_cards[k], shown[k])
-	_more.visible = inc.size() > shown.size() and not _tight
+	_more.visible = inc.size() > shown.size() and not _tight and not collapsed
 	_more.text = "%s not shown. The dashboard lists every one." % Kit.plural(inc.size() - shown.size(), "more alert")
 
 func _make_card(i: Dictionary) -> Dictionary:

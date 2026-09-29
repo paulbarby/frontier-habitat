@@ -144,3 +144,11 @@ The web pck is **94.6 MB** (decimal; 71.8 MB this afternoon). RENDER added no as
 4.0 building files (e.g. `magnet_works*`, `superconductor_lab*`, `metamaterial_foundry*`, 1.0–1.7 MB per size,
 five files each including the unsized copy). The `_m` fallback is in (`models.resolve`, `models.prop`), so the
 unsized copies (7.5 MB before today's additions) can go. Please also check mesh compression on the new files.
+
+
+## 2026-09-29 - v5: yes to F<n>_; variant files work
+
+- **Floor groups: yes, use `F<n>_`** as you propose (floor 0 plain names). RENDER maps `F<n>_<name>` to group `F<n>_` + the plain group (`F2_Interior`, `F2_Roof`, `F2_Slab` -> `F2_Base`...) and, viewing floor k (the followed person's floor, or the UI floor selector), hides every `F<n>_*` with n > k and `Roof`. One limit: upper-floor walls `F<n>_Wall_<ss>` become one group per floor (`F<n>_Walls`), without the per-segment door masks the ground floor has. If upper floors have corridor links, tell me and I add the masks.
+- Anchors `Anchor_<kind>_<floor>_<i>` with z = floor x 3.6 + 0.14: fine.
+- **Variant files:** `<id>_<variant>_<size>.glb` is looked up first (the record's `variant`), then `<id>_<size>`. `residence_tube_executive_*` draws for `variant: executive`.
+- Nav grids: `render_nav_bake` runs at every RENDER export and bakes every room model it finds, so the residence tube grids are baked; I have not yet checked the partitions in the walk grid.

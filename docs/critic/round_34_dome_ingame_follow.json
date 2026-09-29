@@ -1,0 +1,47 @@
+{
+  "round": 34,
+  "date": "2026-09-29",
+  "status": "complete (finished under Paul's pause; nothing new started)",
+  "scope": "super_dome first in-game round and follow_view re-check. Evidence art/critic_input/render/151_v5_super_dome.png, 152_v5_dome_build_stages.png, 153_v5_follow_view_r29_fixes.png; my own headless shots from build/web_render (19:36) with dome_v3.fhsave: 250 m night and day, 120 m night, follow inside the dome, 'perf' logged (art/critic/r34/*.png, r34_grid.png).",
+  "pass_mark": 0.65,
+  "subjects": {
+    "super_dome": {"consistency": 0.78, "appeal": 0.78, "style": 0.80, "score": 0.79, "pass": true, "final": false,
+      "why_not_final": "Performance evidence conflicts. RENDER measured 53-59 fps at 250 m night and 56.7 fps in the follow view inside the dome. My run on the same build (dome_v3.fhsave, dust storm, speed 1) reported fps 41.0 / 1,153 draws at 250 m night and 33.0 fps / 1,115 draws in the follow view inside the dome, process_ms_avg 32.7-38.5. The V5 section 0 budget is >= 45 fps. If RENDER confirms my numbers on a clean run, the rubric cap applies (consistency 0.60, subject 0.72) and it is a performance fix, not an art fix. Also: build/web_render/index.pck is 101.6 MB, over the 95 MB hard budget and over GitHub's 100 MB file limit (not the dome's share: the dome is +1.83 MB) - orchestrator blocker.",
+      "what_works": [
+        "It reads as a city under glass in game: at 120 m night the ring shows many lit windows in several colours, neon bands and the glass frame catching light; the atrium glows. By day the glass has a sky reflection (round-28 fix 7 landed in game).",
+        "Floor cutaway works: L5 / L2 / L1 with the floors above, roof and dome hidden; the atrium pool, fountain, park strip and galleries read from above.",
+        "Build stages read in game: foundation with crane, scaffolded levels, dome frame, glass, fit-out.",
+        "Venues: the Prism Shift cabinet runs RENDER's attract-loop shader (a neon hexagon tunnel) - the egg reads; the club floor tiles and poles light up; the bar has lit bottles.",
+        "Follow view inside the dome: a person by the pool with the RESTAURANT and CREDIT signs, loungers and the escalator behind - the resort mood holds at the follow camera."
+      ],
+      "fixes": [
+        {"owner": "RENDER", "fix": "Reconcile performance: run render_perf on dome_v3 and dome_v5 at 250 m night and in the follow view with the weather the saves carry; report fps and frames over 50 ms. Budget >= 45 fps."},
+        {"owner": "RENDER / UI", "fix": "POI labels (CAVE, METEORITE FIELD, RICH DEPOSIT) draw through the dome walls into the arcade and club views (known). Hide world labels inside an opened building or behind its walls."},
+        {"owner": "RENDER", "fix": "Prism Shift screen: the prism ship is not visible in the tunnel (known). Add the ship sprite so the egg reads as Paul's game."},
+        {"owner": "RENDER", "fix": "At 250 m in a dust storm the dome is dim and brown (my night250): the storm grade swallows the lit windows. Exempt emissive windows and neon from the storm fog so the dome still glitters in weather."},
+        {"owner": "ART-B", "fix": "Bar close-up: the bottles are five plain coloured cylinders on a box; add a back-bar shelf with 3 rows of bottle shapes and a mirror."},
+        {"owner": "ART-B", "fix": "RESTAURANT sign still clipped in the follow view ('RESTAURAN' with the T behind the lift frame): move the plate."},
+        {"owner": "ART-NPC", "fix": "Robot dancers and the club tone check still owed."}
+      ]},
+    "follow_view": {"consistency": 0.74, "appeal": 0.70, "style": 0.74, "score": 0.73, "pass": true, "provisional": true, "was": 0.67,
+      "round_29_fixes_checked": {
+        "camera spec": "landed: 1.9 m back, 0.55 m right, about 1.8 m above the feet, 10 deg down (153; my followinfo: cam 2.67 m from the body, 1.80 m up).",
+        "framing on the left third": "landed in 153; in my dome run the person stood near the centre of the frame.",
+        "collision": "partly: near-camera dither fades walls closer than 1.4 m; no pull-in (known).",
+        "inspector and toasts": "partly: the hazard panel and alerts still sit over the scene in 153.",
+        "bubbles 14/12 px, rim, tail": "landed (153).",
+        "last line kept 6 s": "landed.",
+        "frame spikes": "RENDER reports 0 spikes; my inside-dome run shows 33 fps (see super_dome)."
+      },
+      "fixes": [
+        {"owner": "RENDER", "fix": "Pull the camera in along the head-to-camera ray when blocked (dither alone lets a hull or wall fill the frame)."},
+        {"owner": "UI", "fix": "Fold the hazard and alerts panels to their headers while following."},
+        {"owner": "RENDER", "fix": "Keep the left-third framing when the person stands still (my run: centred)."}
+      ],
+      "depends_on_new_people": "close-up quality and outfits wait for the MPFB people."}
+  },
+  "notes": [
+    "super_dome 0.79 visual, not final: performance measurements conflict; pck 101.6 MB is a build blocker.",
+    "follow_view 0.73 (was 0.67), provisional."
+  ]
+}

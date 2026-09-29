@@ -85,7 +85,8 @@ func frame() -> void:
 			var cat: String = String(def.get("category", "logistics"))
 			Kit.set_icon(_icon, Icons.category(cat), 18, P.cat(cat))
 			_name.text = String(def.get("name", "")).to_upper()
-			_size.text = ("SIZE " + d.SIZE_NAMES[clampi(int(info.get("size", 1)), 0, 3)]) if d.has_sizes(String(info.get("def", ""))) else ""
+			var sw: String = d.size_word(String(info.get("def", "")), int(info.get("size", 1)))
+			_size.text = ("SIZE " + sw) if sw != "" else ""
 			_keys.text = "Left click places  ·  R turns  ·  Z / X size  ·  Shift keeps the tool  ·  Right click or Esc cancels"
 		"link":
 			var kind: String = String(info.get("def", "corridor"))

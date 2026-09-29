@@ -89,6 +89,21 @@ PARENT = {b[0]: b[1] for b in SKELETON}
 BIND_HEAD = {b[0]: Vector(b[2]) for b in SKELETON}
 BIND_TAIL = {b[0]: Vector(b[3]) for b in SKELETON}
 SIDES = ("L", "R")
+EXTRA_FK = []          # extra FK bones (people face bones); empty for the astronaut files
+
+
+def extend_skeleton(bones):
+    """Add FK bones [(name, parent, head, tail)] after the v3 bones (the people rig: jaw, lids).  Call once, before
+    build_rig / Solver; the astronaut builds never call it, so their skeleton stays the 24 v3 bones."""
+    for n, par, h, t in bones:
+        if n in PARENT:
+            continue
+        SKELETON.append((n, par, tuple(h), tuple(t)))
+        BONE_NAMES.append(n)
+        PARENT[n] = par
+        BIND_HEAD[n] = Vector(h)
+        BIND_TAIL[n] = Vector(t)
+        EXTRA_FK.append(n)
 
 # foot contact points in the bind pose (left side; mirror y for right).  The sole bottom is z = 0.
 HEEL_PIVOT = Vector((-0.100, 0.11, 0.0))
@@ -514,6 +529,8 @@ class Solver:
             tgt = cur.slerp(want, aim)
             Q["head"] = D["neck"].inverted() @ tgt
             D["head"] = tgt
+        for b in EXTRA_FK:
+            fk(b, qeuler(P.g(b + ".rx"), P.g(b + ".ry"), P.g(b + ".rz")))
         for s in SIDES:
             fk("shoulder." + s, qeuler(P.g("shoulder.%s.rx" % s), P.g("shoulder.%s.ry" % s), P.g("shoulder.%s.rz" % s)))
             self._arm(P, s, D, Q, pos, fk)

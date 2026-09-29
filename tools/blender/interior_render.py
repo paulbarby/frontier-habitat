@@ -43,6 +43,20 @@ BAND_END_HW = 1.77          # 3.1 round 10: the band ends 5 cm before the housin
 GROUND = (0.50, 0.29, 0.16)
 
 
+def base_tid(tid):
+    """5.0: a variant file (residence_tube_executive) belongs to its type (residence_tube)."""
+    bs = K.load_buildings()
+    if tid in bs:
+        return tid
+    for t_, b_ in bs.items():
+        if not isinstance(b_, dict):
+            continue
+        for var in (b_.get("variants") or {}):
+            if tid == "%s_%s" % (t_, var):
+                return t_
+    return tid
+
+
 def view_transform(sc):
     for vt in ("Filmic", "AgX", "Standard"):
         try:
@@ -566,7 +580,7 @@ def room_points(R, extra=(), top=1.4):
 
 def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, size=(1600, 1100), elevation=56.0,
               azimuth=-42.0, margin=1.04, open_doors=False, focus=None, samples=64, lamps=True, top_z=None,
-              hide_extra=(), marker_z=None):
+              hide_extra=(), marker_z=None, floor=None):
     setup(size[0], size[1], night=night, samples=samples)
     if marker_z is not None:
         bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.12, minor_radius=0.025, location=(0.0, 0.0, marker_z),
@@ -587,7 +601,7 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
     acc = None
     try:
         import build_assets as BA
-        tid = file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file
+        tid = base_tid(file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file)
         acc = BA.hex_to_linear(K.ACCENTS[K.load_buildings().get(tid, {}).get("category", "logistics")])
     except Exception:
         acc = None
@@ -614,6 +628,19 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         if nm.startswith("Upper_") and "Roof" in hide:
             o.hide_render = True
             o.hide_viewport = True
+    fh = 3.6
+    if floor is not None or cutaway:
+        # 5.0 multi-storey: viewing floor k hides every F<n>_* with n > k (and the roof); anchors of other floors
+        # are dropped from the lamp and figure passes
+        k_ = floor or 0
+        for o in objs:
+            nm_ = o.name.split(".")[0]
+            if K.floor_of(nm_) > k_ and cutaway:
+                o.hide_render = True
+                o.hide_viewport = True
+        if cutaway:
+            objs = [o for o in objs if o.type != "EMPTY" or
+                    (k_ * fh - 0.2 < o.matrix_world.translation.z < k_ * fh + 3.4)]
     if cutaway:
         # 3.1: every "...Top" object (door housings and leaves above the wall top) lifts with the roof
         for o in objs:
@@ -652,6 +679,8 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         pts = [Vector(p) for p in focus]
     else:
         pts = room_points(R, extra, top=1.4 if cutaway else 4.8)
+        if floor:
+            pts = [q + Vector((0.0, 0.0, floor * fh)) for q in pts]
         if not cutaway:
             pts += [o.matrix_world @ Vector(c) for o in objs if o.type == "MESH" and not o.hide_render
                     for c in o.bound_box]
@@ -679,7 +708,7 @@ def main():
     global SIZE
     if "--size" in argv:
         SIZE = tuple(int(v) for v in argv[argv.index("--size") + 1].split("x"))
-    tid = file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file
+    tid = base_tid(file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file)
     size = K.SIZE_KEYS.index(file.rsplit("_", 1)[-1]) if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else 1
     b = K.load_buildings().get(tid, {})
     if not b:
@@ -709,6 +738,12 @@ def main():
         return
     if "beauty" in only:
         shot_room(file, R, base + ".png", size=SIZE)
+    if "floors" in only:
+        # 5.0 multi-storey: the cutaway of every floor (the floors above hidden), day and with figures
+        for k in range(int(b.get("floors", 1))):
+            shot_room(file, R, base + "_floor%d.png" % k, size=SIZE, floor=k)
+            shot_room(file, R, base + "_floor%d_anchors.png" % k, size=SIZE, floor=k, figs=True, elevation=72.0,
+                      azimuth=-90.0)
     if "exterior" in only:
         # the building as the game shows it with the roof on (L2..L5 hidden), day light
         shot_room(file, R, base + "_exterior.png", cutaway=False, size=SIZE, elevation=40.0, azimuth=-38.0,

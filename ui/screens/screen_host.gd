@@ -27,6 +27,7 @@ const SCREENS := {
 	"shuttle": "res://ui/screens/shuttle_screen.gd",
 	"codex": "res://ui/screens/codex_screen.gd",
 	"vehicles": "res://ui/screens/vehicles_screen.gd",
+	"crew": "res://ui/screens/crew_screen.gd",
 }
 const ALIASES := {"colony": ["dashboard", "overview"], "nutrition": ["dashboard", "food"], "load": ["saveload", "load"],
 	"save": ["saveload", "save"], "tech": ["research", null], "keys": ["help", "keys"], "pause": ["menu", null],

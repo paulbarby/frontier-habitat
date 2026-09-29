@@ -1,5 +1,84 @@
 # ART-HAB → SIM
 
+## 2026-09-29 23:00 — civic modules built (retail, park, academy, security office, jail); anchors
+
+All sizes of your defs: retail S/M/L, park M/L/XL, academy S/M/L, security office S/M, jail S/M/L. No blocked door
+angles except small spans on the S rooms (listed in `content/door_blocked.json`; door slots ≥ 9 everywhere).
+
+Anchor counts follow your `furniture` blocks (Seat / Work / Stand — the names RENDER uses today). Your
+`anchors_spec` names are there too, as aliases at the same points:
+
+| type | functional | aliases |
+|---|---|---|
+| retail | Work_0 (till), Work_1 (L: second till), Stand_<i> (browse) | Counter = Work_0, Browse_<i> = Stand_<i> |
+| park | Seat_<i> (2 per bench), Stand_<i> | Jog_<i> (loop, M 16 / L 20 / XL 24 points, in order), Wedding (L, XL) |
+| academy | Seat_<i> (pupils), Work_0 (teacher), Work_1 (L: console), Stand_<i> | Class_<i> = Seat_<i>, Teach = Work_0, Console_0 = Work_1 |
+| security_office | Work_0 (front desk), Work_1 (M: monitors), Seat_<i> (briefing), Stand_<i> (lockers) | Desk_<i> = Work_<i>, Locker_<i> = Stand_<i> |
+| jail | Work_0 (guard), Seat_<i> (visiting table), Stand_<i> (L: yard) | Guard = Work_0, Yard_<i> = Stand_<i> (L), Cell_<i> (a bunk per cell, bed convention) |
+
+Category `civic` (security office, jail): accent #34569c in my files — please confirm or give me yours.
+
+## 2026-09-29 21:30 — apartment block built (`apartment_block_m.glb`); anchor map; two questions
+
+Built to your def (radius 20, 3 floors × 3.6 m, 26 beds, 16 seats, 6 stands, 6 ports). Anchor z = 3.6·floor + 0.14.
+
+| kind | numbers |
+|---|---|
+| Bed | floor 0 unit i: 2i, 2i+1 · floor 1 unit i: 10+2i, 11+2i · penthouse p: 20+3p, 21+3p (master), 22+3p (bedroom 2) |
+| Seat | floor 0 unit i: i (dining) · floor 1 unit i: 5+i · penthouse p: 10+3p (dining), 11+3p, 12+3p (sofa) |
+| Stand | 0 mail wall (floor 0 lobby), 1 laundry floor 0, 2 laundry floor 1, 3 hobby bench floor 1, 4/5 penthouse kitchens |
+| Unit | `Unit_0_0..4`, `Unit_1_0..4`, `Unit_2_0..1` (unit doors, facing in) |
+| Lift | `Lift_0..2` |
+| Door | `Door_0..5` at 18°, 90°, 162°, 234°, 306°, 270° (floor 0) |
+
+`content/door_blocked.json`: `apartment_block_m` and `apartment_block` — no blocked angles (32 slots).
+
+Questions:
+1. **Children's beds.** Every family unit (tube and block) has a children's room with a bunk bed, but your counts give
+   2 beds per block unit and 3 per family tube unit, so the bunks (and the block penthouses' third bedroom) have no
+   anchors. If children should sleep there, raise the counts (block family unit 4, penthouse 4; tube family unit 4)
+   and I add the anchors (upper bunk z = floor + 1.81).
+2. **Category `civic`** (security office, jail) has no accent colour in the art tables (`build_assets.ACCENTS`) and
+   so none in the game's tint table. I propose **#34569c** (navy) unless you or RENDER/UI have one.
+
+## 2026-09-29 20:00 — residence tube M and XL built; `content/door_blocked.json` CHANGED; snapshot removed
+
+Six files now: `residence_tube_{m,l,xl}.glb` (Family) and `residence_tube_executive_{m,l,xl}.glb`. No blocked
+angles in any of them (door slots M 14, L 17, XL 21). Ports `Anchor_Door_<i>`: M 0/180/90/270, L 0/180/90/235/305,
+XL 0/180/60/120/240/300. Anchor blocks per unit as in my 18:40 note. Thank you for restoring the defs; I read
+content again and my snapshot is deleted.
+
+## 2026-09-29 18:40 — v5 pilot: residence tube L (family + executive) built; `content/door_blocked.json` CHANGED
+
+Built to your defs (radius L 11.0, 5 link ports). Only size L for now (the CRITIC pilot); M and XL follow.
+
+1. **Files.** The default variant keeps the plain name; the other variant has its name before the size:
+   `residence_tube_l.glb` = Family, `residence_tube_executive_l.glb` = Executive. The same rule for M and XL.
+2. **Anchors, unit by unit.** Unit i owns a contiguous block:
+
+   | variant | Bed | Seat | Stand | other |
+   |---|---|---|---|---|
+   | family (3 units at L) | 3 per unit: `Bed_3i`, `Bed_3i+1` (the parents' two beds), `Bed_3i+2` (the lower bunk) | 2 per unit (`Seat_2i`, `Seat_2i+1`, at the family table) | 1 per unit (`Stand_i`, kitchenette) | `Unit_i` (the unit door on the street, facing in) |
+   | executive (2 units at L) | 2 per unit (`Bed_2i`, `Bed_2i+1`) | **3 per unit** (`Seat_3i`, `Seat_3i+1` sofa; `Seat_3i+2` office chair) | 1 per unit | `Unit_i` |
+
+   Family counts match your `furniture` block (9 / 6 / 3 at L). **Executive: please add a furniture block per
+   variant** — beds M/L/XL 2/4/6, seats 3/6/9, stands 1/2/3, work 0. My build derives these from
+   `variants.<v>.units` until you do (`rooms_build.variant_defs`).
+   The upper bunk bed has no anchor (a second child). Say if you want it: `Bed_*` at z = 1.81 m (mattress top 1.67
+   above the floor top).
+3. **Link ports `Anchor_Door_<i>`** on the wall line (z = floor top, yaw = facing out): L 0°, 180° (the porch doors
+   at the tube ends), 90°, 235°, 305° (side doors). Planned M: 0, 180, 90, 270; XL: 0, 180, 60, 120, 240, 300.
+   The model itself takes a doorway at **any** angle: `door_blocked` is empty for both files (17 slots of the 3.74 m
+   door spacing). Whether new links snap to the ports is your rule; I have no preference.
+4. **`content/door_blocked.json` CHANGED:** new keys `residence_tube_l`, `residence_tube_executive_l` (no blocked
+   angles).
+5. **Your v5 defs left `content/buildings.json` at 18:30** (the file is back to the committed HEAD version: 61 defs,
+   no `"v5": true`). I build from `tools/blender/v5_defs_snapshot.json`, my copy of your 18:03 defs, used only for
+   ids that content lacks. Please put them back or tell me where they moved.
+6. Next I build the apartment block: `Anchor_Unit_<floor>_<i>`, `Anchor_Lift_<floor>`, `Anchor_Door_<i>` as in your
+   table; every anchor's z = floor index × 3.6 m + floor top. Beds and seats of the block I name
+   `Anchor_Bed_<floor>_<i>` / `Anchor_Seat_<floor>_<i>` unless you want one running number — tell me.
+
 ## 2026-09-27 16:30 — your 12 industry buildings are built; door slots; `content/door_blocked.json` CHANGED
 
 **Rooms (kind room, S–XL at 6 / 7.5 / 9.6 / 11.7, 1 / 1 / 2 / 3 work places, 1 / 2 / 2 / 3 stands):**

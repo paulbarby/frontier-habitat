@@ -14,14 +14,16 @@ func _mark(name: String) -> void:
 	_t0 = now
 
 func _step(sim) -> void:
+	# The same order and phases as sim.gd step().
 	_t = {}
 	_t0 = Time.get_ticks_usec()
 	sim.state["tick"] = int(sim.state["tick"]) + 1
 	var tick: int = int(sim.state["tick"])
-	var second: bool = tick % int(sim.bal["tick_hz"]) == 0
+	var hz: int = int(sim.bal["tick_hz"])
+	var ph: int = tick % hz
 	sim.cmds.apply_pending(); _mark("cmds")
 	sim.util.env_tick(); _mark("env")
-	if second:
+	if ph == 0:
 		sim.hazards.tick_second(); _mark("hazards")
 		sim.traffic.tick_second(); _mark("traffic")
 	if bool(sim.state["topo_dirty"]):
@@ -30,13 +32,16 @@ func _step(sim) -> void:
 	sim.util.water_tick(); _mark("water")
 	sim.util.atmo_tick(); _mark("atmo")
 	sim.agents.needs_tick(); _mark("needs")
-	if second:
+	if ph == sim._phase_of(1, hz):
 		sim.build.tick_second(); _mark("build")
 		sim.upgrades.tick_second(); _mark("upgrades")
+	if ph == sim._phase_of(2, hz):
 		sim.vehicles.tick_second(); _mark("vehicles_s")
 		sim.reactors.tick_second(); _mark("reactors")
+	if ph == sim._phase_of(3, hz):
 		sim.explore.tick_second(); _mark("explore")
 		sim.ship.tick_second(); _mark("ship_s")
+	if ph == sim._phase_of(4, hz):
 		var J = sim.jobs
 		J._expire(); _mark("j_expire")
 		J._index(); _mark("j_index")
@@ -57,10 +62,10 @@ func _step(sim) -> void:
 		J._gen_operate(); _mark("j_operate")
 		J._gen_tend(); _mark("j_tend")
 		J._gen_demolish(); _mark("j_demol")
-		if int(sim.state["tick"]) % (10 * int(sim.bal["tick_hz"])) == 0:
+		if (tick / hz) % 10 == 0:
 			J._clean_piles()
 		_mark("j_piles")
-	var n: int = int(sim.bal["tick_hz"])
+	var n: int = hz
 	for aid in sim.state["agents"]:
 		var ag: Dictionary = sim.state["agents"][aid]
 		if ag["state"] == "alive" and (tick + int(aid)) % n == 0:
@@ -75,12 +80,16 @@ func _step(sim) -> void:
 	sim.agents.act_tick(); _mark("act")
 	sim.vehicles.tick(); _mark("vehicles")
 	sim.ship.tick(); _mark("ship")
-	if second:
+	if ph == sim._phase_of(5, hz):
 		sim.prod.crops_second(); sim.prod.auto_second(); sim.prod.spoil_second(); sim.prod.wear_second(); _mark("prod")
+	if ph == sim._phase_of(6, hz):
 		sim.agents.morale_second(); _mark("morale")
-		sim.research.tick_second(); _mark("research")
+	if ph == sim._phase_of(7, hz):
+		sim.research.tick_second(); sim.goals.tick_second(); sim.awards.tick_second(); _mark("research_goals")
+	if ph == sim._phase_of(8, hz):
 		sim.alerts.tick_second(); _mark("alerts")
-		sim.metrics.tick_second(); sim.goals.tick_second(); sim.awards.tick_second(); _mark("metrics")
+	if ph == 0:
+		sim.metrics.tick_second(); _mark("metrics")
 
 func _init() -> void:
 	var a: Array = OS.get_cmdline_user_args()
@@ -90,19 +99,31 @@ func _init() -> void:
 	var sim = Sim.new()
 	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
 	var worst := 0.0
+	var sums := {}
+	var nsec := 0
 	for i in int(secs * 10.0):
-		var w0: int = sim.nav.wins.size()
+		var w0: int = sim.nav.wins.size() if "wins" in sim.nav else -1
 		_step(sim)
 		var total := 0.0
 		for k in _t:
 			total += float(_t[k])
 		worst = maxf(worst, total)
+		if true:
+			nsec += 1
+			for k in _t:
+				sums[k] = float(sums.get(k, 0.0)) + float(_t[k])
 		if total > lim:
 			var parts: Array = []
 			for k in _t:
 				if float(_t[k]) > 1.5:
 					parts.append("%s %.1f" % [k, float(_t[k])])
-			print("tick %d: %.1f ms | %s | windows %d->%d" % [int(sim.state["tick"]), total, ", ".join(parts), w0, sim.nav.wins.size()])
+			print("tick %d: %.1f ms | %s | windows %d->%d" % [int(sim.state["tick"]), total, ", ".join(parts), w0, sim.nav.wins.size() if "wins" in sim.nav else -1])
+	var ks: Array = sums.keys()
+	ks.sort_custom(func(x, y): return float(sums[x]) > float(sums[y]))
+	var parts: Array = []
+	for k in ks.slice(0, 14):
+		parts.append("%s %.2f" % [k, float(sums[k]) / maxf(1, nsec)])
+	print("mean per tick (ms): " + ", ".join(parts))
 	print("worst %.1f ms" % worst)
 	sim.dispose()
 	quit(0)

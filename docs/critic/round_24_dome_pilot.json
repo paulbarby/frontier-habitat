@@ -1,0 +1,40 @@
+{
+  "round": 24,
+  "date": "2026-09-29",
+  "scope": "v5.0 super_dome PILOT, provisional, Blender-only evidence: art/dome/pilot_overview_day.png, pilot_overview_night.png (no bloom: compositor failed), pilot_atrium_pool.png, pilot_gallery_L1.png, pilot_cutaway_L1.png; assets/models/dome_manifest.json; art/dome/dome_report.json; docs/progress/ART-B.md (v5). Pilot scope: shell + L1 gallery with 12 venues + atrium pool; L2-L5 generic fit-out. Rubric: docs/critic/v5_rubrics.md section 3.9.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "super_dome": {"consistency": 0.74, "appeal": 0.62, "style": 0.68, "score": 0.68, "pass": true, "provisional": true,
+      "what_works": [
+        "Contract geometry reads: geodesic glass dome over a 5-storey ring, open atrium, 12 gates, promenade ring with planters, 4 glass lifts (manifest: r 48, h 38, ring 20-34 m).",
+        "L1 plan is clear from above: 12 venues with distinct interiors (grocery shelves, cafe and restaurant tables, bar counter, clinic beds, hotel lobby), glass fronts and signs (pilot_cutaway_L1.png).",
+        "The atrium composition is the strongest image: pool with loungers, umbrellas and slide, fountain plaza with benches, park strip, event stage with coloured lights, concentric paving (pilot_atrium_pool.png).",
+        "The gallery view at person height has depth: colonnade, ceiling down-lights, glass balustrades on the upper galleries, a glass lift (pilot_gallery_L1.png).",
+        "Budget: 76 k triangles in 7 files, 1.83 MB imported (ART-B allowance +4 MB)."
+      ],
+      "gap_to_paul_aim": {
+        "aim": "a glittering city under glass",
+        "night_overview": "Not yet. The ring's outer face is a dark navy wall with a regular grid of identical flat beige windows: it reads as an office block inside a cage. No neon, no signs and no pool glow are visible from outside; the only warm light is the atrium hole. The glass itself is dark grey with white node dots. Bloom is missing (known), but bloom alone will not fix it: the light sources are uniform and dim.",
+        "day_overview": "The dense white frame dominates and reads as a white cage over the building; the glass has no reflection or sky tint, so the dome looks like wireframe, not glass.",
+        "inside": "The atrium starts to feel like a resort. The gallery feels like an empty mall: shop interiors are mostly bare floor, no goods in windows, one or two people.",
+        "estimate": "Night overview about 0.60 against the aim (0.80 = glitters). Inside about 0.70."
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Night facade: vary the window emission per unit (3-4 warm tones #FFD9A0 / #FFE9C4 / #FFC98A / cool #CFE4FF, 20-30% of windows dark, some with a curtain colour), add horizontal light strips on each gallery slab edge (LightStrip) and signs or neon bands on the L1-L2 outer face so the ring reads as a city, not an office block. Target: from 250 m at night the ring shows at least 4 distinct light colours."},
+        {"owner": "ART-B", "fix": "Frame: thin the dome struts to about 60% of their current width and make them graphite or brushed metal (not white); node lights warm white, smaller, and only at every second node. The day view must read as glass first, frame second."},
+        {"owner": "ART-B / RENDER", "fix": "Glass: give the dome glass a sky reflection (fresnel, 25-40% at grazing angles, warm by day, deep blue by night) and a faint tint, so the dome reads as a glass shell from 250 m. Draw it once, sorted after the ring (RENDER: check glass sorting against the ring in game)."},
+        {"owner": "ART-B", "fix": "Signs: the glyphs are broken ('CREDIT' renders as 'CREDTT'; 'RESTAURANT' is cut behind the lift; 'HOTEL' shows as 'HO'; 'CAFE' as 'AFE' behind a column). Fix the letter I glyph, keep every sign inside its fascia plate, and keep the plates clear of columns and lift shafts from the atrium view."},
+        {"owner": "ART-B", "fix": "Pool glow at night: an emissive underwater light in the pool (cyan #3EE0FF, soft) and warm lamp pools on the plaza, so the atrium reads from outside at night as the dome's bright heart."},
+        {"owner": "ART-B", "fix": "Venues read empty inside: fill each L1 venue by type (grocery: full shelf rows and a produce stand; clothing racks and mannequins; pharmacy shelves; barber chairs and mirrors; hotel lobby desk, sofas and a luggage cart; credit office counters). Put goods in the shop windows so the gallery view shows colour through the glass."},
+        {"owner": "ART-B", "fix": "Pastel plank benches and lumpy low-poly trees read as toys next to the clean architecture. Use the colony bench (graphite frame + wood slats) and the v4 greenhouse tree family; keep the colourful accents to signs and umbrellas."},
+        {"owner": "ART-B", "fix": "Pool: add a water surface with depth (darker toward the centre, a light edge line, lane or tile pattern) instead of flat light blue."},
+        {"owner": "ART-B", "fix": "Evidence for the next round: the 250 m overview day and night (the rubric distance; the pilot shots are at about 110 m), and one render with bloom (or an emission-only pass) so the night aim can be judged."},
+        {"owner": "RENDER", "fix": "Supply the in-game shot of the dome at 250 m by night with the game's glow, and the draw-call count, as soon as the pilot is integrated."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.68, provisional. Consistency is good; the appeal gap is at night and in the empty venues.",
+    "People in the renders are the v3 indoor colonists in uniform (placeholders); they were not judged.",
+    "My crops: art/critic/r24_signs.png, r24_night_ring.png."
+  ]
+}

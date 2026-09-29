@@ -1224,8 +1224,12 @@ func sync(delta: float) -> bool:
 				or (cam3 != null and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + Vector3(0, 1.0, 0)) and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + (cam3.global_position - (rec["pos"] as Vector3)).normalized() * 2.0))
 		rec["far"] = far
 		var step: float = delta
-		if far:
-			var k: int = 3
+		# V5 (the 8-10 ms fx_npc cost at 66 people, 2026-09-29): from 70 m camera distance every body
+		# is updated every 2nd frame (a 0.14 m step at run speed, not visible from there); far and
+		# off-screen bodies every 3rd as before.
+		var mid: bool = not far and cam_d > 70.0
+		if far or mid:
+			var k: int = 3 if far else 2
 			if (int(id) + _frame) % k != 0:
 				(lists[variant] as Array).append([rec, lib])
 				continue

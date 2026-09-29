@@ -101,7 +101,7 @@ func setup(d, id: String, size: int) -> void:
 	_reason.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_reason.visible = false
 	v.add_child(_reason)
-	if d.has_sizes(id):
+	if d.has_sizes(id) and String(d.bdef(id).get("size_label", "")) == "":
 		for s in 4:
 			var n: int = s
 			var c: Button = Kit.button(d.SIZE_NAMES[s], func(): _chip(n), "Size %s\nPlace it in this size. Bigger sizes cost more and do more. Keys Z and X." % d.SIZE_NAMES[s], "ChipButton")
@@ -111,7 +111,12 @@ func setup(d, id: String, size: int) -> void:
 			chips.add_child(c)
 			_chips.append(c)
 	else:
-		var one: Label = Kit.label("ONE SIZE", "SmallLabel", 10, P.TEXT_3)
+		# Version 5 giants have a size label of their own (XXL apartment block, XXXXL super dome).
+		var lbl: String = String(d.bdef(id).get("size_label", ""))
+		var one: Label = Kit.label(lbl if lbl != "" else "ONE SIZE", "SmallLabel", 12 if lbl != "" else 10, P.GOLD if lbl != "" else P.TEXT_3)
+		if lbl != "":
+			one.tooltip_text = "Size %s\nOne giant size only: radius %s m%s." % [lbl, Kit.fmt(float(d.bdef(id).get("radius", 0.0))), (", %d floors" % int(d.bdef(id).get("floors", 1))) if int(d.bdef(id).get("floors", 1)) > 1 else ""]
+			one.mouse_filter = Control.MOUSE_FILTER_PASS
 		one.add_theme_font_override("font", Fonts.get_font("head"))
 		chips.add_child(one)
 	mouse_entered.connect(func():
@@ -170,7 +175,8 @@ func refresh_state(totals: Dictionary) -> void:
 		_reason.visible = locked
 		_stat.visible = not locked
 		if _chip_row != null:
-			_chip_row.visible = not locked
+			# A giant's size label (XXL, XXXXL) stays on a locked card; the size chips do not.
+			_chip_row.visible = not locked or (_chips.is_empty() and String(data.bdef(def_id).get("size_label", "")) != "")
 	disabled = false
 	modulate = Color(1, 1, 1, 0.55) if locked else Color.WHITE
 	for s in _chips.size():

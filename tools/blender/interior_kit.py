@@ -674,6 +674,8 @@ def check_anchors(rm):
     for a in rm.anchors:
         if a[0].startswith(("Anchor_Bed_", "Anchor_Seat_", "Anchor_Work_", "Anchor_Stand_", "Anchor_Aisle_")):
             x, y, z = a[1]
+            if z > WALL_TOP and not getattr(rm, "floor_shim", False):
+                continue                     # 5.0: an upper floor (checked against its own floor plan)
             if hypot(x, y) > rm.Ri - 0.25:
                 flags.append("%s too close to the wall" % a[0])
             if plan is not None and a[0].startswith(("Anchor_Stand_", "Anchor_Aisle_")) and plan.dist(x, y) < 0.18:
@@ -791,6 +793,8 @@ def check_standpoints(rm, free=STAND_FREE):
         name = a[0]
         if not name.startswith(("Anchor_Bed_", "Anchor_Seat_", "Anchor_Work_")):
             continue
+        if a[1][2] > WALL_TOP and not getattr(rm, "floor_shim", False):
+            continue                         # 5.0: an upper floor
         x, y = a[1][0], a[1][1]
         yaw = a[2] if len(a) > 2 else 0.0
         dx, dy = cos(radians(yaw)), sin(radians(yaw))

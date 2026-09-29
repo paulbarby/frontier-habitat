@@ -42,6 +42,114 @@ var _photo_angle := 0.0
 var _shake := 0.0
 var _t := 0.0
 
+# ---------------------------------------------------------------- V5 §3 follow view (over the shoulder)
+## shoulder_fn() -> [Vector3 body ground point, float body yaw (model +X forward), float eye height]
+## or null (the person is gone: the view ends). collide_fn(pivot, eye) -> the eye pulled in so it
+## does not pass a wall (world_view). While shoulder_fn is valid the rig is in the follow view.
+var shoulder_fn: Callable
+var collide_fn: Callable
+var sh_side := 1.0            # 1 = right shoulder, -1 = left (Q/E swap)
+var sh_dist := 1.9            # m behind; wheel 1.2..4
+var sh_orbit := 0.0           # rad, drag orbit about the person, clamp +-70 deg
+var sh_pitch := 0.0           # rad, extra pitch from the drag
+var _sh_heading := 0.0
+var _sh_eye := Vector3.ZERO
+var _sh_look := Vector3.ZERO
+var _sh_new := true
+var _sh_drag := false
+const SH_SIDE := 0.55
+const SH_UP := 0.15
+const SH_ORBIT_MAX := 1.2217  # 70 deg
+
+func shoulder_start(fn: Callable) -> void:
+	shoulder_fn = fn
+	_sh_new = true
+	sh_orbit = 0.0
+	sh_pitch = 0.0
+	_photo = false
+	_intro = -1.0
+	camera.near = 0.08
+
+func shoulder_stop() -> void:
+	shoulder_fn = Callable()
+	camera.near = 0.35
+	_sh_drag = false
+
+func in_shoulder() -> bool:
+	return shoulder_fn.is_valid()
+
+func swap_shoulder() -> void:
+	sh_side = -sh_side
+
+func _shoulder_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mb: InputEventMouseButton = event
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
+			sh_dist = maxf(1.2, sh_dist * 0.88)
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
+			sh_dist = minf(4.0, sh_dist * 1.13)
+		elif mb.button_index == MOUSE_BUTTON_MIDDLE or mb.button_index == MOUSE_BUTTON_RIGHT:
+			_sh_drag = mb.pressed
+	elif event is InputEventMouseMotion and _sh_drag:
+		var mm: InputEventMouseMotion = event
+		sh_orbit = clampf(sh_orbit - mm.relative.x * 0.006, -SH_ORBIT_MAX, SH_ORBIT_MAX)
+		sh_pitch = clampf(sh_pitch + mm.relative.y * 0.004, -0.35, 0.6)
+	elif event is InputEventKey and event.pressed and not event.echo and not _typing():
+		var k: int = (event as InputEventKey).physical_keycode
+		if k == KEY_Q or k == KEY_E:
+			swap_shoulder()
+
+## One frame of the follow view. Returns false when the person is gone.
+func _shoulder_process(delta: float) -> bool:
+	var s = shoulder_fn.call()
+	if s == null:
+		shoulder_stop()
+		return false
+	var pos: Vector3 = s[0]
+	var body_yaw: float = float(s[1])
+	var eye_h: float = float(s[2]) if (s as Array).size() > 2 else 1.65
+	# V5 §3 (critic round 29): exactly eye height + 0.15 m; a seated or lying person gets a little more
+	# height so the camera still sees over them.
+	var lift: float = maxf(0.0, 1.65 - eye_h) * 0.5
+	if _sh_new:
+		_sh_heading = body_yaw
+	else:
+		# Spring on the heading: small turns (idle sway, a step aside) barely move the camera,
+		# a real turn is followed in about 0.6 s. No jitter on turns.
+		var dh: float = angle_difference(_sh_heading, body_yaw)
+		var rate: float = 2.2 if absf(dh) > 0.35 else 0.9
+		_sh_heading = _sh_heading + dh * (1.0 - exp(-delta * rate))
+	var hd: float = _sh_heading + sh_orbit
+	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
+	var right := Vector3(sin(hd), 0.0, cos(hd))
+	var pivot: Vector3 = pos + Vector3(0.0, eye_h + SH_UP, 0.0)
+	var want: Vector3 = pivot - fwd * sh_dist * cos(sh_pitch) + right * SH_SIDE * sh_side + Vector3(0.0, lift + sh_dist * sin(sh_pitch), 0.0)
+	# Pull in so the camera never passes a wall (from the pivot, a sphere of 0.3 m).
+	var shoulder_pt: Vector3 = pivot + right * SH_SIDE * sh_side
+	if collide_fn.is_valid():
+		want = collide_fn.call(shoulder_pt, want)
+	if height_fn.is_valid():
+		want.y = maxf(want.y, float(height_fn.call(want.x, want.z)) + 0.35)
+	# The camera looks along the person's heading, 10 deg down (plus the drag pitch): the person stands on
+	# the left third (right shoulder) with room to look ahead (critic round 29).
+	var dn: float = deg_to_rad(10.0) + sh_pitch + lift * 0.25
+	var look: Vector3 = want + (fwd * cos(dn) - Vector3(0.0, sin(dn), 0.0)) * 10.0
+	if _sh_new:
+		_sh_eye = want
+		_sh_look = look
+		_sh_new = false
+	else:
+		# Spring follow: position and aim ease in; pulled-in positions (walls) are taken at once.
+		var k: float = 1.0 - exp(-delta * 9.0)
+		_sh_eye = _sh_eye.lerp(want, k)
+		if pivot.distance_to(want) < pivot.distance_to(_sh_eye) - 0.05:
+			_sh_eye = want
+		_sh_look = _sh_look.lerp(look, 1.0 - exp(-delta * 7.0))
+	focus = pos
+	distance = _sh_eye.distance_to(pos)
+	camera.global_position = _sh_eye
+	camera.look_at(_sh_look, Vector3.UP)
+	return true
 func _ready() -> void:
 	camera = Camera3D.new()
 	camera.fov = 50.0
@@ -90,6 +198,9 @@ func _input(event: InputEvent) -> void:
 		_intro = -1.0
 
 func _unhandled_input(event: InputEvent) -> void:
+	if in_shoulder():
+		_shoulder_input(event)
+		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
@@ -112,6 +223,10 @@ func _pitch_cap(d: float) -> float:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if in_shoulder() and _shoulder_process(delta):
+		_yaw_seen = yaw
+		_pitch_seen = pitch
+		return
 	# Direct writes from other scripts become the new targets.
 	if absf(yaw - _yaw_seen) > 0.0001:
 		_yaw_t = yaw

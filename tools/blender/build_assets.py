@@ -54,6 +54,7 @@ ACCENTS = {
     "comfort": "#f08fc0",
     "science": "#7c8cff",       # 2.0
     "space": "#c9d3e0",         # 2.0
+    "civic": "#34569c",         # 5.0 (security office, jail): proposed to RENDER / UI (docs/requests, v5)
 }
 
 # name -> colour (sRGB hex) and Principled BSDF values.  Names are a contract with the game.

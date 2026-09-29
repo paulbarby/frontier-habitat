@@ -738,3 +738,38 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
   and expire after 120 s; test `v4_exteriors_in_reach` (29 checks; fails without each fix).
 - The airlock check before a mark is cheap and cached per structure and walk revision (the full reach_info in that
   path made a 20-40 ms tick). Full suite 112 of 112 (935 s); worst tick 18.9-22.2 ms in 900 s of showcase_v4.
+
+# ============================== VERSION 5 ==============================
+
+## 2026-09-29, V5 milestone 1: the API and stubs
+- `sim/people.gd` (identity, variant, tint, traits, attraction, skills and levels, rank proposal, outfit rule,
+  marks, home, satisfaction with reasons, attitude with reasons, list), `sim/social.gd` (talks, talks_near,
+  recent_lines, relationships, Rag issues from the day's log, unrest), `sim/floors.gd` (floors, heights, agent
+  floor, units, lift time). Content: `people.json`, `dialogue.json` (starter lines), `tabloid.json` (starter
+  headlines); 8 new structures with size labels, radii, floors, door slots and anchor specs; 5 civic techs.
+- Nothing new is saved yet (derived values); digests of v4 games are unchanged.
+- Tests `v5_people_api`, `v5_social_api`, `v5_buildings_and_floors`.
+- Not done yet: the real systems (stored identity, relationships, romance, ranks by appointment, academy,
+  discipline, unrest effects, fights, jail, housing, children, social log, dome venues, tourism, eggs), schema 6,
+  the >= 600 lines and >= 200 headlines, showcase_v5.
+- The stubs cost nothing per tick: nothing v5 runs in `sim.step()` yet (a first version recorded talk lines each
+  second and made the perf tests 3-6 ms slower; removed: `recent_lines` now derives the lines of the current talk,
+  and rank proposals are cached for a game minute). Full suite 115 of 115 (1,044 s).
+- CRITIC round 25 (Rag pilot) and UI's Rag asks are noted for the social-log milestone: people stories first;
+  building stories by type and never for cables or corridors; lead bodies of 3-6 varied sentences; the poll from
+  each day's real satisfaction with `commander` and `change`; 3-5 gossip, Couple Watch and Feud Watch entries with
+  a `note`; more ads; `serious` as {text, severity}.
+
+## 2026-09-29, PAUSED (Paul): v5 query cost and the once-a-second spike
+- Done: talks are sessions (a room is searched once a second on its own tick; topic and lines made once);
+  satisfaction/attitude cached per person per game second with a per-tick refresh budget for scans; ranks
+  recomputed only on a roster change; relationships per minute; Rag issues made once, one log pass, only 7
+  stories written; unrest a rolling mean; `people.list()` rows cached; caches reset and prewarmed on load.
+  `sim.step()` spreads the once-a-second systems over the ticks of the second (phase = tick % 10).
+- Numbers (native, showcase_v3_late, loaded machine): 110 people talks_near max 0.90 ms (was 3.8);
+  worst phase median 3.4 ms (was 9.0 ms every 10th tick); first rag_issues(30) 495 ms -> ~12 ms.
+- Half-done: a jobs split over two ticks broke u02 and was reverted (jobs whole on phase 4). The second full-suite
+  run was stopped by the pause. The first run: 112/115; u02 failed (the split, now reverted: u02 passes),
+  long_campaign failed once (passes alone, hull day 25.8), long_v3_perf 2.49 ms (limit 2.0, machine loaded).
+- Next: full suite + UI sim-state tests (test_ships_ui, test_v5_people); fix the pad regression of the personal
+  suit_range rule; SIM-to-UI note; then UI's unrest range and cmd_* items; then the V5 section 13 order.

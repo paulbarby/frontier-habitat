@@ -1582,8 +1582,12 @@ def ao_sets_for(objs):
     only where a doorway replaces it)."""
     walls = tuple(sorted(n for n in objs if n.startswith("Wall_")))
     talls = tuple(sorted(n for n in objs if n.startswith("Tall_")))
+    floors = {}
+    for n in objs:
+        if floor_of(n):
+            floors.setdefault(floor_of(n), []).append(n)
     decals = tuple(sorted(n for n in objs if n.startswith(("Decal_", "Upper_")) or n == "NameSign"))
-    if not walls and not talls:
+    if not walls and not talls and not floors:
         return AO_SETS
     out = {}
     for k, v in AO_SETS.items():
@@ -1595,6 +1599,9 @@ def ao_sets_for(objs):
     for d in decals:
         src = d.rsplit("_", 1)[-1] if d.startswith("Decal_") else "Roof"
         out[d] = tuple(AO_SETS.get(src, AO_SETS["Base"])) + walls + (d,)
+    for k, names in floors.items():         # a floor shades itself (its slab, walls, furniture), nothing else
+        for n in names:
+            out[n] = tuple(sorted(names))
     return out
 
 
@@ -1869,8 +1876,18 @@ _GAME_GROUPS = ["Interior", "Roof", "Rotor", "Lights", "Scaffold", "EngineGlow",
                 "PressureLight_2", "Beacon", "Status", "NameSign", "PorchTop", "Base"]   # PorchTop: requested of RENDER
 
 
+def floor_of(n):
+    """5.0 multi-storey buildings: objects of floor k >= 1 are named F<k>_<name> (docs/requests/ART-HAB-to-RENDER.md,
+    v5).  Returns k, or 0 for every other object."""
+    if len(n) > 3 and n[0] == "F" and n[1].isdigit() and n[2] == "_":
+        return int(n[1])
+    return 0
+
+
 def game_group(n):
     """The group the game merges an object into (presentation/models.gd group_of)."""
+    if floor_of(n):
+        return n                               # 5.0: each floor object is its own group (RENDER hides by floor)
     if n.startswith("Wall_") and n[5:7].isdigit():
         return "Walls"
     if n.startswith("Upper_") and n[6:8].isdigit():
@@ -2064,6 +2081,11 @@ def build_file(rm, path, also=(), ao=None):
                 shell_fold(o, mset)                 # and uses fewer of them (RENDER 2026-09-25)
             elif nm.startswith("Upper_"):
                 shell_fold(o, mset)
+            elif floor_of(nm):
+                if nm.endswith("_Interior"):
+                    rm.surfaces[nm] = palette_merge(o, mset)
+                else:
+                    rm.surfaces[nm] = palette_merge(o, mset, max_surfaces=MAX_SHELL_SURFACES)
             elif game_group(nm) in ("Base", "Roof", "L2", "L3", "L4", "L5"):
                 # the outer shell (RENDER 2026-09-25): plain materials join the palette, <= 6 per game group
                 rm.surfaces[nm] = palette_merge(o, mset, max_surfaces=MAX_SHELL_SURFACES,

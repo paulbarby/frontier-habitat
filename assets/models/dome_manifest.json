@@ -1,0 +1,503 @@
+{
+ "version": "5.0-pilot",
+ "origin": "dome centre on the ground; Blender Z up = Godot Y up; all files share it (no offsets)",
+ "radius": 48.0,
+ "height": 38.0,
+ "size_label": "XXXXL",
+ "ring": {
+  "inner": 20.0,
+  "outer": 34.0,
+  "front": 23.0,
+  "sectors": 24,
+  "sector_deg": 15.0,
+  "passages_L1": [
+   0,
+   6,
+   12,
+   18
+  ],
+  "lift_sectors": [
+   3,
+   9,
+   15,
+   21
+  ]
+ },
+ "floors": [
+  {
+   "floor": 1,
+   "z": 0.3,
+   "ceiling": 4.95,
+   "group": "Floor_1",
+   "file": "dome_floor1.glb",
+   "use": "shops and businesses"
+  },
+  {
+   "floor": 2,
+   "z": 5.3,
+   "ceiling": 9.15,
+   "group": "Floor_2",
+   "file": "dome_floor2.glb",
+   "use": "shops and businesses"
+  },
+  {
+   "floor": 3,
+   "z": 9.5,
+   "ceiling": 13.35,
+   "group": "Floor_3",
+   "file": "dome_floor3.glb",
+   "use": "accommodation"
+  },
+  {
+   "floor": 4,
+   "z": 13.7,
+   "ceiling": 17.55,
+   "group": "Floor_4",
+   "file": "dome_floor4.glb",
+   "use": "accommodation"
+  },
+  {
+   "floor": 5,
+   "z": 17.9,
+   "ceiling": 21.75,
+   "group": "Floor_5",
+   "file": "dome_floor5.glb",
+   "use": "accommodation"
+  }
+ ],
+ "roof": {
+  "z": 22.1,
+  "group": "Floor_Roof",
+  "file": "dome_floor5.glb"
+ },
+ "files": [
+  {
+   "file": "dome_shell.glb",
+   "tris": 24412,
+   "top_nodes": [
+    "Dome",
+    "Foundation",
+    "Gates",
+    "Promenade"
+   ]
+  },
+  {
+   "file": "dome_floor1.glb",
+   "tris": 52064,
+   "top_nodes": [
+    "Floor_1"
+   ]
+  },
+  {
+   "file": "dome_floor2.glb",
+   "tris": 61338,
+   "top_nodes": [
+    "Floor_2"
+   ]
+  },
+  {
+   "file": "dome_floor3.glb",
+   "tris": 43476,
+   "top_nodes": [
+    "Floor_3"
+   ]
+  },
+  {
+   "file": "dome_floor4.glb",
+   "tris": 23016,
+   "top_nodes": [
+    "Floor_4"
+   ]
+  },
+  {
+   "file": "dome_floor5.glb",
+   "tris": 37226,
+   "top_nodes": [
+    "Floor_5",
+    "Floor_Roof"
+   ]
+  },
+  {
+   "file": "dome_atrium.glb",
+   "tris": 14424,
+   "top_nodes": [
+    "Atrium",
+    "Lift_0",
+    "Lift_1",
+    "Lift_2",
+    "Lift_3",
+    "Lifts"
+   ]
+  },
+  {
+   "file": "dome_scaffold.glb",
+   "tris": 53076,
+   "top_nodes": [
+    "Crane",
+    "Scaffold_1",
+    "Scaffold_2",
+    "Scaffold_3",
+    "Scaffold_4",
+    "Scaffold_5",
+    "Site"
+   ]
+  }
+ ],
+ "groups": {
+  "Foundation": "stage foundation",
+  "Gates": "stage structure (12 gates, Anchor_Gate_<i> outside, Anchor_GateIn_<i> inside)",
+  "Floor_<n>/Struct_<n>": "stage level_<n> structure",
+  "Floor_<n>/Shell_<n>, Lamps_<n>": "fit-out",
+  "Floor_1/Venue_<id>, VenueLamps_<id>": "fit-out of that venue",
+  "Dome": "stage dome glass",
+  "Atrium, Promenade": "fit-out",
+  "Lifts": "structure (shafts)",
+  "Lift_<i>": "cabs, move along Z to extras.stops"
+ },
+ "build_stages": [
+  {
+   "stage": "foundation",
+   "show": [
+    "Foundation",
+    "Site",
+    "Crane"
+   ]
+  },
+  {
+   "stage": "level_1",
+   "show": [
+    "+ Floor_1/Struct_1",
+    "Gates",
+    "Lifts",
+    "Scaffold_1"
+   ]
+  },
+  {
+   "stage": "level_2",
+   "show": [
+    "+ Floor_2/Struct_2",
+    "Scaffold_2"
+   ],
+   "hide": [
+    "Scaffold_1"
+   ]
+  },
+  {
+   "stage": "level_3",
+   "show": [
+    "+ Floor_3/Struct_3",
+    "Scaffold_3"
+   ],
+   "hide": [
+    "Scaffold_2"
+   ]
+  },
+  {
+   "stage": "level_4",
+   "show": [
+    "+ Floor_4/Struct_4",
+    "Scaffold_4"
+   ],
+   "hide": [
+    "Scaffold_3"
+   ]
+  },
+  {
+   "stage": "level_5",
+   "show": [
+    "+ Floor_5/Struct_5",
+    "Floor_Roof/Roof_Struct",
+    "Scaffold_5"
+   ],
+   "hide": [
+    "Scaffold_4"
+   ]
+  },
+  {
+   "stage": "dome_frame",
+   "show": [
+    "+ Dome/Dome_Frame"
+   ],
+   "hide": [
+    "Scaffold_5",
+    "Crane"
+   ]
+  },
+  {
+   "stage": "dome_glass",
+   "show": [
+    "+ Dome/Dome_Glass",
+    "Dome/Dome_Lights"
+   ]
+  },
+  {
+   "stage": "fitout",
+   "show": [
+    "+ Shell_<n>, Lamps_<n>, Unit_<n>_<s>, Atrium, Promenade, Roof_Garden, Roof_Lamps"
+   ],
+   "hide": [
+    "Site"
+   ]
+  },
+  {
+   "stage": "fitout_<venue>",
+   "show": [
+    "+ Venue_<id>, VenueLamps_<id> (one per venue, in any order)"
+   ]
+  }
+ ],
+ "venues_L1": [
+  {
+   "id": "grocery",
+   "label": "GROCERY",
+   "sectors": [
+    1,
+    2
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "clinic",
+   "label": "CLINIC",
+   "sectors": [
+    3,
+    2
+   ],
+   "sign": "SignGreen"
+  },
+  {
+   "id": "barber",
+   "label": "BARBER",
+   "sectors": [
+    5,
+    1
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "cafe",
+   "label": "CAFE",
+   "sectors": [
+    7,
+    2
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "restaurant",
+   "label": "RESTAURANT",
+   "sectors": [
+    9,
+    2
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "credit",
+   "label": "CREDIT",
+   "sectors": [
+    11,
+    1
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "hotel",
+   "label": "HOTEL",
+   "sectors": [
+    13,
+    2
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "bar",
+   "label": "BAR",
+   "sectors": [
+    15,
+    2
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "comms",
+   "label": "COMMS & POST",
+   "sectors": [
+    17,
+    1
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "clothing",
+   "label": "CLOTHING",
+   "sectors": [
+    19,
+    2
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "electronics",
+   "label": "ELECTRONICS",
+   "sectors": [
+    21,
+    2
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "gifts",
+   "label": "GIFTS",
+   "sectors": [
+    23,
+    1
+   ],
+   "sign": "SignAmber"
+  }
+ ],
+ "venues_L2": [
+  {
+   "id": "beauty",
+   "label": "BEAUTY",
+   "sectors": [
+    0,
+    1
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "arcade",
+   "label": "GAME ZONE",
+   "sectors": [
+    1,
+    4
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "shoes",
+   "label": "SHOES",
+   "sectors": [
+    5,
+    1
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "books",
+   "label": "BOOKS",
+   "sectors": [
+    6,
+    1
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "gym",
+   "label": "GYM",
+   "sectors": [
+    7,
+    3
+   ],
+   "sign": "SignGreen"
+  },
+  {
+   "id": "toys",
+   "label": "TOYS",
+   "sectors": [
+    10,
+    1
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "foodcourt",
+   "label": "FOOD COURT",
+   "sectors": [
+    11,
+    2
+   ],
+   "sign": "SignAmber"
+  },
+  {
+   "id": "club",
+   "label": "CLUB",
+   "sectors": [
+    13,
+    6
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "jewels",
+   "label": "JEWELS",
+   "sectors": [
+    19,
+    1
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "travel",
+   "label": "TRAVEL",
+   "sectors": [
+    20,
+    1
+   ],
+   "sign": "SignCyan"
+  },
+  {
+   "id": "flowers",
+   "label": "FLOWERS",
+   "sectors": [
+    21,
+    1
+   ],
+   "sign": "SignGreen"
+  },
+  {
+   "id": "tailor",
+   "label": "TAILOR",
+   "sectors": [
+    22,
+    1
+   ],
+   "sign": "SignMagenta"
+  },
+  {
+   "id": "vacant",
+   "label": "TO LET",
+   "sectors": [
+    23,
+    1
+   ],
+   "sign": "SignAmber"
+  }
+ ],
+ "units": {
+  "L3": "24 hotel rooms",
+  "L4": "24 standard / family units",
+  "L5": "6 executive units (2 sectors) + 12 hotel rooms",
+  "anchors": "Anchor_Unit_<floor>_<s>, Anchor_Bed_<floor>_<s>_<k> (extras head +Y / -Y mirror), Anchor_Seat_..., Anchor_Desk_..."
+ },
+ "anchor_kinds": {
+  "Anchor_Venue_<id>": "venue door point in the colonnade, +X into the venue",
+  "Anchor_Work_<id>_<k>": "staff stand point",
+  "Anchor_Seat_<id>_<k>": "customer seat / stand point",
+  "Anchor_Lift_<i>_<floor>": "lift door on that floor (floor 6 = roof)",
+  "Anchor_Unit_<floor>_<s>": "accommodation unit door",
+  "Anchor_Lounger_<k>": "pool lounger (lounge_pool)",
+  "Anchor_Swim_<k>": "in the pool at the water line (swim)",
+  "Anchor_SlideTop / Anchor_SlideEnd": "water slide",
+  "Anchor_Lifeguard": "lifeguard chair (sit)",
+  "Anchor_Bench_<k>": "benches (sit_bench)",
+  "Anchor_Stage": "event stage centre",
+  "Anchor_Plaza_<k>": "plaza stand points",
+  "Anchor_Gate_<i> / Anchor_GateIn_<i>": "the 12 gates, outside and inside",
+  "Anchor_Crown": "dome top",
+  "Anchor_Lamp_<floor>_<s>_<k>": "hotel room lamp light point (role lamp, colour, range_m, optional)",
+  "Anchor_Bouncer_club_0": "club door bouncer post (adults_only)"
+ },
+ "anchor_extras": "every anchor has {floor, height}; venue anchors add venue; lift anchors add lift"
+}

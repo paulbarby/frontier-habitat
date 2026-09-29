@@ -30,7 +30,7 @@ import rooms_kit as K        # noqa: E402
 
 BUILDERS = {}
 _MODULES = ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
-            "rooms_v4ind")
+            "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ")
 for _m in _MODULES:
     try:
         mod = __import__(_m)
@@ -45,7 +45,9 @@ ORDER = ["habitat", "greenhouse", "kitchen", "storehouse", "oxygen_plant", "rese
          "atmo_processor", "bio_lab", "cantina", "cold_storage", "research_assembler",
          # 4.0 industry (SIM 2026-09-27)
          "steel_mill", "titanium_smelter", "ceramics_kiln", "carbon_works", "battery_plant", "parts_works",
-         "magnet_works", "superconductor_lab", "metamaterial_foundry"]
+         "magnet_works", "superconductor_lab", "metamaterial_foundry",
+         # 5.0 (docs/V5_DESIGN.md section 7)
+         "residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail"]
 FAMILY = {
     "habitat": "habitat", "lounge": "habitat", "cantina": "habitat", "medical": "habitat", "bio_lab": "habitat",
     "storehouse": "habitat", "cold_storage": "habitat",
@@ -58,6 +60,8 @@ FAMILY = {
     "steel_mill": "industry", "titanium_smelter": "industry", "ceramics_kiln": "industry", "carbon_works": "industry",
     "battery_plant": "industry", "parts_works": "industry", "magnet_works": "industry",
     "superconductor_lab": "industry", "metamaterial_foundry": "industry",
+    "residence_tube": "habitat", "apartment_block": "habitat", "retail": "habitat", "park": "agri",
+    "academy": "science", "security_office": "habitat", "jail": "habitat",
 }
 # 3.0 (docs/V3_DESIGN.md section 7): builders with the detailed interiors and wall segments.  A v3 builder may
 # raise NotImplementedError for a size it does not make yet; that size then uses the v2 builder.
@@ -103,11 +107,16 @@ def jobs(buildings, only=None, sizes=None):
             bdef = V4_PROVISIONAL[tid]            # 4.0 rooms SIM has named but not put in content yet
         radii = bdef.get("sizes", {}).get("radius")
         if radii and tid not in ("airlock", "junction", "corridor"):
+            size_list = bdef.get("size_list", [0, 1, 2, 3])
             for s, key in enumerate(K.SIZE_KEYS):
                 if sizes and key not in sizes:
                     continue
-                out.append(dict(tid=tid, size=s, key=key, R=K.v4_radius(tid, s, float(radii[s])), file="%s_%s" % (tid, key),
-                                also=[], bdef=bdef, single=False))    # 4.0: no <tid>.glb copy (models.resolve)
+                if s not in size_list:
+                    continue                      # 5.0: sizes the type does not have (residence tube: M, L, XL)
+                for var, vdef in variant_defs(bdef, s):
+                    name = "%s_%s" % (tid, key) if var in (None, bdef.get("variant")) else "%s_%s_%s" % (tid, var, key)
+                    out.append(dict(tid=tid, size=s, key=key, R=K.v4_radius(tid, s, float(radii[s])), file=name,
+                                    also=[], bdef=vdef, single=False, variant=var))    # 4.0: no <tid>.glb copy
         elif tid == "airlock" and radii:
             # content has the M / L airlock (SIM, 2026-09-25): airlock_m (+ airlock.glb) and airlock_l
             for s_, key in ((1, "m"), (2, "l")):
@@ -129,6 +138,27 @@ def jobs(buildings, only=None, sizes=None):
                 for s_, key, R_ in ((1, "m", AIRLOCK_RADII["m"]), (2, "l", AIRLOCK_RADII["l"])):
                     out.append(dict(tid=tid, size=s_, key=key, R=R_, file="airlock_" + key, also=[], bdef=bdef,
                                     single=True))
+    return out
+
+
+def variant_defs(bdef, s):
+    """5.0: a type with `variants` (residence tube: family, executive) gives one file per variant; the default
+    variant keeps the plain <id>_<size> name.  The furniture block is the variant's: units x beds_per_unit Beds;
+    Seats 2 (family) / 3 (executive) per unit; 1 Stand per unit (docs/requests/ART-HAB-to-SIM.md, v5)."""
+    vs = bdef.get("variants")
+    if not vs:
+        return [(None, bdef)]
+    out = []
+    for var in sorted(vs, key=lambda v_: (v_ != bdef.get("variant"), v_)):
+        vd = vs[var]
+        units = vd.get("units", [1, 1, 1, 1])
+        bpu = int(vd.get("beds_per_unit", 2))
+        spu = 3 if var == "executive" else 2
+        d = dict(bdef)
+        d["furniture"] = dict(bdef.get("furniture", {}),
+                              beds=[int(u) * bpu for u in units], seats=[int(u) * spu for u in units],
+                              stands=[int(u) for u in units], work_slots=[0, 0, 0, 0])
+        out.append((var, d))
     return out
 
 
@@ -217,7 +247,7 @@ def write_door_blocked(rows):
         v = r.get("v3") or {}
         if "door_blocked" in v:
             keys = [r["id"]] + list(r.get("also") or [])
-            if r.get("size") == "m":
+            if r.get("size") == "m" and r["id"] == "%s_m" % r["type"]:
                 keys.append(r["type"])          # SIM reads the plain <def> key for size M (no file copy in 4.0)
             for key in keys:
                 old[key] = dict(blocked=[list(x) for x in v["door_blocked"]], free_deg=v["door_free_deg"],
@@ -259,6 +289,15 @@ def cut_top_check(rm, objs, eps=0.006):
             if min(v.z for v in vs) < K.WALL_TOP - 0.04:
                 low_upper.append(nm)
             continue
+        fl = K.floor_of(nm)
+        if fl:
+            # 5.0: floor k is cut at k * floor_height + WALL_TOP when the player views it; its *Top objects and its
+            # furniture (Interior) may stand higher
+            if not nm.endswith(("Top", "_Interior")):
+                cut = fl * float(rm.bdef.get("floor_height", 3.6)) + K.WALL_TOP
+                if max(v.z for v in vs) > cut + eps:
+                    high.append("%s %.2f" % (nm, max(v.z for v in vs)))
+            continue
         # every drawn vertex counts, wall-side items included (RENDER render_cut_check.gd: the game draws Walls and
         # WallsIn in the cutaway; only Interior and Tall may stand above the cut)
         shell = vs
@@ -299,6 +338,7 @@ def build_one(job):
     bdef = job["bdef"]
     cat = bdef.get("category", "logistics")
     rm = K.Room(job["tid"], job["size"], job["R"], cat, bdef, single=job["single"])
+    rm.variant = job.get("variant")
     rm.tray_scale = tray_scale(job)
     built_v3 = False
     if job["tid"] in V3_BUILDERS and "--v2" not in sys.argv:
@@ -318,6 +358,11 @@ def build_one(job):
     stats = {p.name: K.part_stats(p) for p in rm.parts() if p.faces}
     tris = sum(s["tris"] for s in stats.values())
     budget = int((V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]] * (1.4 if K.R_SCALE > 1.0 else 1.0))   # v4: 2.25x floor
+    if bdef.get("v5"):
+        budget = int(V3_BUDGET[job["size"]] * 1.6)     # 5.0: pck budget +25 MB (V5_DESIGN 0): interior detail
+        if bdef.get("floors", 1) > 1:
+            budget = 60000 * int(bdef["floors"])        # 5.0 multi-storey (XXL apartment block)
+    flags += getattr(rm, "floor_flags", [])
     if job["tid"] == "corridor":
         budget = 1200
     if tris > budget:
@@ -365,7 +410,8 @@ def build_one(job):
         for oname, mats in info["mats_by"].items():
             if len(mats) > V3_MAX_MATERIALS:
                 flags.append("%s has %d materials > %d" % (oname, len(mats), V3_MAX_MATERIALS))
-            if (oname == "Interior" or oname.startswith("Tall_")) and len(mats) > K.MAX_SURFACES:
+            if (oname == "Interior" or oname.startswith("Tall_") or oname.endswith("_Interior")) and \
+                    len(mats) > K.MAX_SURFACES:
                 flags.append("%s has %d surfaces > %d (draw-call budget)" % (oname, len(mats), K.MAX_SURFACES))
         # the game merges objects per group (presentation/models.gd): one draw call per material of each group
         by_group = {}
@@ -451,6 +497,9 @@ def build_one(job):
             row["v3"]["door_slots"] = slots
             row["v3"]["door_slot_deg"] = round(step, 1)
             need = DOOR_SLOTS_MIN.get(job["key"], DOOR_SLOTS_MIN["m"])
+            ml = job["bdef"].get("sizes", {}).get("max_links")
+            if ml:
+                need = int(ml[job["size"]])        # 5.0: the type's own link count (residence tube M/L/XL 4/5/6)
             loose = set(getattr(rm.plan, "lane_hits", {})) - AIRLOCK_STRUCTURE
             if job["tid"] == "airlock" and loose:
                 flags.append("airlock door lanes blocked by furniture %s (only the chamber may block)" % sorted(loose))

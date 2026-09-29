@@ -65,6 +65,12 @@ var find        # Find window (version 4, §3.4)
 var text_floor  # ui/text_floor.gd
 var advisor     # Advisor window (version 4, §6)
 var v4          # ui/v4_data.gd: orders, vehicles, reactors (SIM when live, else the mock)
+var v5          # ui/v5_data.gd: people, social, the Rag (SIM when live, else preview data)
+var rag         # "The Regolith Rag" window (version 5, §4.3)
+var person      # personnel file window (version 5, §6.2)
+var follow_hud  # follow view card (version 5, §3)
+var unrest_banner # protest / strike / riot banner (version 5, §6.4)
+var floor_sel   # floor selector of a multi-storey building (version 5, §7)
 var orders      # Orders window (version 4, §5)
 var reactor_win # Reactor controls window (version 4, §4.2)
 var reactor_banner
@@ -84,6 +90,7 @@ func _ready() -> void:
 	layer = 10
 	data = Data.new(main)
 	v4 = load("res://ui/v4_data.gd").new(self)
+	v5 = load("res://ui/v5_data.gd").new(self)
 	root = Control.new()
 	root.name = "UiRoot"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -121,6 +128,11 @@ func _ready() -> void:
 	advisor = _add(load("res://ui/hud/advisor_window.gd").new())
 	orders = _add(load("res://ui/hud/orders_window.gd").new())
 	reactor_win = _add(load("res://ui/hud/reactor_window.gd").new())
+	rag = _add(load("res://ui/hud/rag_window.gd").new())
+	person = _add(load("res://ui/hud/person_window.gd").new())
+	follow_hud = _add(load("res://ui/hud/follow_hud.gd").new())
+	unrest_banner = _add(load("res://ui/hud/unrest_banner.gd").new())
+	floor_sel = _add(load("res://ui/hud/floor_selector.gd").new())
 	reactor_banner = _add(load("res://ui/hud/reactor_banner.gd").new())
 	top_bar = _add(TopBar.new())
 	time_panel = _add(TimePanel.new())
@@ -143,6 +155,9 @@ func _ready() -> void:
 	advisor.register_window(wm)
 	orders.register_window(wm)
 	reactor_win.register_window(wm)
+	rag.register_window(wm)
+	person.register_window(wm)
+	load("res://ui/theme/bubble_style.gd").apply(main.view)
 
 func _add(m: Control) -> Control:
 	m.set("hud", self)
@@ -209,6 +224,43 @@ func toggle_advisor() -> void:
 	advisor.toggle()
 
 ## Find window (/ or Ctrl+F, or the nav rail).
+## Opens the personnel file of a person (tab: "file", "social" or "review").
+func open_person(id: int, t: String = "") -> void:
+	person.open(id, t)
+
+## The follow view started (id) or ended (-1): the follow card shows, the rest of the HUD dims
+## (time controls, toasts, the Rag, the personnel file and the banners stay bright).
+func follow_changed(id: int) -> void:
+	load("res://ui/theme/bubble_style.gd").apply(main.view)
+	follow_hud.show_for(id)
+	var dim: float = 0.28 if id >= 0 else 1.0
+	for m in [goals, alerts, minimap, build_bar, nav, top_bar, hazard, traffic, inspector]:
+		if m != null:
+			(m as CanvasItem).modulate.a = dim
+	if id >= 0 and inspector != null:
+		inspector.visible = false
+
+## An Easter egg was found (V5 §4.5): the device profile keeps it (the codex shows found eggs), a toast.
+const EGG_TEXT := {"dance": ["Dance Floor Director", "You found the dance code. The whole corridor dances."],
+	"arcade": ["Prism Shift", "You found the arcade in the gaming lounge."], "dev": ["The dev in the dome", "P. Barby visited the dome."]}
+func egg_found(kind: String, _who: int = -1) -> void:
+	var Profile = load("res://ui/profile.gd")
+	var d: Dictionary = Profile.data()
+	if typeof(d.get("eggs")) != TYPE_DICTIONARY:
+		d["eggs"] = {}
+	var first: bool = not d["eggs"].has(kind)
+	d["eggs"][kind] = int(main.sim.state.get("tick", 0))
+	Profile._save()
+	var e: Array = EGG_TEXT.get(kind, [kind.capitalize(), "You found a secret."])
+	toast(("SECRET FOUND: %s. %s" if first else "%s. %s") % [e[0], e[1]], "info", "sparkle")
+
+func eggs_found() -> Dictionary:
+	var d: Dictionary = load("res://ui/profile.gd").data()
+	return d.get("eggs", {}) if typeof(d.get("eggs")) == TYPE_DICTIONARY else {}
+
+func toggle_rag() -> void:
+	rag.toggle()
+
 func toggle_find() -> void:
 	find.toggle()
 

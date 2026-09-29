@@ -176,8 +176,8 @@ func building(b: Dictionary) -> void:
 	insp.add_badge(stb)
 	if d.can_level(String(b["def"])):
 		insp.add_badge(Kit.badge("LEVEL %d" % d.level_of(b), P.GOLD if d.level_of(b) >= 5 else P.VIOLET))
-	if d.has_sizes(String(b["def"])):
-		insp.add_badge(Kit.badge("SIZE %s" % d.SIZE_NAMES[clampi(d.size_of(b), 0, 3)], P.CYAN))
+	if d.size_word(String(b["def"]), d.size_of(b)) != "":
+		insp.add_badge(Kit.badge("SIZE %s" % d.size_word(String(b["def"]), d.size_of(b)), P.CYAN))
 	if String(b["def"]) == "meridian":
 		insp.add_tabs([])
 		_ship(b)
@@ -1321,6 +1321,10 @@ func agent(a: Dictionary) -> void:
 		_needs(a)
 	var f: HFlowContainer = insp.footer()
 	f.add_child(Kit.button("Follow", func(): insp.hud.main.follow_selected(), "Follow\nThe camera follows this colonist. Key F.", "", "follow", 14))
+	# Version 5: the personnel file and the over-the-shoulder follow view.
+	if insp.hud.v5 != null and insp.hud.v5.live("people"):
+		f.add_child(Kit.button("File", func(): insp.hud.open_person(id), "Personnel file\nSkills, satisfaction, attitude, relationships; review and discipline.", "", "colonists", 14))
+		f.add_child(Kit.button("Shoulder", func(): insp.hud.main.follow_person(id), "Over the shoulder\nThe camera goes behind this person; you see what they say. Key V. Esc ends it.", "", "follow", 14))
 
 ## Visitor card (version 3.1, V3_1_DESIGN §6.5): kind, ship, leaves in, paid, what the visit
 ## gave them so far, health. Visitors take no jobs.

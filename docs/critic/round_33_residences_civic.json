@@ -1,0 +1,57 @@
+{
+  "round": 33,
+  "date": "2026-09-29",
+  "scope": "residences re-check (after round 27, now with the apartment block) and civic_modules (new). Blender + game-camera identity shots, provisional. Evidence art/interiors/residence_tube_{m,l,xl}{,_executive}*.png, apartment_block_m_floor0..2(+_anchors), apartment_block_m_exterior, _night, retail_m, retail_l, park_l, academy_m, security_office_m, jail_l, jail_s and their _exterior renders, v4_identity_v5res_*, v4_identity_v5block_*, v4_identity_v5civic_* (day and night, 110 and 250 m). Rubric v5_rubrics.md 3.7 and 3.8.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "residences": {"consistency": 0.80, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "provisional": true, "was": 0.73,
+      "round_27_fixes_checked": {
+        "1 empty drum ring": "landed: the ring is now a lawn with private patios, tables, planters and play corners per unit; no empty tile band.",
+        "2 executive richer": "landed partly: wood floors throughout, a lounge with sofa and media wall, a proper desk; still the same furniture family as Family, so the premium read comes mostly from floor colour and space.",
+        "3 night": "partly: lamps glow at beds and tables, but rooms are still dim grey away from the lamps (residence_tube_l_night).",
+        "4 vault exterior": "landed: seam lines, porch lamps, and the Executive ribbon glazing reads.",
+        "5 Family vs Executive at 250 m": "landed: the Executive terrace (wood deck, loungers, pergola) reads; at night the Executive vault shows more lit windows.",
+        "6 children's rooms": "landed: bunks with colour, a patterned rug.",
+        "7 evidence": "250 m night supplied; game cutaway in a real colony and the follow view still missing."
+      },
+      "apartment_block": {
+        "identity": "At 110 m and 250 m, day and night, it reads as the big housing building: a large stepped drum in three tiers with the house badge, glazed rings and a roof terrace; clearly different from the habitat dome and the tubes.",
+        "floors": "Floor cutaway renders per floor show a ring of furnished units round a central lift and stair core; the top floor has penthouses with a wood terrace and two pools. Anchors per floor supplied.",
+        "faults": "Floor 1's outer ring is a wide empty grey balcony band (about a third of the floor area); the upper-floor exterior is a plain grey drum with small windows (apartment_block_m_exterior) and needs balconies and lit windows to read as homes; at night the block's windows are few."
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Apartment block floor 1 outer ring: fill the empty band with private balconies per unit (a table, two chairs, planters) separated by screens, or shrink it to 1.5 m."},
+        {"owner": "ART-HAB", "fix": "Apartment block exterior: a window per unit on every floor with warm light at night, balconies on floor 1, and the penthouse terrace visible from 110 m (pergola, pools lit at night)."},
+        {"owner": "ART-HAB", "fix": "Executive units: a second furniture set (upholstered bed, armchairs, a bookcase, art) so Executive differs by quality, not only by floor colour."},
+        {"owner": "ART-HAB", "fix": "Night: a soft ceiling fill so rooms are not dim grey away from lamps (the V3 7.3 rule: no dark rooms)."},
+        {"owner": "RENDER / ART-HAB", "fix": "Evidence for the final: in-game cutaway in a real colony, the apartment floor selector in game, the follow view in a family unit and a penthouse."}
+      ]},
+    "civic_modules": {"consistency": 0.62, "appeal": 0.64, "style": 0.70, "score": 0.65, "pass": true, "provisional": true,
+      "identity_test": {
+        "110 m day": "3 of 5 certain: park (glass dome over green, heart badge), jail (fence ring on the roof, guard tower), academy (mast and dome). Retail and security are uncertain: retail carries the comfort heart like the lounge and the park; security shows the same blue shield as the jail.",
+        "250 m day": "2 of 5: park and (by the fence) jail. Retail reads as the lounge; academy's atom badge reads as the research lab; security reads as the jail.",
+        "250 m night": "2 of 5: the park glows green with lights; the rest are dark discs with small badges."
+      },
+      "security_vs_jail": "Not distinct enough. Both are the same flat grey drum with the same blue shield badge and blue band; at 250 m the only difference is a small tower and a thin fence rail that disappear at game size. V5 section 1 gives security black and red; use it. Give the jail its own badge and silhouette.",
+      "what_works": [
+        "Park: the one green place, a glass geodesic dome over lawns, paths, trees, flower beds, a pond, benches; it glows at night.",
+        "Jail L: cells with bars in a ring round a guard post and a yard area; reads as serious but not grim.",
+        "Academy: rows of desks with chairs, a teacher board, instructor consoles.",
+        "Retail: clothing racks, mannequins, shelves, a counter, a café corner."
+      ],
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Own badges: retail a shopping bag, academy a book or mortarboard, security a shield in black and red, jail barred window or a lock. Never reuse the comfort heart or the science atom for civic buildings."},
+        {"owner": "ART-HAB", "fix": "Security vs jail silhouettes: security office a flat roof with a comms mast, a beacon and a black-and-red band; jail a raised perimeter wall with corner towers and floodlights round the roof and an orange band (prison orange). Each must read at 250 m without the badge."},
+        {"owner": "ART-HAB", "fix": "Retail silhouette: shop-front awnings and lit signage round the drum, a billboard mast larger than now, and warm lit windows at night."},
+        {"owner": "ART-HAB", "fix": "Empty floors: retail M/L, security office M, academy M and jail S leave 40-60% of the floor empty (the v4 1.5x scale). Fill by function: retail more shelf rows and a fitting room; security a briefing table, lockers, a monitor wall, a holding cell; academy a second class area, a library corner and a lab bench; jail S a yard strip and a visitor table."},
+        {"owner": "ART-HAB", "fix": "Security office interior reads as a storeroom (scattered boxes on grey tile). Make it a command post: a raised desk facing a wall of monitors, a dispatch console, an armoury locker row, the black-and-red accent."},
+        {"owner": "ART-HAB", "fix": "Night: all civic modules except the park are dark discs at 250 m. Lit windows in the band and a lit badge per module."}
+      ]}
+  },
+  "notes": [
+    "residences PASS 0.77 (was 0.73), provisional.",
+    "civic_modules PASS 0.65, marginal and provisional: the park is good, but 3 of 5 modules do not pass the label-free identity test at 250 m and the floors are sparse.",
+    "Tone check: no child in the jail; nothing inappropriate.",
+    "My crops: art/critic/r33_civic250.png, r33_civic250n.png; grids r33_tube.png, r33_block.png, r33_civic.png, r33_civic_ext.png, r33_id.png."
+  ]
+}

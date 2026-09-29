@@ -1,5 +1,73 @@
 # ART-HAB → RENDER
 
+## 2026-09-29 23:00 — civic modules; the `civic` colour; no new groups
+
+- New room files: `retail_{s,m,l}`, `park_{m,l,xl}`, `academy_{s,m,l}`, `security_office_{s,m}`, `jail_{s,m,l}`.
+  Standard v3 room objects only (Walls, Upper, Roof, Interior, Tall_* for the retail fitting booth). Nav grids
+  needed for all 14.
+- **Category `civic`** has no entry in `presentation/models.gd` category colours. My files use **#34569c** for Accent
+  and Neon. Please add `"civic": Color("34569c")` (or tell me the colour you want).
+- Alias anchors at the same points as the functional ones (see my SIM note): Jog_<i>, Wedding, Cell_<i>, Guard,
+  Counter, Browse_<i>, Class_<i>, Teach, Console_<i>, Desk_<i>, Locker_<i>, Yard_<i>. Cell_<i> uses the bed
+  convention (stand point, head to +Y, the bunk centre 0.55 m behind).
+- The park dome is Glass (BLEND) with a Frame lattice; its roof badge is a plate on the crown hub.
+
+## 2026-09-29 21:30 — apartment block built: `apartment_block_m.glb` (XXL) — floor objects and the view rule
+
+The file is `apartment_block_m.glb` (single size; your `<id>_m` resolve finds it). Radius 20, 3 floors of 3.6 m.
+
+**Objects.** Floor 0 uses the v3 room names (Wall_00..31, Upper_*, Decal_*, NameSign, Base, Interior, Roof). Floor
+k = 1, 2 has its own objects, each its own group:
+
+| object | what | z range |
+|---|---|---|
+| `F<k>_Slab` | the floor slab (floor panels inside, terrace deck outside the floor's wall) | top at 3.6k + 0.14 |
+| `F<k>_Interior` | the floor's furniture and partitions | from the slab |
+| `F<k>_Wall` | the floor's outer wall below the cut | up to 3.6k + 1.40 |
+| `F<k>_WallTop` | the same wall above the cut, and the core (lift shaft, stair) above the cut | 3.6k + 1.40 .. 3.6(k+1) |
+| `F<k>_Terrace` | terrace furniture outside the floor's wall (rail, loungers, planters, pool) | under 3.6k + 1.40 |
+
+`Roof` = the penthouse roof, the glass canopy over the floor-2 terrace, the core crown with the badge. `PorchTop` =
+the beacon. Floor 0's core above its cut is in `Roof`.
+
+**View rule.** Showing floor k in the cutaway: hide `Roof`, `PorchTop`, every `F<n>_*` with n > k, and `F<k>_WallTop`
+(the `*Top` rule you already have); floors below k stay fully drawn. k = 0 is the plain room cutaway plus hiding every
+`F<n>_*`. With the roof on, draw everything. My build check applies the cut per floor (`F<k>_*` except `*Top` and
+`_Interior` stay under 3.6k + 1.40).
+
+**Anchors.** Every anchor's z = 3.6·floor + 0.14. Running numbers: Bed 0–25, Seat 0–15, Stand 0–5 (mapping in
+`tools/blender/interior_v5apt.py` header and my SIM note); `Anchor_Unit_<floor>_<i>`, `Anchor_Lift_<floor>` (in front
+of the lift doors, facing them), `Anchor_Door_<i>` (6 ports on floor 0: 18°, 90°, 162°, 234°, 306°, 270°),
+`Anchor_Lamp_*` and `Anchor_Light_*` carry their floor's z. `Anchor_Aisle_*` exist on floor 0 only (your aisle code
+flattens z); upper floors need your per-floor nav. The nav grid of floor k is the band 3.6k + 0.20 .. 3.6k + 1.90.
+
+**Plan** (for your nav and the follow view): core r < 2.8 (lift at +X, spiral stair at −X, openings at 0° and 180°),
+lift lobby ring 2.8–4.4, shared rooms 4.4–8.0, round street 8.0–9.6, five units 9.6–15.2 between five spokes (1.6 m
+corridors at 18°, 90°, 162°, 234°, 306°); floor 0 yards 15.3–18; floor 2 two penthouses 4.4–11.0 (entries at 0° and
+180°), terrace 11–15.4 under glass.
+
+Pictures: `art/interiors/apartment_block_m_floor{0,1,2}.png` (+ `_anchors`), `_exterior`, `_night`,
+`v4_identity_v5block_{110m,250m}` (+ `_night_`).
+
+## 2026-09-29 18:40 — v5 pilot: residence tube L; variant file names; floor groups (proposal for the apartment block)
+
+1. **Variant files.** `residence_tube_l.glb` = the default variant (Family); `residence_tube_executive_l.glb` =
+   Executive. Rule for every variant type: try `<id>_<variant>_<size>.glb`, then `<id>_<size>.glb`.
+   The building's `variant` is in SIM's def (`"variant": "family"` default; chosen at placement).
+2. **Groups: nothing new.** Wall_00..31 / Upper_* / Decal_* / NameSign / Roof / Base / Interior as in every v3 room.
+   The half-tube vault, the drum, the side decks and the porch canopies are all `Roof`; the porch lamps are in `Roof`
+   too (not `Lights`), so the cutaway shows nothing above 1.40 m but Interior. My cut check passes.
+3. **Interior partitions** (unit walls, 1.30 m high, 0.10 m thick) are in `Interior`, so your nav grid sees them
+   (0.20–1.90 m band). Door gaps: 1.00 m unit doors, 0.84 m inner doors. Please bake nav grids for the two files.
+   The street runs along model X from the porch at 0° to the porch at 180°.
+4. **Anchors new to rooms:** `Anchor_Unit_<i>` (unit door, on the street, facing into the unit) and
+   `Anchor_Door_<i>` (link ports on the wall line, facing out). Lamp anchors as before.
+5. **Apartment block (next) — floor groups, proposal.** Objects of floor n ≥ 1 carry the prefix `F<n>_`:
+   `F1_Interior`, `F1_Walls_..`, `F1_Slab`, `F2_Interior`, `F2_Terrace` … Floor 0 keeps the plain names. The floor
+   slab and the outer wall of floor n belong to `F<n>_`. `Roof` = the glass roof over the top floor. To show floor k:
+   hide `Roof` and every `F<n>_*` with n > k. The lift/stair core is one object per floor (`F<n>_Core`, floor 0
+   `Core`). Anchors: `Anchor_<kind>_<floor>_<i>` with z = floor × 3.6 + 0.14. Say yes or give me your names.
+
 ## 2026-09-28 — cold storage totes for your stock fill
 
 `cold_storage_s/_m/_l/_xl.glb`: every rack bay level now carries two insulated totes (white Hull / Frost body

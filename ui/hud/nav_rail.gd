@@ -25,6 +25,7 @@ const ITEMS := [
 	["dashboard", "dashboard", "Colony dashboard\nCharts of life support, food, industry, people and research. Key C."],
 	["inventory", "inventory", "Inventory\nEvery item: stock, trend, days of supply, spoilage. Key I."],
 	["colonists", "colonists", "Colonists\nEvery colonist: role, health, morale, nutrition, task. Key P."],
+	["crew", "people", "Crew\nRanks, homes and training: the org chart, housing and the academy. Key U."],
 	["awards", "awards", "Awards\nMedals of this colony and of this device. Key V."],
 	["|", "", ""],
 	["vehicles", "rover", "Vehicles\nRovers, hoppers and the satellite: charge, cargo, crew, orders and routes between bases."],
@@ -68,6 +69,7 @@ func _ready() -> void:
 		_add(name, it[1], it[2], func(): hud.toggle_screen(name))
 	_seam()
 	_add("advisor", "advisor", "Advisor\nWhat to do next: the biggest problems, the next goal steps, unused potential. Key N.", func(): hud.toggle_advisor())
+	_add("rag", "newspaper", "The Regolith Rag\nThe colony's tabloid: who is in love, who is feuding, and the serious news. A new issue every dawn. Key J.", func(): hud.toggle_rag())
 	_add("find", "search", "Find\nType a name or a type: the list shows every match; click one to go there. Key /.", func(): hud.toggle_find())
 	_add("overlay", "overlay", "Overlay\nShows the power, water, air or walking network. Key O. Right click turns it off.", func(): hud.cycle_overlay())
 	(_buttons["overlay"] as Button).gui_input.connect(func(ev):
@@ -135,7 +137,7 @@ func rebuild() -> void:
 func refresh() -> void:
 	var open: String = hud.screen_name()
 	for n in _buttons:
-		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible))
+		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible) or (n == "rag" and hud.rag != null and hud.rag.visible))
 	var d = hud.data
 	# Research: an idle lab (no active project while research exists).
 	var r: Dictionary = d.research()

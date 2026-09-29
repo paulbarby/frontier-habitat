@@ -36,12 +36,12 @@ const CATEGORY := {
 	"life_support": Color("29B6C6"), "food": Color("6ABF4B"), "housing": Color("F2C14E"),
 	"industry": Color("E07A3A"), "logistics": Color("9B6BD6"), "utilities": Color("4A90D9"),
 	"medical": Color("E85D75"), "comfort": Color("F08FC0"), "science": Color("7C8CFF"),
-	"space": Color("C9D3E0"),
+	"space": Color("C9D3E0"), "civic": Color("E8A33D"),
 }
 const CATEGORY_NAME := {
 	"life_support": "Life support", "food": "Food", "housing": "Housing", "industry": "Industry",
 	"logistics": "Logistics", "utilities": "Power", "medical": "Medical", "comfort": "Comfort",
-	"science": "Science", "space": "Space",
+	"science": "Science", "space": "Space", "civic": "Civic",
 }
 const ROLE := {
 	"technician": Color("FF9F1C"), "grower": Color("5AC85A"), "operator": Color("4A90D9"),

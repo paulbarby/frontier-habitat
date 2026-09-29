@@ -1,0 +1,49 @@
+{
+  "round": 30,
+  "date": "2026-09-29",
+  "scope": "v5.0 social_ui PILOT and regolith_rag re-check (UI). Evidence docs/shots/ui12_rag_{1600_top,1600_bottom,special,quiet,1280_top,1280_bottom}.png and ui13_{person_file,person_social,person_review,follow_hud,crew_org,crew_housing,crew_academy,unrest_protest,unrest_riot,palette_civic,codex_people}.png (all 1600x900 except the 1280 pair). SIM data is stub; unrest banners staged; effects marked '(estimate)'. Rubric v5_rubrics.md 3.5 and 3.6.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "regolith_rag": {"consistency": 0.78, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true, "provisional": true, "was": 0.71,
+      "round_25_fixes_checked": {
+        "1 alerts panel folds": "landed: the Alerts panel folds to its header while the Rag is open.",
+        "2 1280x720 fit": "landed: the lead headline is 2 lines and the photo starts in the first view at 1280x720.",
+        "3 newsprint and halftone": "landed for the photo (halftone dot screen); the paper grain is faint and the double rule under the masthead is present.",
+        "4 empty right column": "landed: a contents list with page numbers and a pull quote fill it.",
+        "5 poll glyph": "landed: '- NO CHANGE'.",
+        "6 name link hover": "not verifiable from stills.",
+        "7 layout variety": "partly: a SPECIAL EDITION layout (black masthead, red headline) exists; the 'quiet' issue is the normal layout.",
+        "8 small ads": "landed: 4 ads fill the row."
+      },
+      "fixes": [
+        {"owner": "UI", "fix": "Special edition: the red 3-line headline fills the first view at 1600x900 and pushes the photo below the fold; cap it at 2 lines (auto-fit) as on the normal layout."},
+        {"owner": "UI", "fix": "Quiet day: give it its own look (a smaller lead, a 'SLOW NEWS DAY' kicker, a larger gossip column and a crossword or horoscope box) so a flick through back issues shows three papers, not two."},
+        {"owner": "SIM", "fix": "Content is still the stub: building stories with 'opens its doors' for cables and turbines; one-line bodies; the poll at 61% every day. These hold the appeal score down (round-25 content list stands)."},
+        {"owner": "RENDER", "fix": "Photo is still the placeholder silhouette (photo() not built)."}
+      ]},
+    "social_ui": {"consistency": 0.74, "appeal": 0.66, "style": 0.72, "score": 0.71, "pass": true, "provisional": true,
+      "what_works": [
+        "Personnel file: portrait slot, rank, role, department, traits, home, doing, outfit; satisfaction with named parts and reasons (arrows: 'No leisure lately', 'Housing below what they expect', 'Lonely', 'Likes the work'); attitude with reasons; skills with levels. The design aim (b), 'always find out why', is met.",
+        "Social tab: a clear star graph with coloured friend / enemy / rival links and a sorted relationship list with values.",
+        "Review tab: four review grades and ten discipline and reward actions, each with a one-line effect on attitude and satisfaction marked '(estimate)', colour-coded green / amber / red.",
+        "Crew window: org chart as a command board (commander, departments, captain, first hands, crew, 'expects: executive', empty slots named), housing by dorm with red 'wants family / executive' flags, academy with a clear empty state.",
+        "Unrest banners: the demand in quotes and seven response buttons; the top bar shows unrest with its stage.",
+        "Follow HUD card: name, rank, role, satisfaction, doing, last line, File / Next / Switch / Exit; the rest of the HUD dims.",
+        "Codex: a People section with plain STE entries."
+      ],
+      "fixes": [
+        {"owner": "UI", "fix": "Glass behind dense text is too clear: in the personnel file and the civic palette the colony scene (a dome, a floor grid) shows sharply through the lists, so labels and small numbers sit on a busy picture. Use the darker reading well (about 88% opacity, the round-15 rule) behind every list, table and graph area; keep the clear glass only for frames and headers."},
+        {"owner": "UI", "fix": "Two windows for one person: the personnel file opens beside the inspector, both showing Marek. Open the file in place of the inspector (or dock the inspector as the file's Status tab)."},
+        {"owner": "UI", "fix": "Discipline flow: the confirm step is not in the evidence. Show one confirm dialog with the predicted effect on the person and on others (V5 6.3 'effect on others' column is not shown in the list), and the 'unfair' warning."},
+        {"owner": "UI", "fix": "Protest and riot banners look the same apart from the title colour. Make the riot banner more urgent: a red frame, a pulsing icon and a line naming the damage and injuries so far; keep protest amber."},
+        {"owner": "UI", "fix": "Banner buttons show no effect. Add a one-line tooltip or sub-label per response ('Unrest -20, stock -30 drinks', 'Unrest -15 if seen as fair') as the review tab does."},
+        {"owner": "UI", "fix": "Crew window: names are in a small monospace (about 10 px) and the lower half of the window is empty. Use the body font at 12 px and let the columns grow to fill the height; show each person's satisfaction face next to the name so the chart doubles as a mood board."},
+        {"owner": "UI", "fix": "Satisfaction and attitude bars: the parts (Needs, Leisure, Friends ...) are short bars without a scale; give them a common 0-100 track with the value inside, and sort by the worst first so the cause of anger is the first line."}
+      ]}
+  },
+  "notes": [
+    "regolith_rag PASS 0.75 (was 0.71), provisional (stub data, placeholder photo).",
+    "social_ui PASS 0.71, provisional (stub data, staged banners, no confirm dialog in evidence).",
+    "Tone check: nothing explicit; no child in any shot."
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "round": 31,
+  "date": "2026-09-29",
+  "scope": "v5.0 people PILOT (ART-NPC): m1 and f1 in uniform_engineering and casual_a, 6 new clips. Blender evidence, provisional: art/people/people_closeup.png (1.5 m, 3 angles), people_outfits.png, people_faces.png, people_clips.png; assets/models/people_m1.glb, people_f1.glb, people_manifest.json, npc_pairs.json; docs/progress/ART-NPC.md (v5). Rubric v5_rubrics.md 3.1-3.3. Judged strictly against Paul's 'stunningly modelled' aim (0.80-0.90 at 1.5 m).",
+  "pass_mark": 0.65,
+  "subjects": {
+    "people_closeup": {"consistency": 0.66, "appeal": 0.52, "style": 0.58, "score": 0.59, "pass": false, "provisional": true,
+      "what_works": [
+        "Proportions are human and the two variants differ in height (1.80 / 1.68 m), face shape, hair and skin.",
+        "Modelled features exist: eyes with iris and highlight, brows, nose, lips with a lip line, ears, eyelids, a jaw bone for talk and laugh, five-finger hands.",
+        "Triangle budget holds (m1 11.8 k, f1 15.8 k of 24 k LOD0); +2.91 MB."
+      ],
+      "faults": [
+        "Faces read as mannequins at 1.5 m: flat planes, no cheekbone or brow ridge form, no nasolabial fold, lips painted on a flat mouth area, a hard blocky jaw line. The maker says so; I agree.",
+        "f1's eyes are too large and saturated blue with a white sclera ring all round, under a low stern brow: a startled stare that leans uncanny (people_faces f1 front, 3/4).",
+        "Hair is a solid helmet with a hard jagged hairline on m1 (a stair-step edge where the hair cap meets the forehead) and flat planar cards with visible gaps on f1's bob; the strand texture is a stretched wood-grain look.",
+        "Jagged edges where parts meet: the neck base in the profile view, the tee neckline (a zig-zag edge), the hairline. These read as unfinished at 1.5 m.",
+        "Laugh: the open mouth is a dark hole with ragged lip edges; no teeth read (people_faces m1 and f1 laugh).",
+        "Hands: one open pose with splayed straight fingers in every idle frame; they read as mannequin hands.",
+        "Shading: flat untextured skin (no subtle colour variation, no normal detail), so faces look like painted plastic."
+      ]},
+    "people_outfits": {"consistency": 0.66, "appeal": 0.54, "style": 0.62, "score": 0.61, "pass": false, "provisional": true,
+      "what_works": [
+        "uniform_engineering reads as a work coverall: stand collar, zip line, chest pockets, belt with pouches, the amber department stripe across the chest and sleeves.",
+        "casual_a reads as off-duty (tee, jeans, trainers) and differs from the uniform at the room camera.",
+        "Outfits are separate skinned meshes on the shared rig (manifest)."
+      ],
+      "faults": [
+        "No cloth form: no folds at elbows, knees or waist (V5 section 1 asks for them); the fabric is a smooth tube. The coverall reads as a hard shell.",
+        "Uniform shoulders are blocky pads that sit above the arm; the tee sleeves are round puffed balloons (maker's note, confirmed on both variants).",
+        "f1 casual_a: navy tee and navy jeans in the same colour read as one onesie; the seat and hips bulge behind (outfits az 150/240).",
+        "Pockets and pouches are flat boxes stuck on the surface; the belt is a plain band.",
+        "The tee neckline edge is ragged (zig-zag) on both variants."
+      ]},
+    "people_animation": {"consistency": 0.70, "appeal": 0.62, "style": 0.68, "score": 0.67, "pass": true, "provisional": true,
+      "what_works": [
+        "Six new clips read at the room camera: talk_gesture_a, laugh (head back, hand to chest), argue (open-hand gestures), hug as a pair, sit_bar_stool, dance_a.",
+        "Technical checks: npc_verify 441/0, npc_check 165 PASS, max step 14.48 deg after the hand-direction fix; blink and jaw overlays.",
+        "The hug meets: arms round backs, heads beside each other, clean enter and exit."
+      ],
+      "faults": [
+        "Hug: bodies overlap more than 2 cm at the hold (maker: 144 vertices), and f1's right hand shows a raised thumb behind m1's back (reads as a thumbs-up). The v5 rubric hard check is 'no partner body through the other'.",
+        "Idle arm line: arms hang 25-30 deg out from the body with splayed hands in every clip's rest (the v3 round-1 A-pose fault is back on the new bodies).",
+        "Gestures are small and symmetrical; argue and talk look alike at game size; dance_a is a gentle sway (knees and hips barely move)."
+      ]}
+  },
+  "procedural_ceiling": {
+    "question": "Can the procedural (script-built) approach reach 0.80-0.90 at 1.5 m?",
+    "answer": "No, not in my judgement. With the fixes below it can reach about 0.65-0.72 (an acceptable stylised crowd). 0.80+ at 1.5 m needs sculpted form (cheekbones, brow ridge, eyelid folds, lip volume, cloth folds) and authored textures (skin colour variation, normal maps, hair cards with alpha), which primitive-based scripts do not produce. The realistic routes are (a) a hand-sculpted and retopologised base head and body per sex, made once and varied by shape keys, or (b) a licensed stylised base mesh or an AI generator (for example the Meshy pipeline Paul uses in town-sim) - both are outside V5 section 0 ('no downloads, no installs') and need Paul's decision.",
+    "recommendation": "Orchestrator: raise a decision-needed task for Paul: accept a procedural stylised look near 0.70, or allow one authored or generated base mesh per sex (and say which source) to aim at 0.80+."
+  },
+  "fixes": [
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Faces: add form with shape keys or sculpt displacement: a cheekbone plane, brow ridge, nasolabial fold, chin and jaw curve; lips with volume (upper lip overhang, lower lip shadow). Reduce f1's iris to about 45% of the eye opening, warm the blue, show less sclera, and lift the brows 2 mm to a neutral expression."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Hair: cards with alpha strands for the edge (a soft hairline) over a cap; no stair-step edge. Break f1's bob into 12-16 cards with a slight curl at the ends and a darker root; m1 crop with a fade at the sides."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Weld and smooth every seam: neck base, hairline, tee neckline. No visible jagged edge at 1.5 m."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Skin: bake subtle colour variation (warmer cheeks, nose and ears, cooler jaw), a faint pore or noise normal, and ambient occlusion in the eye sockets and under the nose."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Mouth interior: upper and lower teeth rows and a tongue, with a dark gradient behind; clean lip edges when open."},
+    {"owner": "ART-NPC", "subject": "people_closeup / people_animation", "fix": "Hands: a relaxed idle pose (fingers curled 15-30 deg, thumb in) and a fist, a point and a grip; arms 8-10 deg from the body in idle (the v3 rule)."},
+    {"owner": "ART-NPC", "subject": "people_outfits", "fix": "Cloth folds: modelled folds at elbow, knee, waist and armpit (3-5 fold ridges each), a sleeve hem with thickness; replace the uniform shoulder pads with a set-in sleeve seam and the tee balloon sleeves with a fitted sleeve."},
+    {"owner": "ART-NPC", "subject": "people_outfits", "fix": "f1 casual_a: tee and jeans in different values (for example a light top over dark jeans), a visible waistband, reduce the rear hip volume."},
+    {"owner": "ART-NPC", "subject": "people_outfits", "fix": "Pockets and pouches with flaps and stitching lines; a belt with a buckle; a fabric roughness difference between canvas, knit and denim."},
+    {"owner": "ART-NPC", "subject": "people_animation", "fix": "Hug: fix the interpenetration to <= 2 cm at the hold and fold the thumb in. Make argue larger and asymmetric (a pointing hand, a lean in), and give dance_a hip and knee motion."}
+  ],
+  "notes": [
+    "people_closeup FAIL 0.59 and people_outfits FAIL 0.61 against the 0.65 pass; people_animation PASS 0.67, provisional.",
+    "Evidence gap: the 1.5 m closeup sheet frames the torso; the head is about 110 px tall there. The rubric asks for the face at 300-450 px at 1.5 m; people_faces.png covers it.",
+    "My crops: art/critic/r31_hug.png, r31_bar.png."
+  ]
+}

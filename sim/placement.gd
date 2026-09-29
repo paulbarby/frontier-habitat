@@ -89,7 +89,7 @@ func lock_info(def_id: String, size: int = 1) -> Dictionary:
 				out["tech"] = String(al["research"])
 				out["text"] = "Research %s first for size %s." % [_tech_name(String(al["research"])), sim.sizes.size_name(size)]
 			else:
-				out["text"] = "This structure is not made in size %s. Sizes: %s." % [sim.sizes.size_name(size), ", ".join(sim.sizes.sizes_of(def_id).map(func(z): return sim.sizes.size_name(z)))]
+				out["text"] = "This structure is not made in size %s. Sizes: %s." % [sim.sizes.size_name(size), ", ".join(sim.sizes.sizes_of(def_id).map(func(z): return sim.sizes.size_label(def_id, z)))]
 			return out
 	if tech != "":
 		out["locked"] = true

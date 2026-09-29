@@ -1,11 +1,11 @@
 {
- "date": "2026-09-27 10:27",
+ "date": "2026-09-29 19:51",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 408,
- "failed": 0,
+ "passed": 453,
+ "failed": 2,
  "pending": 0,
- "info": 12,
+ "info": 13,
  "tris": {
   "suit": 6839,
   "indoor": 5964
@@ -22,18 +22,7 @@
    "Head_3": 708
   }
  },
- "sheets": [
-  "art\\npc\\turnaround_suit.png",
-  "art\\npc\\clips_suit.png",
-  "art\\npc\\deform_suit.png",
-  "art\\npc\\turnaround_indoor.png",
-  "art\\npc\\clips_indoor.png",
-  "art\\npc\\deform_indoor.png",
-  "art\\npc\\transitions.png",
-  "art\\npc\\vehicle_clips.png",
-  "art\\npc\\visitors_lineup.png",
-  "art\\npc\\visitors_turnaround.png"
- ],
+ "sheets": [],
  "checks": [
   {
    "check": "file astronaut_suit.glb",
@@ -2134,7 +2123,247 @@
    "check": "rover_small: step_down_r never inside the rover (1 cm; cushion edge soft to 3 cm)",
    "status": "pass",
    "detail": "0 vertices (every 2nd) at worst, deepest 0.000 m in None"
+  },
+  {
+   "check": "people: npc_pairs.json lists the hug",
+   "status": "pass",
+   "detail": "C:\\Users\\paulb\\Claude\\frontier-habitat\\assets\\models\\npc_pairs.json"
+  },
+  {
+   "check": "people m1: skinned meshes Head, Hair, one per outfit",
+   "status": "pass",
+   "detail": "['Hair_m1', 'Head_m1', 'Outfit_casual_a', 'Outfit_uniform_engineering']"
+  },
+  {
+   "check": "people m1: skeleton = v3 + jaw + lids (26 bones)",
+   "status": "pass",
+   "detail": "26 joints"
+  },
+  {
+   "check": "people m1: bone parents as v3; jaw and lids under head",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "people m1: <= 24000 triangles per person on screen (LOD0)",
+   "status": "pass",
+   "detail": "{'uniform_engineering': 11834, 'casual_a': 11634}"
+  },
+  {
+   "check": "people m1: COLOR_0 (AO), <= 4 weights, normalised",
+   "status": "pass",
+   "detail": "max influences 3, max |sum - 1| 0.00000"
+  },
+  {
+   "check": "people m1: every clip of the manifest (30)",
+   "status": "pass",
+   "detail": "30 clips"
+  },
+  {
+   "check": "people m1: durations match the manifest",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "people m1: no scale keys, root never moves",
+   "status": "pass",
+   "detail": "scale [], root []"
+  },
+  {
+   "check": "people m1: bone step per frame < 15 deg (not locomotion, not falls)",
+   "status": "pass",
+   "detail": "14.48 deg (kneel_exit forearm.L f38)"
+  },
+  {
+   "check": "people m1: loop seams <= 1 deg",
+   "status": "pass",
+   "detail": "0.000 deg ()"
+  },
+  {
+   "check": "people m1: face bones (jaw, lids) move <= 25 deg per frame (a blink closes in 0.1 s)",
+   "status": "pass",
+   "detail": "24.1 deg (sleep lids f33)"
+  },
+  {
+   "check": "people m1: never below the floor (z >= -0.01)",
+   "status": "pass",
+   "detail": "-0.0083 m (kneel_enter f12)"
+  },
+  {
+   "check": "people m1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
+   "status": "pass",
+   "detail": "jaw {'talk': 4.3, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 10.0}, lids 50.0"
+  },
+  {
+   "check": "people m1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
+   "status": "pass",
+   "detail": "lowest point over the seat 0.462 m"
+  },
+  {
+   "check": "people m1: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
+   "status": "pass",
+   "detail": "lowest point over the stool 0.751 m"
+  },
+  {
+   "check": "people m1: head and hair never inside the outfit at the test poses (1 cm)",
+   "status": "pass",
+   "detail": "0 vertices at worst "
+  },
+  {
+   "check": "people f1: skinned meshes Head, Hair, one per outfit",
+   "status": "pass",
+   "detail": "['Hair_f1', 'Head_f1', 'Outfit_casual_a', 'Outfit_uniform_engineering']"
+  },
+  {
+   "check": "people f1: skeleton = v3 + jaw + lids (26 bones)",
+   "status": "pass",
+   "detail": "26 joints"
+  },
+  {
+   "check": "people f1: bone parents as v3; jaw and lids under head",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "people f1: <= 24000 triangles per person on screen (LOD0)",
+   "status": "pass",
+   "detail": "{'uniform_engineering': 15798, 'casual_a': 15332}"
+  },
+  {
+   "check": "people f1: COLOR_0 (AO), <= 4 weights, normalised",
+   "status": "pass",
+   "detail": "max influences 3, max |sum - 1| 0.00000"
+  },
+  {
+   "check": "people f1: every clip of the manifest (30)",
+   "status": "pass",
+   "detail": "30 clips"
+  },
+  {
+   "check": "people f1: durations match the manifest",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "people f1: no scale keys, root never moves",
+   "status": "pass",
+   "detail": "scale [], root []"
+  },
+  {
+   "check": "people f1: bone step per frame < 15 deg (not locomotion, not falls)",
+   "status": "pass",
+   "detail": "14.48 deg (kneel_exit forearm.L f38)"
+  },
+  {
+   "check": "people f1: loop seams <= 1 deg",
+   "status": "pass",
+   "detail": "0.000 deg ()"
+  },
+  {
+   "check": "people f1: face bones (jaw, lids) move <= 25 deg per frame (a blink closes in 0.1 s)",
+   "status": "pass",
+   "detail": "24.1 deg (sleep lids f33)"
+  },
+  {
+   "check": "people f1: never below the floor (z >= -0.01)",
+   "status": "pass",
+   "detail": "-0.0077 m (kneel_enter f12)"
+  },
+  {
+   "check": "people f1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
+   "status": "pass",
+   "detail": "jaw {'talk': 4.3, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 10.0}, lids 50.0"
+  },
+  {
+   "check": "people f1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
+   "status": "pass",
+   "detail": "lowest point over the seat 0.458 m"
+  },
+  {
+   "check": "people f1: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
+   "status": "pass",
+   "detail": "lowest point over the stool 0.747 m"
+  },
+  {
+   "check": "people f1: head and hair never inside the outfit at the test poses (1 cm)",
+   "status": "pass",
+   "detail": "0 vertices at worst "
+  },
+  {
+   "check": "people pair hug (m1 with f1): bodies overlapping deeper than 2 cm at the hold (for information)",
+   "status": "info",
+   "detail": "144 vertices (every 2nd) at worst"
+  },
+  {
+   "check": "robot: one skinned mesh Robot_dancer",
+   "status": "pass",
+   "detail": "['Robot_dancer']"
+  },
+  {
+   "check": "robot: skeleton = the 24 v3 bones",
+   "status": "pass",
+   "detail": "24 joints"
+  },
+  {
+   "check": "robot: bone parents as v3",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "robot: <= 24000 triangles",
+   "status": "pass",
+   "detail": "14884"
+  },
+  {
+   "check": "robot: COLOR_0 (AO), <= 4 weights, normalised",
+   "status": "pass",
+   "detail": "max influences 1, max |sum - 1| 0.00000"
+  },
+  {
+   "check": "robot: every clip of the manifest (5)",
+   "status": "pass",
+   "detail": "robot_idle, robot_dance_a, robot_dance_b, robot_dance_c, robot_pole"
+  },
+  {
+   "check": "robot: durations match the manifest",
+   "status": "pass",
+   "detail": "ok"
+  },
+  {
+   "check": "robot: no scale keys, root never moves",
+   "status": "pass",
+   "detail": "scale [], root []"
+  },
+  {
+   "check": "robot: bone step per frame < 15 deg (every clip)",
+   "status": "FAIL",
+   "detail": "22.58 deg (robot_dance_c foot.R f23)"
+  },
+  {
+   "check": "robot: loop seams <= 1 deg",
+   "status": "pass",
+   "detail": "0.000 deg ()"
+  },
+  {
+   "check": "robot: every clip starts on the same pose (chain with no blend; <= 1 deg, 1 mm)",
+   "status": "pass",
+   "detail": "all equal"
+  },
+  {
+   "check": "robot: never below the podium top (z >= -0.01)",
+   "status": "pass",
+   "detail": "-0.0027 m (robot_pole f100)"
+  },
+  {
+   "check": "robot: feet stay on the podium (<= 0.75 m from the pole axis, below 0.25 m)",
+   "status": "pass",
+   "detail": "0.688 m (robot_pole f188)"
+  },
+  {
+   "check": "robot: nothing inside the pole (r 0.045 m; gripping hands <= 2 cm into it)",
+   "status": "FAIL",
+   "detail": "body vertices inside: 96 (robot_pole f164); hand depth 0.012 m (robot_pole f40)"
   }
  ],
- "seconds": 132.2
+ "seconds": 16.7
 }

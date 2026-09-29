@@ -16,6 +16,7 @@ const Boot = preload("res://presentation/boot.gd")
 const Settings = preload("res://ui/settings.gd")
 const Glass = preload("res://ui/widgets/glass.gd")
 const Audio = preload("res://ui/audio.gd")
+const V5Data = preload("res://ui/v5_data.gd")
 const Sfx = preload("res://ui/sfx.gd")
 const Profile = preload("res://ui/profile.gd")
 const UiMock = preload("res://ui/mock.gd")
@@ -613,6 +614,60 @@ func _on_cmd(text: String) -> String:
 			hud.reactor_win.refresh(true)
 			var rs: Array = hud.v4.reactors()
 			return res_txt + ("none" if rs.is_empty() else "%s %s heat %.1f next %s in %.0f s" % [rs[0]["name"], rs[0]["phase"], float(rs[0]["heat"]), str(rs[0].get("next_stage", "")), float(rs[0]["next_phase_s"])])
+		"rag":
+			# rag [n]: opens "The Regolith Rag" on the newest issue (or back issue n, 0 = newest).
+			hud.rag.visible = true
+			if w.size() > 1:
+				hud.rag.show_issue(clampi(int(w[1]), 0, maxi(0, hud.rag._issues.size() - 1)))
+			var iss: Array = hud.rag._issues
+			return "%d issues; shown %d: %s; %d name links" % [iss.size(), hud.rag.shown, String(iss[hud.rag.shown]["lead"]["headline"]) if not iss.is_empty() else "-", hud.rag.links.size()]
+		"unrest":
+			# unrest <calm|grumbling|slowdown|protest|strike|riot|off> [value]: shows that stage (the UI's
+			# view only; SIM is not changed). For screenshots of the banner.
+			if w.size() < 2 or w[1] == "off":
+				hud.v5.unrest_override = {}
+				return "off"
+			var val: float = float(w[2]) if w.size() > 2 else {"calm": 5.0, "grumbling": 30.0, "slowdown": 45.0, "protest": 60.0, "strike": 75.0, "riot": 90.0}.get(w[1], 50.0)
+			hud.v5.unrest_override = {"value": val, "stage": w[1], "causes": [{"text": "Low satisfaction", "delta": val * 0.7}, {"text": "Ration cuts seen as unfair", "delta": val * 0.3}], "demand": "Full rations now!"}
+			hud.unrest_banner._update()
+			return "unrest %s %d" % [w[1], int(val)]
+		"shoulder":
+			# shoulder [off|next]: the over-the-shoulder follow of the selected person (key V).
+			if w.size() > 1 and w[1] == "off":
+				follow_end()
+				return "off"
+			if w.size() > 1 and w[1] == "next":
+				follow_next_person()
+				return str(view.follow_id)
+			if view.selected_kind != "agent":
+				return "select a person first"
+			return "following %d" % view.selected_id if follow_person(view.selected_id) else "cannot follow"
+		"person":
+			# person [tab]: opens the personnel file of the selected person (tab: file, social, review).
+			# person ask <action>: the confirm of a review or discipline action (screenshots; nothing is sent).
+			if view.selected_kind != "agent":
+				return "select a person first"
+			if w.size() > 2 and w[1] == "ask":
+				hud.open_person(view.selected_id, "review")
+				var is_review: bool = V5Data.REVIEWS.any(func(r): return String(r[0]) == w[2])
+				var nm: String = w[2].capitalize()
+				for r in V5Data.REVIEWS + V5Data.ACTIONS:
+					if String(r[0]) == w[2]:
+						nm = String(r[1])
+				hud.person._ask(w[2], nm, "review" if is_review else "discipline")
+				return "asked"
+			hud.open_person(view.selected_id, w[1] if w.size() > 1 else "file")
+			return "ok"
+		"raglayout":
+			# raglayout <standard|special|quiet|auto>: shows the Rag in that layout (screenshots, tests).
+			hud.rag.force_layout = "" if w.size() < 2 or w[1] == "auto" else w[1]
+			hud.rag.visible = true
+			hud.rag.show_issue(maxi(0, hud.rag.shown))
+			return hud.rag.layout
+		"ragscroll":
+			# ragscroll <px>: scrolls the Rag page (screenshots); returns the page height.
+			hud.rag._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
+			return "page %d, view %d" % [int(hud.rag._paper.size.y), int(hud.rag._scroll.size.y)]
 		"advisor":
 			# advisor: opens the advisor window and returns its tips, one per line.
 			hud.advisor.visible = true
@@ -1157,6 +1212,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					follow_selected()
 			KEY_SLASH: hud.toggle_find()
 			KEY_N: hud.toggle_advisor()   # version 4 advisor (V4_DESIGN §6)
+			KEY_J: hud.toggle_rag()       # version 5 "The Regolith Rag" (V5_DESIGN §4.3)
 			KEY_K: hud.toggle_screen("codex")   # version 4 codex (V4_DESIGN §6)
 			KEY_O: hud.cycle_overlay()
 			KEY_G: hud.toggle_screen("goals")
@@ -1164,13 +1220,28 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_C: hud.toggle_screen("dashboard")
 			KEY_I: hud.toggle_screen("inventory")
 			KEY_P: hud.toggle_screen("colonists")
-			KEY_V: hud.toggle_screen("awards")
+			KEY_U: hud.toggle_screen("crew")   # version 5 crew: org chart, housing, academy
+			KEY_V:
+				# Version 5: V follows the selected person over the shoulder; without one, the awards.
+				if in_follow():
+					follow_end()
+				elif view.selected_kind == "agent":
+					follow_person(view.selected_id)
+				else:
+					hud.toggle_screen("awards")
+			KEY_TAB:
+				if in_follow():
+					follow_next_person()
+			KEY_PAGEUP: hud.floor_sel.step(1)
+			KEY_PAGEDOWN: hud.floor_sel.step(-1)
 			KEY_H: hud.set_hud_visible(not hud.hud_visible())
 			KEY_F1: hud.toggle_screen("help")
 			KEY_ESCAPE:
 				# Shift+Esc closes every window (V4 window manager); Esc closes the last one first.
 				if cancel_pick():
 					pass
+				elif in_follow() and not hud.is_modal_open():
+					follow_end()
 				elif k.shift_pressed:
 					close_all_windows()
 				elif tool != "select":
@@ -1259,6 +1330,65 @@ func close_all_windows() -> int:
 	var n: int = hud.screens.get_child_count() if hud.is_modal_open() else 0
 	hud.screens.close_all()
 	return n + (hud.wm.close_all() if hud.wm != null else 0)
+
+# ---------------------------------------------------------------- V5 §3 follow view (UI side)
+## The over-the-shoulder follow of a person: RENDER's camera (view.follow_start), the UI's follow HUD
+## (ui/hud/follow_hud.gd), the rest of the HUD dimmed. Keys while following: Tab next person, Esc exit,
+## the Konami code (§4.5 egg). Returns false when the person cannot be followed.
+func follow_person(id: int) -> bool:
+	if view == null or not view.has_method("follow_start") or not view.follow_start(id):
+		hud.toast("This person cannot be followed now.", "warn", "follow")
+		return false
+	select("agent", id)
+	if hud.is_modal_open():
+		hud.close_modal()
+	hud.follow_changed(id)
+	return true
+
+func follow_end() -> void:
+	if view != null and view.has_method("follow_stop") and view.in_follow():
+		view.follow_stop()
+	hud.follow_changed(-1)
+
+func in_follow() -> bool:
+	return view != null and view.has_method("in_follow") and view.in_follow()
+
+func follow_next_person() -> void:
+	if in_follow():
+		var nx: int = view.follow_next()
+		if nx >= 0:
+			select("agent", nx)
+			hud.follow_changed(nx)
+
+# Konami code (V5 §4.5, egg 3): ↑↑↓↓←→←→BA in the follow view.
+const KONAMI := [KEY_UP, KEY_UP, KEY_DOWN, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LEFT, KEY_RIGHT, KEY_B, KEY_A]
+var _konami_i := 0
+func _konami_key(code: int) -> bool:
+	if code == KONAMI[_konami_i]:
+		_konami_i += 1
+		if _konami_i >= KONAMI.size():
+			_konami_i = 0
+			return true
+	else:
+		_konami_i = 1 if code == KONAMI[0] else 0
+	return false
+
+## The dance egg: SIM makes the person (and nearby friends) dance and gives the award when it has
+## the command "egg"; the UI records the find for the codex and shows it at once.
+func dance_egg() -> void:
+	var id: int = view.follow_id if view != null else -1
+	if id < 0:
+		return
+	submit("egg", {"kind": "dance", "agent": id})
+	if view.has_method("egg_dance"):
+		view.egg_dance(id)
+	hud.egg_found("dance", id)
+
+func _input(event: InputEvent) -> void:
+	# In the follow view the camera takes the arrow keys: the code is read here, before it.
+	if event is InputEventKey and event.pressed and not event.echo and in_follow():
+		if _konami_key((event as InputEventKey).physical_keycode):
+			dance_egg()
 
 func follow_selected() -> void:
 	if view.selected_kind == "agent":

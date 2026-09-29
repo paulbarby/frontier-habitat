@@ -1,7 +1,7 @@
 {
   "clips_shared_bake": true,
   "failures": [],
-  "generated": "2026-09-27T00:29:14",
+  "generated": "2026-09-29T09:04:20",
   "limits": {
     "bone_deg_per_frame": 15.0,
     "fps": 30,
@@ -10,7 +10,7 @@
   "ok": true,
   "skeleton_identical": true,
   "source": "glb",
-  "summary": "145 tests, 0 failures",
+  "summary": "165 tests, 0 failures",
   "tests": [
     {
       "at_frame": 76,
@@ -383,6 +383,156 @@
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "clip suit_swap at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 118,
+      "clips": [
+        "drive_sit"
+      ],
+      "frames": 240,
+      "max_bone": "upper_arm.L",
+      "max_deg": 1.74,
+      "max_hips_m": 0.0007,
+      "max_root_m": 0.0,
+      "name": "clip drive_sit at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 86,
+      "clips": [
+        "ride_sit"
+      ],
+      "frames": 300,
+      "max_bone": "upper_arm.R",
+      "max_deg": 1.03,
+      "max_hips_m": 0.0006,
+      "max_root_m": 0.0,
+      "name": "clip ride_sit at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 8,
+      "clips": [
+        "board"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.R",
+      "max_deg": 14.2,
+      "max_hips_m": 0.0353,
+      "max_root_m": 0.0,
+      "name": "clip board at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 8,
+      "clips": [
+        "board_r"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.2,
+      "max_hips_m": 0.0353,
+      "max_root_m": 0.0,
+      "name": "clip board_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 46,
+      "clips": [
+        "alight"
+      ],
+      "frames": 60,
+      "max_bone": "shin.R",
+      "max_deg": 12.75,
+      "max_hips_m": 0.0308,
+      "max_root_m": 0.0,
+      "name": "clip alight at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 46,
+      "clips": [
+        "alight_r"
+      ],
+      "frames": 60,
+      "max_bone": "shin.L",
+      "max_deg": 12.75,
+      "max_hips_m": 0.0308,
+      "max_root_m": 0.0,
+      "name": "clip alight_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 9,
+      "clips": [
+        "step_up"
+      ],
+      "frames": 60,
+      "max_bone": "hand.R",
+      "max_deg": 14.63,
+      "max_hips_m": 0.0522,
+      "max_root_m": 0.0,
+      "name": "clip step_up at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 9,
+      "clips": [
+        "step_up_r"
+      ],
+      "frames": 60,
+      "max_bone": "hand.L",
+      "max_deg": 14.63,
+      "max_hips_m": 0.0522,
+      "max_root_m": 0.0,
+      "name": "clip step_up_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 56,
+      "clips": [
+        "step_down"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.R",
+      "max_deg": 14.09,
+      "max_hips_m": 0.0732,
+      "max_root_m": 0.0,
+      "name": "clip step_down at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "suit"
+    },
+    {
+      "at_frame": 56,
+      "clips": [
+        "step_down_r"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.09,
+      "max_hips_m": 0.0732,
+      "max_root_m": 0.0,
+      "name": "clip step_down_r at 1x",
       "ok": true,
       "over_15_deg": false,
       "variant": "suit"
@@ -1545,6 +1695,156 @@
       "max_hips_m": 0.0,
       "max_root_m": 0.0,
       "name": "clip suit_swap at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 118,
+      "clips": [
+        "drive_sit"
+      ],
+      "frames": 240,
+      "max_bone": "upper_arm.L",
+      "max_deg": 1.74,
+      "max_hips_m": 0.0007,
+      "max_root_m": 0.0,
+      "name": "clip drive_sit at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 86,
+      "clips": [
+        "ride_sit"
+      ],
+      "frames": 300,
+      "max_bone": "upper_arm.R",
+      "max_deg": 1.03,
+      "max_hips_m": 0.0006,
+      "max_root_m": 0.0,
+      "name": "clip ride_sit at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 8,
+      "clips": [
+        "board"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.R",
+      "max_deg": 14.2,
+      "max_hips_m": 0.0353,
+      "max_root_m": 0.0,
+      "name": "clip board at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 8,
+      "clips": [
+        "board_r"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.2,
+      "max_hips_m": 0.0353,
+      "max_root_m": 0.0,
+      "name": "clip board_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 46,
+      "clips": [
+        "alight"
+      ],
+      "frames": 60,
+      "max_bone": "shin.R",
+      "max_deg": 12.75,
+      "max_hips_m": 0.0308,
+      "max_root_m": 0.0,
+      "name": "clip alight at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 46,
+      "clips": [
+        "alight_r"
+      ],
+      "frames": 60,
+      "max_bone": "shin.L",
+      "max_deg": 12.75,
+      "max_hips_m": 0.0308,
+      "max_root_m": 0.0,
+      "name": "clip alight_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 9,
+      "clips": [
+        "step_up"
+      ],
+      "frames": 60,
+      "max_bone": "hand.R",
+      "max_deg": 14.63,
+      "max_hips_m": 0.0522,
+      "max_root_m": 0.0,
+      "name": "clip step_up at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 9,
+      "clips": [
+        "step_up_r"
+      ],
+      "frames": 60,
+      "max_bone": "hand.L",
+      "max_deg": 14.63,
+      "max_hips_m": 0.0522,
+      "max_root_m": 0.0,
+      "name": "clip step_up_r at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 56,
+      "clips": [
+        "step_down"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.R",
+      "max_deg": 14.09,
+      "max_hips_m": 0.0732,
+      "max_root_m": 0.0,
+      "name": "clip step_down at 1x",
+      "ok": true,
+      "over_15_deg": false,
+      "variant": "in"
+    },
+    {
+      "at_frame": 56,
+      "clips": [
+        "step_down_r"
+      ],
+      "frames": 60,
+      "max_bone": "forearm.L",
+      "max_deg": 14.09,
+      "max_hips_m": 0.0732,
+      "max_root_m": 0.0,
+      "name": "clip step_down_r at 1x",
       "ok": true,
       "over_15_deg": false,
       "variant": "in"
@@ -2398,17 +2698,32 @@
         "collapse",
         "dead",
         "cheer",
-        "suit_swap"
+        "suit_swap",
+        "drive_sit",
+        "ride_sit",
+        "board",
+        "board_r",
+        "alight",
+        "alight_r",
+        "step_up",
+        "step_up_r",
+        "step_down",
+        "step_down_r"
       ],
       "clips_missing": [],
       "file": "res://assets/models/astronaut_indoor.glb",
       "head_variants": 4,
       "in_clip_max_step_deg": {
+        "alight": 12.7500737793347,
+        "alight_r": 12.7500737793347,
+        "board": 14.2044823083661,
+        "board_r": 14.2045386574268,
         "carry_idle": 0.748604261041589,
         "carry_walk": 17.5420551000665,
         "cheer": 11.9162297713075,
         "collapse": 22.2751217703388,
         "dead": 0.0,
+        "drive_sit": 1.74001342278408,
         "idle": 9.77728431573173,
         "idle_look": 2.89313238240765,
         "injured_walk": 12.8146258971804,
@@ -2417,6 +2732,7 @@
         "lie_enter": 12.0085312402038,
         "lie_exit": 13.9390133458952,
         "repair_kneel": 4.68165540950274,
+        "ride_sit": 1.02869553794756,
         "run": 22.1167962778306,
         "sit_eat": 11.7461990421092,
         "sit_enter": 7.08952803770355,
@@ -2424,6 +2740,10 @@
         "sit_idle": 2.00935008659419,
         "sit_type": 2.94384034713606,
         "sleep": 0.0791293690406109,
+        "step_down": 14.0927967626054,
+        "step_down_r": 14.0926849182577,
+        "step_up": 14.6314229192316,
+        "step_up_r": 14.6313153437522,
         "suit_swap": 14.0716872092018,
         "talk": 12.8162267227672,
         "walk": 17.2668053067042,
@@ -2435,7 +2755,7 @@
       "triangles": 8868
     },
     "suit": {
-      "bake_ms": 61.7,
+      "bake_ms": 81.9,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",
@@ -2488,17 +2808,32 @@
         "collapse",
         "dead",
         "cheer",
-        "suit_swap"
+        "suit_swap",
+        "drive_sit",
+        "ride_sit",
+        "board",
+        "board_r",
+        "alight",
+        "alight_r",
+        "step_up",
+        "step_up_r",
+        "step_down",
+        "step_down_r"
       ],
       "clips_missing": [],
       "file": "res://assets/models/astronaut_suit.glb",
       "head_variants": 0,
       "in_clip_max_step_deg": {
+        "alight": 12.7500737793347,
+        "alight_r": 12.7500737793347,
+        "board": 14.2044823083661,
+        "board_r": 14.2045386574268,
         "carry_idle": 0.748604261041589,
         "carry_walk": 17.5420551000665,
         "cheer": 11.9162297713075,
         "collapse": 22.2751217703388,
         "dead": 0.0,
+        "drive_sit": 1.74001342278408,
         "idle": 9.77728431573173,
         "idle_look": 2.89313238240765,
         "injured_walk": 12.8146258971804,
@@ -2507,6 +2842,7 @@
         "lie_enter": 12.0085312402038,
         "lie_exit": 13.9390133458952,
         "repair_kneel": 4.68165540950274,
+        "ride_sit": 1.02869553794756,
         "run": 22.1167962778306,
         "sit_eat": 11.7461990421092,
         "sit_enter": 7.08952803770355,
@@ -2514,6 +2850,10 @@
         "sit_idle": 2.00935008659419,
         "sit_type": 2.94384034713606,
         "sleep": 0.0791293690406109,
+        "step_down": 14.0927967626054,
+        "step_down_r": 14.0926849182577,
+        "step_up": 14.6314229192316,
+        "step_up_r": 14.6313153437522,
         "suit_swap": 14.0716872092018,
         "talk": 12.8162267227672,
         "walk": 17.2668053067042,

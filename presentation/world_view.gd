@@ -25,6 +25,7 @@ const TerrainV4 = preload("res://presentation/terrain_v4.gd")
 const Vehicles = preload("res://presentation/fx_vehicles.gd")
 const Reactor = preload("res://presentation/fx_reactor.gd")
 const Explore = preload("res://presentation/fx_explore.gd")
+const Bubbles = preload("res://presentation/fx_bubbles.gd")
 const Post = preload("res://presentation/fx_post.gd")
 const Particles = preload("res://presentation/fx_particles.gd")
 const Ghost = preload("res://presentation/fx_ghost.gd")
@@ -216,6 +217,10 @@ func setup(s) -> void:
 	explore.name = "Explore"
 	add_child(explore)
 	explore.setup(self)
+	bubbles = Bubbles.new()
+	bubbles.name = "Bubbles"
+	add_child(bubbles)
+	bubbles.setup(self)
 	interior = Interior.new()
 	interior.name = "InteriorLights"
 	add_child(interior)
@@ -242,6 +247,373 @@ func h(x: float, y: float) -> float:
 
 func to3(p: Vector2, lift: float = 0.0) -> Vector3:
 	return Vector3(p.x, h(p.x, p.y) + lift, p.y)
+
+# ---------------------------------------------------------------- V5 §8 super dome (RENDER draws)
+## ART-B's dome (models.gd dome_template): one template, one group per node. Each frame: the build
+## stage (which groups exist yet), the floor cutaway (floors above the viewed floor, the roof and the
+## dome hidden), the lift cabs and the crane jib, and the glass uniforms (night, sun).
+## Stages: 0 foundation, 1..5 level_n, 6 dome_frame, 7 dome_glass, 8 fit-out (venues one by one), 9 done.
+## SIM gives no stage yet: from b.build_stage when present, else from the build progress.
+var dome_view_floor := {}     # building id -> floor 1..5 the player views (UI floor selector); absent = top
+const LIFT_STOPS := [0.0, 5.0, 9.2, 13.4, 17.6, 21.8]
+
+func set_view_floor(bid: int, k: int) -> void:
+	if k <= 0:
+		dome_view_floor.erase(bid)
+	else:
+		dome_view_floor[bid] = k
+
+func _dome_stage(b: Dictionary) -> float:
+	if b.has("build_stage"):
+		return float(b["build_stage"])
+	if String(b["state"]) == "building":
+		var p: float = clampf(float(b.get("progress", 0.0)) / maxf(1.0, float(b.get("work_total", 1.0))), 0.0, 0.999)
+		return p * 9.0
+	return 9.0
+
+static func _dome_floor_of(g: String) -> int:
+	if g.begins_with("D_Floor_") and g.length() > 8 and g[8].is_valid_int():
+		return int(g[8])
+	return 0
+
+## Is group g built at stage s (float: 8.x = fit-out x done)?
+static func _dome_built(g: String, s: float, rank: float) -> bool:
+	var st: int = int(floor(s))
+	if g == "D_Foundation":
+		return true
+	if g == "D_Site" or g.begins_with("D_Crane"):
+		return st < 6
+	if g.begins_with("D_Scaffold_"):
+		return st == int(g.substr(11, 1))
+	if g in ["D_Gates", "D_Lifts"] or g.begins_with("D_Lift_"):
+		return st >= 1
+	var fl: int = _dome_floor_of(g)
+	if fl > 0:
+		if g == "D_Floor_%d" % fl or g.begins_with("D_Floor_%d__Struct" % fl):
+			return st >= fl
+		return s >= 8.0 + rank
+	if g.begins_with("D_Floor_Roof"):
+		return st >= 5 if g.contains("Struct") else s >= 8.0 + rank
+	if g == "D_Dome" or g.begins_with("D_Dome__Dome_Frame"):
+		return st >= 6
+	if g.begins_with("D_Dome"):
+		return st >= 7
+	return s >= 8.0 + rank
+
+func _dome_update(b: Dictionary, meta: Dictionary, delta: float) -> void:
+	var hnd: int = meta["h"]
+	var tpl: Dictionary = meta["tpl"]
+	var s: float = _dome_stage(b)
+	# Finished (or back under construction): the other template.
+	if (s >= 9.0) != String(tpl.get("key", "")).ends_with(":merged"):
+		_drop_building(int(b["id"]))
+		return
+	# The floor the player views: the followed person's floor inside this dome, else the selector,
+	# else the top floor when the camera is close (roof and dome off), else no cut.
+	var k := 0
+	if follow_id >= 0 and sim.get("floors") != null:
+		var fa: Dictionary = sim.floors.agent_floor(sim.state["agents"].get(follow_id, {}))
+		if int(fa.get("building", -1)) == int(b["id"]):
+			k = int(fa.get("floor", 0)) + 1
+	if k == 0 and dome_view_floor.has(int(b["id"])):
+		k = int(dome_view_floor[int(b["id"])])
+	elif k == 0 and float(meta["open"]) > 0.5:
+		k = 5
+	var sig := "%d|%d" % [int(s * 20.0), k]
+	if sig != String(meta.get("dome_sig", "")):
+		meta["dome_sig"] = sig
+		var groups: Array = (tpl.get("groups", {}) as Dictionary).keys()
+		var fit: Array = groups.filter(func(g): return not _dome_is_structure(String(g)))
+		fit.sort()
+		var rank_of := {}
+		for i in fit.size():
+			rank_of[fit[i]] = float(i) / maxf(1.0, float(fit.size()))
+		for g in groups:
+			var gs: String = g
+			var show: bool = _dome_built(gs, s, float(rank_of.get(gs, 0.0)))
+			if k > 0 and show:
+				var fl: int = _dome_floor_of(gs)
+				if fl > k or gs.begins_with("D_Floor_Roof") or gs.begins_with("D_Dome"):
+					show = false
+			inst.set_hidden(hnd, gs, not show)
+	# Lift cabs: each rides a loop over the stops (1.5 m/s, 4 s at each stop), phase per cab.
+	for i in 4:
+		var g2 := "D_Lift_%d" % i
+		if not (tpl.get("groups", {}) as Dictionary).has(g2):
+			continue
+		inst.set_extra(hnd, g2, Transform3D(Basis(), Vector3(0.0, _lift_y(_time + float(i) * 11.0), 0.0)))
+	# Crane jib turns slowly while it stands.
+	if s < 6.0 and (tpl.get("groups", {}) as Dictionary).has("D_Crane__Crane_Jib"):
+		var jp: Vector3 = (tpl.get("jib_pivot", Transform3D.IDENTITY) as Transform3D).origin
+		var rot := Basis(Vector3.UP, sin(_time * 0.05) * 1.4)
+		inst.set_extra(hnd, "D_Crane__Crane_Jib", Transform3D(Basis(), jp) * Transform3D(rot, Vector3.ZERO) * Transform3D(Basis(), -jp))
+	var gm = tpl.get("dome_glass")
+	if gm is ShaderMaterial:
+		(gm as ShaderMaterial).set_shader_parameter("night", clampf(maxf(float(sky.night), v4_dark * 0.85), 0.0, 1.0))
+		(gm as ShaderMaterial).set_shader_parameter("sun_dir", sky.sun_dir)
+
+## V5 §7 multi-storey rooms (ART-HAB F<n>_ groups, the apartment block): viewing floor k hides every
+## F<n>_* group with n > k and the Roof. k: the followed person's floor + 1, else the UI floor selector,
+## else no cut. (Floor 0 keeps the plain group names.)
+func _floors_update(b: Dictionary, meta: Dictionary) -> void:
+	var k := -1
+	if follow_id >= 0 and sim.get("floors") != null:
+		var fa: Dictionary = sim.floors.agent_floor(sim.state["agents"].get(follow_id, {}))
+		if int(fa.get("building", -1)) == int(b["id"]):
+			k = int(fa.get("floor", 0))
+	if k < 0 and dome_view_floor.has(int(b["id"])):
+		k = int(dome_view_floor[int(b["id"])]) - 1
+	var sig := str(k)
+	if sig == String(meta.get("floor_sig", "")):
+		return
+	meta["floor_sig"] = sig
+	for g in (meta["tpl"].get("groups", {}) as Dictionary):
+		var gs: String = g
+		var fl: int = Models.floor_of_group(gs)
+		if fl > 0:
+			inst.set_hidden(int(meta["h"]), gs, k >= 0 and fl > k)
+	if k >= 0:
+		inst.set_hidden(int(meta["h"]), "Roof", true)
+
+static func _dome_is_structure(g: String) -> bool:
+	if g in ["D_Foundation", "D_Site", "D_Gates", "D_Lifts", "D_Dome"] or g.begins_with("D_Crane") or g.begins_with("D_Scaffold_") or g.begins_with("D_Lift_") or g.begins_with("D_Dome__"):
+		return true
+	var fl: int = _dome_floor_of(g)
+	if fl > 0 and (g == "D_Floor_%d" % fl or g.begins_with("D_Floor_%d__Struct" % fl)):
+		return true
+	return g.begins_with("D_Floor_Roof") and g.contains("Struct")
+
+## A lift cab's height: a loop over the stops up and down, 1.5 m/s, 4 s dwell.
+func _lift_y(t: float) -> float:
+	var legs: Array = []
+	var seq: Array = [0, 1, 2, 3, 4, 5, 4, 3, 2, 1]
+	var total := 0.0
+	for j in seq.size():
+		var a: float = LIFT_STOPS[seq[j]]
+		var bb: float = LIFT_STOPS[seq[(j + 1) % seq.size()]]
+		var dur: float = absf(bb - a) / 1.5
+		legs.append([a, bb, dur])
+		total += dur + 4.0
+	var u: float = fposmod(t, total)
+	for l in legs:
+		if u < 4.0:
+			return float(l[0])
+		u -= 4.0
+		if u < float(l[2]):
+			return lerpf(float(l[0]), float(l[1]), smoothstep(0.0, 1.0, u / float(l[2])))
+		u -= float(l[2])
+	return 0.0
+
+# ---------------------------------------------------------------- V5 §3 follow view (RENDER camera)
+var bubbles
+var follow_id := -1
+var _follow_open := {}      # building id -> true: roofs cut away for the follow view
+
+## Over-the-shoulder follow of a person (V5 §3). UI binds V / the Follow button / Esc / Tab to
+## follow_start, follow_stop and follow_next; the camera rig does the spring, orbit, zoom, Q/E swap.
+func follow_start(id: int) -> bool:
+	var r = rig()
+	if r == null or not r.has_method("shoulder_start") or not sim.state["agents"].has(id) or agent_world_pos(id) == null:
+		return false
+	follow_id = id
+	bubbles.follow_id = id
+	r.shoulder_start(func(): return _follow_body(id))
+	Models.near_fade(0.8, 1.4)
+	r.collide_fn = _follow_collide
+	return true
+
+func follow_stop() -> void:
+	var r = rig()
+	if r != null and r.has_method("shoulder_stop"):
+		r.shoulder_stop()
+		r.target_distance = 22.0
+		r.distance = 22.0
+	follow_id = -1
+	bubbles.follow_id = -1
+	_follow_open = {}
+	Models.near_fade(0.0, 0.001)
+
+func in_follow() -> bool:
+	return follow_id >= 0
+
+## The next living person (Tab), by id order.
+func follow_next() -> int:
+	var ids: Array = []
+	for id in sim.state["agents"]:
+		if sim.state["agents"][id]["state"] == "alive" and agent_world_pos(int(id)) != null:
+			ids.append(int(id))
+	ids.sort()
+	if ids.is_empty():
+		return -1
+	var nx: int = ids[0]
+	for id in ids:
+		if id > follow_id:
+			nx = id
+			break
+	follow_start(nx)
+	return nx
+
+## [ground point, body yaw, eye height] of the followed person, or null.
+func _follow_body(id: int):
+	if not sim.state["agents"].has(id) or sim.state["agents"][id]["state"] != "alive":
+		follow_id = -1
+		bubbles.follow_id = -1
+		return null
+	var p = agent_world_pos(id)
+	if p == null:
+		return null
+	var yaw := 0.0
+	var eye := 1.65
+	if npc != null and npc.agents.has(id):
+		yaw = float(npc.agents[id]["yaw"])
+		var clip: String = String(npc.agents[id]["sm"].cur)
+		if clip in ["sleep", "lie_enter", "lie_exit", "collapse", "dead"]:
+			eye = 0.7
+		elif clip.begins_with("sit") or clip in ["drive_sit", "ride_sit"]:
+			eye = 1.2
+		elif clip.begins_with("kneel") or clip == "repair_kneel":
+			eye = 1.05
+	var indoor: bool = String(sim.state["agents"][id].get("where", "")) != "out"
+	return [p, yaw, eye, indoor]
+
+## The rooms and exteriors whose walls a point or a segment meets (xz circles).
+func _follow_circles(center: Vector3, reach: float) -> Array:
+	var out: Array = []
+	var c2 := Vector2(center.x, center.z)
+	for id in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(id, {})
+		if b.is_empty() or b["kind"] == "link" or not (b["kind"] in ["room", "exterior"]):
+			continue
+		var r: float = float(b["radius"]) * (1.0 if b["kind"] == "room" else 0.8)
+		var bp: Vector2 = b["pos"]
+		if bp.distance_to(c2) < r + reach:
+			out.append([int(id), bp, r, b["kind"] == "room"])
+	return out
+
+## The camera never passes a wall: from the shoulder to the wanted eye, stop 0.3 m before the
+## first wall (a person inside a room: the eye stays inside it; outside: it does not enter one).
+func _follow_collide(pivot: Vector3, eye: Vector3) -> Vector3:
+	var a := Vector2(pivot.x, pivot.z)
+	var b2 := Vector2(eye.x, eye.z)
+	var d: Vector2 = b2 - a
+	var len: float = d.length()
+	if len < 0.01:
+		return eye
+	var best: float = 1.0
+	for c in _follow_circles(pivot, len + 1.0):
+		# A room open in the cutaway has no wall above 1.40 m: the camera (above 2 m) passes over it.
+		if bmeta.has(c[0]) and float(bmeta[c[0]].get("open", 0.0)) > 0.5 and eye.y - pivot.y > -1.0:
+			continue
+		var cp: Vector2 = c[1]
+		var r: float = c[2]
+		var inside: bool = a.distance_to(cp) < r - 0.05
+		var rr: float = (r - 0.3) if inside else (r + 0.3)
+		# |a + d t - cp| = rr
+		var f: Vector2 = a - cp
+		var qa: float = d.dot(d)
+		var qb: float = 2.0 * f.dot(d)
+		var qc: float = f.dot(f) - rr * rr
+		var disc: float = qb * qb - 4.0 * qa * qc
+		if disc < 0.0:
+			continue
+		var s: float = sqrt(disc)
+		var t: float = (-qb + s) / (2.0 * qa) if inside else (-qb - s) / (2.0 * qa)
+		if t > 0.0 and t < best:
+			best = t
+	# Ship hulls and vehicles (critic round 29: the camera was pressed against a ship hull): their world
+	# boxes, grown by 0.3 m (the camera sphere), cut the segment too.
+	var d3: Vector3 = eye - pivot
+	for ab in _follow_obstacles():
+		var bx: AABB = (ab as AABB).grow(0.3)
+		if bx.has_point(pivot):
+			continue
+		var hit = bx.intersects_segment(pivot, eye)
+		if hit != null:
+			var th: float = ((hit as Vector3) - pivot).length() / maxf(d3.length(), 0.001)
+			best = minf(best, th)
+	return pivot.lerp(eye, clampf(best, 0.08, 1.0))
+
+var _obst: Array = []
+var _obst_t := -10.0
+## World boxes of the ships (pad ship and visiting traffic) and the vehicles, rebuilt twice a second.
+func _follow_obstacles() -> Array:
+	if _time - _obst_t < 0.5:
+		return _obst
+	_obst_t = _time
+	_obst = []
+	var nodes: Array = []
+	if traffic != null:
+		for r in traffic.ships.values():
+			if r.get("node") != null:
+				nodes.append(r["node"])
+	if ship != null and ship.node != null:
+		nodes.append(ship.node)
+	if vehicles != null:
+		for r in vehicles.vehicles.values():
+			nodes.append(r["node"])
+	for nd in nodes:
+		if not is_instance_valid(nd) or not (nd as Node3D).is_visible_in_tree():
+			continue
+		var box := AABB()
+		var first := true
+		for vi in (nd as Node).find_children("*", "MeshInstance3D", true, false):
+			var b3: AABB = (vi as MeshInstance3D).global_transform * (vi as MeshInstance3D).get_aabb()
+			box = b3 if first else box.merge(b3)
+			first = false
+		if not first:
+			_obst.append(box)
+	return _obst
+
+## Line of sight for bubbles: no closed (not cut away) wall between two heads.
+func follow_los(a3: Vector3, b3: Vector3) -> bool:
+	var a := Vector2(a3.x, a3.z)
+	var b2 := Vector2(b3.x, b3.z)
+	for c in _follow_circles(a3, a.distance_to(b2) + 1.0):
+		var cp: Vector2 = c[1]
+		var r: float = c[2]
+		var ia: bool = a.distance_to(cp) < r
+		var ib: bool = b2.distance_to(cp) < r
+		if ia == ib and not ia:
+			# both outside: blocked only if the segment passes through the building
+			var q: Vector2 = Geometry2D.get_closest_point_to_segment(cp, a, b2)
+			if q.distance_to(cp) >= r:
+				continue
+		elif ia == ib:
+			continue
+		var open: bool = bmeta.has(c[0]) and float(bmeta[c[0]].get("open", 0.0)) > 0.5
+		if not open:
+			return false
+	return true
+
+## Follow view each frame: the rooms round the person and the camera open (roof and upper walls
+## cut away), as the cutaway rule does near the camera.
+func _follow_sync() -> void:
+	if follow_id < 0:
+		if not _follow_open.is_empty():
+			_follow_open = {}
+		return
+	var r = rig()
+	if r == null or not r.in_shoulder():
+		follow_id = -1
+		bubbles.follow_id = -1
+		_follow_open = {}
+		Models.near_fade(0.0, 0.001)
+		return
+	var p = agent_world_pos(follow_id)
+	if p == null:
+		return
+	var cam: Vector3 = r.camera.global_position
+	_follow_open = {}
+	for c in _follow_circles(p, 6.0) + _follow_circles(cam, 3.0):
+		_follow_open[c[0]] = true
+	# Corridors the person is in or next to.
+	for id in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(id, {})
+		if b.is_empty() or b["def"] != "corridor":
+			continue
+		var q: Vector2 = Geometry2D.get_closest_point_to_segment(Vector2(p.x, p.z), b["p0"], b["p1"])
+		if q.distance_to(Vector2(p.x, p.z)) < 5.0:
+			_follow_open[int(id)] = true
 
 func rig():
 	var cam: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
@@ -514,6 +886,8 @@ func sync(delta: float) -> void:
 	if not _skip.has("vehicles"): vehicles.sync(delta)
 	if not _skip.has("reactor"): reactor.sync(delta)
 	if not _skip.has("explore"): explore.sync(delta)
+	_follow_sync()
+	bubbles.sync(delta)
 	_fly_step(delta)
 	_sync_selection(delta)
 	overlays.sync(delta)
@@ -900,7 +1274,7 @@ func _vis_mode(b: Dictionary) -> String:
 		return "node:demolish"
 	match String(b["state"]):
 		"blueprint": return "node:blueprint"
-		"building": return "node:building"
+		"building": return "inst" if String(b["def"]) == "super_dome" else "node:building"
 		"broken": return "node:broken"
 	return "inst"
 
@@ -909,6 +1283,9 @@ func _template(b: Dictionary) -> Dictionary:
 	if b["kind"] == "link":
 		return Models.prop([String(b["def"])], 1.2, "room", "logistics")
 	var size: int = int(b.get("size", 1)) if def.has("sizes") else -1
+	if String(b["def"]) == "super_dome" and Models.has_model("dome_shell"):
+		# The finished dome is the merged template (119 surfaces, not 460: V5 §0 draw calls).
+		return Models.dome_template(_dome_stage(b) >= 9.0)
 	# Old-save airlocks (record radius 2.8 m, before the 3.4 m airlock): ART-HAB's own R 2.8
 	# model, unscaled (ART-HAB F0; never airlock_m scaled down).
 	if String(b["def"]) == "airlock" and float(b["radius"]) < 3.0 and Models.has_model("airlock_r28"):
@@ -933,7 +1310,12 @@ func _template(b: Dictionary) -> Dictionary:
 			s_r = float(mr[size])
 		if mr.has(-1):
 			m_r = float(mr[-1])
-	var tb: Dictionary = Models.building(b["def"], size, float(b["radius"]), m_r, b["kind"], def.get("category", "logistics"), s_r)
+	# V5 (ART-HAB 2026-09-29): variant files <id>_<variant>_<size>.glb (residence tube executive), else <id>_<size>.
+	var model_id: String = String(b["def"])
+	var variant: String = String(b.get("variant", ""))
+	if variant != "" and size >= 0 and size < Models.SIZE_SUFFIX.size() and Models.has_model("%s_%s_%s" % [model_id, variant, Models.SIZE_SUFFIX[size]]):
+		model_id = "%s_%s" % [model_id, variant]
+	var tb: Dictionary = Models.building(model_id, size, float(b["radius"]), m_r, b["kind"], def.get("category", "logistics"), s_r)
 	if mr.has(-1) and size < 0 and absf(float(b["radius"]) - m_r) > 0.05:
 		tb = Models._with_scale(tb, float(b["radius"]) / m_r)
 	# Airlock lights take their colour from the cycle (fx_airlock).
@@ -1185,7 +1567,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 		# Roof cutaway: nearby roofs open when the camera is close; the selected one always.
 		if b["kind"] != "link" or b["def"] == "corridor":
 			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0 and not _no_cutaway
-			var want: float = 1.0 if (near or _force_open_all or (selected_kind == "building" and selected_id == id)) else 0.0
+			var want: float = 1.0 if (near or _force_open_all or _follow_open.has(id) or (selected_kind == "building" and selected_id == id)) else 0.0
 			# 4.0 exteriors whose roof is part of the silhouette (depot hangar, reactor, plants, pad):
 			# never cut away (UI shot 2026-09-27: the depot read as a plain box without it).
 			if String(b["def"]) in NO_CUTAWAY:
@@ -1194,6 +1576,10 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			if o != want:
 				meta["open"] = move_toward(o, want, delta * 3.5)
 				_apply_roof(b, meta)
+		if String(b["def"]) == "super_dome":
+			_dome_update(b, meta, delta)
+		elif bool(meta["tpl"].get("has_floors", false)):
+			_floors_update(b, meta)
 		# Rotor spins with the real wind.
 		if (meta["tpl"]["groups"] as Dictionary).has("Rotor"):
 			var w: float = float(sim.state["env"].get("wind", 3.0))
@@ -2359,6 +2745,86 @@ func debug_cmd(text: String) -> String:
 			return str(vehicles.test_off.keys())
 		"vspots":
 			vehicles.spots_on = not (w.size() > 1 and w[1] == "0")
+		"follow":
+			# follow <agent id|next|off>: the V5 over-the-shoulder view (UI binds the keys).
+			if w.size() < 2 or w[1] == "off":
+				follow_stop()
+				return "off"
+			if w[1] == "next":
+				return str(follow_next())
+			if w[1] == "talk":
+				# the speaker of a SIM talk going on now (evidence: bubbles from SIM's data)
+				var soc = sim.get("social")
+				if soc != null:
+					for tk in soc.talks():
+						if agent_world_pos(int(tk["speaker"])) != null and follow_start(int(tk["speaker"])):
+							return str(int(tk["speaker"]))
+				return "none"
+			if w[1] == "near":
+				# the living person nearest to x z (follow near <x> <z>)
+				var q := Vector2(float(w[2]), float(w[3]))
+				var best := -1
+				var bd := 1e9
+				for aid in sim.state["agents"]:
+					var ag: Dictionary = sim.state["agents"][aid]
+					if ag["state"] == "alive" and (ag["pos"] as Vector2).distance_to(q) < bd and agent_world_pos(int(aid)) != null:
+						bd = (ag["pos"] as Vector2).distance_to(q)
+						best = int(aid)
+				return str(best) if follow_start(best) else "none"
+			return "ok" if follow_start(int(w[1])) else "not found"
+		"shoulder":
+			# shoulder <dist 1.2-4> <orbit deg> <side 1|-1> [pitch deg]: the follow camera by command.
+			var rs = rig()
+			if rs == null:
+				return "no rig"
+			rs.sh_dist = clampf(float(w[1]), 1.2, 4.0) if w.size() > 1 else rs.sh_dist
+			rs.sh_orbit = clampf(deg_to_rad(float(w[2])), -1.2217, 1.2217) if w.size() > 2 else rs.sh_orbit
+			rs.sh_side = (1.0 if float(w[3]) >= 0.0 else -1.0) if w.size() > 3 else rs.sh_side
+			rs.sh_pitch = deg_to_rad(float(w[4])) if w.size() > 4 else rs.sh_pitch
+			return "d %.2f orbit %.0f side %d" % [rs.sh_dist, rad_to_deg(rs.sh_orbit), int(rs.sh_side)]
+		"bubbles":
+			# bubbles stub|sim: evidence staging only (RENDER stub lines) or SIM's talks (default).
+			bubbles.force_stub = w.size() > 1 and w[1] == "stub"
+			return "stub" if bubbles.force_stub else "sim"
+		"anchor":
+			# anchor <name part>: world positions of matching anchors of any structure (evidence camera aim).
+			var out_a := []
+			for bid2 in bmeta:
+				for an in (bmeta[bid2].get("anchors", {}) as Dictionary):
+					if String(an).contains(w[1]):
+						var ap: Vector3 = (bmeta[bid2]["anchors"][an] as Transform3D).origin
+						out_a.append([an, snappedf(ap.x, 0.1), snappedf(ap.y, 0.1), snappedf(ap.z, 0.1)])
+			return JSON.stringify(out_a.slice(0, 12))
+		"viewanchor":
+			# viewanchor <name part> [floor]: the over-the-shoulder camera on a structure's anchor (a stand
+			# point: the arcade player, a bar stool), facing along the anchor's +X. Evidence camera.
+			for bid3 in bmeta:
+				for an2 in (bmeta[bid3].get("anchors", {}) as Dictionary):
+					if String(an2).contains(w[1]):
+						var ax: Transform3D = bmeta[bid3]["anchors"][an2]
+						var fx: Vector3 = ax.basis.x.normalized()
+						var ay: float = atan2(-fx.z, fx.x)
+						if w.size() > 2:
+							set_view_floor(int(bid3), int(w[2]))
+						var rr = rig()
+						if rr != null:
+							rr.shoulder_start(func(): return [ax.origin, ay, 1.65, true])
+							rr.collide_fn = Callable()
+						return "%s at %s" % [an2, str(ax.origin.snapped(Vector3.ONE * 0.1))]
+			return "not found"
+		"viewfloor":
+			# viewfloor <building id> <floor 1..5 | 0 = off>: the floor cutaway (UI's floor selector calls set_view_floor)
+			set_view_floor(int(w[1]), int(w[2]))
+			return str(dome_view_floor)
+		"followinfo":
+			var rf = rig()
+			var fp = agent_world_pos(follow_id) if follow_id >= 0 else null
+			return JSON.stringify({"id": follow_id, "name": String(sim.state["agents"].get(follow_id, {}).get("name", "")), "where": String(sim.state["agents"].get(follow_id, {}).get("where", "")),
+				"cam": str(rf.camera.global_position.snapped(Vector3.ONE * 0.01)) if rf != null else "", "body": str(fp.snapped(Vector3.ONE * 0.01)) if fp != null else "",
+				"cam_body_m": snappedf(rf.camera.global_position.distance_to(fp), 0.01) if (rf != null and fp != null) else -1, "open": _follow_open.keys().size(), "bubbles": bubbles.stats,
+				"in": (_follow_circles(fp, 0.0).map(func(c): return String(sim.state["buildings"][c[0]]["def"]) + ("/open" if float(bmeta[c[0]].get("open", 0.0)) > 0.5 else "")) if fp != null else []),
+				"cam_in": (_follow_circles(rf.camera.global_position, 0.0).map(func(c): return String(sim.state["buildings"][c[0]]["def"]) + ("/open" if float(bmeta[c[0]].get("open", 0.0)) > 0.5 else "")) if rf != null else []),
+				"clip": String(npc.agents[follow_id]["sm"].cur) if (npc != null and npc.agents.has(follow_id)) else ""})
 		"launchtest":
 			return explore.test_launch(int(w[1]))
 		"v4state":

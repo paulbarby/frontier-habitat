@@ -21,6 +21,19 @@ func build() -> void:
 	var a: Dictionary = arg if typeof(arg) == TYPE_DICTIONARY else {}
 	for line in a.get("lines", []):
 		var row: HBoxContainer = Kit.hbox(8)
+		if typeof(line) == TYPE_DICTIONARY:
+			# A headed line: {head, text, color, icon} (the discipline confirm: on the person, on others, unfair).
+			var d: Dictionary = line
+			var col: Color = d.get("color", accent)
+			row.add_child(Kit.icon(String(d.get("icon", "arrow_right")), 16, col))
+			var hv: VBoxContainer = Kit.vbox(0)
+			hv.add_child(Kit.head(String(d.get("head", "")).to_upper(), col, 12))
+			var dl: Label = Kit.wrap(String(d.get("text", "")), 14, P.TEXT)
+			dl.custom_minimum_size.x = 470
+			hv.add_child(dl)
+			row.add_child(hv)
+			content.add_child(row)
+			continue
 		row.add_child(Kit.icon("arrow_right", 12, accent))
 		var l: Label = Kit.wrap(String(line), 14, P.TEXT)
 		l.custom_minimum_size.x = 480

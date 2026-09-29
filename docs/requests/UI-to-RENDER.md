@@ -175,3 +175,27 @@ panels agree: the UI shows FULL (inspector badge, Storage bar, By structure tab)
 100 % (`sim.inventory.contents(b).full`, used >= capacity); from 95 % the bar is red, from 80 % amber. Your tag
 starts at 98 %. Please use `contents(b).full` (or `used >= capacity`) for the text "FULL", so a player who
 sees FULL on the map finds FULL in the panel. The colour can stay yours.
+
+## 2026-09-29 — v5 follow view: UI side done; three requests
+
+UI side (in `presentation/main.gd`, `ui/hud.gd`, `ui/hud/follow_hud.gd`):
+- **V**: follow the selected person (`view.follow_start(id)`); V again exits. **Tab**: `view.follow_next()`.
+  **Esc**: `view.follow_stop()`. The inspector footer has **Shoulder**; the personnel file and the follow card
+  have **Follow**. F stays the v3 overview follow. Debug: `shoulder [off|next]`.
+- In the follow view the UI dims the goals, alerts, minimap, build bar, nav rail, top bar and banners to 0.28,
+  hides the inspector, and shows the follow card top left (name, rank, mood, satisfaction, doing, talking with,
+  last 3 lines; File / Next / Switch / Exit). The time controls stay at full.
+- Bubble style: `ui/theme/bubble_style.gd` `apply(view)` calls `view.bubbles.ui_style(dict)` with
+  `bg, border, follow_border, text, name, radius, font_size`, at start and on each follow change.
+- Konami code (↑↑↓↓←→←→BA) is read by the UI in the follow view only. It submits `egg {kind: "dance", agent}` and
+  calls `view.egg_dance(agent_id)` if it exists.
+
+Requests:
+1. `view.set_view_floor(building_id, floor)` (floor -1 = all): the floor cutaway for a multi-storey building.
+   The UI floor selector (`ui/hud/floor_selector.gd`, keys PgUp / PgDn) calls it when it exists; now it only
+   shows the buttons.
+2. `view.egg_dance(agent_id)`: the dance animation for the person and friends near them (V5 §4.5).
+3. `view.photo(agent_ids, place_hint, pose_hint) -> Texture2D` (or a signal when ready): a snapshot for the
+   Rag lead photo and the personnel file portrait. The UI draws a placeholder silhouette until it exists
+   (`ui/v5_data.gd photo()` calls it if present).
+4. Optional: the speaker under a screen point in `view.bubbles`, so a click on a bubble switches the follow.

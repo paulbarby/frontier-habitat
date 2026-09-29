@@ -978,3 +978,50 @@ Checks: `check` 235 scripts 0 failed; path PASS (550,104 samples, wall 0, furnit
 - Checks: `check` 238 scripts 0 failed; path PASS; v4 path PASS; airlock all 0; cut 0 above, doors 0 bad.
 
 - FULL tag now uses SIM `contents(b).full` only (the panels' rule, 100 %). Cold storage with ART-HAB totes fills visibly: S 32, M 57, L 94, XL 145 totes (`147_cold_storage_fill.png`).
+
+
+# v5 (from 2026-09-29)
+
+## 2026-09-29 - follow-view pilot (V5 §3)
+
+**Landed:**
+- `camera_rig.gd` shoulder mode: 0.55 m to the side (Q/E swap), 1.9 m back (wheel 1.2-4 m), eye height + 0.15 m (+0.45 m more indoors so the view clears the kept furniture; lower pivot when the person sits, kneels or lies), right/middle drag orbit +-70 deg and pitch, spring on position and heading (small turns barely move the camera; real turns followed in about 0.6 s), near plane 0.08 m.
+- `world_view.gd`: `follow_start/stop/next`, `in_follow`; the rooms and corridors round the person and the camera are cut away (roof off, walls at 1.40 m); wall pull-in against closed rooms and exteriors (circle test from the shoulder, 0.3 m margin; an open room is passed over, its walls are cut); ground clearance 0.35 m. Debug: `follow <id|next|talk|near x z|off>`, `shoulder <dist> <orbit> <side> [pitch]`, `followinfo`, `bubbles stub|sim`.
+- `presentation/fx_bubbles.gd`: glass bubbles with a tail, name, 1-2 lines, 7 emote icons drawn in code, fade in/out, stacked upward, max 6, 14 m and line of sight (closed walls block, cut-away rooms do not), the followed person's bubble always. Data from SIM's `talks_near` (asked once a second); a RENDER stub for staging only.
+- `render_export.mjs` mirrors `templates/` (the new web shell lives there; without it the export had an empty shell).
+
+**Measured** (web GPU, machine loaded ~20 % CPU by other agents' Blender and Python):
+| view | fps | max ms | frames > 50 ms / 20 s | draw calls |
+|---|---|---|---|---|
+| follow, v3_late 66 people, indoors, 3rd 20 s | 47.5 | 100 | 18 | 1,080 |
+| overview 110 m, same save and load | 35.2 | 117 | 22 | 1,215 |
+The follow view costs no more than the overview. Both are held down by SIM's once-a-second tick (51-66 ms, reported) and fx_npc (8-10 ms at 66 people under this load).
+
+**Not done / not tested:** props in the sphere cast (only room and exterior walls); corridors' tube walls; floors above (§7, no multi-storey building yet); new people models (ART-NPC files not landed); the dome case (30 people in view, no dome yet); click-a-bubble; the UI keys and HUD (UI). Evidence `art/critic_input/render/150_v5_follow_view_pilot.png`.
+
+
+## 2026-09-29 (later) - round 29 fixes, super dome, floors, variants, fx_npc cost
+
+**Follow view (critic round 29):** camera exactly 0.55 m right, 1.9 m back, eye + 0.15 m (measured 1.98 m in plan, 1.80 m above the feet on 8 people), looks along the heading 10 deg down: the person on the left third. Near-camera dither on every building material (standard materials: distance fade pixel dither; interior, wall and tint shaders: the same in code): closer than 0.8-1.4 m fades, only in the follow view (the shader variant exists from the start). Bubbles 14 px lines, 12 px names, 1 px metal rim, tail to the speaker's head even when stacked, the followed person's last line kept 6 s. POI labels and pillars hidden in the follow view.
+
+**Super dome:** `Models.dome_template(merged)` joins ART-B's 8 files; per-node groups (stages, floors, lifts, crane jib); merged finished dome 119 surfaces (not 460). `dome_glass.gdshader` (day fresnel sky reflection, night rim + crown glow, priority -2), `prism_shift_screen.gdshader` on `ArcadeScreen`, interior fill on the floors' surfaces, lift cabs looping over the stops, crane jib turning. Stages from `b.build_stage` or the build progress. Floor cutaway: the followed person's floor (`sim.floors.agent_floor`), else `set_view_floor` (UI), else the top floor when the camera is close. Debug: `viewfloor`, `viewanchor`, `anchor`. Saves: `tools/render_dome_save.gd`.
+
+**Floors (apartment block):** `F<n>_` groups (ART-HAB proposal accepted), `_floors_update` hides floors above the viewed one and `Roof`. Not tested: no apartment block model yet.
+**Variants:** `<id>_<variant>_<size>` first. Not shot in game yet (no residence tube with `variant: executive` in a save).
+**fx_npc:** 9.4 -> 5.3 ms at 66 people, 110 m (bodies updated every 2nd frame beyond 70 m camera distance). Path check PASS after.
+
+**Measured (web, GPU, machine loaded by other agents):**
+| case | fps | frames > 50 ms | draw calls |
+|---|---|---|---|
+| showcase_v4 + dome, 250 m, night, 20 s | 53.3-59.3 | 0 | 1,364 |
+| showcase_v4 + dome, 250 m, day | - | - | 1,309 |
+| follow view inside the dome, 30 people (v3_late + dome), 30 s | 56.7 | 0 | 1,361 |
+
+**Not tested:** the budget's 110-person v5 showcase (not built by SIM yet); the apartment block (no model); residence tube variants in game; lift riders; the robot dancers (ART-NPC); props in the camera collision beyond the near dither; paired clips; photo(). Evidence 151-153.
+
+
+## 2026-09-29 - PAUSED (Paul)
+
+- **Done, not exported or shot:** ART-B §9 glass spec in `dome_glass.gdshader` (F = 1 - ndv^0.9, alpha 0.12 -> 0.85, Schlick F0 0.08, tint #C4DEE8, rim #FFDDB3 x A x 0.8); PRISM SHIFT screen V flipped (the title bar showed at the bottom) and a larger prism ship; follow camera pull-in against ship hulls and vehicles (world boxes grown 0.3 m, `_follow_obstacles`). `check` 258 scripts, 0 failed.
+- **Not started:** ART-HAB v5 buildings in game (apartment block floors, residence tube variants, retail, park, academy, security office, jail, `civic` colour), `photo()`, the 20 s indoor follow spike re-measure, the MPFB rig agreement with ART-NPC.
+- **Next step:** export, shoot the glass (250 m day/night) and the arcade screen, then the ART-HAB buildings.

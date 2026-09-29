@@ -32,6 +32,14 @@ func _init(s) -> void:
 static func size_name(size: int) -> String:
 	return SIZE_NAMES[clampi(size, 0, 3)]
 
+## V5: the size label to show: a giant single-size structure has its own ("XXL" apartment block,
+## "XXXXL" super dome); others S/M/L/XL.
+func size_label(def_id: String, size: int) -> String:
+	var d: Dictionary = sim.content["buildings"].get(def_id, {})
+	if d.has("size_label"):
+		return String(d["size_label"])
+	return size_name(size)
+
 ## The sizes a structure can have: [0, 1, 2, 3] with a "sizes" block, else [1]. A
 ## "size_list" limits them (V3.1: the airlock has M and L only).
 func sizes_of(def_id: String) -> Array:

@@ -1,0 +1,39 @@
+{
+  "round": 26,
+  "date": "2026-09-29",
+  "scope": "super_dome re-check after ART-B's round-24 fixes 1-8. Blender-only, provisional. Evidence art/dome/overview_250_day.png, overview_250_night.png (bloom pass), pilot_overview_day.png, pilot_overview_night.png, pilot_atrium_pool.png, pilot_atrium_night.png, pilot_gallery_L1.png, pilot_cutaway_L1.png. Rubric v5_rubrics.md 3.9.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "super_dome": {"consistency": 0.78, "appeal": 0.70, "style": 0.74, "score": 0.74, "pass": true, "provisional": true, "was": 0.68,
+      "round_24_fixes_checked": {
+        "1 night facade": "landed: windows now vary (warm amber, cream, cool blue, about a quarter dark), light strips on the gallery slabs, neon signs CLOTHING / ELECTRONICS / GIFTS and a lit billboard on the L1 outer face. At 250 m I count 4-5 light colours. Still reads more 'lit office ring' than 'city': the upper three floors are an even grid of equal windows, and the neon is only on one low band facing the camera.",
+        "2 frame thinner and metal": "landed: graphite struts about half the old width, small warm node lights. The day view now reads glass first.",
+        "3 glass reflection": "partly: the glass has a faint tint and a highlight rim, but no sky reflection or fresnel gradient is visible; the dome still reads as clear film at 250 m by day.",
+        "4 signs": "landed: CREDIT, RESTAURANT, CAFE and CLINIC read; HOTEL is still clipped at its left edge by the tree ('OTEL' reads as 'HOTEL' only in part), and the barber sign in the gallery view is cut by a column ('AR ER').",
+        "5 pool glow": "landed: cyan rim-lit pool, warm plaza lamps and string lights at night (pilot_atrium_night.png); from the 250 m night view the atrium is the bright heart.",
+        "6 venues filled": "partly: the cutaway shows more (clothing racks and mannequins, grocery shelf rows, electronics counters, hotel sofas); inside the gallery view the cafe goods are plain coloured boxes on tables and the wall screens are flat cyan rectangles.",
+        "7 props": "landed: slatted benches with graphite frames; palms and trees now match the colony plant family (palms are a new but fitting choice for a resort).",
+        "8 pool water": "partly: a darker edge and a rim light, no tile or lane pattern; the surface is still a flat light blue by day."
+      },
+      "gap_to_paul_aim": {
+        "aim": "a glittering city under glass",
+        "night_overview_250m": "Close to the mark. It is now the brightest object in the scene, with a glowing atrium, varied windows and neon at street level. What keeps it from glittering: the glass shell itself is almost invisible at night (no rim glow, no reflections of the city lights), and the lights are too regular on L3-L5. Estimate 0.72 against the aim (0.80 = glitters).",
+        "day_overview_250m": "Reads as a domed city; the glass needs a sky reflection to feel like glass. Estimate 0.70.",
+        "inside": "The atrium at night is the best image of the dome: resort mood, pool glow, neon signs, warm lamps. The gallery still needs goods with detail. Estimate 0.74."
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Break the grid on L3-L5: per unit, vary window size (2 widths), add small balconies or planter boxes on every third unit, and let some units show a TV-blue flicker or a coloured lamp; add 2-3 more neon or sign bands at L2 around the full ring (not only the camera side)."},
+        {"owner": "ART-B / RENDER", "fix": "Night glass: a faint emissive rim along the dome edge and at the crown ring, plus the city lights reflected in the glass panes (in game: screen-space or a cheap reflection probe tinted warm), so the shell itself glitters."},
+        {"owner": "ART-B / RENDER", "fix": "Day glass: sky reflection with fresnel (25-40% at grazing angles). This was fix 3 and is still open."},
+        {"owner": "ART-B", "fix": "Signs: keep HOTEL and BARBER plates clear of trees and columns from the atrium and gallery views (move the plate, or the tree 1.5 m)."},
+        {"owner": "ART-B", "fix": "Venue goods: replace plain boxes with type props (cakes and cups on the cafe counter, boxed goods with labels, a menu board); give the wall screens content (a menu, an advert) instead of flat cyan."},
+        {"owner": "ART-B", "fix": "Pool: a tile or lane pattern and a darker deep end so it reads as water by day."},
+        {"owner": "RENDER", "fix": "In-game: the 250 m night shot with the game's glow, the draw-call count, and glass sorting against the ring. This decides the final score."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.74 (was 0.68), provisional. 5 of 8 fixes fully landed, 3 partly (glass reflection, venue goods, pool water).",
+    "Seen in passing: in the gallery view a customer stands inside the table top (hips through the table edge). The people are placeholders, but RENDER's seat and stand anchors must keep bodies clear of the cafe tables.",
+    "My evidence: art/critic/r26_night250_gamepx.png (night 250 m at half size), r26_gallery_crop.png."
+  ]
+}

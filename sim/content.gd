@@ -31,6 +31,9 @@ static func load_all() -> Dictionary:
 	# V4 planet (docs/V4_DESIGN.md section 1).
 	c["terrain_v4"] = _read("res://content/terrain_v4.json")
 	c["vehicles"] = _read("res://content/vehicles.json")
+	c["people"] = _read("res://content/people.json")
+	c["dialogue"] = _read("res://content/dialogue.json")
+	c["tabloid"] = _read("res://content/tabloid.json")
 	# V3.1 door clearance (ART-HAB data): model angles where a new corridor may not attach.
 	c["door_blocked"] = _read("res://content/door_blocked.json").get("rooms", {}) if FileAccess.file_exists("res://content/door_blocked.json") else {}
 	var awards_file: Dictionary = _read("res://content/awards.json")

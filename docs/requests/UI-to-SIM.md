@@ -205,3 +205,58 @@ codex ("How to unlock") and the advisor. Thank you.
 `clear_after`. The UI now holds this alert 180 s from its first clear, so the panel is steady; the log may
 still show it cleared and raised. Please check whether a machine with a full buffer and a finished batch should
 count as blocked through the batch.
+
+## 2026-09-29 — v5: the Rag window reads `sim.social.rag_issues()`
+
+The Regolith Rag window (`ui/hud/rag_window.gd`) is built on your issue shape; the adapter
+`ui/v5_data.gd norm_rag()` maps it. Please add, when you can (the UI fills gaps meanwhile):
+1. `lead.kind` and each story's `kind` are used (kicker and tag); keep them.
+2. The lead `text` is one line now ("Our spies saw them together."): a lead body of 2-4 sentences in
+   tabloid voice with the actors' names (the window links every name).
+3. `gossip`, `ads`: 3 and 4 lines per issue, varied by day (the UI pads from `content/tabloid.json`
+   columns; there are 2 lines each). Ads from retail stock and ship arrivals (the UI adds arrivals).
+4. `couple_watch`/`feud_watch` rows: a `note` (one tabloid line) each.
+5. `poll`: `commander` (agent id) and `change` (points since the last issue).
+6. `serious`: rows `{text, severity}` (the UI shows the icon by severity).
+
+## 2026-09-29 — v5 people UI: the commands it submits, and one finding
+
+The personnel file, crew screen and unrest banner are in. They submit these commands with `main.submit(kind,
+payload)`. SIM answers `invalid` for all of them now; the UI shows "not yet" when `sim.<system>` has no
+`cmd_<kind>`. Please add them (names and payloads are yours to change; tell me in SIM-to-UI.md):
+
+| kind | payload | from |
+|---|---|---|
+| `review` | `{agent, grade}`: excellent, good, needs_improvement, poor | personnel file, Review tab |
+| `discipline` | `{agent, action}`: praise, bonus_leisure, gift, warning, extra_shift, ration_cut, confine, demote, jail | Review tab |
+| `appoint` | `{agent, rank, department, base}`: commander, captain, first_hand | crew screen, org chart drop |
+| `set_home` | `{agent, building, unit}` | crew screen, Housing drop |
+| `enrol` | `{agent, skill, building}` | crew screen, Academy |
+| `unrest_response` | `{base, response}`: meet_demand, leisure_day, party, amnesty, replace_captain, arrest_ringleaders, lock_down | unrest banner |
+| `egg` | `{kind: "dance", agent}` | Konami code in the follow view |
+
+Also asked:
+1. `sim.people.predict(agent, action, params = {}) -> {attitude, satisfaction, others (text), risk (text)}`
+   for the reviews and actions above. The UI now uses a trait table of its own and marks it "(estimate)".
+2. `sim.education.students(building) -> [{agent, skill, progress 0..1}]` for the Academy tab.
+
+**Finding (unrest cannot reach protest):** in `showcase_v4`, with every colonist at morale 0, fatigue 100 and
+health 30, `sim.social.unrest(-1)` gives value about 37 (grumbling). Protest starts at 55, so the banner and
+the responses cannot show in play. Test: `tools/ui/test_v5_people.gd` prints "NOTE unrest from SIM with every
+colonist unhappy". The UI evidence uses the debug command `unrest <stage>` (UI view only, no sim write).
+
+**Finding (landing pad not powered, 2026-09-29 evening):** `tools/ui/test_ships_ui.gd` fails one check now.
+In `showcase_v3_late`, a landing pad placed at 374.5 430.5, built (`fast 400`) and cabled to 6507 (18 m)
+reports `13497:active:powered=false` after `fast 200`. The test passed before SIM's changes of 18:04–18:31
+(`content/buildings.json`, `sim/*.gd`). The UI did not change here. Please check whether the pad (power 1.0,
+class industry) now loses its power in load shedding, or whether the cable no longer joins it to the grid.
+
+## 2026-09-29 — critic round 30: three small data asks
+
+1. `sim.social.unrest(base)`: please add `damage` (rooms damaged in this riot) and `injured` (people hurt).
+   The riot banner shows "DAMAGE: … · INJURED: …" and says "not reported yet" until they exist.
+2. `sim.social.response_effect(base, response) -> {unrest (delta), cost (text)}`: the banner shows a short
+   effect under each response. Until then it shows the UI's estimate (for example "unrest -40 · costs stock
+   or a rule") and the tooltip says it is an estimate.
+3. `people.predict(...)`: please include `unfair` (bool or a sentence). The discipline confirm warns
+   "UNFAIR" now when the person's attitude is 0 or more (the UI's rule until SIM decides).

@@ -64,6 +64,12 @@ static func panel_style(kind: String) -> StyleBox:
 	match kind:
 		"hud":
 			return glass_frame("hud", [16, 12, 16, 12])
+		"reading_hud":
+			# Critic round 30, fix 1: lists, tables and graphs sit on a darker glass (about 88 %).
+			var rh = glass_frame("hud", [16, 12, 16, 12])
+			rh.tint_top = Color(0.05, 0.09, 0.15, 0.86)
+			rh.tint_bottom = Color(0.03, 0.05, 0.09, 0.90)
+			return rh
 		"card":
 			return rimmed(Color(0.085, 0.13, 0.21, 0.55), Color(0.06, 0.095, 0.16, 0.62), [7, 0, 7, 0], [9, 7, 9, 7], 1.0, true)
 		"card_button":

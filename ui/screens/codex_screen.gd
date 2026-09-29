@@ -29,7 +29,7 @@ func _init() -> void:
 	title = "Codex"
 	subtitle = "Every structure, item, research project and hazard: where it comes from and what uses it."
 	accent = P.CYAN
-	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"]]
+	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"], ["society", "People", "people"]]
 
 func _ready() -> void:
 	if typeof(arg) == TYPE_STRING and String(arg).contains(":"):

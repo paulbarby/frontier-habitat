@@ -17,10 +17,11 @@ const TABS := [
 	["power", "Power", "cat_utilities", ["utilities"]],
 	["logistics", "Logistics", "cat_logistics", ["logistics"]],
 	["science", "Science", "cat_science", ["science", "space"]],
+	["civic", "Civic", "cat_civic", ["civic"]],
 ]
 const TAB_TIP := {"life": "Life support", "food": "Food", "habitat": "Habitat, comfort and medical", "industry": "Industry", "power": "Power",
-	"logistics": "Logistics", "science": "Science and space"}
-const TAB_COLOR := {"life": "life_support", "food": "food", "habitat": "housing", "industry": "industry", "power": "utilities", "logistics": "logistics", "science": "science"}
+	"logistics": "Logistics", "science": "Science and space", "civic": "Civic: security, jail and the super dome"}
+const TAB_COLOR := {"life": "life_support", "food": "food", "habitat": "housing", "industry": "industry", "power": "utilities", "logistics": "logistics", "science": "science", "civic": "civic"}
 
 var hud
 var open_tab := ""
@@ -84,6 +85,7 @@ func _ready() -> void:
 		_tool_buttons[kind] = b
 	# Drawer
 	_drawer = Kit.panel("HudPanel")
+	_drawer.add_theme_stylebox_override("panel", load("res://ui/theme/ui_theme.gd").panel_style("reading_hud"))   # critic round 30
 	_drawer.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_drawer.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_drawer.grow_vertical = Control.GROW_DIRECTION_BEGIN

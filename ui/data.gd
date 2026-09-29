@@ -1269,3 +1269,11 @@ func kpis() -> Dictionary:
 	out["forecast"] = f
 	out["day_len"] = day_len
 	return out
+
+## Version 5: the size word of a structure: S/M/L/XL, or its own label (XXL apartment block, XXXXL
+## super dome); "" for a one-size structure without a label.
+func size_word(def_id: String, size: int) -> String:
+	var lbl: String = String(bdef(def_id).get("size_label", ""))
+	if lbl != "":
+		return lbl
+	return SIZE_NAMES[clampi(size, 0, 3)] if has_sizes(def_id) else ""

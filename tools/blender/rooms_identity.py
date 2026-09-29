@@ -118,12 +118,30 @@ ICONS = {
     "medical": [[[(-0.18, -0.70), (0.18, -0.70), (0.18, -0.18), (0.70, -0.18), (0.70, 0.18), (0.18, 0.18),
                   (0.18, 0.70), (-0.18, 0.70), (-0.18, 0.18), (-0.70, 0.18), (-0.70, -0.18), (-0.18, -0.18)]]],
     "comfort": _heart(),
+    # 5.0 (critic round 33): one icon per civic type
+    "shop": [[[(-0.55, -0.70), (0.55, -0.70), (0.48, 0.22), (-0.48, 0.22)]],
+             [[(0.34 * cos(radians(t)), 0.22 + 0.40 * sin(radians(t))) for t in range(0, 181, 15)] +
+              [(0.20 * cos(radians(t)), 0.22 + 0.26 * sin(radians(t))) for t in range(180, -1, -15)]]],
+    "academy": [[[(0.0, 0.66), (-0.80, 0.28), (0.0, -0.10), (0.80, 0.28)]],
+                [[(-0.44, -0.46), (0.44, -0.46), (0.44, 0.10), (-0.44, 0.10)]],
+                [[(0.56, -0.52), (0.66, -0.52), (0.66, 0.26), (0.56, 0.26)]],
+                [_circle(0.09, 12, 0.61, -0.58)]],
+    "security": [[[(-0.60, 0.66), (-0.60, 0.02), (-0.38, -0.45), (0.0, -0.80), (0.38, -0.45), (0.60, 0.02),
+                   (0.60, 0.66), (0.0, 0.76)],
+                  [(0.30 * cos(radians(90 + 36 * k)) * (1.0 if k % 2 == 0 else 0.42),
+                    0.02 + 0.30 * sin(radians(90 + 36 * k)) * (1.0 if k % 2 == 0 else 0.42)) for k in range(10)]]],
+    "jail": [[[(-0.52, -0.72), (0.52, -0.72), (0.52, 0.12), (-0.52, 0.12)], _circle(0.11, 14, 0.0, -0.24)],
+             [[(0.36 * cos(radians(t)), 0.10 + 0.52 * sin(radians(t))) for t in range(0, 181, 15)] +
+              [(0.22 * cos(radians(t)), 0.10 + 0.38 * sin(radians(t))) for t in range(180, -1, -15)]]],
+    # 5.0: civic (security office, jail): a shield with a bar
+    "civic": [[[(-0.62, 0.62), (-0.62, -0.05), (0.0, -0.78), (0.62, -0.05), (0.62, 0.62), (0.0, 0.76)],
+               [(-0.11, -0.46), (0.11, -0.46), (0.11, 0.46), (-0.11, 0.46)]]],
     "life_support": _drop(),
     "logistics": _crate(),
     "utilities": [[[(0.10, 0.78), (-0.42, -0.06), (-0.04, -0.06), (-0.18, -0.78), (0.44, 0.10), (0.04, 0.10),
                     (0.22, 0.78)]]],
 }
-ICON_MAT = {}
+ICON_MAT = {"security": "Ember", "jail": "BeaconAmber"}      # security red, jail amber (critic round 33)
 
 
 def _signed_area(loop):
@@ -527,13 +545,13 @@ def identity_pass(rm):
         z = top + 0.25
         rm.roof.vcyl(cx, cy, top - 0.4, z - 0.06, 0.18, seg=10, mat="Frame")
         rm.roof.vcyl(cx, cy, z - 0.08, z, r + 0.06, seg=48, mat="Frame")
-        badge(rm.roof, rm.cat, cx, cy, r, lambda x_, y_: z, lift=0.004)
+        badge(rm.roof, getattr(rm, "badge_family", rm.cat), cx, cy, r, lambda x_, y_: z, lift=0.004)
         rm.top_z = max(rm.top_z, z + 0.05)
         print("  identity: badge plate over the crown on", rm.tid, rm.size)
         rm.badge_done = True
         return True
     cx, cy, r, surf = got
-    badge(rm.roof, rm.cat, cx, cy, r, surf, lift=0.02)
+    badge(rm.roof, getattr(rm, "badge_family", rm.cat), cx, cy, r, surf, lift=0.02)
     rm.badge_done = True
     return True
 

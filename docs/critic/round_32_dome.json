@@ -1,0 +1,40 @@
+{
+  "round": 32,
+  "date": "2026-09-29",
+  "scope": "super_dome re-check after ART-B's round-28 fixes. Blender-only, provisional. Evidence art/dome/sign_test_sheet.png, L3_hotel_room_inside.png, L2_club.png, L2_arcade_room.png, L2_arcade_prism.png, L2_cutaway.png, pilot_gallery_L1.png, pilot_atrium_night.png, overview_250_day.png, overview_250_night.png, build_stages.png.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "super_dome": {"consistency": 0.82, "appeal": 0.76, "style": 0.78, "score": 0.79, "pass": true, "provisional": true, "was": 0.76,
+      "round_28_fixes_checked": {
+        "1 sign font": "landed: the test sheet renders all 48 strings correctly, including BARBER, BOOKS, CLUB, PRISM SHIFT, ADULTS ONLY and the vehicle codes; in the gallery and atrium BARBER and BOOKS read. ART-B's cause (B missing, P too small) matches what I saw. One placement fault remains: in the atrium view RESTAURANT still reads 'R STAURANT' because a lift frame crosses the E.",
+        "2 hotel rooms": "landed: bed with headboard and two bedside lamps, armchairs, side table, floor lamp, TV on a media unit, desk and chair, wardrobe, wall art, a rug, window with side curtains, a bathroom door (L3_hotel_room_inside.png). Still reads plain: all items are untextured boxes and the middle third of the floor is empty.",
+        "3 club": "landed: a light truss with spotlights over the floor, raised stage with steps, a booth and high tables in view, the back wall broken into panels, a bar with a neon edge. The ADULTS ONLY sign exists on the sheet but no bouncer post or sign is visible in the club evidence.",
+        "4 arcade": "landed: more cabinets, a PRIZES counter, a sit-down racer cabinet with a red seat for Prism Shift, neon floor arrows, stools and a table. The racer cabinet stands out from the uprights.",
+        "5 upper floors": "partly: a few very bright windows now break the grid at night; no balconies or planters are visible from outside.",
+        "6 cafe": "landed: cakes on stands in the window, three menu boards, an A-frame sign.",
+        "7 day glass": "still open: no fresnel reflection at the grazing edge.",
+        "8 in-game": "still open (RENDER).",
+        "9 robot dancers": "still open (ART-NPC)."
+      },
+      "tone_check": "PASS for the set: no people or dancers in the club evidence; poles on podiums with a light show. Still owed: the bouncer post and ADULTS ONLY sign at the club door in view, and the robot dancers.",
+      "gap_to_paul_aim": {
+        "aim": "a glittering city under glass",
+        "night_overview_250m": "about 0.78: warm glass shell, multicoloured windows with bright highlights, neon bands, bright atrium. The last step is still sparkle on the upper floors (balconies with lights) and the city reflected in the glass.",
+        "day_overview_250m": "about 0.72: reads as a domed city; the glass needs a fresnel sky reflection.",
+        "inside": "about 0.79: the atrium, cafe gallery, club and arcade now feel like a resort mall; the hotel room is the plain part."
+      },
+      "fixes": [
+        {"owner": "ART-B", "fix": "Move the RESTAURANT sign plate (or the lift frame) so the full word reads from the atrium."},
+        {"owner": "ART-B", "fix": "Club door: a bouncer post (a stand and a rope line) and the ADULTS ONLY sign at the entrance, shown in one render."},
+        {"owner": "ART-B", "fix": "Hotel room: texture the bed (a quilt pattern, pillows), a patterned rug that fills the middle floor, and a small lounge set (two chairs and a table) in the empty centre; a warm lamp pool at night."},
+        {"owner": "ART-B", "fix": "Upper floors outside: balconies or planter boxes with small lights on every third unit (round-26 fix 1, still open)."},
+        {"owner": "ART-B / RENDER", "fix": "Day glass: fresnel sky reflection at the grazing edge."},
+        {"owner": "RENDER", "fix": "In-game evidence: 250 m night with glow, draw calls, follow-view fps inside the dome, the Prism Shift screen shader. The final score needs it."},
+        {"owner": "ART-NPC", "fix": "Robot dancers for the tone check (after the MPFB rebuild of the people)."}
+      ]}
+  },
+  "notes": [
+    "PASS 0.79 (was 0.76), provisional. 5 of 9 items landed, 1 partly, 3 still open (day glass, in-game, robot dancers).",
+    "Info noted: Paul chose MPFB/MakeHuman for the people; ART-NPC rebuilds the pilot. The people subjects will be rated from zero on the rebuild."
+  ]
+}

@@ -217,3 +217,24 @@ kinds above are fixed now. Furniture: 1–3 work places per size like the v3 ind
 - Exteriors (automatic, no staff): `fuel_rod_plant` 8.0, `he3_separator` 7.0, `graphene_reactor` 6.0; and
   `chemical_plant` 9.0 and `crystal_refinery` 8.0 are placeable now (stage 0, automatic).
 - No new furniture or door needs.
+
+# ============================== VERSION 5 ==============================
+
+## 2026-09-29 — V5 structures in content (milestone 1): ids, sizes, radii, floors, door slots, anchors
+
+The defs are in `content/buildings.json` (look for `"v5": true`). Footprints are circles for placement; the model
+fits inside. Please build to these numbers, or tell me yours and I change content.
+
+| id | owner | sizes | radius (m) | floors | door slots | anchors (`anchors_spec`) |
+|---|---|---|---|---|---|---|
+| `residence_tube` | ART-HAB | M, L, XL | 9 / 11 / 13 | 1 | 4 / 5 / 6 | half-tube; `Anchor_Unit_<i>`, `Anchor_Bed_<i>` (family 6/9/12 beds, executive 2/4/6), `Anchor_Seat_<i>`, `Anchor_Door_<i>` (ends + sides). Variants Family and Executive (same shell, different fit-out) |
+| `apartment_block` | ART-HAB | XXL | 20 | 3 × 3.6 m | 6 | `Anchor_Unit_<floor>_<i>` (floors 0, 1: 5 each; floor 2: 2 penthouses), `Anchor_Lift_<floor>`, `Anchor_Door_<i>`; every anchor carries its floor index |
+| `retail` | ART-HAB | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | `Anchor_Counter`, `Anchor_Browse_<i>` |
+| `park` | ART-HAB | M, L, XL | 9 / 12 / 15 | 1 | 6/7/8 | `Anchor_Seat_<i>` (benches), `Anchor_Jog_<i>` (a loop), `Anchor_Wedding` (L, XL); pond from L |
+| `academy` | ART-HAB | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | `Anchor_Class_<i>` (4/8/14), `Anchor_Teach`, `Anchor_Console_<i>` |
+| `security_office` | ART-HAB | S, M | 6 / 7.5 | 1 | 4/6 | `Anchor_Desk_<i>`, `Anchor_Locker_<i>` |
+| `jail` | ART-HAB | S, M, L | 6 / 7.5 / 9.6 | 1 | 4/6/7 | `Anchor_Cell_<i>` (2/4/8), `Anchor_Guard`, `Anchor_Yard_<i>` (L) |
+| `super_dome` | ART-B | XXXXL | 48 | 5 × 6 m | 12 gates | atrium radius 20, ring depth 14, height 38; `Anchor_Venue_<id>_<i>` (venue ids in the def, with floors), `Anchor_Unit_<floor>_<i>` (30 on floors 2-4), `Anchor_Lift_<i>_<floor>`, `Anchor_Door_<i>` (12), `Anchor_Pool_<i>`, `Anchor_Stage`; build stages: foundation_ring, level_1..5, dome_glass, fit_out |
+
+Furniture counts (`furniture` blocks) are in the defs as for v3 rooms. Door blocked angles: none yet; send them
+in `content/door_blocked.json` as before when the models exist.

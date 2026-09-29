@@ -927,6 +927,10 @@ def run(renders):
                                              clips_meta.get(c, {}).get("seat_offset")) for c in VEHICLE_DOOR))
 
     rover_fit(evals, check)
+    import people_verify
+    people_verify.run(check, gltf_facts)
+    import robot_verify
+    robot_verify.run(check, gltf_facts)
 
     sheets = []
     if renders:
