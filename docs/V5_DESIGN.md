@@ -53,8 +53,8 @@ casual wear for when they are off work and socialise."*
 
 - **Source (Paul, 29 September 2026): MPFB / MakeHuman.** The procedural pilot failed (people_closeup 0.59,
   people_outfits 0.61). People are built with the MPFB 2.0.17 Blender extension and CC0 MakeHuman assets
-  (base mesh, skins, eyes, hair, clothes). CC-BY assets only with credit in .
-  Downloads stay outside the repo (). Exported models are CC0.
+  (base mesh, skins, eyes, hair, clothes). CC-BY assets only with credit in `assets/models/people_credits.md`.
+  Downloads stay outside the repo (`D:\Tools\mpfb\`). Exported models are CC0.
 - **Six adult variants**, one skeleton (the v3 skeleton, extended with face bones if needed):
   `m1 m2 m3 f1 f2 f3`. Each differs in **build, height (1.62–1.92 m), face shape, skin tone, hair
   style and hair colour**. Hair colour and skin tone also vary per person through vertex-colour tint
