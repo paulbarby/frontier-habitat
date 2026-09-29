@@ -43,6 +43,7 @@ func tests() -> Array:
 		["v4_rover_tubes_and_blocks", v4_rover_tubes_and_blocks],
 		["v4_locks_explained", v4_locks_explained],
 		["v4_inventory_contents", v4_inventory_contents],
+		["v4_exteriors_in_reach", v4_exteriors_in_reach],
 	]
 
 static func _fresh_world(sim, seed_value: int):
@@ -2061,4 +2062,119 @@ func v4_inventory_contents(t) -> void:
 			ok = false
 	t.check(ok and camp.size() >= 1, "by_structure(2) lists only the camp's structures (%d rows)" % camp.size())
 	sim.dispose()
+	t.done()
+
+## Paul: a plan 30-50 m from an airlock with air showed "OUT OF REACH". Every exterior type within
+## 60 m of a working airlock is in reach (reach_info and in play); one 300 m out is not; and a
+## colonist outside with a part-used suit does not mark a task "too far" for everybody.
+func v4_exteriors_in_reach(t) -> void:
+	var g = H.Game.new(1001, false)
+	var sim = g.sim
+	sim.new_game(1001, "frontier")
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	var res: Dictionary = H.layout(sim, H.CORE_STEPS + [{"place": "habitat", "as": "H1"}, {"link": "corridor", "a": "L1", "b": "H1"}])
+	t.eq(res["errors"], [], "the test base")
+	g.run(2)
+	H.fill_utilities(sim, 1.0, 0.8, true)
+	var lock: Dictionary = sim.state["buildings"][res["ids"]["L1"]]
+	var door: Vector2 = sim.nav.door_pos(lock)
+	var plans := {}
+	var k := 0
+	for def_id in sim.content["buildings"]:
+		var d: Dictionary = sim.content["buildings"][def_id]
+		if d.get("kind", "") != "exterior" or bool(d.get("needs_deposit", false)) or int(d.get("stage", 0)) > 0:
+			continue
+		k += 1
+		var sz: int = int((sim.sizes.sizes_of(def_id) as Array)[0]) if not (sim.sizes.sizes_of(def_id) as Array).is_empty() else 1
+		var done := false
+		for r in [30.0, 38.0, 46.0, 54.0]:
+			for j in 36:
+				var p: Vector2 = sim.place.snap_pos(door + Vector2.RIGHT.rotated(float(j * 7 + k * 11) * TAU / 36.0) * r)
+				if not done and sim.place.check_building(def_id, p, 0.0, -1, sz) == "ok":
+					var cr: Dictionary = g.cmd("place_building", {"def": def_id, "x": p.x, "y": p.y, "rot": 0.0, "size": sz})
+					if bool(cr["ok"]):
+						plans[int(cr["id"])] = def_id
+						done = true
+		t.check(done, "%s placed within 60 m" % def_id)
+	var far: Vector2 = Vector2(-1, -1)
+	for j in 36:
+		var q: Vector2 = sim.place.snap_pos(door + Vector2.RIGHT.rotated(j * TAU / 36.0) * 300.0)
+		if far.x < 0.0 and sim.place.check_building("solar_array", q, 0.0) == "ok":
+			far = q
+	var far_id: int = int(g.cmd("place_building", {"def": "solar_array", "x": far.x, "y": far.y, "rot": 0.0}).get("id", -1))
+	var bad: Array = []
+	for id in plans:
+		var ri: Dictionary = sim.agents.reach_info(sim.state["buildings"][id])
+		if not bool(ri["ok"]):
+			bad.append("%s: %s" % [plans[id], ri["text"]])
+	t.eq(bad, [], "reach_info: every plan within 60 m is in reach")
+	var rf: Dictionary = sim.agents.reach_info(sim.state["buildings"][far_id])
+	t.check(not bool(rf["ok"]) and (rf["why"] == "too_far" or rf["why"] == "no_path"), "300 m out is not: %s" % rf["text"])
+	t.check(float(rf["reach_m"]) > 100.0 and int(rf["lock"]) != -1 or rf["why"] == "no_path", "with the numbers (reach %.0f m, walk %.0f m)" % [float(rf["reach_m"]), float(rf["walk_m"])])
+	# A colonist outside with a part-used suit refuses a task for itself only.
+	var a: Dictionary = {}
+	for aid in sim.state["agents"]:
+		if a.is_empty():
+			a = sim.state["agents"][aid]
+	g.run(20)
+	var site_id := -1
+	for tid in sim.state["tasks"]:
+		var tk0: Dictionary = sim.state["tasks"][tid]
+		if site_id == -1 and plans.has(int(tk0["bld"])) and int(tk0["owner"]) == -1 and tk0["state"] == "open":
+			site_id = int(tk0["bld"])
+	var site: Dictionary = sim.state["buildings"].get(site_id, {})
+	var site_tasks := 0
+	var reset: Array = []
+	for tid in sim.state["tasks"]:
+		var tk: Dictionary = sim.state["tasks"][tid]
+		if int(tk["bld"]) == site_id and int(tk["owner"]) == -1 and tk["state"] == "open":
+			site_tasks += 1
+			tk["reason"] = ""
+			tk["retry"] = 0
+			reset.append(tid)
+		else:
+			a["backoff"][tid] = int(sim.state["tick"]) + 100000                             # test set-up: only the site's tasks
+	H.put_outside(sim, a, sim.nav.best_access(site, door) + Vector2(1, 0), 12.0)            # test set-up: 12 s of suit left
+	var refused: bool = not sim.agents._try_work(a)
+	var poisoned := 0
+	for tid in reset:
+		var tk2: Dictionary = sim.state["tasks"].get(tid, {})
+		if not tk2.is_empty() and (String(tk2["reason"]) == "suit_range" or int(tk2["retry"]) > int(sim.state["tick"])):
+			poisoned += 1
+	t.check(site_tasks > 0 and refused, "the colonist with 12 s of air refuses the site's %d tasks" % site_tasks)
+	t.eq(poisoned, 0, "a part-used suit outside does not mark the site too far for everybody")
+	# UI's hypothesis: path failures from where colonists stood must not mark a reachable plan, and
+	# a mark never outlives its cause (at most 120 s without a map change).
+	var ft: Dictionary = {}
+	for tid in sim.state["tasks"]:
+		var tk3: Dictionary = sim.state["tasks"][tid]
+		if int(tk3["bld"]) == site_id and ft.is_empty():
+			ft = tk3
+	if t.check(not ft.is_empty(), "a task of the plan"):
+		for i in int(sim.bal["task_max_path_fails"]):
+			if sim.state["tasks"].has(int(ft["id"])):
+				sim.jobs.path_failed(ft)
+		t.note("site %s %s block %s fails %d rev %d/%d kind %s" % [site["def"], site["state"], site["block"], int(ft["fails"]), int(site["unreach_rev"]), int(sim.state["rev"]["walk"]), ft["kind"]])
+		g.run(10)
+		t.check(String(site["block"]) != "unreachable", "failed walks from odd places do not mark a reachable plan out of reach (state %s, fails %d, rev %d/%d)" % [site["state"], int(ft["fails"]), int(site["unreach_rev"]), int(sim.state["rev"]["walk"])])
+	site["unreach_rev"] = int(sim.state["rev"]["walk"])                                   # test set-up: an old mark
+	site["unreach_tick"] = int(sim.state["tick"])
+	g.run(20)
+	t.eq(String(site["block"]), "unreachable", "a mark shows")
+	g.run(1250)
+	t.check(String(site["block"]) != "unreachable", "and clears within 120 s (block now '%s')" % site["block"])
+	# In play: half a day, nothing near is ever "too far" or "out of reach".
+	var lander_inv: int = int(sim.state["buildings"][sim.state["lander_id"]]["inv_out"])
+	for r2 in ["metal", "polymer", "electronics", "composite"]:
+		sim.inv.add_new_forced(lander_inv, r2, 200, "test")                             # test set-up
+	var marked := {}
+	for s in 30:
+		g.run(100)
+		H.fill_utilities(sim, 1.0, 0.8, true)
+		for id in plans:
+			var b: Dictionary = sim.state["buildings"].get(id, {})
+			if not b.is_empty() and (String(b["block"]) == "suit_range" or String(b["block"]) == "unreachable"):
+				marked[plans[id]] = String(b["block"])
+	t.eq(marked, {}, "no plan within 60 m is shown too far or out of reach in play")
+	g.dispose()
 	t.done()

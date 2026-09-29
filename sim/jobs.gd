@@ -249,7 +249,7 @@ func _gen_construction() -> void:
 	for id in blds:
 		var b: Dictionary = blds[id]
 		if b["state"] == "blueprint":
-			if int(b["unreach_rev"]) == rev:
+			if _unreach(b):
 				b["block"] = "unreachable"
 				continue
 			# Out of suit range: the stock reserved for it is let go, so other plans can use
@@ -279,7 +279,7 @@ func _gen_construction() -> void:
 			b["block"] = blocked
 		elif b["state"] == "building":
 			var slots: int = int(sim.bdef(b["def"]).get("build_slots", 2))
-			if int(b["unreach_rev"]) == rev:
+			if _unreach(b):
 				b["block"] = "unreachable"
 				continue
 			while int(_count.get("build:%d" % id, 0)) < slots:
@@ -301,7 +301,21 @@ func _release_hauls(bid: int, reason: String) -> void:
 ## True while a structure is parked as unreachable: no new work is made for it until the
 ## walking graph changes (for example, its corridor is finished).
 func _parked(b: Dictionary) -> bool:
-	return int(b["unreach_rev"]) == int(sim.state["rev"]["walk"])
+	return _unreach(b)
+
+## Parked as unreachable: until the walking graph changes, and (V4) at most UNREACH_HOLD s: then
+## the colony tries again, so a mark can never outlive its cause.
+const UNREACH_HOLD := 120
+
+func _unreach(b: Dictionary) -> bool:
+	if int(b["unreach_rev"]) != int(sim.state["rev"]["walk"]):
+		return false
+	var since: int = int(b.get("unreach_tick", -1))
+	if since >= 0 and int(sim.state["tick"]) - since > UNREACH_HOLD * int(sim.bal["tick_hz"]):
+		b["unreach_rev"] = -1
+		b.erase("unreach_tick")
+		return false
+	return true
 
 func _site_emergency(b: Dictionary) -> int:
 	# Life support goes first while the colony still depends on the lander air.
@@ -1001,12 +1015,55 @@ func path_failed(t: Dictionary) -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	if int(t["bld"]) != -1 and blds.has(t["bld"]):
 		var b: Dictionary = blds[t["bld"]]
+		# V4 (Paul: "OUT OF REACH" beside an airlock): the failures may come from where the
+		# colonists stood (a walk re-planned from a cell that a new neighbour just closed), not from
+		# the structure. It is marked only when no airlock with air has a way to it either; else only
+		# this task fails and the work goes on.
+		var outdoor: bool = b["state"] == "blueprint" or b["state"] == "building" or b["kind"] == "exterior"
+		if b["kind"] != "link" and outdoor and _walk_from_airlock(b):
+			t["fails"] = 0
+			fail(t["id"], "no_path")
+			return
+		var again: bool = int(b.get("unreach_logged", -2)) == int(sim.state["rev"]["walk"])
 		b["unreach_rev"] = int(sim.state["rev"]["walk"])
+		b["unreach_tick"] = int(sim.state["tick"])
+		b["unreach_logged"] = int(sim.state["rev"]["walk"])
 		b["block"] = "unreachable"
-		sim.log_event("unreachable", "%s cannot be reached on foot yet. A room needs a corridor route to an airlock. Work on it waits until the map changes." % b["name"], [b["id"]], 1)
+		if not again:
+			sim.log_event("unreachable", "%s cannot be reached on foot yet. A room needs a corridor route to an airlock. Work on it waits until the map changes." % b["name"], [b["id"]], 1)
 		cancel_tasks_for_building(t["bld"], "unreachable")
 	else:
 		fail(t["id"], "unreachable")
+
+## A cheap check for path_failed (the frame budget): is there a walk from the nearest airlock with
+## air to one of the structure's two nearest access points? Kept per structure until the walking
+## graph changes.
+func _walk_from_airlock(b: Dictionary) -> bool:
+	var rev: int = int(sim.state["rev"]["walk"])
+	if int(b.get("walk_ok_rev", -1)) == rev:
+		return bool(b["walk_ok"])
+	var ok := false
+	var c: Vector2 = b["pos"]
+	var best_lock := -1
+	var best_d := 1e18
+	for comp in sim.topo.locks_by_comp:
+		if sim.util.comp_supplied(comp):
+			for lid in sim.topo.locks_by_comp[comp]:
+				var d: float = sim.nav.door_pos(sim.state["buildings"][lid]).distance_squared_to(c)
+				if d < best_d or (d == best_d and int(lid) < best_lock):
+					best_d = d
+					best_lock = int(lid)
+	if best_lock != -1:
+		var door: Vector2 = sim.nav.door_pos(sim.state["buildings"][best_lock])
+		var pts: Array = sim.nav.access_points(b)
+		pts.sort_custom(func(x, y): return (x as Vector2).distance_squared_to(door) < (y as Vector2).distance_squared_to(door))
+		for q in pts.slice(0, 2):
+			if bool(sim.nav.path_out(door, q)["ok"]):
+				ok = true
+				break
+	b["walk_ok_rev"] = rev
+	b["walk_ok"] = ok
+	return ok
 
 func cancel_tasks_for_building(bid: int, reason: String) -> void:
 	var tasks: Dictionary = sim.state["tasks"]

@@ -813,3 +813,22 @@ additions this round are scripts and seven small SVG icons, so the growth is fro
 - Check (`tools/shoot.mjs --gpu --throttle 150000 --early …`): 5.5 s download 66 %, 6.3 s "Preparing graphics"
   95 %, 6.9 s 99 %, 7.2 s the title screen, with no black frame between. Sheet: `docs/shots/ui10_loader_sequence.png`
   (order of the tiles: 5.5, 6.3, 6.6, 6.9, 6.0, 7.2, 7.5, 7.8 s).
+
+## 2026-09-29 — "OUT OF REACH" explains itself
+
+- `ui/why.gd reach(hud, b)`: SIM's `sim.agents.reach_info(b)` (why ok | no_air | no_access | no_path | too_far,
+  text, walk_m, straight_m, reach_m, lock_name) → one line, the reason and a concrete fix:
+  - too_far: "Walk from Airlock 2: 180 m, suit reach 120 m" / fix "Build an airlock closer: within 120 m on
+    foot, joined to rooms with air." + "Or research Extended Suits: suits hold more air." (the next suit-air
+    research not done);
+  - no_path: "No walking path from any airlock with air" + SIM's text (straight-line metres) / "Clear the way:
+    steep slopes, crevices, boulders or structures block the path. Or build an airlock on this side.";
+  - no_air: "No airlock has air" / "Join an airlock by a corridor to rooms with air, and keep the oxygen plant
+    powered."; no_access: "No open ground round it" / "Clear the way …";
+  - ok (the block is older than the check): "In reach: 18 m from Lander, suit reach 142 m" / "Nothing to
+    build: wait, or raise its priority."
+  A fallback (straight line to the nearest airlock with air) runs on a SIM without reach_info.
+- Used by "Why stopped?" (plans and active structures), the Materials line of a plan, the Construction line,
+  and the inspector's OUT OF REACH / TOO FAR badge tooltip (reason + "Fix: …"). The 3D tag is RENDER's.
+- Test `tools/ui/test_reach.gd` (Frontier: a plan 250 m out; a copy next to the lander; SIM rows for no_path
+  and no_air; the badge tooltip and the Materials line).

@@ -167,7 +167,13 @@ func building(b: Dictionary) -> void:
 	var district: String = s.topo.district_name(b["pos"]) if b.has("pos") else ""
 	insp.set_header(Icons.category(cat), P.cat(cat), String(b.get("name", base.get("name", ""))), "%s district  ·  %s" % [district, P.CATEGORY_NAME.get(cat, cat.capitalize())])
 	var st: Array = status_of(b)
-	insp.add_badge(Kit.badge(st[0], st[1]))
+	var stb: Control = Kit.badge(st[0], st[1])
+	# The OUT OF REACH / TOO FAR badge says why on hover (the nearest airlock with air, walk, reach).
+	if String(b.get("block", "")) in ["unreachable", "suit_range"]:
+		var rr: Dictionary = load("res://ui/why.gd").reach(insp.hud, b)
+		stb.tooltip_text = "%s\n%s\nFix: %s" % [String(st[0]), " ".join(rr.why), " ".join(rr.fix)]
+		stb.mouse_filter = Control.MOUSE_FILTER_PASS
+	insp.add_badge(stb)
 	if d.can_level(String(b["def"])):
 		insp.add_badge(Kit.badge("LEVEL %d" % d.level_of(b), P.GOLD if d.level_of(b) >= 5 else P.VIOLET))
 	if d.has_sizes(String(b["def"])):
@@ -519,7 +525,9 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 		if blk.begins_with("materials:"):
 			sec.add_child(Kit.wrap("Waiting: no free %s in storage." % _d().item_name(blk.substr(10)).to_lower(), 13, P.AMBER))
 		elif blk == "unreachable" or blk == "suit_range":
-			sec.add_child(Kit.wrap(BLOCK_TEXT[blk], 13, P.RED))
+			# The reason with the numbers (why.gd reach): the nearest airlock with air, its walk, the reach.
+			var rr: Dictionary = load("res://ui/why.gd").reach(insp.hud, b)
+			sec.add_child(Kit.wrap(String(rr.short) + "." if String(rr.short) != "" else BLOCK_TEXT[blk], 13, P.RED))
 		else:
 			sec.add_child(Kit.wrap("Carriers bring the materials. Then technicians build it.", 12, P.TEXT_2))
 	elif state == "building":
@@ -536,7 +544,8 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 			bar.value = f
 			lab.text = "%d%%  ·  %d of %d work" % [int(f * 100.0), int(bb["progress"]), int(bb["work_total"])])
 		if String(b.get("block", "")) == "suit_range":
-			sec2.add_child(Kit.wrap(BLOCK_TEXT["suit_range"], 13, P.RED))
+			var rr2: Dictionary = load("res://ui/why.gd").reach(insp.hud, b)
+			sec2.add_child(Kit.wrap(String(rr2.short) + "." if String(rr2.short) != "" else BLOCK_TEXT["suit_range"], 13, P.RED))
 	else:
 		var hrow: HBoxContainer = Kit.bar_row("Health", float(b.get("health", 100.0)) / 100.0, "%d" % int(b.get("health", 100.0)), P.level(float(b.get("health", 100.0))), 70.0)
 		body.add_child(hrow)

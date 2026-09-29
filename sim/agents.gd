@@ -81,6 +81,59 @@ func suit_reach_metres() -> float:
 	var budget: float = suit_cap() * float(bal["suit_task_fraction"]) - float(bal["exterior_work_chunk_seconds"])
 	return maxf(0.0, budget * 0.5 * sim.util.out_speed())
 
+## Can colonists reach structure b on foot and get back on one suit? The numbers behind the
+## "too far" / "out of reach" verdicts (V4, for the inspector):
+## {ok, why ("ok" | "no_air" | "no_access" | "no_path" | "too_far"), text, walk_m (door to the best
+##  access point, -1 when none), straight_m, reach_m (the limit: suit_reach_metres), lock (id, -1),
+##  lock_name, point (Vector2 or null)}.
+func reach_info(b: Dictionary) -> Dictionary:
+	var reach: float = suit_reach_metres()
+	var out := {"ok": false, "why": "", "text": "", "walk_m": -1.0, "straight_m": -1.0, "reach_m": reach, "lock": -1, "lock_name": "", "point": null}
+	var locks: Array = []
+	for comp in sim.topo.locks_by_comp:
+		if sim.util.comp_supplied(comp):
+			for lid in sim.topo.locks_by_comp[comp]:
+				locks.append(int(lid))
+	if locks.is_empty():
+		out["why"] = "no_air"
+		out["text"] = "No airlock has air: nobody can go out and come back."
+		return out
+	var c: Vector2 = b["pos"] if b["kind"] != "link" else ((b["p0"] as Vector2) + (b["p1"] as Vector2)) * 0.5
+	var blds: Dictionary = sim.state["buildings"]
+	locks.sort_custom(func(x, y):
+		var dx: float = sim.nav.door_pos(blds[x]).distance_squared_to(c)
+		var dy: float = sim.nav.door_pos(blds[y]).distance_squared_to(c)
+		return dx < dy if dx != dy else x < y)
+	out["straight_m"] = sim.nav.door_pos(blds[locks[0]]).distance_to(c)
+	var pts: Array = sim.nav.access_points(b)
+	if pts.is_empty():
+		out["why"] = "no_access"
+		out["text"] = "There is no open ground round it to work from."
+		return out
+	var best := 1e18
+	for lid in locks.slice(0, 3):
+		var door: Vector2 = sim.nav.door_pos(blds[lid])
+		for q in pts:
+			var r: Dictionary = sim.nav.path_out(door, q)
+			if bool(r["ok"]) and float(r["len"]) < best:
+				best = float(r["len"])
+				out["lock"] = lid
+				out["point"] = q
+	if out["lock"] == -1:
+		out["why"] = "no_path"
+		out["text"] = "No walking way from an airlock with air to it (%d m in a straight line)." % int(out["straight_m"])
+		return out
+	out["walk_m"] = best
+	out["lock_name"] = String(blds[out["lock"]]["name"])
+	if best > reach:
+		out["why"] = "too_far"
+		out["text"] = "Too far: %d m on foot from %s; a suit allows %d m out and back." % [int(best), out["lock_name"], int(reach)]
+		return out
+	out["ok"] = true
+	out["why"] = "ok"
+	out["text"] = "In reach: %d m on foot from %s (a suit allows %d m)." % [int(best), out["lock_name"], int(reach)]
+	return out
+
 ## Straight-line metres from p to the nearest airlock door (or lander hatch) with air.
 func nearest_air_metres(p: Vector2) -> float:
 	var best := 1e9
@@ -895,11 +948,16 @@ func _try_work(a: Dictionary) -> bool:
 			if a["where"] != "out":
 				sim.jobs.path_failed(t)
 		elif tasks.has(c[1]):
-			t["reason"] = plan["reason"]
 			# Out of suit range or without air is the same for everybody for a while: the
-			# task rests, so that the colony's other work is not starved by it.
-			if plan["reason"] == "suit_range" or plan["reason"] == "no_air":
-				t["retry"] = tick + int(TASK_REST_SECONDS * hz())
+			# task rests, so that the colony's other work is not starved by it. V4 (Paul: "out of
+			# reach" 30 m from an airlock): only when the answer holds for everybody, i.e. not from a
+			# colonist outside whose suit is part used (somebody from inside, with a full suit,
+			# can still go); that colonist only rests from the task itself (backoff above).
+			var personal: bool = plan["reason"] == "suit_range" and a["where"] == "out" and float(a["suit"]) < suit_cap() * 0.95
+			if not personal:
+				t["reason"] = plan["reason"]
+				if plan["reason"] == "suit_range" or plan["reason"] == "no_air":
+					t["retry"] = tick + int(TASK_REST_SECONDS * hz())
 	return false
 
 func _inv_loc(inv_id: int, from: Vector2) -> Dictionary:

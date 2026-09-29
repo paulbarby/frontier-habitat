@@ -36,6 +36,112 @@ static func _deposit_info(hud, b: Dictionary) -> Dictionary:
 			return s.prod.deposit_info(d)
 	return {}
 
+## Why a structure is out of reach, and what to do (Paul, 2026-09-29: "OUT OF REACH" next to an
+## airlock). SIM's reach_info(b) when it exists (watched in SIM-to-UI.md); until then the UI measures:
+## the airlocks with air (sim.topo.locks_by_comp + util.comp_supplied), the nearest one in a straight
+## line (agents.nearest_air_metres) against the suit reach (agents.suit_reach_metres).
+## Returns {code: "no_air" | "too_far" | "no_path" | "", why: [lines], fix: [lines], short: one line}.
+static func reach(hud, b: Dictionary) -> Dictionary:
+	var s = hud.main.sim
+	for holder in [s.get("agents"), s.get("nav"), s.get("jobs"), s.get("place"), s]:
+		if holder != null and holder is Object and (holder as Object).has_method("reach_info"):
+			var r = holder.reach_info(b)
+			if typeof(r) == TYPE_DICTIONARY and not (r as Dictionary).is_empty():
+				return _reach_from_sim(hud, r)
+	var out := {"code": "", "why": [], "fix": [], "short": ""}
+	if not b.has("pos"):
+		return out
+	var p: Vector2 = b["pos"]
+	var reach_m: float = float(s.agents.suit_reach_metres()) if s.agents.has_method("suit_reach_metres") else 0.0
+	# The airlocks with air, and the nearest one.
+	var best_id := -1
+	var best_d := 1e18
+	if "topo" in s and s.topo != null:
+		for comp in s.topo.locks_by_comp:
+			if not s.util.comp_supplied(comp):
+				continue
+			for lid in s.topo.locks_by_comp[comp]:
+				var lb: Dictionary = s.state["buildings"].get(lid, {})
+				if lb.is_empty():
+					continue
+				var dp: Vector2 = s.nav.door_pos(lb) if s.nav.has_method("door_pos") else lb["pos"]
+				var d: float = dp.distance_to(p) - float(b.get("radius", 0.0))
+				if d < best_d:
+					best_d = d
+					best_id = int(lid)
+	var suit_tech: String = _suit_tech(hud)
+	if best_id < 0:
+		out.code = "no_air"
+		out.short = "No airlock has air"
+		out.why = ["No airlock has air, so nobody can go out and come back."]
+		out.fix = ["Join an airlock by a corridor to rooms with air, and keep the oxygen plant powered."]
+		return out
+	var lname: String = String(s.state["buildings"][best_id].get("name", "the airlock"))
+	var dm: int = int(roundf(maxf(0.0, best_d)))
+	var rm: int = int(roundf(reach_m))
+	if best_d > reach_m:
+		out.code = "too_far"
+		out.short = "Walk from %s: %d m, suit reach %d m" % [lname, dm, rm]
+		out.why = ["Walk from %s (the nearest airlock with air): at least %d m. The suit reach is %d m (there and back, with time to work)." % [lname, dm, rm]]
+		out.fix = ["Build an airlock closer: within %d m of it, joined to rooms with air." % rm]
+		if suit_tech != "":
+			out.fix.append("Or research %s: suits hold more air." % hud.data.tech_name(suit_tech))
+	else:
+		out.code = "no_path"
+		out.short = "No walking path from %s" % lname
+		out.why = ["%s is %d m away in a straight line, inside the suit reach of %d m, but no walking path joins them." % [lname, dm, rm]]
+		out.fix = ["Clear the way: steep slopes, crevices, boulders or structures block the path. Or build an airlock on this side."]
+	return out
+
+## SIM's sim.agents.reach_info(b): {ok, why ("ok" | "no_air" | "no_access" | "no_path" | "too_far"),
+## text, walk_m, straight_m, reach_m, lock, lock_name, point}. SIM's text is the reason; the fix is ours.
+static func _reach_from_sim(hud, r: Dictionary) -> Dictionary:
+	var code: String = String(r.get("why", r.get("code", "")))
+	var lname: String = String(r.get("lock_name", ""))
+	var walk: int = int(roundf(float(r.get("walk_m", -1.0))))
+	var straight: int = int(roundf(float(r.get("straight_m", -1.0))))
+	var rm: int = int(roundf(float(r.get("reach_m", -1.0))))
+	var out := {"code": code, "why": [], "fix": [], "short": ""}
+	var text: String = String(r.get("text", ""))
+	var st: String = _suit_tech(hud)
+	match code:
+		"no_air":
+			out.short = "No airlock has air"
+			out.why = [text if text != "" else "No airlock has air: nobody can go out and come back."]
+			out.fix = ["Join an airlock by a corridor to rooms with air, and keep the oxygen plant powered."]
+		"no_access":
+			out.short = "No open ground round it"
+			out.why = [text if text != "" else "There is no open ground round it to work from."]
+			out.fix = ["Clear the way: move or remove what stands round it, or place it on open ground."]
+		"no_path":
+			out.short = "No walking path from any airlock with air"
+			out.why = [text if text != "" else "No walking path joins it to an airlock with air."]
+			out.fix = ["Clear the way: steep slopes, crevices, boulders or structures block the path. Or build an airlock on this side."]
+		"too_far":
+			out.short = "Walk from %s: %d m, suit reach %d m" % [lname, walk, rm]
+			out.why = ["Walk from %s: %d m on foot. The suit reach is %d m (out and back, with time to work)." % [lname, walk, rm]]
+			out.fix = ["Build an airlock closer: within %d m on foot, joined to rooms with air." % rm]
+			if st != "":
+				out.fix.append("Or research %s: suits hold more air." % hud.data.tech_name(st))
+		"ok":
+			out.short = "In reach: %d m from %s, suit reach %d m" % [walk, lname, rm]
+			out.why = [(text if text != "" else out.short + ".") + " The verdict is from before: a technician goes when one is free."]
+			out.fix = ["Nothing to build: wait, or raise its priority."]
+		_:
+			out.short = text
+			out.why = [text] if text != "" else []
+	return out
+
+## The next suit-air research not done yet ("" = none).
+static func _suit_tech(hud) -> String:
+	var d = hud.data
+	var ids: Array = d.techs().keys()
+	ids.sort_custom(func(a, c): return int(d.techs()[a].get("tier", 1)) < int(d.techs()[c].get("tier", 1)) if int(d.techs()[a].get("tier", 1)) != int(d.techs()[c].get("tier", 1)) else String(a) < String(c))
+	for t in ids:
+		if (d.techs()[t].get("bonus", {}) as Dictionary).has("suit_air_mult") and not d.tech_done(String(t)):
+			return String(t)
+	return ""
+
 static func structure(hud, b: Dictionary) -> Dictionary:
 	var s = hud.main.sim
 	var def: Dictionary = s.bdef(b["def"])
@@ -55,15 +161,11 @@ static func structure(hud, b: Dictionary) -> Dictionary:
 			out.title = "Waiting for " + _res(hud, item)
 			out.why = ["No free %s in storage for the build. Other plans may have reserved it." % _res(hud, item)]
 			out.fix = ["Make or unload %s, or cancel a plan that reserves it." % _res(hud, item)]
-		elif blk == "unreachable":
-			out.title = "Out of reach"
-			out.why = ["No technician can walk to the site."]
-			out.fix = ["Build a corridor or an airlock nearer to it."]
-			out.color = P.RED
-		elif blk == "suit_range":
-			out.title = "Too far from an airlock"
-			out.why = ["A suit runs out of air before a technician gets there and back."]
-			out.fix = ["Build an airlock closer, or research longer suit air."]
+		elif blk == "unreachable" or blk == "suit_range":
+			var rr: Dictionary = reach(hud, b)
+			out.title = "Out of reach" if blk == "unreachable" else "Too far from an airlock"
+			out.why = rr.why if not (rr.why as Array).is_empty() else ["No technician can walk to the site and back on one suit."]
+			out.fix = rr.fix if not (rr.fix as Array).is_empty() else ["Build an airlock closer, joined to rooms with air."]
 			out.color = P.RED
 		elif blk == "occupied":
 			out.title = "Site not clear"
@@ -178,9 +280,10 @@ static func structure(hud, b: Dictionary) -> Dictionary:
 			out.why = ["The project needs research packs, and the lab has none."]
 			out.fix = ["Build a research assembler, or bring packs with a supply run."]
 		"unreachable", "suit_range":
+			var rr2: Dictionary = reach(hud, b)
 			out.title = "Out of reach"
-			out.why = ["No worker can reach it with enough suit air."]
-			out.fix = ["Link it with a corridor, or build an airlock nearer."]
+			out.why = rr2.why if not (rr2.why as Array).is_empty() else ["No worker can reach it with enough suit air."]
+			out.fix = rr2.fix if not (rr2.fix as Array).is_empty() else ["Link it with a corridor, or build an airlock nearer."]
 			out.color = P.RED
 		"occupied":
 			out.title = "Waiting"

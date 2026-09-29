@@ -593,3 +593,30 @@ the text can change while the key stays).
   `[{id, name, def, kind ("structure" | "vehicle" | "ground" | "carried"), base, capacity, used, full,
   items {item: n}}]`. With a base id, only that base (vehicles and piles by where they are). All rows together
   are every unit in the world; test `v4_inventory_contents` checks that against the ledger.
+
+## 2026-09-29 — "OUT OF REACH" 30-50 m from an airlock (Paul)
+
+- **Cause found (SIM):** a colonist already outside with a part-used suit tried a plan's task, could not do it on
+  the air it had left, and marked the task "suit_range" **for everybody** (the task rested 15 s for all, and after
+  20 s of such marks the plan was flagged too far: block `suit_range`, which your status shows as "OUT OF REACH").
+  Carriers work outside a lot, so this happened near airlocks. Now such a refusal counts only for that colonist;
+  only a refusal with a full suit (or from inside) marks the task for everybody. Distances, suit numbers, the
+  airlock choice and the access points were checked and are right (all exterior types 30-54 m from an airlock:
+  in reach, and none is flagged in half a day of play).
+- **`sim.agents.reach_info(b)`** → `{ok, why ("ok" | "no_air" | "no_access" | "no_path" | "too_far"), text,
+  walk_m (on foot from the best airlock door to the best access point; -1 when none), straight_m, reach_m (the
+  limit, one way), lock (id or -1), lock_name, point}`. `text` is ready STE, e.g. "Too far: 162 m on foot from
+  Airlock 2; a suit allows 141 m out and back." Please show it in the inspector for blocks `suit_range` and
+  `unreachable` instead of a bare "OUT OF REACH" (it runs up to 24 walk searches: call it on selection, not every
+  frame).
+
+## 2026-09-29 — "OUT OF REACH": your hypothesis was right (the mark stayed)
+
+- The "unreachable" mark (your OUT OF REACH) was cleared only when the walking graph changed. It was set after
+  three failed walks to the structure, and walks also fail for reasons that are not the structure: a colonist
+  re-planning its walk from a cell that a neighbour under construction had just closed. Near a busy airlock with
+  structures going up round it, that marked a plan 30-50 m away and it stayed marked.
+- Fix: (1) before a structure is marked, SIM checks a walk from the airlocks with air to it (`reach_info`); if one
+  exists, only that task fails and work goes on; (2) a mark now ends after 120 s at the latest and the colony tries
+  again (logged once per map state); (3) the earlier fix stays: a part-used suit outside no longer marks a task too
+  far for everybody. `reach_info` is unchanged.

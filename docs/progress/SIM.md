@@ -732,3 +732,9 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
 - Alert blinking: key stable and hysteresis applied on every map; `live` now holds 10 s (`alerts.live_hold`) so a
   momentary drop does not show as clearing. Test `v3_alert_output_blocked_300s_frontier` (also checks `live`).
 - Storage API: `sim.inventory.contents(x)` and `by_structure(base)`; test `v4_inventory_contents` (rows = ledger).
+- Reach: a part-used suit outside no longer marks a task too far for everybody (the "OUT OF REACH" near an
+  airlock); `agents.reach_info(b)` with the numbers; test `v4_exteriors_in_reach` (fails without the fix).
+- OUT OF REACH (UI hypothesis confirmed): unreachable marks are verified from the airlocks before they are set
+  and expire after 120 s; test `v4_exteriors_in_reach` (29 checks; fails without each fix).
+- The airlock check before a mark is cheap and cached per structure and walk revision (the full reach_info in that
+  path made a 20-40 ms tick). Full suite 112 of 112 (935 s); worst tick 18.9-22.2 ms in 900 s of showcase_v4.
