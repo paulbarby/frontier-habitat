@@ -190,7 +190,14 @@ func fit_view(vp: Vector2) -> void:
 	if compact:
 		# + 20: the version-4 metal band (10 px a side) sits inside the frame; the content keeps its width.
 		frame.custom_minimum_size = Vector2(minf(compact_size.x + 20.0, vp.x - 16.0), 0.0)
-		_scroll.custom_minimum_size.y = content.get_combined_minimum_size().y
+		# Paul, 2026-10-01: content wider than compact_size (a long row, another interface scale)
+		# widens the frame up to the view, so nothing (the Back button) hides past a side scroll.
+		var cmin: Vector2 = content.get_combined_minimum_size()
+		var side: float = 44.0 + 20.0
+		if _frame_style != null:
+			side = 44.0 + _frame_style.get_margin(SIDE_LEFT) + _frame_style.get_margin(SIDE_RIGHT)
+		_scroll.custom_minimum_size.x = minf(cmin.x, maxf(0.0, vp.x - 16.0 - side))
+		_scroll.custom_minimum_size.y = cmin.y
 		var excess: float = frame.get_combined_minimum_size().y - (vp.y - 16.0)
 		if excess > 0.0:
 			_scroll.custom_minimum_size.y = maxf(40.0, _scroll.custom_minimum_size.y - excess)

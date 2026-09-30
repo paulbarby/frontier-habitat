@@ -71,7 +71,8 @@ func build() -> void:
 	k.add_child(grid)
 	for pair in [["W A S D, arrows", "move the camera"], ["Mouse wheel", "zoom"], ["Middle drag, Q E", "turn"], ["Space; 1 2 3", "pause; speed 1x 2x 4x"],
 			["R; Z X", "turn; size while placing"], ["Shift + click", "keep placing"], ["Esc; right click", "cancel; menu"], ["F", "follow a colonist"], ["/ or Ctrl+F", "find a structure"], ["N", "advisor"], ["K", "codex"], ["Shift+Esc", "close every window"],
-			["O", "overlay"], ["Delete", "remove the selection"], ["G T C I P V", "goals, research, colony, inventory, people, awards"], ["H", "hide the interface"]]:
+			["O", "overlay"], ["Delete", "remove the selection"], ["G T C", "goals, research, colony"], ["I P U", "inventory, people, crew"], ["J", "The Regolith Rag"],
+			["V", "person's view; else awards"], ["H", "hide the interface"]]:
 		grid.add_child(Kit.num(pair[0], 12, P.CYAN))
 		grid.add_child(Kit.label(pair[1], "", 12, P.TEXT_2))
 	# About (V4_DESIGN §7): the version.

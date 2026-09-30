@@ -103,6 +103,27 @@ func _plan() -> void:
 		var bid: int = corners[i]
 		q(func(): main.select("building", bid); main.focus_on(main.sim.state["buildings"][bid]["pos"]), 6)
 		q(func(): check("800x600 corner %d: inspector on %s" % [i, main.sim.state["buildings"][bid]["name"]], outside()), 1)
+	# Paul, 2026-10-01: at 80 % scale the Settings Back button sat past a side scroll. For each
+	# interface scale, no window's content is wider than its scroll area (nothing hidden sideways).
+	for scv in [0.8, 1.0, 1.4]:
+		var sc: float = scv
+		q(func(): set_size(Vector2i(1920, 1080)); main._on_cmd("uiscale %s" % str(sc)), 12)
+		for spec in SCREENS:
+			var name: String = spec[0]
+			var arg = spec[1]
+			q(func(): main.hud.open_screen(name, arg), 8)
+			q(func():
+				var bad: Array = outside()
+				var top = main.hud.screens.top_screen()
+				if top == null or top.get("_scroll") == null:
+					bad.append("screen did not open")
+				else:
+					var scr: ScrollContainer = top._scroll
+					var cw: float = top.content.get_combined_minimum_size().x
+					if cw > scr.size.x + 0.5:
+						bad.append("content %.0f px wider than its area %.0f px" % [cw, scr.size.x])
+				check("scale %d%% screen %s%s: content fits its width" % [int(sc * 100.0), name, (" " + str(arg)) if arg != null else ""], bad)
+				main.hud.close_modal(), 3)
 	# Resize with windows open.
 	for name in ["dashboard", "newcolony", "research", "settings"]:
 		var nm: String = name
