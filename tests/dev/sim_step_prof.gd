@@ -6,12 +6,14 @@ const Persistence = preload("res://sim/persistence.gd")
 
 var tot := {}
 var worst := {}
+var cur := {}
 
 func _t(name: String, f: Callable) -> void:
 	var t0: int = Time.get_ticks_usec()
 	f.call()
 	var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0
 	tot[name] = float(tot.get(name, 0.0)) + ms
+	cur[name] = ms
 	worst[name] = maxf(float(worst.get(name, 0.0)), ms)
 
 func _init() -> void:
@@ -52,6 +54,7 @@ func _init() -> void:
 	var steps: Array = []
 	for i in n:
 		var t_all: int = Time.get_ticks_usec()
+		cur = {}
 		sim.state["tick"] = int(sim.state["tick"]) + 1
 		var tick: int = int(sim.state["tick"])
 		var phase: int = tick % hz
@@ -73,7 +76,11 @@ func _init() -> void:
 		if phase == 3:
 			_t("explore_ship", func(): sim.explore.tick_second(); sim.ship.tick_second())
 		if phase == 4:
-			_t("jobs", func(): sim.jobs.tick_second())
+			_t("jobs", func(): sim.jobs.tick_part(0))
+		elif phase == 9:
+			_t("jobs_b", func(): sim.jobs.tick_part(1))
+		elif phase == 1:
+			_t("jobs_c", func(): sim.jobs.tick_part(2))
 		_t("think", func(): sim.agents.think_tick())
 		_t("locks", func(): sim.agents.locks_tick())
 		_t("act", func(): sim.agents.act_tick())
@@ -81,8 +88,9 @@ func _init() -> void:
 		if phase == 5:
 			_t("prod", func(): sim.prod.crops_second(); sim.prod.auto_second(); sim.prod.spoil_second(); sim.prod.wear_second())
 		if phase == 6:
-			_t("morale", func(): sim.agents.morale_second())
+			_t("morale", func(): sim.agents.morale_second(0))
 		if phase == 7:
+			_t("morale", func(): sim.agents.morale_second(1))
 			_t("research_goals_awards", func(): sim.research.tick_second(); sim.goals.tick_second(); sim.awards.tick_second())
 		if phase == 8:
 			_t("alerts", func(): sim.alerts.tick_second())
@@ -97,7 +105,14 @@ func _init() -> void:
 			_t("families", func(): sim.families.tick_second())
 		if phase == 0:
 			_t("metrics", func(): sim.metrics.tick_second())
-		steps.append(float(Time.get_ticks_usec() - t_all) / 1000.0)
+		var st_ms: float = float(Time.get_ticks_usec() - t_all) / 1000.0
+		steps.append(st_ms)
+		if st_ms > 8.0:
+			var parts: Array = []
+			for k in cur:
+				if float(cur[k]) > 0.8:
+					parts.append("%s %.1f" % [k, float(cur[k])])
+			print("  slow tick %d (phase %d): %.1f ms: %s" % [tick, phase, st_ms, ", ".join(parts)])
 	var keys: Array = tot.keys()
 	keys.sort_custom(func(x, y): return float(tot[x]) > float(tot[y]))
 	print("%d people, %d ticks" % [sim.state["agents"].size(), n])

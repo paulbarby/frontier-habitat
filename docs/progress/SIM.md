@@ -864,3 +864,6 @@ still grow by days, not by work done; best-dressed uses traits, not outfits; fit
 (venues open by staff and goods); a real liner bringing P. Barby, the shuttle family and the `shared_home` request
 answers are not tested; the worst tick (13.5 ms) is over the 12 ms budget; the distillery has no model (ART-HAB).
 Notes to UI, RENDER and ART-HAB: SIM-to-UI.md, SIM-to-RENDER.md, SIM-to-ART-HAB.md (2026-10-01).
+## 2026-10-01, PAUSED (coordinator): perf and open items half-done
+- Done, not yet tested in the suite: jobs split over 3 ticks (tick_part 0/1/2 on phases 4/9/1), morale in 2 halves (phases 6/7), lite satisfaction/attitude in people._update, talk end checks once a second; rider repair (vehicles.repair_crews at load; riders never walk: the showcase death was a rider of showcase_v4 saved 'out' and pinned to the rover); unrest privilege cause; bystanders flee fights; skills grow with work (rec.xp); best dressed by clothes. Only v5_showcase_det, v5_society_det, u02, a01 run (pass) before the last four edits.
+- Not done: A/B perf numbers (baseline copy in the SIM scratchpad sim_base; runs were at 30-65 % load, not usable); showcase_v5 rebuild (builder now fails on any death); tests for flee, privilege, skill growth, P. Barby on a real liner, shuttle families, shared-home answers; full suite; SIM-to-UI/RENDER notes for these changes.

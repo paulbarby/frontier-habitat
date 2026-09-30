@@ -114,6 +114,8 @@ MATERIALS = {
     "SignalRedGlow": dict(color="#d93a3a", rough=0.40, emit="#d93a3a", emit_strength=2.2),
     "PrisonOrange": dict(color="#ff7a1a", rough=0.55),
     "PrisonOrangeGlow": dict(color="#ff7a1a", rough=0.40, emit="#ff7a1a", emit_strength=2.2),
+    # 5.0 distillery stills (plain metal: merges into PaletteMetal, the colour lives in COLOR_0)
+    "Copper":     dict(color="#c47a42", metal=0.80, rough=0.32),
 }
 
 SHARP_ANGLE = 50.0   # degrees; edges sharper than this get split normals on smooth faces

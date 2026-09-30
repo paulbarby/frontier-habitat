@@ -1,5 +1,5 @@
 extends SceneTree
-## "The Regolith Rag" window (V5_DESIGN §4.3, §10), headless, on showcase_v4:
+## "The Regolith Rag" window (V5_DESIGN §4.3, §10), headless, on showcase_v5 (stored issues and relations):
 ##   node tools/godot.mjs script res://tools/ui/test_rag.gd
 ## The issues come from SIM (or the preview), every part of the page is built, names link to people
 ## and a click selects them, back issues switch, and the window stays inside the view at 1600x900
@@ -37,7 +37,7 @@ func _process(_d: float) -> bool:
 	match _step:
 		0:
 			root.size = Vector2i(1600, 900)
-			main._import_bytes(FileAccess.get_file_as_bytes("res://content/saves/showcase_v4.fhsave"))
+			main._import_bytes(FileAccess.get_file_as_bytes("res://content/saves/showcase_v5.fhsave"))
 			main._on_cmd("speed 0")
 			main._on_cmd("rag")
 			_step = 1

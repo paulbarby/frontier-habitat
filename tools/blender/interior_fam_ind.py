@@ -526,7 +526,7 @@ def industry(rm):
         rx_, ry_ = cxm - (x1 - x0) * 0.22, cym + (y1 - y0) * 0.22
         riser(n, rx_, ry_, F + 1.2, roof_z(rm, rx_, ry_, F + 2.9 + 0.1 * s, 0.03))
     if s == 3:
-        stock_zones(plan, 3, [k for k in IND_STOCK[tid] if k not in ("cart", "racks", "tanks")], seed=5)
+        stock_zones(plan, 3, [k for k in IND_STOCK[tid] if k not in ("cart", "racks", "tanks", "washbacks", "casks")], seed=5)
     fill_decor(plan, IND_STOCK[tid], seed=111 + s, align=0.0, max_n=(1, 2, 5, 8)[s], walk=(0.75, 0.75, 0.6, 0.6)[s])
     plan.wall_items(IND_WALL, wall_set(plan), open_every=3, seed=111 + s, depth_of=DEPTHS)
     plan.stands(fu["stands"], [(cx - 0.9, max(ys) + 1.0, 180.0), (cx - 0.9, min(ys) - 1.0, 180.0)])

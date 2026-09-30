@@ -1309,6 +1309,11 @@ func _act_all(dt: float) -> void:
 		var plan: Array = a["plan"]
 		if plan.is_empty():
 			continue
+		# A rider never walks: a plan of a person aboard would set where = out while the vehicle
+		# keeps the body in its crew (the showcase death). The plan is dropped.
+		if a["where"] == "vehicle":
+			abort_plan(a, "aboard")
+			continue
 		# V5: riding the lift/stair core of a multi-storey building (floors.gd on_use).
 		if a.has("lift"):
 			if int(sim.state["tick"]) < int(a["lift"]["t1"]):
@@ -1738,7 +1743,9 @@ func _do_timed(a: Dictionary, seconds: float, dt: float, goal: String, mark: Str
 		_clear_plan(a)
 
 # ---------------------------------------------------------------- morale (each second)
-func morale_second() -> void:
+## part -1: everybody; 0 / 1: the people with an even / odd id (sim.gd runs the two halves on two
+## ticks of the second: V5 budget, no tick over 12 ms). Each person still moves once a second.
+func morale_second(part: int = -1) -> void:
 	var bal: Dictionary = sim.bal
 	var tick: int = int(sim.state["tick"])
 	var day_ticks: float = float(bal["day_length"]) * hz()
@@ -1764,6 +1771,8 @@ func morale_second() -> void:
 	var m_death: float = float(bal["morale_death_penalty"])
 	var step: float = float(bal["morale_rate_per_day"]) / float(bal["day_length"])
 	for aid in sim.state["agents"]:
+		if part != -1 and int(aid) % 2 != part:
+			continue
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive":
 			continue

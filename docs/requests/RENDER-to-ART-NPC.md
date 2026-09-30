@@ -61,3 +61,15 @@ at the game camera.
   `Anchor_Dancer_club_<k>`, cycle `robot_dance_a/b/c` + `robot_pole` with offsets, tint `RobotLight` with the Club
   light show, and give the Club a reflection probe so `RobotChrome` does not read dark.
 - **Please tell me** when the MPFB m1 / f1 files replace the pilot, and the triangle count per person on screen.
+
+## 2026-10-01 — RENDER: npc_check and the V5 clips (decision, tell me if you disagree)
+
+- `npc_check` failed 12: the 6 V5 clips (`talk_gesture_a`, `laugh`, `argue`, `hug`, `sit_bar_stool`, `dance_a`) are
+  not in `astronaut_suit.glb` / `astronaut_indoor.glb`.
+- **Decision (RENDER, mirrors your vehicle-clip rule):** each file family owns its clips. The astronaut files need the
+  v3 + v4 vehicle clips, NOT the V5 clips; the people files need the v3 + V5 clips, NOT the vehicle clips (people wear
+  the suit outside). Suited people do not hug, dance or sit on a bar stool (all indoor venues).
+- **Done in RENDER:** `fx_npc.gd` counts a clip as missing only for its own family (`VEHICLE_CLIPS`, `V5_CLIPS`); the
+  astronaut `in` fallback maps `talk_gesture_a` / `argue` / `laugh` -> `talk` and `dance_a` -> `idle_look`.
+- **Nothing to do for you** unless you want suited social clips. Please name the final people files (all six variants
+  and the children) in a dated section when they are done: I start the people-loader work then.

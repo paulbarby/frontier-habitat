@@ -1503,6 +1503,14 @@ func _venues(b: Dictionary) -> void:
 	var sec: VBoxContainer = _section("Venues", "cat_civic", P.CYAN)
 	sec.name = "Venues"
 	sec.add_child(Kit.wrap("A venue is open when the structure has power, its staff are at work and a shop has goods. Colonists use venues for free; tourists pay the price.", 12, P.TEXT_2))
+	var tour: Label = Kit.wrap("", 12, P.GOLD)
+	tour.name = "Tourism"
+	sec.add_child(tour)
+	var tfill := func():
+		var t: Dictionary = _hud().v5.tourism()
+		tour.text = "Visitors now: %d  ·  tourism earned %d credits (all time)  ·  balance %d" % [int(t["visitors"]), int(t["earned"]), int(t["balance"])]
+	tfill.call()
+	insp.bind(tfill)
 	var box: VBoxContainer = Kit.vbox(8)
 	sec.add_child(box)
 	var sig := [""]
@@ -1517,11 +1525,11 @@ func _venues(b: Dictionary) -> void:
 		sig[0] = sg
 		Kit.clear(box)
 		for r in rows:
-			box.add_child(_venue_row(r))
+			box.add_child(_venue_row(r, id))
 	fill.call()
 	insp.bind(fill)
 
-func _venue_row(r: Dictionary) -> Control:
+func _venue_row(r: Dictionary, bid: int = -1) -> Control:
 	var v: VBoxContainer = Kit.vbox(2)
 	v.name = "Venue_" + String(r["id"])
 	var h: HBoxContainer = Kit.hbox(6)
@@ -1549,6 +1557,8 @@ func _venue_row(r: Dictionary) -> Control:
 		parts.append("Quality %d" % int(r["quality"]))
 	var l: Label = Kit.wrap("  ·  ".join(parts), 12, P.TEXT_2)
 	v.add_child(l)
+	if int(r.get("need_staff", 0)) > 0 and bid >= 0:
+		v.add_child(_staff_pick(bid, r))
 	var stock: Dictionary = r.get("stock", {})
 	if not (r.get("items", []) as Array).is_empty():
 		var any := false
@@ -1559,3 +1569,45 @@ func _venue_row(r: Dictionary) -> Control:
 		else:
 			v.add_child(_items_row(stock))
 	return v
+
+## Venue staff (command "staff" {building, venue, agent}; -1 = none). SIM proposes staff; the player can
+## choose. People without a venue job come first, then by name; the current job is named.
+func _staff_pick(bid: int, r: Dictionary) -> Control:
+	var s = _sim()
+	var ob := OptionButton.new()
+	ob.name = "Staff_" + String(r["id"])
+	ob.focus_mode = Control.FOCUS_NONE
+	ob.add_theme_font_size_override("font_size", 12)
+	ob.custom_minimum_size = Vector2(200, 26)
+	ob.tooltip_text = "Staff
+Choose who works at the %s (%s). The person leaves their other venue job." % [String(r["name"]).to_lower(), String(r.get("job", "staff"))]
+	ob.add_item("Choose staff...")
+	ob.set_item_metadata(0, -2)
+	ob.add_item("No staff")
+	ob.set_item_metadata(1, -1)
+	var base: int = s.bases.base_of(bid) if s.bases.count() > 1 else -1
+	var rows: Array = []
+	for p in _hud().v5.people():
+		if String(p["kind"]) != "colonist" or bool(p.get("prisoner", false)):
+			continue
+		if base >= 0 and int(p.get("base", -1)) != base:
+			continue
+		rows.append(p)
+	rows.sort_custom(func(x, y):
+		var jx: bool = String(x.get("job", "")) != ""
+		var jy: bool = String(y.get("job", "")) != ""
+		return (not jx and jy) or (jx == jy and String(x["name"]) < String(y["name"])))
+	for p in rows:
+		var job: String = String(p.get("job", ""))
+		ob.add_item("%s%s" % [String(p["name"]), ("  (" + job + ")") if job != "" else ""])
+		ob.set_item_metadata(ob.item_count - 1, int(p["id"]))
+	ob.select(0)
+	var vid: String = String(r["id"])
+	ob.item_selected.connect(func(i: int):
+		var aid: int = int(ob.get_item_metadata(i))
+		if aid == -2:
+			return
+		var res: Dictionary = _hud().v5.command("staff", {"building": bid, "venue": vid, "agent": aid})
+		insp.last_staff = res
+		_hud().toast("Staff: " + String(res.get("text", "")), "info" if bool(res.get("ok", false)) else "warn", "people"))
+	return ob

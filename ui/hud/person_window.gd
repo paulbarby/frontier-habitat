@@ -185,6 +185,8 @@ func _file(p: Dictionary) -> void:
 		var l: Label = Kit.wrap(String(row[1]), 13, P.TEXT)
 		l.custom_minimum_size.x = 200
 		g.add_child(l)
+	if String(idn.get("kind", "")) == "child":
+		_school()
 	# Satisfaction
 	var sat: Dictionary = p["satisfaction"]
 	var sv: float = float(sat["value"])
@@ -245,6 +247,36 @@ func _file(p: Dictionary) -> void:
 		for ln in lines:
 			sec4.add_child(Kit.wrap("\"%s\"" % String(ln.get("text", "")), 13, P.TEXT_2))
 	_history()
+
+## A child's school (V5 §5.3; SIM sim/families.gd): the school points by subject (they are added to the
+## skills when the child grows up), the academy, when the child grows up and the job the best subject
+## gives.
+func _school() -> void:
+	var s = hud.main.sim
+	var a: Dictionary = hud.v5.agent(agent_id)
+	var sch: Dictionary = s.state.get("v5", {}).get("school", {}).get(agent_id, {})
+	var fc: Dictionary = s.content.get("society", {}).get("families", {})
+	var sec: VBoxContainer = _section("School", "research")
+	sec.name = "School"
+	var acad: int = s.education.school_for(a) if s.get("education") != null and s.education.has_method("school_for") else -1
+	sec.add_child(Kit.wrap(("School at %s by day. " % String(s.state["buildings"][acad]["name"])) if acad >= 0 else "No academy: no school. Build an academy (Science tab). ", 13, P.TEXT_2 if acad >= 0 else P.AMBER))
+	var keys: Array = sch.keys()
+	keys.sort_custom(func(x, y): return float(sch[x]) > float(sch[y]))
+	var top: float = 1.0
+	for k in keys:
+		top = maxf(top, float(sch[k]))
+	for k in keys:
+		var r: HBoxContainer = Kit.bar_row(String(k).capitalize(), float(sch[k]) / top, "%.1f points" % float(sch[k]), P.CYAN, 110.0)
+		r.tooltip_text = "%s: %.1f school points\nWhen the child grows up, the points are added to this skill." % [String(k).capitalize(), float(sch[k])]
+		sec.add_child(r)
+	if keys.is_empty():
+		sec.add_child(Kit.label("No lessons yet.", "SmallLabel", 12, P.TEXT_3))
+	var day: float = float(s.bal["day_length"]) * float(s.bal["tick_hz"])
+	var grow: float = float(fc.get("child_grow_days", 30)) * day
+	var left: float = grow - float(int(s.state["tick"]) - int(a.get("child_at", s.state["tick"])))
+	var best: String = String(keys[0]) if not keys.is_empty() else ""
+	var role: String = String(fc.get("role_of_skill", {}).get(best, "technician"))
+	sec.add_child(Kit.wrap("Grows up in %.1f days%s." % [maxf(0.0, left / day), (" and joins the crew as a %s (best subject: %s)" % [String(s.bal["role_names"].get(role, role)).to_lower(), best]) if best != "" else ""], 13, P.TEXT))
 
 ## Effects now and the history (V5 §6.2: promotions, punishments, break-ups; SIM sim.people.rec_of):
 ## each active effect with its change to satisfaction and attitude and the time left; then the last

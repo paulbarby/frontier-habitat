@@ -9,7 +9,8 @@ academy          student desks in rows facing the teacher board (Seat = Anchor_C
                  (Work_0 = Anchor_Teach), instructor consoles (Work_1.. = Anchor_Console_<i>), shelves, a reading rug
 security_office  front desk (Work_0 = Anchor_Desk_0), monitor console (Work_1 = Anchor_Desk_1), lockers
                  (Stand = Anchor_Locker_<i>), a briefing table (Seat), a holding bench, an equipment rack
-jail             cells with bars, a bunk, WC and basin each (Anchor_Cell_<i> beside the bunk, the bed convention),
+jail             cells with bars, a bunk, WC and basin each (Anchor_Cell_<i> = Anchor_Bed_<i> beside the bunk, the bed
+                 convention),
                  the guard desk (Work_0 = Anchor_Guard), a visiting table (Seat), a yard at L (Anchor_Yard_<i> =
                  the yard Stands)
 Anchor counts follow content/buildings.json `furniture` (checked by rooms_build.py).
@@ -952,6 +953,8 @@ def cell(plan, x, y, yaw, i, W=1.9, Dd=2.2):
     ax, ay = off(bx, by, yaw, 0.0, 0.55)              # the bed's stand side (bed frame +X = cell +Y)
     if i is not None:
         plan.rm.anchor("Cell_%d" % i, (ax, ay, F), yaw + 90.0)
+        # SIM 2026-10-01: the jail's furniture beds are the cells; the prisoner sleeps on Anchor_Bed_<i> = Cell_<i>
+        plan.anchor("Bed", ax, ay, yaw + 90.0)
 
 
 def jail(rm):

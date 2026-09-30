@@ -30,7 +30,7 @@ import rooms_kit as K        # noqa: E402
 
 BUILDERS = {}
 _MODULES = ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
-            "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ")
+            "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ", "rooms_distillery")
 for _m in _MODULES:
     try:
         mod = __import__(_m)
@@ -47,7 +47,8 @@ ORDER = ["habitat", "greenhouse", "kitchen", "storehouse", "oxygen_plant", "rese
          "steel_mill", "titanium_smelter", "ceramics_kiln", "carbon_works", "battery_plant", "parts_works",
          "magnet_works", "superconductor_lab", "metamaterial_foundry",
          # 5.0 (docs/V5_DESIGN.md section 7)
-         "residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail"]
+         "residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail",
+         "distillery"]
 FAMILY = {
     "habitat": "habitat", "lounge": "habitat", "cantina": "habitat", "medical": "habitat", "bio_lab": "habitat",
     "storehouse": "habitat", "cold_storage": "habitat",
@@ -62,6 +63,7 @@ FAMILY = {
     "superconductor_lab": "industry", "metamaterial_foundry": "industry",
     "residence_tube": "habitat", "apartment_block": "habitat", "retail": "habitat", "park": "agri",
     "academy": "science", "security_office": "habitat", "jail": "habitat",
+    "distillery": "industry",
 }
 # 3.0 (docs/V3_DESIGN.md section 7): builders with the detailed interiors and wall segments.  A v3 builder may
 # raise NotImplementedError for a size it does not make yet; that size then uses the v2 builder.

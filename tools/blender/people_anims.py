@@ -39,7 +39,17 @@ CONTACT = {
     "lie_enter": ("bed", 0.55, ()), "sleep": ("bed", 0.55, ()), "lie_exit": ("bed", 0.55, ()),
     "work_console": (None, 0.0, ("L", "R")), "work_bench": (None, 0.0, ("L", "R")),
     "repair_kneel": (None, 0.0, ("L", "R")),
+    # v5 planned clips (people_clips.py)
+    "sit_bench": ("seat", 0.45, ()), "sit_class": ("seat", 0.46, ("L", "R")),
+    "drink_bar": ("seat", BAR_STOOL["seat_z"], (), (BAR_STOOL["seat_z"] + 0.187) - 0.98),
+    "lounge_pool": ("seat", 0.35, (), (0.35 + 0.115) - 0.98),
+    "sleep_cell": ("bed", 0.45, ()), "lie_enter_r": ("bed", 0.55, ()), "sleep_r": ("bed", 0.55, ()),
+    "lie_exit_r": ("bed", 0.55, ()), "drive_sit": ("seat", 0.46, ("L", "R")),
+    "play_arcade": (None, 0.0, ("L", "R")), "shop_browse": (None, 0.0, ("R",)),
 }
+LIE_CLIPS = ("collapse", "dead", "lie_enter", "sleep", "lie_exit", "fall_down", "get_up", "sleep_cell", "lie_enter_r",
+             "sleep_r", "lie_exit_r")
+STOOL_CLIPS = ("sit_bar_stool", "drink_bar")
 # the settled hips offset of each support (s = 1), for the blend weight
 SETTLED = {"seat": A.SIT.g("hips.z"), "bed": None}
 
@@ -52,7 +62,7 @@ STOOL_ADJ = 0.0           # the bar-stool hips (per body; the MPFB builds calibr
 FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3 one (x s); MPFB builds set it
 KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
 ARM_IN = 0.0              # deg: standing FK arms closer to the body (MPFB builds: 5)
-WORLD_FEET = {"sit_bar_stool"}
+WORLD_FEET = {"sit_bar_stool", "drink_bar"}
 
 
 def people_fix(P, clip):
@@ -60,7 +70,7 @@ def people_fix(P, clip):
     Q = Pose(P)
     kind = CONTACT.get(clip, (None,))[0]
     hz = P.g("hips.z")
-    if kind == "seat" and clip != "sit_bar_stool":
+    if kind == "seat" and clip not in STOOL_CLIPS:
         w = max(0.0, min(1.0, hz / A.SIT.g("hips.z")))
         Q["hips.z"] = hz + SEAT_DROP * w
         for side in ("L", "R"):
@@ -79,9 +89,9 @@ def people_fix(P, clip):
             f = stand * (1.0 - max(0.0, min(1.0, Q.g("arm.%s.ik" % side))))
             k = "upper_arm.%s.rx" % side
             Q[k] = Q.g(k) + sg * ARM_IN * f
-    if clip == "sit_bar_stool" and STOOL_ADJ:
+    if clip in STOOL_CLIPS and STOOL_ADJ:
         Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
-    if clip in ("collapse", "dead", "lie_enter", "sleep", "lie_exit"):
+    if clip in LIE_CLIPS:
         w = max(0.0, min(1.0, (-hz - 0.55) / 0.25))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
         for side in ("L", "R"):                     # the bigger people hands: fingertips clear of the floor
@@ -126,6 +136,9 @@ def _retarget(P, s, clip, settled_z=None):
         w = max(0.0, min(1.0, hz / ref)) if ref < 0 else 0.0
         dz = w * h * (1.0 - s)
         Q["hips.z"] = Q.g("hips.z") + dz
+        if kind == "seat" and s < 0.85:                     # children: the feet dangle (they cannot reach the floor)
+            for side in ("L", "R"):
+                Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz * 0.8
         for side in ("L", "R"):
             if side not in world and Q.g("arm.%s.ik" % side) > 0:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + dz
@@ -208,6 +221,29 @@ EXPRESSIONS = {
     "work_console": lambda u: dict(frown=0.30), "work_bench": lambda u: dict(frown=0.30),
     "repair_kneel": lambda u: dict(frown=0.35), "sit_type": lambda u: dict(frown=0.20),
     "injured_walk": lambda u: dict(frown=0.80, laugh=0.0), "collapse": lambda u: dict(frown=0.8 * _env(u, 0.1, 0.3)),
+    # v5 planned clips
+    "talk_idle": lambda u: dict(smile=0.25 + 0.10 * sin(TAU * u)),
+    "talk_gesture_b": lambda u: dict(smile=0.30, surprise=0.5 * _bump(u, 0.55, 0.08)),
+    "listen_nod": lambda u: dict(smile=0.20 + 0.15 * (_bump(u, 0.2, 0.05) + _bump(u, 0.5, 0.05) + _bump(u, 0.8, 0.05))),
+    "shout": lambda u: dict(frown=_env(u, 0.12, 0.25)),
+    "sulk": lambda u: dict(frown=0.55),
+    "wave": lambda u: dict(smile=0.8 * _env(u, 0.15, 0.2)),
+    "handshake": lambda u: dict(smile=0.6 * _env(u, 0.2, 0.2)),
+    "kiss_brief": lambda u: dict(smile=0.5 * _env(u, 0.15, 0.15)),
+    "hold_hands_walk": lambda u: dict(smile=0.55), "hold_hands_walk_r": lambda u: dict(smile=0.55),
+    "flirt_lean": lambda u: dict(smile=0.55 + 0.15 * sin(TAU * u), laugh=0.6 * _bump(u, 0.62, 0.06)),
+    "slap": lambda u: dict(frown=_env(u, 0.1, 0.3)), "punch": lambda u: dict(frown=_env(u, 0.1, 0.3)),
+    "hit_react": lambda u: dict(surprise=0.8 * _bump(u, 0.35, 0.12), frown=0.6 * _env(u, 0.35, 0.3)),
+    "fall_down": lambda u: dict(surprise=0.7 * _env(u, 0.1, 0.5)), "get_up": lambda u: dict(frown=0.4 * _env(u, 0.2, 0.3)),
+    "fight_idle": lambda u: dict(frown=0.9), "protest_fist": lambda u: dict(frown=0.7),
+    "handcuffed_walk": lambda u: dict(frown=0.6), "escort_walk": lambda u: dict(frown=0.2),
+    "sit_bench": lambda u: dict(smile=0.15), "drink_bar": lambda u: dict(smile=0.35),
+    "dance_b": lambda u: dict(smile=0.65 + 0.15 * sin(TAU * u * 2)), "dance_c": lambda u: dict(smile=0.5, laugh=0.4 * _bump(u, 0.5, 0.1)),
+    "lounge_pool": lambda u: dict(smile=0.30), "jog": lambda u: dict(frown=0.25),
+    "play_arcade": lambda u: dict(smile=0.3 + 0.3 * _bump(u, 0.5, 0.1), surprise=0.4 * _bump(u, 0.8, 0.06)),
+    "shop_browse": lambda u: dict(smile=0.20, surprise=0.3 * _bump(u, 0.45, 0.08)),
+    "sit_class": lambda u: dict(frown=0.15), "teach": lambda u: dict(smile=0.3),
+    "child_play": lambda u: dict(smile=0.7, laugh=0.6 * _bump(u, 0.75, 0.08)), "child_run": lambda u: dict(smile=0.6),
 }
 
 
@@ -494,16 +530,30 @@ def people_clips():
                 dict(furniture="bar_stool")))
     fn, n = dance_a_fn()
     out.append(("dance_a", "loop", "stand", "stand", True, n, with_face(fn, "dance_a", n, True), dict(bpm=120)))
+    # the v5 planned clips (people_clips.py): face overlays, jaw in the talking ones
+    import people_clips as PC
+    jaws = {"talk_idle": lambda t, d: talk_jaw(t, d, True, rate=3.8, amp=3.0),
+            "talk_gesture_b": lambda t, d: talk_jaw(t, d, True, rate=4.4, amp=5.0),
+            "shout": lambda t, d: (14.0 * max(0.0, min(1.0, (t - 0.45) / 0.1, (1.45 - t) / 0.15)) *
+                                   (0.75 + 0.25 * sin(TAU * 3.0 * t))),
+            "protest_fist": lambda t, d: 10.0 * (0.5 - 0.5 * cos(TAU * t)) * max(0.0, min(1.0, t / 0.3, (d - t) / 0.3)),
+            "teach": lambda t, d: talk_jaw(t, d, True, rate=4.0, amp=4.0)}
+    for c in PC.v5_clips():
+        name, kind, pf, pt, loop, n, fn, meta = c
+        out.append((name, kind, pf, pt, loop, n, with_face(fn, name, n, loop, jaws.get(name)), meta))
     return out
 
 
 def pairs_json():
+    import people_clips as PC
+    pairs = {"hug": dict(clip_a="hug", clip_b="hug", distance_m=HUG["distance"], facing_deg=HUG["facing_deg"],
+                         sync_s=HUG["sync_s"], side_offset_m=0.0, note="arms round the partner's back, heads side by side")}
+    pairs.update({k: dict(v) for k, v in PC.PAIRS.items()})
     return {
-        "note": ("Paired clips: both partners play the clip with the same start time (sync_s); partner B stands at "
-                 "distance_m along partner A's forward axis and faces A (facing_deg 180).  Distances are for two "
-                 "1.80 m people; scale by the mean of the two variant scales."),
-        "pairs": {
-            "hug": dict(clip_a="hug", clip_b="hug", distance_m=HUG["distance"], facing_deg=HUG["facing_deg"],
-                        sync_s=HUG["sync_s"], side_offset_m=0.0),
-        },
+        "note": ("Paired clips.  Partner A plays clip_a at time 0, partner B plays clip_b from sync_s.  B stands at "
+                 "distance_m along A's forward axis (+X) and side_offset_m along A's left (+Y), turned facing_deg about "
+                 "the vertical from A's facing (180 = facing A, 0 = the same way).  Distances are for two 1.80 m "
+                 "people; scale them by the mean of the two variant scales.  Walking pairs move both roots together "
+                 "along +X at the clip's speed_mps."),
+        "pairs": pairs,
     }

@@ -196,6 +196,16 @@
    "rooms": [
     "academy_s"
    ]
+  },
+  {
+   "at": "2026-10-01 07:34",
+   "rooms": [
+    "distillery",
+    "distillery_l",
+    "distillery_m",
+    "distillery_s",
+    "distillery_xl"
+   ]
   }
  ],
  "generator": "tools/blender/rooms_build.py",
@@ -534,6 +544,31 @@
    "min_lane_m": 0.82
   },
   "cold_storage_xl": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "distillery": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "distillery_l": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 1.04
+  },
+  "distillery_m": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.99
+  },
+  "distillery_s": {
+   "blocked": [],
+   "free_deg": 360.0,
+   "min_lane_m": 0.82
+  },
+  "distillery_xl": {
    "blocked": [],
    "free_deg": 360.0,
    "min_lane_m": 1.04

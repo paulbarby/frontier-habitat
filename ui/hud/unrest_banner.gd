@@ -42,6 +42,9 @@ var last_result: Dictionary = {}
 var _damage: Label
 var _style: StyleBoxFlat
 var _btn := {}    # response -> Button
+var _grid: GridContainer
+var _lock: Label       # lockdown: doors open in … (SIM unrest.lock_info)
+var lock_base := -2    # the locked base shown (tests; -2 none)
 var _eff := {}    # response -> effect Label
 
 func _ready() -> void:
@@ -80,7 +83,11 @@ func _ready() -> void:
 	_damage = Kit.head("", Color("FF6B72"), 13, "head")
 	_damage.name = "Damage"
 	v.add_child(_damage)
+	_lock = Kit.head("", Color("7FD4FF"), 13, "head")
+	_lock.name = "Lockdown"
+	v.add_child(_lock)
 	var grid: GridContainer = Kit.grid(4, 8, 6)
+	_grid = grid
 	v.add_child(grid)
 	for r in RESPONSES:
 		var id: String = r[0]
@@ -148,9 +155,37 @@ func _update() -> void:
 			best = u
 			best_b = int(b)
 	var st: String = String(best.get("stage", "calm"))
-	visible = st in LOUD
-	shown_stage = st if visible else ""
+	# Lockdown (response lock_down; SIM unrest.lock_info): the doors of a base are closed for a time.
+	lock_base = -2
+	var left := 0.0
+	for b in ids:
+		var li: Dictionary = hud.v5.lock_info(int(b))
+		if bool(li.get("locked", false)):
+			lock_base = int(b)
+			left = float(li.get("seconds_left", 0.0))
+			break
+	var lock_txt: String = ("LOCKDOWN%s  ·  DOORS OPEN IN %s" % [(" AT " + String(s.bases.name_of(lock_base)).to_upper()) if lock_base >= 0 and s.bases.count() > 1 else "", Kit.clock(left)]) if lock_base != -2 else ""
+	_lock.text = lock_txt
+	_lock.visible = lock_txt != ""
+	visible = st in LOUD or lock_base != -2
+	shown_stage = st if st in LOUD else ("lockdown" if lock_base != -2 else "")
 	if not visible:
+		return
+	_grid.visible = st in LOUD
+	if not (st in LOUD):
+		# Only the lockdown: a short banner with the time left.
+		base_id = lock_base
+		_style.bg_color = Color(0.03, 0.09, 0.14, 0.92)
+		_style.border_color = Color("7FD4FF")
+		_damage.visible = false
+		_demand.visible = false
+		_text.text = "LOCKDOWN"
+		_text.add_theme_color_override("font_color", Color("7FD4FF"))
+		_icon.modulate = Color("7FD4FF")
+		_sub.text = "People stay in their rooms: no riot can spread, no leisure, and unrest rises a little. The doors open when the time is over."
+		tooltip_text = "Lockdown
+Ordered with the Lock down response (the unrest banner or Crew, Security)."
+		Kit.fit(self)
 		return
 	base_id = best_b
 	var col: Color = STAGE_COL.get(st, P.AMBER)
@@ -160,7 +195,8 @@ func _update() -> void:
 	if st == "riot":
 		var dmg = best.get("damage", null)
 		var inj = best.get("injured", null)
-		_damage.text = "DAMAGE: %s  ·  INJURED: %s" % [("%d rooms" % int(dmg)) if dmg != null else "not reported yet", str(int(inj)) if inj != null else "not reported yet"]
+		_damage.text = "DAMAGE: %s  ·  INJURED: %s%s" % [("%d rooms" % int(dmg)) if dmg != null else "not reported yet", str(int(inj)) if inj != null else "not reported yet",
+			("  ·  LOOTED: %d" % int(best["looted"])) if best.get("looted", null) != null else ""]
 	_text.text = "%s%s  ·  UNREST %d" % [STAGE_TEXT[st], (" AT " + String(s.bases.name_of(best_b)).to_upper()) if best_b >= 0 else "", int(best["value"])]
 	_text.add_theme_color_override("font_color", col)
 	_icon.modulate = col
@@ -201,6 +237,15 @@ func _responses(u: Dictionary) -> void:
 				parts.append("prisoners go free")
 			txt = " · ".join(parts)
 		var ok: bool = bool(ready.get(id, true))
+		# SIM's own effect and cost (sim.unrest.response_effect, 2026-10-01): the stock a party uses now,
+		# the demand, the lock hours. It replaces the table above.
+		var un = hud.main.sim.get("unrest")
+		if un != null and (un as Object).has_method("response_effect"):
+			var fx: Dictionary = un.response_effect(base_id, id)
+			if not fx.is_empty():
+				est = false
+				txt = "unrest %+d · %s" % [int(fx.get("unrest", 0)), String(fx.get("cost", ""))]
+				ok = bool(fx.get("ready", ok))
 		if _eff.has(id):
 			(_eff[id] as Label).text = txt if ok else "not ready: used recently"
 		if _btn.has(id):

@@ -19,37 +19,52 @@ func _init(s) -> void:
 	sim = s
 
 # ---------------------------------------------------------------- per second
+## The whole job board once (tools and tests that call it directly).
 func tick_second() -> void:
-	_expire()
-	_index()
-	# Machines take their inputs before plans reserve the rest: a factory that waits for
-	# steel while every unit is promised to construction sites makes no more steel.
-	_gen_machine_inputs()
-	# V3: repairs, breach seals and maintenance take their parts before construction plans
-	# reserve the rest (a cracked corridor must not wait for a new solar array).
-	_gen_repair()
-	_gen_hazard_work()
-	_gen_research()
-	_gen_medical()
-	# V3: the Meridian's parts are reserved before ordinary construction and upgrades
-	# (with repairs, maintenance and research packs there are more users of steel).
-	_gen_ship()
-	_gen_construction()
-	_gen_upgrades()
-	_gen_vehicles()
-	_gen_reactors()
-	_gen_dining()
-	_gen_venues()
-	_gen_trade()
-	_gen_water_fill()
-	_gen_clearing()
-	_gen_operate()
-	_gen_tend()
-	_gen_demolish()
-	# Every 10 s (the jobs run on their own tick of the second: sim.gd step()).
-	if (int(sim.state["tick"]) / int(sim.bal["tick_hz"])) % 10 == 0:
-		_clean_piles()
+	tick_part(0)
+	tick_part(1)
+	tick_part(2)
 
+## The job board in three parts, each on its own tick of the second (sim.gd step(): phases 4, 9
+## and 1), so that no tick carries all of it (V5 budget: no tick over 12 ms). The parts keep the
+## order of the generators (A, B, C, A, B, C ...): machines and repairs still reserve before
+## construction, and each part indexes the board again (the state moved between the parts).
+func tick_part(part: int) -> void:
+	if part != 0:
+		_index()
+	match part:
+		0:
+			_expire()
+			_index()
+			# Machines take their inputs before plans reserve the rest: a factory that waits for
+			# steel while every unit is promised to construction sites makes no more steel.
+			_gen_machine_inputs()
+			# V3: repairs, breach seals and maintenance take their parts before construction plans
+			# reserve the rest (a cracked corridor must not wait for a new solar array).
+			_gen_repair()
+			_gen_hazard_work()
+		1:
+			_gen_research()
+			_gen_medical()
+			# V3: the Meridian's parts are reserved before ordinary construction and upgrades
+			# (with repairs, maintenance and research packs there are more users of steel).
+			_gen_ship()
+			_gen_construction()
+			_gen_upgrades()
+			_gen_vehicles()
+			_gen_reactors()
+			_gen_dining()
+			_gen_venues()
+			_gen_trade()
+		2:
+			_gen_water_fill()
+			_gen_clearing()
+			_gen_operate()
+			_gen_tend()
+			_gen_demolish()
+			# Every 10 s.
+			if (int(sim.state["tick"]) / int(sim.bal["tick_hz"])) % 10 == 0:
+				_clean_piles()
 func _index() -> void:
 	_inbound = {}
 	_open_hauls = {}

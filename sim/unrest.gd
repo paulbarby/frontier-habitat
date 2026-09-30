@@ -70,6 +70,8 @@ func _update(base_id: int, dt_s: float) -> void:
 	var dep_sat := {}
 	var dep_n := {}
 	var officers := 0
+	var luxe := 0
+	var dorm := 0
 	var ids: Array = sim.state["agents"].keys()
 	ids.sort()
 	for aid in ids:
@@ -97,6 +99,13 @@ func _update(base_id: int, dt_s: float) -> void:
 			dep_n[dep] = int(dep_n.get(dep, 0)) + 1
 		if String(a["role"]) == "security":
 			officers += 1
+		# Entitlements (V5 section 5.1): officers in executive homes while the crew sleep in dorms.
+		var rk: String = String(sim.people.rank(a)["rank"])
+		var hq: int = int(sim.people.home(a)["quality"])
+		if (rk == "commander" or rk == "captain") and hq >= 3:
+			luxe += 1
+		elif not ["commander", "captain", "first_hand"].has(rk) and hq <= 1:
+			dorm += 1
 	if n == 0:
 		return
 	sat /= n
@@ -128,6 +137,11 @@ func _update(base_id: int, dt_s: float) -> void:
 	var sec: float = minf(float(c["security_max"]), float(c["security_per_officer"]) * officers)
 	var target: float = (float(c["sat_ref"]) - sat) * float(c["per_sat_point"]) + maxf(0.0, -att) * float(c["per_att_point"])
 	target += float(low) / float(n) * float(c["low_share"]) + pun + float(rations) * float(c["ration"]) + float(deaths) * float(c["death"])
+	# Privileges seen as unfair: officers in luxury while most of the crew live in dorms.
+	var priv := 0.0
+	if luxe > 0 and float(dorm) / float(n) >= float(c.get("privilege_low_share", 0.5)):
+		priv = minf(float(c.get("privilege_max", 9)), float(c.get("privilege_per_officer", 3)) * luxe)
+	target += priv
 	target -= lead + sec
 	target = clampf(target, 0.0, 100.0)
 	r["target"] = snappedf(target, 0.1)
@@ -135,6 +149,9 @@ func _update(base_id: int, dt_s: float) -> void:
 	r["att"] = snappedf(att, 0.1)
 	r["commander"] = cmd_id
 	r["causes"] = _causes(c, sat, att, low, n, pun, rations, deaths, lead, sec)
+	if priv > 0.0:
+		(r["causes"] as Array).append({"text": "Officers live in luxury, the crew in dorms", "delta": snappedf(priv, 0.1)})
+	r["privilege"] = snappedf(priv, 0.1)
 	var v: float = float(r["value"])
 	var step_up: float = float(c["rise_per_day"]) * dt_s / float(sim.bal["day_length"])
 	var step_down: float = float(c["fall_per_day"]) * dt_s / float(sim.bal["day_length"])

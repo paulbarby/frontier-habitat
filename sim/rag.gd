@@ -333,20 +333,34 @@ func _poll(number: int) -> Dictionary:
 		who = String(sim.state["agents"][cmd]["name"])
 	return {"approval": approval, "question": "Do you approve of %s?" % who, "commander": cmd, "change": change, "unrest": String(u.get("stage", "calm"))}
 
+## Best dressed by clothes (V5 section 4.3): the person who bought new clothes at a shop that day
+## (leisure: a.clothes_t), else the best casual outfit worn that day by look (the outfit and the
+## tint from people.identity; charming people carry it better). -1: nobody.
 func _best_dressed(number: int) -> int:
-	var cand: Array = []
+	var dt: int = _day_ticks()
+	var t0: int = (number - 1) * dt
+	var best := -1
+	var best_v := -1.0
 	var ids: Array = sim.state["agents"].keys()
 	ids.sort()
 	for aid in ids:
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive" or String(a.get("kind", "")) == "child":
 			continue
+		var v := 0.0
+		if int(a.get("clothes_t", -1)) >= t0:
+			v += 100.0
+		var outfit: String = sim.people.outfit(a)
+		if not outfit.begins_with("casual") and outfit != "swimwear" and v <= 0.0:
+			continue
+		var idn: Dictionary = sim.people.identity(a)
+		v += 10.0 * _h(number * 7 + outfit.hash() % 97, int(aid)) + 5.0 * absf(float(idn["tint"]["hair"]) - float(idn["tint"]["skin"]))
 		if sim.people.has_trait(a, "charming") or sim.people.has_trait(a, "party-animal"):
-			cand.append(int(aid))
-	if cand.is_empty():
-		return -1
-	return int(cand[int(_h(number, 9) * cand.size()) % cand.size()])
-
+			v += 6.0
+		if v > best_v:
+			best_v = v
+			best = int(aid)
+	return best
 ## 3-4 small ads: goods in stock at the shops, the next ship, then column lines.
 func _ads(number: int) -> Array:
 	var out: Array = []

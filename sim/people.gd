@@ -272,7 +272,7 @@ func _update(a: Dictionary) -> void:
 		if int(m["until"]) > now:
 			keep.append(m)
 	r["mods"] = keep
-	var s: Dictionary = _satisfaction(a)
+	var s: Dictionary = _satisfaction(a, true)
 	var lo := ""
 	var lov := 1e9
 	for k in s["components"]:
@@ -281,9 +281,44 @@ func _update(a: Dictionary) -> void:
 			lo = k
 	r["sat"] = float(s["value"])
 	r["low"] = lo
-	var tg: float = float(attitude_target(a, float(s["value"]))["value"])
+	var tg: float = float(attitude_target(a, float(s["value"]), true)["value"])
 	r["att"] = snappedf(float(r["att"]) + (tg - float(r["att"])) * float(soc()["attitude"]["rate"]), 0.01)
+	_grow(a, r, now)
 	_apply_flags(a, r)
+
+## V5 section 5.2: skills grow by doing the work, with diminishing returns (xp_per_s x (1 - skill /
+## 100) for the role's main skill, half for its second), and fall a little (xp_decay_per_day) when the
+## person has not worked for xp_decay_after_days. Stored as rec.xp {skill: points}, started from the
+## days here (the rule before).
+func _grow(a: Dictionary, r: Dictionary, now: int) -> void:
+	var kind: String = String(a.get("kind", ""))
+	if kind == "visitor" or kind == "child":
+		return
+	var c: Dictionary = cfg()
+	var st: Dictionary = c["start_skill"]
+	var mine: Array = c["role_skills"].get(String(a.get("role", "")), [])
+	if mine.is_empty():
+		return
+	var dt: int = int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))
+	if not r.has("xp"):
+		var days: float = float(maxi(0, now / dt - int(a.get("born", 0)) / dt))
+		var x0 := {}
+		for sk in mine:
+			x0[sk] = snappedf(minf(float(st["cap"]), days * float(st["per_day"])), 0.01)
+		r["xp"] = x0
+		r["worked"] = now
+	var xp: Dictionary = r["xp"]
+	var secs: float = float(soc()["update_every_s"])
+	if String(a.get("plan_kind", "")) == "task" and sim.agents._step_op(a) == "work":
+		r["worked"] = now
+		var sks: Dictionary = skills(a)
+		for i in mini(2, mine.size()):
+			var sk: String = mine[i]
+			var g: float = float(st["xp_per_s"]) * secs * (1.0 - float(sks.get(sk, 0)) / 100.0) * (1.0 if i == 0 else 0.5)
+			xp[sk] = snappedf(minf(float(st["cap"]), float(xp.get(sk, 0.0)) + maxf(0.0, g)), 0.001)
+	elif float(now - int(r.get("worked", now))) > float(st["xp_decay_after_days"]) * float(dt):
+		for sk in xp.keys():
+			xp[sk] = snappedf(maxf(0.0, float(xp[sk]) - float(st["xp_decay_per_day"]) * secs / float(sim.bal["day_length"])), 0.001)
 
 ## The flags the rest of the simulation reads on the agent (absent = normal):
 ## v5_nowork (no work: confined, jailed, in class, on strike), v5_norec (no leisure),
@@ -475,8 +510,12 @@ func skills(a: Dictionary) -> Dictionary:
 	var dt: int = int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))
 	var days: float = float(maxi(0, int(sim.state["tick"]) / dt - int(a.get("born", 0)) / dt))
 	var bonus: Dictionary = rec_of(id).get("skill_bonus", {})
+	# V5 section 5.2: role skills grow with the work done (state: rec.xp, people._grow); before the
+	# first update the days here stand in for it (the rule of saves before the change).
+	var xp = rec_of(id).get("xp")
+	var key: int = bonus.hash() ^ (xp.hash() if xp != null else 0)
 	var hit = _skill_cache.get(id)
-	if hit != null and hit[0] == days and hit[1] == String(a.get("role", "")) and hit[3] == bonus.hash():
+	if hit != null and hit[0] == days and hit[1] == String(a.get("role", "")) and hit[3] == key:
 		return hit[2]
 	var out := {}
 	var i := 0
@@ -484,14 +523,14 @@ func skills(a: Dictionary) -> Dictionary:
 		i += 1
 		var v: float
 		if mine.has(sk):
-			v = lerpf(float(st["role_from"]), float(st["role_to"]), _h(id, 100 + i)) + days * float(st["per_day"])
+			v = lerpf(float(st["role_from"]), float(st["role_to"]), _h(id, 100 + i)) + (float(xp.get(sk, 0.0)) if xp != null else minf(float(st["cap"]), days * float(st["per_day"])))
 		else:
 			v = _h(id, 200 + i) * float(st["other_to"])
 		if sk == "leadership" or sk == "social":
 			v += 20.0 * _h(id, 300 + i)
 		v += float(bonus.get(sk, 0))
 		out[sk] = clampi(int(round(v)), 0, 100)
-	_skill_cache[id] = [days, String(a.get("role", "")), out, bonus.hash()]
+	_skill_cache[id] = [days, String(a.get("role", "")), out, key]
 	return out
 
 ## Level 1..5 of a skill value.
@@ -786,7 +825,8 @@ func satisfaction(a: Dictionary) -> Dictionary:
 	_sat_cache[id] = [ph, out]
 	return out
 
-func _satisfaction(a: Dictionary) -> Dictionary:
+## lite: no reasons (the simulation's own update needs the value and the components only).
+func _satisfaction(a: Dictionary, lite: bool = false) -> Dictionary:
 	var comp := {}
 	var reasons: Array = []
 	comp["needs"] = clampf(float(a.get("morale", 50.0)), 0.0, 100.0)
@@ -829,6 +869,8 @@ func _satisfaction(a: Dictionary) -> Dictionary:
 		s += float(comp[k]) * float(w[k])
 		ws += float(w[k])
 		comp[k] = snappedf(float(comp[k]), 0.1)
+	if lite:
+		return {"value": snappedf(s / ws, 0.1), "components": comp, "reasons": reasons}
 	var texts: Dictionary = SAT_BAD
 	var good: Dictionary = SAT_GOOD
 	var keys: Array = comp.keys()
@@ -866,20 +908,22 @@ func _attitude(a: Dictionary) -> Dictionary:
 
 ## Where a person's attitude goes: {value, reasons [{text, delta}]} from satisfaction, traits and
 ## the active reviews and discipline.
-func attitude_target(a: Dictionary, sat: float) -> Dictionary:
+func attitude_target(a: Dictionary, sat: float, lite: bool = false) -> Dictionary:
 	var ac: Dictionary = soc()["attitude"]
 	var v: float = (sat - 50.0) * float(ac["from_satisfaction"])
-	var reasons: Array = [{"text": "Satisfaction %d" % int(sat), "delta": snappedf(v, 0.1)}]
+	var reasons: Array = [] if lite else [{"text": "Satisfaction %d" % int(sat), "delta": snappedf(v, 0.1)}]
 	var mods: Dictionary = ac["traits"]
 	for tr in identity(a)["traits"]:
 		if mods.has(tr):
 			v += float(mods[tr])
-			reasons.append({"text": "Trait: %s" % tr, "delta": float(mods[tr])})
+			if not lite:
+				reasons.append({"text": "Trait: %s" % tr, "delta": float(mods[tr])})
 	var now: int = int(sim.state["tick"])
 	for m in rec_of(int(a["id"])).get("mods", []):
 		if int(m["until"]) > now and float(m.get("att", 0.0)) != 0.0:
 			v += float(m["att"])
-			reasons.append({"text": String(m.get("text", m["kind"])), "delta": float(m["att"])})
+			if not lite:
+				reasons.append({"text": String(m.get("text", m["kind"])), "delta": float(m["att"])})
 	return {"value": snappedf(clampf(v, -100.0, 100.0), 0.1), "reasons": reasons}
 
 # ---------------------------------------------------------------- lists

@@ -77,6 +77,10 @@ func _init() -> void:
 	sim = Sim.new()
 	sim.load_state(dec["state"], {"debug": true})
 	sim.state["flags"]["unlock_all"] = true
+	var dead0 := 0
+	for a0 in sim.state["agents"].values():
+		if a0["state"] == "dead":
+			dead0 += 1
 	var base: int = int(sim.bases.ids()[0])
 	var lander: Dictionary = sim.state["buildings"][int(sim.state["lander_id"])]
 	var lp: Vector2 = lander["pos"]
@@ -255,6 +259,10 @@ func _init() -> void:
 		if a["state"] == "dead":
 			causes[String(a.get("cause", ""))] = int(causes.get(String(a.get("cause", "")), 0)) + 1
 	print("deaths: %s" % str(causes))
+	var died: int = 0
+	for c in causes.values():
+		died += int(c)
+	died -= dead0
 	H.fill_utilities(sim, 1.0, 0.9, true)
 	sim.state["flags"]["unlock_all"] = false
 	sim.state["options"]["debug"] = false
@@ -273,4 +281,6 @@ func _init() -> void:
 	f.close()
 	print("wrote content/saves/showcase_v5.fhsave (%d bytes)" % bytes.size())
 	sim.dispose()
-	quit(0 if audit.is_empty() else 1)
+	if died > 0:
+		print("FAILED: %d died while the save was built" % died)
+	quit(0 if audit.is_empty() and died == 0 else 1)

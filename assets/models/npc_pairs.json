@@ -1,5 +1,5 @@
 {
- "note": "Paired clips: both partners play the clip with the same start time (sync_s); partner B stands at distance_m along partner A's forward axis and faces A (facing_deg 180).  Distances are for two 1.80 m people; scale by the mean of the two variant scales.",
+ "note": "Paired clips.  Partner A plays clip_a at time 0, partner B plays clip_b from sync_s.  B stands at distance_m along A's forward axis (+X) and side_offset_m along A's left (+Y), turned facing_deg about the vertical from A's facing (180 = facing A, 0 = the same way).  Distances are for two 1.80 m people; scale them by the mean of the two variant scales.  Walking pairs move both roots together along +X at the clip's speed_mps.",
  "pairs": {
   "hug": {
    "clip_a": "hug",
@@ -7,7 +7,62 @@
    "distance_m": 0.44,
    "facing_deg": 180.0,
    "sync_s": 0.0,
-   "side_offset_m": 0.0
+   "side_offset_m": 0.0,
+   "note": "arms round the partner's back, heads side by side"
+  },
+  "handshake": {
+   "clip_a": "handshake",
+   "clip_b": "handshake",
+   "distance_m": 0.8,
+   "facing_deg": 180.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.0,
+   "note": "right hands meet at (0.40, 0, 1.00) from A; prop.R of A and B meet"
+  },
+  "kiss_brief": {
+   "clip_a": "kiss_brief",
+   "clip_b": "kiss_brief",
+   "distance_m": 0.48,
+   "facing_deg": 180.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.0,
+   "note": "adults only; faces meet 0.6-1.2 s, no more"
+  },
+  "hold_hands_walk": {
+   "clip_a": "hold_hands_walk",
+   "clip_b": "hold_hands_walk_r",
+   "distance_m": 0.0,
+   "facing_deg": 0.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.5,
+   "note": "B walks at A's left (+Y), the same phase; A's left hand holds B's right hand; move both along +X at the walk speed"
+  },
+  "slap": {
+   "clip_a": "slap",
+   "clip_b": "hit_react",
+   "distance_m": 0.6,
+   "facing_deg": 180.0,
+   "sync_s": 0.05,
+   "side_offset_m": 0.0,
+   "note": "contact at 0.50 s (A); B plays hit_react 0.05 s later (its hit at 0.45 s)"
+  },
+  "punch": {
+   "clip_a": "punch",
+   "clip_b": "hit_react",
+   "distance_m": 0.7,
+   "facing_deg": 180.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.0,
+   "note": "contact at 0.45 s (A), B's hit at 0.45 s"
+  },
+  "escort": {
+   "clip_a": "escort_walk",
+   "clip_b": "handcuffed_walk",
+   "distance_m": 0.0,
+   "facing_deg": 0.0,
+   "sync_s": 0.0,
+   "side_offset_m": 0.45,
+   "note": "the prisoner B walks at the escort A's left (+Y), the same phase; A's left hand holds B's right upper arm"
   }
  }
 }

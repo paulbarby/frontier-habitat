@@ -28,6 +28,7 @@ var _body: VBoxContainer
 var _scroll: ScrollContainer
 var _footer: HFlowContainer
 var _binds: Array = []       # [Callable] run on every refresh
+var last_staff: Dictionary = {}   # the answer to the last venue staff order (tests)
 var _accent := P.CYAN
 var sections
 var _head: HBoxContainer

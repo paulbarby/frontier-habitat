@@ -469,6 +469,28 @@ func _population(body: VBoxContainer) -> void:
 		ab.categories = keys.slice(0, 8)
 		ab.series = [{"name": "Colonists", "color": P.CYAN, "values": vals}])
 	_line(r2, "Morale and nutrition", [["Morale", "morale", P.CATEGORY["comfort"]], ["Nutrition", "nutrition", P.NUTRIENT["vitamins"]]], 230.0)
+	# Tourism (version 5, V5 §8-§9): visitors over time; what tourists paid at the venues.
+	var r3: HBoxContainer = _row(body)
+	_line(r3, "Visitors in the colony", [["Visitors", "visitors", P.GOLD]], 200.0, "area", 2.0)
+	var tc: VBoxContainer = card("Tourism", "credits", P.GOLD)
+	var tp: PanelContainer = card_panel(tc)
+	tp.name = "Tourism"
+	tp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	r3.add_child(tp)
+	var tg: GridContainer = Kit.grid(2, 12, 4)
+	tc.add_child(tg)
+	var labels: Array = []
+	for nm in ["Visitors now", "Tourism earned", "Credits now"]:
+		tg.add_child(Kit.dim(nm, 13))
+		var l: Label = Kit.num("", 15, P.GOLD, true)
+		tg.add_child(l)
+		labels.append(l)
+	tc.add_child(Kit.wrap("Tourists pay at open venues: shops, the bar, the club and the other places of the super dome. Colonists use them for free.", 12, P.TEXT_2))
+	_updaters.append(func():
+		var t: Dictionary = hud.v5.tourism()
+		(labels[0] as Label).text = "%d" % int(t["visitors"])
+		(labels[1] as Label).text = "%d credits" % int(t["earned"])
+		(labels[2] as Label).text = "%d credits" % int(t["balance"]))
 
 func _research(body: VBoxContainer) -> void:
 	var d = hud.data

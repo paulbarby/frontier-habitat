@@ -987,7 +987,11 @@ def build_variant(m, v, outfits, stop=None):
                 P["arm.%s.x" % sd], P["arm.%s.y" % sd], P["arm.%s.z" % sd] = t.x, t.y, t.z
         return P
     meta = {}
+    import people_clips as PC
+    child = bool(spec.get("child"))
     for (name, kind, pf, pt, loop, frames, fn, extra) in PA.people_clips():
+        if (child and name in PC.ADULT_ONLY) or (not child and name in PC.CHILD_ONLY):
+            continue
         fv = (lambda fn, name: (lambda f: PA.retarget(fn(f), s_, name)))(fn, name)
         N.bake_clip(rig, solver, name, fv, frames, fix=clamp_reach)
         mt = dict(frames=frames, duration_s=round(frames / N.FPS, 4), kind=kind, pose_from=pf, pose_to=pt, loop=loop)
@@ -998,13 +1002,13 @@ def build_variant(m, v, outfits, stop=None):
         import people_verify as PV
         co = pose_eval(rig, solver, PA.retarget(dict((c[0], c[6]) for c in PA.people_clips())["sit_bar_stool"](0), s_,
                                                   "sit_bar_stool"), [first_outfit])
-        mk = (np.abs(co[:, 0] + 0.04) < 0.11) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
+        mk = (np.abs(co[:, 0] + 0.04) < 0.07) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
         print("  DEBUG stool pose_eval after bake %.3f" % co[mk, 2].min())
         N.reset_pose(rig)
         PV.set_clip(rig, "sit_bar_stool", 1)
         PV.set_clip(rig, "sit_bar_stool", 0)
         co = PV.world_co(first_outfit)
-        mk = (np.abs(co[:, 0] + 0.04) < 0.11) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
+        mk = (np.abs(co[:, 0] + 0.04) < 0.07) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
         print("  DEBUG stool baked action %.3f" % co[mk, 2].min())
         rig.animation_data.action = None
     N.reset_pose(rig)
@@ -1064,7 +1068,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
         if m.any():
             PA.SEAT_DROP += 0.462 - co[m, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["sit_bar_stool"](0), s, "sit_bar_stool"), obs)
-        m = (np.abs(co[:, 0] + 0.04) < 0.11) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
+        m = (np.abs(co[:, 0] + 0.04) < 0.07) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
         if m.any():
             if os.environ.get("NPC_DEBUG"):
                 i = int(np.argmin(np.where(m, co[:, 2], 9.0)))
@@ -1573,7 +1577,7 @@ def write_manifest(results):
                            head="Head_%s" % v, hair="Hair_%s" % v, outfits=outs, addons=r["addons"],
                            triangles={k: n for k, n in T.items() if not k.startswith("LOD1_")},
                            triangles_lod1={k[5:]: n for k, n in T.items() if k.startswith("LOD1_")},
-                           triangles_on_screen=on_screen, triangles_on_screen_lod1=lod1,
+                           triangles_on_screen=on_screen, triangles_on_screen_lod1=lod1, clips=sorted(r["clips"]),
                            look=dict(skin_tone_hint=LOOK_HINT.get(v)), source="MPFB 2.0.17 + CC0 MakeHuman assets",
                            assets=r["sources"])
     doc["variants"] = {k: variants[k] for k in VARIANTS if k in variants}
@@ -1617,7 +1621,15 @@ def write_manifest(results):
     old = doc.get("clips", {})
     old.update(clips)
     doc["clips"] = old
-    doc["furniture"] = PA.furniture_json() if hasattr(PA, "furniture_json") else dict(bar_stool=PA.BAR_STOOL)
+    import people_clips as PC
+    doc["furniture"] = dict(bar_stool=PA.BAR_STOOL, **PC.FURNITURE)
+    doc["pose_states"] = {
+        "stand": "idle frame 0", "sit": "sit_idle frame 0 (chair 0.46 m; sit_bench and sit_class start and end on it)",
+        "kneel": "repair_kneel frame 0", "lie": "sleep frame 0 (bed 0.55 m); collapse and fall_down end on dead "
+        "frame 0 (the ground), get_up starts there", "stool": "sit_bar_stool frame 0 (drink_bar starts and ends on it)",
+        "vehicle": "drive_sit frame 0 (the arcade racer seat)", "lounger": "lounge_pool frame 0 (no enter / exit clip: "
+        "fade)", "bunk": "sleep_cell frame 0 (no enter / exit clip: fade)", "water": "swim frame 0 (no enter / exit: "
+        "fade at the pool edge)"}
     doc["textures"] = dict(note=("external PNGs in assets/models/people_tex_shared/ (one file per texture, shared by "
                                  "every variant that uses it); sources in assets/models/people_tex/ (.gdignore)"))
     doc["credits"] = ("MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, "

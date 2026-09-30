@@ -370,6 +370,8 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	explore.ensure()
 	if nav.has_method("prewarm"):
 		nav.prewarm()
+	# A rider saved outside the vehicle is put back aboard (vehicles.repair_crews).
+	vehicles.repair_crews()
 	# V5: a save from before schema 6 gets one commander a base, chosen by seniority.
 	people.ensure_commanders()
 	people.prewarm()
@@ -539,8 +541,13 @@ func step() -> void:
 	if phase == _phase_of(3, hz):
 		explore.tick_second()
 		ship.tick_second()
+	# The job board in three parts (jobs.gd tick_part: phases 4, 9 and 1).
 	if phase == _phase_of(4, hz):
-		jobs.tick_second()
+		jobs.tick_part(0)
+	elif phase == _phase_of(9, hz):
+		jobs.tick_part(1)
+	elif phase == _phase_of(1, hz):
+		jobs.tick_part(2)
 	agents.think_tick()
 	agents.locks_tick()
 	agents.act_tick()
@@ -551,9 +558,11 @@ func step() -> void:
 		prod.auto_second()
 		prod.spoil_second()
 		prod.wear_second()
+	# Morale in two halves (even and odd ids) on phases 6 and 7.
 	if phase == _phase_of(6, hz):
-		agents.morale_second()
+		agents.morale_second(0)
 	if phase == _phase_of(7, hz):
+		agents.morale_second(1)
 		research.tick_second()
 		goals.tick_second()
 		awards.tick_second()

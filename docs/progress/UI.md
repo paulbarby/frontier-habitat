@@ -1113,3 +1113,7 @@ feedback. At 100 % in 1920x1080 the layout is the same as before.
   with real data (no jail or officer in the save); a staffed, stocked venue; the dome stage badge.
 - Note: UI tests run one at a time. A parallel run next to SIM's test processes made test_tiers hang; alone it
   passes.
+
+## 2026-10-01 — PAUSED (coordinator): showcase_v5 work half-done
+- Done, not yet tested: lockdown banner mode + Crew Security "Lock down this base" (SIM lock_info, response_effect); SIM's response_effect on the unrest banner; tourism (Venues tab line, dashboard People "Tourism" card + visitors chart); venue staff picker (command `staff`); a child's School section in the file; dome stages 9 in help. test_rag now loads showcase_v5: PASS.
+- Half-done: `tools/ui/test_v5_showcase.gd` (new) loops on step 0: the pairs query right after `_import_bytes` finds no couples; move the queries one step later (after a few frames). No ui17 shots, no export, no title load-time measure yet (the title already picks showcase_v5: newest name).

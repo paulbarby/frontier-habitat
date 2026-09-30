@@ -159,6 +159,21 @@ func talk_of(id: int) -> Dictionary:
 			return t
 	return {}
 
+## Tourism (V5 §8-§9; SIM leisure pays credits "tourism"): {visitors now, earned all time, today (stats)}.
+func tourism() -> Dictionary:
+	var s = _sim()
+	var n := 0
+	for aid in s.state["agents"]:
+		var a: Dictionary = s.state["agents"][aid]
+		if a["state"] == "alive" and String(a.get("kind", "")) == "visitor":
+			n += 1
+	return {"visitors": n, "earned": int(s.state.get("credits", {}).get("by", {}).get("tourism", 0)), "balance": int(s.state.get("credits", {}).get("balance", 0))}
+
+## Lockdown of a base (SIM sim.unrest.lock_info): {locked, until, seconds_left}; {} without it.
+func lock_info(base_id: int) -> Dictionary:
+	var un = _sim().get("unrest")
+	return un.lock_info(base_id) if un != null and (un as Object).has_method("lock_info") else {}
+
 ## Open requests of people to the player (SIM sim.relations.requests(): [{id, kind, agent, other, ship,
 ## tick, text}], oldest first). request_override: debug `request` (screenshots; UI view only).
 var request_override: Array = []

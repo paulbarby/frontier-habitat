@@ -313,3 +313,8 @@ mine and can change). Night readability of the radiation suit is not checked.
 - **Robot (CRITIC round 38):** hip block with panel line and joint caps, thicker thighs and knee plates;
   `robot_dance_b` is a step routine with a turn; knee bounce on the beat. `npc_verify` robot checks all pass.
 - **Not done:** LOD1, the other 6 variants, the other outfits, planned clips.
+
+## v5.0 — 2026-10-01 — PAUSED (Paul): round-40 fixes, 8 variants, all outfits, LOD1, 40 new clips (half-done)
+- **Landed (files load; `godot.mjs import` done, `check` 292/0):** people_m1..m3, f1..f3, c1, c2 `.glb` + `_lod1.glb` (new coverall with clean cut hems, bisected department bands, pockets, collar; add-ons toolbelt/apron/vest/labcoat/tunic/jacket/rank1-3; casual_a/b/c, swimwear, school, prison; brows, warmer skin map, lid rest, hug fixed 0.44 m; `people_clips.py` with the 36 planned clips + hold_hands_walk_r, drive_sit, lie_*_r); manifest 5.0-mpfb, npc_pairs.json 7 pairs.
+- **Half-done (npc_verify 543/13):** punch hand.R step 70° f14; wave step on children; kiss_brief pair overlap; hold_hands 11 pts >2 cm; people_f2.glb is from the 07:31 build (its last rebuild did not write: wave frames differ from the manifest, drink_bar/swim fixes missing there) — rebuild f2, then fix and re-verify.
+- **Not done:** texture/GLB import settings (lossy, mipmaps, no LOD/shadow/tangents), stale people_m1_*/people_f1_* PNGs, size report, sheets for critic (closeup/faces/clips need re-render), RENDER request (8-outfit cap, `_lod1` files, new materials/clips/states), clip plan update.

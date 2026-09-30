@@ -396,6 +396,39 @@ func _nearest_air_door(p: Vector2) -> Vector2:
 				best = d
 	return best
 
+## Load-time repair (V5, the showcase death): a crew member must be aboard. showcase_v4 was saved
+## with a rider "out" (a walking plan of a rider set where = out while the vehicle kept the person
+## in its crew and moved the body with it: pinned outside at the crater rim, the person died of lack
+## of oxygen). The rider is put back aboard with no plan; the ordinary rules (_needs_guard,
+## _ride_think) then bring the crew home. Returns the number of riders repaired.
+func repair_crews() -> int:
+	var n := 0
+	if not sim.state.has("vehicles"):
+		return 0
+	var ids: Array = _list().keys()
+	ids.sort()
+	for vid in ids:
+		n += _repair_crew(_list()[vid])
+	return n
+
+func _repair_crew(v: Dictionary) -> int:
+	var n := 0
+	var keep: Array = []
+	for aid in v.get("crew", []):
+		var a: Dictionary = sim.state["agents"].get(int(aid), {})
+		if a.is_empty() or a["state"] != "alive" or int(a.get("veh", -1)) != int(v["id"]):
+			continue
+		keep.append(int(aid))
+		if a["where"] != "vehicle":
+			sim.agents.abort_plan(a, "repair")
+			a["where"] = "vehicle"
+			a["bld"] = -1
+			a["pos"] = v["pos"]
+			a["goal"] = "Riding in %s" % v["name"]
+			n += 1
+	v["crew"] = keep
+	return n
+
 func alight_all(v: Dictionary) -> void:
 	for aid in (v["crew"] as Array).duplicate():
 		var a: Dictionary = sim.state["agents"].get(int(aid), {})

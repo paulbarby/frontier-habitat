@@ -79,14 +79,20 @@ func tick() -> void:
 	var ended: Array = []
 	for key in talks:
 		var t: Dictionary = talks[key]
-		var x: Dictionary = agents.get(int(t["a"]), {})
-		var y: Dictionary = agents.get(int(t["b"]), {})
-		var li: int = (now - int(t["start"])) / line_ticks
-		if x.is_empty() or y.is_empty() or li >= int(t["lines"]) or not can_talk(x) or not can_talk(y) or int(x["bld"]) != int(t["bld"]) or int(y["bld"]) != int(t["bld"]) or (x["pos"] as Vector2).distance_to(y["pos"]) > float(c["keep_m"]):
+		var age: int = now - int(t["start"])
+		# The lines are over: it ends. Whether the two parted is checked once a second of the
+		# talk (cost: not every talk every tick).
+		if age / line_ticks >= int(t["lines"]):
 			ended.append(key)
-		else:
-			busy[int(t["a"])] = true
-			busy[int(t["b"])] = true
+			continue
+		if age % hz == 0:
+			var x: Dictionary = agents.get(int(t["a"]), {})
+			var y: Dictionary = agents.get(int(t["b"]), {})
+			if x.is_empty() or y.is_empty() or not can_talk(x) or not can_talk(y) or int(x["bld"]) != int(t["bld"]) or int(y["bld"]) != int(t["bld"]) or (x["pos"] as Vector2).distance_to(y["pos"]) > float(c["keep_m"]):
+				ended.append(key)
+				continue
+		busy[int(t["a"])] = true
+		busy[int(t["b"])] = true
 	for key in ended:
 		talks.erase(key)
 	# 2. A tenth of the people (their turn by id) may start a talk with a room-mate. (Cost: the

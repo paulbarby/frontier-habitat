@@ -266,7 +266,7 @@ def _fit_under_roof(rm, part, n0, gap=0.05):
 def v4_decor(plan, max_items=40):
     rm = plan.rm
     _register_v4_decor()
-    kinds = [k_ for k_ in V4_KINDS.get(rm.cat, ["plant", "cart"]) + ["cart", "plant", "light"]
+    kinds = [k_ for k_ in V4_KINDS.get(rm.tid, V4_KINDS.get(rm.cat, ["plant", "cart"])) + ["cart", "plant", "light"]
              if k_ in _FAMX.DECOR]
     kinds = list(dict.fromkeys(kinds))
     if not kinds:
@@ -513,7 +513,7 @@ INTERIORS = {
 def v2_builders():
     out = {}
     for m in ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
-              "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ"):
+              "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ", "rooms_distillery"):
         out.update(getattr(__import__(m), "BUILDERS", {}))
     return out
 
@@ -542,7 +542,7 @@ import interior_families as _FAM     # noqa: E402  (uses the helpers above)
 _FAMX = _FAM
 INTERIORS.update(_FAM.INTERIORS)
 for _mod in ("interior_fam_farm", "interior_fam_ind", "interior_fam_sci", "interior_airlock_reg", "interior_fam_v4ind",
-             "interior_v5", "interior_v5apt", "interior_v5civ"):
+             "interior_v5", "interior_v5apt", "interior_v5civ", "interior_distillery"):
     try:
         INTERIORS.update(__import__(_mod).INTERIORS)
     except ModuleNotFoundError as _exc:

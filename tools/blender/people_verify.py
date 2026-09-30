@@ -19,8 +19,10 @@ from mathutils.bvhtree import BVHTree   # noqa: E402
 MANIFEST = os.path.join(N.MODEL_DIR, "people_manifest.json")
 PAIRS = os.path.join(N.MODEL_DIR, "npc_pairs.json")
 FACE_BONES = ["jaw", "lids"]
-LOCOMOTION = {"walk", "run", "carry_walk", "injured_walk"}
-FALLS = {"collapse"}
+LOCOMOTION = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk",
+              "hold_hands_walk_r", "handcuffed_walk", "escort_walk"}
+FALLS = {"collapse", "fall_down"}
+NO_FLOOR = {"swim"}                 # the origin is the water surface
 STEP_LIMIT = 15.0
 BUDGET = 24000
 
@@ -148,9 +150,10 @@ def run(check, gltf_facts):
         check("people %s: COLOR_0 (AO), <= 4 weights, normalised" % v,
               F["color0"] and not F["joints_1"] and F["max_influences"] <= 4 and F["weight_sum_err"] < 2e-3,
               "max influences %d, max |sum - 1| %.5f" % (F["max_influences"], F["weight_sum_err"]))
-        missing = [c for c in M["clips"] if c not in F["animations"]]
-        check("people %s: every clip of the manifest (%d)" % (v, len(M["clips"])), not missing,
-              "missing %s" % missing if missing else "%d clips" % len(M["clips"]))
+        vclips = d.get("clips") or list(M["clips"])
+        missing = [c for c in vclips if c not in F["animations"]]
+        check("people %s: every clip the manifest lists for it (%d)" % (v, len(vclips)), not missing,
+              "missing %s" % missing if missing else "%d clips" % len(vclips))
         bad = [c for c, a in F["animations"].items() if c in M["clips"] and
                abs(a["duration"] - M["clips"][c]["frames"] / N.FPS) > 0.5 / N.FPS]
         check("people %s: durations match the manifest" % v, not bad, "%s" % bad if bad else "ok")
@@ -167,7 +170,7 @@ def run(check, gltf_facts):
         vis = [meshes[d["head"]], meshes[d["hair"]], meshes[outfits[0]]]
         worst_step, worst_seam, zmin, lid_step = (0.0, "", 0), (0.0, ""), (9.0, ""), (0.0, "")
         jaw_max, lids_max = {}, 0.0
-        for c, m in M["clips"].items():
+        for c, m in ((c, M["clips"][c]) for c in vclips if c in M["clips"]):
             act = set_clip(rig, c, 0)
             if act is None:
                 continue
@@ -190,7 +193,7 @@ def run(check, gltf_facts):
                         if a > worst_step[0]:
                             worst_step = (a, "%s %s f%d" % (c, bn, f), f)
                 prev = R
-                if f % 6 == 0:
+                if f % 6 == 0 and c not in NO_FLOOR:
                     lo = min(float(world_co(o)[:, 2].min()) for o in vis)
                     if lo < zmin[0]:
                         zmin = (lo, "%s f%d" % (c, f))
@@ -219,12 +222,13 @@ def run(check, gltf_facts):
         low = float(co[mask, 2].min()) if mask.any() else 9.0
         check("people %s: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)" % v, 0.44 <= low <= 0.48,
               "lowest point over the seat %.3f m" % low)
-        set_clip(rig, "sit_bar_stool", 0)
-        co = np.concatenate([world_co(o) for o in vis])
-        mask = (np.abs(co[:, 0] + 0.04) < 0.11) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
-        low = float(co[mask, 2].min()) if mask.any() else 9.0
-        check("people %s: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)" % v, 0.735 <= low <= 0.785,
-              "lowest point over the stool %.3f m" % low)
+        if "sit_bar_stool" in vclips:
+            set_clip(rig, "sit_bar_stool", 0)
+            co = np.concatenate([world_co(o) for o in vis])
+            mask = (np.abs(co[:, 0] + 0.04) < 0.07) & (np.abs(co[:, 1]) < 0.15) & (co[:, 2] > 0.6)
+            low = float(co[mask, 2].min()) if mask.any() else 9.0
+            check("people %s: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)" % v, 0.735 <= low <= 0.785,
+                  "lowest point over the stool %.3f m" % low)
         # poke-through: head (above the collar) and hair must not go inside the outfit, at test poses
         worst = (0, "")
         for o in outfits:
@@ -323,21 +327,19 @@ def check_pairs(check, M):
         act_b = acts_b.get(pr["clip_b"])
         n = max(M["clips"][pr["clip_a"]]["frames"], M["clips"][pr["clip_b"]]["frames"])
         sync = int(round(pr.get("sync_s", 0.0) * N.FPS))
+        # B plays its clip from sync (an NLA strip; before it, B holds its first frame)
+        adb = rig_b.animation_data
+        adb.action = None
+        for tr in list(adb.nla_tracks):
+            adb.nla_tracks.remove(tr)
+        if act_b is not None:
+            tr = adb.nla_tracks.new()
+            st = tr.strips.new(pr["clip_b"], sync, act_b)
+            st.extrapolation = "HOLD"
         worst2, worst4, deepest, at = 0, 0, 0.0, ""
         for f in range(0, n + 1, 3):
             set_clip(rig_a, pr["clip_a"], min(f, M["clips"][pr["clip_a"]]["frames"]))
-            rig_b.animation_data.action = act_b
-            if act_b is not None and act_b.slots:
-                rig_b.animation_data.action_slot = act_b.slots[0]
-            fb = min(max(0, f - sync), M["clips"][pr["clip_b"]]["frames"])
-            rig_b.pose.bones["root"].location = rig_b.pose.bones["root"].location
             bpy.context.scene.frame_set(f)
-            if fb != f:
-                act = rig_b.animation_data.action
-                rig_b.animation_data.action = None
-                for fc in (act.fcurves if hasattr(act, "fcurves") else []):
-                    pass
-                rig_b.animation_data.action = act
             bpy.context.view_layer.update()
             pa = world_co(ob_a)[::2]
             pb = world_co(ob_b)[::2]

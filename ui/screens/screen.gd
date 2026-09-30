@@ -43,7 +43,7 @@ const TAB_TIPS := {
 	"dashboard:life": "Life support\nOxygen, water and power over time, per network.",
 	"dashboard:food": "Food\nCrops, dishes, spoilage and the nutrition of the colonists.",
 	"dashboard:industry": "Industry\nWhat each machine makes, and what waits for input or workers.",
-	"dashboard:population": "People\nColonists, roles, morale and health over time.",
+	"dashboard:population": "People\nColonists, roles, morale and health over time; visitors and tourism.",
 	"dashboard:research": "Research\nResearch points per day and the projects done.",
 	"dashboard:hazards": "Hazards\nForecast events, machines near failure and maintenance.",
 	"inventory:all": "All items\nEvery item in the colony.", "inventory:raw": "Raw resources\nOre, sand, ice and crystal.",

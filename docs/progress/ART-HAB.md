@@ -5,6 +5,11 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-01 v5 — distillery (PAUSED by the user)
+
+- Distillery S/M/L/XL built (`rooms_distillery.py`, `interior_distillery.py`, `Copper` material, badge "distillery"): 14,430 / 18,015 / 26,058 / 36,702 tris (budget 18k / 27k / 39.6k / 54k), 0 flags, verify ok, thumbs, import params set, Godot import + check 292 scripts 0 failed; `content/door_blocked.json` rewritten (distillery 360° free; SIM not yet told).
+- Code only, NOT rebuilt: jail `Anchor_Bed_<i>` = `Anchor_Cell_<i>` (`interior_v5civ.cell`); the jail files on disk lack Bed anchors. Not done: distillery night renders and S/L renders, RENDER nav-bake request, SIM note, critic carry-over (academy M front floor).
+
 ## 2026-09-30 (3) — bed anchors (coordinator decision) and critic round 37
 
 - **Beds:** upper bunk anchors in every family unit (tube, block), the third penthouse bedroom anchored; counts

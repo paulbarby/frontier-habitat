@@ -176832,6 +176832,4319 @@
     ]
    },
    "verify_problems": []
+  },
+  {
+   "id": "distillery_s",
+   "type": "distillery",
+   "size": "s",
+   "footprint": 6.0,
+   "tris": 15440,
+   "budget": 18000,
+   "tris_by_object": {
+    "Base": 324,
+    "Roof": 4784,
+    "Interior": 3510,
+    "L2": 60,
+    "L5": 120,
+    "Decal_00_L2": 8,
+    "Decal_00_L3": 2,
+    "Decal_00_L4": 2,
+    "Decal_00_L5": 4,
+    "Decal_01_L2": 4,
+    "Decal_01_L3": 2,
+    "Decal_01_L4": 2,
+    "Decal_01_L5": 12,
+    "Decal_02_L2": 2,
+    "Decal_02_L3": 2,
+    "Decal_02_L4": 2,
+    "Decal_02_L5": 4,
+    "Decal_03_L2": 2,
+    "Decal_03_L3": 2,
+    "Decal_03_L4": 2,
+    "Decal_03_L5": 1,
+    "Decal_04_L2": 6,
+    "Decal_04_L3": 4,
+    "Decal_04_L4": 4,
+    "Decal_04_L5": 7,
+    "Decal_05_L2": 2,
+    "Decal_05_L3": 2,
+    "Decal_05_L4": 2,
+    "Decal_05_L5": 4,
+    "Decal_06_L2": 4,
+    "Decal_06_L3": 2,
+    "Decal_06_L4": 2,
+    "Decal_06_L5": 12,
+    "Decal_07_L2": 4,
+    "Decal_08_L2": 8,
+    "Decal_08_L3": 2,
+    "Decal_08_L4": 2,
+    "Decal_08_L5": 4,
+    "Decal_09_L2": 4,
+    "Decal_09_L3": 2,
+    "Decal_09_L4": 2,
+    "Decal_09_L5": 12,
+    "Decal_10_L2": 2,
+    "Decal_10_L3": 2,
+    "Decal_10_L4": 2,
+    "Decal_10_L5": 4,
+    "Decal_11_L2": 2,
+    "Decal_11_L3": 2,
+    "Decal_11_L4": 2,
+    "Decal_11_L5": 1,
+    "Decal_12_L2": 6,
+    "Decal_12_L3": 4,
+    "Decal_12_L4": 4,
+    "Decal_12_L5": 7,
+    "Decal_13_L2": 2,
+    "Decal_13_L3": 2,
+    "Decal_13_L4": 2,
+    "Decal_13_L5": 4,
+    "Decal_14_L2": 4,
+    "Decal_14_L3": 2,
+    "Decal_14_L4": 2,
+    "Decal_14_L5": 12,
+    "Decal_15_L2": 4,
+    "Decal_16_L2": 8,
+    "Decal_16_L3": 2,
+    "Decal_16_L4": 2,
+    "Decal_16_L5": 4,
+    "Decal_17_L2": 4,
+    "Decal_17_L3": 2,
+    "Decal_17_L4": 2,
+    "Decal_17_L5": 12,
+    "Decal_18_L2": 2,
+    "Decal_18_L3": 2,
+    "Decal_18_L4": 2,
+    "Decal_18_L5": 4,
+    "Decal_19_L2": 2,
+    "Decal_19_L3": 2,
+    "Decal_19_L4": 2,
+    "Decal_19_L5": 3,
+    "Decal_20_L2": 6,
+    "Decal_20_L3": 4,
+    "Decal_20_L4": 4,
+    "Decal_20_L5": 5,
+    "Decal_21_L2": 2,
+    "Decal_21_L3": 2,
+    "Decal_21_L4": 2,
+    "Decal_21_L5": 4,
+    "Decal_22_L2": 4,
+    "Decal_22_L3": 2,
+    "Decal_22_L4": 2,
+    "Decal_22_L5": 12,
+    "Decal_23_L2": 4,
+    "Decal_24_L2": 8,
+    "Decal_24_L3": 2,
+    "Decal_24_L4": 2,
+    "Decal_24_L5": 4,
+    "Decal_25_L2": 4,
+    "Decal_25_L3": 2,
+    "Decal_25_L4": 2,
+    "Decal_25_L5": 12,
+    "Decal_26_L2": 2,
+    "Decal_26_L3": 2,
+    "Decal_26_L4": 2,
+    "Decal_26_L5": 4,
+    "Decal_27_L2": 2,
+    "Decal_27_L3": 2,
+    "Decal_27_L4": 2,
+    "Decal_27_L5": 3,
+    "Decal_28_L2": 6,
+    "Decal_28_L3": 4,
+    "Decal_28_L4": 4,
+    "Decal_28_L5": 5,
+    "Decal_29_L2": 2,
+    "Decal_29_L3": 2,
+    "Decal_29_L4": 2,
+    "Decal_29_L5": 4,
+    "Decal_30_L2": 4,
+    "Decal_30_L3": 2,
+    "Decal_30_L4": 2,
+    "Decal_30_L5": 12,
+    "Decal_31_L2": 4,
+    "Upper_00": 12,
+    "Upper_01": 18,
+    "Upper_02": 12,
+    "Upper_03": 12,
+    "Upper_04": 18,
+    "Upper_05": 12,
+    "Upper_06": 12,
+    "Upper_07": 16,
+    "Upper_08": 16,
+    "Upper_09": 12,
+    "Upper_10": 12,
+    "Upper_11": 18,
+    "Upper_12": 12,
+    "Upper_13": 12,
+    "Upper_14": 18,
+    "Upper_15": 12,
+    "Upper_16": 12,
+    "Upper_17": 18,
+    "Upper_18": 12,
+    "Upper_19": 12,
+    "Upper_20": 18,
+    "Upper_21": 12,
+    "Upper_22": 12,
+    "Upper_23": 16,
+    "Upper_24": 16,
+    "Upper_25": 12,
+    "Upper_26": 12,
+    "Upper_27": 18,
+    "Upper_28": 12,
+    "Upper_29": 12,
+    "Upper_30": 18,
+    "Upper_31": 12,
+    "NameSign": 16,
+    "Wall_00..31": 5746
+   },
+   "bbox_min": [
+    -5.872,
+    -5.872,
+    -0.2
+   ],
+   "bbox_max": [
+    5.872,
+    5.872,
+    7.694
+   ],
+   "max_radius": 5.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Beacon",
+    "Anchor_Work_0",
+    "Anchor_Stand_0",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Accent_0",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28"
+   ],
+   "materials": [
+    "Accent",
+    "Ember",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Hull",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "Window"
+   ],
+   "file_size": 1083788,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 6.7,
+   "ao_rays": 1521792,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Beacon": 1,
+     "Work": 1,
+     "Stand": 1,
+     "Light": 2,
+     "Accent": 1,
+     "Aisle": 29
+    },
+    "wall_tris": 5746,
+    "interior_materials": [
+     "Accent",
+     "Ember",
+     "Glass",
+     "LightStrip",
+     "Palette",
+     "PaletteMetal",
+     "Screen",
+     "Window"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Hull",
+     "LightStrip",
+     "Palette",
+     "Screen"
+    ],
+    "file_materials": 15,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Beacon",
+      "pos": [
+       -4.587,
+       0.604,
+       3.71
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       2.442,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       1.092,
+       1.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.55
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       2.379,
+       1.373,
+       2.55
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_0",
+      "pos": [
+       -0.85,
+       0.0,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       4.755,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       4.284,
+       2.063,
+       0.14
+      ],
+      "yaw": 115.71
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       2.965,
+       3.718,
+       0.14
+      ],
+      "yaw": 141.43
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       1.058,
+       4.636,
+       0.14
+      ],
+      "yaw": 167.14
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       -1.058,
+       4.636,
+       0.14
+      ],
+      "yaw": 192.86
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       -2.965,
+       3.718,
+       0.14
+      ],
+      "yaw": 218.57
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -4.284,
+       2.063,
+       0.14
+      ],
+      "yaw": 244.29
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -4.755,
+       0.0,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -4.284,
+       -2.063,
+       0.14
+      ],
+      "yaw": -64.29
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -2.965,
+       -3.718,
+       0.14
+      ],
+      "yaw": -38.57
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -1.058,
+       -4.636,
+       0.14
+      ],
+      "yaw": -12.86
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       1.058,
+       -4.636,
+       0.14
+      ],
+      "yaw": 12.86
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       2.965,
+       -3.718,
+       0.14
+      ],
+      "yaw": 38.57
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       4.284,
+       -2.063,
+       0.14
+      ],
+      "yaw": 64.29
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       -3.75,
+       -1.25,
+       0.14
+      ],
+      "yaw": -71.57
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       -3.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       -3.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 251.57
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -2.5,
+       -2.5,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       -2.5,
+       2.5,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       0.0,
+       -3.75,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       0.0,
+       -2.5,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       0.0,
+       2.5,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       0.0,
+       3.75,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       1.25,
+       3.75,
+       0.14
+      ],
+      "yaw": 161.57
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       2.5,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       3.75,
+       -1.25,
+       0.14
+      ],
+      "yaw": 71.57
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       3.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       3.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 108.43
+     }
+    ],
+    "tall_parts": 0,
+    "surfaces": {
+     "Base": [
+      2,
+      2
+     ],
+     "Roof": [
+      13,
+      6
+     ],
+     "Interior": [
+      16,
+      8
+     ],
+     "L2": [
+      3,
+      2
+     ],
+     "L5": [
+      4,
+      3
+     ]
+    },
+    "group_surfaces": {
+     "Base": 2,
+     "DecalL2": 1,
+     "DecalL3": 1,
+     "DecalL4": 1,
+     "DecalL5": 1,
+     "Interior": 8,
+     "L2": 2,
+     "L5": 3,
+     "NameSign": 3,
+     "Roof": 6,
+     "WallsUp": 2,
+     "Walls": 5,
+     "WallShell": 2
+    },
+    "decals": {
+     "decal_objects": 116,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.65
+     ],
+     "upper_band": [
+      1.98,
+      2.32
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 0.82,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     4.75,
+     5.12,
+     4.43
+    ],
+    "v4_empty_patch": 2.23,
+    "door_lane_hit_angles": {},
+    "door_slots": 9,
+    "door_slot_deg": 38.4,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 15440,
+    "rmax": 5.8999999627750945,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.004776953253895044,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_L2",
+     "Decal_00_L3",
+     "Decal_00_L4",
+     "Decal_00_L5",
+     "Decal_01_L2",
+     "Decal_01_L3",
+     "Decal_01_L4",
+     "Decal_01_L5",
+     "Decal_02_L2",
+     "Decal_02_L3",
+     "Decal_02_L4",
+     "Decal_02_L5",
+     "Decal_03_L2",
+     "Decal_03_L3",
+     "Decal_03_L4",
+     "Decal_03_L5",
+     "Decal_04_L2",
+     "Decal_04_L3",
+     "Decal_04_L4",
+     "Decal_04_L5",
+     "Decal_05_L2",
+     "Decal_05_L3",
+     "Decal_05_L4",
+     "Decal_05_L5",
+     "Decal_06_L2",
+     "Decal_06_L3",
+     "Decal_06_L4",
+     "Decal_06_L5",
+     "Decal_07_L2",
+     "Decal_08_L2",
+     "Decal_08_L3",
+     "Decal_08_L4",
+     "Decal_08_L5",
+     "Decal_09_L2",
+     "Decal_09_L3",
+     "Decal_09_L4",
+     "Decal_09_L5",
+     "Decal_10_L2",
+     "Decal_10_L3",
+     "Decal_10_L4",
+     "Decal_10_L5",
+     "Decal_11_L2",
+     "Decal_11_L3",
+     "Decal_11_L4",
+     "Decal_11_L5",
+     "Decal_12_L2",
+     "Decal_12_L3",
+     "Decal_12_L4",
+     "Decal_12_L5",
+     "Decal_13_L2",
+     "Decal_13_L3",
+     "Decal_13_L4",
+     "Decal_13_L5",
+     "Decal_14_L2",
+     "Decal_14_L3",
+     "Decal_14_L4",
+     "Decal_14_L5",
+     "Decal_15_L2",
+     "Decal_16_L2",
+     "Decal_16_L3",
+     "Decal_16_L4",
+     "Decal_16_L5",
+     "Decal_17_L2",
+     "Decal_17_L3",
+     "Decal_17_L4",
+     "Decal_17_L5",
+     "Decal_18_L2",
+     "Decal_18_L3",
+     "Decal_18_L4",
+     "Decal_18_L5",
+     "Decal_19_L2",
+     "Decal_19_L3",
+     "Decal_19_L4",
+     "Decal_19_L5",
+     "Decal_20_L2",
+     "Decal_20_L3",
+     "Decal_20_L4",
+     "Decal_20_L5",
+     "Decal_21_L2",
+     "Decal_21_L3",
+     "Decal_21_L4",
+     "Decal_21_L5",
+     "Decal_22_L2",
+     "Decal_22_L3",
+     "Decal_22_L4",
+     "Decal_22_L5",
+     "Decal_23_L2",
+     "Decal_24_L2",
+     "Decal_24_L3",
+     "Decal_24_L4",
+     "Decal_24_L5",
+     "Decal_25_L2",
+     "Decal_25_L3",
+     "Decal_25_L4",
+     "Decal_25_L5",
+     "Decal_26_L2",
+     "Decal_26_L3",
+     "Decal_26_L4",
+     "Decal_26_L5",
+     "Decal_27_L2",
+     "Decal_27_L3",
+     "Decal_27_L4",
+     "Decal_27_L5",
+     "Decal_28_L2",
+     "Decal_28_L3",
+     "Decal_28_L4",
+     "Decal_28_L5",
+     "Decal_29_L2",
+     "Decal_29_L3",
+     "Decal_29_L4",
+     "Decal_29_L5",
+     "Decal_30_L2",
+     "Decal_30_L3",
+     "Decal_30_L4",
+     "Decal_30_L5",
+     "Decal_31_L2",
+     "Interior",
+     "L2",
+     "L5",
+     "NameSign",
+     "Roof",
+     "Upper_00",
+     "Upper_01",
+     "Upper_02",
+     "Upper_03",
+     "Upper_04",
+     "Upper_05",
+     "Upper_06",
+     "Upper_07",
+     "Upper_08",
+     "Upper_09",
+     "Upper_10",
+     "Upper_11",
+     "Upper_12",
+     "Upper_13",
+     "Upper_14",
+     "Upper_15",
+     "Upper_16",
+     "Upper_17",
+     "Upper_18",
+     "Upper_19",
+     "Upper_20",
+     "Upper_21",
+     "Upper_22",
+     "Upper_23",
+     "Upper_24",
+     "Upper_25",
+     "Upper_26",
+     "Upper_27",
+     "Upper_28",
+     "Upper_29",
+     "Upper_30",
+     "Upper_31",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Accent_0",
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Beacon",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Stand_0",
+     "Anchor_Work_0"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "distillery_m",
+   "type": "distillery",
+   "size": "m",
+   "footprint": 7.5,
+   "tris": 20415,
+   "budget": 27000,
+   "tris_by_object": {
+    "Base": 412,
+    "Roof": 5949,
+    "Interior": 6900,
+    "L2": 60,
+    "L3": 118,
+    "L4": 88,
+    "L5": 160,
+    "Decal_00_L2": 8,
+    "Decal_00_L3": 4,
+    "Decal_00_L4": 4,
+    "Decal_00_L5": 8,
+    "Decal_01_L2": 4,
+    "Decal_01_L3": 2,
+    "Decal_01_L4": 2,
+    "Decal_01_L5": 8,
+    "Decal_02_L2": 4,
+    "Decal_02_L3": 2,
+    "Decal_02_L4": 2,
+    "Decal_02_L5": 4,
+    "Decal_03_L2": 4,
+    "Decal_03_L3": 2,
+    "Decal_03_L4": 2,
+    "Decal_03_L5": 5,
+    "Decal_04_L2": 8,
+    "Decal_04_L3": 4,
+    "Decal_04_L4": 4,
+    "Decal_04_L5": 11,
+    "Decal_05_L2": 4,
+    "Decal_05_L3": 2,
+    "Decal_05_L4": 2,
+    "Decal_05_L5": 4,
+    "Decal_06_L2": 4,
+    "Decal_06_L3": 2,
+    "Decal_06_L4": 2,
+    "Decal_06_L5": 8,
+    "Decal_07_L2": 4,
+    "Decal_07_L3": 2,
+    "Decal_07_L4": 2,
+    "Decal_07_L5": 4,
+    "Decal_08_L2": 8,
+    "Decal_08_L3": 4,
+    "Decal_08_L4": 4,
+    "Decal_08_L5": 8,
+    "Decal_09_L2": 4,
+    "Decal_09_L3": 2,
+    "Decal_09_L4": 2,
+    "Decal_09_L5": 8,
+    "Decal_10_L2": 4,
+    "Decal_10_L3": 2,
+    "Decal_10_L4": 2,
+    "Decal_10_L5": 4,
+    "Decal_11_L2": 4,
+    "Decal_11_L3": 2,
+    "Decal_11_L4": 2,
+    "Decal_11_L5": 5,
+    "Decal_12_L2": 8,
+    "Decal_12_L3": 4,
+    "Decal_12_L4": 4,
+    "Decal_12_L5": 11,
+    "Decal_13_L2": 4,
+    "Decal_13_L3": 2,
+    "Decal_13_L4": 2,
+    "Decal_13_L5": 4,
+    "Decal_14_L2": 4,
+    "Decal_14_L3": 2,
+    "Decal_14_L4": 2,
+    "Decal_14_L5": 8,
+    "Decal_15_L2": 4,
+    "Decal_15_L3": 2,
+    "Decal_15_L4": 2,
+    "Decal_15_L5": 4,
+    "Decal_16_L2": 8,
+    "Decal_16_L3": 4,
+    "Decal_16_L4": 4,
+    "Decal_16_L5": 8,
+    "Decal_17_L2": 4,
+    "Decal_17_L3": 2,
+    "Decal_17_L4": 2,
+    "Decal_17_L5": 8,
+    "Decal_18_L2": 4,
+    "Decal_18_L3": 2,
+    "Decal_18_L4": 2,
+    "Decal_18_L5": 4,
+    "Decal_19_L2": 4,
+    "Decal_19_L3": 2,
+    "Decal_19_L4": 2,
+    "Decal_19_L5": 7,
+    "Decal_20_L2": 8,
+    "Decal_20_L3": 4,
+    "Decal_20_L4": 4,
+    "Decal_20_L5": 9,
+    "Decal_21_L2": 4,
+    "Decal_21_L3": 2,
+    "Decal_21_L4": 2,
+    "Decal_21_L5": 4,
+    "Decal_22_L2": 4,
+    "Decal_22_L3": 2,
+    "Decal_22_L4": 2,
+    "Decal_22_L5": 8,
+    "Decal_23_L2": 4,
+    "Decal_23_L3": 2,
+    "Decal_23_L4": 2,
+    "Decal_23_L5": 4,
+    "Decal_24_L2": 8,
+    "Decal_24_L3": 4,
+    "Decal_24_L4": 4,
+    "Decal_24_L5": 8,
+    "Decal_25_L2": 4,
+    "Decal_25_L3": 2,
+    "Decal_25_L4": 2,
+    "Decal_25_L5": 8,
+    "Decal_26_L2": 4,
+    "Decal_26_L3": 2,
+    "Decal_26_L4": 2,
+    "Decal_26_L5": 4,
+    "Decal_27_L2": 4,
+    "Decal_27_L3": 2,
+    "Decal_27_L4": 2,
+    "Decal_27_L5": 7,
+    "Decal_28_L2": 8,
+    "Decal_28_L3": 4,
+    "Decal_28_L4": 4,
+    "Decal_28_L5": 9,
+    "Decal_29_L2": 4,
+    "Decal_29_L3": 2,
+    "Decal_29_L4": 2,
+    "Decal_29_L5": 4,
+    "Decal_30_L2": 4,
+    "Decal_30_L3": 2,
+    "Decal_30_L4": 2,
+    "Decal_30_L5": 8,
+    "Decal_31_L2": 4,
+    "Decal_31_L3": 2,
+    "Decal_31_L4": 2,
+    "Decal_31_L5": 4,
+    "Upper_00": 12,
+    "Upper_01": 18,
+    "Upper_02": 12,
+    "Upper_03": 18,
+    "Upper_04": 12,
+    "Upper_05": 18,
+    "Upper_06": 12,
+    "Upper_07": 16,
+    "Upper_08": 16,
+    "Upper_09": 12,
+    "Upper_10": 18,
+    "Upper_11": 12,
+    "Upper_12": 18,
+    "Upper_13": 12,
+    "Upper_14": 18,
+    "Upper_15": 12,
+    "Upper_16": 12,
+    "Upper_17": 18,
+    "Upper_18": 12,
+    "Upper_19": 18,
+    "Upper_20": 12,
+    "Upper_21": 18,
+    "Upper_22": 12,
+    "Upper_23": 16,
+    "Upper_24": 16,
+    "Upper_25": 12,
+    "Upper_26": 18,
+    "Upper_27": 12,
+    "Upper_28": 18,
+    "Upper_29": 12,
+    "Upper_30": 18,
+    "Upper_31": 12,
+    "NameSign": 16,
+    "Wall_00..31": 5712
+   },
+   "bbox_min": [
+    -7.377,
+    -7.377,
+    -0.2
+   ],
+   "bbox_max": [
+    7.377,
+    7.377,
+    8.356
+   ],
+   "max_radius": 7.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Beacon",
+    "Anchor_Work_0",
+    "Anchor_Stand_0",
+    "Anchor_Stand_1",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Light_2",
+    "Anchor_Light_3",
+    "Anchor_Accent_0",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28",
+    "Anchor_Aisle_29",
+    "Anchor_Aisle_30",
+    "Anchor_Aisle_31",
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35"
+   ],
+   "materials": [
+    "Accent",
+    "Ember",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Hull",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "Window"
+   ],
+   "file_size": 1257084,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 8.1,
+   "ao_rays": 2044464,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Beacon": 1,
+     "Work": 1,
+     "Stand": 2,
+     "Light": 4,
+     "Accent": 1,
+     "Aisle": 36
+    },
+    "wall_tris": 5712,
+    "interior_materials": [
+     "Accent",
+     "Ember",
+     "Glass",
+     "LightStrip",
+     "Palette",
+     "PaletteMetal",
+     "Screen",
+     "Window"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen"
+    ],
+    "file_materials": 15,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Beacon",
+      "pos": [
+       -1.654,
+       5.681,
+       3.71
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       2.541,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       1.191,
+       1.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       1.191,
+       -1.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       2.996,
+       1.73,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_2",
+      "pos": [
+       -2.996,
+       1.73,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_3",
+      "pos": [
+       -0.0,
+       -3.46,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_0",
+      "pos": [
+       -0.85,
+       0.0,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       6.08,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       5.669,
+       2.196,
+       0.14
+      ],
+      "yaw": 111.18
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       4.493,
+       4.096,
+       0.14
+      ],
+      "yaw": 132.35
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       2.71,
+       5.443,
+       0.14
+      ],
+      "yaw": 153.53
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       0.561,
+       6.054,
+       0.14
+      ],
+      "yaw": 174.71
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       -1.664,
+       5.848,
+       0.14
+      ],
+      "yaw": 195.88
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -3.664,
+       4.852,
+       0.14
+      ],
+      "yaw": 217.06
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -5.169,
+       3.201,
+       0.14
+      ],
+      "yaw": 238.24
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -5.976,
+       1.117,
+       0.14
+      ],
+      "yaw": 259.41
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -5.976,
+       -1.117,
+       0.14
+      ],
+      "yaw": -79.41
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -5.169,
+       -3.201,
+       0.14
+      ],
+      "yaw": -58.24
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       -3.664,
+       -4.852,
+       0.14
+      ],
+      "yaw": -37.06
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       -1.664,
+       -5.848,
+       0.14
+      ],
+      "yaw": -15.88
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       0.561,
+       -6.054,
+       0.14
+      ],
+      "yaw": 5.29
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       2.71,
+       -5.443,
+       0.14
+      ],
+      "yaw": 26.47
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       4.493,
+       -4.096,
+       0.14
+      ],
+      "yaw": 47.65
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       5.669,
+       -2.196,
+       0.14
+      ],
+      "yaw": 68.82
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -5.0,
+       -1.25,
+       0.14
+      ],
+      "yaw": -75.96
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       -5.0,
+       1.25,
+       0.14
+      ],
+      "yaw": 255.96
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       -3.75,
+       -2.5,
+       0.14
+      ],
+      "yaw": -56.31
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       -3.75,
+       -1.25,
+       0.14
+      ],
+      "yaw": -71.57
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       -3.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 251.57
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       -3.75,
+       2.5,
+       0.14
+      ],
+      "yaw": 236.31
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       -2.5,
+       2.5,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       -1.25,
+       -5.0,
+       0.14
+      ],
+      "yaw": -14.04
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       -1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": -18.43
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       -1.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": -26.57
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       -1.25,
+       2.5,
+       0.14
+      ],
+      "yaw": 206.57
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       -1.25,
+       5.0,
+       0.14
+      ],
+      "yaw": 194.04
+     },
+     {
+      "name": "Anchor_Aisle_29",
+      "pos": [
+       0.0,
+       -2.5,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       0.0,
+       2.5,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       0.0,
+       5.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       1.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 26.57
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       1.25,
+       -1.25,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       2.5,
+       -3.75,
+       0.14
+      ],
+      "yaw": 33.69
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       5.0,
+       -1.25,
+       0.14
+      ],
+      "yaw": 75.96
+     }
+    ],
+    "tall_parts": 0,
+    "surfaces": {
+     "Base": [
+      2,
+      2
+     ],
+     "Roof": [
+      13,
+      6
+     ],
+     "Interior": [
+      15,
+      8
+     ],
+     "L2": [
+      3,
+      2
+     ],
+     "L3": [
+      5,
+      3
+     ],
+     "L4": [
+      4,
+      2
+     ],
+     "L5": [
+      4,
+      3
+     ]
+    },
+    "group_surfaces": {
+     "Base": 2,
+     "DecalL2": 1,
+     "DecalL3": 1,
+     "DecalL4": 1,
+     "DecalL5": 1,
+     "Interior": 8,
+     "L2": 2,
+     "L3": 3,
+     "L4": 2,
+     "L5": 3,
+     "NameSign": 3,
+     "Roof": 6,
+     "WallsUp": 2,
+     "Walls": 6,
+     "WallShell": 2
+    },
+    "decals": {
+     "decal_objects": 128,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.65
+     ],
+     "upper_band": [
+      1.98,
+      2.32
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 0.99,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     6.08,
+     6.62,
+     5.58
+    ],
+    "v4_empty_patch": 2.4,
+    "door_lane_hit_angles": {},
+    "door_slots": 11,
+    "door_slot_deg": 30.2,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 20415,
+    "rmax": 7.400000182311928,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.0043914420530200005,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_L2",
+     "Decal_00_L3",
+     "Decal_00_L4",
+     "Decal_00_L5",
+     "Decal_01_L2",
+     "Decal_01_L3",
+     "Decal_01_L4",
+     "Decal_01_L5",
+     "Decal_02_L2",
+     "Decal_02_L3",
+     "Decal_02_L4",
+     "Decal_02_L5",
+     "Decal_03_L2",
+     "Decal_03_L3",
+     "Decal_03_L4",
+     "Decal_03_L5",
+     "Decal_04_L2",
+     "Decal_04_L3",
+     "Decal_04_L4",
+     "Decal_04_L5",
+     "Decal_05_L2",
+     "Decal_05_L3",
+     "Decal_05_L4",
+     "Decal_05_L5",
+     "Decal_06_L2",
+     "Decal_06_L3",
+     "Decal_06_L4",
+     "Decal_06_L5",
+     "Decal_07_L2",
+     "Decal_07_L3",
+     "Decal_07_L4",
+     "Decal_07_L5",
+     "Decal_08_L2",
+     "Decal_08_L3",
+     "Decal_08_L4",
+     "Decal_08_L5",
+     "Decal_09_L2",
+     "Decal_09_L3",
+     "Decal_09_L4",
+     "Decal_09_L5",
+     "Decal_10_L2",
+     "Decal_10_L3",
+     "Decal_10_L4",
+     "Decal_10_L5",
+     "Decal_11_L2",
+     "Decal_11_L3",
+     "Decal_11_L4",
+     "Decal_11_L5",
+     "Decal_12_L2",
+     "Decal_12_L3",
+     "Decal_12_L4",
+     "Decal_12_L5",
+     "Decal_13_L2",
+     "Decal_13_L3",
+     "Decal_13_L4",
+     "Decal_13_L5",
+     "Decal_14_L2",
+     "Decal_14_L3",
+     "Decal_14_L4",
+     "Decal_14_L5",
+     "Decal_15_L2",
+     "Decal_15_L3",
+     "Decal_15_L4",
+     "Decal_15_L5",
+     "Decal_16_L2",
+     "Decal_16_L3",
+     "Decal_16_L4",
+     "Decal_16_L5",
+     "Decal_17_L2",
+     "Decal_17_L3",
+     "Decal_17_L4",
+     "Decal_17_L5",
+     "Decal_18_L2",
+     "Decal_18_L3",
+     "Decal_18_L4",
+     "Decal_18_L5",
+     "Decal_19_L2",
+     "Decal_19_L3",
+     "Decal_19_L4",
+     "Decal_19_L5",
+     "Decal_20_L2",
+     "Decal_20_L3",
+     "Decal_20_L4",
+     "Decal_20_L5",
+     "Decal_21_L2",
+     "Decal_21_L3",
+     "Decal_21_L4",
+     "Decal_21_L5",
+     "Decal_22_L2",
+     "Decal_22_L3",
+     "Decal_22_L4",
+     "Decal_22_L5",
+     "Decal_23_L2",
+     "Decal_23_L3",
+     "Decal_23_L4",
+     "Decal_23_L5",
+     "Decal_24_L2",
+     "Decal_24_L3",
+     "Decal_24_L4",
+     "Decal_24_L5",
+     "Decal_25_L2",
+     "Decal_25_L3",
+     "Decal_25_L4",
+     "Decal_25_L5",
+     "Decal_26_L2",
+     "Decal_26_L3",
+     "Decal_26_L4",
+     "Decal_26_L5",
+     "Decal_27_L2",
+     "Decal_27_L3",
+     "Decal_27_L4",
+     "Decal_27_L5",
+     "Decal_28_L2",
+     "Decal_28_L3",
+     "Decal_28_L4",
+     "Decal_28_L5",
+     "Decal_29_L2",
+     "Decal_29_L3",
+     "Decal_29_L4",
+     "Decal_29_L5",
+     "Decal_30_L2",
+     "Decal_30_L3",
+     "Decal_30_L4",
+     "Decal_30_L5",
+     "Decal_31_L2",
+     "Decal_31_L3",
+     "Decal_31_L4",
+     "Decal_31_L5",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "NameSign",
+     "Roof",
+     "Upper_00",
+     "Upper_01",
+     "Upper_02",
+     "Upper_03",
+     "Upper_04",
+     "Upper_05",
+     "Upper_06",
+     "Upper_07",
+     "Upper_08",
+     "Upper_09",
+     "Upper_10",
+     "Upper_11",
+     "Upper_12",
+     "Upper_13",
+     "Upper_14",
+     "Upper_15",
+     "Upper_16",
+     "Upper_17",
+     "Upper_18",
+     "Upper_19",
+     "Upper_20",
+     "Upper_21",
+     "Upper_22",
+     "Upper_23",
+     "Upper_24",
+     "Upper_25",
+     "Upper_26",
+     "Upper_27",
+     "Upper_28",
+     "Upper_29",
+     "Upper_30",
+     "Upper_31",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Accent_0",
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_29",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_30",
+     "Anchor_Aisle_31",
+     "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Beacon",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Light_2",
+     "Anchor_Light_3",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Work_0"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "distillery_l",
+   "type": "distillery",
+   "size": "l",
+   "footprint": 9.6,
+   "tris": 26602,
+   "budget": 39600,
+   "tris_by_object": {
+    "Base": 660,
+    "Roof": 7722,
+    "Interior": 10880,
+    "L2": 220,
+    "L3": 118,
+    "L4": 228,
+    "L5": 160,
+    "Decal_00_L2": 8,
+    "Decal_00_L3": 4,
+    "Decal_00_L4": 4,
+    "Decal_00_L5": 8,
+    "Decal_01_L2": 4,
+    "Decal_01_L3": 4,
+    "Decal_01_L4": 4,
+    "Decal_01_L5": 12,
+    "Decal_02_L2": 8,
+    "Decal_02_L3": 2,
+    "Decal_02_L4": 2,
+    "Decal_02_L5": 4,
+    "Decal_03_L2": 4,
+    "Decal_03_L3": 2,
+    "Decal_03_L4": 2,
+    "Decal_03_L5": 5,
+    "Decal_04_L2": 8,
+    "Decal_04_L3": 4,
+    "Decal_04_L4": 4,
+    "Decal_04_L5": 11,
+    "Decal_05_L2": 8,
+    "Decal_05_L3": 2,
+    "Decal_05_L4": 2,
+    "Decal_05_L5": 4,
+    "Decal_06_L2": 4,
+    "Decal_06_L3": 4,
+    "Decal_06_L4": 4,
+    "Decal_06_L5": 12,
+    "Decal_07_L2": 4,
+    "Decal_07_L3": 2,
+    "Decal_07_L4": 2,
+    "Decal_07_L5": 4,
+    "Decal_08_L2": 8,
+    "Decal_08_L3": 4,
+    "Decal_08_L4": 4,
+    "Decal_08_L5": 8,
+    "Decal_09_L2": 4,
+    "Decal_09_L3": 4,
+    "Decal_09_L4": 4,
+    "Decal_09_L5": 12,
+    "Decal_10_L2": 8,
+    "Decal_10_L3": 2,
+    "Decal_10_L4": 2,
+    "Decal_10_L5": 4,
+    "Decal_11_L2": 4,
+    "Decal_11_L3": 2,
+    "Decal_11_L4": 2,
+    "Decal_11_L5": 5,
+    "Decal_12_L2": 8,
+    "Decal_12_L3": 4,
+    "Decal_12_L4": 4,
+    "Decal_12_L5": 11,
+    "Decal_13_L2": 8,
+    "Decal_13_L3": 2,
+    "Decal_13_L4": 2,
+    "Decal_13_L5": 4,
+    "Decal_14_L2": 4,
+    "Decal_14_L3": 4,
+    "Decal_14_L4": 4,
+    "Decal_14_L5": 12,
+    "Decal_15_L2": 4,
+    "Decal_15_L3": 2,
+    "Decal_15_L4": 2,
+    "Decal_15_L5": 4,
+    "Decal_16_L2": 8,
+    "Decal_16_L3": 4,
+    "Decal_16_L4": 4,
+    "Decal_16_L5": 8,
+    "Decal_17_L2": 4,
+    "Decal_17_L3": 4,
+    "Decal_17_L4": 4,
+    "Decal_17_L5": 12,
+    "Decal_18_L2": 8,
+    "Decal_18_L3": 2,
+    "Decal_18_L4": 2,
+    "Decal_18_L5": 4,
+    "Decal_19_L2": 4,
+    "Decal_19_L3": 2,
+    "Decal_19_L4": 2,
+    "Decal_19_L5": 7,
+    "Decal_20_L2": 8,
+    "Decal_20_L3": 4,
+    "Decal_20_L4": 4,
+    "Decal_20_L5": 9,
+    "Decal_21_L2": 8,
+    "Decal_21_L3": 2,
+    "Decal_21_L4": 2,
+    "Decal_21_L5": 4,
+    "Decal_22_L2": 4,
+    "Decal_22_L3": 4,
+    "Decal_22_L4": 4,
+    "Decal_22_L5": 12,
+    "Decal_23_L2": 4,
+    "Decal_23_L3": 2,
+    "Decal_23_L4": 2,
+    "Decal_23_L5": 4,
+    "Decal_24_L2": 8,
+    "Decal_24_L3": 4,
+    "Decal_24_L4": 4,
+    "Decal_24_L5": 8,
+    "Decal_25_L2": 4,
+    "Decal_25_L3": 4,
+    "Decal_25_L4": 4,
+    "Decal_25_L5": 12,
+    "Decal_26_L2": 8,
+    "Decal_26_L3": 2,
+    "Decal_26_L4": 2,
+    "Decal_26_L5": 4,
+    "Decal_27_L2": 4,
+    "Decal_27_L3": 2,
+    "Decal_27_L4": 2,
+    "Decal_27_L5": 7,
+    "Decal_28_L2": 8,
+    "Decal_28_L3": 4,
+    "Decal_28_L4": 4,
+    "Decal_28_L5": 9,
+    "Decal_29_L2": 8,
+    "Decal_29_L3": 2,
+    "Decal_29_L4": 2,
+    "Decal_29_L5": 4,
+    "Decal_30_L2": 4,
+    "Decal_30_L3": 4,
+    "Decal_30_L4": 4,
+    "Decal_30_L5": 12,
+    "Decal_31_L2": 4,
+    "Decal_31_L3": 2,
+    "Decal_31_L4": 2,
+    "Decal_31_L5": 4,
+    "Upper_00": 16,
+    "Upper_01": 16,
+    "Upper_02": 16,
+    "Upper_03": 16,
+    "Upper_04": 16,
+    "Upper_05": 16,
+    "Upper_06": 16,
+    "Upper_07": 16,
+    "Upper_08": 16,
+    "Upper_09": 16,
+    "Upper_10": 16,
+    "Upper_11": 16,
+    "Upper_12": 16,
+    "Upper_13": 16,
+    "Upper_14": 16,
+    "Upper_15": 16,
+    "Upper_16": 16,
+    "Upper_17": 16,
+    "Upper_18": 16,
+    "Upper_19": 16,
+    "Upper_20": 16,
+    "Upper_21": 16,
+    "Upper_22": 16,
+    "Upper_23": 16,
+    "Upper_24": 16,
+    "Upper_25": 16,
+    "Upper_26": 16,
+    "Upper_27": 16,
+    "Upper_28": 16,
+    "Upper_29": 16,
+    "Upper_30": 16,
+    "Upper_31": 16,
+    "NameSign": 16,
+    "Wall_00..31": 5462
+   },
+   "bbox_min": [
+    -9.48,
+    -9.48,
+    -0.2
+   ],
+   "bbox_max": [
+    9.48,
+    9.48,
+    9.069
+   ],
+   "max_radius": 9.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Beacon",
+    "Anchor_Work_0",
+    "Anchor_Work_1",
+    "Anchor_Stand_0",
+    "Anchor_Stand_1",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Light_2",
+    "Anchor_Light_3",
+    "Anchor_Light_4",
+    "Anchor_Accent_0",
+    "Anchor_Accent_1",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28",
+    "Anchor_Aisle_29",
+    "Anchor_Aisle_30",
+    "Anchor_Aisle_31",
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35",
+    "Anchor_Aisle_36",
+    "Anchor_Aisle_37",
+    "Anchor_Aisle_38",
+    "Anchor_Aisle_39",
+    "Anchor_Aisle_40"
+   ],
+   "materials": [
+    "Accent",
+    "Ember",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Hull",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "Window"
+   ],
+   "file_size": 1548880,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 10.2,
+   "ao_rays": 2650752,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Beacon": 1,
+     "Work": 2,
+     "Stand": 2,
+     "Light": 5,
+     "Accent": 2,
+     "Aisle": 41
+    },
+    "wall_tris": 5462,
+    "interior_materials": [
+     "Accent",
+     "Ember",
+     "Glass",
+     "LightStrip",
+     "Palette",
+     "PaletteMetal",
+     "Screen",
+     "Window"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen"
+    ],
+    "file_materials": 15,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Beacon",
+      "pos": [
+       -1.803,
+       7.509,
+       3.71
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       2.951,
+       -0.675,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Work_1",
+      "pos": [
+       2.951,
+       0.675,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       1.601,
+       1.675,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       1.601,
+       -1.675,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       4.07,
+       2.35,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_2",
+      "pos": [
+       -2.35,
+       4.07,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_3",
+      "pos": [
+       -4.07,
+       -2.35,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_4",
+      "pos": [
+       2.35,
+       -4.07,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_0",
+      "pos": [
+       -0.85,
+       0.0,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_1",
+      "pos": [
+       0.0,
+       3.807,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       8.13,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       7.829,
+       2.193,
+       0.14
+      ],
+      "yaw": 105.65
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       6.946,
+       4.224,
+       0.14
+      ],
+      "yaw": 121.3
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       5.549,
+       5.942,
+       0.14
+      ],
+      "yaw": 136.96
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       3.74,
+       7.219,
+       0.14
+      ],
+      "yaw": 152.61
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       1.654,
+       7.96,
+       0.14
+      ],
+      "yaw": 168.26
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -0.555,
+       8.111,
+       0.14
+      ],
+      "yaw": 183.91
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -2.723,
+       7.661,
+       0.14
+      ],
+      "yaw": 199.57
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -4.688,
+       6.642,
+       0.14
+      ],
+      "yaw": 215.22
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -6.307,
+       5.131,
+       0.14
+      ],
+      "yaw": 230.87
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -7.457,
+       3.239,
+       0.14
+      ],
+      "yaw": 246.52
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       -8.054,
+       1.107,
+       0.14
+      ],
+      "yaw": 262.17
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       -8.054,
+       -1.107,
+       0.14
+      ],
+      "yaw": -82.17
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       -7.457,
+       -3.239,
+       0.14
+      ],
+      "yaw": -66.52
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       -6.307,
+       -5.131,
+       0.14
+      ],
+      "yaw": -50.87
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       -4.688,
+       -6.642,
+       0.14
+      ],
+      "yaw": -35.22
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       -2.723,
+       -7.661,
+       0.14
+      ],
+      "yaw": -19.57
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -0.555,
+       -8.111,
+       0.14
+      ],
+      "yaw": -3.91
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       1.654,
+       -7.96,
+       0.14
+      ],
+      "yaw": 11.74
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       3.74,
+       -7.219,
+       0.14
+      ],
+      "yaw": 27.39
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       5.549,
+       -5.942,
+       0.14
+      ],
+      "yaw": 43.04
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       6.946,
+       -4.224,
+       0.14
+      ],
+      "yaw": 58.7
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       7.829,
+       -2.193,
+       0.14
+      ],
+      "yaw": 74.35
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       -6.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 258.69
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       -6.25,
+       2.5,
+       0.14
+      ],
+      "yaw": 248.2
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       -5.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       -5.0,
+       3.75,
+       0.14
+      ],
+      "yaw": 233.13
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       -5.0,
+       5.0,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       -3.75,
+       -5.0,
+       0.14
+      ],
+      "yaw": -36.87
+     },
+     {
+      "name": "Anchor_Aisle_29",
+      "pos": [
+       -3.75,
+       3.75,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       -2.5,
+       3.75,
+       0.14
+      ],
+      "yaw": 213.69
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       -2.5,
+       6.25,
+       0.14
+      ],
+      "yaw": 201.8
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       -1.25,
+       6.25,
+       0.14
+      ],
+      "yaw": 191.31
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       3.75,
+       -3.75,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       5.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       5.0,
+       -3.75,
+       0.14
+      ],
+      "yaw": 53.13
+     },
+     {
+      "name": "Anchor_Aisle_36",
+      "pos": [
+       5.0,
+       2.5,
+       0.14
+      ],
+      "yaw": 116.57
+     },
+     {
+      "name": "Anchor_Aisle_37",
+      "pos": [
+       5.0,
+       3.75,
+       0.14
+      ],
+      "yaw": 126.87
+     },
+     {
+      "name": "Anchor_Aisle_38",
+      "pos": [
+       5.0,
+       5.0,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_39",
+      "pos": [
+       6.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 68.2
+     },
+     {
+      "name": "Anchor_Aisle_40",
+      "pos": [
+       6.25,
+       2.5,
+       0.14
+      ],
+      "yaw": 111.8
+     }
+    ],
+    "tall_parts": 0,
+    "surfaces": {
+     "Base": [
+      3,
+      2
+     ],
+     "Roof": [
+      13,
+      6
+     ],
+     "Interior": [
+      16,
+      8
+     ],
+     "L2": [
+      3,
+      2
+     ],
+     "L3": [
+      5,
+      3
+     ],
+     "L4": [
+      6,
+      4
+     ],
+     "L5": [
+      4,
+      3
+     ]
+    },
+    "group_surfaces": {
+     "Base": 2,
+     "DecalL2": 1,
+     "DecalL3": 1,
+     "DecalL4": 1,
+     "DecalL5": 1,
+     "Interior": 8,
+     "L2": 2,
+     "L3": 3,
+     "L4": 4,
+     "L5": 3,
+     "NameSign": 3,
+     "Roof": 6,
+     "WallsUp": 2,
+     "Walls": 6,
+     "WallShell": 2
+    },
+    "decals": {
+     "decal_objects": 128,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.65
+     ],
+     "upper_band": [
+      1.98,
+      2.32
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 1.04,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     8.13,
+     8.72,
+     7.58
+    ],
+    "v4_empty_patch": 2.44,
+    "door_lane_hit_angles": {},
+    "door_slots": 15,
+    "door_slot_deg": 23.3,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 26602,
+    "rmax": 9.50000029528455,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.0043914420530200005,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_L2",
+     "Decal_00_L3",
+     "Decal_00_L4",
+     "Decal_00_L5",
+     "Decal_01_L2",
+     "Decal_01_L3",
+     "Decal_01_L4",
+     "Decal_01_L5",
+     "Decal_02_L2",
+     "Decal_02_L3",
+     "Decal_02_L4",
+     "Decal_02_L5",
+     "Decal_03_L2",
+     "Decal_03_L3",
+     "Decal_03_L4",
+     "Decal_03_L5",
+     "Decal_04_L2",
+     "Decal_04_L3",
+     "Decal_04_L4",
+     "Decal_04_L5",
+     "Decal_05_L2",
+     "Decal_05_L3",
+     "Decal_05_L4",
+     "Decal_05_L5",
+     "Decal_06_L2",
+     "Decal_06_L3",
+     "Decal_06_L4",
+     "Decal_06_L5",
+     "Decal_07_L2",
+     "Decal_07_L3",
+     "Decal_07_L4",
+     "Decal_07_L5",
+     "Decal_08_L2",
+     "Decal_08_L3",
+     "Decal_08_L4",
+     "Decal_08_L5",
+     "Decal_09_L2",
+     "Decal_09_L3",
+     "Decal_09_L4",
+     "Decal_09_L5",
+     "Decal_10_L2",
+     "Decal_10_L3",
+     "Decal_10_L4",
+     "Decal_10_L5",
+     "Decal_11_L2",
+     "Decal_11_L3",
+     "Decal_11_L4",
+     "Decal_11_L5",
+     "Decal_12_L2",
+     "Decal_12_L3",
+     "Decal_12_L4",
+     "Decal_12_L5",
+     "Decal_13_L2",
+     "Decal_13_L3",
+     "Decal_13_L4",
+     "Decal_13_L5",
+     "Decal_14_L2",
+     "Decal_14_L3",
+     "Decal_14_L4",
+     "Decal_14_L5",
+     "Decal_15_L2",
+     "Decal_15_L3",
+     "Decal_15_L4",
+     "Decal_15_L5",
+     "Decal_16_L2",
+     "Decal_16_L3",
+     "Decal_16_L4",
+     "Decal_16_L5",
+     "Decal_17_L2",
+     "Decal_17_L3",
+     "Decal_17_L4",
+     "Decal_17_L5",
+     "Decal_18_L2",
+     "Decal_18_L3",
+     "Decal_18_L4",
+     "Decal_18_L5",
+     "Decal_19_L2",
+     "Decal_19_L3",
+     "Decal_19_L4",
+     "Decal_19_L5",
+     "Decal_20_L2",
+     "Decal_20_L3",
+     "Decal_20_L4",
+     "Decal_20_L5",
+     "Decal_21_L2",
+     "Decal_21_L3",
+     "Decal_21_L4",
+     "Decal_21_L5",
+     "Decal_22_L2",
+     "Decal_22_L3",
+     "Decal_22_L4",
+     "Decal_22_L5",
+     "Decal_23_L2",
+     "Decal_23_L3",
+     "Decal_23_L4",
+     "Decal_23_L5",
+     "Decal_24_L2",
+     "Decal_24_L3",
+     "Decal_24_L4",
+     "Decal_24_L5",
+     "Decal_25_L2",
+     "Decal_25_L3",
+     "Decal_25_L4",
+     "Decal_25_L5",
+     "Decal_26_L2",
+     "Decal_26_L3",
+     "Decal_26_L4",
+     "Decal_26_L5",
+     "Decal_27_L2",
+     "Decal_27_L3",
+     "Decal_27_L4",
+     "Decal_27_L5",
+     "Decal_28_L2",
+     "Decal_28_L3",
+     "Decal_28_L4",
+     "Decal_28_L5",
+     "Decal_29_L2",
+     "Decal_29_L3",
+     "Decal_29_L4",
+     "Decal_29_L5",
+     "Decal_30_L2",
+     "Decal_30_L3",
+     "Decal_30_L4",
+     "Decal_30_L5",
+     "Decal_31_L2",
+     "Decal_31_L3",
+     "Decal_31_L4",
+     "Decal_31_L5",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "NameSign",
+     "Roof",
+     "Upper_00",
+     "Upper_01",
+     "Upper_02",
+     "Upper_03",
+     "Upper_04",
+     "Upper_05",
+     "Upper_06",
+     "Upper_07",
+     "Upper_08",
+     "Upper_09",
+     "Upper_10",
+     "Upper_11",
+     "Upper_12",
+     "Upper_13",
+     "Upper_14",
+     "Upper_15",
+     "Upper_16",
+     "Upper_17",
+     "Upper_18",
+     "Upper_19",
+     "Upper_20",
+     "Upper_21",
+     "Upper_22",
+     "Upper_23",
+     "Upper_24",
+     "Upper_25",
+     "Upper_26",
+     "Upper_27",
+     "Upper_28",
+     "Upper_29",
+     "Upper_30",
+     "Upper_31",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Accent_0",
+     "Anchor_Accent_1",
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_29",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_30",
+     "Anchor_Aisle_31",
+     "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_36",
+     "Anchor_Aisle_37",
+     "Anchor_Aisle_38",
+     "Anchor_Aisle_39",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_40",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Beacon",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Light_2",
+     "Anchor_Light_3",
+     "Anchor_Light_4",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Work_0",
+     "Anchor_Work_1"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "distillery_xl",
+   "type": "distillery",
+   "size": "xl",
+   "footprint": 11.7,
+   "tris": 36358,
+   "budget": 54000,
+   "tris_by_object": {
+    "Base": 676,
+    "Roof": 8070,
+    "Interior": 20216,
+    "L2": 220,
+    "L3": 118,
+    "L4": 228,
+    "L5": 160,
+    "Decal_00_L2": 8,
+    "Decal_00_L3": 4,
+    "Decal_00_L4": 4,
+    "Decal_00_L5": 8,
+    "Decal_01_L2": 4,
+    "Decal_01_L3": 4,
+    "Decal_01_L4": 4,
+    "Decal_01_L5": 10,
+    "Decal_02_L2": 8,
+    "Decal_02_L3": 2,
+    "Decal_02_L4": 2,
+    "Decal_02_L5": 6,
+    "Decal_03_L2": 4,
+    "Decal_03_L3": 2,
+    "Decal_03_L4": 2,
+    "Decal_03_L5": 5,
+    "Decal_04_L2": 8,
+    "Decal_04_L3": 4,
+    "Decal_04_L4": 4,
+    "Decal_04_L5": 11,
+    "Decal_05_L2": 8,
+    "Decal_05_L3": 2,
+    "Decal_05_L4": 2,
+    "Decal_05_L5": 6,
+    "Decal_06_L2": 4,
+    "Decal_06_L3": 4,
+    "Decal_06_L4": 4,
+    "Decal_06_L5": 10,
+    "Decal_07_L2": 4,
+    "Decal_07_L3": 2,
+    "Decal_07_L4": 2,
+    "Decal_07_L5": 4,
+    "Decal_08_L2": 8,
+    "Decal_08_L3": 4,
+    "Decal_08_L4": 4,
+    "Decal_08_L5": 8,
+    "Decal_09_L2": 4,
+    "Decal_09_L3": 4,
+    "Decal_09_L4": 4,
+    "Decal_09_L5": 10,
+    "Decal_10_L2": 8,
+    "Decal_10_L3": 2,
+    "Decal_10_L4": 2,
+    "Decal_10_L5": 6,
+    "Decal_11_L2": 4,
+    "Decal_11_L3": 2,
+    "Decal_11_L4": 2,
+    "Decal_11_L5": 5,
+    "Decal_12_L2": 8,
+    "Decal_12_L3": 4,
+    "Decal_12_L4": 4,
+    "Decal_12_L5": 11,
+    "Decal_13_L2": 8,
+    "Decal_13_L3": 2,
+    "Decal_13_L4": 2,
+    "Decal_13_L5": 6,
+    "Decal_14_L2": 4,
+    "Decal_14_L3": 4,
+    "Decal_14_L4": 4,
+    "Decal_14_L5": 10,
+    "Decal_15_L2": 4,
+    "Decal_15_L3": 2,
+    "Decal_15_L4": 2,
+    "Decal_15_L5": 4,
+    "Decal_16_L2": 8,
+    "Decal_16_L3": 4,
+    "Decal_16_L4": 4,
+    "Decal_16_L5": 8,
+    "Decal_17_L2": 4,
+    "Decal_17_L3": 4,
+    "Decal_17_L4": 4,
+    "Decal_17_L5": 10,
+    "Decal_18_L2": 8,
+    "Decal_18_L3": 2,
+    "Decal_18_L4": 2,
+    "Decal_18_L5": 6,
+    "Decal_19_L2": 4,
+    "Decal_19_L3": 2,
+    "Decal_19_L4": 2,
+    "Decal_19_L5": 7,
+    "Decal_20_L2": 8,
+    "Decal_20_L3": 4,
+    "Decal_20_L4": 4,
+    "Decal_20_L5": 9,
+    "Decal_21_L2": 8,
+    "Decal_21_L3": 2,
+    "Decal_21_L4": 2,
+    "Decal_21_L5": 6,
+    "Decal_22_L2": 4,
+    "Decal_22_L3": 4,
+    "Decal_22_L4": 4,
+    "Decal_22_L5": 10,
+    "Decal_23_L2": 4,
+    "Decal_23_L3": 2,
+    "Decal_23_L4": 2,
+    "Decal_23_L5": 4,
+    "Decal_24_L2": 8,
+    "Decal_24_L3": 4,
+    "Decal_24_L4": 4,
+    "Decal_24_L5": 8,
+    "Decal_25_L2": 4,
+    "Decal_25_L3": 4,
+    "Decal_25_L4": 4,
+    "Decal_25_L5": 10,
+    "Decal_26_L2": 8,
+    "Decal_26_L3": 2,
+    "Decal_26_L4": 2,
+    "Decal_26_L5": 6,
+    "Decal_27_L2": 4,
+    "Decal_27_L3": 2,
+    "Decal_27_L4": 2,
+    "Decal_27_L5": 7,
+    "Decal_28_L2": 8,
+    "Decal_28_L3": 4,
+    "Decal_28_L4": 4,
+    "Decal_28_L5": 9,
+    "Decal_29_L2": 8,
+    "Decal_29_L3": 2,
+    "Decal_29_L4": 2,
+    "Decal_29_L5": 6,
+    "Decal_30_L2": 4,
+    "Decal_30_L3": 4,
+    "Decal_30_L4": 4,
+    "Decal_30_L5": 10,
+    "Decal_31_L2": 4,
+    "Decal_31_L3": 2,
+    "Decal_31_L4": 2,
+    "Decal_31_L5": 4,
+    "Upper_00": 18,
+    "Upper_01": 12,
+    "Upper_02": 18,
+    "Upper_03": 16,
+    "Upper_04": 16,
+    "Upper_05": 18,
+    "Upper_06": 12,
+    "Upper_07": 18,
+    "Upper_08": 18,
+    "Upper_09": 12,
+    "Upper_10": 18,
+    "Upper_11": 16,
+    "Upper_12": 16,
+    "Upper_13": 18,
+    "Upper_14": 12,
+    "Upper_15": 18,
+    "Upper_16": 18,
+    "Upper_17": 12,
+    "Upper_18": 18,
+    "Upper_19": 16,
+    "Upper_20": 16,
+    "Upper_21": 18,
+    "Upper_22": 12,
+    "Upper_23": 18,
+    "Upper_24": 18,
+    "Upper_25": 12,
+    "Upper_26": 18,
+    "Upper_27": 16,
+    "Upper_28": 16,
+    "Upper_29": 18,
+    "Upper_30": 12,
+    "Upper_31": 18,
+    "NameSign": 16,
+    "Wall_00..31": 5518
+   },
+   "bbox_min": [
+    -11.575,
+    -11.575,
+    -0.2
+   ],
+   "bbox_max": [
+    11.575,
+    11.575,
+    9.783
+   ],
+   "max_radius": 11.6,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Beacon",
+    "Anchor_Work_0",
+    "Anchor_Work_1",
+    "Anchor_Work_2",
+    "Anchor_Stand_0",
+    "Anchor_Stand_1",
+    "Anchor_Stand_2",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Light_2",
+    "Anchor_Light_3",
+    "Anchor_Light_4",
+    "Anchor_Light_5",
+    "Anchor_Accent_0",
+    "Anchor_Accent_1",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28",
+    "Anchor_Aisle_29",
+    "Anchor_Aisle_30",
+    "Anchor_Aisle_31",
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35",
+    "Anchor_Aisle_36",
+    "Anchor_Aisle_37",
+    "Anchor_Aisle_38",
+    "Anchor_Aisle_39",
+    "Anchor_Aisle_40",
+    "Anchor_Aisle_41",
+    "Anchor_Aisle_42",
+    "Anchor_Aisle_43",
+    "Anchor_Aisle_44",
+    "Anchor_Aisle_45",
+    "Anchor_Aisle_46",
+    "Anchor_Aisle_47",
+    "Anchor_Aisle_48",
+    "Anchor_Aisle_49",
+    "Anchor_Aisle_50",
+    "Anchor_Aisle_51"
+   ],
+   "materials": [
+    "Accent",
+    "Ember",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Hull",
+    "L3Band",
+    "L4Band",
+    "L5Gold",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "Window"
+   ],
+   "file_size": 1985468,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 16.1,
+   "ao_rays": 3648288,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Beacon": 1,
+     "Work": 3,
+     "Stand": 3,
+     "Light": 6,
+     "Accent": 2,
+     "Aisle": 52
+    },
+    "wall_tris": 5518,
+    "interior_materials": [
+     "Accent",
+     "Ember",
+     "Glass",
+     "LightStrip",
+     "Palette",
+     "PaletteMetal",
+     "Screen",
+     "Window"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen"
+    ],
+    "file_materials": 15,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Beacon",
+      "pos": [
+       -9.143,
+       2.685,
+       3.71
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       3.077,
+       -1.35,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Work_1",
+      "pos": [
+       3.077,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Work_2",
+      "pos": [
+       3.077,
+       1.35,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       1.727,
+       2.35,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       1.727,
+       -2.35,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_2",
+      "pos": [
+       10.154,
+       1.247,
+       0.14
+      ],
+      "yaw": 187.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       5.198,
+       3.001,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_2",
+      "pos": [
+       -1.248,
+       5.87,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_3",
+      "pos": [
+       -5.969,
+       0.627,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_4",
+      "pos": [
+       -2.441,
+       -5.483,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_5",
+      "pos": [
+       4.46,
+       -4.016,
+       2.85
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_0",
+      "pos": [
+       -0.85,
+       0.0,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Accent_1",
+      "pos": [
+       -2.94,
+       2.94,
+       2.04
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       10.23,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       9.991,
+       2.199,
+       0.14
+      ],
+      "yaw": 102.41
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       9.284,
+       4.295,
+       0.14
+      ],
+      "yaw": 114.83
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       8.144,
+       6.191,
+       0.14
+      ],
+      "yaw": 127.24
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       6.623,
+       7.797,
+       0.14
+      ],
+      "yaw": 139.66
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       4.792,
+       9.038,
+       0.14
+      ],
+      "yaw": 152.07
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       2.737,
+       9.857,
+       0.14
+      ],
+      "yaw": 164.48
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       0.554,
+       10.215,
+       0.14
+      ],
+      "yaw": 176.9
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -1.655,
+       10.095,
+       0.14
+      ],
+      "yaw": 189.31
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -3.787,
+       9.503,
+       0.14
+      ],
+      "yaw": 201.72
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -5.741,
+       8.467,
+       0.14
+      ],
+      "yaw": 214.14
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       -7.427,
+       7.035,
+       0.14
+      ],
+      "yaw": 226.55
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       -8.766,
+       5.274,
+       0.14
+      ],
+      "yaw": 238.97
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       -9.694,
+       3.266,
+       0.14
+      ],
+      "yaw": 251.38
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       -10.17,
+       1.106,
+       0.14
+      ],
+      "yaw": 263.79
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       -10.17,
+       -1.106,
+       0.14
+      ],
+      "yaw": -83.79
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       -9.694,
+       -3.266,
+       0.14
+      ],
+      "yaw": -71.38
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -8.766,
+       -5.274,
+       0.14
+      ],
+      "yaw": -58.97
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       -7.427,
+       -7.035,
+       0.14
+      ],
+      "yaw": -46.55
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       -5.741,
+       -8.467,
+       0.14
+      ],
+      "yaw": -34.14
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       -3.787,
+       -9.503,
+       0.14
+      ],
+      "yaw": -21.72
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       -1.655,
+       -10.095,
+       0.14
+      ],
+      "yaw": -9.31
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       0.554,
+       -10.215,
+       0.14
+      ],
+      "yaw": 3.1
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       2.737,
+       -9.857,
+       0.14
+      ],
+      "yaw": 15.52
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       4.792,
+       -9.038,
+       0.14
+      ],
+      "yaw": 27.93
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       6.623,
+       -7.797,
+       0.14
+      ],
+      "yaw": 40.34
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       8.144,
+       -6.191,
+       0.14
+      ],
+      "yaw": 52.76
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       9.284,
+       -4.295,
+       0.14
+      ],
+      "yaw": 65.17
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       9.991,
+       -2.199,
+       0.14
+      ],
+      "yaw": 77.59
+     },
+     {
+      "name": "Anchor_Aisle_29",
+      "pos": [
+       -8.75,
+       -2.5,
+       0.14
+      ],
+      "yaw": -74.05
+     },
+     {
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       -8.75,
+       -1.25,
+       0.14
+      ],
+      "yaw": -81.87
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       -8.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       -8.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 261.87
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       -8.75,
+       2.5,
+       0.14
+      ],
+      "yaw": 254.05
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       -7.5,
+       -5.0,
+       0.14
+      ],
+      "yaw": -56.31
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       -7.5,
+       5.0,
+       0.14
+      ],
+      "yaw": 236.31
+     },
+     {
+      "name": "Anchor_Aisle_36",
+      "pos": [
+       -6.25,
+       -6.25,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_37",
+      "pos": [
+       -5.0,
+       -7.5,
+       0.14
+      ],
+      "yaw": -33.69
+     },
+     {
+      "name": "Anchor_Aisle_38",
+      "pos": [
+       -5.0,
+       -6.25,
+       0.14
+      ],
+      "yaw": -38.66
+     },
+     {
+      "name": "Anchor_Aisle_39",
+      "pos": [
+       -5.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_40",
+      "pos": [
+       -5.0,
+       7.5,
+       0.14
+      ],
+      "yaw": 213.69
+     },
+     {
+      "name": "Anchor_Aisle_41",
+      "pos": [
+       -2.5,
+       -8.75,
+       0.14
+      ],
+      "yaw": -15.95
+     },
+     {
+      "name": "Anchor_Aisle_42",
+      "pos": [
+       -2.5,
+       -7.5,
+       0.14
+      ],
+      "yaw": -18.43
+     },
+     {
+      "name": "Anchor_Aisle_43",
+      "pos": [
+       -1.25,
+       -8.75,
+       0.14
+      ],
+      "yaw": -8.13
+     },
+     {
+      "name": "Anchor_Aisle_44",
+      "pos": [
+       0.0,
+       -8.75,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_45",
+      "pos": [
+       2.5,
+       -8.75,
+       0.14
+      ],
+      "yaw": 15.95
+     },
+     {
+      "name": "Anchor_Aisle_46",
+      "pos": [
+       2.5,
+       -7.5,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_47",
+      "pos": [
+       3.75,
+       -7.5,
+       0.14
+      ],
+      "yaw": 26.57
+     },
+     {
+      "name": "Anchor_Aisle_48",
+      "pos": [
+       5.0,
+       -7.5,
+       0.14
+      ],
+      "yaw": 33.69
+     },
+     {
+      "name": "Anchor_Aisle_49",
+      "pos": [
+       7.5,
+       -5.0,
+       0.14
+      ],
+      "yaw": 56.31
+     },
+     {
+      "name": "Anchor_Aisle_50",
+      "pos": [
+       7.5,
+       2.5,
+       0.14
+      ],
+      "yaw": 108.43
+     },
+     {
+      "name": "Anchor_Aisle_51",
+      "pos": [
+       8.75,
+       2.5,
+       0.14
+      ],
+      "yaw": 105.95
+     }
+    ],
+    "tall_parts": 0,
+    "surfaces": {
+     "Base": [
+      3,
+      2
+     ],
+     "Roof": [
+      13,
+      6
+     ],
+     "Interior": [
+      16,
+      8
+     ],
+     "L2": [
+      3,
+      2
+     ],
+     "L3": [
+      5,
+      3
+     ],
+     "L4": [
+      6,
+      4
+     ],
+     "L5": [
+      4,
+      3
+     ]
+    },
+    "group_surfaces": {
+     "Base": 2,
+     "DecalL2": 1,
+     "DecalL3": 1,
+     "DecalL4": 1,
+     "DecalL5": 1,
+     "Interior": 8,
+     "L2": 2,
+     "L3": 3,
+     "L4": 4,
+     "L5": 3,
+     "NameSign": 3,
+     "Roof": 6,
+     "WallsUp": 2,
+     "Walls": 6,
+     "WallShell": 2
+    },
+    "decals": {
+     "decal_objects": 128,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.65
+     ],
+     "upper_band": [
+      1.98,
+      2.32
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 1.04,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     10.23,
+     10.82,
+     9.68
+    ],
+    "v4_empty_patch": 2.42,
+    "door_lane_hit_angles": {},
+    "door_slots": 18,
+    "door_slot_deg": 18.9,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 36358,
+    "rmax": 11.600000330409914,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.0043914420530200005,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_L2",
+     "Decal_00_L3",
+     "Decal_00_L4",
+     "Decal_00_L5",
+     "Decal_01_L2",
+     "Decal_01_L3",
+     "Decal_01_L4",
+     "Decal_01_L5",
+     "Decal_02_L2",
+     "Decal_02_L3",
+     "Decal_02_L4",
+     "Decal_02_L5",
+     "Decal_03_L2",
+     "Decal_03_L3",
+     "Decal_03_L4",
+     "Decal_03_L5",
+     "Decal_04_L2",
+     "Decal_04_L3",
+     "Decal_04_L4",
+     "Decal_04_L5",
+     "Decal_05_L2",
+     "Decal_05_L3",
+     "Decal_05_L4",
+     "Decal_05_L5",
+     "Decal_06_L2",
+     "Decal_06_L3",
+     "Decal_06_L4",
+     "Decal_06_L5",
+     "Decal_07_L2",
+     "Decal_07_L3",
+     "Decal_07_L4",
+     "Decal_07_L5",
+     "Decal_08_L2",
+     "Decal_08_L3",
+     "Decal_08_L4",
+     "Decal_08_L5",
+     "Decal_09_L2",
+     "Decal_09_L3",
+     "Decal_09_L4",
+     "Decal_09_L5",
+     "Decal_10_L2",
+     "Decal_10_L3",
+     "Decal_10_L4",
+     "Decal_10_L5",
+     "Decal_11_L2",
+     "Decal_11_L3",
+     "Decal_11_L4",
+     "Decal_11_L5",
+     "Decal_12_L2",
+     "Decal_12_L3",
+     "Decal_12_L4",
+     "Decal_12_L5",
+     "Decal_13_L2",
+     "Decal_13_L3",
+     "Decal_13_L4",
+     "Decal_13_L5",
+     "Decal_14_L2",
+     "Decal_14_L3",
+     "Decal_14_L4",
+     "Decal_14_L5",
+     "Decal_15_L2",
+     "Decal_15_L3",
+     "Decal_15_L4",
+     "Decal_15_L5",
+     "Decal_16_L2",
+     "Decal_16_L3",
+     "Decal_16_L4",
+     "Decal_16_L5",
+     "Decal_17_L2",
+     "Decal_17_L3",
+     "Decal_17_L4",
+     "Decal_17_L5",
+     "Decal_18_L2",
+     "Decal_18_L3",
+     "Decal_18_L4",
+     "Decal_18_L5",
+     "Decal_19_L2",
+     "Decal_19_L3",
+     "Decal_19_L4",
+     "Decal_19_L5",
+     "Decal_20_L2",
+     "Decal_20_L3",
+     "Decal_20_L4",
+     "Decal_20_L5",
+     "Decal_21_L2",
+     "Decal_21_L3",
+     "Decal_21_L4",
+     "Decal_21_L5",
+     "Decal_22_L2",
+     "Decal_22_L3",
+     "Decal_22_L4",
+     "Decal_22_L5",
+     "Decal_23_L2",
+     "Decal_23_L3",
+     "Decal_23_L4",
+     "Decal_23_L5",
+     "Decal_24_L2",
+     "Decal_24_L3",
+     "Decal_24_L4",
+     "Decal_24_L5",
+     "Decal_25_L2",
+     "Decal_25_L3",
+     "Decal_25_L4",
+     "Decal_25_L5",
+     "Decal_26_L2",
+     "Decal_26_L3",
+     "Decal_26_L4",
+     "Decal_26_L5",
+     "Decal_27_L2",
+     "Decal_27_L3",
+     "Decal_27_L4",
+     "Decal_27_L5",
+     "Decal_28_L2",
+     "Decal_28_L3",
+     "Decal_28_L4",
+     "Decal_28_L5",
+     "Decal_29_L2",
+     "Decal_29_L3",
+     "Decal_29_L4",
+     "Decal_29_L5",
+     "Decal_30_L2",
+     "Decal_30_L3",
+     "Decal_30_L4",
+     "Decal_30_L5",
+     "Decal_31_L2",
+     "Decal_31_L3",
+     "Decal_31_L4",
+     "Decal_31_L5",
+     "Interior",
+     "L2",
+     "L3",
+     "L4",
+     "L5",
+     "NameSign",
+     "Roof",
+     "Upper_00",
+     "Upper_01",
+     "Upper_02",
+     "Upper_03",
+     "Upper_04",
+     "Upper_05",
+     "Upper_06",
+     "Upper_07",
+     "Upper_08",
+     "Upper_09",
+     "Upper_10",
+     "Upper_11",
+     "Upper_12",
+     "Upper_13",
+     "Upper_14",
+     "Upper_15",
+     "Upper_16",
+     "Upper_17",
+     "Upper_18",
+     "Upper_19",
+     "Upper_20",
+     "Upper_21",
+     "Upper_22",
+     "Upper_23",
+     "Upper_24",
+     "Upper_25",
+     "Upper_26",
+     "Upper_27",
+     "Upper_28",
+     "Upper_29",
+     "Upper_30",
+     "Upper_31",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Accent_0",
+     "Anchor_Accent_1",
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_29",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_30",
+     "Anchor_Aisle_31",
+     "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_36",
+     "Anchor_Aisle_37",
+     "Anchor_Aisle_38",
+     "Anchor_Aisle_39",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_40",
+     "Anchor_Aisle_41",
+     "Anchor_Aisle_42",
+     "Anchor_Aisle_43",
+     "Anchor_Aisle_44",
+     "Anchor_Aisle_45",
+     "Anchor_Aisle_46",
+     "Anchor_Aisle_47",
+     "Anchor_Aisle_48",
+     "Anchor_Aisle_49",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_50",
+     "Anchor_Aisle_51",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Beacon",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Light_2",
+     "Anchor_Light_3",
+     "Anchor_Light_4",
+     "Anchor_Light_5",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Stand_2",
+     "Anchor_Work_0",
+     "Anchor_Work_1",
+     "Anchor_Work_2"
+    ]
+   },
+   "verify_problems": []
   }
  ]
 }

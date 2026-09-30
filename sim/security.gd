@@ -262,9 +262,11 @@ func _fight_second(f: Dictionary, now: int) -> void:
 			elif a["state"] == "alive":
 				f["injured"] = int(f["injured"]) + 1
 				_let_go(a, "Knocked down in a fight")
-	# Friends of a fighter in the room may join (at most join_max in all).
+	# Friends of a fighter in the room may join (at most join_max in all); the others flee.
 	if standing.size() >= 2 and (f["fighters"] as Array).size() < int(c["join_max"]):
 		_joiners(f, now)
+	if not f.has("fled"):
+		_flee(f)
 	# An officer who has arrived separates them.
 	var off: Dictionary = sim.state["agents"].get(int(f["officer"]), {})
 	var arrived: bool = not off.is_empty() and off["state"] == "alive" and off["where"] == "in" and int(off["bld"]) == int(f["bld"]) \
@@ -291,6 +293,27 @@ func _joiners(f: Dictionary, now: int) -> void:
 		if friend and hot and _h(int(aid), now / _hz() + int(f["id"])) < float(c["join_chance"]):
 			(f["fighters"] as Array).append(int(aid))
 			_hold_fight(a, int(f["id"]), float(int(f["until"]) - now) / float(_hz()))
+
+## Bystanders near a new fight who do not join it leave the room (children and visitors too): at
+## most flee_max, once a fight. Officers and fighters stay.
+func _flee(f: Dictionary) -> void:
+	var fled: Array = []
+	f["fled"] = fled
+	var ids: Array = sim.state["agents"].keys()
+	ids.sort()
+	for aid in ids:
+		if fled.size() >= int(cfg().get("flee_max", 6)):
+			break
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] != "alive" or a["where"] != "in" or int(a["bld"]) != int(f["bld"]) or (f["fighters"] as Array).has(int(aid)) or int(aid) == int(f["officer"]):
+			continue
+		if a.has("v5_hold") or a.has("jailed") or bool(a.get("sleeping", false)) or String(a.get("plan_kind", "")) == "safety" or a.has("lift"):
+			continue
+		if (a["pos"] as Vector2).distance_to(f["pos"]) > float(cfg().get("flee_m", 10.0)):
+			continue
+		if sim.agents._go_somewhere_safe(a, int(f["bld"])):
+			a["goal"] = "Getting away from a fight"
+			fled.append(int(aid))
 
 func _let_go(a: Dictionary, why: String) -> void:
 	if String(a.get("v5_hold", "")) == "fight":
@@ -365,6 +388,9 @@ func on_jailed(a: Dictionary, escort: bool = false) -> void:
 		return
 	a["cell_b"] = jb
 	a.erase("v5_fight")
+	# Aboard a vehicle: the walk to the cell starts when they get out (hold_think).
+	if a["where"] == "vehicle":
+		return
 	sim.agents.abort_plan(a, "arrested")
 	a["v5_hold"] = "cuffed"
 	if not _to_cell(a, jb):

@@ -544,6 +544,24 @@ func _security(box: VBoxContainer) -> void:
 		v.add_child(Kit.head(String(c[0]), P.TEXT_3, 11))
 		v.add_child(Kit.num(String(c[1]), 18, c[2], true))
 		sum.add_child(v)
+	# Lockdown (response lock_down, V5 §6.4): the doors of the base close for a time; the time left.
+	var lr: HBoxContainer = Kit.hbox(10)
+	lr.name = "LockRow"
+	box.add_child(lr)
+	var li: Dictionary = hud.v5.lock_info(b)
+	var fx: Dictionary = s.unrest.response_effect(b, "lock_down") if s.get("unrest") != null and s.unrest.has_method("response_effect") else {}
+	if bool(li.get("locked", false)):
+		lr.add_child(Kit.icon("lock", 16, Color("7FD4FF")))
+		lr.add_child(Kit.head("LOCKDOWN  ·  DOORS OPEN IN %s" % Kit.clock(float(li.get("seconds_left", 0.0))), Color("7FD4FF"), 13))
+	else:
+		var lb: Button = Kit.button("Lock down this base", func():
+			hud.confirm("Lock down %s?" % (String(s.bases.name_of(b)) if b >= 0 else "the colony"), [String(fx.get("cost", "The doors close for a time. Unrest rises.")), "People stay in their rooms: no riot can spread, no leisure."], func():
+				last_result = hud.v5.command("unrest_response", {"base": b, "response": "lock_down"})
+				hud.toast("Lock down: " + String(last_result["text"]), "info" if bool(last_result["ok"]) else "warn", "lock")
+				_build_tab_content(), "Lock down", true), "Lock down\n%s" % String(fx.get("cost", "The doors close for a time.")), "DangerButton", "lock", 14)
+		lb.disabled = not bool(fx.get("ready", true))
+		lr.add_child(lb)
+		lr.add_child(Kit.label(("unrest %+d · %s" % [int(fx.get("unrest", 0)), String(fx.get("cost", ""))]) if not fx.is_empty() else "", "SmallLabel", 12, P.TEXT_2) if bool(fx.get("ready", true)) else Kit.label("Not ready: used recently.", "SmallLabel", 12, P.AMBER))
 	# Officers
 	var offs: Array = sec.officers(b)
 	var h1: VBoxContainer = card("Officers", "lock", P.CYAN)

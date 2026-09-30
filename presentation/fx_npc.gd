@@ -59,6 +59,8 @@ const ALL_CLIPS := ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idl
 	"drive_sit", "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r",
 	# V5 people (people_manifest.json): social clips, the bar stool and a dance.
 	"talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"]
+const VEHICLE_CLIPS := ["drive_sit", "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r"]
+const V5_CLIPS := ["talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"]
 ## suit_swap (ART-NPC, V3_1 §5.4): the variant is cut at this clip time (frame 30 of 60).
 const SWAP_CUT := 1.0
 const ROLE_INDEX := {"technician": 0, "grower": 1, "operator": 2, "medic": 3, "scientist": 4}
@@ -469,6 +471,11 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 	var clips := {}
 	var missing: Array = []
 	for c in ALL_CLIPS:
+		# Each file family owns its clips (decided 2026-10-01, RENDER-to-ART-NPC.md): the vehicle clips
+		# are only in the astronaut files (people wear the suit outside); the V5 social clips are only in
+		# the people files (the astronaut `in` body is a fallback; resolve_loop maps them to near clips).
+		if (_baking_people and c in VEHICLE_CLIPS) or (not _baking_people and c in V5_CLIPS):
+			continue
 		if not anims.has(c):
 			missing.append(c)
 	if not anims.has("idle") or not anims.has("walk"):
@@ -2228,6 +2235,8 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		var lc: Vector3 = wp[wp.size() - 2] if wp.size() > 1 else before
 		if planner.same_leg(lc, goal, inside):
 			wp[-1] = goal
+			# (the path now ends at the goal: no re-plan when the goal is 0.8 m past the old plan's end)
+			rec["wp_goal"] = goal
 		elif (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or pri:
 			_plans_frame += 1
 			var tq1: int = Time.get_ticks_usec()
@@ -2323,6 +2332,12 @@ func _trim_start(rec: Dictionary, before: Vector3, pts: Array, inside: bool) -> 
 		if dq.length() > 0.6 or dq.dot(d0) > 0.0:
 			break
 		if not planner.same_leg(before, pts[1], inside):
+			# (no clear line to the next point, e.g. across a doorway: join the first leg at its point
+			# nearest the body instead of walking back to its start; 2026-10-01, a body walked back and
+			# forth 0.1 m a frame on every re-plan)
+			var j: Vector3 = Geometry3D.get_closest_point_to_segment(before, q, pts[1])
+			if j.distance_to(q) > 0.02:
+				pts[0] = j
 			break
 		pts.pop_front()
 	return pts

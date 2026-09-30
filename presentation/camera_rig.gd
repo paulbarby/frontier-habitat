@@ -87,6 +87,7 @@ const SH_W_VEL := 6.0         # 1/s: body velocity low-pass (the fed-forward vel
 const SH_W_EYE := 4.0
 const SH_W_DIST := 8.0
 const SH_HACC := 5.0          # rad/s^2: the most the heading's turn rate changes (camera jerk at 4x)
+const SH_HRATE := 1.75        # rad/s (100 deg/s): the fastest the camera heading turns
 const SH_W_IN := 14.0         # wall pull-in: fast
 const SH_W_OUT := 2.5         # release: slow
 const SH_SOFT := 0.6          # m: the smoothed eye starts to pull in this far off a wall
@@ -189,7 +190,9 @@ func _shoulder_process(delta: float) -> bool:
 		# 12 rad/s^2 after each corner (7-15 mm camera jerk, 2026-10-01). The person stays in frame
 		# (the camera always looks along its heading at the pivot).
 		var rh: Vector2 = _crit(_sh_heading, _sh_hvel, _sh_heading - e, wh, dt)
-		var hv: float = clampf(rh.y, _sh_hvel - SH_HACC * dt, _sh_hvel + SH_HACC * dt)
+		# ... and the turn rate itself is at most SH_HRATE: the camera circles the person at ~2 m, so its
+		# acceleration is 2 m x rate^2 (240 deg/s at 4x = 35 m/s^2, 10 mm per 1/60 s^2; 100 deg/s = 1.7 mm).
+		var hv: float = clampf(clampf(rh.y, _sh_hvel - SH_HACC * dt, _sh_hvel + SH_HACC * dt), -SH_HRATE, SH_HRATE)
 		_sh_heading = rh.x if hv == rh.y else _sh_heading + (_sh_hvel + hv) * 0.5 * dt
 		_sh_hvel = hv
 		var re: Vector2 = _crit(_sh_eh, _sh_ehv, eye_h, SH_W_EYE, dt)

@@ -76,7 +76,9 @@ func resolve_loop(l: String, p: String) -> String:
 	if clips.has(l):
 		return l
 	var fb: Dictionary = {"idle_look": "idle", "work_console": "work_bench", "work_bench": "work_console", "talk": "idle_look",
-		"carry_idle": "idle", "sit_eat": "sit_idle", "sit_type": "sit_idle", "dead": "sleep"}
+		"carry_idle": "idle", "sit_eat": "sit_idle", "sit_type": "sit_idle", "dead": "sleep",
+		# V5 social loops on a body without them (the astronaut fallback): the nearest v3 loop.
+		"talk_gesture_a": "talk", "argue": "talk", "laugh": "talk", "dance_a": "idle_look"}
 	var f: String = String(fb.get(l, ""))
 	if f != "" and clips.has(f):
 		return f

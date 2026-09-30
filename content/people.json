@@ -39,7 +39,7 @@
     "security": ["security", "social"],
     "visitor": ["social", "piloting"]
   },
-  "start_skill": {"_note": "A new colonist: role skills from..to, other skills 0..to_other; +per_day for each day worked (cap).", "role_from": 25, "role_to": 55, "other_to": 25, "per_day": 1.2, "cap": 90},
+  "start_skill": {"_note": "A new colonist: role skills from..to, other skills 0..to_other. Role skills then grow with the work done: xp_per_s x (1 - skill/100) a second of work (the second role skill half of it), up to cap; they fall by xp_decay_per_day after xp_decay_after_days without work. per_day: the old rule (a day here), used to start the work points of a person from a save before this rule.", "role_from": 25, "role_to": 55, "other_to": 25, "per_day": 1.2, "cap": 90, "xp_per_s": 0.006, "xp_decay_after_days": 3, "xp_decay_per_day": 0.3},
   "departments": {
     "industry": {"name": "Industry", "roles": ["operator"], "skill": "fabrication", "uniform": "uniform_engineering", "stripe": "amber"},
     "science": {"name": "Science", "roles": ["scientist", "medic"], "skill": "science", "uniform": "uniform_science", "stripe": "blue"},

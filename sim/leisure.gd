@@ -238,6 +238,8 @@ func on_rec_end(a: Dictionary) -> void:
 			var item: String = String(items[(start + i) % items.size()])
 			if inv != -1 and sim.inv.consume(inv, item, 1, "used"):
 				used = item
+				if item == "clothing":
+					a["clothes_t"] = now
 				sim.stat_add("consumed", item, 1)
 				break
 	if items.is_empty() or used != "":
