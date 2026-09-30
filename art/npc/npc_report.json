@@ -1,9 +1,9 @@
 {
- "date": "2026-09-30 22:13",
+ "date": "2026-10-01 06:35",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 456,
- "failed": 0,
+ "passed": 452,
+ "failed": 4,
  "pending": 0,
  "info": 12,
  "tris": {
@@ -2132,7 +2132,7 @@
   {
    "check": "people m1: skinned meshes Head, Hair, one per outfit",
    "status": "pass",
-   "detail": "['Addon_apron', 'Addon_rank', 'Addon_toolbelt', 'Addon_vest', 'Hair_m1', 'Head_m1', 'Outfit_casual_a', 'Outfit_uniform']"
+   "detail": "['Addon_apron', 'Addon_jacket', 'Addon_labcoat', 'Addon_rank1', 'Addon_rank2', 'Addon_rank3', 'Addon_toolbelt', 'Addon_tunic', 'Addon_vest', 'Hair_m1', 'Head_m1', 'Outfit_casual_a', 'Outfit_uniform']"
   },
   {
    "check": "people m1: skeleton = v3 + face bones (31)",
@@ -2147,7 +2147,7 @@
   {
    "check": "people m1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 22586, 'uniform_science': 22310, 'uniform_food': 22630, 'uniform_medical': 22310, 'uniform_security': 23374, 'uniform_command': 22334, 'casual_a': 21290}"
+   "detail": "{'uniform_engineering': 18094, 'uniform_science': 19877, 'uniform_food': 18403, 'uniform_medical': 19877, 'uniform_security': 19594, 'uniform_command': 20053, 'prison': 17678, 'casual_a': 15948}"
   },
   {
    "check": "people m1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2171,8 +2171,8 @@
   },
   {
    "check": "people m1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "pass",
-   "detail": "14.37 deg (kneel_exit forearm.L f37)"
+   "status": "FAIL",
+   "detail": "20.89 deg (dance_a forearm.L f97)"
   },
   {
    "check": "people m1: loop seams <= 1 deg",
@@ -2182,17 +2182,17 @@
   {
    "check": "people m1: face bones (jaw, lids) move <= 25 deg per frame (a blink closes in 0.1 s)",
    "status": "pass",
-   "detail": "24.1 deg (sleep lids f33)"
+   "detail": "21.6 deg (sleep lids f33)"
   },
   {
    "check": "people m1: never below the floor (z >= -0.01)",
    "status": "pass",
-   "detail": "-0.0013 m (kneel_enter f12)"
+   "detail": "-0.0001 m (kneel_enter f12)"
   },
   {
    "check": "people m1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 19.0}, lids 64.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 19.0}, lids 60.0"
   },
   {
    "check": "people m1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2202,7 +2202,7 @@
   {
    "check": "people m1: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
    "status": "pass",
-   "detail": "lowest point over the stool 0.764 m"
+   "detail": "lowest point over the stool 0.765 m"
   },
   {
    "check": "people m1: head and hair never inside the outfit at the test poses (1 cm)",
@@ -2212,7 +2212,7 @@
   {
    "check": "people f1: skinned meshes Head, Hair, one per outfit",
    "status": "pass",
-   "detail": "['Addon_apron', 'Addon_rank', 'Addon_toolbelt', 'Addon_vest', 'Hair_f1', 'Head_f1', 'Outfit_casual_a', 'Outfit_uniform']"
+   "detail": "['Addon_apron', 'Addon_jacket', 'Addon_labcoat', 'Addon_rank1', 'Addon_rank2', 'Addon_rank3', 'Addon_toolbelt', 'Addon_tunic', 'Addon_vest', 'Hair_f1', 'Head_f1', 'Outfit_casual_a', 'Outfit_uniform']"
   },
   {
    "check": "people f1: skeleton = v3 + face bones (31)",
@@ -2227,7 +2227,7 @@
   {
    "check": "people f1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 22586, 'uniform_science': 22310, 'uniform_food': 22630, 'uniform_medical': 22310, 'uniform_security': 23374, 'uniform_command': 22334, 'casual_a': 20746}"
+   "detail": "{'uniform_engineering': 19735, 'uniform_science': 21518, 'uniform_food': 20088, 'uniform_medical': 21518, 'uniform_security': 21235, 'uniform_command': 21694, 'prison': 19319, 'casual_a': 17690}"
   },
   {
    "check": "people f1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2251,8 +2251,8 @@
   },
   {
    "check": "people f1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "pass",
-   "detail": "14.29 deg (cheer upper_arm.L f19)"
+   "status": "FAIL",
+   "detail": "20.89 deg (dance_a hand.L f97)"
   },
   {
    "check": "people f1: loop seams <= 1 deg",
@@ -2262,17 +2262,17 @@
   {
    "check": "people f1: face bones (jaw, lids) move <= 25 deg per frame (a blink closes in 0.1 s)",
    "status": "pass",
-   "detail": "24.1 deg (sleep lids f33)"
+   "detail": "19.2 deg (sleep lids f33)"
   },
   {
    "check": "people f1: never below the floor (z >= -0.01)",
    "status": "pass",
-   "detail": "0.0012 m (kneel_enter f12)"
+   "detail": "0.0020 m (kneel_enter f36)"
   },
   {
    "check": "people f1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 19.0}, lids 64.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.3, 'laugh': 19.0}, lids 60.0"
   },
   {
    "check": "people f1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2282,17 +2282,17 @@
   {
    "check": "people f1: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
    "status": "pass",
-   "detail": "lowest point over the stool 0.759 m"
+   "detail": "lowest point over the stool 0.760 m"
   },
   {
    "check": "people f1: head and hair never inside the outfit at the test poses (1 cm)",
-   "status": "pass",
-   "detail": "0 vertices at worst "
+   "status": "FAIL",
+   "detail": "78 vertices at worst Outfit_uniform walk f8"
   },
   {
-   "check": "people pair hug (m1 with f1): <= 60 vertices (every 2nd) deeper than 2 cm and <= 3 deeper than 4 cm (single contact points), whole clip",
-   "status": "pass",
-   "detail": "29 deeper than 2 cm, 3 deeper than 4 cm, deepest 0.110 m"
+   "check": "people pair hug (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
+   "status": "FAIL",
+   "detail": "20 points deeper than 2 cm (worst f60), 9 deeper than 4 cm, deepest 0.063 m"
   },
   {
    "check": "robot: one skinned mesh Robot_dancer",
@@ -2365,5 +2365,5 @@
    "detail": "body vertices inside: 0 (); hand depth 0.009 m (robot_pole f98)"
   }
  ],
- "seconds": 27.6
+ "seconds": 19.5
 }

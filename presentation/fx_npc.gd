@@ -23,6 +23,7 @@ const Models = preload("res://presentation/models.gd")
 const Rng = preload("res://sim/rng.gd")
 const NpcPath = preload("res://presentation/fx_npc_path.gd")
 const ACCEL := 1.5               # m/s^2 (game time), V3_1 §4.1
+const DECEL := 4.0               # m/s^2 (game time): the fastest slow-down before the stopping curve
 const TURN := 5.236              # rad/s (300 deg/s, game time)
 const CARROT := 0.4              # m: look-ahead on the path (the corner rounding radius)
 const FADE_GAP := 25.0           # m: a larger jump fades out and in instead of walking
@@ -78,6 +79,7 @@ var _frame := 0
 var _buf_cache := {}
 var npc_ms := 0.0
 var game_rate := 1.0             # game seconds per real second (smoothed; 0 when paused)
+var _tick_s := 0.1               # game seconds per sim tick (set in sync from bal.tick_hz)
 var planner                     # fx_npc_path (created in setup)
 var _plans_frame := 0
 var _plan_us := 0
@@ -1391,6 +1393,7 @@ func sync(delta: float) -> bool:
 	var cam3: Camera3D = view.get_viewport().get_camera_3d() if view.is_inside_tree() else null
 	# Animation runs in game time: 2x speed plays the clips at 2x, a pause freezes them.
 	game_rate = float(view.game_rate)
+	_tick_s = 1.0 / maxf(float(sim.bal.get("tick_hz", 10)), 1.0)
 	_dyn_used = 0
 	_bd_used = 0
 	_plans_frame = 0
@@ -2181,11 +2184,19 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			wp[-1] = goal
 			rec["wp_goal"] = goal
 			pend = goal
+	# A path walked to its end while the goal moved on in plain sight: on to the goal, no plan. At 4x
+	# the plan budget ran out on most frames and such a body stood still every other frame (stop-go).
+	if wp.is_empty() and gap > 0.05 and gap < 6.0 and pend != Vector3.INF and planner.same_leg(before, goal, inside):
+		wp = [goal]
+		rec["wp_goal"] = goal
+		pend = goal
+	# The person in the follow view always gets a plan (the budget is for the crowd).
+	var pri: bool = view.get("follow_id") != null and int(rec.get("id", -1)) == int(view.follow_id)
 	if pend.distance_to(goal) > 0.8 or (wp.is_empty() and gap > 0.05):
-		if (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or wp.is_empty() and gap < 1.5:
+		if (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or wp.is_empty() and gap < 1.5 or pri:
 			_plans_frame += 1
 			var tq0: int = Time.get_ticks_usec()
-			wp = _round_corners(before, planner.plan(before, goal, inside))
+			wp = _round_corners(before, _trim_start(rec, before, planner.plan(before, goal, inside), inside))
 			_plan_us += Time.get_ticks_usec() - tq0
 			rec["wp_goal"] = goal
 			rec["wpq"] = planner.quality
@@ -2197,10 +2208,10 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		var lc: Vector3 = wp[wp.size() - 2] if wp.size() > 1 else before
 		if planner.same_leg(lc, goal, inside):
 			wp[-1] = goal
-		elif _plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us:
+		elif (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or pri:
 			_plans_frame += 1
 			var tq1: int = Time.get_ticks_usec()
-			wp = _round_corners(before, planner.plan(before, goal, inside))
+			wp = _round_corners(before, _trim_start(rec, before, planner.plan(before, goal, inside), inside))
 			_plan_us += Time.get_ticks_usec() - tq1
 			rec["wp_goal"] = goal
 			rec["wpq"] = planner.quality
@@ -2214,9 +2225,41 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	for q in wp:
 		remaining += (q as Vector3).distance_to(prev)
 		prev = q
+	# The path's end moves to the goal only after the goal drifted 0.25 m (above): the rest of the
+	# way to the goal counts too, so `remaining` grows on every step of the goal, not every 2nd-3rd.
+	remaining += Vector2(goal.x - prev.x, goal.z - prev.z).length()
+	# The goal is the simulation's position: it moves only on the 10 Hz ticks, in steps. Between two
+	# steps `remaining` shrinks as the body walks, so the stopping curve below slowed the body on
+	# every frame and the next step sped it up again (10-15 % speed ripple at 10 Hz, 2026-10-01).
+	# The goal's own speed (its step over the ticks it took) times the game time since the last tick
+	# (world_view.tick_age, from main.gd's tick clock) is added back: for a goal that walks at a
+	# steady pace the effective distance is steady, at 1x and at 4x (several ticks in one frame).
+	var tick_now: int = int(sim.state["tick"])
+	var gprev: Vector3 = rec.get("g_prev", goal)
+	var gtk: int = int(rec.get("g_tick", tick_now))
+	var gu: float = float(rec.get("g_u", 0.0))
+	var gstep: float = Vector2(goal.x - gprev.x, goal.z - gprev.z).length()
+	if gstep > 0.002:
+		var nt: int = maxi(tick_now - gtk, 1)
+		gu = lerpf(gu, minf(gstep / (float(nt) * _tick_s), vmax), 0.5)
+		rec["g_tick"] = tick_now
+	elif tick_now - gtk > 3:
+		gu = 0.0
+	if not rec.has("g_tick"):
+		rec["g_tick"] = tick_now
+	rec["g_prev"] = goal
+	rec["g_u"] = gu
+	var ta = view.get("tick_age")
+	var rem_eff: float = remaining + gu * (clampf(float(ta), 0.0, _tick_s) if ta != null else 0.0)
 	var v: float = float(rec.get("v", 0.0))
-	var vdes: float = minf(vmax, sqrt(2.0 * ACCEL * remaining) + 0.05)
-	v = move_toward(v, vdes, ACCEL * dtg) if vdes > v else vdes
+	var vdes: float = minf(vmax, sqrt(2.0 * ACCEL * rem_eff) + 0.05)
+	if vdes > v:
+		v = move_toward(v, vdes, ACCEL * dtg)
+	else:
+		# Slow down at DECEL at most (a new slower top speed near an anchor dropped 3.4 -> 1.1 m/s in
+		# one frame), but always fast enough to stop on the path's end.
+		v = maxf(vdes, v - DECEL * dtg)
+		v = minf(v, sqrt(2.0 * DECEL * remaining) + 0.05)
 	rec["v"] = v
 	# Move exactly along the (corner-rounded) polyline: a long frame step never cuts a corner.
 	var left: float = v * dtg
@@ -2233,6 +2276,25 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			left = 0.0
 	rec["wp"] = wp
 	return now
+
+## A new plan for a body that is already walking starts at a grid point near it, often a little
+## behind or beside it: the body stepped back 0.3 m and turned 30-60 deg for one frame (follow view,
+## 2026-10-01, 4x). Points behind the walking direction and under 0.6 m away are dropped while the
+## next point is in plain sight (same leg).
+func _trim_start(rec: Dictionary, before: Vector3, pts: Array, inside: bool) -> Array:
+	var vd = rec.get("vdir")
+	if vd == null or float(rec.get("v", 0.0)) < 0.3:
+		return pts
+	var d0: Vector2 = vd
+	while pts.size() >= 2:
+		var q: Vector3 = pts[0]
+		var dq := Vector2(q.x - before.x, q.z - before.z)
+		if dq.length() > 0.6 or dq.dot(d0) > 0.0:
+			break
+		if not planner.same_leg(before, pts[1], inside):
+			break
+		pts.pop_front()
+	return pts
 
 ## Rounds every corner of a path (start `s`, then the points) with a curve of radius up to
 ## CARROT (0.4 m, V3_1 §4.1): quadratic curves sampled every ~0.12 m, inside the corner.

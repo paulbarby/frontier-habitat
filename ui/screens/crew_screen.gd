@@ -6,6 +6,8 @@ extends "res://ui/screens/screen.gd"
 ##   Housing    every home (dorm beds, residence units, apartments, penthouses) and who lives there;
 ##              quality against what the person's rank expects. Drag a person onto a unit to move them.
 ##   Academy    the academies (seats, teachers) and an enrolment form: a person, a skill, a step.
+##   Security   officers against the target (1 per 12 people), the fights now (Show), the prisoners by
+##              jail with the time left, and a form to change a person's job (security officer).
 ## One base at a time (the base picker in the header; the top bar filter picks the first one).
 ## Orders go to SIM through ui/v5_data.gd command(): appoint, set_home, enrol.
 ## Data: sim.people.list() / rank / home / skills, sim.floors.units(b), content/people.json.
@@ -59,7 +61,7 @@ func _init() -> void:
 	title = "Crew"
 	subtitle = "Ranks, homes and training. Drag a person onto a slot."
 	accent = P.CYAN
-	tabs = [["org", "Org chart", "people"], ["housing", "Housing", "home"], ["academy", "Academy", "research"]]
+	tabs = [["org", "Org chart", "people"], ["housing", "Housing", "home"], ["academy", "Academy", "research"], ["security", "Security", "lock"]]
 
 func header_extra(row: HBoxContainer) -> void:
 	var s = hud.main.sim
@@ -86,6 +88,7 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 	match id:
 		"housing": _housing(box)
 		"academy": _academy(box)
+		"security": _security(box)
 		_: _org(box)
 
 func _rows() -> Array:
@@ -515,3 +518,124 @@ func _skill_table(box: VBoxContainer, skills: Array) -> void:
 			c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			chip.add_child(c)
 			g.add_child(chip)
+
+# ---------------------------------------------------------------- security (V5 §6.5; SIM sim/security.gd)
+## Officers against the target, fights now, prisoners by jail, and a job change form.
+func _security(box: VBoxContainer) -> void:
+	var s = hud.main.sim
+	var sec = s.get("security")
+	if sec == null or not (sec as Object).has_method("info"):
+		box.add_child(Kit.wrap("Security is not available in this game.", 15, P.TEXT_2))
+		return
+	var b: int = base_id if s.bases.count() > 1 else -1
+	var inf: Dictionary = sec.info(b)
+	box.add_child(Kit.wrap("Security officers patrol public places, stop fights and take the one who started it to a jail cell. Aim for 1 officer for every %d people. A security office makes their answer faster. Without a free cell, an arrested person is confined to quarters instead." % int(s.content.get("society", {}).get("security", {}).get("officer_ratio", 12)), 13, P.TEXT_2, 1100.0))
+	# Summary chips
+	var sum: HFlowContainer = HFlowContainer.new()
+	sum.name = "SecuritySummary"
+	sum.add_theme_constant_override("h_separation", 22)
+	box.add_child(sum)
+	var ok_off: bool = int(inf.get("officers", 0)) >= int(inf.get("wanted", 0))
+	for c in [["Officers", "%d of %d wanted" % [int(inf.get("officers", 0)), int(inf.get("wanted", 0))], P.GREEN if ok_off else P.AMBER],
+			["Security office", "yes" if sec.has_office(b) else "none", P.GREEN if sec.has_office(b) else P.TEXT_3],
+			["Jail cells", "%d used of %d" % [int(inf.get("prisoners", 0)), int(inf.get("cells", 0))], P.TEXT if int(inf.get("cells", 0)) > 0 else P.AMBER],
+			["Fights now", "%d" % int(inf.get("fights", 0)), P.RED if int(inf.get("fights", 0)) > 0 else P.GREEN]]:
+		var v: VBoxContainer = Kit.vbox(0)
+		v.add_child(Kit.head(String(c[0]), P.TEXT_3, 11))
+		v.add_child(Kit.num(String(c[1]), 18, c[2], true))
+		sum.add_child(v)
+	# Officers
+	var offs: Array = sec.officers(b)
+	var h1: VBoxContainer = card("Officers", "lock", P.CYAN)
+	box.add_child(card_panel(h1))
+	var of: HFlowContainer = HFlowContainer.new()
+	of.add_theme_constant_override("h_separation", 6)
+	h1.add_child(of)
+	for oid in offs:
+		var r: Dictionary = hud.v5.person(int(oid))
+		if not r.is_empty():
+			of.add_child(_chip({"id": int(oid), "name": r["name"], "role": r["role"], "title": r["rank"]["title"], "satisfaction": r["satisfaction"]["value"]}))
+	if offs.is_empty():
+		h1.add_child(Kit.label("No security officer. Make one below (needs security %d or more)." % int(s.content.get("society", {}).get("security", {}).get("role_skill", 40)), "", 13, P.AMBER))
+	# Fights now
+	var h2: VBoxContainer = card("Fights now", "sev_warning", P.RED)
+	h2.get_parent().name = "Fights"
+	box.add_child(card_panel(h2))
+	var fs: Array = sec.fights()
+	if fs.is_empty():
+		h2.add_child(Kit.label("No fight now.", "", 13, P.GREEN))
+	for f in fs:
+		if b >= 0 and int(f.get("base", -1)) != b:
+			continue
+		var names: Array = []
+		for aid in f.get("fighters", []):
+			names.append(hud.v5.agent_name(int(aid)))
+		var row: HBoxContainer = Kit.hbox(8)
+		row.add_child(Kit.icon("sev_warning", 14, P.RED))
+		var bn: String = String(s.state["buildings"].get(int(f.get("bld", -1)), {}).get("name", "outside"))
+		var off: int = int(f.get("officer", -1))
+		var l: Label = Kit.label("%s  ·  %s  ·  %s" % [" vs ".join(names), bn, ("%s is coming" % hud.v5.agent_name(off)) if off >= 0 else "no officer is coming"], "", 13, P.TEXT)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		var pos = f.get("pos", null)
+		if pos is Vector2:
+			var pv: Vector2 = pos
+			row.add_child(Kit.button("Show", func():
+				host.close(self)
+				hud.main.focus_on(pv), "Show\nThe camera goes to the fight.", "GhostButton", "target", 13))
+		h2.add_child(row)
+	# Prisoners by jail
+	var h3: VBoxContainer = card("Prisoners", "lock", P.AMBER)
+	h3.get_parent().name = "Prisoners"
+	box.add_child(card_panel(h3))
+	var js: Array = sec.jails(b)
+	if js.is_empty():
+		h3.add_child(Kit.label("No jail. Build one (Civic tab). Without a jail, an arrest confines the person to quarters.", "", 13, P.TEXT_2))
+	var hz: float = float(s.bal["tick_hz"])
+	for j in js:
+		var jb: Dictionary = s.state["buildings"][j]
+		var ps: Array = sec.prisoners_in(int(j))
+		h3.add_child(Kit.head("%s  ·  %d of %d cells" % [String(jb["name"]).to_upper(), ps.size(), int(s.bd(jb).get("cells", 0))], P.TEXT_2, 11))
+		for aid in ps:
+			var left := ""
+			for m in hud.v5.record(int(aid)).get("mods", []):
+				if String(m.get("kind", "")) == "jail":
+					left = "%s left" % Kit.clock(maxf(0.0, float(int(m.get("until", 0)) - int(s.state["tick"])) / hz))
+			var pr: HBoxContainer = Kit.hbox(8)
+			var id2: int = int(aid)
+			pr.add_child(Kit.button(hud.v5.agent_name(id2), func(): hud.open_person(id2, "file"), "Personnel file\nWhy they are here and their history.", "ListButton", "colonists", 13))
+			pr.add_child(Kit.label(left, "SmallLabel", 12, P.TEXT_2))
+			h3.add_child(pr)
+	# Change a job (SIM command set_role; a security officer needs the security skill)
+	box.add_child(Kit.sep())
+	box.add_child(Kit.head("Change a job", P.CYAN, 12))
+	var fr: HBoxContainer = Kit.hbox(8)
+	box.add_child(fr)
+	var who := OptionButton.new()
+	who.name = "JobWho"
+	var ids: Array = []
+	for r in _rows():
+		who.add_item(String(r["name"]))
+		ids.append(int(r["id"]))
+	who.tooltip_text = "Person\nWho changes job."
+	fr.add_child(who)
+	var roles: Array = (s.bal.get("roles", []) as Array).duplicate()
+	if not roles.has("security"):
+		roles.append("security")
+	var ro := OptionButton.new()
+	ro.name = "JobRole"
+	for rr in roles:
+		ro.add_item(String(s.bal.get("role_names", {}).get(rr, "Security officer" if rr == "security" else String(rr).capitalize())))
+	ro.select(roles.find("security"))
+	ro.tooltip_text = "Job\nThe new job. A security officer needs security %d or more." % int(s.content.get("society", {}).get("security", {}).get("role_skill", 40))
+	fr.add_child(ro)
+	fr.add_child(Kit.button("Change job", func():
+		if ids.is_empty():
+			return
+		var aid: int = int(ids[who.selected])
+		var role: String = String(roles[ro.selected])
+		var rn: String = ro.get_item_text(ro.selected)
+		hud.confirm("%s: %s?" % [hud.v5.agent_name(aid), rn], ["They stop their current work and start the new job.", "A captain or first hand keeps the post only in the same department."], func():
+			last_result = hud.v5.command("set_role", {"agent": aid, "role": role})
+			hud.toast("Change job: " + String(last_result["text"]), "info" if bool(last_result["ok"]) else "warn", "people")
+			_build_tab_content(), "Change job"), "Change job\nGives the person a new job (asks to confirm).", "PrimaryButton", "check", 14))

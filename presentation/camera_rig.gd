@@ -44,8 +44,17 @@ var _t := 0.0
 
 # ---------------------------------------------------------------- V5 §3 follow view (over the shoulder)
 ## shoulder_fn() -> [Vector3 body ground point, float body yaw (model +X forward), float eye height]
-## or null (the person is gone: the view ends). collide_fn(pivot, eye) -> the eye pulled in so it
-## does not pass a wall (world_view). While shoulder_fn is valid the rig is in the follow view.
+## or null (the person is gone: the view ends). collide_fn(pivot, eye, margin) -> the eye pulled in
+## so it stays `margin` m off every wall (world_view). While shoulder_fn is valid the rig is in the
+## follow view.
+##
+## Smoothing (2026-10-01, Paul: "the follow cam shakes"): every moving part of the camera is a
+## critically damped spring, stepped in closed form (the same result at 30, 60 or 144 fps):
+##   pivot    - the body point, with the body's smoothed velocity fed forward (no lag on a steady walk)
+##   heading  - the body yaw (slow for small turns, faster for real ones)
+##   eye      - the eye height (sit / stand / lie change it in steps)
+##   distance - the wheel distance and the wall pull-in (fast in, slow out, a 4 % dead band out)
+## The aim is computed from the smoothed heading, never from a separately lagged look point.
 var shoulder_fn: Callable
 var collide_fn: Callable
 var sh_side := 1.0            # 1 = right shoulder, -1 = left (Q/E swap)
@@ -53,10 +62,41 @@ var sh_dist := 1.9            # m behind; wheel 1.2..4
 var sh_orbit := 0.0           # rad, drag orbit about the person, clamp +-70 deg
 var sh_pitch := 0.0           # rad, extra pitch from the drag
 var _sh_heading := 0.0
+var _sh_hvel := 0.0
+var _sh_p := Vector3.ZERO     # smoothed body point
+var _sh_pv := Vector3.ZERO    # its velocity
+var _sh_bu := Vector3.ZERO    # smoothed body velocity (fed forward)
+var _sh_bprev := Vector3.ZERO
+var _sh_eh := 1.65            # smoothed eye height
+var _sh_ehv := 0.0
+var _sh_d := 1.9              # smoothed wheel distance
+var _sh_dv := 0.0
+var _sh_side_s := 1.0         # smoothed shoulder side (Q/E swap slides across)
+var _sh_sv := 0.0
+var _sh_f := 1.0              # smoothed wall pull-in (fraction of the free eye offset)
+var _sh_fv := 0.0
+var _sh_fhold := 0.0          # s the wall has been further off than the eye (release after 0.6 s)
 var _sh_eye := Vector3.ZERO
-var _sh_look := Vector3.ZERO
 var _sh_new := true
 var _sh_drag := false
+var probe_fn: Callable        # measurement only (fx_follow_probe): called after each follow frame
+var _sh_pull := 1.0           # last wall pull-in used: fraction of the free eye offset (1 = free)
+var _sh_eyeh := 1.65
+const SH_W_PIVOT := 10.0      # rad/s: pivot spring
+const SH_W_VEL := 6.0         # 1/s: body velocity low-pass (the fed-forward velocity)
+const SH_W_EYE := 4.0
+const SH_W_DIST := 8.0
+const SH_W_IN := 14.0         # wall pull-in: fast
+const SH_W_OUT := 2.5         # release: slow
+const SH_SOFT := 0.6          # m: the smoothed eye starts to pull in this far off a wall
+const SH_HARD := 0.2          # m: the eye is never closer than this to a wall (no easing)
+
+## One exact step of a critically damped spring (x, v) toward `target` with angular frequency w.
+static func _crit(x: float, v: float, target: float, w: float, dt: float) -> Vector2:
+	var e: float = x - target
+	var ex: float = exp(-w * dt)
+	var tmp: float = (v + w * e) * dt
+	return Vector2(target + (e + tmp) * ex, (v - w * tmp) * ex)
 const SH_SIDE := 0.55
 const SH_UP := 0.15
 const SH_ORBIT_MAX := 1.2217  # 70 deg
@@ -108,48 +148,107 @@ func _shoulder_process(delta: float) -> bool:
 	var pos: Vector3 = s[0]
 	var body_yaw: float = float(s[1])
 	var eye_h: float = float(s[2]) if (s as Array).size() > 2 else 1.65
-	# V5 §3 (critic round 29): exactly eye height + 0.15 m; a seated or lying person gets a little more
-	# height so the camera still sees over them.
-	var lift: float = maxf(0.0, 1.65 - eye_h) * 0.5
+	var dt: float = clampf(delta, 0.0, 0.1)
+	# A jump (another person, a fade move, a load): start again from the body.
+	if not _sh_new and _sh_p.distance_to(pos) > 4.0:
+		_sh_new = true
 	if _sh_new:
 		_sh_heading = body_yaw
-	else:
-		# Spring on the heading: small turns (idle sway, a step aside) barely move the camera,
-		# a real turn is followed in about 0.6 s. No jitter on turns.
-		var dh: float = angle_difference(_sh_heading, body_yaw)
-		var rate: float = 2.2 if absf(dh) > 0.35 else 0.9
-		_sh_heading = _sh_heading + dh * (1.0 - exp(-delta * rate))
+		_sh_hvel = 0.0
+		_sh_p = pos
+		_sh_pv = Vector3.ZERO
+		_sh_bu = Vector3.ZERO
+		_sh_bprev = pos
+		_sh_eh = eye_h
+		_sh_ehv = 0.0
+		_sh_d = sh_dist
+		_sh_dv = 0.0
+		_sh_side_s = sh_side
+		_sh_sv = 0.0
+	elif dt > 0.0:
+		# The body's velocity, low-passed, is fed forward: a steady walk has no lag and the small
+		# ripple of the drawn walk is filtered. The spring takes the rest (per axis, relative velocity).
+		_sh_bu = _sh_bu.lerp((pos - _sh_bprev) / dt, 1.0 - exp(-dt * SH_W_VEL))
+		_sh_bprev = pos
+		var pred: Vector3 = _sh_p + _sh_bu * dt
+		for ax in 3:
+			var r: Vector2 = _crit(pred[ax], _sh_pv[ax] - _sh_bu[ax], pos[ax], SH_W_PIVOT, dt)
+			_sh_p[ax] = r.x
+			_sh_pv[ax] = r.y + _sh_bu[ax]
+		# Heading: small turns (idle sway, a step aside) barely move the camera, a real turn is
+		# followed in about 1 s; the spring rate blends between the two (no switch).
+		var e: float = angle_difference(body_yaw, _sh_heading)
+		var wh: float = lerpf(1.4, 3.2, smoothstep(0.15, 0.6, absf(e)))
+		var rh: Vector2 = _crit(e, _sh_hvel, 0.0, wh, dt)
+		_sh_heading = body_yaw + rh.x
+		_sh_hvel = rh.y
+		var re: Vector2 = _crit(_sh_eh, _sh_ehv, eye_h, SH_W_EYE, dt)
+		_sh_eh = re.x
+		_sh_ehv = re.y
+		var rd: Vector2 = _crit(_sh_d, _sh_dv, sh_dist, SH_W_DIST, dt)
+		_sh_d = rd.x
+		_sh_dv = rd.y
+		var rs: Vector2 = _crit(_sh_side_s, _sh_sv, sh_side, 6.0, dt)
+		_sh_side_s = rs.x
+		_sh_sv = rs.y
+	# V5 §3 (critic round 29): exactly eye height + 0.15 m; a seated or lying person gets a little more
+	# height so the camera still sees over them.
+	var lift: float = maxf(0.0, 1.65 - _sh_eh) * 0.5
 	var hd: float = _sh_heading + sh_orbit
 	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
 	var right := Vector3(sin(hd), 0.0, cos(hd))
-	var pivot: Vector3 = pos + Vector3(0.0, eye_h + SH_UP, 0.0)
-	var want: Vector3 = pivot - fwd * sh_dist * cos(sh_pitch) + right * SH_SIDE * sh_side + Vector3(0.0, lift + sh_dist * sin(sh_pitch), 0.0)
-	# Pull in so the camera never passes a wall (from the pivot, a sphere of 0.3 m).
-	var shoulder_pt: Vector3 = pivot + right * SH_SIDE * sh_side
+	var pivot: Vector3 = _sh_p + Vector3(0.0, _sh_eh + SH_UP, 0.0)
+	var shoulder_pt: Vector3 = pivot + right * SH_SIDE * _sh_side_s
+	var free: Vector3 = pivot - fwd * _sh_d * cos(sh_pitch) + right * SH_SIDE * _sh_side_s + Vector3(0.0, lift + _sh_d * sin(sh_pitch), 0.0)
+	# The camera never passes a wall. The eye eases in when a wall comes within SH_SOFT of it (fast)
+	# and out when the wall is gone (slow, with a dead band, so a wall at the edge does not make it
+	# pump); it is never closer than SH_HARD to a wall (a hard clamp, only if the easing is too late).
+	var f_soft := 1.0
+	var f_hard := 1.0
 	if collide_fn.is_valid():
-		want = collide_fn.call(shoulder_pt, want)
-	if height_fn.is_valid():
-		want.y = maxf(want.y, float(height_fn.call(want.x, want.z)) + 0.35)
-	# The camera looks along the person's heading, 10 deg down (plus the drag pitch): the person stands on
-	# the left third (right shoulder) with room to look ahead (critic round 29).
-	var dn: float = deg_to_rad(10.0) + sh_pitch + lift * 0.25
-	var look: Vector3 = want + (fwd * cos(dn) - Vector3(0.0, sin(dn), 0.0)) * 10.0
+		var ol: float = maxf(shoulder_pt.distance_to(free), 0.001)
+		f_soft = shoulder_pt.distance_to(collide_fn.call(shoulder_pt, free, SH_SOFT)) / ol
+		f_hard = shoulder_pt.distance_to(collide_fn.call(shoulder_pt, free, SH_HARD)) / ol
 	if _sh_new:
-		_sh_eye = want
-		_sh_look = look
-		_sh_new = false
-	else:
-		# Spring follow: position and aim ease in; pulled-in positions (walls) are taken at once.
-		var k: float = 1.0 - exp(-delta * 9.0)
-		_sh_eye = _sh_eye.lerp(want, k)
-		if pivot.distance_to(want) < pivot.distance_to(_sh_eye) - 0.05:
-			_sh_eye = want
-		_sh_look = _sh_look.lerp(look, 1.0 - exp(-delta * 7.0))
+		_sh_f = f_soft
+		_sh_fv = 0.0
+	elif dt > 0.0:
+		var tgt: float = _sh_f
+		var wf: float = SH_W_OUT
+		# Out: at once past the dead band, else after 0.6 s of free room (no pumping at a wall edge,
+		# and never left a little short for good).
+		_sh_fhold = _sh_fhold + dt if f_soft > _sh_f + 0.005 else 0.0
+		if f_soft < _sh_f - 0.005:
+			tgt = f_soft
+			wf = SH_W_IN
+		elif f_soft > _sh_f + 0.04 or _sh_fhold > 0.6:
+			tgt = f_soft
+		var rf: Vector2 = _crit(_sh_f, _sh_fv, tgt, wf, dt)
+		_sh_f = rf.x
+		_sh_fv = rf.y
+	if f_hard < _sh_f:
+		_sh_f = f_hard
+		_sh_fv = 0.0
+	_sh_f = clampf(_sh_f, 0.08, 1.0)
+	var eye: Vector3 = shoulder_pt + (free - shoulder_pt) * _sh_f
+	if height_fn.is_valid():
+		eye.y = maxf(eye.y, float(height_fn.call(eye.x, eye.z)) + 0.35)
+	_sh_pull = _sh_f
+	_sh_eyeh = _sh_eh
+	_sh_new = false
+	# The camera looks along the (smoothed) heading, 10 deg down (plus the drag pitch): the person stands
+	# on the left third (right shoulder) with room to look ahead (critic round 29).
+	var dn: float = deg_to_rad(10.0) + sh_pitch + lift * 0.25
+	var aim: Vector3 = fwd * cos(dn) - Vector3(0.0, sin(dn), 0.0)
+	_sh_eye = eye
 	focus = pos
-	distance = _sh_eye.distance_to(pos)
-	camera.global_position = _sh_eye
-	camera.look_at(_sh_look, Vector3.UP)
+	distance = eye.distance_to(pos)
+	camera.global_position = eye
+	camera.look_at(eye + aim, Vector3.UP)
+	if probe_fn.is_valid():
+		probe_fn.call(self, delta)
 	return true
+
 func _ready() -> void:
 	camera = Camera3D.new()
 	camera.fov = 50.0

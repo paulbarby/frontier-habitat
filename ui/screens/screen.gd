@@ -34,6 +34,7 @@ var _hdr: Control
 var _last_vp := Vector2.ZERO
 var _fit_on := false             # the frame is sized to its content now (fits_content())
 var _hdr_row: HBoxContainer      # the title, tabs and extras (inside a sideways clip area)
+var _tabs_row: HFlowContainer    # the tab buttons (they wrap when the header is narrow)
 ## Rich tooltips for the screen tabs ("Title\nwhat the page shows"), by "screen:tab".
 const TAB_TIPS := {
 	"research:tree": "Tree\nEvery research project by branch and tier. Click one to see it; the queue runs in order.",
@@ -53,6 +54,10 @@ const TAB_TIPS := {
 	"colonists:priorities": "Priorities\nFor each colonist and kind of job: first, normal, last or never.",
 	"vehicles:vehicles": "Vehicles\nEvery vehicle: charge or fuel, cargo, crew, wear; give it orders.",
 	"vehicles:routes": "Routes\nMedium rovers that carry goods and people between two bases, again and again.",
+	"crew:org": "Org chart\nThe commander, the captains and first hands of each department. Drag a person onto a rank.",
+	"crew:housing": "Housing\nEvery home and who lives there, against what each rank expects. Drag a person onto a unit.",
+	"crew:academy": "Academy\nCourses, students and the enrolment form; the skill levels of the crew.",
+	"crew:security": "Security\nOfficers against the target, the fights now, the prisoners, and a job change.",
 	"colonists:visitors": "Visitors\nTourists and other guests: their ship, when they leave, what they paid.",
 	"awards:colony": "This colony\nMedals earned by this colony.", "awards:device": "This device\nMedals earned by any colony on this device.",
 	"help:rules": "Rules\nHow the colony lives: air, water, power, food, work.", "help:keys": "Controls\nEvery key and mouse action.",
@@ -133,7 +138,14 @@ func fits_content() -> bool:
 func _hdr_width() -> float:
 	# The row's own minimum (it sits in a clip area, so the frame does not see it) + Close (38) and
 	# the gap (6) + the plate margins (22 + 14) + the frame's metal band and padding (about 40).
-	return (_hdr_row.get_combined_minimum_size().x if _hdr_row != null else 600.0) + 6.0 + 38.0 + 36.0 + 40.0
+	# The tabs count on one line (their flow container alone reports only its widest tab).
+	var w: float = _hdr_row.get_combined_minimum_size().x if _hdr_row != null else 600.0
+	if _tabs_row != null and _tabs_row.get_child_count() > 0:
+		var line := -4.0
+		for b in _tabs_row.get_children():
+			line += (b as Control).get_combined_minimum_size().x + 4.0
+		w += line - _tabs_row.get_combined_minimum_size().x
+	return w + 6.0 + 38.0 + 36.0 + 40.0
 
 ## A list in a scroll area (Kit.well_scroll) as tall as its rows, up to max_h (then it scrolls).
 ## For screens sized to their content: a scroll area alone measures no height.
@@ -189,7 +201,9 @@ func fit_view(vp: Vector2) -> void:
 		_last_vp = Vector2.ZERO
 	if compact:
 		# + 20: the version-4 metal band (10 px a side) sits inside the frame; the content keeps its width.
-		frame.custom_minimum_size = Vector2(minf(compact_size.x + 20.0, vp.x - 16.0), 0.0)
+		# Paul, 2026-10-01: and at least as wide as the header needs (title, subtitle, tabs), so the
+		# header is never cut off (the menu's at 80 %).
+		frame.custom_minimum_size = Vector2(minf(maxf(compact_size.x + 20.0, _hdr_width()), vp.x - 16.0), 0.0)
 		# Paul, 2026-10-01: content wider than compact_size (a long row, another interface scale)
 		# widens the frame up to the view, so nothing (the Back button) hides past a side scroll.
 		var cmin: Vector2 = content.get_combined_minimum_size()
@@ -238,19 +252,33 @@ func _hdrer() -> Control:
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hsc.add_child(row)
 	_hdr_row = row
+	# The icon and the title block stay together at the top when the tabs wrap to a second line.
+	var tb: HBoxContainer = Kit.hbox(14)
+	tb.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(tb)
 	if icon != "":
 		var ic: TextureRect = Kit.icon(icon, 30, accent)
-		row.add_child(ic)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		tb.add_child(ic)
 	var tv: VBoxContainer = Kit.vbox(0)
-	row.add_child(tv)
+	tb.add_child(tv)
 	var t: Label = Kit.label(title.to_upper(), "TitleLabel", 24 if not compact else 18, P.TEXT)
 	tv.add_child(t)
 	_subtitle_label = Kit.label(subtitle, "DimLabel", 13, P.TEXT_2)
 	_subtitle_label.visible = subtitle != ""
 	tv.add_child(_subtitle_label)
 	row.add_child(Kit.gap(16))
-	var tabs_row: HBoxContainer = Kit.hbox(4)
+	# Paul, 2026-10-01 ("scaling the UI should not cause UI elements to be hidden"): the tabs wrap onto a
+	# second line when the header is narrow (at 140 % the Dashboard's Hazards tab was cut off). They take
+	# the free width (the spacer after them keeps a small share), so with room they are one line, as before.
+	var tabs_row := HFlowContainer.new()
+	tabs_row.add_theme_constant_override("h_separation", 4)
+	tabs_row.add_theme_constant_override("v_separation", 4)
+	tabs_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tabs_row.size_flags_stretch_ratio = 20.0
 	tabs_row.size_flags_vertical = Control.SIZE_SHRINK_END
+	tabs_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tabs_row = tabs_row
 	row.add_child(tabs_row)
 	for t2 in tabs:
 		var id: String = t2[0]

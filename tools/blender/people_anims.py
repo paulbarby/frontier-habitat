@@ -159,6 +159,7 @@ def blink_amount(t, starts):
 
 
 BLINK_DEG = 50.0
+LID_REST = 0.0            # deg: the upper lids a little lower at rest (per body; no fixed stare), MPFB builds set it
 
 
 def talk_jaw(t, dur, loop, rate=4.4, amp=9.0, seed=1, pause=(0.35, 0.55)):
@@ -218,8 +219,8 @@ def expression_pose(P, w):
         P["mouth.%s.rz" % s] = P.g("mouth.%s.rz" % s) + sg * (9.0 * smile - 3.0 * frown)
         P["brow.%s.ry" % s] = P.g("brow.%s.ry" % s) + 9.0 * frown - 11.0 * surprise - 3.0 * laugh
         P["brow.%s.rz" % s] = P.g("brow.%s.rz" % s) - sg * 6.0 * frown
-    P["lids_low.ry"] = P.g("lids_low.ry") - 9.0 * smile - 6.0 * laugh + 3.0 * surprise
-    P["lids.ry"] = P.g("lids.ry") + 14.0 * laugh + 6.0 * frown - 8.0 * surprise
+    P["lids_low.ry"] = P.g("lids_low.ry") - 5.0 * smile - 3.0 * laugh + 3.0 * surprise
+    P["lids.ry"] = P.g("lids.ry") + 10.0 * laugh + 6.0 * frown - 8.0 * surprise
     P["jaw.ry"] = P.g("jaw.ry") + 9.0 * laugh + 4.0 * surprise
     return P
 
@@ -232,7 +233,7 @@ def with_face(fn, name, frames, loop, jaw=None):
     def g(f):
         P = Pose(fn(f))
         t = f / FPS
-        P["lids.ry"] = P.g("lids.ry") + BLINK_DEG * blink_amount(t, starts)
+        P["lids.ry"] = P.g("lids.ry") + LID_REST + (BLINK_DEG - LID_REST) * blink_amount(t, starts)
         if jaw:
             P["jaw.ry"] = P.g("jaw.ry") + jaw(t, dur)
         if expr:
@@ -301,24 +302,33 @@ def laugh_fn():
 
 
 def argue_keys():
-    """Arguing: leaning in, sharp two-hand gestures, a pointing hand, the head jutting forward; loops in 3 s."""
-    S = add(STAND, hips__x=0.015, spine__ry=6.0, chest__ry=4.0, neck__ry=6.0, head__ry=-4.0)
-    set_foot(S, "L", (ANK.x + 0.06, 0.115, ANK.z), yaw=5.0, knee_out=4.0)
+    """Arguing (CRITIC round 40: distinct from talk): a step in, the chin forward, the right hand jabs twice at the
+    partner's chest, then both arms flung open ("what?"), a chop of the left hand; the weight stays forward.  3 s loop."""
+    S = add(STAND, hips__x=0.030, hips__ry=3.0, spine__ry=8.0, chest__ry=4.0, neck__ry=9.0, head__ry=-7.0)
+    set_foot(S, "L", (ANK.x + 0.11, 0.120, ANK.z), yaw=4.0, knee_out=4.0)
+    set_foot(S, "R", (ANK.x - 0.05, 0.125, ANK.z), yaw=10.0, knee_out=3.0)
     S = fill_arm_targets(S)
-    K1 = Pose(S)
-    set_arm_ik(K1, "L", (0.260, 0.160, 1.210), (0.8, 0.3, 0.3), (0.2, -0.3, 1.0), w=1.0, pole=-15.0)
-    set_arm_ik(K1, "R", (0.260, 0.160, 1.200), (0.8, 0.3, 0.3), (0.2, -0.3, 1.0), w=1.0, pole=-15.0)
-    K1.update({"head.ry": -8.0, "neck.ry": 10.0})
-    K2 = Pose(S)
-    set_arm_ik(K2, "R", (0.340, 0.020, 1.300), (1.0, 0.1, 0.1), (0.0, 1.0, 0.0), w=1.0, pole=-30.0)   # pointing
-    K2.update({"spine.ry": 9.0, "head.ry": -6.0, "neck.rz": -5.0, "hips.x": 0.025})
-    K3 = Pose(S)
-    set_arm_ik(K3, "L", (0.200, 0.250, 1.120), (0.5, 0.8, -0.2), (0.0, -0.4, 1.0), w=1.0, pole=-5.0)
-    set_arm_ik(K3, "R", (0.200, 0.250, 1.120), (0.5, 0.8, -0.2), (0.0, -0.4, 1.0), w=1.0, pole=-5.0)
-    K3.update({"spine.ry": 3.0, "chest.ry": 1.0, "head.ry": 2.0, "neck.rz": 4.0, "head.rz": 5.0})
-    keys = [S, K1, K2, K3, S]
+    J1 = Pose(S)
+    set_arm_ik(J1, "R", (0.400, 0.070, 1.250), (1.0, 0.05, 0.05), (0.0, 0.3, -1.0), w=1.0, pole=-30.0)
+    set_arm_ik(J1, "L", (0.140, 0.230, 1.020), (0.6, -0.4, -0.6), (0.0, 0.2, -1.0), w=1.0, pole=10.0)
+    J1.update({"chest.rz": -9.0, "spine.rz": -4.0, "neck.ry": 13.0, "head.ry": -9.0, "hips.x": 0.045})
+    B1 = Pose(J1)
+    set_arm_ik(B1, "R", (0.255, 0.110, 1.200), (0.9, -0.1, 0.3), (0.0, 0.4, -1.0), w=1.0, pole=-25.0)
+    B1.update({"chest.rz": -4.0, "neck.ry": 10.0})
+    J2 = Pose(J1)
+    set_arm_ik(J2, "R", (0.430, 0.060, 1.280), (1.0, 0.0, 0.10), (0.0, 0.3, -1.0), w=1.0, pole=-30.0)
+    J2.update({"chest.rz": -11.0, "spine.ry": 10.0, "neck.ry": 15.0, "head.ry": -11.0, "hips.x": 0.050})
+    OPEN = add(S, hips__x=-0.01, spine__ry=-2.0, chest__ry=-5.0, neck__ry=2.0, head__ry=-4.0, head__rz=6.0)
+    for sd in ("L", "R"):
+        set_arm_ik(OPEN, sd, (0.230, 0.360, 1.180), (0.4, 1.0, 0.3), (0.0, 0.0, 1.0), w=1.0, pole=-20.0)
+        OPEN["shoulder.%s.ry" % sd] = -6.0
+    CHOP = Pose(S)
+    set_arm_ik(CHOP, "L", (0.360, 0.120, 1.130), (0.9, -0.2, -0.5), (0.0, -1.0, 0.0), w=1.0, pole=-25.0)
+    set_arm_ik(CHOP, "R", (0.130, 0.220, 1.010), (0.6, -0.4, -0.6), (0.0, 0.2, -1.0), w=1.0, pole=10.0)
+    CHOP.update({"chest.rz": 7.0, "neck.ry": 12.0, "head.ry": -8.0, "head.rz": -4.0, "hips.x": 0.045})
+    keys = [S, J1, B1, J2, OPEN, CHOP, S]
     keys = [ik_to_fk(k) for k in keys]
-    return [(t, k) for t, k in zip((0.0, 0.55, 1.25, 2.05, 3.0), keys)]
+    return [(t, k) for t, k in zip((0.0, 0.40, 0.70, 1.00, 1.60, 2.25, 3.0), keys)]
 
 
 def hug_keys():
@@ -390,40 +400,50 @@ def sit_bar_stool_fn(n=150):
 
 
 def dance_a_fn(n=120):
-    """120 bpm step-touch, 8 beats in 4 s: step right, touch, step left, touch; hips sway, arms swing bent, head bob."""
-    base = fill_arm_targets(add(STAND, hips__z=-0.03))
+    """120 bpm club groove, 8 beats in 4 s (CRITIC round 40: a real dance): a knee bounce on every beat, a side step
+    and touch each 2 beats with the hips swinging over the standing leg, the chest twisting against the hips, arms
+    bent and pumping in turn, beats 7-8 both arms up and back down; the head nods on the beat."""
+    base = fill_arm_targets(add(STAND, hips__z=-0.035))
     for s in ("L", "R"):
         base["arm.%s.ik" % s] = 0.0
-    sym(base, **{"upper_arm.rx": -25.0, "upper_arm.ry": 4.0, "forearm.ry": -72.0, "forearm.rx": 6.0,
-                 "hand.ry": -2.0})
+    sym(base, **{"upper_arm.rx": -22.0, "upper_arm.ry": 8.0, "forearm.ry": -82.0, "forearm.rx": 4.0,
+                 "hand.ry": -4.0})
     base = fill_arm_targets(base)
 
     def fn(f):
         t = f / n                                   # 0..1 over 8 beats
         beat = t * 8.0
-        # lateral weight: a smooth side-to-side over 4 beats, repeated twice
-        side = sin(TAU * t * 2)
+        bounce = 0.5 - 0.5 * cos(TAU * beat)        # 0 on the beat, 1 between: the knees give on each beat
+        side = sin(TAU * t * 2)                     # a full side-to-side in 4 beats
         P = Pose(base)
-        P["hips.y"] = 0.055 * side
-        P["hips.z"] = base.g("hips.z") - 0.022 * (0.5 - 0.5 * cos(TAU * beat))
-        P["hips.rx"] = -5.0 * side
+        P["hips.y"] = 0.070 * side
+        P["hips.z"] = base.g("hips.z") - 0.045 * (1.0 - bounce)
+        P["hips.rx"] = -6.5 * side
+        P["hips.rz"] = 8.0 * sin(TAU * t * 2 + 0.5)
+        P["hips.ry"] = 4.0 + 2.0 * (1.0 - bounce)
         P["spine.rx"] = 3.0 * side
-        P["chest.rx"] = 2.5 * side
-        P["chest.rz"] = 6.0 * sin(TAU * t * 2 + 0.6)
-        P["head.ry"] = 5.0 * (0.5 - 0.5 * cos(TAU * beat)) - 2.0
-        P["head.rx"] = -3.0 * side
-        # feet: the free foot lifts and taps beside the standing one on the off beats
+        P["chest.rx"] = 3.5 * side
+        P["spine.rz"] = -5.0 * sin(TAU * t * 2 + 0.5)
+        P["chest.rz"] = -7.0 * sin(TAU * t * 2 + 0.6)
+        P["neck.ry"] = 4.0 * (1.0 - bounce)
+        P["head.ry"] = -3.0 + 6.0 * (1.0 - bounce)
+        P["head.rx"] = -4.0 * side
         for s, sg in (("L", 1.0), ("R", -1.0)):
-            stance = max(0.0, sg * side)                 # this side carries the weight
-            lift = max(0.0, -sg * side) ** 2
-            y = 0.125 + 0.060 * lift
-            z = ANK.z + 0.045 * sin(pi * lift)
-            set_foot(P, s, (ANK.x, y, z), yaw=7.0, knee_out=4.0 + 6.0 * lift, pitch=-12.0 * lift)
-        # arms: swing in time
+            stance = max(0.0, sg * side)
+            lift = max(0.0, -sg * side) ** 1.5
+            y = 0.140 + 0.080 * lift
+            z = ANK.z + 0.050 * sin(pi * lift)
+            set_foot(P, s, (ANK.x + 0.02 * lift, y, z), yaw=8.0, knee_out=5.0 + 8.0 * lift, pitch=-18.0 * lift,
+                     toe=12.0 * lift)
+        # arms: alternating pumps (2 beats), both up on beats 6.5-8
+        up = max(0.0, min(1.0, (beat - 6.0) / 0.8)) * max(0.0, min(1.0, (8.0 - beat) / 0.9))
+        up = up * up * (3 - 2 * up)
         for s, sg in (("L", 1.0), ("R", -1.0)):
-            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 18.0 * sin(TAU * beat / 2 + (0 if s == "L" else pi))
-            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) - 8.0 * sin(TAU * beat / 2 + 0.5 + (0 if s == "L" else pi))
-            P["shoulder.%s.rx" % s] = -2.5 * sg * (0.5 - 0.5 * cos(TAU * beat))
+            ph = TAU * beat / 2 + (0.0 if s == "L" else pi)
+            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 26.0 * sin(ph) * (1 - up) + 95.0 * up
+            P["upper_arm.%s.rx" % s] = base.g("upper_arm.%s.rx" % s) + sg * 10.0 * up
+            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) - 16.0 * sin(ph + 0.6) * (1 - up) + 40.0 * up
+            P["shoulder.%s.rx" % s] = -3.0 * sg * (1.0 - bounce) + sg * 6.0 * up
         return P
     return fn, n
 

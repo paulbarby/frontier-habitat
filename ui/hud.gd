@@ -70,6 +70,7 @@ var rag         # "The Regolith Rag" window (version 5, §4.3)
 var person      # personnel file window (version 5, §6.2)
 var follow_hud  # follow view card (version 5, §3)
 var unrest_banner # protest / strike / riot banner (version 5, §6.4)
+var request_card  # a person asks the player (leave with a ship; version 5, §4.2)
 var floor_sel   # floor selector of a multi-storey building (version 5, §7)
 var orders      # Orders window (version 4, §5)
 var reactor_win # Reactor controls window (version 4, §4.2)
@@ -132,6 +133,7 @@ func _ready() -> void:
 	person = _add(load("res://ui/hud/person_window.gd").new())
 	follow_hud = _add(load("res://ui/hud/follow_hud.gd").new())
 	unrest_banner = _add(load("res://ui/hud/unrest_banner.gd").new())
+	request_card = _add(load("res://ui/hud/request_card.gd").new())
 	floor_sel = _add(load("res://ui/hud/floor_selector.gd").new())
 	reactor_banner = _add(load("res://ui/hud/reactor_banner.gd").new())
 	top_bar = _add(TopBar.new())
@@ -258,7 +260,13 @@ func egg_found(kind: String, _who: int = -1) -> void:
 
 func eggs_found() -> Dictionary:
 	var d: Dictionary = load("res://ui/profile.gd").data()
-	return d.get("eggs", {}) if typeof(d.get("eggs")) == TYPE_DICTIONARY else {}
+	var out: Dictionary = (d.get("eggs", {}) as Dictionary).duplicate() if typeof(d.get("eggs")) == TYPE_DICTIONARY else {}
+	# Version 5: the eggs this colony found (SIM sim/eggs.gd state.v5.eggs: prism_shift, barby, dance)
+	# count too; the codex names them arcade, dev and dance.
+	var se: Dictionary = main.sim.state.get("v5", {}).get("eggs", {}) if main != null and main.sim != null else {}
+	for k in se:
+		out[{"prism_shift": "arcade", "barby": "dev"}.get(String(k), String(k))] = se[k]
+	return out
 
 func toggle_rag() -> void:
 	rag.toggle()

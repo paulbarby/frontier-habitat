@@ -19,6 +19,7 @@ var _index_rev := -1
 var _index := {}              # agent id -> [pair keys] (derived from state.v5.rel)
 var _index_n := -1
 var _by_phase := {}           # tick of the day -> [pair keys] (derived, with _index)
+var _index_state = null       # the state.v5.rel the index was made from
 
 func _init(s) -> void:
 	sim = s
@@ -28,6 +29,7 @@ func reset() -> void:
 	_index = {}
 	_index_n = -1
 	_by_phase = {}
+	_index_state = null
 
 func cfg() -> Dictionary:
 	return sim.content["society"]["social"]
@@ -87,22 +89,29 @@ func tick() -> void:
 			busy[int(t["b"])] = true
 	for key in ended:
 		talks.erase(key)
-	# 2. A tenth of the people (their turn by id) may start a talk with a room-mate.
+	# 2. A tenth of the people (their turn by id) may start a talk with a room-mate. (Cost: the
+	# rooms of this tick's slice are collected first; only people in those rooms are checked.)
 	var slice: Array = []
-	var by_bld := {}
+	var rooms := {}
 	for aid in agents:
-		var a: Dictionary = agents[aid]
-		if not can_talk(a):
+		if (now + int(aid)) % hz != 0 or busy.has(int(aid)):
 			continue
-		var b: int = int(a["bld"])
-		if not by_bld.has(b):
-			by_bld[b] = []
-		by_bld[b].append(a)
-		if (now + int(aid)) % hz == 0 and not busy.has(int(aid)):
-			slice.append(a)
+		var a0: Dictionary = agents[aid]
+		if can_talk(a0):
+			slice.append(a0)
+			rooms[int(a0["bld"])] = true
 	if slice.is_empty():
 		_day_pass(now)
 		return
+	var by_bld := {}
+	for aid in agents:
+		var a: Dictionary = agents[aid]
+		var b: int = int(a["bld"])
+		if not rooms.has(b) or not can_talk(a):
+			continue
+		if not by_bld.has(b):
+			by_bld[b] = []
+		by_bld[b].append(a)
 	slice.sort_custom(func(p, q): return int(p["id"]) < int(q["id"]))
 	for b in by_bld:
 		(by_bld[b] as Array).sort_custom(func(p, q): return int(p["id"]) < int(q["id"]))
@@ -150,12 +159,37 @@ func _rel_w(x: Dictionary, y: Dictionary) -> Dictionary:
 	if not rel.has(key):
 		rel[key] = {"a": mini(int(x["id"]), int(y["id"])), "b": maxi(int(x["id"]), int(y["id"])), "aff": 0.0, "att": 0.0, "status": "stranger",
 			"since": int(sim.state["tick"]), "last": int(sim.state["tick"]), "talks": 0}
-		_bump()
+		_added(key, rel[key])
 	return rel[key]
 
+## After a direct write of state.v5.rel (tests, set-ups, a new game's families): the index is made again.
 func _bump() -> void:
 	var v: Dictionary = _w()
 	v["rel_rev"] = int(v["rel_rev"]) + 1
+	_index_rev = -1
+
+## A status changed (the set of pairs did not): the index stays.
+func _status_changed() -> void:
+	var v: Dictionary = _w()
+	v["rel_rev"] = int(v["rel_rev"]) + 1
+
+## A new pair: added to the index in key order (the order a rebuild gives), without a rebuild.
+func _added(key: int, r: Dictionary) -> void:
+	var v: Dictionary = _w()
+	v["rel_rev"] = int(v["rel_rev"]) + 1
+	if _index_rev == -1 or not is_same(_index_state, v["rel"]):
+		return
+	_index_n += 1
+	var ph: int = int(key % _day_ticks())
+	if not _by_phase.has(ph):
+		_by_phase[ph] = []
+	var bp: Array = _by_phase[ph]
+	bp.insert(bp.bsearch(key), key)
+	for pid in [int(r["a"]), int(r["b"])]:
+		if not _index.has(pid):
+			_index[pid] = []
+		var ix: Array = _index[pid]
+		ix.insert(ix.bsearch(key), key)
 
 func _talked(x: Dictionary, y: Dictionary, topic: String, now: int) -> void:
 	var c: Dictionary = cfg()
@@ -236,7 +270,7 @@ func _update_status(r: Dictionary, x: Dictionary, y: Dictionary, topic: String) 
 	if st != old:
 		r["status"] = st
 		r["since"] = int(sim.state["tick"])
-		_bump()
+		_status_changed()
 		match st:
 			"dating":
 				sim.log_event("couple", "%s and %s are dating." % [String(x["name"]), String(y["name"])], [int(x["id"]), int(y["id"])], 1, {"place": int(x["bld"])})
@@ -284,6 +318,9 @@ func _day_pass(now: int) -> void:
 				elif days >= float(sc["partners_days"]) and float(r["aff"]) >= float(sc["partners_aff"]):
 					_set_status(r, "partners")
 					sim.log_event("partners", "%s and %s are now partners." % [String(x["name"]), String(y["name"])], [int(x["id"]), int(y["id"])], 1)
+					# V5 section 4.2: partners move in together (families.gd).
+					if sim.get("families") != null:
+						sim.families.on_partners(x, y)
 			"partners":
 				if float(r["aff"]) < float(sc["breakup_aff"]):
 					_break_up(r, x, y, "")
@@ -305,7 +342,7 @@ func _day_pass(now: int) -> void:
 func _set_status(r: Dictionary, st: String) -> void:
 	r["status"] = st
 	r["since"] = int(sim.state["tick"])
-	_bump()
+	_status_changed()
 
 func _break_up(r: Dictionary, x: Dictionary, y: Dictionary, why: String) -> void:
 	_set_status(r, "ex")
@@ -359,7 +396,21 @@ func _fling_day(key: int, r: Dictionary, x: Dictionary, y: Dictionary, now: int)
 			"text": "%s wants to leave with %s on the ship. Let them go?" % [String(col["name"]), String(vis["name"])]}
 		sim.log_event("defect_request", "%s asks to leave the colony with %s." % [String(col["name"]), String(vis["name"])], [int(col["id"]), int(vis["id"])], 2, {"request": rid2})
 
-## Command "answer_request" {id, answer: "allow" | "refuse"}.
+## A question for the player (requests()): kind "leave_with_ship" or "shared_home". One open request
+## of a kind per person.
+func add_request(kind: String, x: Dictionary, y: Dictionary, text: String) -> int:
+	var reqs: Dictionary = _w()["requests"]
+	for rid in reqs:
+		if String(reqs[rid]["kind"]) == kind and int(reqs[rid]["agent"]) == int(x["id"]):
+			return int(rid)
+	var rid2: int = int(_w().get("req_seq", 0)) + 1
+	_w()["req_seq"] = rid2
+	reqs[rid2] = {"id": rid2, "kind": kind, "agent": int(x["id"]), "other": int(y["id"]), "ship": -1, "tick": int(sim.state["tick"]), "text": text}
+	sim.log_event("request_" + kind, text, [int(x["id"]), int(y["id"])], 1, {"request": rid2})
+	return rid2
+
+## Command "answer_request" {id, answer: "allow" | "refuse"}. shared_home: "allow" tries again to
+## house the pair (a home may exist now); "refuse" leaves them apart (both unhappy).
 func cmd_answer_request(p: Dictionary) -> Dictionary:
 	var reqs: Dictionary = _w()["requests"]
 	var rid: int = int(p.get("id", -1))
@@ -373,6 +424,17 @@ func cmd_answer_request(p: Dictionary) -> Dictionary:
 	reqs.erase(rid)
 	if a.is_empty() or a["state"] != "alive":
 		return {"ok": true, "code": "ok", "text": "The request no longer applies."}
+	if String(q["kind"]) == "shared_home":
+		var o: Dictionary = sim.state["agents"].get(int(q["other"]), {})
+		if o.is_empty() or o["state"] != "alive":
+			return {"ok": true, "code": "ok", "text": "The request no longer applies."}
+		if ans == "allow":
+			sim.families.on_partners(a, o)
+			var together: bool = int(a["bed"]) == int(o["bed"]) and int(sim.people.rec_of(int(a["id"])).get("unit", -2)) == int(sim.people.rec_of(int(o["id"])).get("unit", -3))
+			return {"ok": together, "code": "ok" if together else "full", "text": "They moved in together." if together else "There is still no free home for two."}
+		for x in [a, o]:
+			sim.people.add_mod(x, {"kind": "apart", "text": "Not allowed a shared home", "comp": "housing", "sat": -10.0, "att": -5.0, "days": 3.0})
+		return {"ok": true, "code": "ok", "text": "They stay apart. They are not happy."}
 	if ans == "allow":
 		var ship: int = int(q["ship"])
 		var arr: Dictionary = sim.traffic.ship(ship)
@@ -405,8 +467,9 @@ func requests() -> Array:
 func _keys_of(id: int) -> Array:
 	var v: Dictionary = v5r()
 	var rel: Dictionary = v.get("rel", {})
-	if int(v.get("rel_rev", 0)) != _index_rev or rel.size() != _index_n:
-		_index_rev = int(v.get("rel_rev", 0))
+	if _index_rev == -1 or rel.size() != _index_n or not is_same(_index_state, rel):
+		_index_rev = 0
+		_index_state = rel
 		_index_n = rel.size()
 		_index = {}
 		_by_phase = {}

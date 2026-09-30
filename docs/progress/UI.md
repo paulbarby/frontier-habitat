@@ -1018,3 +1018,98 @@ unrest now come from SIM (no "(estimate)"); response effects from content/societ
   test_tooltips_clip, test_wm, test_find: PASS. `check` clean (265 scripts).
 
 - 2026-09-30: scratch files of UI now start with `ui_` (coordinator rule); my earlier ones were renamed (e.g. `ui_edit.mjs`, `ui_r30shots.json`). Loader rebuilt by the coordinator with the v5 tips.
+
+## 2026-10-01: interface scale hides nothing sideways (Paul: "scaling the UI should not cause UI elements to be hidden")
+
+At 140 % in 1920x1080 (logical 1371x771) five screens were wider than their area and hid columns past a side
+scroll. Now every screen fits down to a logical view of 1300 px (area 1184 px), except Goals (see below).
+The area used is the screen's scroll area (`_scroll.size.x`); it does not follow the content, so there is no
+feedback. At 100 % in 1920x1080 the layout is the same as before.
+
+- Colonists (`ui/screens/colonists_screen.gd`): every column has a full width and a least width (`COLS`,
+  `VCOLS`; Settlers card 300 → 230). `fit_view()` shrinks them together, in 5 % steps, just enough for the
+  area. Text cells (name, role, doing, where, visitor cells) cut with "..." and carry the full text as a
+  tooltip. Header and rows keep the same widths, so the columns stay aligned.
+- Research (`ui/screens/research_screen.gd`): the search bar is an HFlowContainer (the legend is one unit
+  and goes to a second line when there is no room). The detail panel is 320 px with room and down to 260 px
+  when narrow. The queue strip wraps. Labs and packs: the pack cards wrap (HFlowContainer).
+- Dashboard (`ui/screens/dashboard_screen.gd`): the Overview tiles are a grid, 8 columns when one row fits,
+  else 4. Hazards: events and breaches are side by side with room, breaches go under the events when narrow;
+  the breach sentence wraps.
+- Widths (content / area): at 1371 px research 676/1252, labs 932, dashboard 636, hazards 950, colonists
+  1226, visitors 1224. At 1300 px colonists 1171/1184, visitors 1165.
+- Probes: `tools/ui/ui_probe_all_widths.gd <w> <h> <scale>` (every screen, content against area),
+  `tools/ui/ui_probe_screen_width.gd <scale> <screen> <tab|-> [w h] [least px]` (minimum width tree).
+- Tests: `check` 275 scripts, 0 failed. test_window_bounds PASS (130), test_v4_screens, test_theme_v4,
+  test_v5_people, test_v5_orders, test_storage, test_reach, test_tooltips_clip, test_v4_live, test_locks,
+  test_ships_ui, test_tiers: PASS.
+- Not fixed: Goals is 1190 px at a 1300 px view (area 1184; 6 px over; it fits at 1371). File not in this task.
+  test_rag FAIL (2): "names are links" (1 link) and "quiet day gossip column" (2). That test opens only the Rag
+  window, no screen changed here; `sim/` and `content/society.json` changed after its last PASS.
+- Note: run UI tests one at a time. Probable cause: all runs share the user:// files (settings.json, windows.json).
+  A parallel run gave false top-bar overlap failures in test_window_bounds; alone it passes.
+
+## 2026-10-01 (later): v5 UI — Goals width, test_rag cause, requests, history, security, venues, families
+
+1. **Goals** (`ui/screens/goals_screen.gd`): goal cards 400 px least (was 430). Every screen now fits a 1300 px
+   logical view (Goals 1130 in an area of 1184).
+2. **Headers hide nothing** (`ui/screens/screen.gd`): at 140 % the Dashboard's Hazards tab and 8 Inventory tabs were
+   cut off in the header's clip area. The tabs are now an HFlowContainer: one line with room, two lines when
+   narrow; the icon and title stay at the top. A compact screen (menu) is at least as wide as its header.
+   `test_window_bounds` now also checks the header row and every tab at 80, 100 and 140 %.
+3. **test_rag** (2 FAIL, then 1): cause is SIM. Relations are stored now (schema 6, `state.v5.rel`);
+   `showcase_v4.fhsave` (2026-09-28) has no `v5`, so `relationships_of` is `[]` for every colonist, couples and
+   feuds are empty, and the gossip padding finds no relations. Sent to `docs/requests/UI-to-SIM.md` with the data
+   (seed relations on migration, or rebuild the save). SIM's new `tabloid.json` lines fixed the gossip check;
+   "names are links" (1 link, wants 2) still fails. No UI change.
+4. **Requests** (`ui/hud/request_card.gd`, new): SIM's `relations.requests()` show as a card under the unrest
+   banner. `leave_with_ship`: Let them go (confirm; cannot be undone) or Refuse. `shared_home`: Try again or Keep
+   apart. Each shows both effects. File, Show. Answer = command `answer_request`. Debug `request [home|off]`.
+5. **Toasts** for SIM's v5 log (`ui/hud/watchers.gd`): couple, partners, wedding, break-up, affair, request,
+   defected, graduated, unrest stage, move in, adoption, grew up, fight, arrest, released, dome stage, arcade
+   record, P. Barby, dance. Fix: log entries of one tick added while paused were skipped (the walk now stops at the
+   last entry seen, by value). Fix: "Refused: Refused." — a v5 order's answer is shown once, by its window.
+6. **Personnel file**: File tab, History (effects now with satisfaction/attitude change and time left; the last 8
+   history lines). Social tab, Family (parents, children; Adopt a child for partners or a married couple → command
+   `adopt`, confirm first). Status "fling" named and coloured. Debug `person scroll <px>`.
+7. **Crew window, Security tab** (`ui/screens/crew_screen.gd`): officers against the target (1 per 12), security
+   office, cells used, fights now (Show), prisoners by jail with time left, and "Change a job" (command
+   `set_role`; SIM refuses a security officer below skill 40 and says so).
+8. **Inspector, Venues tab** (retail, park, super dome; SIM `leisure.venues(b)`): each venue open or closed with the
+   reason, staff n of n, what tourists pay, quality, goods (or "No goods"). Super dome: a STAGE n OF 8 badge while
+   it is built (`leisure.dome_stage`).
+9. **Eggs**: hidden medals (content `"hidden": true`) show in the awards gallery only once earned; the codex counts
+   SIM's found eggs (prism_shift, barby, dance) as found.
+10. **Help** (`ui/v5_help.gd`, STE): new topics Couples and break-ups, Requests from people, Families and children,
+    Venues goods and tourists; the file topic names History; the codex Security entry names the Security tab.
+11. New test `tools/ui/test_v5_social.gd` (30 checks): request card both kinds through SIM, confirm, history, toasts,
+    debug, help topics, crew Security tab and a job change through SIM, a retail module's Venues tab.
+
+§10 against the game (web build `build/web_ui`, 2026-10-01):
+| item | state |
+|---|---|
+| Follow HUD | done (card, dim, Tab, Esc, Switch, File). Click a bubble to switch: not done (RENDER bubbles have no click); the Switch button does it. |
+| Rag window | done (layout, photo, back issues, name → select + file). Follow from a story: through the file's Follow button. |
+| Personnel file, review, discipline with prediction + confirm | done; History added today |
+| Org chart per base, drag, SIM's star, entitlements | done |
+| Social tab, secret crush | done; Family added today |
+| Unrest meter per base, banners, responses | done |
+| Academy | done |
+| Housing tab | done |
+| Floor selector | done (RENDER's set_view_floor) |
+| Palette XXL / XXXXL, locks | done |
+| Codex people, buildings, eggs hidden until found | done (SIM eggs counted today) |
+| Version 5.0.0 | done |
+| Security, jail, fights (§6.5) | done today (Crew, Security) |
+| Families, children, adoption | done today (file, Social tab); a child's school in the file: not yet |
+| Dome venues, leisure, tourism | done today (Venues tab); staff choice by the player (command `staff`): not yet |
+
+- Shots (`build/web_ui`, `--gpu`, 1920x1080): `docs/shots/ui16_request_card.png`, `ui16_request_under_protest.png`,
+  `ui16_request_shared_home.png`, `ui16_person_history.png`, `ui16_crew_security.png`, `ui16_venues_tab.png`,
+  `ui16_dashboard_140.png`, `ui16_dashboard_hazards_140.png`, `ui16_inventory_140.png`, `ui16_research_140.png`,
+  `ui16_research_labs_140.png`, `ui16_colonists_140.png`, `ui16_goals_140.png`, `ui16_dashboard_100.png`,
+  `ui16_colonists_100.png`.
+- Not tested: the Family section and Adopt with a real couple (no partners in showcase_v4); fights and prisoners
+  with real data (no jail or officer in the save); a staffed, stocked venue; the dome stage badge.
+- Note: UI tests run one at a time. A parallel run next to SIM's test processes made test_tiers hang; alone it
+  passes.

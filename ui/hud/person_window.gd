@@ -1,7 +1,7 @@
 extends PanelContainer
 ## Personnel file (V5_DESIGN §6.2, §10): one person. Tabs:
 ##   File     portrait, rank, role, home, skills (levels 1-5), satisfaction with its parts and reasons,
-##            attitude with reasons, the last lines they said.
+##            attitude with reasons, the last lines they said, the effects now and the history.
 ##   Social   the relationship web (a small graph round the person) and the list: partner, friends,
 ##            enemies; a crush shows only when it is known (from the Rag or the bubbles).
 ##   Review   write a review (Excellent .. Poor) and discipline or reward. Every action shows the
@@ -244,6 +244,55 @@ func _file(p: Dictionary) -> void:
 		var sec4: VBoxContainer = _section("Said lately", "info")
 		for ln in lines:
 			sec4.add_child(Kit.wrap("\"%s\"" % String(ln.get("text", "")), 13, P.TEXT_2))
+	_history()
+
+## Effects now and the history (V5 §6.2: promotions, punishments, break-ups; SIM sim.people.rec_of):
+## each active effect with its change to satisfaction and attitude and the time left; then the last
+## 8 entries of the history, newest first.
+func _history() -> void:
+	var rec: Dictionary = hud.v5.record(agent_id)
+	var mods: Array = rec.get("mods", [])
+	var hist: Array = rec.get("hist", [])
+	if mods.is_empty() and hist.is_empty():
+		return
+	var s = hud.main.sim
+	var now: int = int(s.state["tick"])
+	var hz: float = float(s.bal["tick_hz"])
+	var day_ticks: int = int(float(s.bal["day_length"]) * hz)
+	var sec: VBoxContainer = _section("History", "list")
+	sec.name = "History"
+	for m in mods:
+		var r: HBoxContainer = Kit.hbox(6)
+		var sat: float = float(m.get("sat", 0.0))
+		var att: float = float(m.get("att", 0.0))
+		r.add_child(Kit.icon("trend_up" if sat + att >= 0.0 else "trend_down", 12, P.GREEN if sat + att >= 0.0 else P.AMBER))
+		var l: Label = Kit.label(String(m.get("text", "")), "", 13, P.TEXT)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		r.add_child(l)
+		var parts: Array = []
+		if absf(sat) >= 0.5:
+			parts.append("satisfaction %+d" % int(roundf(sat)))
+		if absf(att) >= 0.5:
+			parts.append("attitude %+d" % int(roundf(att)))
+		var left: float = float(int(m.get("until", now)) - now) / hz
+		if left > 0.0:
+			parts.append("%s left" % Kit.clock(left))
+		r.add_child(Kit.label(", ".join(parts), "SmallLabel", 12, P.TEXT_2))
+		r.tooltip_text = "Effect now: %s\n%s." % [String(m.get("text", "")), ", ".join(parts).capitalize() if not parts.is_empty() else "No change in numbers"]
+		r.mouse_filter = Control.MOUSE_FILTER_PASS
+		sec.add_child(r)
+	var rows: Array = hist.duplicate()
+	rows.reverse()
+	for e in rows.slice(0, 8):
+		var r2: HBoxContainer = Kit.hbox(8)
+		var dl: Label = Kit.num("Day %d" % (int(e.get("tick", 0)) / maxi(1, day_ticks) + 1), 12, P.TEXT_3)
+		dl.custom_minimum_size.x = 54
+		r2.add_child(dl)
+		var tl: Label = Kit.wrap(String(e.get("text", "")), 13, P.TEXT_2)
+		r2.add_child(tl)
+		sec.add_child(r2)
+	if hist.size() > 8:
+		sec.add_child(Kit.label("%s earlier." % Kit.plural(hist.size() - 8, "entry", "entries"), "SmallLabel", 12, P.TEXT_3))
 
 func _reason(text: String, d: float) -> Control:
 	var h: HBoxContainer = Kit.hbox(6)
@@ -266,7 +315,7 @@ func _section(title: String, icon: String) -> VBoxContainer:
 
 # ---------------------------------------------------------------- Social
 const STATUS_COLOR := {"best_friend": Color("6EE7A8"), "friend": Color("4FC3F7"), "acquaintance": Color("9AA7B4"), "rival": Color("FFB547"),
-	"enemy": Color("FF5A5F"), "crush": Color("F472B6"), "dating": Color("F472B6"), "partners": Color("F472B6"), "married": Color("FFD166"), "ex": Color("8B7F9E"), "affair": Color("E11D48")}
+	"enemy": Color("FF5A5F"), "crush": Color("F472B6"), "dating": Color("F472B6"), "partners": Color("F472B6"), "married": Color("FFD166"), "ex": Color("8B7F9E"), "affair": Color("E11D48"), "fling": Color("F472B6")}
 
 class Web extends Control:
 	var rows: Array = []
@@ -311,6 +360,7 @@ func _social(p: Dictionary) -> void:
 		web.names[int(r["other"])] = hud.v5.agent_name(int(r["other"])).get_slice(" ", 0)
 	web.name = "Web"
 	_body.add_child(web)
+	_family()
 	if shown.is_empty():
 		_body.add_child(Kit.wrap("Knows nobody well yet. People meet at meals, at work and in leisure places.", 14, P.TEXT_2))
 		return
@@ -330,6 +380,42 @@ func _social(p: Dictionary) -> void:
 	var hidden: int = rel.size() - shown.size()
 	if hidden > 0:
 		_body.add_child(Kit.wrap("Some feelings are secret. The Rag and what people say tell you more.", 12, P.TEXT_3))
+
+## Family (V5 §4.2, §7; SIM sim/families.gd): parents, children, and for partners or a married couple
+## the Adopt a child order (a medical bay and a free bunk in their home; confirm first).
+func _family() -> void:
+	var s = hud.main.sim
+	var fam = s.get("families")
+	if fam == null or not (fam as Object).has_method("children_of"):
+		return
+	var a: Dictionary = hud.v5.agent(agent_id)
+	var kids: Array = fam.children_of(agent_id)
+	var parents: Array = a.get("parents", [])
+	var pid: int = s.relations.partner_of(agent_id) if s.get("relations") != null and s.relations.has_method("partner_of") else -1
+	var st: String = String(s.relations.rel_of(agent_id, pid).get("status", "")) if pid != -1 else ""
+	var can_adopt: bool = st in ["partners", "married"] and String(a.get("kind", "")) != "child"
+	if kids.is_empty() and parents.is_empty() and not can_adopt:
+		return
+	var sec: VBoxContainer = _section("Family", "home")
+	sec.name = "Family"
+	for row in [["Parents", parents], ["Children", kids]]:
+		if (row[1] as Array).is_empty():
+			continue
+		var h: HFlowContainer = HFlowContainer.new()
+		h.add_theme_constant_override("h_separation", 6)
+		h.add_child(Kit.dim(String(row[0]), 13))
+		for cid in row[1]:
+			var c2: int = int(cid)
+			h.add_child(Kit.button(hud.v5.agent_name(c2), func(): open(c2), "%s\nOpens their personnel file." % hud.v5.agent_name(c2), "GhostButton"))
+		sec.add_child(h)
+	if can_adopt:
+		var nm: String = String(hud.v5.agent_name(agent_id)).get_slice(" ", 0)
+		var pn: String = hud.v5.agent_name(pid).get_slice(" ", 0)
+		sec.add_child(Kit.button("Adopt a child", func():
+			hud.confirm("Adopt a child: %s and %s?" % [nm, pn], ["A child comes to the medical bay in a few days and lives in their home.", "It needs a medical bay and a free bunk in their unit. A child goes to school at the academy and never works."], func():
+				last_result = hud.v5.command("adopt", {"agent": agent_id})
+				hud.toast("Adopt: " + String(last_result.get("text", "")), "good" if bool(last_result.get("ok", false)) else "warn", "people")
+				refresh(true), "Adopt"), "Adopt a child\n%s and %s are partners. A child needs a medical bay and a free bunk in their home." % [nm, pn], "", "people", 14))
 
 # ---------------------------------------------------------------- Review and discipline
 func _review(p: Dictionary) -> void:

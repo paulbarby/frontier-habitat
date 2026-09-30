@@ -19,6 +19,17 @@ func tests() -> Array:
 		["v5_dialogue_content", v5_dialogue_content],
 		["long_v5_relationships_10_days", long_v5_relationships],
 		["v5_affair_and_visitor_fling", v5_affair_and_visitor_fling],
+		["v5_fight_arrest_jail", v5_fight_arrest_jail],
+		["v5_lock_down_and_party", v5_lock_down_and_party],
+		["v5_families_and_children", v5_families_and_children],
+		["v5_venues_and_tourism", v5_venues_and_tourism],
+		["v5_dome_build_stages", v5_dome_build_stages],
+		["v5_rag_stored_issues", v5_rag_stored_issues],
+		["v5_multistorey_paths", v5_multistorey_paths],
+		["v5_migration_old_saves", v5_migration_old_saves],
+		["v5_eggs", v5_eggs],
+		["v5_showcase", v5_showcase],
+		["long_v5_perf_showcase", long_v5_perf_showcase],
 	]
 
 static func _showcase():
@@ -348,17 +359,9 @@ func v5_appoint_home_enrol(t) -> void:
 		t.eq(int(mover["bed"]), dest, "the new bed is kept")
 	else:
 		t.note("no structure with a free bed in the showcase (set_home not tested)")
-	# The academy (TEST SET-UP: an active academy placed at once).
-	var spot := Vector2(-1, -1)
+	# The academy (TEST SET-UP: an active academy joined by a corridor to the base).
 	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
-	for rr in range(20, 200, 6):
-		for k in 24:
-			var q: Vector2 = sim.place.snap_pos(lander + Vector2(rr, 0).rotated(TAU * float(k) / 24.0))
-			if spot.x < 0.0 and sim.place.check_building("academy", q, 0.0, -1, 1) == "ok":
-				spot = q
-		if spot.x >= 0.0:
-			break
-	var acad: Dictionary = sim.build.spawn_active("academy", spot, 0.0, 1) if spot.x >= 0.0 else {}
+	var acad: Dictionary = H.attach(sim, "academy", lander, 1)
 	t.check(not acad.is_empty(), "an academy for the test")
 	if not acad.is_empty():
 		# ppl[1] is on the expedition rover far out: the vehicle brings them home first
@@ -387,18 +390,35 @@ func v5_appoint_home_enrol(t) -> void:
 		t.eq(n_ok, seats, "the academy takes %d students, no more" % seats)
 		var waited := 0
 		var trace: Array = []
-		while sim.education.in_class(student) and waited < 3000:
-			sim.run_seconds(50.0)
+		var seen_in_class := false
+		var moved_without := false
+		var last_p: float = 0.0
+		while sim.education.in_class(student) and waited < 4000:
+			for s5 in 10:
+				sim.run_seconds(5.0)
+				var c5: Dictionary = sim.state["v5"]["courses"].get(int(student["id"]), {})
+				if c5.is_empty():
+					break
+				var here: bool = student["where"] == "in" and int(student["bld"]) == int(acad["id"]) and sim.agents._step_op(student) == "class"
+				if here:
+					seen_in_class = seen_in_class or sim.people.action(student) == "sit_class"
+				elif float(c5["progress"]) > last_p + 0.0001 and student["where"] == "in" and int(student["bld"]) != int(acad["id"]):
+					moved_without = true
+				last_p = float(c5["progress"])
 			waited += 50
 			trace.append("%d:%s/%s th%d fa%d hp%d %s" % [waited, student["state"], student["where"], int(student["thirst"]), int(student["fatigue"]), int(student["health"]), student["goal"]])
+		t.check(seen_in_class, "the student walked to the academy and sat in class (action sit_class)")
+		t.check(not moved_without, "the course moves on only in class")
 		var v1: int = int(sim.people.skills(student)[sk])
 		t.check(sim.people.level_of(float(v1)) == lv0 + 1 and not sim.education.in_class(student), "the course raises the level in %d s (%s %d L%d -> %d L%d; %s)" % [waited, sk, v0, lv0, v1, sim.people.level_of(float(v1)), str(sim.people.rec_of(int(student["id"])).get("hist", []).slice(-2)) + " " + String(student["state"]) + " " + String(student.get("cause", "")) + " " + String(student["role"]) + " " + str(trace.slice(-3)) + " " + str(sim.people.rec_of(int(student["id"])).keys())])
 		t.check(not student.has("v5_nowork") or sim.unrest.on_strike(student), "the graduate works again")
 	# The dance egg.
 	var dancer: Dictionary = ppl[3]
-	t.check(bool(_cmd(sim, "egg", {"kind": "dance", "agent": int(dancer["id"])}).get("ok", false)) and sim.people.action(dancer) == "dance", "the dance egg")
+	t.check(bool(_cmd(sim, "egg", {"kind": "dance", "agent": int(dancer["id"])}).get("ok", false)) and sim.people.action(dancer) == "dance_c", "the dance egg (dance_c)")
+	t.check(sim.eggs.found("dance") and not sim.social.recent_lines(int(dancer["id"]), 1).is_empty(), "the dance egg is found and the dancer says a line")
 	sim.run_seconds(25.0)
-	t.eq(sim.people.action(dancer), "", "the dance ends")
+	t.check(sim.people.action(dancer) != "dance_c", "the dance ends")
+	t.check(sim.awards.earned("egg_dance"), "award Dance Floor Director")
 	t.eq(sim.inv.audit(), {}, "ledger")
 	sim.dispose()
 	t.done()
@@ -607,5 +627,598 @@ func v5_affair_and_visitor_fling(t) -> void:
 			sim.step()
 			t.check(bool(sim.cmds.results[cid]["ok"]) and sim.people.has_mod(col, "refused_leave"), "refuse: the colonist stays, unhappy")
 			t.check(sim.relations.requests().is_empty(), "the request is answered")
+	sim.dispose()
+	t.done()
+
+# ---------------------------------------------------------------- V5 milestone: security, families, venues, Rag
+## A person by id, alive, of the colony (not a visitor, not a child), inside, awake.
+static func _awake_inside(sim, skip: Array = []) -> Array:
+	var out: Array = []
+	for a in _colonists(sim):
+		if a["where"] == "in" and not bool(a.get("sleeping", false)) and not skip.has(int(a["id"])) and float(a["health"]) > 60.0 and not a.has("lift"):
+			out.append(a)
+	return out
+
+## A fight between enemies ends with an arrest by a security officer; the prisoner is walked to a
+## cell (handcuffed_walk), wears prison clothes, stays in the jail and is released when the time is up.
+func v5_fight_arrest_jail(t) -> void:
+	var sim = _showcase()
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	sim.run_seconds(5.0)
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	var jail: Dictionary = H.attach(sim, "jail", lander, 1)
+	var office: Dictionary = H.attach(sim, "security_office", lander, 0)
+	t.check(not jail.is_empty() and not office.is_empty(), "a jail and a security office for the test")
+	if jail.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	var ppl: Array = _awake_inside(sim)
+	var off: Dictionary = ppl[ppl.size() - 1]
+	var low: Dictionary = ppl[ppl.size() - 2]
+	# TEST SET-UP: a colonist trained in security (the academy's job) becomes an officer.
+	t.eq(String(_cmd(sim, "set_role", {"agent": int(low["id"]), "role": "security"}).get("code", "")), "refused", "an officer needs the security skill")
+	sim.people.rec_w(off)["skill_bonus"] = {"security": 60}
+	sim.people.invalidate(int(off["id"]))
+	var r0: Dictionary = _cmd(sim, "set_role", {"agent": int(off["id"]), "role": "security"})
+	t.check(bool(r0.get("ok", false)) and String(off["role"]) == "security", "set_role security: %s" % str(r0))
+	var patrol := false
+	for s0 in 60:
+		sim.run_seconds(1.0)
+		if String(off.get("plan_kind", "")) == "patrol" and sim.people.outfit(off) == "uniform_security":
+			patrol = true
+			break
+	t.check(patrol, "the officer patrols in the security uniform")
+	var x: Dictionary = {}
+	var y: Dictionary = {}
+	for a in _awake_inside(sim, [int(off["id"])]):
+		if x.is_empty():
+			x = a
+		elif y.is_empty():
+			y = a
+	# TEST SET-UP: y stands in x's room; the two are enemies.
+	H.put_inside(sim, y, int(x["bld"]))
+	var rel: Dictionary = sim.relations._rel_w(x, y)
+	rel["aff"] = -60.0
+	rel["status"] = "enemy"
+	sim.relations._bump()
+	var fid: int = sim.security.start_fight(x, y, "test")
+	t.check(fid != -1 and String(x.get("v5_hold", "")) == "fight", "a fight starts (%d)" % fid)
+	t.check(["fight_idle", "punch", "hit_react"].has(sim.people.action(x)), "a fighter plays a fight clip: %s" % sim.people.action(x))
+	var f0: Dictionary = sim.state["v5"]["fights"].get(fid, {})
+	t.eq(int(f0.get("officer", -1)), int(off["id"]), "the officer is sent to the fight")
+	var cuffed := false
+	var ended := false
+	for s in 1200:
+		sim.step()
+		if not sim.state["v5"]["fights"].has(fid):
+			ended = true
+		for a in [x, y]:
+			if String(a.get("v5_hold", "")) == "cuffed" and sim.people.action(a) == "handcuffed_walk":
+				cuffed = true
+		if ended and (x.has("jailed") or y.has("jailed")) and s > 50:
+			var pz: Dictionary = x if x.has("jailed") else y
+			if int(pz["bld"]) == int(jail["id"]) and pz["where"] == "in" and not pz.has("v5_hold"):
+				break
+	t.check(ended, "the fight ended")
+	t.check(not H.log_entries(sim, "fight").is_empty() and not H.log_entries(sim, "arrest").is_empty(), "fight and arrest are in the log")
+	var pr: Dictionary = x if x.has("jailed") else y
+	t.check(pr.has("jailed") and int(pr.get("cell_b", -1)) == int(jail["id"]), "the one with the worse attitude is jailed in a cell of the jail")
+	t.check(cuffed, "the prisoner walked to the cell in handcuffs")
+	t.check(int(pr["bld"]) == int(jail["id"]), "the prisoner reached the jail (in %s)" % str(pr["bld"]))
+	t.eq(sim.people.outfit(pr), "prison", "a prisoner wears prison clothes")
+	var left := false
+	for k in 120:
+		sim.run_seconds(5.0)
+		if pr.has("jailed") and (pr["where"] != "in" or int(pr["bld"]) != int(jail["id"])) and String(pr.get("plan_kind", "")) != "jail" and String(pr.get("plan_kind", "")) != "safety":
+			left = true
+		if not pr.has("jailed"):
+			break
+	t.check(not left, "the prisoner stays in the jail (eats, drinks and sleeps there)")
+	sim.run_seconds(2.0)
+	t.check(not pr.has("jailed") and not pr.has("cell_b") and not H.log_entries(sim, "released").is_empty(), "released when the time is up")
+	t.eq(sim.security.info(-1)["officers"], 1, "one officer")
+	var rag_kinds := {}
+	for e in sim.state["v5"]["slog"]:
+		rag_kinds[String(e["kind"])] = true
+	t.check(rag_kinds.has("fight") and rag_kinds.has("arrest"), "the fight and the arrest are in the social log: %s" % str(rag_kinds.keys()))
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+
+## A lock-down keeps people in their rooms for 2 game hours; a party uses drinks, snacks or rations
+## and is refused without them; the response effects are predicted.
+func v5_lock_down_and_party(t) -> void:
+	var sim = _showcase()
+	sim.run_seconds(20.0)
+	var base: int = int(sim.bases.ids()[0]) if sim.bases.count() > 0 else -1
+	var eff: Dictionary = sim.unrest.response_effect(base, "party")
+	t.check(eff.has("unrest") and String(eff["cost"]).contains("drinks"), "response_effect: %s" % str(eff))
+	var items: Array = sim.content["society"]["party"]["items"]
+	var need: int = sim.unrest._party_need(base)
+	var before: int = sim.leisure.count_stock(base, items)
+	var r1: Dictionary = _cmd(sim, "unrest_response", {"base": base, "response": "party"})
+	if before >= need:
+		t.check(bool(r1.get("ok", false)), "party accepted with stock (%d of %d): %s" % [need, before, str(r1)])
+		t.eq(sim.leisure.count_stock(base, items), before - need, "the party used %d units" % need)
+	else:
+		t.eq(String(r1.get("code", "")), "no_stock", "a party without stock is refused")
+	var r2: Dictionary = _cmd(sim, "unrest_response", {"base": base, "response": "lock_down"})
+	t.check(bool(r2.get("ok", false)) and sim.unrest.locked(base) and bool(sim.unrest.info(base)["locked"]), "lock_down: the base is locked")
+	var moved: Array = []
+	var start := {}
+	for a in _colonists(sim):
+		if a["where"] == "in" and (a["plan"] as Array).is_empty():
+			start[int(a["id"])] = int(a["bld"])
+	for s in 300:
+		sim.step()
+		for a in _colonists(sim):
+			var k: String = String(a.get("plan_kind", ""))
+			if start.has(int(a["id"])) and (k == "task" or k == "rec" or k == "patrol" or k == "staff"):
+				if not moved.has(int(a["id"])):
+					moved.append(int(a["id"]))
+	t.eq(moved, [], "nobody idle at the lock starts work or leisure elsewhere while locked")
+	sim.run_seconds(40.0)
+	t.check(not sim.unrest.locked(base), "the lock-down ends after 2 game hours")
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+## Partners move in together; partners adopt through a medical bay; the child lives in their unit,
+## never works, goes to school at the academy and grows up into a colonist.
+func v5_families_and_children(t) -> void:
+	var sim = _showcase()
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	sim.run_seconds(5.0)
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	var tube: Dictionary = H.attach(sim, "residence_tube", lander, 2)
+	var acad: Dictionary = H.attach(sim, "academy", lander, 1)
+	var bay: int = -1
+	for id in sim.state["buildings"]:
+		if String(sim.state["buildings"][id]["def"]) == "medical" and sim.state["buildings"][id]["state"] == "active":
+			bay = int(id)
+	if bay == -1:
+		bay = int(H.attach(sim, "medical", lander, 1).get("id", -1))
+	t.check(not tube.is_empty() and not acad.is_empty() and bay != -1, "a residence tube, an academy and a medical bay")
+	if tube.is_empty() or acad.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	var x: Dictionary = {}
+	var y: Dictionary = {}
+	var ppl: Array = _colonists(sim)
+	for i in ppl.size():
+		for j in range(i + 1, ppl.size()):
+			if x.is_empty() and sim.social.compatible(ppl[i], ppl[j]):
+				x = ppl[i]
+				y = ppl[j]
+	t.check(not x.is_empty(), "a compatible pair")
+	# TEST SET-UP: the two are partners (the romance chain is tested in long_v5_relationships).
+	var rel: Dictionary = sim.relations._rel_w(x, y)
+	rel["aff"] = 70.0
+	rel["att"] = 80.0
+	rel["status"] = "partners"
+	sim.relations._bump()
+	sim.families.on_partners(x, y)
+	var ux: int = int(sim.people.rec_of(int(x["id"])).get("unit", -1))
+	t.check(int(x["bed"]) == int(y["bed"]) and ux >= 0 and ux == int(sim.people.rec_of(int(y["id"])).get("unit", -2)), "partners share a unit (%s %d / %s)" % [str(x["bed"]), ux, str(y["bed"])])
+	t.eq(sim.people.home(x)["kind"], "family", "their home is a family unit")
+	t.check(not H.log_entries(sim, "move_in").is_empty(), "the move is in the log")
+	var r1: Dictionary = _cmd(sim, "adopt", {"agent": int(x["id"])})
+	t.check(bool(r1.get("ok", false)), "adopt: %s" % str(r1))
+	sim.run_seconds(610.0)
+	var kids: Array = sim.families.children_of(int(x["id"]))
+	t.eq(kids.size(), 1, "the child came after a day")
+	if kids.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	var c: Dictionary = sim.state["agents"][kids[0]]
+	var idn: Dictionary = sim.people.identity(c)
+	t.check(bool(idn["child"]) and ["c1", "c2"].has(idn["variant"]) and int(idn["age"]) >= 6 and int(idn["age"]) <= 12, "a child: %s, %d" % [idn["variant"], int(idn["age"])])
+	t.eq(String(sim.people.rank(c)["rank"]), "child", "rank child")
+	t.check(not H.log_entries(sim, "adoption").is_empty(), "the adoption is in the log")
+	var worked := false
+	var school := false
+	var discipline: Dictionary = _cmd(sim, "discipline", {"agent": int(c["id"]), "action": "ration_cut"})
+	t.eq(String(discipline.get("code", "")), "refused", "a child is never disciplined")
+	for s in 120:
+		sim.run_seconds(5.0)
+		if String(c.get("plan_kind", "")) == "task":
+			worked = true
+		if String(c.get("plan_kind", "")) == "class" and int(c["bld"]) == int(acad["id"]) and sim.people.outfit(c) == "school":
+			school = true
+	t.check(not worked, "a child takes no work")
+	t.check(school, "the child went to school in the school uniform")
+	t.check(int(c["bed"]) == int(x["bed"]), "the child lives in the parents' home")
+	var sch: Dictionary = sim.state["v5"]["school"].get(int(c["id"]), {})
+	t.check(not sch.is_empty(), "school points: %s" % str(sch))
+	# TEST SET-UP: the child's days are over.
+	c["child_at"] = int(sim.state["tick"]) - int(float(sim.content["society"]["families"]["child_grow_days"]) * 6000.0)
+	sim.run_seconds(12.0)
+	t.check(String(c["kind"]) != "child" and String(sim.people.identity(c)["kind"]) == "colonist" and not H.log_entries(sim, "grew_up").is_empty(), "the child grew up: %s" % String(c["role"]))
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+
+## A retail module and a staffed venue: staff are proposed, carriers stock the goods store, visits
+## use goods and raise comfort, and tourists pay credits (tourism).
+func v5_venues_and_tourism(t) -> void:
+	var sim = _showcase()
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	sim.run_seconds(5.0)
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	var shop: Dictionary = H.attach(sim, "retail", lander, 1)
+	H.attach_power(sim, lander)
+	t.check(not shop.is_empty() and int(shop.get("inv_in", -1)) != -1, "a retail module with a goods store")
+	if shop.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	# TEST SET-UP: goods in the lander's store (as if made or bought).
+	var store: int = int(sim.state["buildings"][int(sim.state["lander_id"])]["inv_out"])
+	for item in ["snacks", "clothing", "gifts", "gadgets", "luxury_goods"]:
+		sim.inv.add_new_forced(store, item, 12, "scenario")
+	sim.run_seconds(40.0)
+	var staff: Array = sim.leisure.staff_of(int(shop["id"]), "shop")
+	t.eq(staff.size(), 1, "SIM proposed a shopkeeper")
+	var stocked := false
+	var open := false
+	var used0: int = int(sim.state["ledger"].get("snacks", {}).get("consumed", 0)) + int(sim.state["ledger"].get("clothing", {}).get("consumed", 0))
+	for s in 60:
+		sim.run_seconds(10.0)
+		if sim.inv.total(int(shop["inv_in"])) > 0:
+			stocked = true
+		if sim.leisure.is_open(shop, "shop"):
+			open = true
+	t.check(stocked, "carriers stocked the shop (%s)" % str(sim.inv.get_inv(int(shop["inv_in"]))["items"]))
+	var rows: Array = sim.leisure.venues(shop)
+	t.check(open, "the shop opened: %s" % str(rows))
+	# People relax when they have no work (work comes first): TEST SET-UP: six colonists start a visit.
+	var n_vis := 0
+	for a in _colonists(sim):
+		if n_vis >= 6 or a["where"] != "in" or a.has("v5_hold"):
+			continue
+		if sim.agents._start_personal(a, "rec", int(shop["id"]), [{"op": "rec"}], "Shopping", -1):
+			sim.leisure.pick_venue(a, int(shop["id"]))
+			n_vis += 1
+	sim.run_seconds(120.0)
+	var used := 0
+	for item in ["snacks", "clothing", "gifts", "gadgets", "luxury_goods"]:
+		used += int(sim.state["ledger"].get(item, {}).get("consumed", 0))
+	t.check(used > 0, "visits used goods (%d)" % used)
+	var q := 0
+	for a in _colonists(sim):
+		if a.has("rec_q_t"):
+			q += 1
+	t.check(q > 0, "%d people had a venue visit (comfort bonus)" % q)
+	# A tourist at the shop pays (TEST SET-UP: a visitor record).
+	var v: Dictionary = sim.agents.spawn("visitor", "Tourist 99", shop["pos"], int(shop["id"]))
+	v["kind"] = "visitor"
+	v["vkind"] = "liner"
+	v["visit"] = {"ate": 0, "rec": 0, "slept": 0, "paid": 0, "treated": false, "study": 0.0, "tour": [], "toured": 0}
+	v["venue"] = "shop"
+	var c0: int = int(sim.state["credits"]["by"].get("tourism", 0))
+	for k in 20:
+		sim.step()
+		sim.leisure.on_rec_end(v)
+	t.check(int(sim.state["credits"]["by"].get("tourism", 0)) > c0, "a tourist pays at a venue (tourism %d)" % int(sim.state["credits"]["by"].get("tourism", 0)))
+	t.eq(sim.traffic.credits_audit(), {}, "credits balance")
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+
+## The super dome rises in its 9 stages (ART-B's ids; each is logged), then opens: 16 venues with floors, staff
+## proposed, and an open dome doubles the tourists of a liner.
+func v5_dome_build_stages(t) -> void:
+	var g = H.Game.new(1001, false)
+	var sim = g.sim
+	sim.new_game(1001, "frontier", {"debug": true})
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	var c: Vector2 = sim.world.center
+	var p := Vector2(-1, -1)
+	for r in range(80, 700, 20):
+		for k in 24:
+			var q: Vector2 = sim.place.snap_pos(c + Vector2.RIGHT.rotated(k * TAU / 24.0) * float(r))
+			if p.x < 0.0 and sim.place.check_building("super_dome", q, 0.0, -1, 1) == "ok":
+				p = q
+	var res: Dictionary = g.cmd("place_building", {"def": "super_dome", "x": p.x, "y": p.y, "rot": 0.0, "size": 1})
+	t.check(bool(res["ok"]), "a dome is planned")
+	var b: Dictionary = sim.state["buildings"][int(res["id"])]
+	t.eq(int(sim.leisure.dome_stage(b)["index"]), -1, "a blueprint is the site stage")
+	# TEST SET-UP: every material on site (as if carried), freeze nothing.
+	for item in b["cost"]:
+		sim.inv.add_new_forced(int(b["inv_site"]), item, int(b["cost"][item]), "scenario")
+	for s in 30:
+		sim.step()
+	t.eq(String(b["state"]), "building", "the dome is being built")
+	var seen: Array = []
+	for step in 90:
+		sim.build.add_progress(b, float(b["work_total"]) / 80.0)                        # test set-up: builders' work
+		for k in 10:
+			sim.step()
+		var st: Dictionary = sim.leisure.dome_stage(b)
+		if not seen.has(int(st["index"])):
+			seen.append(int(st["index"]))
+		if String(b["state"]) == "active":
+			break
+	t.eq(String(b["state"]), "active", "the dome is finished")
+	t.check(seen.has(0) and seen.has(7), "stages 0..7 seen: %s" % str(seen))
+	t.check(H.log_entries(sim, "dome_stage").size() >= 7, "each stage is logged (%d)" % H.log_entries(sim, "dome_stage").size())
+	var rows: Array = sim.leisure.venues(b)
+	t.eq(rows.size(), 16, "16 venues")
+	var floors := {}
+	for rw in rows:
+		floors[int(rw["floor"])] = true
+	t.check(floors.has(0) and floors.has(1), "venues on floors 0 and 1")
+	t.check(String(sim.leisure.why_closed(b, "bar")) != "", "the bar is closed without staff: %s" % sim.leisure.why_closed(b, "bar"))
+	t.check(sim.leisure.why_closed(b, "plaza") == "" or not bool(b["powered"]), "the plaza needs no staff")
+	t.eq(sim.inv.audit(), {}, "ledger")
+	g.dispose()
+	t.done()
+
+## The Rag is stored at the turn of each day: an issue with a lead of 3-6 sentences, 3 or more
+## stories when the day had events, 3-5 gossip lines, watches with notes, a poll with the commander
+## and the change, 3-4 ads and serious rows {text, severity}.
+func v5_rag_stored_issues(t) -> void:
+	var sim = _showcase()
+	sim.run_seconds(1800.0)
+	var issues: Array = sim.social.rag_issues(30)
+	var stored := 0
+	for iss in issues:
+		if bool(iss.get("stored", false)):
+			stored += 1
+	t.check(stored >= 2, "issues stored in the game (%d of %d)" % [stored, issues.size()])
+	var iss: Dictionary = issues[0]
+	t.check(bool(iss.get("stored", false)), "the newest issue is stored")
+	var sentences: int = String(iss["lead"]["text"]).count(". ") + 1
+	t.check(sentences >= 3 and sentences <= 7, "a lead body of 3-6 sentences (%d): %s" % [sentences, iss["lead"]["text"]])
+	t.check(iss["stories"].size() >= 3, "3 stories or more (%d)" % iss["stories"].size())
+	t.check(iss["gossip"].size() >= 3 and iss["gossip"].size() <= 5, "3-5 gossip lines (%d)" % iss["gossip"].size())
+	t.check(iss["ads"].size() >= 3 and iss["ads"].size() <= 4, "3-4 ads (%d)" % iss["ads"].size())
+	t.check(iss["poll"].has("commander") and iss["poll"].has("change"), "the poll has the commander and the change: %s" % str(iss["poll"]))
+	var ok_notes := true
+	for w in iss["couple_watch"] + iss["feud_watch"]:
+		ok_notes = ok_notes and String(w.get("note", "")) != ""
+	t.check(ok_notes, "watch rows have a note")
+	var ok_serious := true
+	for s in iss["serious"]:
+		ok_serious = ok_serious and typeof(s) == TYPE_DICTIONARY and s.has("text") and s.has("severity")
+	t.check(ok_serious, "serious rows are {text, severity}")
+	for st in [iss["lead"]] + iss["stories"]:
+		if String(st["headline"]).contains("{") or String(st["text"]).contains("{"):
+			t.fail("an unfilled slot: %s / %s" % [st["headline"], st["text"]])
+	var n := 0
+	for k in sim.content["tabloid"]["headlines"]:
+		n += (sim.content["tabloid"]["headlines"][k] as Array).size()
+	t.check(n >= 200, "200 headlines or more (%d)" % n)
+	# The issue survives a save and a load unchanged.
+	var st2: Dictionary = Persistence.decode(Persistence.encode(sim.state))["state"]
+	var sim2 = H.Sim.new()
+	sim2.load_state(st2)
+	t.eq(sim2.social.rag_issue(int(iss["number"])), iss, "the stored issue loads unchanged")
+	sim2.dispose()
+	sim.dispose()
+	t.done()
+
+## Multi-storey paths: every bed, child bed, seat and stand of the apartment block and every unit
+## and venue of the dome has a floor inside the building; the door and the centre of each are joined
+## on the walking map; a floor change is a lift ride of lift_seconds.
+func v5_multistorey_paths(t) -> void:
+	var sim = _showcase()
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	var blk: Dictionary = H.attach(sim, "apartment_block", lander, 1)
+	t.check(not blk.is_empty(), "an apartment block joined to the base")
+	if blk.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	var bad: Array = []
+	var f: Dictionary = sim.sizes.furniture("apartment_block", 1)
+	for kind in ["bed", "child_bed", "seat", "stand"]:
+		var cap: int = sim.agents._slot_cap(kind, int(blk["id"]))
+		var per := {}
+		for i in cap:
+			var fl: int = sim.floors.slot_floor(blk, kind, i)
+			if fl < 0 or fl > 2:
+				bad.append("%s %d floor %d" % [kind, i, fl])
+			per[fl] = int(per.get(fl, 0)) + 1
+		if kind == "bed" and per.size() != 3:
+			bad.append("beds on %d floors" % per.size())
+	t.eq(bad, [], "every anchor of the block is on floor 0, 1 or 2")
+	var a: Dictionary = _colonists(sim)[0]
+	var r: Dictionary = sim.nav.plan(sim.agents.loc_of(a), {"b": int(blk["id"]), "p": sim.nav.slot_pos(blk, 3)})
+	t.check(bool(r["ok"]), "the block is reachable on the walking map")
+	var units: Array = sim.floors.units({"id": -1, "def": "super_dome", "size": 1})
+	var uf := {}
+	for u in units:
+		uf[int(u["floor"])] = true
+	t.check(units.size() == 30 and uf.has(2) and uf.has(4) and not uf.has(0), "30 dome units on floors 2-4")
+	var vf := {}
+	for v in sim.bdef("super_dome")["venues"]:
+		vf[int(v["floor"])] = true
+	t.check(vf.has(0) and vf.has(1) and vf.size() == 2, "dome venues on floors 0 and 1")
+	t.near(sim.floors.lift_seconds("super_dome", 0, 4), 20.0, 0.01, "4 floors of the dome lift: 20 s")
+	sim.dispose()
+	t.done()
+
+## Old saves load (schema 5 and the v3.1 schema): schema 6, one commander a base by seniority, no
+## relationships, and a day runs with the ledger balanced.
+func v5_migration_old_saves(t) -> void:
+	for path in ["res://content/saves/showcase_v4.fhsave", "res://content/saves/showcase_v31.fhsave"]:
+		var dec: Dictionary = Persistence.decode(FileAccess.get_file_as_bytes(path))
+		t.check(bool(dec["ok"]), "%s decodes" % path)
+		if not bool(dec["ok"]):
+			continue
+		var sim = H.Sim.new()
+		sim.load_state(dec["state"])
+		t.eq(int(sim.state["schema"]), 6, "%s: schema 6" % path)
+		t.eq(sim.state["v5"].get("rel", {}).size(), 0, "no relationships")
+		var cmd := {}
+		for row in sim.people.list():
+			if row["rank"] == "commander":
+				cmd[row["base"]] = int(cmd.get(row["base"], 0)) + 1
+		var one := true
+		for b in cmd:
+			one = one and int(cmd[b]) == 1
+		t.check(one and cmd.size() >= 1, "one commander a base: %s" % str(cmd))
+		var oldest: int = -1
+		var ob := 1 << 60
+		for a in _colonists(sim):
+			if int(a.get("born", 0)) < ob:
+				ob = int(a.get("born", 0))
+				oldest = int(a["id"])
+		var cid: int = int(sim.state["v5"]["appoint"].get("%d:commander" % (int(sim.bases.ids()[0]) if sim.bases.count() > 0 else -1), -1))
+		t.check(cid != -1, "the commander is appointed by seniority (%d; oldest %d)" % [cid, oldest])
+		var n0: int = sim.alive_count()
+		sim.run_seconds(600.0)
+		t.check(sim.alive_count() >= n0 - 1, "a day runs (%d -> %d)" % [n0, sim.alive_count()])
+		t.eq(sim.inv.audit(), {}, "ledger")
+		sim.dispose()
+	t.done()
+
+## PRISM SHIFT records, the champion rule, P. Barby after the dome opens.
+func v5_eggs(t) -> void:
+	var sim = _showcase()
+	var a: Dictionary = _colonists(sim)[0]
+	for k in 5:
+		sim.eggs.on_arcade(a)
+		sim.step()
+	var ar: Dictionary = sim.eggs.arcade()
+	t.check(int(ar["best"]) > 0 and int(ar["holder"]) == int(a["id"]) and int(ar["plays"]) == 5, "arcade record %s" % str(ar))
+	t.check(sim.eggs.found("prism_shift") and not H.log_entries(sim, "arcade_record").is_empty(), "the PRISM SHIFT egg is found with the first record")
+	var champs := 0
+	for id in 20000:
+		if sim.eggs.is_champion(id):
+			champs += 1
+	t.check(champs >= 5 and champs <= 40, "about 1 in 1,000 is a champion (%d in 20,000)" % champs)
+	var lines: Array = sim.content["dialogue"]["topics"]["barby"]
+	t.check(lines.size() >= 3 and String(lines[0]).contains("made this place"), "P. Barby has lines of his own")
+	# P. Barby only after a dome opens (TEST SET-UP: an active dome record, a liner's visitor).
+	var v: Dictionary = sim.agents.spawn("visitor", "Tourist 77", a["pos"], int(a["bld"]))
+	v["kind"] = "visitor"
+	v["vkind"] = "liner"
+	v["visit"] = {"ate": 0, "rec": 0, "slept": 0, "paid": 0, "treated": false, "study": 0.0, "tour": [], "toured": 0}
+	sim.eggs.on_liner({"n": 0}, [int(v["id"])])
+	t.check(not sim.eggs.found("barby"), "no P. Barby before the dome")
+	var p := Vector2(-1, -1)
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	for r in range(120, 900, 20):
+		for k in 24:
+			var q: Vector2 = sim.place.snap_pos(lander + Vector2.RIGHT.rotated(k * TAU / 24.0) * float(r))
+			if p.x < 0.0 and sim.place.check_building("super_dome", q, 0.0, -1, 1) == "ok":
+				p = q
+	sim.build.spawn_active("super_dome", p, 0.0, 1)
+	var hit := -1
+	for n in 200:
+		if sim.eggs._h(n, 99) < 0.25:
+			hit = n
+			break
+	sim.eggs.on_liner({"n": hit}, [int(v["id"])])
+	t.check(sim.eggs.found("barby") and String(v["name"]) == "P. Barby" and bool(sim.people.identity(v)["vip"]) and String(sim.social.topic_for(v, a, 1)) == "barby", "P. Barby visits once the dome is open")
+	sim.run_seconds(4.0)
+	t.check(sim.awards.earned("egg_barby") and sim.awards.earned("egg_prism"), "the egg awards are earned")
+	sim.dispose()
+	t.done()
+
+## content/saves/showcase_v5.fhsave (tests/make_showcase_v5.gd): about 110 people with children, the
+## civic buildings, a dome with venues, a jail with a prisoner, couples, Rag issues, unrest.
+func v5_showcase(t) -> void:
+	var path := "res://content/saves/showcase_v5.fhsave"
+	if not FileAccess.file_exists(path):
+		t.fail("no %s (run tests/make_showcase_v5.gd)" % path)
+		t.done()
+		return
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+	var raw := StreamPeerBuffer.new()
+	raw.data_array = bytes
+	raw.seek(8)
+	t.eq(raw.get_u32(), 6, "schema 6")
+	var dec: Dictionary = Persistence.decode(bytes)
+	var sim = H.Sim.new()
+	sim.load_state(dec["state"])
+	var people := 0
+	var kids := 0
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive":
+			people += 1
+			if String(a.get("kind", "")) == "child":
+				kids += 1
+	t.check(people >= 100, "100 people or more (%d)" % people)
+	t.check(kids >= 6, "6 children or more (%d)" % kids)
+	var defs := {}
+	for b in sim.state["buildings"].values():
+		if b["state"] == "active":
+			defs[String(b["def"])] = int(defs.get(String(b["def"]), 0)) + 1
+	for d in ["residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail", "super_dome"]:
+		t.check(defs.has(d), "has a %s" % d)
+	t.check(sim.bases.count() >= 2, "2 bases")
+	var prisoners := 0
+	var students := 0
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and a.has("jailed"):
+			prisoners += 1
+	for k in sim.state["v5"].get("courses", {}):
+		students += 1
+	t.check(prisoners >= 1, "a prisoner (%d)" % prisoners)
+	t.check(students >= 1, "students at the academy (%d)" % students)
+	var couples: Array = sim.relations.pairs_with(["dating", "partners", "married"])
+	t.check(couples.size() >= 2, "2 couples or more (%d)" % couples.size())
+	t.check(not sim.relations.pairs_with(["affair"]).is_empty(), "an affair about to break")
+	var issues: Array = sim.social.rag_issues(30)
+	var stored := 0
+	for iss in issues:
+		if bool(iss.get("stored", false)):
+			stored += 1
+	t.check(stored >= 5, "5 Rag issues (%d)" % stored)
+	var u: float = float(sim.unrest.info(-1)["value"])
+	t.check(u < 25.0, "calm unrest (%.1f)" % u)
+	var dome: Dictionary = {}
+	for b in sim.state["buildings"].values():
+		if String(b["def"]) == "super_dome":
+			dome = b
+	var open := 0
+	for rw in sim.leisure.venues(dome):
+		if bool(rw["open"]):
+			open += 1
+	t.check(open >= 5, "the dome has open venues (%d)" % open)
+	var tourists := 0
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and String(a.get("kind", "")) == "visitor":
+			tourists += 1
+	t.note("%d people, %d children, %d visitors, unrest %.1f, %d open venues, %d stored issues" % [people, kids, tourists, u, open, stored])
+	sim.run_seconds(60.0)
+	t.eq(sim.inv.audit(), {}, "ledger after a minute")
+	sim.dispose()
+	t.done()
+## V5 budget (section 0): the sim tick at about 110 people with the social systems. Median of the
+## tick times over 1,500 ticks of showcase_v5 (<= 3.0 ms) and the worst tick (budget 12 ms; the test
+## fails over 30 ms, as long_v4_tick_max: the worst tick depends on the machine's load).
+func long_v5_perf_showcase(t) -> void:
+	var path := "res://content/saves/showcase_v5.fhsave"
+	if not FileAccess.file_exists(path):
+		t.fail("no %s" % path)
+		t.done()
+		return
+	var sim = H.Sim.new()
+	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
+	sim.run_seconds(30.0)
+	var times: Array = []
+	for i in 1500:
+		var t0: int = Time.get_ticks_usec()
+		sim.step()
+		times.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+	var sorted_t: Array = times.duplicate()
+	sorted_t.sort()
+	var med: float = float(sorted_t[sorted_t.size() / 2])
+	var worst: float = float(sorted_t[sorted_t.size() - 1])
+	var p99: float = float(sorted_t[int(sorted_t.size() * 0.99)])
+	var mean := 0.0
+	for x in times:
+		mean += float(x)
+	mean /= float(times.size())
+	t.note("%d people: median %.3f ms, mean %.3f ms, p99 %.2f ms, worst %.2f ms" % [sim.state["agents"].size(), med, mean, p99, worst])
+	t.check(med <= 3.0, "median tick %.3f ms (budget 3.0)" % med)
+	t.check(worst <= 30.0, "worst tick %.2f ms (budget 12; fails over 30)" % worst)
 	sim.dispose()
 	t.done()

@@ -135,6 +135,8 @@ var _frozen := false
 var _focus_now := Vector3.ZERO
 var _frame := 0
 var game_rate := 1.0       # game seconds per real second, smoothed (0 while paused)
+var _cont_prev := -1.0     # main.gd's continuous game clock on the last frame (see sync)
+var tick_age := 0.0        # game seconds since the last sim tick (main.gd's accumulator; 0 when unknown)
 var shake_enabled := true  # settings "Camera shake" (UI sets it); quake and impact shakes respect it
 
 # ---------------------------------------------------------------- setup
@@ -419,6 +421,7 @@ var bubbles
 var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
 var _follow_open := {}      # building id -> true: roofs cut away for the follow view
+var fprobe                   # fx_follow_probe (measurement only, debug "fprobe")
 
 ## Over-the-shoulder follow of a person (V5 §3). UI binds V / the Follow button / Esc / Tab to
 ## follow_start, follow_stop and follow_next; the camera rig does the spring, orbit, zoom, Q/E swap.
@@ -501,9 +504,9 @@ func _follow_circles(center: Vector3, reach: float) -> Array:
 			out.append([int(id), bp, r, b["kind"] == "room"])
 	return out
 
-## The camera never passes a wall: from the shoulder to the wanted eye, stop 0.3 m before the
+## The camera never passes a wall: from the shoulder to the wanted eye, stop `margin` m before the
 ## first wall (a person inside a room: the eye stays inside it; outside: it does not enter one).
-func _follow_collide(pivot: Vector3, eye: Vector3) -> Vector3:
+func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3) -> Vector3:
 	var a := Vector2(pivot.x, pivot.z)
 	var b2 := Vector2(eye.x, eye.z)
 	var d: Vector2 = b2 - a
@@ -518,7 +521,7 @@ func _follow_collide(pivot: Vector3, eye: Vector3) -> Vector3:
 		var cp: Vector2 = c[1]
 		var r: float = c[2]
 		var inside: bool = a.distance_to(cp) < r - 0.05
-		var rr: float = (r - 0.3) if inside else (r + 0.3)
+		var rr: float = (r - margin) if inside else (r + margin)
 		# |a + d t - cp| = rr
 		var f: Vector2 = a - cp
 		var qa: float = d.dot(d)
@@ -535,7 +538,7 @@ func _follow_collide(pivot: Vector3, eye: Vector3) -> Vector3:
 	# boxes, grown by 0.3 m (the camera sphere), cut the segment too.
 	var d3: Vector3 = eye - pivot
 	for ab in _follow_obstacles():
-		var bx: AABB = (ab as AABB).grow(0.3)
+		var bx: AABB = (ab as AABB).grow(margin)
 		if bx.has_point(pivot):
 			continue
 		var hit = bx.intersects_segment(pivot, eye)
@@ -841,9 +844,21 @@ func sync(delta: float) -> void:
 	var sim_dt: float = 0.0 if _sim_seconds < 0.0 else clampf(secs - _sim_seconds, 0.0, 30.0)
 	_sim_seconds = secs
 	if delta > 0.0:
-		# A time average of sim seconds per view second. The ratio is NOT clamped low: the sim
-		# steps in 0.1 s ticks, so one frame in many carries a large ratio (slow motion).
-		game_rate = lerpf(game_rate, clampf(sim_dt / delta, 0.0, 1000.0), 1.0 - exp(-delta * 1.5))
+		# Game seconds per view second. The sim steps in 0.1 s ticks, so sim_dt / delta is 0 on most
+		# frames and large on one: a time average of it rippled +-6 % at 10 Hz, and every drawn
+		# body's speed and clip rate rippled with it (follow view jitter, 2026-10-01). The clock that
+		# main.gd runs the ticks from (stepped time + its accumulator) is continuous: its rate is
+		# exact on every frame (1, 2, 4 ... or 0 when paused). Old way when that clock is not there.
+		var mp = get_parent()
+		var acc = mp.get("_acc") if mp != null else null
+		if acc != null:
+			var cont: float = secs + float(acc)
+			tick_age = float(acc)
+			var cdt: float = 0.0 if _cont_prev < 0.0 else clampf(cont - _cont_prev, 0.0, 30.0)
+			_cont_prev = cont
+			game_rate = lerpf(game_rate, clampf(cdt / delta, 0.0, 1000.0), 1.0 - exp(-delta * 6.0))
+		else:
+			game_rate = lerpf(game_rate, clampf(sim_dt / delta, 0.0, 1000.0), 1.0 - exp(-delta * 1.5))
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	var focus: Vector3 = _focus()
 	_focus_now = focus
@@ -2857,6 +2872,28 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"fprobe":
+			# fprobe start <secs> [in|out|any|keep] | get | csv | stop: follow-view smoothness probe (measurement).
+			var rp = rig()
+			if rp == null:
+				return "no rig"
+			if fprobe == null:
+				fprobe = load("res://presentation/fx_follow_probe.gd").new(self)
+			var sub: String = w[1] if w.size() > 1 else "get"
+			if sub == "start":
+				rp.probe_fn = fprobe.record
+				return fprobe.start(float(w[2]) if w.size() > 2 else 20.0, w[3] if w.size() > 3 else "any")
+			if sub == "stop":
+				fprobe.on = false
+				rp.probe_fn = Callable()
+				return "stopped"
+			if sub == "csv":
+				return fprobe.csv()
+			if sub == "walker":
+				return str(fprobe.pick_walker(w[2] if w.size() > 2 else "any", -1))
+			var rep: Dictionary = fprobe.report()
+			rep["running"] = fprobe.on
+			return JSON.stringify(rep)
 		"followinfo":
 			var rf = rig()
 			var fp = agent_world_pos(follow_id) if follow_id >= 0 else null

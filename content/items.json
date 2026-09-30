@@ -9,7 +9,8 @@
     "crop": {"name": "Crops", "order": 6},
     "dish": {"name": "Dishes", "order": 7},
     "science": {"name": "Science", "order": 8},
-    "find": {"name": "Finds", "order": 9}
+    "find": {"name": "Finds", "order": 9},
+    "leisure": {"name": "Leisure goods", "order": 10}
   },
   "items": {
     "ore":          {"tier": 1, "tier_name": "basic", "name": "Iron ore",        "category": "raw",       "color": "#8A5A44", "value": 1,  "desc": "Mined from mineral deposits. A refinery turns 2 ore into 1 steel."},
@@ -83,6 +84,12 @@
     "data_core": {"tier": 3, "tier_name": "high", "name": "Data core", "category": "find", "color": "#40A0FF", "value": 60, "plural": "Data cores", "desc": "Found at wrecks and derelict probes. A research assembler turns one into three deep research packs."},
     "derelict_parts": {"tier": 2, "tier_name": "mid", "name": "Derelict parts", "category": "find", "color": "#A08060", "value": 20, "plural": "Derelict parts", "desc": "Found at wrecks. A workshop salvages spare parts and electronics from them."},
     "meteorite_sample": {"tier": 3, "tier_name": "high", "name": "Meteorite sample", "category": "find", "color": "#806070", "value": 30, "plural": "Meteorite samples", "desc": "Found in meteorite fields. Holds exotic crystal (a chemical plant purifies it)."},
-    "blueprint_fragment": {"tier": 2, "tier_name": "mid", "name": "Blueprint fragment", "category": "find", "color": "#80C0FF", "value": 40, "plural": "Blueprint fragments", "desc": "Found in derelict probes. A research assembler makes three advanced research packs from one."}
+    "blueprint_fragment": {"tier": 2, "tier_name": "mid", "name": "Blueprint fragment", "category": "find", "color": "#80C0FF", "value": 40, "plural": "Blueprint fragments", "desc": "Found in derelict probes. A research assembler makes three advanced research packs from one."},
+    "snacks": {"tier": 1, "tier_name": "basic", "name": "Snacks", "category": "leisure", "color": "#F2A65A", "value": 2, "plural": "Snacks", "one": "Snack", "desc": "Crisps and sweets from the distillery. Cafes, the grocery and parties use them."},
+    "drinks": {"tier": 1, "tier_name": "basic", "name": "Drinks", "category": "leisure", "color": "#C0392B", "value": 3, "plural": "Drinks", "one": "Drink", "desc": "Brewed at the distillery. The bar, the Club and parties use them."},
+    "clothing": {"tier": 1, "tier_name": "basic", "name": "Clothing", "category": "leisure", "color": "#8E7CC3", "value": 4, "plural": "Clothes", "one": "Set of clothes", "desc": "Casual wear from the workshop. Shops sell it; people like new clothes."},
+    "gifts": {"tier": 1, "tier_name": "basic", "name": "Gifts", "category": "leisure", "color": "#FF8FB1", "value": 4, "plural": "Gifts", "one": "Gift", "desc": "Small presents from the workshop. Shops sell them; the Gift order uses one."},
+    "gadgets": {"tier": 2, "tier_name": "mid", "name": "Gadgets", "category": "leisure", "color": "#3EC1D3", "value": 8, "plural": "Gadgets", "one": "Gadget", "desc": "Games and devices from the electronics fab. The electronics shop sells them."},
+    "luxury_goods": {"tier": 2, "tier_name": "mid", "name": "Luxury goods", "category": "leisure", "color": "#E8C547", "value": 12, "plural": "Luxury goods", "one": "Luxury item", "desc": "Fine goods from the fabricator. Shops sell them to colonists and tourists."}
   }
 }

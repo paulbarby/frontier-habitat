@@ -327,6 +327,10 @@ func eval_kind(kind: String, p: Dictionary, from_tick: int = -1) -> Array:
 			return [okd, since, float(p.get("days", 1))]
 		"victory":
 			return [victory(), 1.0 if victory() else 0.0, 1.0]
+		"egg":
+			# V5 section 4.5: an Easter egg was found (state.v5.eggs, sim/eggs.gd).
+			var eg: bool = sim.state.get("v5", {}).get("eggs", {}).has(String(p.get("id", "")))
+			return [eg, 1.0 if eg else 0.0, 1.0]
 	return [false, 0.0, 1.0]
 
 func _produced(item: String) -> int:

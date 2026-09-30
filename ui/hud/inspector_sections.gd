@@ -178,6 +178,14 @@ func building(b: Dictionary) -> void:
 		insp.add_badge(Kit.badge("LEVEL %d" % d.level_of(b), P.GOLD if d.level_of(b) >= 5 else P.VIOLET))
 	if d.size_word(String(b["def"]), d.size_of(b)) != "":
 		insp.add_badge(Kit.badge("SIZE %s" % d.size_word(String(b["def"]), d.size_of(b)), P.CYAN))
+	# Version 5: the super dome is built in stages (SIM leisure.dome_stage); the stage shows while it is built.
+	var ds: Dictionary = _dome_stage(b)
+	if not ds.is_empty() and String(ds.get("id", "")) != "done":
+		var sb: Control = Kit.badge("STAGE %d OF %d" % [int(ds["index"]) + 1, int(ds["count"])], P.GOLD)
+		sb.tooltip_text = "Build stage
+%s: %d %% done. The dome is built in %d stages; each one shows in the world." % [String(ds["name"]), int(float(ds.get("progress", 0.0)) * 100.0), int(ds["count"])]
+		sb.mouse_filter = Control.MOUSE_FILTER_PASS
+		insp.add_badge(sb)
 	if String(b["def"]) == "meridian":
 		insp.add_tabs([])
 		_ship(b)
@@ -206,6 +214,8 @@ func building(b: Dictionary) -> void:
 		tabs.append(["vehicles", "Vehicles"])
 	if _is_pad(b) and b["state"] == "active":
 		tabs.append(["satellite", "Satellite"])
+	if _has_venues(b) and b["state"] == "active":
+		tabs.append(["venues", "Venues"])
 	tabs.append(["stats", "Stats"])
 	insp.add_tabs(tabs)
 	match insp.tab:
@@ -217,6 +227,7 @@ func building(b: Dictionary) -> void:
 		"stats": _stats(b, def)
 		"vehicles": _depot(b)
 		"satellite": _pad(b)
+		"venues": _venues(b)
 		"storage": _storage(b)
 		_: _overview(b, def)
 	if insp.tab != "storage" and not store_first and b["state"] == "active" and insp.tab in ["", "overview"]:
@@ -1475,3 +1486,76 @@ func _nutrition(a: Dictionary) -> void:
 	if diet.is_empty():
 		return
 	sec2.add_child(Kit.label("%s in the last %s. %d or more lift morale." % [Kit.plural(distinct.size(), "different dish", "different dishes"), Kit.plural(diet.size(), "meal"), good], "SmallLabel", 12, P.GREEN if distinct.size() >= good else P.TEXT_2))
+
+# ---------------------------------------------------------------- venues (version 5, V5 §8-§9; SIM sim/leisure.gd)
+func _has_venues(b: Dictionary) -> bool:
+	var l = _sim().get("leisure")
+	return l != null and (l as Object).has_method("venues") and not (_sim().bdef(String(b["def"])).get("venues", []) as Array).is_empty()
+
+func _dome_stage(b: Dictionary) -> Dictionary:
+	var l = _sim().get("leisure")
+	return l.dome_stage(b) if l != null and (l as Object).has_method("dome_stage") else {}
+
+## Each venue of a shop, park or the super dome: open or closed (and why), staff, goods in stock, what a
+## tourist pays. SIM proposes the staff; colonists use venues for free.
+func _venues(b: Dictionary) -> void:
+	var id: int = int(b["id"])
+	var sec: VBoxContainer = _section("Venues", "cat_civic", P.CYAN)
+	sec.name = "Venues"
+	sec.add_child(Kit.wrap("A venue is open when the structure has power, its staff are at work and a shop has goods. Colonists use venues for free; tourists pay the price.", 12, P.TEXT_2))
+	var box: VBoxContainer = Kit.vbox(8)
+	sec.add_child(box)
+	var sig := [""]
+	var fill := func():
+		var bb: Dictionary = _sim().state["buildings"].get(id, {})
+		if bb.is_empty():
+			return
+		var rows: Array = _sim().leisure.venues(bb)
+		var sg: String = str(rows)
+		if sg == sig[0]:
+			return
+		sig[0] = sg
+		Kit.clear(box)
+		for r in rows:
+			box.add_child(_venue_row(r))
+	fill.call()
+	insp.bind(fill)
+
+func _venue_row(r: Dictionary) -> Control:
+	var v: VBoxContainer = Kit.vbox(2)
+	v.name = "Venue_" + String(r["id"])
+	var h: HBoxContainer = Kit.hbox(6)
+	v.add_child(h)
+	var open: bool = bool(r.get("open", false))
+	h.add_child(Kit.icon("sev_ok" if open else "lock", 14, P.GREEN if open else P.AMBER))
+	var nm: Label = Kit.label(String(r["name"]) + (("  ·  floor %d" % (int(r["floor"]) + 1)) if int(r.get("floor", 0)) > 0 else ""), "", 13, P.TEXT)
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(nm)
+	if bool(r.get("adults_only", false)):
+		h.add_child(Kit.badge("ADULTS", P.VIOLET))
+	h.add_child(Kit.badge("OPEN" if open else "CLOSED", P.GREEN if open else P.AMBER))
+	var parts: Array = []
+	if not open and String(r.get("why", "")) != "":
+		parts.append(String(r["why"]))
+	var staff: Array = r.get("staff", [])
+	if int(r.get("need_staff", 0)) > 0:
+		var names: Array = []
+		for aid in staff:
+			names.append(_hud().v5.agent_name(int(aid)).get_slice(" ", 0))
+		parts.append("Staff %d of %d%s" % [staff.size(), int(r["need_staff"]), (": " + ", ".join(names)) if not names.is_empty() else ""])
+	if int(r.get("price", 0)) > 0 or int(r.get("fee", 0)) > 0:
+		parts.append("Tourists pay %d" % maxi(int(r.get("price", 0)), int(r.get("fee", 0))))
+	if int(r.get("quality", 0)) > 0:
+		parts.append("Quality %d" % int(r["quality"]))
+	var l: Label = Kit.wrap("  ·  ".join(parts), 12, P.TEXT_2)
+	v.add_child(l)
+	var stock: Dictionary = r.get("stock", {})
+	if not (r.get("items", []) as Array).is_empty():
+		var any := false
+		for n in stock.values():
+			any = any or int(n) > 0
+		if not any:
+			v.add_child(Kit.wrap("No goods. Carriers bring %s from storage." % ", ".join((r["items"] as Array).map(func(x): return _d().item_name(String(x)).to_lower())), 12, P.AMBER))
+		else:
+			v.add_child(_items_row(stock))
+	return v

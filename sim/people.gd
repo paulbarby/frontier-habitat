@@ -91,6 +91,33 @@ func attitude_soon(a: Dictionary) -> Dictionary:
 		return hit[1]
 	return attitude(a)
 
+## A save from before schema 6 (persistence._v5_to_v6 marks state.v5.migrated): each base gets one
+## commander, the colonist who has been there longest (then the lowest id). Done once at the load;
+## every other rank is SIM's proposal as in a new game.
+func ensure_commanders() -> void:
+	var v: Dictionary = sim.state.get("v5", {})
+	if not bool(v.get("migrated", false)) or bool(v.get("seniority_done", false)):
+		return
+	v["seniority_done"] = true
+	if not v.has("appoint"):
+		v["appoint"] = {}
+	var nb: int = sim.bases.count()
+	var best := {}
+	var ids: Array = sim.state["agents"].keys()
+	ids.sort()
+	for aid in ids:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] != "alive" or String(a.get("kind", "")) == "visitor" or String(a.get("kind", "")) == "child":
+			continue
+		var b: int = sim.bases.home_of(a) if nb > 0 else -1
+		if not best.has(b) or int(a.get("born", 0)) < int(best[b].get("born", 0)):
+			best[b] = a
+	for b in best:
+		var key: String = "%d:commander" % int(b)
+		if not v["appoint"].has(key):
+			v["appoint"][key] = int(best[b]["id"])
+	_rank_sig = -1
+
 ## Fills the caches after a load, so the first scan in a frame does not pay for everybody.
 func prewarm() -> void:
 	for aid in sim.state["agents"]:
@@ -280,9 +307,64 @@ func predict(a, action: String, params: Dictionary = {}) -> Dictionary:
 		return {}
 	return sim.discipline.predict(ag, action, params)
 
-## What a person is doing for show (RENDER): "dance" during the dance egg, else "".
+## The animation a person plays now, for show (RENDER; "" = the ordinary clip of the activity):
+## "dance_c" (the dance egg), "fight_idle" | "punch" | "hit_react" (in a fight), "fall_down" (knocked
+## down), "handcuffed_walk" (taken to jail), "escort_walk" (an officer taking them), "sleep_cell",
+## "protest_fist", "sit_class", "teach", "child_play", and the venue clips: "shop_browse",
+## "sit_bench", "drink_bar", "play_arcade", "dance_a", "jog", "swim".
 func action(a: Dictionary) -> String:
-	return "dance" if has_mod(a, "dance") else ""
+	if a["state"] != "alive":
+		return ""
+	var hold: String = String(a.get("v5_hold", ""))
+	match hold:
+		"fight":
+			if float(a["health"]) <= float(soc()["security"]["down_health"]):
+				return "fall_down"
+			return ["fight_idle", "punch", "hit_react"][((int(sim.state["tick"]) / 12) + int(a["id"])) % 3]
+		"cuffed":
+			return "handcuffed_walk"
+		"escort":
+			return "escort_walk"
+	if has_mod(a, "dance"):
+		return "dance_c"
+	var kind: String = String(a.get("plan_kind", ""))
+	var op: String = sim.agents._step_op(a)
+	if a.has("jailed") and bool(a.get("sleeping", false)):
+		return "sleep_cell"
+	if a.has("knocked_until") and int(a["knocked_until"]) > int(sim.state["tick"]):
+		return "fall_down"
+	match op:
+		"protest":
+			return "protest_fist"
+		"class":
+			return "sit_class"
+		"teach":
+			return "teach"
+	if op == "rec" or (kind == "staff" and op == "staff"):
+		if String(a.get("kind", "")) == "child" and op == "rec":
+			return "child_play"
+		var v: Dictionary = sim.leisure.venue_of(a) if sim.get("leisure") != null else {}
+		if not v.is_empty():
+			return String(v["act"])
+	return ""
+
+## The V5 duties of a person with nothing to do (agents._think, before work): school or play for a
+## child, a course or a class to teach, a protest, a patrol for an officer, a shift at a venue.
+## true: a plan started.
+func duty_think(a: Dictionary) -> bool:
+	if String(a.get("kind", "")) == "child":
+		return sim.families.child_think(a)
+	if sim.education.think(a):
+		return true
+	if a.has("v5_nowork"):
+		return false
+	if sim.unrest.protest_think(a):
+		return true
+	if String(a.get("role", "")) == "security":
+		return sim.security.patrol_think(a)
+	if a.has("job") and sim.leisure.staff_think(a):
+		return true
+	return false
 
 func _h(id: int, salt: int) -> float:
 	return Rng.hash2(id, salt, int(sim.state.get("seed", 1)) ^ 0x5EED)
@@ -309,6 +391,9 @@ func identity(a: Dictionary) -> Dictionary:
 		variant = "%s%d" % [sex, 1 + int(_h(id, 2) * 3.0) % 3]
 	var ar: Array = c["age"]["child" if child else "adult"]
 	var age: int = int(ar[0]) + int(_h(id, 3) * float(int(ar[1]) - int(ar[0]) + 1))
+	# A child who grew up (families.gd) keeps a young adult age.
+	if a.has("age_set"):
+		age = int(a["age_set"])
 	var vdef: Dictionary = c["variants"][variant]
 	var height: float = snappedf(float(vdef["height"]) + (_h(id, 4) - 0.5) * 0.06, 0.01)
 	var grey: bool = age >= int(c["tint"]["hair_grey_age"]) and _h(id, 5) < 0.7
@@ -330,8 +415,19 @@ func identity(a: Dictionary) -> Dictionary:
 		var r: float = _h(id, 9)
 		attraction = "opposite" if r < float(w["opposite"]) else ("same" if r < float(w["opposite"]) + float(w["same"]) else "both")
 	var kind: String = "child" if child else ("visitor" if String(a.get("kind", "")) == "visitor" else "colonist")
+	# Easter eggs (V5 section 4.5): "barby" (the one-off tourist, a unique jacket) and "champion" (a
+	# PRISM SHIFT champion, about 1 in 1,000).
+	var egg := ""
+	if String(a.get("vip", "")) == "barby":
+		egg = "barby"
+	elif not child and sim.get("eggs") != null and sim.eggs.is_champion(id):
+		egg = "champion"
 	var out := {"id": id, "name": a.get("name", ""), "sex": sex, "variant": variant, "child": child, "age": age, "height": height,
-		"tint": tint, "traits": traits, "attraction": attraction, "kind": kind, "vip": false}
+		"tint": tint, "traits": traits, "attraction": attraction, "kind": kind, "vip": egg == "barby", "egg": egg}
+	if egg == "barby":
+		out["sex"] = "m"
+		out["variant"] = "m1"
+		out["traits"] = ["funny", "charming"]
 	_id_cache[id] = out
 	return out
 
@@ -570,14 +666,22 @@ func outfit(a: Dictionary) -> String:
 	if bool(a.get("jailed", false)):
 		return "prison"
 	var here: Dictionary = sim.state["buildings"].get(int(a.get("bld", -1)), {})
+	# V5 section 8: the pool (swimwear), for everybody at the pool venue.
+	if String(a.get("venue", "")) == "pool" and String(a.get("plan_kind", "")) == "rec":
+		return "swimwear"
 	if idn["child"]:
-		return "school" if not here.is_empty() and here["def"] == "academy" else casual
+		return "school" if (not here.is_empty() and here["def"] == "academy") or String(a.get("plan_kind", "")) == "class" else casual
 	if idn["kind"] == "visitor":
 		return casual
 	var kind: String = String(a.get("plan_kind", ""))
+	# Staff of a venue work in the Food department's uniform; a student in class wears casual.
+	if kind == "staff":
+		return "uniform_food"
+	if kind == "class" or kind == "protest":
+		return casual
 	if bool(a.get("sleeping", false)) or kind == "sleep" or kind == "rec":
 		return casual
-	if not here.is_empty() and String(sim.bdef(here["def"]).get("category", "")) == "housing" and kind != "task":
+	if not here.is_empty() and String(sim.bdef(here["def"]).get("category", "")) == "housing" and not ["task", "patrol", "respond", "escort", "teach"].has(kind):
 		return casual
 	var r: String = String(rank(a)["rank"])
 	if r == "commander" or r == "captain":
@@ -642,12 +746,21 @@ func _satisfaction(a: Dictionary) -> Dictionary:
 	var h: Dictionary = home(a)
 	var want: int = 3 if ["commander", "captain"].has(String(rank(a)["rank"])) else 1
 	comp["housing"] = clampf(50.0 + 20.0 * float(int(h["quality"]) - want), 0.0, 100.0)
-	var gap_days: float = float(int(sim.state["tick"]) - int(a.get("last_rec", -1000000))) / (float(sim.bal["tick_hz"]) * float(sim.bal["day_length"]))
+	var day_t: float = float(sim.bal["tick_hz"]) * float(sim.bal["day_length"])
+	var gap_days: float = float(int(sim.state["tick"]) - int(a.get("last_rec", -1000000))) / day_t
 	comp["comfort"] = clampf(90.0 - gap_days * 25.0, 10.0, 90.0)
+	# V5 section 9: a visit to an open venue with its goods adds its quality for a day.
+	if a.has("rec_q_t") and float(int(sim.state["tick"]) - int(a["rec_q_t"])) < float(soc()["leisure"]["rec_q_days"]) * day_t:
+		comp["comfort"] = minf(100.0, float(comp["comfort"]) + float(a.get("rec_q", 0.0)))
 	# V5 section 4.2: friends, a partner and enemies (relations.gd).
 	var so: Dictionary = sim.relations.summary(int(a["id"])) if sim.get("relations") != null else {"friends": 0, "best_friends": 0, "partner": -1, "enemies": 0}
 	var social: float = 50.0 + 6.0 * minf(4.0, float(so["friends"])) + 10.0 * minf(2.0, float(so["best_friends"])) + (15.0 if int(so["partner"]) != -1 else 0.0) - 6.0 * minf(3.0, float(so["enemies"]))
 	comp["social"] = clampf(social + (8.0 if has_trait(a, "charming") else 0.0) - (8.0 if has_trait(a, "shy") else 0.0), 0.0, 100.0)
+	# Partners who do not share a home (V5 section 7).
+	if int(so["partner"]) != -1:
+		var pa: Dictionary = sim.state["agents"].get(int(so["partner"]), {})
+		if not pa.is_empty() and (int(pa["bed"]) != int(a["bed"]) or int(rec_of(int(pa["id"])).get("unit", -1)) != int(rec_of(int(a["id"])).get("unit", -1))):
+			comp["housing"] = clampf(float(comp["housing"]) - 10.0, 0.0, 100.0)
 	comp["work"] = clampf(75.0 - maxf(0.0, float(a.get("fatigue", 0.0)) - 60.0), 0.0, 100.0)
 	comp["fairness"] = 70.0
 	var safety: float = 90.0 - float(a.get("dose", 0.0)) / 10.0 - (30.0 if sim.hazards.sheltered() else 0.0)
@@ -741,7 +854,8 @@ func list() -> Array:
 		_row_cache[int(aid)] = [ph, {"id": int(aid), "name": a["name"], "kind": idn["kind"], "sex": idn["sex"], "variant": idn["variant"], "age": idn["age"],
 			"role": a["role"], "rank": r["rank"], "title": r["title"], "department": r["department"], "base": r["base"],
 			"outfit": outfit(a), "satisfaction": float(satisfaction(a)["value"]), "attitude": float(attitude(a)["value"]),
-			"activity": String(a.get("goal", "")), "home": home(a)}]
+			"activity": String(a.get("goal", "")), "home": home(a), "job": String(a.get("job", "")), "prisoner": a.has("jailed"),
+			"hold": String(a.get("v5_hold", "")), "egg": String(idn.get("egg", ""))}]
 		out.append(_row_cache[int(aid)][1])
 	_list_tick = int(sim.state["tick"])
 	_list = out

@@ -44,6 +44,12 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 			return sim.social.cmd_egg(p)
 		"answer_request":
 			return sim.relations.cmd_answer_request(p)
+		"staff":
+			return sim.leisure.cmd_staff(p)
+		"adopt":
+			return sim.families.cmd_adopt(p)
+		"set_role":
+			return sim.ranks.cmd_set_role(p)
 		"place_building":
 			return sim.build.place_building(p["def"], Vector2(p["x"], p["y"]), float(p.get("rot", 0.0)), int(p.get("size", 1)))
 		"upgrade":
@@ -244,7 +250,7 @@ func _set_immigration(p: Dictionary) -> Dictionary:
 	if p.has("roles"):
 		var roles: Array = []
 		for r in p["roles"]:
-			if (sim.bal["roles"] as Array).has(String(r)) and not roles.has(String(r)):
+			if ((sim.bal["roles"] as Array).has(String(r)) or String(r) == "security") and not roles.has(String(r)):
 				roles.append(String(r))
 		pol["roles"] = roles
 	if p.has("cap"):

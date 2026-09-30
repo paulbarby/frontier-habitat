@@ -39,6 +39,7 @@ func tick_second() -> void:
 	_gen_vehicles()
 	_gen_reactors()
 	_gen_dining()
+	_gen_venues()
 	_gen_trade()
 	_gen_water_fill()
 	_gen_clearing()
@@ -304,6 +305,17 @@ func _gen_construction() -> void:
 			while int(_count.get("build:%d" % id, 0)) < slots:
 				_new_task("build", "construction", id, {"emergency": _site_emergency(b)})
 			b["block"] = "suit_range" if _range_blocked(id) else ""
+
+## V5 section 9: carriers stock the venues (the goods store of the retail module and the super dome)
+## with the goods their staffed venues sell (sim/leisure.gd wants).
+func _gen_venues() -> void:
+	if sim.get("leisure") == null:
+		return
+	for w in sim.leisure.wants():
+		var b: Dictionary = sim.state["buildings"].get(int(w[2]), {})
+		if b.is_empty() or _parked(b):
+			continue
+		_fill(int(w[0]), w[1], "food", int(w[2]), 0, w[3], 2)
 
 ## Seconds a plan out of suit range waits before stock is reserved for it again.
 const RANGE_WAIT_SECONDS := 60

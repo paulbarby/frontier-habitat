@@ -322,7 +322,7 @@ func v31_save(t) -> void:
 	var raw := StreamPeerBuffer.new()
 	raw.data_array = bytes
 	raw.seek(8)
-	t.eq(raw.get_u32(), 5, "saves are schema 5 (V4)")
+	t.eq(raw.get_u32(), 6, "saves are schema 6 (V5)")
 	sim2.dispose()
 	g.dispose()
 	for name in ["showcase_v3_late", "showcase_mid"]:
@@ -331,7 +331,7 @@ func v31_save(t) -> void:
 		if not bool(dec["ok"]):
 			continue
 		var s: Dictionary = dec["state"]
-		t.eq(int(s["schema"]), 5, "%s migrated to 5" % name)
+		t.eq(int(s["schema"]), 6, "%s migrated to 6" % name)
 		t.eq(int(s["credits"]["balance"]), 0, "%s: credits 0" % name)
 		var sim3 = H.Sim.new()
 		sim3.load_state(s)
@@ -699,7 +699,7 @@ func v31_showcase_save(t) -> void:
 		return
 	var sim = H.Sim.new()
 	sim.load_state(dec["state"])
-	t.eq(int(sim.state["schema"]), 5, "schema 5 (V4)")
+	t.eq(int(sim.state["schema"]), 6, "schema 6 (V5)")
 	t.eq(H.buildings_of(sim, "landing_pad", true).size() >= 2, true, "two pads or more")
 	var kinds: Array = sim.traffic.ships().map(func(x): return "%s:%s" % [x["kind"], x["phase"]])
 	t.check(kinds.has("trader:landed") and kinds.has("liner:landed"), "a trader and a liner landed (%s)" % str(kinds))

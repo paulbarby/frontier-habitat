@@ -25,7 +25,10 @@ var selected := ""
 var _canvas: Control
 var _nodes := {}
 var _detail: VBoxContainer
-var _queue_row: HBoxContainer
+var _queue_row: HFlowContainer
+var _search_bar: HFlowContainer
+var _detail_panel: PanelContainer
+const DETAIL_W := [320.0, 260.0]   # the detail panel: with room, least (Paul, 2026-10-01)
 var _rate_label: Label
 var _pack_row: HBoxContainer
 var _pack_labels := {}
@@ -89,6 +92,8 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 	_lab_box = null
 	_lab_updaters = []
 	_lab_sig = ""
+	_detail_panel = null
+	_search_bar = null
 	if not hud.data.research_available():
 		return
 	if id == "labs":
@@ -130,7 +135,13 @@ func _build_tree(box: VBoxContainer) -> void:
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(left)
-	var bar: HBoxContainer = Kit.hbox(10)
+	# Paul, 2026-10-01 (nothing hidden at 140 %): the bar wraps (the legend goes to a second line)
+	# when the area is narrow; with room it is one line, as before.
+	var bar := HFlowContainer.new()
+	bar.add_theme_constant_override("h_separation", 10)
+	bar.add_theme_constant_override("v_separation", 6)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_search_bar = bar
 	left.add_child(bar)
 	_search = LineEdit.new()
 	_search.placeholder_text = "Find: name, unlock, branch"
@@ -149,6 +160,7 @@ func _build_tree(box: VBoxContainer) -> void:
 	_match_label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
 	_match_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(_match_label)
+	var legend: HBoxContainer = Kit.hbox(10)   # one unit, so it wraps whole
 	for lg in [["Done", P.GREEN], ["Active", P.CYAN], ["Queued", P.VIOLET], ["Can start", P.TEXT], ["Locked", P.TEXT_3]]:
 		var lh: HBoxContainer = Kit.hbox(4)
 		var sw := ColorRect.new()
@@ -157,7 +169,8 @@ func _build_tree(box: VBoxContainer) -> void:
 		sw.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lh.add_child(sw)
 		lh.add_child(Kit.label(String(lg[0]), "SmallLabel", 12, P.TEXT_2))
-		bar.add_child(lh)
+		legend.add_child(lh)
+	bar.add_child(legend)
 	left.add_child(sc)
 	# Column heads: the tier and the research packs its projects use (milestone 5: packs by tier).
 	var tier_packs := {}
@@ -217,7 +230,8 @@ func _build_tree(box: VBoxContainer) -> void:
 		_canvas.add_child(node)
 		_nodes[tid] = node
 	var dp: PanelContainer = Kit.panel("CardPanel", false)
-	dp.custom_minimum_size.x = 320
+	dp.custom_minimum_size.x = DETAIL_W[0]
+	_detail_panel = dp
 	apply_search()
 	dp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(dp)
@@ -225,9 +239,29 @@ func _build_tree(box: VBoxContainer) -> void:
 	dp.add_child(Kit.scroll(_detail))
 	var qp: PanelContainer = Kit.panel("WellPanel", false)
 	box.add_child(qp)
-	_queue_row = Kit.hbox(8)
+	# Paul, 2026-10-01: the queue strip wraps onto a second line when the area is narrow.
+	_queue_row = HFlowContainer.new()
+	_queue_row.add_theme_constant_override("h_separation", 8)
+	_queue_row.add_theme_constant_override("v_separation", 4)
+	_queue_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	qp.add_child(_queue_row)
 	_refresh_all()
+
+## Paul, 2026-10-01: "scaling the UI should not cause UI elements to be hidden". The detail panel
+## is 320 px with room, and narrower (down to 260 px) when the area is narrow, so the search bar
+## keeps one line as long as it can. The area is the screen's scroll area, which does not follow
+## the content: no feedback.
+func fit_view(vp: Vector2) -> void:
+	super.fit_view(vp)
+	if _detail_panel == null or not is_instance_valid(_detail_panel) or _search_bar == null or not is_instance_valid(_search_bar) or _scroll.size.x <= 0.0:
+		return
+	var bar_w := 120.0   # the match count: a fixed share, so typing a search does not move the panel
+	for c in _search_bar.get_children():
+		if c != _match_label:
+			bar_w += (c as Control).get_combined_minimum_size().x + 10.0
+	var w: float = clampf(floorf(_scroll.size.x - 4.0 - 16.0 - bar_w), DETAIL_W[1], DETAIL_W[0])
+	if absf(_detail_panel.custom_minimum_size.x - w) > 0.5:
+		_detail_panel.custom_minimum_size.x = w
 
 ## Search and filter: a project matches by its name, its description, the names of what it unlocks,
 ## or its branch. Others are dimmed (never hidden: the lanes keep their shape).
@@ -614,8 +648,12 @@ func _build_labs(box: VBoxContainer) -> void:
 	var body: VBoxContainer = Kit.vbox(12)
 	box.add_child(Kit.scroll(body))
 	body.add_child(Kit.wrap("A research lab makes research points (RP) while a scientist works there. Tier 1 projects need no packs. Higher tiers use research packs as the lab works: tier 2 basic packs, tier 3 basic and applied, tier 4 applied, tier 5 exotic. A lab that holds the pack type of its project works x2. Each lab can have a focus branch: +25% RP for that branch, -10% for the others.", 13, P.TEXT_2))
-	# Pack cards
-	var prow: HBoxContainer = Kit.hbox(12)
+	# Pack cards. Paul, 2026-10-01 (nothing hidden at 140 %): they wrap onto more lines when the
+	# area is narrow; with room they are one row, as before.
+	var prow := HFlowContainer.new()
+	prow.add_theme_constant_override("h_separation", 12)
+	prow.add_theme_constant_override("v_separation", 12)
+	prow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(prow)
 	for pid in d.pack_ids():
 		prow.add_child(_pack_card(String(pid)))

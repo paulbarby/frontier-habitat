@@ -38,6 +38,13 @@ func _award_list() -> Array:
 func build_tab(id: String, box: VBoxContainer) -> void:
 	var d = hud.data
 	var list: Array = _award_list()
+	# Version 5 Easter eggs (content/awards.json "hidden": true): a hidden medal shows only once it is
+	# earned (in this colony on the colony tab, on this device on the device tab), so the gallery does
+	# not give the secret away.
+	list = list.filter(func(a):
+		if not bool(d.awards_def().get(String(a["id"]), {}).get("hidden", false)):
+			return true
+		return int(a.get("earned", -1)) >= 0 if id == "colony" else not Profile.award(String(a["id"])).is_empty())
 	var tiers: Dictionary = d.award_tiers()
 	# Summary
 	var earned := 0

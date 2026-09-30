@@ -711,7 +711,7 @@ func v2_migration(t) -> void:
 		t.done()
 		return
 	var s: Dictionary = dec["state"]
-	t.eq(int(s["schema"]), 5, "migrated to schema 5 (through 2, 3 and 4)")
+	t.eq(int(s["schema"]), 6, "migrated to schema 6 (through 2, 3, 4 and 5)")
 	t.eq(int(s["map_size"]), 256, "an old save keeps its 256 m map")
 	var raw_left := 0
 	for iid in s["inventories"]:

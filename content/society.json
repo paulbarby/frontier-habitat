@@ -62,7 +62,7 @@
   "responses": {
     "meet_demand": {"unrest": -25, "cooldown_days": 1, "text": "The demand is met."},
     "leisure_day": {"unrest": -15, "cooldown_days": 1, "leisure": true, "text": "A leisure day for everybody."},
-    "party": {"unrest": -20, "cooldown_days": 2, "leisure": true, "cost": {"meal": 1}, "text": "A party at the bar."},
+    "party": {"unrest": -20, "cooldown_days": 2, "leisure": true, "text": "A party at the bar."},
     "amnesty": {"unrest": -12, "cooldown_days": 2, "release": true, "text": "All prisoners are released."},
     "replace_captain": {"unrest": -8, "cooldown_days": 1, "text": "A captain is replaced."},
     "arrest_ringleaders": {"unrest": -18, "unfair_unrest": 10, "cooldown_days": 1, "text": "The ringleaders are arrested."},
@@ -84,10 +84,88 @@
     "decay_per_day": 1.0
   },
   "education": {
-    "_note": "V5 section 5.3. A course takes a person one level up in one skill. Game hours are 1/24 of a day.",
+    "_note": "V5 section 5.3. A course takes a person one level up in one skill. Game hours are 1/24 of a day. The student walks to the academy; the course moves on only while the student sits in class (pace 1 with the teacher in the room, console_pace without, and nothing above console_max_level without the teacher).",
     "course_hours": 16,
     "teacher_skill": 60,
     "console_max_level": 3,
+    "console_pace": 0.5,
+    "class_s": 40,
     "seats": [4, 8, 14]
+  },
+  "security": {
+    "_note": "V5 sections 6.4 and 6.5. Chances are per game second. A fight lasts fight_s (fight_s_office with a security office at the base) unless an officer separates the two first; the officer arrests the one with the worse attitude (jail arrest_days, or confinement without a free cell). Riot: fights, damage to rooms (never under riot_min_health) and looting of leisure goods and rations.",
+    "officer_ratio": 12,
+    "talk_fight": {"enemy": 0.03, "rebel": 0.05, "hot": 0.01},
+    "fight_s": 24,
+    "fight_s_office": 16,
+    "damage_per_s": 1.0,
+    "down_health": 35,
+    "join_max": 4,
+    "join_chance": 0.25,
+    "respond_m": 6.0,
+    "arrest_days": 1.0,
+    "riot_fight_chance": 0.12,
+    "riot_damage": 1.5,
+    "riot_min_health": 30,
+    "loot_chance": 0.08,
+    "loot_items": ["luxury_goods", "gadgets", "gifts", "clothing", "drinks", "snacks", "meals"],
+    "lock_mult": 0.25,
+    "patrol_s": 20,
+    "role_skill": 40
+  },
+  "party": {"_note": "A party (unrest response) uses one unit of these (drinks first) for every per_people people of the base.", "per_people": 2, "items": ["drinks", "snacks", "meals"]},
+  "protest": {"_note": "During a protest or strike the unhappiest people (satisfaction under unrest.low_sat) gather at the protest place (the dome plaza, else the largest leisure room) and shout the demand.", "max_people": 8, "protest_s": 30},
+  "families": {
+    "_note": "V5 section 4.2. No births: partners adopt through a medical bay (the child comes adopt_days later), or shuttles bring families. Children go to school at an academy by day and grow up after child_grow_days into adults whose role follows their best school subject.",
+    "child_grow_days": 30,
+    "adopt_days": 1,
+    "school_pts_per_s": 0.05,
+    "shuttle_family_chance": 0.3,
+    "school_day": [0.1, 0.7],
+    "grown_age": 21,
+    "role_of_skill": {"engineering": "technician", "fabrication": "technician", "mining": "operator", "farming": "grower", "cooking": "grower", "medicine": "medic", "science": "scientist", "security": "security"}
+  },
+  "leisure": {
+    "_note": "V5 sections 8 and 9. Venues of the retail module, the park and the super dome. items: what the venue sells (one unit is used in rec_use of the visits); price: credits a tourist pays for it (fee: for a venue without goods); quality: the satisfaction bonus of a visit (comfort); staff: people needed; job: their title. A venue is open when it has its staff, power, and (for a shop) goods. Stock is kept in the building's goods store (inv_in) up to stock_target of each item.",
+    "stock_target": 8,
+    "dome_stock_target": 12,
+    "rec_use": 0.6,
+    "rec_q_days": 1.0,
+    "dome_tourist_mult": 2.0,
+    "staff_share": 0.25,
+    "venues": {
+      "shop": {"name": "Shop", "items": ["luxury_goods", "clothing", "gadgets", "gifts", "snacks"], "price": 9, "quality": 10, "staff": 1, "job": "shopkeeper", "act": "shop_browse"},
+      "park": {"name": "Park", "items": [], "fee": 0, "quality": 9, "staff": 0, "job": "", "act": "sit_bench"},
+      "grocery": {"name": "Grocery", "items": ["snacks"], "price": 5, "quality": 5, "staff": 1, "job": "shopkeeper", "act": "shop_browse"},
+      "clothing": {"name": "Clothing store", "items": ["clothing"], "price": 12, "quality": 8, "staff": 1, "job": "shopkeeper", "act": "shop_browse"},
+      "electronics_shop": {"name": "Electronics store", "items": ["gadgets"], "price": 18, "quality": 9, "staff": 1, "job": "shopkeeper", "act": "shop_browse"},
+      "pharmacy": {"name": "Pharmacy", "items": ["gifts"], "price": 8, "quality": 4, "staff": 1, "job": "pharmacist", "act": "shop_browse"},
+      "cafe": {"name": "Cafe", "items": ["snacks", "drinks"], "price": 6, "quality": 9, "staff": 1, "job": "barista", "act": "sit_bench"},
+      "restaurant": {"name": "Restaurant", "items": ["snacks", "drinks"], "price": 14, "quality": 12, "staff": 1, "job": "chef", "act": "sit_bench"},
+      "bar": {"name": "Bar", "items": ["drinks"], "price": 8, "quality": 12, "staff": 1, "job": "bartender", "act": "drink_bar"},
+      "gaming_lounge": {"name": "Gaming lounge", "items": [], "fee": 10, "quality": 12, "staff": 1, "job": "attendant", "act": "play_arcade"},
+      "club": {"name": "The Club", "items": ["drinks"], "price": 15, "quality": 14, "staff": 1, "job": "dj", "act": "dance_a", "adults_only": true},
+      "barber": {"name": "Barber and beauty", "items": [], "fee": 8, "quality": 7, "staff": 1, "job": "barber", "act": "sit_bench"},
+      "credit_office": {"name": "Credit office", "items": [], "fee": 0, "quality": 2, "staff": 1, "job": "clerk", "act": "shop_browse"},
+      "post_office": {"name": "Comms and post office", "items": [], "fee": 2, "quality": 3, "staff": 1, "job": "clerk", "act": "shop_browse"},
+      "gym": {"name": "Fitness gym", "items": [], "fee": 6, "quality": 9, "staff": 1, "job": "trainer", "act": "jog"},
+      "hotel_lobby": {"name": "Hotel lobby", "items": [], "fee": 0, "quality": 3, "staff": 1, "job": "receptionist", "act": "sit_bench"},
+      "pool": {"name": "Pool", "items": [], "fee": 10, "quality": 13, "staff": 1, "job": "lifeguard", "act": "swim", "outfit": "swimwear"},
+      "plaza": {"name": "Plaza", "items": [], "fee": 0, "quality": 6, "staff": 0, "job": "", "act": "sit_bench"}
+    }
+  },
+  "rag": {
+    "_note": "V5 section 4.3. The social log keeps slog_keep entries; the Rag keeps the last keep issues. codes: log code -> [story kind, heat]. Buildings of these defs never make a story: skip_defs.",
+    "keep": 30,
+    "slog_keep": 600,
+    "skip_defs": ["corridor", "cable", "pipe", "power_line", "tube", "wall"],
+    "codes": {
+      "couple": ["couple", 60], "partners": ["couple", 55], "move_in": ["move_in", 45], "wedding": ["wedding", 85], "breakup": ["breakup", 70],
+      "affair": ["affair", 95], "fling": ["visitor_romance", 75], "feud": ["feud", 45], "defect_request": ["defection", 80], "defected": ["defection", 90],
+      "promotion": ["promotion", 40], "demotion": ["demotion", 60], "discipline": ["punishment", 50], "fight": ["fight", 85], "arrest": ["arrest", 80],
+      "released": ["release", 30], "adoption": ["family", 60], "grew_up": ["birthday", 50], "arcade_record": ["arcade", 55], "barby": ["barby", 99],
+      "date": ["date", 50], "party": ["party", 45], "graduated": ["graduate", 25], "death": ["death", 90], "settlers": ["ship", 30], "ship_landed": ["ship", 30],
+      "commissioned": ["new_building", 20], "dance": ["dance", 40], "protest": ["protest", 70], "strike": ["strike", 80], "riot": ["riot", 95], "dome_stage": ["new_building", 35], "research": ["research", 30], "award": ["award", 25], "hazard_start": ["hazard", 45], "breach": ["hazard", 60], "goal": ["goal", 30]
+    }
   }
 }

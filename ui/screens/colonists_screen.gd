@@ -9,6 +9,16 @@ var _rows := {}
 var _vrows := {}
 var _clock := 0
 var _sort := "name"
+## Paul, 2026-10-01: "scaling the UI should not cause UI elements to be hidden". Each column has
+## its width at 100 % and the least width it may shrink to: [title, full, least, sort key].
+## fit_view() shrinks every column (and the Settlers card) together when the area is narrower
+## than the full widths; text cells cut with "..." and carry the full text as a tooltip.
+const COLS := [["Name", 214, 150, "name"], ["Role", 110, 88, "role"], ["Health", 110, 96, "health"], ["Morale", 110, 96, "morale"],
+	["Nutrition", 110, 96, "nutrition"], ["Dose", 84, 66, "dose"], ["Doing", 198, 110, ""], ["Where", 150, 84, ""]]
+const VCOLS := [["Name", 214, 150], ["Kind", 110, 88], ["Ship", 190, 130], ["Leaves in", 90, 78], ["Paid", 70, 56], ["Health", 80, 64], ["Doing", 240, 130], ["Where", 160, 90]]
+const SIDE_W := [300.0, 230.0]   # the Settlers card: full, least
+var _k := 0.0                    # 0 = full widths, 1 = least widths
+var _col_ctl: Array = []         # [Control, full width, least width]
 
 func _init() -> void:
 	icon = "colonists"
@@ -23,6 +33,7 @@ func _ready() -> void:
 func build_tab(id: String, box: VBoxContainer) -> void:
 	_rows = {}
 	_vrows = {}
+	_col_ctl = []
 	if id == "visitors":
 		_visitors(box)
 	elif id == "priorities":
@@ -55,20 +66,19 @@ func _colonists(box: VBoxContainer) -> void:
 	body.add_child(left)
 	var head: HBoxContainer = Kit.hbox(10)
 	# Dose (SIM milestone 6): mSv, amber from 250, red from 750; sort puts the highest first.
-	for c in [["Name", 214, "name"], ["Role", 110, "role"], ["Health", 110, "health"], ["Morale", 110, "morale"], ["Nutrition", 110, "nutrition"], ["Dose", 84, "dose"], ["Doing", 198, ""], ["Where", 150, ""]]:
-		var key: String = c[2]
+	for c in COLS:
+		var key: String = c[3]
 		if key != "":
 			var b: Button = Kit.button(String(c[0]).to_upper(), func():
 				_sort = key
 				_fill(), "Sort by %s" % String(c[0]).to_lower(), "GhostButton")
-			b.custom_minimum_size = Vector2(c[1], 26)
+			b.custom_minimum_size.y = 26
+			b.clip_text = true
 			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			b.add_theme_font_size_override("font_size", 11)
-			head.add_child(b)
+			head.add_child(_sized(b, c[1], c[2]))
 		else:
-			var l: Label = Kit.head(c[0], P.TEXT_3, 10)
-			l.custom_minimum_size.x = c[1]
-			head.add_child(l)
+			head.add_child(_sized(Kit.head(c[0], P.TEXT_3, 10), c[1], c[2]))
 	left.add_child(head)
 	var list: VBoxContainer = Kit.seam_list(2)   # v4: rows with seams in a darker well
 	list.name = "List"
@@ -77,8 +87,7 @@ func _colonists(box: VBoxContainer) -> void:
 	var im: Dictionary = s.state.get("policies", {}).get("immigration", {})
 	var right: VBoxContainer = card("Settlers", "people", P.CYAN)
 	var rp: PanelContainer = card_panel(right)
-	rp.custom_minimum_size.x = 300
-	body.add_child(rp)
+	body.add_child(_sized(rp, SIDE_W[0], SIDE_W[1]))
 	if im.is_empty():
 		right.add_child(Kit.wrap("Settler settings are not available yet.", 13, P.TEXT_3))
 	else:
@@ -133,6 +142,7 @@ func _fill() -> void:
 		return
 	Kit.clear(list)
 	_rows = {}
+	_col_ctl = _col_ctl.filter(func(e): return is_instance_valid(e[0]) and not (e[0] as Node).is_queued_for_deletion())   # drop the old rows
 	var s = hud.main.sim
 	var d = hud.data
 	var ids: Array = []
@@ -153,32 +163,21 @@ func _fill() -> void:
 		h.offset_left = 8
 		b.add_child(h)
 		var nb: HBoxContainer = Kit.hbox(8)
-		nb.custom_minimum_size.x = 210
 		nb.add_child(Kit.icon(load("res://ui/theme/icons.gd").role(String(a["role"])), 18, P.ROLE.get(a["role"], P.CYAN)))
-		nb.add_child(Kit.label(String(a["name"]), "", 14, P.TEXT))
-		h.add_child(nb)
-		var rl: Label = Kit.label(String(s.bal["role_names"].get(a["role"], a["role"])), "", 13, P.TEXT_2)
-		rl.custom_minimum_size.x = 110
-		h.add_child(rl)
+		nb.add_child(_cut_name(Kit.label(String(a["name"]), "", 14, P.TEXT)))
+		h.add_child(_sized(nb, COLS[0][1] - 4, COLS[0][2] - 4))
+		var rl: Label = _cut(Kit.label(String(s.bal["role_names"].get(a["role"], a["role"])), "", 13, P.TEXT_2))
+		h.add_child(_sized(rl, COLS[1][1], COLS[1][2]))
 		var hb: HBoxContainer = _bar(h)
 		var mb: HBoxContainer = _bar(h)
 		var nbar: HBoxContainer = _bar(h)
 		var dose: Label = Kit.num("", 13, P.TEXT_2)
-		dose.custom_minimum_size.x = 84
 		dose.mouse_filter = Control.MOUSE_FILTER_PASS
-		h.add_child(dose)
-		var doing: Label = Kit.label("", "", 13, P.TEXT)
-		doing.custom_minimum_size.x = 198   # 260 before v4: the metal band and the dose column take the rest
-		doing.clip_text = true
-		doing.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		doing.mouse_filter = Control.MOUSE_FILTER_PASS
-		h.add_child(doing)
-		var where: Label = Kit.label("", "SmallLabel", 12, P.TEXT_2)
-		where.custom_minimum_size.x = 150
-		where.clip_text = true
-		where.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		where.mouse_filter = Control.MOUSE_FILTER_PASS
-		h.add_child(where)
+		h.add_child(_sized(dose, COLS[5][1], COLS[5][2]))
+		var doing: Label = _cut(Kit.label("", "", 13, P.TEXT))   # 260 before v4: the metal band and the dose column take the rest
+		h.add_child(_sized(doing, COLS[6][1], COLS[6][2]))
+		var where: Label = _cut(Kit.label("", "SmallLabel", 12, P.TEXT_2))
+		h.add_child(_sized(where, COLS[7][1], COLS[7][2]))
 		list.add_child(b)
 		_rows[id] = {"h": hb, "m": mb, "n": nbar, "dose": dose, "doing": doing, "where": where}
 	_update()
@@ -202,10 +201,9 @@ func _less(a: int, b: int) -> bool:
 
 func _bar(h: HBoxContainer) -> HBoxContainer:
 	var r: HBoxContainer = Kit.hbox(6)
-	r.custom_minimum_size.x = 110
+	_sized(r, 110, 96)
 	var b = Kit.bar(0.0, P.GREEN, 6.0)
-	b.custom_minimum_size.x = 72
-	r.add_child(b)
+	r.add_child(_sized(b, 72, 58))
 	var n: Label = Kit.num("", 12, P.TEXT)
 	r.add_child(n)
 	h.add_child(r)
@@ -258,10 +256,8 @@ func _visitors(box: VBoxContainer) -> void:
 			ids.append(aid)
 	set_subtitle("%s from visiting ships  ·  credits %d" % [Kit.plural(ids.size(), "visitor"), d.credits()])
 	var head: HBoxContainer = Kit.hbox(10)
-	for c in [["Name", 214], ["Kind", 110], ["Ship", 190], ["Leaves in", 90], ["Paid", 70], ["Health", 80], ["Doing", 240], ["Where", 160]]:
-		var l: Label = Kit.head(c[0], P.TEXT_3, 10)
-		l.custom_minimum_size.x = c[1]
-		head.add_child(l)
+	for c in VCOLS:
+		head.add_child(_sized(Kit.head(c[0], P.TEXT_3, 10), c[1], c[2]))
 	box.add_child(head)
 	var list: VBoxContainer = Kit.seam_list(2)
 	box.add_child(Kit.well_scroll(list))
@@ -283,18 +279,13 @@ func _visitors(box: VBoxContainer) -> void:
 		b.add_child(h)
 		var vk: String = String(a.get("vkind", ""))
 		var nb: HBoxContainer = Kit.hbox(8)
-		nb.custom_minimum_size.x = 210
 		nb.add_child(Kit.icon(d.ship_icon(vk), 18, P.GOLD))
-		nb.add_child(Kit.label(String(a["name"]), "", 14, P.TEXT))
-		h.add_child(nb)
+		nb.add_child(_cut_name(Kit.label(String(a["name"]), "", 14, P.TEXT)))
+		h.add_child(_sized(nb, VCOLS[0][1] - 4, VCOLS[0][2] - 4))
 		var cells: Array = []
-		for w in [110, 190, 90, 70, 80, 240, 160]:
-			var l2: Label = Kit.label("", "", 13, P.TEXT_2)
-			l2.custom_minimum_size.x = w
-			l2.clip_text = true
-			l2.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			l2.mouse_filter = Control.MOUSE_FILTER_PASS
-			h.add_child(l2)
+		for ci in range(1, VCOLS.size()):
+			var l2: Label = _cut(Kit.label("", "", 13, P.TEXT_2))
+			h.add_child(_sized(l2, VCOLS[ci][1], VCOLS[ci][2]))
 			cells.append(l2)
 		(cells[0] as Label).text = String(d.ship_kind(vk).get("vname", vk.capitalize()))
 		list.add_child(b)
@@ -318,6 +309,55 @@ func _update_visitors() -> void:
 		(cells[6] as Label).text = "Outside" if a["where"] == "out" else String(s.state["buildings"].get(a.get("bld", -1), {}).get("name", "a room"))
 		for cl in cells:
 			(cl as Label).tooltip_text = (cl as Label).text
+
+## Paul, 2026-10-01: sets a column control to the width of now (between full and least) and
+## keeps it, so fit_view() can change it when the area changes.
+func _sized(c: Control, full: float, least: float) -> Control:
+	c.custom_minimum_size.x = lerpf(full, least, _k)
+	_col_ctl.append([c, full, least])
+	return c
+
+## A text cell that cuts with "..." when its column is narrow; the tooltip has the full text.
+## (No expand flag: the cells keep the header's column widths.)
+static func _cut(l: Label) -> Label:
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.mouse_filter = Control.MOUSE_FILTER_PASS
+	if l.tooltip_text == "":
+		l.tooltip_text = l.text
+	return l
+
+## The name in a row: fills the name cell and cuts; the row button's tooltip has the full name.
+static func _cut_name(l: Label) -> Label:
+	_cut(l)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+## Paul, 2026-10-01: the columns (and the Settlers card) shrink together, just enough for the
+## area of this view. The area does not follow the content (it is the screen's scroll area), so
+## this does not feed back. Steps of 5 % keep a drag-resize from resizing every frame.
+func fit_view(vp: Vector2) -> void:
+	super.fit_view(vp)
+	if tab == "priorities" or _scroll == null or _scroll.size.x <= 0.0 or _col_ctl.is_empty():
+		return
+	var cols: Array = VCOLS if tab == "visitors" else COLS
+	var full: float = 10.0 * float(cols.size() - 1)
+	var least: float = full
+	for c in cols:
+		full += float(c[1])
+		least += float(c[2])
+	if tab != "visitors":
+		full += 16.0 + SIDE_W[0]
+		least += 16.0 + SIDE_W[1]
+	var k: float = clampf((full - (_scroll.size.x - 6.0)) / (full - least), 0.0, 1.0)
+	k = ceilf(k * 20.0 - 0.001) / 20.0
+	if is_equal_approx(k, _k):
+		return
+	_k = k
+	for e in _col_ctl:
+		if is_instance_valid(e[0]):
+			(e[0] as Control).custom_minimum_size.x = lerpf(float(e[1]), float(e[2]), _k)
 
 ## {ship, leaves, paid} of a visitor, in words (also used by the inspector card).
 static func visitor_info(h, a: Dictionary) -> Dictionary:

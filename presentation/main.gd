@@ -631,6 +631,26 @@ func _on_cmd(text: String) -> String:
 			hud.v5.unrest_override = {"value": val, "stage": w[1], "causes": [{"text": "Low satisfaction", "delta": val * 0.7}, {"text": "Ration cuts seen as unfair", "delta": val * 0.3}], "demand": "Full rations now!"}
 			hud.unrest_banner._update()
 			return "unrest %s %d" % [w[1], int(val)]
+		"request":
+			# request [home|off]: shows a "leave with a ship" (or shared-home) request card for the selected person (the UI's view
+			# only; SIM is not changed; an answer gets SIM's "No such request."). For screenshots.
+			if w.size() > 1 and w[1] == "off":
+				hud.v5.request_override = []
+				hud.request_card.update()
+				return "off"
+			var ra: int = view.selected_id if view.selected_kind == "agent" else int(hud.v5.people()[0]["id"]) if not hud.v5.people().is_empty() else -1
+			if ra < 0:
+				return "no person"
+			var rn: String = hud.v5.agent_name(ra)
+			# request home: the shared-home kind instead.
+			if w.size() > 1 and w[1] == "home":
+				hud.v5.request_override = [{"id": 0, "kind": "shared_home", "agent": ra, "other": -1, "ship": -1, "tick": int(sim.state["tick"]),
+					"text": "%s and Kai Moreno want a shared home. Build a residence tube or an apartment block." % rn}]
+			else:
+				hud.v5.request_override = [{"id": 0, "kind": "leave_with_ship", "agent": ra, "other": -1, "ship": -1, "tick": int(sim.state["tick"]),
+					"text": "%s wants to leave with Rio Tamsin on the ship. Let them go?" % rn}]
+			hud.request_card.update()
+			return "request for %s" % rn
 		"shoulder":
 			# shoulder [off|next]: the over-the-shoulder follow of the selected person (key V).
 			if w.size() > 1 and w[1] == "off":
@@ -662,6 +682,10 @@ func _on_cmd(text: String) -> String:
 						nm = String(r[1])
 				hud.person._ask(w[2], nm, "review" if is_review else "discipline")
 				return "asked"
+			if w.size() > 1 and w[1] == "scroll":
+				# person scroll <px>: scrolls the open file (screenshots of the History at its foot).
+				hud.person._scroll.scroll_vertical = int(w[2]) if w.size() > 2 else 0
+				return "scroll %d of %d" % [hud.person._scroll.scroll_vertical, int(hud.person._body.size.y)]
 			hud.open_person(view.selected_id, w[1] if w.size() > 1 else "file")
 			return "ok"
 		"raglayout":
@@ -1025,7 +1049,8 @@ func _poll_results() -> void:
 			_sent.erase(cid)
 			sim.cmds.results.erase(cid)
 			if not bool(r.get("ok", false)):
-				hud.toast("Refused: " + _reason(String(r.get("code", ""))), "warn")
+				# SIM's own sentence when the command gives one (the v5 orders), else the reason by code.
+				hud.toast("Refused: " + (String(r["text"]) if String(r.get("text", "")) != "" else _reason(String(r.get("code", "")))), "warn")
 				Sfx.play("error")
 
 func _reason(code: String) -> String:

@@ -27,7 +27,10 @@ MANIFEST = os.path.join(N.MODEL_DIR, "people_manifest.json")
 # the game's palettes (shaders/npc_skin.gdshader, linear) and one department colour
 SKIN_TONES = NR.SKIN_TONES
 HAIR_COLOURS = [(0.010, 0.008, 0.007), (0.075, 0.035, 0.015), (0.34, 0.075, 0.018), (0.58, 0.40, 0.17)]
-LOOK = {"m1": dict(tone=2, hair=1, cloth=(0.60, 0.08, 0.05)), "f1": dict(tone=2, hair=2, cloth=(0.05, 0.20, 0.42))}
+LOOK = {"m1": dict(tone=3, hair=1, cloth=(0.60, 0.08, 0.05)), "f1": dict(tone=2, hair=2, cloth=(0.05, 0.20, 0.42)),
+        "m2": dict(tone=0, hair=0, cloth=(0.10, 0.30, 0.12)), "m3": dict(tone=2, hair=0, cloth=(0.30, 0.30, 0.34)),
+        "f2": dict(tone=1, hair=0, cloth=(0.55, 0.30, 0.05)), "f3": dict(tone=3, hair=0, cloth=(0.40, 0.08, 0.25)),
+        "c1": dict(tone=4, hair=3, cloth=(0.05, 0.25, 0.50)), "c2": dict(tone=1, hair=0, cloth=(0.60, 0.20, 0.35))}
 DEPT = (1.0, 0.35, 0.01)          # technician amber
 
 
@@ -260,41 +263,80 @@ def stool_props():
     NR.add_box("CounterTop", (0.52, 0.0, 1.07), (0.52, 1.24, 0.04), (0.2, 0.2, 0.22))
 
 
-def sheet_clips():
+PAIRS = os.path.join(N.MODEL_DIR, "npc_pairs.json")
+CLIP_GROUPS = {
+    "pilot": ["talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"],
+    "hug": ["hug"],
+}
+
+
+def pair_of(clip):
+    """The npc_pairs.json entry whose clip_a or clip_b is this clip: (entry, this clip is partner B)."""
+    if not os.path.exists(PAIRS):
+        return None, False
+    for k, e in json.load(open(PAIRS, encoding="utf-8"))["pairs"].items():
+        if e["clip_a"] == clip:
+            return e, False
+        if e["clip_b"] == clip:
+            return e, True
+    return None, False
+
+
+def place_partner(e, sa, sb):
+    """Partner B's location and turn from a pair entry (A at the origin facing +X)."""
+    s = (sa + sb) / 2
+    fac = radians(e.get("facing_deg", 180.0))
+    return (e["distance_m"] * s, e.get("side_offset_m", 0.0) * s, 0.0), fac
+
+
+def sheet_clips(group="pilot", variants=None, outfit="casual_a", frames=6):
     tmpdir()
     M = manifest()
     rows = []
-    new = ["talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"]
-    for clip in new:
+    vs = variants or [v for v in ("m1", "f1") if v in M["variants"]] or list(M["variants"])
+    for clip in CLIP_GROUPS[group]:
+        if clip not in M["clips"]:
+            continue
         n = M["clips"][clip]["frames"]
-        for v in M["variants"]:
+        e, _ = pair_of(clip)
+        for v in (vs[:1] if e else vs):
             studio(300, 420)
-            if clip == "sit_bar_stool":
+            if clip in ("sit_bar_stool", "drink_bar"):
                 stool_props()
-            rig, _ = import_person(v, "casual_a")
+            if clip in FURNITURE_PROPS:
+                FURNITURE_PROPS[clip]()
+            rig, _ = import_person(v, outfit)
             other = None
-            if clip == "hug":
-                ov = [x for x in M["variants"] if x != v][0] if len(M["variants"]) > 1 else v
-                d = 0.30 * (M["variants"][v]["scale"] + M["variants"][ov]["scale"]) / 2
-                other, _ = import_person(ov, "casual_a", loc=(d, 0, 0), rot_z=radians(180))
+            if e:
+                ov = vs[1] if len(vs) > 1 else v
+                loc, fac = place_partner(e, M["variants"][v]["scale"], M["variants"][ov]["scale"])
+                other, _ = import_person(ov, outfit, loc=loc, rot_z=fac)
             row = []
-            for k in range(6):
-                f = int(round(n * k / 5))
-                pose(rig, clip, f)
+            for k in range(frames):
+                f = int(round(n * k / (frames - 1)))
+                pose(rig, e["clip_a"] if e else clip, f)
                 if other is not None:
-                    pose(other, clip, f)
+                    tb = max(0, f - int(round(e.get("sync_s", 0.0) * N.FPS)))
+                    pose(other, e["clip_b"], tb)
                 NR.clear_cameras()
-                if clip == "hug":
-                    NR.camera((0.15, 0.0, 1.1), -70, 8, 3.6, lens=85)
-                elif clip == "sit_bar_stool":
+                if e:
+                    NR.camera((0.25, 0.0, 1.05), -80, 8, 3.8, lens=85)
+                elif clip in ("sit_bar_stool", "drink_bar"):
                     NR.camera((0.1, 0.0, 1.0), -55, 8, 3.8, lens=85)
+                elif clip in LOW_CLIPS:
+                    NR.camera((0.0, 0.0, 0.55), -45, 18, 4.2, lens=85)
                 else:
                     NR.camera((0.05, 0.0, 1.0), -35, 6, 3.8, lens=85)
-                row.append(("%s %s %d" % (v, clip, f), NR.render(os.path.join(TMP, "cl_%s_%s_%d.png" % (clip, v, k)))))
+                lab = "%s %s %d" % (v + ("+" + ov if e else ""), clip if not e else e["clip_a"] + ("/" + e["clip_b"] if e["clip_b"] != e["clip_a"] else ""), f)
+                row.append((lab, NR.render(os.path.join(TMP, "cl_%s_%s_%d.png" % (clip, v, k)))))
             rows.append(row)
-    out = os.path.join(ART, "people_clips.png")
-    NR.compose(rows, out, title="people pilot: the 6 new clips, 6 frames each (hug as a pair: m1 with f1)")
+    out = os.path.join(ART, "people_clips%s.png" % ("" if group == "pilot" else "_" + group))
+    NR.compose(rows, out, title="people clips (%s): %d frames each; pairs placed from npc_pairs.json" % (group, frames))
     return out
+
+
+FURNITURE_PROPS = {}
+LOW_CLIPS = set()
 
 
 SHEETS = dict(closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
@@ -307,6 +349,9 @@ def main():
     if "--sheets" in argv:
         names = argv[argv.index("--sheets") + 1].split(",")
     for n in names:
+        if n.startswith("clips:"):
+            print("SHEET", sheet_clips(n[6:]))
+            continue
         print("SHEET", SHEETS[n]())
 
 

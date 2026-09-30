@@ -1,24 +1,578 @@
 {
-  "_note": "V5 section 4.3: The Regolith Rag. Headline templates per story kind, in tabloid voice (never explicit). Slots: {a} {b} {place} {n} {base}. STARTER SET for the API stubs; the full set (>= 200 headlines) comes with the social log milestone.",
+  "_note": "V5 section 4.3: The Regolith Rag. Headline templates per story kind, in tabloid voice (puns allowed, never explicit). Slots: {a} {b} {place} {n} {base}. bodies: the first sentence of a story per kind; fillers: 2-4 more sentences for the lead (any kind). gossip and ads: column lines (the issue adds its own from the colony's state). sim/rag.gd reads this file.",
   "masthead": "THE REGOLITH RAG",
   "tagline": "All the dirt that is fit to print",
   "headlines": {
-    "couple": ["LOVE IN THE AIRLOCK: {a} AND {b} ARE AN ITEM!", "SPARKS FLY AT THE {place}!"],
-    "date": ["{a} AND {b} SPOTTED ON A DATE AT THE {place}", "DINNER FOR TWO UNDER THE DOME"],
-    "breakup": ["IT IS OVER! {a} DUMPS {b}", "TEARS IN THE CORRIDOR"],
-    "affair": ["CHEAT SHEET! {a} CAUGHT WITH {b}", "SECRET TRYST IN THE {place}"],
-    "fight": ["PUNCH-UP AT THE {place}!", "{a} AND {b} COME TO BLOWS"],
-    "arrest": ["BEHIND BARS: {a} ARRESTED", "SECURITY SWOOP ON {a}"],
-    "promotion": ["{a} MOVES UP! NEW CAPTAIN NAMED", "RISING STAR: {a}"],
-    "protest": ["FED UP! CREW MARCH ON THE {place}", "WE WANT MORE! {n} PROTEST"],
-    "wedding": ["WEDDING BELLS FOR {a} AND {b}", "I DO! UNDER THE DOME"],
-    "new_building": ["NEW {place} OPENS ITS DOORS", "BUILT IT! THE {place} IS READY"],
-    "death": ["COLONY MOURNS {a}", "A SAD DAY ON {base}"],
-    "ship": ["SHIP AHOY! TRADERS LAND", "VISITORS FLOCK TO THE COLONY"],
-    "quiet": ["QUIET DAY ON THE FRONTIER", "NOTHING TO SEE HERE (OR IS THERE?)"]
+    "couple": [
+      "LOVE IN THE AIRLOCK: {a} AND {b} ARE AN ITEM!",
+      "SPARKS FLY AT THE {place}!",
+      "IT'S OFFICIAL: {a} + {b}",
+      "HEARTS PRESSURISED! {a} FALLS FOR {b}",
+      "ORBITING EACH OTHER: {a} AND {b}",
+      "{a} AND {b}: THE NEW POWER COUPLE",
+      "CUPID STRIKES ON {base}",
+      "ZERO GRAVITY, ALL ROMANCE"
+    ],
+    "move_in": [
+      "KEYS SWAPPED! {a} MOVES IN WITH {b}",
+      "ONE BED, TWO TOOTHBRUSHES",
+      "{a} AND {b} SET UP HOME",
+      "LOVE NEST ON {base}!",
+      "HOME SWEET HABITAT FOR {a} AND {b}",
+      "SHARED QUARTERS, SHARED DREAMS"
+    ],
+    "wedding": [
+      "WEDDING BELLS FOR {a} AND {b}",
+      "I DO! UNDER THE DOME",
+      "{a} WEDS {b} IN FRONT OF THE WHOLE COLONY",
+      "HERE COMES THE BRIDE (IN A PRESSURE SUIT)",
+      "TIED THE KNOT! {a} AND {b} SAY YES",
+      "TEARS, CAKE AND A KISS AT THE {place}",
+      "THE WEDDING OF THE YEAR!",
+      "HAPPILY EVER ORBIT"
+    ],
+    "breakup": [
+      "IT IS OVER! {a} DUMPS {b}",
+      "TEARS IN THE CORRIDOR",
+      "SPLIT! {a} AND {b} CALL IT QUITS",
+      "DEPRESSURISED: {a} AND {b} PART WAYS",
+      "HEARTBREAK ON {base}",
+      "NO MORE SHARED RATIONS FOR {a} AND {b}",
+      "{b} GETS THE COLD SHOULDER",
+      "LOVE LOST IN THE {place}"
+    ],
+    "affair": [
+      "CHEAT SHEET! {a} CAUGHT WITH {b}",
+      "SECRET TRYST IN THE {place}",
+      "SCANDAL! {a} TWO-TIMES ON {base}",
+      "{a} AND {b}: THE AFFAIR THAT SHOOK THE COLONY",
+      "CAUGHT RED-HANDED IN THE {place}!",
+      "LOVE TRIANGLE ROCKS {base}",
+      "THE SECRET IS OUT, {a}!",
+      "WHO KNEW? EVERYBODY, NOW"
+    ],
+    "visitor_romance": [
+      "HOLIDAY HEARTTHROB! {a} FALLS FOR A TOURIST",
+      "STARSTRUCK: {a} SMITTEN WITH VISITOR {b}",
+      "SHIPS IN THE NIGHT: {a} AND {b}",
+      "{a}'S OFF-WORLD FLING",
+      "LOVE LANDS ON PAD ONE",
+      "TOURIST TRAP! {b} STEALS {a}'S HEART"
+    ],
+    "feud": [
+      "{a} AND {b} AT WAR!",
+      "FEUD ERUPTS IN THE {place}",
+      "FROSTY! {a} WON'T SPEAK TO {b}",
+      "BAD BLOOD ON {base}",
+      "{a} VS {b}: ROUND ONE",
+      "NOT ON SPEAKING TERMS",
+      "THE COLDEST SHOULDER ON THE PLANET",
+      "RIVALS! {a} AND {b} CLASH"
+    ],
+    "defection": [
+      "FOR LOVE! {a} ASKS TO FLY AWAY",
+      "{a} WANTS OFF THIS ROCK",
+      "ONE-WAY TICKET? {a} EYES THE STARS",
+      "GOODBYE {base}! {a} LEAVES FOR LOVE",
+      "DEFECTOR! {a} BOARDS WITH A STRANGER",
+      "LOVE FINDS A WAY (OFF-PLANET)"
+    ],
+    "promotion": [
+      "{a} MOVES UP! NEW POST NAMED",
+      "RISING STAR: {a}",
+      "BIG CHAIR FOR {a}",
+      "{a} GETS THE STRIPES",
+      "FROM CREW TO CAPTAIN: {a}",
+      "PROMOTED! {a} IS THE NEW BOSS",
+      "CORNER OFFICE (WELL, CORNER MODULE) FOR {a}"
+    ],
+    "demotion": [
+      "BUSTED DOWN! {a} LOSES THE POST",
+      "FALL FROM GRACE FOR {a}",
+      "{a} STRIPPED OF RANK",
+      "NO MORE STRIPES FOR {a}",
+      "DEMOTED! {a} BACK TO THE RANKS",
+      "THE BIG CHAIR IS EMPTY AGAIN"
+    ],
+    "punishment": [
+      "TOUGH LOVE: {a} PUNISHED",
+      "RATIONS CUT FOR {a}!",
+      "{a} IN THE DOGHOUSE",
+      "THE BOSS GETS TOUGH ON {a}",
+      "DISCIPLINE DAY ON {base}",
+      "FAIR OR FOUL? {a} PAYS THE PRICE",
+      "{a} LEARNS THE HARD WAY"
+    ],
+    "fight": [
+      "PUNCH-UP AT THE {place}!",
+      "{a} AND {b} COME TO BLOWS",
+      "FISTS FLY ON {base}!",
+      "KNOCKOUT! BRAWL IN THE {place}",
+      "{a} LANDS ONE ON {b}",
+      "SLUGFEST IN THE {place}",
+      "BLACK EYES AND BRUISED EGOS",
+      "ROUND ONE TO {a}?"
+    ],
+    "arrest": [
+      "BEHIND BARS: {a} ARRESTED",
+      "SECURITY SWOOP ON {a}",
+      "CUFFED! {a} MARCHED TO THE CELLS",
+      "{a} DOES TIME",
+      "LOCKED UP! {a} IN THE JAIL",
+      "THE LONG ARM OF THE LAW GRABS {a}",
+      "NIGHT IN THE CELLS FOR {a}"
+    ],
+    "release": [
+      "FREE AT LAST! {a} WALKS OUT",
+      "{a} IS OUT OF JAIL",
+      "TIME SERVED: {a} IS BACK",
+      "A CHANGED PERSON? {a} RETURNS",
+      "THE CELL DOOR OPENS FOR {a}",
+      "{a} SMELLS FREEDOM"
+    ],
+    "family": [
+      "BUNDLE OF JOY FOR {a} AND {b}",
+      "THE FAMILY GROWS ON {base}",
+      "{a} AND {b} WELCOME A NEW CHILD",
+      "A NEW LITTLE ONE AT THE MEDICAL BAY",
+      "FAMILY MATTERS: {a}'S NEW ARRIVAL",
+      "MUM, DAD AND A BUNK BED"
+    ],
+    "birthday": [
+      "ALL GROWN UP! {a} JOINS THE CREW",
+      "{a} IS AN ADULT NOW",
+      "FROM SCHOOL DESK TO WORK BENCH: {a}",
+      "HAPPY BIRTHDAY, {a}!",
+      "THE KIDS ARE ALRIGHT: {a} GROWS UP",
+      "CAKE AND CANDLES FOR {a}"
+    ],
+    "arcade": [
+      "ARCADE KING! {a} SMASHES THE RECORD",
+      "PRISM SHIFT HIGH SCORE FALLS TO {a}",
+      "{a} RULES THE NEON TUNNEL",
+      "NEW HIGH SCORE! {a} CAN'T BE STOPPED",
+      "JOYSTICK GENIUS {a}",
+      "GAME ON! {a} TOPS THE TABLE"
+    ],
+    "barby": [
+      "THE MAKER WALKS AMONG US!",
+      "MYSTERY GUEST P. BARBY TOURS THE DOME",
+      "\"I MADE THIS PLACE\" CLAIMS TOURIST",
+      "WHO IS P. BARBY?",
+      "SPOTTED: THE MAN IN THE JACKET",
+      "CREATOR VISITS HIS CREATION?"
+    ],
+    "date": [
+      "{a} AND {b} SPOTTED ON A DATE AT THE {place}",
+      "DINNER FOR TWO UNDER THE DOME",
+      "TABLE FOR TWO, {place}",
+      "{a} TREATS {b} TO A NIGHT OUT",
+      "DATE NIGHT! {a} AND {b} STEP OUT",
+      "CANDLELIGHT AND CORRIDORS"
+    ],
+    "party": [
+      "PARTY TIME ON {base}!",
+      "THE BAR IS OPEN! {n} PARTY ALL NIGHT",
+      "BOSS THROWS A BASH",
+      "DRINKS ON THE COLONY!",
+      "DANCING TILL THE AIR RUNS OUT",
+      "HANGOVERS ALL ROUND"
+    ],
+    "graduate": [
+      "TOP OF THE CLASS: {a}",
+      "{a} PASSES WITH FLYING COLOURS",
+      "BRAINS! {a} LEVELS UP",
+      "ACADEMY STAR {a}",
+      "HOMEWORK PAYS OFF FOR {a}",
+      "{a} EARNS A NEW BADGE"
+    ],
+    "death": [
+      "COLONY MOURNS {a}",
+      "A SAD DAY ON {base}",
+      "FAREWELL, {a}",
+      "TRAGEDY ON {base}",
+      "{a}: GONE BUT NOT FORGOTTEN",
+      "FLAGS AT HALF MAST"
+    ],
+    "ship": [
+      "SHIP AHOY! VISITORS LAND",
+      "NEW FACES ON {base}",
+      "WELCOME, STRANGERS!",
+      "PAD BUSY AS SHIP TOUCHES DOWN",
+      "FRESH ARRIVALS SHAKE THINGS UP",
+      "FROM THE STARS TO OUR DOORSTEP"
+    ],
+    "new_building": [
+      "NEW {place} OPENS ITS DOORS",
+      "BUILT IT! THE {place} IS READY",
+      "RIBBON CUT AT THE {place}",
+      "BIGGER AND BETTER: THE {place}",
+      "HARD HATS OFF FOR THE {place}",
+      "THE {place} IS OPEN FOR BUSINESS"
+    ],
+    "dance": [
+      "DANCE FEVER GRIPS {base}!",
+      "{a} BUSTS A MOVE",
+      "NOBODY SAW THAT COMING: {a} DANCES",
+      "FOOTLOOSE ON {base}",
+      "THE MOVES OF THE MONTH: {a}",
+      "{a} STARTS A DANCE CRAZE"
+    ],
+    "protest": [
+      "FED UP! CREW MARCH ON THE {place}",
+      "WE WANT MORE! {n} PROTEST",
+      "PLACARDS UP ON {base}",
+      "ANGRY CROWD AT THE {place}",
+      "THE PEOPLE HAVE SPOKEN (LOUDLY)",
+      "PROTEST! COMMANDER UNDER PRESSURE",
+      "FISTS IN THE AIR ON {base}"
+    ],
+    "strike": [
+      "TOOLS DOWN! STRIKE ON {base}",
+      "NOBODY WORKS TODAY",
+      "WALKOUT! {n} DOWN TOOLS",
+      "STRIKE BITES AS WORK STOPS",
+      "THE BIG STOP ON {base}",
+      "NO PAY? NO PLAY? NO WORK!"
+    ],
+    "riot": [
+      "RIOT! {base} IN CHAOS",
+      "MAYHEM IN THE {place}!",
+      "FISTS, FURNITURE AND FURY",
+      "THE NIGHT {base} BOILED OVER",
+      "SECURITY OVERWHELMED AS RIOT RAGES",
+      "SMASHED! RIOTERS WRECK THE {place}",
+      "ANARCHY UNDER GLASS"
+    ],
+    "best_dressed": [
+      "BEST DRESSED: {a} STUNS IN CASUAL",
+      "FASHION ICON {a}",
+      "WHO WORE IT BEST? {a}",
+      "STYLE STAR OF {base}: {a}",
+      "{a} TURNS HEADS IN THE {place}",
+      "RED CARPET READY: {a}"
+    ],
+    "commander_scandal": [
+      "COMMANDER IN HOT WATER!",
+      "POLL PLUNGE FOR THE BOSS",
+      "IS {a} LOSING THE CREW?",
+      "APPROVAL CRASHES ON {base}",
+      "THE KNIVES ARE OUT FOR {a}",
+      "CREW SAY: WE WANT CHANGE"
+    ],
+    "crush": [
+      "WHO HAS A CRUSH ON {b}?",
+      "SECRET ADMIRER ON {base}",
+      "BLUSHING IN THE {place}",
+      "SOMEBODY IS SMITTEN!",
+      "{a} CAN'T STOP STARING",
+      "LOVE IS IN THE (RECYCLED) AIR"
+    ],
+    "quiet": [
+      "QUIET DAY ON THE FRONTIER",
+      "NOTHING TO SEE HERE (OR IS THERE?)",
+      "ALL CALM ON {base}",
+      "A DAY SO DULL WE CHECKED TWICE",
+      "SLOW NEWS DAY: WE BLAME THE DUST",
+      "NO SCANDALS TODAY (YET)"
+    ],
+    "poll": [
+      "POLL: {n}% BACK THE BOSS",
+      "APPROVAL WATCH: {n} OUT OF 100",
+      "THE CREW HAS SPOKEN: {n}%",
+      "IS {a} DOING A GOOD JOB? {n}% SAY YES",
+      "OUR POLL: {n}% HAPPY",
+      "THE NUMBERS ARE IN: {n}%"
+    ],
+    "friends": [
+      "BEST BUDDIES: {a} AND {b}",
+      "FRIENDS FOREVER ON {base}",
+      "{a} AND {b}: THE COLONY'S TIGHTEST PAIR",
+      "INSEPARABLE! {a} AND {b}",
+      "TWO OF A KIND",
+      "SHIFT PARTNERS, LIFE PARTNERS?"
+    ],
+    "research": [
+      "EUREKA! SCIENTISTS CRACK IT",
+      "BRAINS OF {base} DO IT AGAIN",
+      "NEW TECH, NEW HOPE",
+      "LAB COATS CELEBRATE",
+      "SCIENCE WINS THE DAY",
+      "THE FUTURE ARRIVES EARLY"
+    ],
+    "award": [
+      "MEDAL FOR {base}!",
+      "GOLD STAR COLONY",
+      "AWARD NIGHT ON {base}",
+      "SHINY! A NEW MEDAL",
+      "WE WON SOMETHING!",
+      "HONOURS FOR THE CREW"
+    ],
+    "hazard": [
+      "BRACE! DANGER HITS {base}",
+      "STORM CHAOS ON {base}",
+      "SHELTER! SHELTER! SHELTER!",
+      "SKY FALLS (A BIT)",
+      "NATURE STRIKES BACK",
+      "CLOSE CALL ON {base}"
+    ],
+    "goal": [
+      "MISSION MILESTONE REACHED",
+      "ONE STEP CLOSER TO HOME",
+      "TICK! ANOTHER GOAL DONE",
+      "{base} HITS ITS TARGET",
+      "PROGRESS REPORT: GOOD NEWS",
+      "ON TRACK AND ON TIME"
+    ]
   },
+  "bodies": {
+    "couple": [
+      "{a} and {b} were seen holding hands in the {place}.",
+      "Friends say {a} and {b} cannot stop smiling.",
+      "It started with a chat over rations. Now {a} and {b} are an item."
+    ],
+    "move_in": [
+      "{a} and {b} carried their boxes into one home today.",
+      "The residence office confirms it: {a} and {b} share a unit now.",
+      "{a} has a new address, and it is {b}'s."
+    ],
+    "wedding": [
+      "{a} and {b} said yes in front of the whole colony.",
+      "There was cake, there were tears, and {a} and {b} are married.",
+      "The {place} has never looked so good for {a} and {b}."
+    ],
+    "breakup": [
+      "{a} and {b} are no longer a couple.",
+      "Sources say the shouting was heard two modules away.",
+      "It ended in the {place}. {a} walked out first."
+    ],
+    "affair": [
+      "{a} was seen far too close to {b}.",
+      "The secret did not last. Gossips across {base} saw {a} and {b} together.",
+      "A partner has been cheated, and the whole colony knows it."
+    ],
+    "visitor_romance": [
+      "{a} fell hard for a visitor, {b}.",
+      "The tourist came for the view. {a} came for the tourist.",
+      "{a} has eyes only for {b}, who leaves with the next ship."
+    ],
+    "feud": [
+      "{a} and {b} cannot stand each other.",
+      "Words were said in the {place}. Nobody has forgotten them.",
+      "Colleagues keep {a} and {b} at opposite ends of every room."
+    ],
+    "defection": [
+      "{a} wants to leave the colony with a visitor.",
+      "Love, a ship and a big decision: {a} wants to go.",
+      "The commander must choose: let {a} go, or say no."
+    ],
+    "promotion": [
+      "{a} has a new post and a new title.",
+      "{a} got the job, and a rival is not pleased.",
+      "Colleagues cheered when {a} got the news."
+    ],
+    "demotion": [
+      "{a} lost the post today.",
+      "It was a short career at the top for {a}.",
+      "A rival smiled when {a} was sent back to the ranks."
+    ],
+    "punishment": [
+      "{a} was punished by the commander.",
+      "Friends of {a} say it was not fair.",
+      "{a} is not smiling today."
+    ],
+    "fight": [
+      "{a} and {b} came to blows in the {place}.",
+      "Fists flew, furniture moved and both ended up at the medical bay.",
+      "Witnesses say {a} threw the first punch."
+    ],
+    "arrest": [
+      "Security marched {a} to the cells.",
+      "{a} was led away in handcuffs from the {place}.",
+      "Officers took {a} to jail after the trouble."
+    ],
+    "release": [
+      "{a} walked out of jail today.",
+      "The cell door opened and {a} is back at work.",
+      "Time served. {a} says it will not happen again."
+    ],
+    "family": [
+      "{a} and {b} have a new child at home.",
+      "The bunk bed is made up and the family is complete.",
+      "A little one joins the colony, and {a} is a parent now."
+    ],
+    "birthday": [
+      "{a} is an adult now and starts work.",
+      "School is over for {a}. The work bench waits.",
+      "The colony watched {a} grow up. Now {a} joins the crew."
+    ],
+    "arcade": [
+      "{a} set a new record on the PRISM SHIFT cabinet.",
+      "Nobody has ever gone this far down the neon tunnel. {a} did.",
+      "The arcade crowd went wild for {a}."
+    ],
+    "barby": [
+      "A tourist named P. Barby toured the dome in a jacket nobody else owns.",
+      "\"I made this place, you know,\" the visitor told our reporter.",
+      "Staff say the mystery guest knew where every door was."
+    ],
+    "date": [
+      "{a} and {b} shared a table at the {place}.",
+      "Our spies saw {a} and {b} on a date.",
+      "Two drinks, one table: {a} and {b} at the {place}."
+    ],
+    "party": [
+      "The colony partied at the bar, on the house.",
+      "The drinks were free and the dance floor was full.",
+      "{n} people came. Not all of them remember it."
+    ],
+    "graduate": [
+      "{a} finished a course at the academy.",
+      "Hard work paid off: {a} has a new skill level.",
+      "{a} is the talk of the academy."
+    ],
+    "death": [
+      "The colony lost {a} today.",
+      "{a} will be missed by friends and crew.",
+      "A sad day on {base}. {a} is gone."
+    ],
+    "ship": [
+      "A ship landed and new faces walked in.",
+      "Visitors crowd the corridors of {base}.",
+      "The pad was busy today."
+    ],
+    "new_building": [
+      "The {place} is open.",
+      "Builders finished the {place} today.",
+      "Everybody wants a look inside the {place}."
+    ],
+    "dance": [
+      "{a} started dancing, and friends joined in.",
+      "Nobody knows why {a} started dancing. Nobody wanted to stop.",
+      "The moves were bold. The crowd loved them."
+    ],
+    "protest": [
+      "Unhappy crew gathered at the {place}.",
+      "Placards, chants and one clear demand.",
+      "{n} people marched and shouted."
+    ],
+    "strike": [
+      "A whole department stopped work.",
+      "Tools are down until the demand is met.",
+      "Nobody clocked in today."
+    ],
+    "riot": [
+      "Fights broke out and rooms were damaged.",
+      "Security could not hold the crowd.",
+      "Rioters smashed furniture in the {place}."
+    ],
+    "best_dressed": [
+      "{a} was the best-dressed person on {base} today.",
+      "Heads turned when {a} walked into the {place}.",
+      "Style points to {a}."
+    ],
+    "commander_scandal": [
+      "The commander's approval fell sharply.",
+      "Crew are unhappy with {a}.",
+      "Questions are asked about the leadership of {a}."
+    ],
+    "crush": [
+      "Somebody has a crush on {b}.",
+      "Our spies saw {a} blushing near {b}.",
+      "Watch this space."
+    ],
+    "quiet": [
+      "Nothing happened. Or did it?",
+      "The air was clean and the food was hot.",
+      "Our reporters looked everywhere."
+    ],
+    "poll": [
+      "{n} out of 100 back the commander today.",
+      "Our poll asked the crew one question.",
+      "The commander will read this closely."
+    ],
+    "friends": [
+      "{a} and {b} share every meal and every joke.",
+      "Nobody has seen {a} without {b} this week.",
+      "Friends say they are the best team on the base."
+    ],
+    "research": [
+      "The labs finished a new project today.",
+      "Scientists are smiling, which is rare.",
+      "New knowledge, new buildings, new trouble."
+    ],
+    "award": [
+      "The colony earned a new medal.",
+      "The whole crew can be proud today.",
+      "A shiny new award for {base}."
+    ],
+    "hazard": [
+      "Danger hit the colony today.",
+      "People ran for shelter.",
+      "The damage is being counted."
+    ],
+    "goal": [
+      "The colony reached a new goal.",
+      "One more step on the long road.",
+      "The commander ticked another box."
+    ]
+  },
+  "fillers": [
+    "Our spies were there, of course.",
+    "The whole colony is talking about it.",
+    "Friends refused to comment. Their faces said it all.",
+    "Nobody at the canteen could talk about anything else.",
+    "Readers, you heard it here first.",
+    "The Rag asked for a statement. We got a glare.",
+    "One witness said: \"I have never seen anything like it.\"",
+    "It is the talk of every corridor on {base}.",
+    "The recyclers are working overtime on all the hot air.",
+    "Is this the end of the story? Do not bet your rations on it.",
+    "Sources close to the pair told us more. We cannot print most of it.",
+    "Stay tuned. The Rag never sleeps.",
+    "The commander is said to be watching closely.",
+    "Rumours are flying faster than a supply shuttle.",
+    "One thing is sure: day {days} will be remembered.",
+    "Some say it was bound to happen.",
+    "Others say it was the worst idea on the planet.",
+    "The gossips in the lounge are delighted."
+  ],
   "columns": {
-    "gossip": ["Which captain was seen leaving the lounge at dawn? Our lips are sealed.", "Word is somebody is sweet on a trader."],
-    "ads": ["FRESH TOMATOES at the greenhouse. Ask nicely.", "LOST: one wrench. Answers to 'Wrenchy'."]
+    "gossip": [
+      "Which captain was seen leaving the lounge at dawn? Our lips are sealed.",
+      "Word is somebody is sweet on a trader.",
+      "Who keeps taking two desserts? The kitchen knows.",
+      "A certain technician hums love songs while fixing pipes.",
+      "Two growers argued about tomatoes for an hour. Yes, tomatoes.",
+      "Somebody left flowers on a bunk. Nobody admits it.",
+      "Which scientist talks to the plants? All of them, apparently.",
+      "The night shift says the coffee is getting worse. The day shift blames the night shift.",
+      "Who was humming in the airlock? The airlock is not telling.",
+      "A new haircut has been spotted. We approve.",
+      "Rumour has it the commander has a secret snack drawer.",
+      "Somebody is practising dance moves in the storage module.",
+      "Which medic winks at every patient? Asking for a friend.",
+      "Two operators are not speaking. Nobody remembers why.",
+      "A love letter was found in the recycler. Unsigned. Readable.",
+      "Who borrowed the good wrench and never gave it back?",
+      "The lounge sofa has a regular. Every night. Same spot.",
+      "Is that a new romance at the greenhouse, or just the humidity?",
+      "Somebody sings in the shower module. Loudly. Badly.",
+      "A certain officer has a soft spot for kittens (in videos)."
+    ],
+    "ads": [
+      "FRESH TOMATOES at the greenhouse. Ask nicely.",
+      "LOST: one wrench. Answers to 'Wrenchy'.",
+      "WANTED: a dance partner with two left feet. Must be patient.",
+      "FOR SWAP: one slightly used spacesuit glove. Left hand only.",
+      "LESSONS: learn to cook with three ingredients. The only three.",
+      "FOUND: a sock. Blue. Lonely. Collect at the laundry.",
+      "SHOUT-OUT to the night shift. You keep the lights on.",
+      "OFFER: I will fix your bunk for a dessert.",
+      "QUIET PLEASE in the lounge after 22:00.",
+      "NEW at the academy: courses in everything. Ask the teacher.",
+      "WANTED: someone who can explain the air filter manual.",
+      "SPARE SEAT on the rover to the outpost. Bring snacks."
+    ]
   }
 }

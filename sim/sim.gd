@@ -60,6 +60,11 @@ const Education = preload("res://sim/education.gd")
 const Housing = preload("res://sim/housing.gd")
 const Relations = preload("res://sim/relations.gd")
 const Floors = preload("res://sim/floors.gd")
+const Security = preload("res://sim/security.gd")
+const Leisure = preload("res://sim/leisure.gd")
+const Families = preload("res://sim/families.gd")
+const Rag = preload("res://sim/rag.gd")
+const Eggs = preload("res://sim/eggs.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -108,6 +113,11 @@ var education
 var housing
 var relations
 var floors
+var security
+var leisure
+var families
+var rag
+var eggs
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -157,11 +167,16 @@ func _init() -> void:
 	housing = Housing.new(self)
 	relations = Relations.new(self)
 	floors = Floors.new(self)
+	security = Security.new(self)
+	leisure = Leisure.new(self)
+	families = Families.new(self)
+	rag = Rag.new(self)
+	eggs = Eggs.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations, security, leisure, families, rag, eggs]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -325,6 +340,8 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	social.reset()
 	unrest.reset()
 	relations.reset()
+	security.reset()
+	leisure.reset()
 	if bool(opts.get("debug", false)):
 		if not state.has("options"):
 			state["options"] = {}
@@ -353,6 +370,8 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	explore.ensure()
 	if nav.has_method("prewarm"):
 		nav.prewarm()
+	# V5: a save from before schema 6 gets one commander a base, chosen by seniority.
+	people.ensure_commanders()
 	people.prewarm()
 	util.power_stats = {}
 	util.water_stats = {}
@@ -470,6 +489,9 @@ func log_event(code: String, text: String, entities: Array, sev: int = 1, extra:
 	for k in extra:
 		e[k] = extra[k]
 	log.append(e)
+	# V5: social events also go to the social log (the Rag's source; sim/rag.gd).
+	if rag != null:
+		rag.from_log(code, text, entities, extra)
 	var cap: int = int(bal["log_max_entries"])
 	while log.size() > cap:
 		log.pop_front()
@@ -539,6 +561,11 @@ func step() -> void:
 	relations.tick()
 	education.tick()
 	unrest.tick()
+	rag.tick()
+	if phase == _phase_of(9, hz):
+		security.tick_second()
+		leisure.tick_second()
+		families.tick_second()
 	if phase == 0:
 		metrics.tick_second()
 

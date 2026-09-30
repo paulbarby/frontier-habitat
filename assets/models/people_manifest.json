@@ -61,18 +61,20 @@
       "Addon_toolbelt"
      ],
      "base_rgb": [
-      0.33,
-      0.37,
-      0.42
+      0.3,
+      0.34,
+      0.4
      ]
     },
     "uniform_science": {
      "mesh": "Outfit_uniform",
-     "addons": [],
+     "addons": [
+      "Addon_labcoat"
+     ],
      "base_rgb": [
-      0.86,
-      0.88,
-      0.9
+      0.52,
+      0.58,
+      0.66
      ]
     },
     "uniform_food": {
@@ -81,18 +83,20 @@
       "Addon_apron"
      ],
      "base_rgb": [
-      0.55,
-      0.62,
-      0.52
+      0.5,
+      0.58,
+      0.47
      ]
     },
     "uniform_medical": {
      "mesh": "Outfit_uniform",
-     "addons": [],
+     "addons": [
+      "Addon_tunic"
+     ],
      "base_rgb": [
-      0.92,
-      0.93,
-      0.94
+      0.78,
+      0.86,
+      0.88
      ]
     },
     "uniform_security": {
@@ -110,7 +114,8 @@
     "uniform_command": {
      "mesh": "Outfit_uniform",
      "addons": [
-      "Addon_rank"
+      "Addon_jacket",
+      "Addon_rank3"
      ],
      "base_rgb": [
       0.09,
@@ -118,45 +123,70 @@
       0.26
      ]
     },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
     "casual_a": "Outfit_casual_a"
    },
    "addons": [
     "Addon_apron",
-    "Addon_rank",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
     "Addon_toolbelt",
+    "Addon_tunic",
     "Addon_vest"
    ],
    "triangles": {
     "Head_m1": 2918,
-    "Hair_m1": 3344,
-    "Outfit_uniform": 16048,
-    "Outfit_casual_a": 15028,
-    "Addon_toolbelt": 276,
-    "Addon_apron": 320,
-    "Addon_vest": 788,
-    "Addon_rank": 24
+    "Hair_m1": 1050,
+    "Outfit_uniform": 13710,
+    "Outfit_casual_a": 11980,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 725,
+    "Addon_vest": 1500,
+    "Addon_labcoat": 2199,
+    "Addon_tunic": 2199,
+    "Addon_jacket": 2199,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
    },
    "triangles_on_screen": {
-    "uniform_engineering": 22586,
-    "uniform_science": 22310,
-    "uniform_food": 22630,
-    "uniform_medical": 22310,
-    "uniform_security": 23374,
-    "uniform_command": 22334,
-    "casual_a": 21290
+    "uniform_engineering": 18094,
+    "uniform_science": 19877,
+    "uniform_food": 18403,
+    "uniform_medical": 19877,
+    "uniform_security": 19594,
+    "uniform_command": 20053,
+    "prison": 17678,
+    "casual_a": 15948
    },
    "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
    "assets": {
     "skin": "skins/young_caucasian_male",
-    "hair": "hair/short02",
-    "brows": "eyebrows/eyebrow008",
+    "hair": "hair/short04",
+    "brows": "eyebrows/eyebrow002",
     "eyes": "eyes/materials/brown.mhmat",
     "outfits": {
      "uniform": [
       "clothes/toigo_ankle_boots_male"
      ],
      "casual_a": [
-      "clothes/toigo_basic_tucked_t-shirt",
+      "clothes/elvs_crude_t-shirt_male",
       "clothes/cortu_cargo_pants",
       "clothes/shoes06"
      ]
@@ -177,18 +207,20 @@
       "Addon_toolbelt"
      ],
      "base_rgb": [
-      0.33,
-      0.37,
-      0.42
+      0.3,
+      0.34,
+      0.4
      ]
     },
     "uniform_science": {
      "mesh": "Outfit_uniform",
-     "addons": [],
+     "addons": [
+      "Addon_labcoat"
+     ],
      "base_rgb": [
-      0.86,
-      0.88,
-      0.9
+      0.52,
+      0.58,
+      0.66
      ]
     },
     "uniform_food": {
@@ -197,18 +229,20 @@
       "Addon_apron"
      ],
      "base_rgb": [
-      0.55,
-      0.62,
-      0.52
+      0.5,
+      0.58,
+      0.47
      ]
     },
     "uniform_medical": {
      "mesh": "Outfit_uniform",
-     "addons": [],
+     "addons": [
+      "Addon_tunic"
+     ],
      "base_rgb": [
-      0.92,
-      0.93,
-      0.94
+      0.78,
+      0.86,
+      0.88
      ]
     },
     "uniform_security": {
@@ -226,7 +260,8 @@
     "uniform_command": {
      "mesh": "Outfit_uniform",
      "addons": [
-      "Addon_rank"
+      "Addon_jacket",
+      "Addon_rank3"
      ],
      "base_rgb": [
       0.09,
@@ -234,45 +269,70 @@
       0.26
      ]
     },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
     "casual_a": "Outfit_casual_a"
    },
    "addons": [
     "Addon_apron",
-    "Addon_rank",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
     "Addon_toolbelt",
+    "Addon_tunic",
     "Addon_vest"
    ],
    "triangles": {
     "Head_f1": 2922,
     "Hair_f1": 2852,
-    "Outfit_uniform": 16536,
-    "Outfit_casual_a": 14972,
-    "Addon_toolbelt": 276,
-    "Addon_apron": 320,
-    "Addon_vest": 788,
-    "Addon_rank": 24
+    "Outfit_uniform": 13545,
+    "Outfit_casual_a": 11916,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 769,
+    "Addon_vest": 1500,
+    "Addon_labcoat": 2199,
+    "Addon_tunic": 2199,
+    "Addon_jacket": 2199,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
    },
    "triangles_on_screen": {
-    "uniform_engineering": 22586,
-    "uniform_science": 22310,
-    "uniform_food": 22630,
-    "uniform_medical": 22310,
-    "uniform_security": 23374,
-    "uniform_command": 22334,
-    "casual_a": 20746
+    "uniform_engineering": 19735,
+    "uniform_science": 21518,
+    "uniform_food": 20088,
+    "uniform_medical": 21518,
+    "uniform_security": 21235,
+    "uniform_command": 21694,
+    "prison": 19319,
+    "casual_a": 17690
    },
    "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
    "assets": {
     "skin": "skins/young_caucasian_female",
     "hair": "hair/toigo_curled_under_bob",
-    "brows": "eyebrows/eyebrow010",
+    "brows": "eyebrows/eyebrow003",
     "eyes": "eyes/materials/green.mhmat",
     "outfits": {
      "uniform": [
       "clothes/toigo_ankle_boots_male"
      ],
      "casual_a": [
-      "clothes/toigo_basic_tucked_t-shirt",
+      "clothes/joepal_crude_t-shirt_female",
       "clothes/cortu_cargo_pants",
       "clothes/shoes05"
      ]
@@ -286,13 +346,13 @@
     "technician",
     "operator"
    ],
-   "look": "coverall, amber stripe on chest and sleeves, tool belt, work boots"
+   "look": "slate coverall, amber reflective bands (chest, upper sleeves, lower legs), chest and thigh pockets, tool belt with pouches, work boots"
   },
   "uniform_science": {
    "who": [
     "scientist"
    ],
-   "look": "light coverall, blue stripe on chest and sleeves"
+   "look": "light slate coverall, blue bands, white knee-length lab coat with blue collar and sleeve bands"
   },
   "uniform_food": {
    "who": [
@@ -300,26 +360,32 @@
     "kitchen",
     "venue staff"
    ],
-   "look": "sage coverall, green stripe, white apron"
+   "look": "sage coverall, green bands, white bib apron with ties"
   },
   "uniform_medical": {
    "who": [
     "medic"
    ],
-   "look": "white coverall (scrubs), red stripe"
+   "look": "pale scrubs coverall, white tunic with red collar and sleeve bands, red bands"
   },
   "uniform_security": {
    "who": [
     "security officer"
    ],
-   "look": "black coverall, armoured vest, red stripe, belt"
+   "look": "black coverall, armoured vest with shoulder straps, red bands, duty belt"
   },
   "uniform_command": {
    "who": [
     "commander",
     "captains"
    ],
-   "look": "navy coverall, shoulder boards with rank"
+   "look": "navy coverall, tailored hip-length jacket with a stand collar, shoulder boards with rank bars"
+  },
+  "prison": {
+   "who": [
+    "prisoner"
+   ],
+   "look": "orange coverall, light grey bands, no pockets used"
   },
   "casual_a": {
    "who": [

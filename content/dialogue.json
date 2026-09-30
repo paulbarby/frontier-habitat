@@ -19,7 +19,18 @@
   "dome": "music",
   "news": "question",
   "child": "music",
-  "academy": "question"
+  "academy": "question",
+  "arcade": "music",
+  "arcade_champion": "music",
+  "barby": "question",
+  "dance_egg": "music",
+  "protest": "anger",
+  "jail": "sweat",
+  "fight": "anger",
+  "school": "question",
+  "date": "heart",
+  "security": "question",
+  "venue": "music"
  },
  "topics": {
   "small_talk": [
@@ -985,6 +996,135 @@
    "Oh?",
    "No idea.",
    "Of course not."
+  ],
+  "arcade": [
+   "Did you see my score on the PRISM SHIFT cabinet?",
+   "The neon tunnel got me again at level nine.",
+   "I dream about that prism ship now.",
+   "Beat my high score and I buy the drinks.",
+   "The arcade is the best room in the dome.",
+   "One more go. Just one. Then I sleep.",
+   {
+    "text": "I am going to be the ARCADE KING, {other}.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "I let you win last time, {other}. Honestly.",
+    "trait": "funny"
+   },
+   "The tunnel goes faster after the red gate.",
+   "My hands still shake after a good run."
+  ],
+  "arcade_champion": [
+   "Level ninety-nine of PRISM SHIFT. Nobody else has seen it.",
+   "The prism ship and I understand each other.",
+   "They call me the champion. I call it practice."
+  ],
+  "barby": [
+   "I made this place, you know.",
+   "The dome looks better than on my screen.",
+   "Mind the second lift. I never fixed that one.",
+   "Is the PRISM SHIFT cabinet still in the lounge?",
+   "Everybody here has such a story. I love it.",
+   "Somebody wrote all these lines. I wonder who."
+  ],
+  "dance_egg": [
+   "The floor is ours. Everybody dance!",
+   "Up, up, down, down... and now we dance!",
+   "Nobody told me there would be dancing!",
+   "My feet have a mind of their own today."
+  ],
+  "protest": [
+   "We will not stay quiet any longer!",
+   "What do we want? Change! When? Now!",
+   "The commander must listen to us.",
+   "I am here for everybody who is too tired to shout.",
+   {
+    "text": "Enough is enough, {other}!",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "I hope this ends without trouble.",
+    "trait": "calm"
+   },
+   "They cannot run this base without us.",
+   "Stand with us, {other}. It is for you too."
+  ],
+  "jail": [
+   "This cell is smaller than my bunk.",
+   "I did not start it. Nobody believes me.",
+   "The food in here is worse than a ration.",
+   "One more day and I am out.",
+   {
+    "text": "When I get out, somebody pays.",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "I deserved this. I will do better.",
+    "trait": "honest"
+   },
+   "Tell my friends I am fine.",
+   "The guard snores. Every night."
+  ],
+  "fight": [
+   "Say that again, {other}!",
+   "You want trouble? You found it!",
+   "Get off me!",
+   "That is for the last time!",
+   "Somebody call security!",
+   "Stop it, both of you!"
+  ],
+  "school": [
+   "We learned about oxygen today.",
+   "My teacher says I am good at science.",
+   "School is boring. The park is better.",
+   "I want to be an engineer when I grow up.",
+   "Can we go to the pool after class?",
+   "I finished my homework before everybody.",
+   "The console asks too many questions.",
+   "When I grow up I am going to fly rovers."
+  ],
+  "date": [
+   "This is nice. Just us, {other}.",
+   "You look great tonight, {other}.",
+   "I booked the best table in the {place}.",
+   "Tell me something nobody else knows.",
+   {
+    "text": "I wrote you a poem. It is short.",
+    "trait": "romantic"
+   },
+   {
+    "text": "I am not good at this. Sorry.",
+    "trait": "shy"
+   },
+   "Same time next week?",
+   "I could stay here all night."
+  ],
+  "security": [
+   "All quiet on my round so far.",
+   "Keep it calm, folks.",
+   "I saw that. Do not do it again.",
+   "The cameras miss nothing in the {building}.",
+   "If there is trouble, call me first.",
+   {
+    "text": "Rules are rules, {other}.",
+    "trait": "honest"
+   },
+   "My feet hurt from the patrol.",
+   "The jail is full of talkers today."
+  ],
+  "venue": [
+   "The drinks at the bar are better this week.",
+   "I bought new clothes. Do you like them?",
+   "The pool water is warm today.",
+   "The Club had robot dancers last night!",
+   "The gym is full of show-offs.",
+   "I spent my day off at the shops.",
+   {
+    "text": "Let us go to the Club tonight, {other}!",
+    "trait": "party-animal"
+   },
+   "The cafe makes the best snacks on the planet."
   ]
  }
 }

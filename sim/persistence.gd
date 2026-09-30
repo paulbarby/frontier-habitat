@@ -7,7 +7,7 @@ extends RefCounted
 ## bytes_to_var never decodes objects, so an imported file cannot run code.
 
 const MAGIC := "FHSAVE1\n"
-const SCHEMA := 5
+const SCHEMA := 6
 const REQUIRED := ["schema", "seed", "tick", "rng", "buildings", "inventories", "agents", "tasks", "holds", "policies", "ledger"]
 const Research = preload("res://sim/research.gd")
 const Goals = preload("res://sim/goals.gd")
@@ -72,6 +72,9 @@ static func migrate(state: Dictionary) -> Dictionary:
 	if v < 5:
 		_v4_to_v5(state)
 		v = 5
+	if v < 6:
+		_v5_to_v6(state)
+		v = 6
 	state["schema"] = v
 	return state
 
@@ -231,6 +234,16 @@ static func _v2_to_v3(s: Dictionary) -> void:
 static func _v4_to_v5(s: Dictionary) -> void:
 	if not s.has("bases"):
 		s["bases"] = Bases.fresh_state()
+
+## Version 6 (docs/V5_DESIGN.md section 0): people, society and the city dome. Appearance, traits and
+## skills are derived from the seed, the person and their role and days worked (people.gd), so
+## nothing is stored for them. The v5 record starts empty: no relationships, no courses, no unrest
+## history. "migrated" makes sim.load_state appoint one commander a base by seniority
+## (people.ensure_commanders); the other ranks are SIM's proposal as in a new game.
+static func _v5_to_v6(s: Dictionary) -> void:
+	if not s.has("v5"):
+		s["v5"] = {"people": {}, "appoint": {}, "unrest": {}, "courses": {}}
+	s["v5"]["migrated"] = true
 
 static func _v3_to_v4(s: Dictionary) -> void:
 	if not s.has("traffic"):

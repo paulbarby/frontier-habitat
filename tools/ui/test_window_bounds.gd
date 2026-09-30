@@ -122,7 +122,16 @@ func _plan() -> void:
 					var cw: float = top.content.get_combined_minimum_size().x
 					if cw > scr.size.x + 0.5:
 						bad.append("content %.0f px wider than its area %.0f px" % [cw, scr.size.x])
-				check("scale %d%% screen %s%s: content fits its width" % [int(sc * 100.0), name, (" " + str(arg)) if arg != null else ""], bad)
+					# The header too: title, every tab and the extras inside its clip area (the tabs wrap).
+					var hr: Control = top.get("_hdr_row")
+					if hr != null:
+						var clip: Rect2 = (hr.get_parent() as Control).get_global_rect()
+						if hr.get_combined_minimum_size().x > clip.size.x + 0.5:
+							bad.append("header %.0f px wider than its clip area %.0f px" % [hr.get_combined_minimum_size().x, clip.size.x])
+						for b in top._tab_buttons.values():
+							if not clip.grow(0.5).encloses((b as Control).get_global_rect()):
+								bad.append("tab %s cut off" % (b as Button).text)
+				check("scale %d%% screen %s%s: content and header fit their width" % [int(sc * 100.0), name, (" " + str(arg)) if arg != null else ""], bad)
 				main.hud.close_modal(), 3)
 	# Resize with windows open.
 	for name in ["dashboard", "newcolony", "research", "settings"]:

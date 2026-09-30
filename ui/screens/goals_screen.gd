@@ -126,7 +126,9 @@ func _signature(goals: Array) -> String:
 
 func _card(g: Dictionary) -> Dictionary:
 	var p: PanelContainer = Kit.panel("CardPanel", false)
-	p.custom_minimum_size = Vector2(430, 150)
+	# Paul, 2026-10-01 (nothing hidden sideways): 400, not 430, so two columns fit a 1300 px view.
+	# The cards expand, so with room they look the same as before.
+	p.custom_minimum_size = Vector2(400, 150)
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var v: VBoxContainer = Kit.vbox(6)
 	p.add_child(v)

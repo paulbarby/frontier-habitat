@@ -223,7 +223,10 @@
     "grower": "Grower",
     "operator": "Operator",
     "medic": "Medic",
-    "scientist": "Scientist"
+    "scientist": "Scientist",
+    "security": "Security officer",
+    "child": "Child",
+    "visitor": "Visitor"
   },
   "stages": [
     {

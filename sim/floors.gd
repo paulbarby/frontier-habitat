@@ -83,6 +83,9 @@ func on_use(a: Dictionary) -> void:
 			a.erase("floor_b")
 		return
 	var f: int = slot_floor(b, String(u["kind"]), int(u["i"]))
+	# V5: at a venue of the dome the floor is the venue's (leisure.gd).
+	if String(a.get("venue", "")) != "" and sim.bdef(String(b["def"])).has("venues") and String(u["kind"]) != "bed" and String(u["kind"]) != "child_bed":
+		f = clampi(sim.leisure.venue_floor(b, String(a["venue"])), 0, floors_of(b) - 1)
 	var old: int = int(a.get("floor", 0)) if int(a.get("floor_b", -1)) == bid else 0
 	if f != old:
 		var now: int = int(sim.state["tick"])

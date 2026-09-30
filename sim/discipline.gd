@@ -117,10 +117,13 @@ func apply(a: Dictionary, action: String, params: Dictionary = {}) -> Dictionary
 		if sp.has(k):
 			m[k] = sp[k]
 	if action == "jail" and not _has_jail(a):
-		# Without a jail the person is confined to quarters instead (weaker).
+		# Without a jail (or a free cell) the person is confined to quarters instead (weaker).
 		m.erase("jail")
-		m["text"] = "Confined to quarters (no jail)"
+		m["text"] = "Confined to quarters (no jail)" if sim.security.jails(sim.bases.home_of(a) if sim.bases.count() > 0 else -1).is_empty() else "Confined to quarters (no free cell)"
 	sim.people.add_mod(a, m)
+	if a.has("jailed"):
+		# V5 section 6.5: the prisoner is walked to a cell (an officer walks along when free).
+		sim.security.on_jailed(a, not bool(params.get("arrest", false)))
 	var r: Dictionary = sim.people.rec_w(a)
 	r["att"] = clampf(float(r["att"]) + e["att"], -100.0, 100.0)
 	if sp.has("fatigue"):
@@ -139,12 +142,7 @@ func apply(a: Dictionary, action: String, params: Dictionary = {}) -> Dictionary
 	return {"ok": true, "code": "ok", "text": String(m["text"]), "unfair": uf, "attitude": snappedf(e["att"], 0.1)}
 
 func _has_jail(a: Dictionary) -> bool:
-	var base: int = sim.bases.home_of(a) if sim.bases.count() > 0 else -1
-	for id in sim.state["buildings"]:
-		var b: Dictionary = sim.state["buildings"][id]
-		if String(b["def"]) == "jail" and b["state"] == "active" and (base == -1 or sim.bases.base_of(int(id)) == base):
-			return true
-	return false
+	return int(a.get("cell_b", -1)) != -1 or sim.security.jail_for(a) != -1
 
 func _demote(a: Dictionary, now: int) -> void:
 	var appt: Dictionary = sim.people.v5w()["appoint"]

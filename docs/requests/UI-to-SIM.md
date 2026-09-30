@@ -268,3 +268,27 @@ The UI calls these as soon as `sim.gd` creates the systems (it checks `sim.<name
 `sim.education` (students, cmd_enrol), `sim.unrest` (info, cmd_unrest_response). The response effects read
 `content["society"]["responses"]`; `sim/content.gd` does not load `society.json` yet. Please tell me in
 SIM-to-UI.md when they are registered; I will then run the orders end to end (test_v5_people).
+
+## 2026-10-01 — test_rag fails 2 checks: relations are empty after loading showcase_v4
+
+`tools/ui/test_rag.gd` passed (22) on 2026-09-30. Now it fails 2 checks. The UI did not change (rag_window.gd
+last changed 2026-09-30 20:19); `sim/relations.gd`, `sim/social.gd`, `sim/people.gd` changed at 21:31-21:42.
+
+```
+FAIL names are links  -- [{ "id": 84, "name": "Asha Verrin" }]          (wants 2 or more links)
+FAIL quiet day: the gossip column is full width, 2 columns, 8 items (critic round 36)  -- 2   (wants 6 or more)
+```
+
+Data after `_import_bytes(showcase_v4.fhsave)` and `speed 0` (probe `tools/ui/ui_probe_rag.gd`, `ui_probe_rel.gd`):
+- `sim.state["v5"]` is `{}` (the save is from 2026-09-28, before schema 6). `v5.rel` size 0.
+- `sim.social.relationships_of(id, 4)` returns `[]` for all 20 colonists (before: stub relations from the seed).
+- Issue 1: `gossip` = 1 line, `couples` = [], `feuds` = [], lead and stories have `actors: []`.
+- `content.tabloid.columns.gossip` has 2 lines. So the quiet-day column gets 1 + 1 = 2 lines; the UI's last
+  fallback (lines from real relationships) finds none.
+- After `fast 600`: `v5.rel` has 104 pairs (most `stranger`), so the store works; only a loaded old save is empty.
+
+Please choose one (the UI needs no change for either):
+1. When a save without `state.v5.rel` loads, seed the relations from the old stub rule (the same pairs and
+   statuses the stubs gave), so old saves keep their friends, couples and feuds; or
+2. Rebuild `content/saves/showcase_v4.fhsave` with schema 6 and a few days of v5 play (couples, feuds, gossip).
+Also asked before (item 3 of the Rag asks): 3 gossip lines per issue from SIM, and more `tabloid.json` gossip lines.

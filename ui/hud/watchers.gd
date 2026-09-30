@@ -27,7 +27,17 @@ const HAZARD_LOG := {"hazard_detected": ["info", "hazard"], "hazard_start": ["wa
 	"shelter": ["info", "shelter"], "survey": ["research", "exotic"],
 	# Ships (sim/traffic.gd, version 3.1). ship_orbit, ship_takeoff, ship_gone: the traffic panel shows them.
 	"ship_forecast": ["info", "ship"], "ship_landing": ["info", "ship"], "ship_landed": ["good", "ship"],
-	"ship_denied": ["info", "ship"], "ship_left": ["warn", "ship"], "trade": ["good", "credits"]}
+	"ship_denied": ["info", "ship"], "ship_left": ["warn", "ship"], "trade": ["good", "credits"],
+	# Version 5 society (sim/relations.gd, education.gd, ranks.gd): the big moments of people's lives.
+	# Feuds, flings, promotions, discipline and unrest answers are not toasted (the Rag shows them; the
+	# player gave the order and got its answer).
+	"couple": ["info", "heart"], "partners": ["info", "heart"], "wedding": ["good", "heart"], "breakup": ["info", "heart"],
+	"affair": ["warn", "heart"], "defect_request": ["warn", "heart"], "defected": ["warn", "ship"],
+	"graduated": ["good", "research"], "unrest": ["warn", "people"],
+	# Homes, families, security, the dome and the eggs (sim/families.gd, security.gd, leisure.gd, eggs.gd).
+	"move_in": ["info", "home"], "request_shared_home": ["warn", "home"], "adoption": ["good", "people"], "grew_up": ["good", "people"],
+	"fight": ["warn", "sev_warning"], "arrest": ["warn", "people"], "released": ["info", "people"], "dome_stage": ["good", "build"],
+	"arcade_record": ["info", "trophy"], "barby": ["good", "ship"], "dance": ["good", "people"]}
 
 var hud
 var gate = AlertGate.new()   # alert toasts and the steady alert list (V3_DESIGN §2)
@@ -40,6 +50,7 @@ var _victory := false
 var _lost := false
 var _stage := -1
 var _log_tick := -1
+var _log_last = null     # the newest log entry seen (compared by value; see the log walk)
 var _unseen := 0
 var _primed := false
 var _grace_tick := 0
@@ -66,6 +77,7 @@ func reset() -> void:
 	_stage = int(st["progress"].get("stage", 0))
 	var log: Array = st.get("log", [])
 	_log_tick = int(log[log.size() - 1]["tick"]) if not log.is_empty() else -1
+	_log_last = log[log.size() - 1] if not log.is_empty() else null
 	_primed = true
 	_unseen = 0
 	_grace_tick = int(st["tick"]) + int(GRACE_SECONDS * float(hud.main.sim.bal["tick_hz"]))
@@ -166,7 +178,11 @@ func check() -> void:
 	if not quiet:
 		for i in range(log.size() - 1, -1, -1):
 			var e: Dictionary = log[i]
-			if int(e["tick"]) <= _log_tick:
+			# The last entry seen stops the walk (entries of one tick, logged while paused, after it still
+			# count: a v5 order at speed 0); by tick only when that entry has left the capped log.
+			if _log_last != null and e == _log_last:
+				break
+			if int(e["tick"]) < _log_tick or (_log_last == null and int(e["tick"]) <= _log_tick):
 				break
 			match String(e.get("code", "")):
 				"commissioned":
@@ -200,6 +216,7 @@ func check() -> void:
 							Sfx.play("trade_chime")
 	if not log.is_empty():
 		_log_tick = maxi(_log_tick, int(log[log.size() - 1]["tick"]))
+		_log_last = log[log.size() - 1]
 
 ## A world sound at the log entry's first structure (only heard zoomed in and close: audio.gd rules).
 func _world_at(name: String, e: Dictionary) -> void:

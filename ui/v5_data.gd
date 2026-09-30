@@ -159,6 +159,22 @@ func talk_of(id: int) -> Dictionary:
 			return t
 	return {}
 
+## Open requests of people to the player (SIM sim.relations.requests(): [{id, kind, agent, other, ship,
+## tick, text}], oldest first). request_override: debug `request` (screenshots; UI view only).
+var request_override: Array = []
+func requests() -> Array:
+	if not request_override.is_empty():
+		return request_override
+	var s = _sim()
+	var r = s.get("relations")
+	return r.requests() if r != null and r is Object and (r as Object).has_method("requests") else []
+
+## A person's stored record: {att, sat, low, mods [{kind, text, comp, sat, att, until}], hist [{tick, text}],
+## review, skill_bonus, demoted_until, unit} (SIM sim.people.rec_of; {} before the first update).
+func record(id: int) -> Dictionary:
+	var s = _sim()
+	return s.people.rec_of(id) if s.get("people") != null and s.people.has_method("rec_of") else {}
+
 var unrest_override := {}   # debug `unrest <stage> [value]` (screenshots and tests; debug=1 or tests only)
 func unrest(base_id: int = -1) -> Dictionary:
 	var s = _sim()
@@ -171,7 +187,7 @@ func unrest(base_id: int = -1) -> Dictionary:
 	return s.social.unrest(base_id) if s.get("social") != null and s.social.has_method("unrest") else {}
 
 const STATUS_NAME := {"acquaintance": "Acquaintance", "friend": "Friend", "best_friend": "Best friend", "rival": "Rival", "enemy": "Enemy",
-	"crush": "Crush", "dating": "Dating", "partners": "Partner", "married": "Married", "ex": "Ex", "affair": "Affair", "stranger": "Stranger"}
+	"crush": "Crush", "dating": "Dating", "partners": "Partner", "married": "Married", "ex": "Ex", "affair": "Affair", "fling": "Fling", "stranger": "Stranger"}
 
 ## Mood face 0..4 from satisfaction (0 = very unhappy).
 static func mood(v: float) -> int:
@@ -281,6 +297,9 @@ func predict(id: int, action: String) -> Dictionary:
 func command(kind: String, payload: Dictionary) -> Dictionary:
 	var cid = hud.main.submit(kind, payload)
 	var res: Dictionary = _sim().cmds.results.get(cid, {})
+	if not res.is_empty():
+		# The caller shows this answer itself: main does not toast it a second time ("Refused: Refused.").
+		hud.main._sent.erase(cid)
 	if res.is_empty():
 		return {"ok": true, "code": "submitted", "text": "Order given."}
 	if String(res.get("code", "")) == "invalid" and not live_command(kind):
@@ -290,7 +309,7 @@ func command(kind: String, payload: Dictionary) -> Dictionary:
 ## True when SIM has a handler for a v5 order (sim.<system>.cmd_<kind>).
 func live_command(kind: String) -> bool:
 	var s = _sim()
-	for sys_name in ["people", "social", "ranks", "education", "housing", "discipline", "unrest"]:
+	for sys_name in ["people", "social", "ranks", "education", "housing", "discipline", "unrest", "relations", "families", "leisure", "security"]:
 		var o = s.get(sys_name)
 		if o != null and o is Object and (o as Object).has_method("cmd_" + kind):
 			return true

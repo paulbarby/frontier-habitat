@@ -240,7 +240,15 @@ func _make_arrival(n: int, at: int, kind: String) -> Dictionary:
 			var all: Array = sim.bal["roles"]
 			for i in int(arr["people"]):
 				roles.append(all[_hi(n, 700 + i, 0, all.size() - 1)])
+			# V5: after Civic Planning some settlers are security officers (a separate hash, so the
+			# other roles of an arrival stay as before), and some shuttles bring a family with children.
+			if sim.research.is_done("civic_1"):
+				for i in roles.size():
+					if _h(n, 750 + i) < 0.12:
+						roles[i] = "security"
 			offer = {"roles": roles}
+			if roles.size() >= 2 and _h(n, 760) < float(sim.content["society"]["families"]["shuttle_family_chance"]):
+				offer["children"] = 1 + int(_h(n, 761) * 2.0) % 2
 		"liner", "medical", "inspector":
 			offer = {"people": int(arr["people"]), "fee": int(k.get("fee", 0))}
 	arr["offer"] = offer
@@ -396,10 +404,29 @@ func _land(arr: Dictionary, pad: Dictionary, tick: int) -> void:
 			for r0 in clampi(n0, 0, roles.size()):
 				who.append(r0)
 		var n: int = who.size()
+		var came: Array = []
 		for j in n:
 			var a: Dictionary = sim.agents.spawn(String(roles[int(who[j])]), sim.next_name(), _spot(spawn, pad, j), -1)
 			a["hunger"] = 25.0
 			a["thirst"] = 25.0
+			came.append(a)
+		# V5: a family: the first two settlers are the parents (married when they suit each other).
+		var kids: int = int(o.get("children", 0))
+		if kids > 0 and not came.is_empty():
+			var parents: Array = [int(came[0]["id"])]
+			if came.size() >= 2:
+				parents.append(int(came[1]["id"]))
+				if sim.social.compatible(came[0], came[1]):
+					var r: Dictionary = sim.relations._rel_w(came[0], came[1])
+					r["aff"] = 70.0
+					r["att"] = 70.0
+					r["status"] = "married"
+					r["since"] = tick
+					sim.relations._bump()
+			for ki in kids:
+				sim.families.spawn_child(parents, _spot(spawn, pad, n + ki), -1)
+			arr["result"]["children"] = kids
+			text += " A family with %s came." % Text.n(kids, "child", "children")
 		sim.stat_add("settlers", "", n)
 		if n > 0:
 			sim.settler_supplies(n, _spot(spawn, pad, 0))
@@ -407,6 +434,9 @@ func _land(arr: Dictionary, pad: Dictionary, tick: int) -> void:
 		text += " %s joined the colony." % Text.n(n, "settler")
 	elif int(arr["people"]) > 0:
 		var n2: int = int(arr["people"])
+		# V5 section 8: an open super dome draws more tourists.
+		if kind == "liner":
+			n2 = int(round(float(n2) * sim.leisure.tourist_mult()))
 		# Visitors come only when they can reach air on one suit, and tourists only into free beds.
 		var can: int = n2 if spawn != null and _reachable(spawn) else 0
 		if kind == "liner":
@@ -418,6 +448,8 @@ func _land(arr: Dictionary, pad: Dictionary, tick: int) -> void:
 			(arr["visitors"] as Array).append(int(v["id"]))
 		arr["result"]["came"] = can
 		arr["result"]["aboard"] = n2 - can
+		if kind == "liner" and can > 0:
+			sim.eggs.on_liner(arr, (arr["visitors"] as Array).slice((arr["visitors"] as Array).size() - can))
 		if can > 0:
 			text += " %s came into the colony." % Text.n(can, "visitor")
 		if can < n2:

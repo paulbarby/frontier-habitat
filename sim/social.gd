@@ -113,6 +113,20 @@ func _remember(sid: int, at: int, line: Dictionary, topic: String, to: int) -> v
 		arr.pop_front()
 	_recent[sid] = arr
 
+## A line a person says outside a talk (a shout at a protest, a fight, the dance egg): it shows in
+## recent_lines (the follow HUD and the bubbles of the followed person).
+func say(a: Dictionary, text: String, topic: String, to: int) -> void:
+	if text == "":
+		return
+	var emotes: Dictionary = dlg().get("emotes", {})
+	_remember(int(a["id"]), int(sim.state["tick"]), {"text": text, "emote": String(emotes.get(topic, ""))}, topic, to)
+
+## A line of a topic for this person (trait variants first), slots filled; "" for an unknown topic.
+func pick_line(topic: String, a: Dictionary, salt: int) -> String:
+	if not dlg()["topics"].has(topic):
+		return ""
+	return String(line_for(a, a, topic, absi(salt) % 2147483647, int(a.get("bld", -1)))["text"])
+
 ## Talks within radius of pos (the follow view and the bubbles).
 func talks_near(pos: Vector2, radius: float) -> Array:
 	var out: Array = []
@@ -205,9 +219,18 @@ func _issue_weights() -> Dictionary:
 func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
 	var idn: Dictionary = sim.people.identity(a)
 	if idn["kind"] == "child":
-		return "child"
+		return "school" if String(a.get("plan_kind", "")) == "class" and _h(int(a["id"]), salt) < 0.5 else "child"
+	if String(idn.get("egg", "")) == "barby":
+		return "barby"
 	if idn["kind"] == "visitor":
 		return "visitor_says"
+	# V5: the person's situation first (in a cell, at a protest, a record on the arcade).
+	if a.has("jailed"):
+		return "jail"
+	if String(a.get("plan_kind", "")) == "protest":
+		return "protest"
+	if a.has("arcade_last") and int(sim.state["tick"]) - int(a["arcade_last"]) < 600 * int(sim.bal["tick_hz"]) and _h(int(a["id"]), salt + 5) < 0.5:
+		return "arcade_champion" if String(idn.get("egg", "")) == "champion" else "arcade"
 	if sim.people.identity(other)["kind"] == "visitor":
 		return "visitor"
 	var crit: float = float(sim.bal["need_critical"])
@@ -247,6 +270,12 @@ func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
 		w["dome"] = 1.5
 	if String(rec.get("low", "")) == "housing":
 		w["housing"] = 2.0
+	if String(a.get("role", "")) == "security":
+		w["security"] = 2.0
+	if a.has("rec_q_t") and int(sim.state["tick"]) - int(a["rec_q_t"]) < 300 * int(sim.bal["tick_hz"]):
+		w["venue"] = 2.0
+	if String(a.get("venue", "")) != "" and sim.relations.partner_of(int(a["id"])) == int(other["id"]):
+		w["date"] = 5.0
 	if String(rec.get("low", "")) == "work":
 		w["overwork"] = maxf(float(w.get("overwork", 0.0)), 1.5)
 	var keys: Array = w.keys()
@@ -348,6 +377,12 @@ func rag_issues(n: int = 30) -> Array:
 	var d: int = today
 	var ctx: Dictionary = {}
 	while d >= 1 and out.size() < n:
+		# V5: issues made at the turn of the day are stored in the game (sim/rag.gd).
+		var st: Dictionary = sim.rag.stored(d) if sim.get("rag") != null else {}
+		if not st.is_empty():
+			out.append(st)
+			d -= 1
+			continue
 		if not _rag_cache.has(d):
 			if ctx.is_empty():
 				ctx = _rag_ctx()
@@ -385,6 +420,9 @@ func _rag_ctx() -> Dictionary:
 
 func rag_issue(number: int) -> Dictionary:
 	# An issue is made once: its day is over (issue n covers day n, printed at its end).
+	var st: Dictionary = sim.rag.stored(number) if sim.get("rag") != null else {}
+	if not st.is_empty():
+		return st
 	if _rag_cache.has(number):
 		return _rag_cache[number]
 	var out: Dictionary = _rag_issue(number, _rag_ctx())
@@ -440,6 +478,12 @@ func _rag_issue(number: int, ctx: Dictionary) -> Dictionary:
 		if int(iss.get("severity", 0)) >= 2:
 			serious.append(String(iss["text"]))
 	var cols: Dictionary = rag()["columns"]
+	if sim.get("rag") != null:
+		# A day before the v5 state (an old save): the columns come from the colony now.
+		return {"number": number, "day": number, "masthead": rag()["masthead"], "tagline": rag()["tagline"], "lead": lead, "stories": rest,
+			"gossip": sim.rag._gossip(number), "couple_watch": sim.rag._watch(["married", "partners", "dating", "fling"], number, true),
+			"feud_watch": sim.rag._watch(["enemy", "rival"], number, false), "poll": sim.rag._poll(number), "ads": sim.rag._ads(number),
+			"serious": sim.rag._serious(), "stored": false}
 	return {"number": number, "day": number, "masthead": rag()["masthead"], "tagline": rag()["tagline"], "lead": lead, "stories": rest,
 		"gossip": [cols["gossip"][number % (cols["gossip"] as Array).size()]],
 		"couple_watch": [{"a": pair[0], "b": pair[1], "status": "dating"}] if not pair.is_empty() else [],
@@ -505,7 +549,8 @@ func cmd_egg(p: Dictionary) -> Dictionary:
 	if a.is_empty() or a["state"] != "alive":
 		return {"ok": false, "code": "invalid", "text": "No such person."}
 	sim.people.add_mod(a, {"kind": "dance", "text": "Dancing", "comp": "comfort", "sat": 5.0, "att": 1.0, "days": 20.0 / float(sim.bal["day_length"])})
-	return {"ok": true, "code": "ok", "text": "%s dances." % _first(a)}
+	var n: int = sim.eggs.on_dance(a) if sim.get("eggs") != null else 0
+	return {"ok": true, "code": "ok", "text": "%s dances%s." % [_first(a), (" and %d friends join in" % n) if n > 0 else ""], "joined": n}
 
 func _unrest(base_id: int) -> Dictionary:
 	var sat := 0.0

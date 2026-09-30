@@ -150,7 +150,7 @@ func refresh() -> void:
 	Kit.clear(_love)
 	for r in rel:
 		var st: String = String(r["status"])
-		if st in ["dating", "partners", "married", "affair"] or (st == "crush" and bool(r.get("known", false))):
+		if st in ["dating", "partners", "married", "affair", "fling"] or (st == "crush" and bool(r.get("known", false))):
 			_love.add_child(Kit.icon("heart", 14, Color("F472B6")))
 			_love.add_child(Kit.label("%s: %s" % [String(V5.STATUS_NAME.get(st, st)), hud.v5.agent_name(int(r["other"])).get_slice(" ", 0)], "SmallLabel", 12, P.TEXT_2))
 	_love.visible = _love.get_child_count() > 0

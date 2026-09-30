@@ -13,6 +13,7 @@ const Spark = preload("res://ui/charts/sparkline.gd")
 var _updaters: Array = []      # Callables, run every 2 s
 var _clock := 0
 var _tpd := 6000.0
+var _tiles: GridContainer        # the headline tiles of the Overview (Paul, 2026-10-01)
 
 func _init() -> void:
 	icon = "dashboard"
@@ -36,8 +37,23 @@ func refresh() -> void:
 	for u in _updaters:
 		(u as Callable).call()
 
+## Paul, 2026-10-01: "scaling the UI should not cause UI elements to be hidden". The Overview
+## tiles take 8 columns when one row of them fits the area, else 4. The area is the screen's
+## scroll area, which does not follow the content: no feedback.
+func fit_view(vp: Vector2) -> void:
+	super.fit_view(vp)
+	if _tiles == null or not is_instance_valid(_tiles) or _scroll.size.x <= 0.0:
+		return
+	var row_w: float = 10.0 * float(_tiles.get_child_count() - 1)
+	for c in _tiles.get_children():
+		row_w += (c as Control).get_combined_minimum_size().x
+	var cols: int = 8 if row_w <= _scroll.size.x - 6.0 else 4
+	if _tiles.columns != cols:
+		_tiles.columns = cols
+
 func build_tab(id: String, box: VBoxContainer) -> void:
 	_updaters = []
+	_tiles = null
 	var s = hud.main.sim
 	set_subtitle("Day %d  ·  %s  ·  a sample every 10 s" % [s.util.day_number(), Kit.plural(s.alive_count(), "colonist")])
 	var body: VBoxContainer = Kit.vbox(12)
@@ -120,7 +136,12 @@ func _note(parent: Control, text: String) -> void:
 # ---------------------------------------------------------------- pages
 func _overview(body: VBoxContainer) -> void:
 	var d = hud.data
-	var r1: HBoxContainer = _row(body, 10)
+	# Paul, 2026-10-01 (nothing hidden at 140 %): the eight tiles are a grid, one row of 8 with
+	# room, two rows of 4 when the area is narrow (fit_view()).
+	var r1: GridContainer = Kit.grid(8, 10, 10)
+	r1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(r1)
+	_tiles = r1
 	_tile(r1, "people", "Colonists", P.CATEGORY["housing"], "pop", func():
 		var kk: Dictionary = hud.kpi
 		return ["%d" % int(kk["pop"]["value"]), Kit.plural(int(kk["pop"]["beds"]), "bed"), P.AMBER if int(kk["pop"]["beds"]) < int(kk["pop"]["value"]) else P.TEXT])
@@ -501,7 +522,14 @@ func _research(body: VBoxContainer) -> void:
 func _hazards(body: VBoxContainer) -> void:
 	var d = hud.data
 	var s = hud.main.sim
-	var top: HBoxContainer = _row(body)
+	# Paul, 2026-10-01 (nothing hidden at 140 %): events and breaches side by side with room;
+	# breaches wrap under the events when the area is narrow.
+	var top := HFlowContainer.new()
+	top.add_theme_constant_override("h_separation", 12)
+	top.add_theme_constant_override("v_separation", 12)
+	top.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(top)
 	# Events
 	var ev: VBoxContainer = card("Hazard events", "hazard", P.AMBER)
 	var evp: PanelContainer = card_panel(ev)
@@ -561,7 +589,9 @@ func _hazards(body: VBoxContainer) -> void:
 			var row: HBoxContainer = Kit.hbox(8)
 			row.add_child(Kit.icon("breach", 16, P.RED))
 			row.add_child(_goto_button(String(b.get("name", "")), int(id)))
-			row.add_child(Kit.label("Air leaks. A technician repairs it with 1 hull plate (or 2 steel).", "SmallLabel", 12, P.TEXT_2))
+			var leak: Label = Kit.wrap("Air leaks. A technician repairs it with 1 hull plate (or 2 steel).", 12, P.TEXT_2, 180.0)   # wraps in a narrow card
+			leak.theme_type_variation = "SmallLabel"
+			row.add_child(leak)
 			br_list.add_child(row))
 	# Maintenance
 	var mt: VBoxContainer = card("Maintenance: machines near failure", "wrench", P.CYAN)

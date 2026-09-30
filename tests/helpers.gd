@@ -310,6 +310,66 @@ static func link_now(sim, def_id: String, a_id: int, b_id: int, errors: Array) -
 	sim.build._commission(l, false)
 	return l
 
+## V5 SET-UP (tests and the showcase builder): a finished structure joined by a finished corridor to
+## an active room with air, the rooms nearest `near` first. Returns {} when no spot is found.
+static func attach(sim, def_id: String, near: Vector2, size: int = 1, max_rooms: int = 40, base_id: int = -1) -> Dictionary:
+	var rooms: Array = []
+	for id in sim.state["buildings"]:
+		var rb: Dictionary = sim.state["buildings"][id]
+		if rb["state"] != "active" or rb["kind"] == "link" or not sim.topo.atmo_comp.has(int(id)) or bool(rb["demolish"]):
+			continue
+		if ["lander", "airlock", "outpost_core"].has(String(rb["def"])):
+			continue
+		if base_id != -1 and sim.bases.count() > 1 and sim.bases.base_of(int(id)) != base_id:
+			continue
+		rooms.append([(rb["pos"] as Vector2).distance_to(near), int(id)])
+	rooms.sort_custom(func(x, y): return x[0] < y[0] if x[0] != y[0] else x[1] < y[1])
+	var nr: float = float(sim.sizes.def_for(def_id, size)["radius"])
+	var errs: Array = []
+	for e in rooms.slice(0, max_rooms):
+		var rb2: Dictionary = sim.state["buildings"][int(e[1])]
+		for gap in [9.0, 13.0, 18.0]:
+			for k in 24:
+				var p: Vector2 = sim.place.snap_pos((rb2["pos"] as Vector2) + Vector2.RIGHT.rotated(k * TAU / 24.0) * (float(rb2["radius"]) + nr + gap))
+				if sim.place.check_building(def_id, p, 0.0, -1, size) != "ok":
+					continue
+				var b: Dictionary = sim.build.spawn_active(def_id, p, 0.0, size)
+				var l: Dictionary = link_now(sim, "corridor", int(rb2["id"]), int(b["id"]), errs)
+				if l.is_empty():
+					sim.build._remove_record(b)
+					errs.clear()
+					continue
+				sim.topo.rebuild(true)
+				return b
+	return {}
+
+## V5 SET-UP: a finished fusion reactor (60 power day and night) cabled to the active room nearest
+## `near`. Returns the reactor or {}.
+static func attach_power(sim, near: Vector2, base_id: int = -1) -> Dictionary:
+	var rooms: Array = []
+	for id in sim.state["buildings"]:
+		var rb: Dictionary = sim.state["buildings"][id]
+		if rb["state"] == "active" and rb["kind"] == "room" and sim.topo.atmo_comp.has(int(id)) and (base_id == -1 or sim.bases.count() < 2 or sim.bases.base_of(int(id)) == base_id):
+			rooms.append([(rb["pos"] as Vector2).distance_to(near), int(id)])
+	rooms.sort_custom(func(x, y): return x[0] < y[0] if x[0] != y[0] else x[1] < y[1])
+	var errs: Array = []
+	for e in rooms.slice(0, 30):
+		var rb2: Dictionary = sim.state["buildings"][int(e[1])]
+		for gap in [8.0, 14.0, 22.0]:
+			for k in 24:
+				var p: Vector2 = sim.place.snap_pos((rb2["pos"] as Vector2) + Vector2.RIGHT.rotated(k * TAU / 24.0) * (float(rb2["radius"]) + 6.5 + gap))
+				if sim.place.check_building("fusion_reactor", p, 0.0, -1, 1) != "ok":
+					continue
+				var b: Dictionary = sim.build.spawn_active("fusion_reactor", p, 0.0, 1)
+				var l: Dictionary = link_now(sim, "cable", int(rb2["id"]), int(b["id"]), errs)
+				if l.is_empty():
+					sim.build._remove_record(b)
+					errs.clear()
+					continue
+				sim.topo.rebuild(true)
+				return b
+	return {}
+
 ## Removes a finished link at once, through the same code path that removes the links of
 ## a demolished building.
 static func unlink_now(sim, link_id: int) -> void:

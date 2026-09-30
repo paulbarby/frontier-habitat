@@ -5,7 +5,10 @@ extends RefCounted
 ## work until the course ends (a trade-off). Numbers: content/society.json "education".
 ##
 ## Stored in state.v5.courses[agent id] = {skill, building, progress 0..1, level_to, teacher}.
-## NOT YET: the student does not walk to the academy (the course runs where they are).
+## The student walks to the academy and sits in class ("class" steps, a seat anchor); the course
+## moves on only then: pace 1 with the teacher in the room (the teacher walks there and teaches:
+## "teach" steps at the teacher's desk), console_pace without, and nothing above console_max_level
+## without the teacher. Research "education" adds course_speed. Children at school take free seats.
 
 var sim
 
@@ -88,37 +91,109 @@ func cmd_enrol(p: Dictionary) -> Dictionary:
 	sim.people.invalidate(int(a["id"]))
 	return {"ok": true, "code": "ok", "text": "Enrolled: %s to level %d." % [skill.capitalize(), lv + 1], "teacher": t}
 
-## Every tick (sim.step): each course moves on once a game second on its own tick; a course ends
-## when its academy is gone or the student dies.
-func tick() -> void:
+## True while the person sits in class in building bid now.
+func _in_room(a: Dictionary, bid: int) -> bool:
+	return a["state"] == "alive" and a["where"] == "in" and int(a["bld"]) == bid and String(a.get("plan_kind", "")) == "class" and sim.agents._step_op(a) == "class"
+
+func _teaching(t: Dictionary, bid: int) -> bool:
+	return not t.is_empty() and t["state"] == "alive" and t["where"] == "in" and int(t["bld"]) == bid and String(t.get("plan_kind", "")) == "teach"
+
+## People in the seats of an academy now (students and children at school).
+func seated(bid: int) -> int:
+	var n := 0
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] == "alive" and String(a.get("plan_kind", "")) == "class":
+			for st in a["plan"]:
+				if String(st["op"]) == "go" and int(st["to"]["b"]) == bid:
+					n += 1
+			if a["where"] == "in" and int(a["bld"]) == bid and sim.agents._step_op(a) == "class":
+				n += 1
+	return n
+
+## An academy of the child's base with a seat free for school (-1: none).
+func school_for(a: Dictionary) -> int:
+	var base: int = sim.bases.home_of(a) if sim.bases.count() > 1 else -1
+	var ids: Array = sim.state["buildings"].keys()
+	ids.sort()
+	for id in ids:
+		var b: Dictionary = sim.state["buildings"][id]
+		if String(b["def"]) != "academy" or b["state"] != "active" or not sim.util.building_supplied(int(id)):
+			continue
+		if base != -1 and sim.bases.base_of(int(id)) != base:
+			continue
+		if students(int(id)).size() + seated(int(id)) < seats(b) + 1:
+			return int(id)
+	return -1
+
+## A student's or a teacher's part of the day (people.duty_think). true: a plan started.
+func think(a: Dictionary) -> bool:
 	var cs: Dictionary = _courses_r()
-	if cs.is_empty():
-		return
-	var hz: int = int(sim.bal["tick_hz"])
-	var now: int = int(sim.state["tick"])
-	var dur_s: float = float(cfg()["course_hours"]) / 24.0 * float(sim.bal["day_length"])
+	var c: Dictionary = cs.get(int(a["id"]), {})
+	var class_s: float = float(cfg().get("class_s", 40))
+	if not c.is_empty():
+		var bid: int = int(c["building"])
+		var name: String = String(c["skill"]).capitalize()
+		return sim.agents._start_personal(a, "class", bid, [{"op": "class", "t": class_s}], "In class: %s" % name, -1)
+	# A teacher goes to the academy while a student of theirs is there.
 	var ids: Array = cs.keys()
 	ids.sort()
-	for aid in ids:
-		if (now + int(aid)) % hz != 0:
+	for sid in ids:
+		var c2: Dictionary = cs[sid]
+		if int(c2["teacher"]) != int(a["id"]):
 			continue
-		var c: Dictionary = cs[aid]
-		var a: Dictionary = sim.state["agents"].get(int(aid), {})
-		var b: Dictionary = sim.state["buildings"].get(int(c["building"]), {})
-		if a.is_empty() or a["state"] != "alive" or b.is_empty() or b["state"] != "active":
-			cs.erase(aid)
-			if not a.is_empty():
+		var s: Dictionary = sim.state["agents"].get(int(sid), {})
+		var bid2: int = int(c2["building"])
+		if s.is_empty() or s["state"] != "alive" or String(s.get("plan_kind", "")) != "class":
+			continue
+		if sim.agents._start_personal(a, "teach", bid2, [{"op": "teach", "t": class_s}], "Teaching %s" % String(c2["skill"]), 0):
+			return true
+	return false
+
+## Every tick (sim.step): each course moves on once a game second on its own tick while the student
+## sits in class; a course ends when its academy is gone or the student dies. Children at school
+## gain school points the same way.
+func tick() -> void:
+	var cs: Dictionary = _courses_r()
+	var hz: int = int(sim.bal["tick_hz"])
+	var now: int = int(sim.state["tick"])
+	if not cs.is_empty():
+		var dur_s: float = float(cfg()["course_hours"]) / 24.0 * float(sim.bal["day_length"])
+		var speed: float = 1.0 + sim.research.bonus("course_speed")
+		var ids: Array = cs.keys()
+		ids.sort()
+		for aid in ids:
+			if (now + int(aid)) % hz != 0:
+				continue
+			var c: Dictionary = cs[aid]
+			var a: Dictionary = sim.state["agents"].get(int(aid), {})
+			var b: Dictionary = sim.state["buildings"].get(int(c["building"]), {})
+			if a.is_empty() or a["state"] != "alive" or b.is_empty() or b["state"] != "active":
+				cs.erase(aid)
+				if not a.is_empty():
+					sim.people._apply_flags(a, sim.people.rec_w(a))
+				continue
+			if not _in_room(a, int(c["building"])):
+				continue
+			var pace := 0.0
+			if int(c["teacher"]) >= 0 and _teaching(sim.state["agents"].get(int(c["teacher"]), {}), int(c["building"])):
+				pace = 1.0
+			elif int(c["level_to"]) <= int(cfg()["console_max_level"]):
+				pace = float(cfg().get("console_pace", 0.5))
+			c["progress"] = minf(1.0, float(c["progress"]) + pace * speed / dur_s)
+			if float(c["progress"]) >= 1.0:
+				_graduate(a, c)
+				cs.erase(aid)
 				sim.people._apply_flags(a, sim.people.rec_w(a))
-			continue
-		if bool(a.get("sleeping", false)):
-			continue
-		# A teacher doubles the pace of the console.
-		var pace: float = 1.0 if int(c["teacher"]) >= 0 else 0.5
-		c["progress"] = minf(1.0, float(c["progress"]) + pace / dur_s)
-		if float(c["progress"]) >= 1.0:
-			_graduate(a, c)
-			cs.erase(aid)
-			sim.people._apply_flags(a, sim.people.rec_w(a))
+				if String(a.get("plan_kind", "")) == "class":
+					sim.agents._clear_plan(a)
+	# School: children in class, once a second each.
+	if now % hz == 6:
+		var pts: float = float(sim.content["society"]["families"]["school_pts_per_s"])
+		for aid in sim.state["agents"]:
+			var k: Dictionary = sim.state["agents"][aid]
+			if String(k.get("kind", "")) == "child" and k["state"] == "alive" and String(k.get("plan_kind", "")) == "class" and sim.agents._step_op(k) == "class" and k["where"] == "in":
+				sim.families.school_second(k, pts)
 
 func _graduate(a: Dictionary, c: Dictionary) -> void:
 	var skill: String = String(c["skill"])

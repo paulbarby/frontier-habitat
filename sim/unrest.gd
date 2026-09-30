@@ -229,6 +229,11 @@ func _stage_changed(base_id: int, old: String, stage: String, r: Dictionary) -> 
 	var text: String = String(texts.get(stage, "%s: " + stage)) % name
 	if not up and stage != "calm":
 		text = "Unrest in %s falls to %s." % [name, stage]
+	if stage == "riot" and up:
+		# A new riot: its damage and injuries are counted from now.
+		r["damaged"] = []
+		r["injured"] = 0
+		r["looted"] = 0
 	var sev: int = 1 if _rank_of(stage) < _rank_of("protest") else (2 if stage != "riot" else 3)
 	sim.log_event("unrest", text, [base_id] if base_id != -1 else [], sev, {"stage": stage, "demand": String(r.get("demand", ""))})
 	# The people of the base get their work flags again (a strike starts or ends).
@@ -258,6 +263,103 @@ func on_strike(a: Dictionary) -> bool:
 func add_punishment(base_id: int, unfair: bool) -> void:
 	_rec_w(base_id)["punish"].append([int(sim.state["tick"]), unfair])
 
+# ---------------------------------------------------------------- lock-down and protests
+## True while a lock-down holds the base: the doors between its rooms are closed (RENDER draws the
+## corridor doors of the base closed), people stay in the room they are in (only critical needs
+## move them), and riots start fewer fights and loot less.
+func locked(base_id: int) -> bool:
+	return int(rec_of(base_id).get("lock_until", -1)) > int(sim.state["tick"])
+
+## {locked, until (tick), seconds_left} for the interface.
+func lock_info(base_id: int) -> Dictionary:
+	var u: int = int(rec_of(base_id).get("lock_until", -1))
+	var now: int = int(sim.state["tick"])
+	return {"locked": u > now, "until": u, "seconds_left": maxf(0.0, float(u - now) / float(sim.bal["tick_hz"]))}
+
+func locked_in(a: Dictionary) -> bool:
+	return a["where"] == "in" and locked(_home(a))
+
+## Where a protest gathers: the dome (its plaza) or the largest leisure room of the base (-1: none).
+func protest_place(base_id: int) -> int:
+	var best := -1
+	var best_v := -1
+	var ids: Array = sim.state["buildings"].keys()
+	ids.sort()
+	for id in ids:
+		var b: Dictionary = sim.state["buildings"][id]
+		if b["state"] != "active" or bool(b["demolish"]) or not sim.topo.atmo_comp.has(int(id)):
+			continue
+		if base_id != -1 and sim.bases.count() > 1 and sim.bases.base_of(int(id)) != base_id:
+			continue
+		var v: int = int(sim.bd(b).get("recreation", 0)) + (1000 if String(b["def"]) == "super_dome" else 0)
+		if v > best_v and (v > 0 or bool(sim.bdef(String(b["def"])).get("dining", false))):
+			best_v = v
+			best = int(id)
+	return best
+
+## During a protest or a strike the unhappiest people gather and shout the demand (people.duty_think).
+func protest_think(a: Dictionary) -> bool:
+	var base: int = _home(a)
+	var r: Dictionary = rec_of(base)
+	if not ["protest", "strike"].has(String(r.get("stage", "calm"))):
+		return false
+	if String(a.get("kind", "")) == "visitor" or String(a.get("kind", "")) == "child":
+		return false
+	if float(sim.people.rec_of(int(a["id"])).get("sat", 100.0)) >= float(cfg()["low_sat"]):
+		return false
+	var pc: Dictionary = sim.content["society"]["protest"]
+	var n := 0
+	for aid in sim.state["agents"]:
+		var x: Dictionary = sim.state["agents"][aid]
+		if x["state"] == "alive" and String(x.get("plan_kind", "")) == "protest" and _home(x) == base:
+			n += 1
+	if n >= int(pc["max_people"]):
+		return false
+	var place: int = protest_place(base)
+	if place == -1:
+		return false
+	var demand: String = String(r.get("demand", ""))
+	if sim.agents._start_personal(a, "protest", place, [{"op": "protest", "t": float(pc["protest_s"])}], "Protesting: %s" % demand, -1):
+		if String(sim.state["buildings"][place]["def"]) == "super_dome":
+			a["venue"] = "plaza"
+		sim.social.say(a, demand, "protest", -1)
+		return true
+	return false
+
+## What a response would do now, for the banner: {unrest (delta), cost (text), ready (bool)}.
+func response_effect(base_id: int, response: String) -> Dictionary:
+	var rc: Dictionary = sim.content["society"]["responses"].get(response, {})
+	if rc.is_empty():
+		return {}
+	var d: float = float(rc["unrest"])
+	var cost := ""
+	match response:
+		"meet_demand":
+			cost = "Ends the cause of the demand: %s" % String(rec_of(base_id).get("demand", "nothing asked yet"))
+		"leisure_day":
+			cost = "Nobody works for a short time."
+		"party":
+			var need: int = _party_need(base_id)
+			var have: int = sim.leisure.count_stock(base_id, sim.content["society"]["party"]["items"])
+			cost = "Uses %d drinks, snacks or rations (%d in stock)." % [need, have]
+		"amnesty":
+			cost = "All prisoners go free. Security morale falls."
+		"replace_captain":
+			cost = "The captain of the striking department loses the post."
+		"arrest_ringleaders":
+			cost = "Two people are jailed. Unfair arrests add %d unrest." % int(rc.get("unfair_unrest", 0))
+		"lock_down":
+			cost = "Doors close for %d game hours. Unrest rises." % int(rc.get("lock_hours", 2))
+	return {"unrest": d, "cost": cost, "ready": bool(_ready(rec_of(base_id)).get(response, true))}
+
+func _party_need(base_id: int) -> int:
+	var n := 0
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] == "alive" and String(a.get("kind", "")) != "visitor" and (base_id == -1 or _home(a) == base_id):
+			n += 1
+	return int(ceil(float(n) / float(sim.content["society"]["party"]["per_people"])))
+
 # ---------------------------------------------------------------- query
 ## {value 0..100, target, stage, causes [{text, delta}], demand ("" or text), department (on strike),
 ##  responses {response: ready (bool)}} for one base (-1: the whole colony: the base with the most).
@@ -278,10 +380,12 @@ func info(base_id: int = -1) -> Dictionary:
 		r = rec_of(base_id)
 	var out: Dictionary
 	if r.is_empty():
-		out = {"value": 0.0, "target": 0.0, "stage": "calm", "causes": [], "demand": "", "department": "", "responses": _ready({})}
+		out = {"value": 0.0, "target": 0.0, "stage": "calm", "causes": [], "demand": "", "department": "", "responses": _ready({}), "damage": 0, "injured": 0, "looted": 0, "locked": false}
 	else:
 		out = {"value": snappedf(float(r["value"]), 0.1), "target": float(r.get("target", 0.0)), "stage": String(r["stage"]), "causes": r.get("causes", []),
-			"demand": String(r.get("demand", "")), "department": String(r.get("dep", "")), "responses": _ready(r)}
+			"demand": String(r.get("demand", "")), "department": String(r.get("dep", "")), "responses": _ready(r),
+			"damage": (r.get("damaged", []) as Array).size(), "injured": int(r.get("injured", 0)), "looted": int(r.get("looted", 0)),
+			"locked": int(r.get("lock_until", -1)) > tick}
 	_info_cache[base_id] = [tick, out]
 	return out
 
@@ -318,6 +422,14 @@ func cmd_unrest_response(p: Dictionary) -> Dictionary:
 		return {"ok": false, "code": "cooldown", "text": "This response was used a short time ago."}
 	var cfgr: Dictionary = rc[resp]
 	var delta: float = float(cfgr["unrest"])
+	# A party uses drinks, snacks or rations: refused without enough in stock.
+	if resp == "party":
+		var need: int = _party_need(base_id)
+		var items: Array = sim.content["society"]["party"]["items"]
+		var have: int = sim.leisure.count_stock(base_id, items)
+		if have < need:
+			return {"ok": false, "code": "no_stock", "text": "A party needs %d drinks, snacks or rations; the base has %d." % [need, have]}
+		sim.leisure.take_stock(base_id, items, need, "party")
 	var people: Array = []
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
@@ -347,6 +459,9 @@ func cmd_unrest_response(p: Dictionary) -> Dictionary:
 		"amnesty":
 			for a in people:
 				sim.people.end_mods(a, ["jail", "confine"])
+				# Security morale falls: their arrests were for nothing.
+				if String(a["role"]) == "security":
+					sim.people.add_mod(a, {"kind": "amnesty", "text": "Prisoners let go", "comp": "work", "sat": -8.0, "att": -6.0, "days": 2.0})
 		"replace_captain":
 			var dep: String = String(r.get("dep", ""))
 			var appt: Dictionary = sim.people.v5w()["appoint"]
@@ -372,7 +487,14 @@ func cmd_unrest_response(p: Dictionary) -> Dictionary:
 			for a in ranked.slice(0, 2):
 				if float(sim.people.rec_of(int(a["id"])).get("att", 0.0)) > float(sim.content["society"]["unfair_attitude_from"]):
 					unfair = true
-				sim.discipline.apply(a, "jail", {"days": 1.0, "silent": true})
+				# Officers of the base take them to the cells (security.gd).
+				var off: Dictionary = {}
+				for oid in sim.security.officers(base_id):
+					var o: Dictionary = sim.state["agents"][oid]
+					if not o.has("v5_hold") and not o.has("jailed") and o["where"] == "in":
+						off = o
+						break
+				sim.security.arrest(a, off, 1.0)
 			if unfair:
 				delta += float(cfgr["unfair_unrest"])
 		"lock_down":

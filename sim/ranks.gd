@@ -9,6 +9,43 @@ var sim
 func _init(s) -> void:
 	sim = s
 
+## Command "set_role" {agent, role}: retraining (V5 section 6.5). A security officer needs the
+## security skill at role_skill (content security) or more (the academy teaches it); the other roles
+## are open to any adult colonist. A post in the old department is left.
+func cmd_set_role(p: Dictionary) -> Dictionary:
+	var a: Dictionary = sim.state["agents"].get(int(p.get("agent", -1)), {})
+	var role: String = String(p.get("role", ""))
+	if a.is_empty() or a["state"] != "alive" or String(a.get("kind", "")) == "visitor" or String(a.get("kind", "")) == "child":
+		return {"ok": false, "code": "invalid", "text": "Only a colonist can change jobs."}
+	var roles: Array = (sim.bal["roles"] as Array).duplicate()
+	roles.append("security")
+	if not roles.has(role):
+		return {"ok": false, "code": "invalid", "text": "Unknown role."}
+	if role == String(a["role"]):
+		return {"ok": true, "code": "ok", "text": "No change."}
+	var need: int = int(sim.content["society"]["security"]["role_skill"])
+	if role == "security" and int(sim.people.skills(a)["security"]) < need:
+		return {"ok": false, "code": "refused", "text": "A security officer needs security %d or more (a course at the academy)." % need}
+	var appt: Dictionary = sim.people.v5w()["appoint"]
+	var id: int = int(a["id"])
+	for k in appt.keys():
+		if k == "demoted" or String(k).ends_with(":commander"):
+			continue
+		var v = appt[k]
+		if typeof(v) == TYPE_ARRAY:
+			(v as Array).erase(id)
+		elif int(v) == id:
+			appt.erase(k)
+	sim.agents.abort_plan(a, "new_role")
+	var old: String = String(a["role"])
+	a["role"] = role
+	sim.people.invalidate(id)
+	sim.people._rank_sig = -1
+	var names: Dictionary = sim.bal["role_names"]
+	sim.people.note(a, "Changed job: %s to %s." % [String(names.get(old, old)).to_lower(), String(names.get(role, role)).to_lower()])
+	sim.log_event("new_role", "%s is now a %s." % [String(a["name"]), String(names.get(role, role)).to_lower()], [id], 1)
+	return {"ok": true, "code": "ok", "text": "%s is now a %s." % [String(a["name"]), String(names.get(role, role)).to_lower()]}
+
 ## Command "appoint" {agent, rank (commander | captain | first_hand), department, base}.
 func cmd_appoint(p: Dictionary) -> Dictionary:
 	var a: Dictionary = sim.state["agents"].get(int(p.get("agent", -1)), {})
@@ -69,5 +106,9 @@ func cmd_appoint(p: Dictionary) -> Dictionary:
 		if o["state"] == "alive":
 			sim.people.add_mod(o, {"kind": "replaced", "text": "Lost the post of " + r.replace("_", " "), "comp": "fairness", "sat": -8.0, "att": -6.0, "days": 2.0})
 			sim.people.note(o, "Replaced by %s." % String(a["name"]))
+			# V5 section 5.1: a promotion makes a rival of the one who lost the post.
+			var rr: Dictionary = sim.relations._rel_w(a, o)
+			rr["aff"] = clampf(float(rr["aff"]) - 25.0, -100.0, 100.0)
+			sim.relations._update_status(rr, a, o, "")
 	sim.log_event("promotion", "%s is now %s." % [String(a["name"]), title], [id], 1, {"rank": r, "department": dep})
 	return {"ok": true, "code": "ok", "text": "%s is now %s." % [String(a["name"]), title], "replaced": old_holder}

@@ -485,6 +485,10 @@ func _think(a: Dictionary) -> void:
 		if not here.is_empty() and bool(here["demolish"]) and (a["plan"] as Array).is_empty():
 			if _go_somewhere_safe(a, a["bld"]):
 				return
+	# 2b. V5: a fight, an arrest, an escort or a jail cell (security.gd) decide before the person's
+	# own needs: a prisoner drinks, eats and sleeps in the cell.
+	if (a.has("v5_hold") or a.has("jailed")) and sim.security.hold_think(a):
+		return
 	# 3. Critical personal needs interrupt work.
 	var crit: float = float(bal["need_critical"])
 	var kind: String = a["plan_kind"]
@@ -505,6 +509,10 @@ func _think(a: Dictionary) -> void:
 	# still interrupt it).
 	if a.has("order") and sim.orders.think(a):
 		return
+	# V5: a lock-down keeps people in the room they are in (unrest.gd); critical needs above still move them.
+	if sim.unrest.locked_in(a):
+		_start_plan(a, "idle", [{"op": "wait", "t": 3.0}], "Locked down")
+		return
 	# 4. Ordinary needs, before new work is taken.
 	var trig: float = float(bal["need_trigger"])
 	if float(a["thirst"]) >= trig and _try_drink(a):
@@ -515,8 +523,11 @@ func _think(a: Dictionary) -> void:
 		return
 	if float(a["health"]) < 55.0 and _try_heal(a):
 		return
-	# 5. Work (V5: not while confined, jailed, in class or on strike).
-	if not a.has("v5_nowork") and _try_work(a):
+	# 5. V5 duties (school, a course, teaching, a protest, a patrol, a shift at a venue), then work
+	# (not while confined, jailed, in class or on strike; never for children; officers patrol).
+	if sim.people.duty_think(a):
+		return
+	if not a.has("v5_nowork") and a["kind"] != "child" and a["role"] != "security" and _try_work(a):
 		return
 	# 6. Recreation (V5: not while confined or jailed), then idle somewhere safe.
 	if not a.has("v5_norec") and _wants_rec(a) and _try_rec(a):
@@ -735,7 +746,8 @@ func beds_used(bid: int) -> int:
 		_beds = {}
 		for aid in sim.state["agents"]:
 			var x: Dictionary = sim.state["agents"][aid]
-			if x["state"] == "alive":
+			# V5: children sleep in bunks (child_beds), not in the adult beds counted here.
+			if x["state"] == "alive" and x["kind"] != "child":
 				_beds[int(x["bed"])] = int(_beds.get(int(x["bed"]), 0)) + 1
 	return int(_beds.get(bid, 0))
 
@@ -774,6 +786,11 @@ func _bed_rooms() -> Array:
 	return _bed_list
 
 func _assign_bed(a: Dictionary) -> int:
+	# V5: a child sleeps at a parent's home (families.gd).
+	if a["kind"] == "child":
+		var cb: int = sim.families.child_bed(a)
+		if cb != -1:
+			return cb
 	var blds: Dictionary = sim.state["buildings"]
 	var cur: int = int(a["bed"])
 	var cur_ok: bool = blds.has(cur) and blds[cur]["state"] == "active" and not bool(blds[cur]["demolish"]) and sim.util.building_supplied(cur)
@@ -866,11 +883,17 @@ func _try_rec(a: Dictionary) -> bool:
 		if _count_doing(bid, "rec") >= places:
 			continue
 		var bonus: float = float(d.get("morale_bonus", 0.0))
+		# V5: venues (shop, park, the dome) draw people by the quality of their open venues.
+		if d.has("venues"):
+			bonus += sim.leisure.rec_bonus(b, a)
 		cands.append([(b["pos"] as Vector2).distance_to(a["pos"]) - bonus * 10.0, bid])
 	cands.sort_custom(func(x, y): return x[0] < y[0] if x[0] != y[0] else x[1] < y[1])
 	for c in cands:
 		var goal: String = "Going to the %s" % String(sim.bdef(blds[c[1]]["def"])["name"]).to_lower()
 		if _start_personal(a, "rec", c[1], [{"op": "rec"}], goal, -1):
+			var vid: String = sim.leisure.pick_venue(a, c[1])
+			if vid != "":
+				a["goal"] = "Going to the %s" % String(sim.leisure.vcfg(vid).get("name", vid)).to_lower()
 			return true
 	return false
 
@@ -1228,6 +1251,8 @@ func _clear_plan(a: Dictionary) -> void:
 	a["act_t"] = -1.0
 	a["sleeping"] = false
 	a["goal"] = "Idle"
+	if a.has("venue"):
+		a.erase("venue")
 	_sync_use(a)
 
 func on_task_lost(a: Dictionary, tid: int, _reason: String) -> void:
@@ -1315,6 +1340,10 @@ func _act_all(dt: float) -> void:
 			"heal": _do_heal(a)
 			"study": _do_study(a, step, dt)
 			"tour": _do_tour(a, step, dt)
+			# V5: class, teaching, a cell, a patrol, a venue shift, a protest, a fight (timed; their
+			# effects are in education.gd, security.gd, leisure.gd and unrest.gd).
+			"class", "teach", "cell", "patrol", "staff", "protest", "fight":
+				_do_timed(a, float(step["t"]), dt, a["goal"], "")
 			"board": _board.append(a)
 			"ride":
 				if not sim.vehicles.board(a, int(step["v"])):
@@ -1700,6 +1729,9 @@ func _do_timed(a: Dictionary, seconds: float, dt: float, goal: String, mark: Str
 			# A cantina gives a morale bonus until the next recreation.
 			var b: Dictionary = sim.state["buildings"].get(a["bld"], {})
 			a["rec_bonus"] = float(sim.bd(b).get("morale_bonus", 0.0)) if not b.is_empty() else 0.0
+			# V5: a venue visit uses goods, gives its quality and takes a tourist's credits.
+			if a.has("venue"):
+				sim.leisure.on_rec_end(a)
 		_clear_plan(a)
 
 # ---------------------------------------------------------------- morale (each second)
@@ -1711,7 +1743,8 @@ func morale_second() -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	for bid in blds:
 		if blds[bid]["state"] == "active" and blds[bid]["kind"] != "link":
-			beds += int(sim.bd(blds[bid]).get("beds", 0))
+			# V5: bunks count for the children (who are part of the population).
+			beds += int(sim.bd(blds[bid]).get("beds", 0)) + int(sim.bd(blds[bid]).get("child_beds", 0))
 	var pop: int = sim.alive_count()
 	var pr: Dictionary = sim.state["progress"]
 	var recent_death: bool = int(pr["last_death_tick"]) >= 0 and float(tick - int(pr["last_death_tick"])) < float(bal["morale_death_memory_days"]) * day_ticks
@@ -1787,7 +1820,24 @@ func _want_use(a: Dictionary) -> Array:
 	var bid: int = int(a["bld"])
 	match String(step["op"]):
 		"sleep":
+			# V5: a child sleeps in a bunk (child_bed anchors) where the home has them.
+			if inside and a["kind"] == "child" and _slot_cap("child_bed", bid) > 0:
+				return ["child_bed", bid, "lie", "sleep", -1]
 			return ["bed", bid, "lie", "sleep", -1] if inside else []
+		"class":
+			return ["seat", bid, "sit", "study", -1] if inside else []
+		"teach":
+			return ["work", bid, "stand", "teach", -1] if inside else []
+		"cell":
+			return ["bed", bid, "sit", "idle", -1] if inside else []
+		"staff":
+			return ["work", bid, "stand", "work", -1] if inside else []
+		"patrol":
+			return ["stand", bid, "stand", "patrol", -1] if inside else []
+		"protest":
+			return ["stand", bid, "stand", "protest", -1] if inside else []
+		"fight":
+			return ["stand", bid, "stand", "fight", -1] if inside else []
 		"heal":
 			return ["bed", bid, "lie", "heal", -1] if inside else []
 		"eat":

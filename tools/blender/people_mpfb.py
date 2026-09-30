@@ -58,7 +58,7 @@ EXPR_BONES = [("brow.L", "head", (0.09, 0.03, 1.69), (0.12, 0.03, 1.70)),
 N.extend_skeleton(EXPR_BONES)
 
 OUT_TEX = os.path.join(N.MODEL_DIR, "people_tex")
-BUDGET = dict(lod0=24000, body=8000, garments=7000, hair=3600, head=1500, tex=1024)
+BUDGET = dict(lod0=20500, outfit=14000, body=5600, garments=7000, hair=3400, head=1500, tex=1024)
 
 # ------------------------------------------------------------------------------------------------------------------
 # variants: MakeHuman macro values (0..1).  age: 0.1875 = 11 years, 0.5 = 25, 1.0 = 90.  Heights are exact (the body is
@@ -67,27 +67,27 @@ BUDGET = dict(lod0=24000, body=8000, garments=7000, hair=3600, head=1500, tex=10
 VARIANTS = {
     "m1": dict(sex="m", height=1.80, macro=dict(gender=1.0, age=0.50, muscle=0.60, weight=0.50, proportions=0.60,
                                                 race=(0.10, 0.10, 0.80)),
-               skin="skins/young_caucasian_male", hair="hair/short02", brows="eyebrows/eyebrow008",
+               skin="skins/young_caucasian_male", hair="hair/short04", brows="eyebrows/eyebrow002",
                eye_mat="eyes/materials/brown.mhmat"),
     "m2": dict(sex="m", height=1.76, macro=dict(gender=1.0, age=0.62, muscle=0.45, weight=0.65, proportions=0.50,
                                                 race=(0.80, 0.05, 0.15)),
-               skin="skins/middleage_african_male", hair="hair/short04", brows="eyebrows/eyebrow009",
+               skin="skins/middleage_african_male", hair="hair/culturalibre_hair_02", brows="eyebrows/eyebrow009",
                eye_mat="eyes/materials/brown.mhmat"),
     "m3": dict(sex="m", height=1.90, macro=dict(gender=1.0, age=0.76, muscle=0.40, weight=0.55, proportions=0.55,
                                                 race=(0.05, 0.75, 0.20)),
-               skin="skins/middleage_asian_male", hair="hair/short01", brows="eyebrows/eyebrow004",
+               skin="skins/middleage_asian_male", hair="hair/short02", brows="eyebrows/eyebrow004",
                eye_mat="eyes/materials/brownlight.mhmat"),
     "f1": dict(sex="f", height=1.68, macro=dict(gender=0.0, age=0.50, muscle=0.50, weight=0.45, proportions=0.60,
                                                 race=(0.10, 0.10, 0.80)),
-               skin="skins/young_caucasian_female", hair="hair/toigo_curled_under_bob", brows="eyebrows/eyebrow010",
-               eye_mat="eyes/materials/green.mhmat"),
+               skin="skins/young_caucasian_female", hair="hair/toigo_curled_under_bob", brows="eyebrows/eyebrow003",
+               eye_mat="eyes/materials/green.mhmat", lid_rest=10.0),
     "f2": dict(sex="f", height=1.62, macro=dict(gender=0.0, age=0.60, muscle=0.55, weight=0.60, proportions=0.50,
                                                 race=(0.75, 0.05, 0.20)),
-               skin="skins/middleage_african_female", hair="hair/afro01", brows="eyebrows/eyebrow003",
+               skin="skins/middleage_african_female", hair="hair/afro01", brows="eyebrows/eyebrow001",
                eye_mat="eyes/materials/brown.mhmat"),
     "f3": dict(sex="f", height=1.74, macro=dict(gender=0.0, age=0.70, muscle=0.40, weight=0.50, proportions=0.55,
                                                 race=(0.05, 0.75, 0.20)),
-               skin="skins/middleage_asian_female", hair="hair/ponytail01", brows="eyebrows/eyebrow010",
+               skin="skins/middleage_asian_female", hair="hair/ponytail01", brows="eyebrows/eyebrow006",
                eye_mat="eyes/materials/brownlight.mhmat"),
     "c1": dict(sex="m", height=1.38, child=True, macro=dict(gender=1.0, age=0.17, muscle=0.50, weight=0.50,
                                                              proportions=0.50, race=(0.20, 0.20, 0.60)),
@@ -95,7 +95,7 @@ VARIANTS = {
                eye_mat="eyes/materials/green.mhmat"),
     "c2": dict(sex="f", height=1.34, child=True, macro=dict(gender=0.0, age=0.16, muscle=0.50, weight=0.45,
                                                              proportions=0.50, race=(0.30, 0.30, 0.40)),
-               skin="skins/young_african_female", hair="hair/ponytail01", brows="eyebrows/eyebrow011",
+               skin="skins/young_african_female", hair="hair/braid01", brows="eyebrows/eyebrow007",
                eye_mat="eyes/materials/brown.mhmat"),
 }
 PILOT = ["m1", "f1"]
@@ -111,9 +111,9 @@ OUTFITS = {
     "casual_a": dict(
         who=["off duty"],
         look="tee in the person's colour (over the waistband), dark cargo trousers, sneakers",
-        m=[("clothes/toigo_basic_tucked_t-shirt", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
+        m=[("clothes/elvs_crude_t-shirt_male", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
            ("clothes/shoes06", "own")],
-        f=[("clothes/toigo_basic_tucked_t-shirt", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
+        f=[("clothes/joepal_crude_t-shirt_female", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
            ("clothes/shoes05", "own")]),
 }
 PILOT_OUTFITS = ["uniform", "casual_a"]
@@ -437,7 +437,7 @@ def pose_to_v3_bind(mh_rig, meshes, bmap):
         nm = pb.name
         if nm.startswith("finger") and "-" in nm:
             digit, seg = nm[6:].split("-")[0], nm.split("-")[1].split(".")[0]
-            ang = {"1": 14.0, "2": 26.0, "3": 22.0}.get(seg, 0.0) * (0.55 if digit == "1" else 1.0)
+            ang = {"1": 20.0, "2": 34.0, "3": 28.0}.get(seg, 0.0) * (0.55 if digit == "1" else 1.0)
             pb.rotation_mode = "XYZ"
             pb.rotation_euler.x = math.radians(ang) * FINGER_CURL_SIGN
     bpy.context.view_layer.update()
@@ -516,7 +516,9 @@ def move_weights(ob, bmap, rig):
     mod.object = rig
 
 
-def decimate(ob, target_tris):
+def decimate(ob, target_tris, weight_at=None):
+    """Collapse decimation to target_tris; open edges are protected (weight 0), and weight_at(p) (0 = keep .. 1 =
+    free) protects a region (the face)."""
     tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
     if tris <= target_tris:
         return tris
@@ -533,7 +535,13 @@ def decimate(ob, target_tris):
             for e in vv.link_edges:
                 edge_v.add(e.other_vert(vv).index)
     bm.free()
-    g.add([i for i in range(len(ob.data.vertices)) if i not in edge_v], 1.0, "REPLACE")
+    if weight_at is None:
+        g.add([i for i in range(len(ob.data.vertices)) if i not in edge_v], 1.0, "REPLACE")
+    else:
+        mw = ob.matrix_world
+        for vv in ob.data.vertices:
+            if vv.index not in edge_v:
+                g.add([vv.index], weight_at(mw @ vv.co), "REPLACE")
     if edge_v:
         g.add(list(edge_v), 0.0, "REPLACE")
     mod = ob.modifiers.new("Dec", "DECIMATE")
@@ -574,7 +582,7 @@ def blur_alpha(px, w, h, r):
     return px
 
 
-def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_blur=0):
+def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_blur=0, alpha_dense=0.0):
     """Load, shrink to <= size, optionally make a tint detail map (the image divided by its mean colour), save PNG."""
     img = bpy.data.images.load(path, check_existing=False)
     w, h = img.size
@@ -583,14 +591,24 @@ def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_b
     if detail:
         import numpy as np
         px = np.array(img.pixels[:], dtype=np.float32).reshape(-1, 4)
-        solid = px[:, 3] > 0.5                              # the mean of the visible pixels (alpha cards)
+        lum = px[:, :3] @ np.array([0.30, 0.59, 0.11], dtype=np.float32)
+        solid = (px[:, 3] > 0.5) & (lum > 0.12)             # the mean of the visible pixels (no black padding)
         mean = (px[solid, :3] if solid.any() else px[:, :3]).mean(axis=0) + 1e-4
-        px[:, :3] = np.clip(px[:, :3] / mean * 0.82, 0.0, 1.0)
+        lm = float(mean @ np.array([0.30, 0.59, 0.11]))
+        norm = mean ** 0.72 * lm ** 0.28                    # 28 % of the texture's own hue stays (warmth)
+        px[:, :3] = np.clip(px[:, :3] / norm * 0.82, 0.0, 1.0)
         if bake_rgb is not None:                            # a plain (untinted) material: its colour goes in here
             px[:, :3] = np.clip(px[:, :3] * np.array(bake_rgb, dtype=np.float32), 0.0, 1.0)
         if alpha_blur:
             w_, h_ = img.size
             px = blur_alpha(px, w_, h_, alpha_blur)
+        if alpha_dense:
+            # brows: a 1 px max filter and an alpha boost, so the thin hairs survive the 0.5 alpha clip (full brows,
+            # not dotted lines)
+            w_, h_ = img.size
+            a = px[:, 3].reshape(h_, w_)
+            a = np.maximum.reduce([a, np.roll(a, 1, 0), np.roll(a, -1, 0), np.roll(a, 1, 1), np.roll(a, -1, 1)])
+            px[:, 3] = np.clip(a.ravel() * alpha_dense, 0.0, 1.0)
         img.pixels = px.ravel().tolist()
     os.makedirs(OUT_TEX, exist_ok=True)
     out = os.path.join(OUT_TEX, name + ".png")
@@ -634,7 +652,7 @@ def plain_material(name, base=None, alpha=None, normal=None, rough=0.6, color=(1
     return m
 
 
-TEX_SIZE = {"Skin": 1024, "Hair": 1024, "Eye": 256, "Hair_brows": 256, "Hair_lashes": 256, "Teeth": 128}
+TEX_SIZE = {"Skin": 1024, "Hair": 1024, "Eye": 256, "Hair_brows": 512, "Hair_lashes": 256, "Teeth": 128}
 TEX_DEFAULT, TEX_NORMAL = 512, 256          # garments; normal maps
 
 
@@ -649,7 +667,7 @@ def material_from_mhmat(mhmat, name, v, detail=False, alpha=False, bake_rgb=None
         p = f if os.path.isabs(f) else os.path.join(root, f)
         return texture(p, "%s_%s_%s" % (v, name.lower(), suffix), **kw) if os.path.exists(p) else None
     base = tex("diffuseTexture", "base", detail=detail, bake_rgb=bake_rgb, size=TEX_SIZE.get(name, TEX_DEFAULT),
-               alpha_blur=6 if name == "Hair" else 0)
+               alpha_blur=0, alpha_dense=1.35 if name == "Hair_brows" else 0.0)
     nrm = tex("normalmapTexture", "normal", size=TEX_NORMAL)
     return plain_material(name, base=base, alpha="base" if alpha else None, normal=nrm,
                           cutoff=0.3 if name == "Hair_brows" else 0.5,
@@ -718,7 +736,7 @@ def build_variant(m, v, outfits, stop=None):
     for kind, folder in dict(FACE, eyebrows=spec["brows"]).items():
         f = m.asset(folder)
         parts[kind] = (m.add_asset(base, f, kind.capitalize()), f)
-    hair_f = m.asset(spec["hair"])
+    hair_f = m.asset(os.environ.get("NPC_HAIR_" + v.upper(), spec["hair"]))
     parts["hair"] = (m.add_asset(base, hair_f, "Hair"), hair_f)
     garments = {}
     for oid in outfits:
@@ -772,7 +790,7 @@ def build_variant(m, v, outfits, stop=None):
         tops = [g for g in gs if garment_layer(g[1]) == 3 and g[2] != "shell"]
         bottoms = [g[0] for g in gs if garment_layer(g[1]) == 2]
         for g in tops:
-            extend_hem(g[0], [base] + bottoms)
+            pass                                      # untucked tees (2026-10-01): no hem extension
     # ---- the body copy per outfit, before the groups are replaced -----------------------------------------
     if body_idx is not None:
         remove_groups_verts_not(base, "body")
@@ -787,9 +805,10 @@ def build_variant(m, v, outfits, stop=None):
     # ---- weights ------------------------------------------------------------------------------------------
     for o in list(bodies.values()) + [o for o in objs if o is not None] + list(addon_objs.values()):
         move_weights(o, bmap, rig)
-    for a in addon_objs.values():                       # add-ons are small: <= 900 triangles each
-        if ntris(a) > 900:
-            decimate(a, 900)
+    for a in addon_objs.values():                       # add-ons: coats <= 3000 triangles, the others <= 1600
+        cap = 2200 if a.name.split(".")[0] in ("Addon_labcoat", "Addon_tunic", "Addon_jacket") else 1500
+        if ntris(a) > cap:
+            decimate(a, cap)
     # ---- materials ----------------------------------------------------------------------------------------
     skin_mat = material_from_mhmat(skin_mhmat, "Skin", os.path.basename(spec["skin"]), detail=True)
     eye_mat = material_from_mhmat(m.asset(spec["eye_mat"], "mhmat"), "Eye",
@@ -807,7 +826,7 @@ def build_variant(m, v, outfits, stop=None):
             hairy = nm.startswith("Hair")
             key = os.path.basename(os.path.dirname(f)) + ("_%s" % spec["sex"] if hairy else "")
             mat = material_from_mhmat(mhclo_material(f), nm, key, detail=hairy, alpha=hairy,
-                                      bake_rgb=((0.55,) * 3 if spec["sex"] == "m" else (0.72,) * 3) if hairy else None)
+                                      bake_rgb=(0.60,) * 3 if hairy else None)
         replace_materials(ob, mat)
         if kind == "teeth":
             decimate(ob, 700)
@@ -823,27 +842,36 @@ def build_variant(m, v, outfits, stop=None):
     for oid, gs in garments.items():
         body = bodies[oid]
         replace_materials(body, skin_mat)
-        nk = remove_covered(body, [ob for ob, _, _, _ in gs])
+        is_shell = any(g[2] == "shell" for g in gs)
+        if is_shell:
+            nk = remove_inside_coverall(body, J)
+            nk += remove_covered(body, [ob for ob, _, m_, _ in gs if m_ != "shell"])
+        else:
+            nk = remove_covered(body, [ob for ob, _, _, _ in gs])
         # between garments: an inner layer loses what an outer layer covers (tops over trousers over shoes)
         for ob, f, _, _ in gs:
             outer = [o2 for o2, f2, _, _ in gs if garment_layer(f2) > garment_layer(f)]
             if outer:
-                tuck_under(ob, outer)
-                remove_covered(ob, outer)
-        gsum = sum(ntris(ob) for ob, _, _, _ in gs)
-        room = BUDGET["lod0"] - 600 - tris[head.name] - tris[hob.name]
-        if any(g[2] == "shell" for g in gs):
-            room -= max([0] + [ntris(a) for a in addon_objs.values()]) + 300     # the biggest add-on set
+                # boots under the coverall legs: only the part inside the trouser tube moves or goes (above the hem)
+                zlim = (J["foot.L"].z + 0.080 + 0.012) if any(o2 is g[0] for g in gs if g[2] == "shell" for o2 in outer) else None
+                tuck_under(ob, outer, zmin=zlim)
+                remove_covered(ob, outer, zmin=zlim)
+        gsum = sum(ntris(ob) for ob, _, m_, _ in gs if m_ != "shell")
+        shell_t = sum(ntris(ob) for ob, _, m_, _ in gs if m_ == "shell")
+        # V5 section 1: <= 14k triangles per body + outfit at LOD0 (the outfit mesh with its largest add-on set)
+        room = BUDGET["outfit"]
+        if is_shell:
+            room -= max(sum(ntris(addon_objs[a]) for a in PU.DEPARTMENTS[d_]["addons"] if a in addon_objs)
+                        for d_ in PU.DEPARTMENTS)
         body_t = min(ntris(body), BUDGET["body"])
-        tb = decimate(body, body_t)
-        g_budget = room - tb
+        face_z = J["neck"].z + 0.02
+        tb = decimate(body, body_t, weight_at=lambda p: 0.30 if p.z > face_z else (0.55 if p.z > face_z - 0.28 else 0.9))
+        g_budget = max(600, room - tb - shell_t)
         print("  %s %s: %d covered skin vertices removed" % (v, oid, nk))
         pieces = [body]
         for ob, f, mat, _ in gs:
             if mat == "shell":
-                uniform_materials(ob, v)
-                if gsum > g_budget:
-                    decimate(ob, int(g_budget * ntris(ob) / max(1, gsum)))
+                uniform_materials(ob, v)                # built to its own budget (clean edges: no decimation)
                 pieces.append(ob)
                 continue
             if mat.startswith("tint:"):
@@ -875,6 +903,7 @@ def build_variant(m, v, outfits, stop=None):
             hairline_shade(o, hob)
     PA.FOOT_DZ = J["foot.L"].z - N.ANKLE_JOINT.z * s_          # this body's ankle height vs the v3 one
     PA.ARM_IN = 5.0                                            # the standing arms 5 deg closer (CRITIC round 40)
+    PA.LID_REST = spec.get("lid_rest", 5.0)                   # relaxed upper lids (CRITIC round 40: f1 stare)
     solver = N.Solver()
     solver.set_rest_from_rig(rig)
     first_outfit = bpy.data.objects["Outfit_%s" % list(garments)[0]]          # the outfit npc_verify measures
@@ -1173,19 +1202,28 @@ _UNI_MATS = {}
 def canvas_textures():
     """A woven canvas (base around white, for the tint) and its normal map; shared by every variant."""
     import numpy as np
-    base_p = os.path.join(OUT_TEX, "uniform_canvas_base.png")
-    nrm_p = os.path.join(OUT_TEX, "uniform_canvas_normal.png")
+    base_p = os.path.join(OUT_TEX, "uniform_canvas3_base.png")
+    nrm_p = os.path.join(OUT_TEX, "uniform_canvas3_normal.png")
     if not (os.path.exists(base_p) and os.path.exists(nrm_p)):
         os.makedirs(OUT_TEX, exist_ok=True)
         n = 256
         u = np.arange(n)[None, :] / n
         v = np.arange(n)[:, None] / n
         rng = np.random.default_rng(7)
-        weave = 0.5 + 0.5 * np.sin(2 * np.pi * 32 * u) * np.sin(2 * np.pi * 32 * v)
-        noise = rng.random((n, n)) * 0.5 + 0.5 * np.roll(rng.random((n, n)), 1, axis=0)
-        h = 0.7 * weave + 0.3 * noise
-        col = 0.82 + 0.035 * (h - 0.5)
-        img = bpy.data.images.new("uniform_canvas_base", n, n, alpha=False)
+
+        def blur(a, r):
+            for _ in range(2):
+                for ax in (0, 1):
+                    a = sum(np.roll(a, k, axis=ax) for k in range(-r, r + 1)) / (2 * r + 1)
+            return a
+        mottle = blur(rng.random((n, n)), 12)
+        mottle = (mottle - mottle.mean()) / (mottle.std() + 1e-6)
+        fibre = blur(rng.random((n, n)), 1)
+        fibre = (fibre - fibre.mean()) / (fibre.std() + 1e-6)
+        twill = np.sin(2 * np.pi * 16 * (u + v))                  # a soft diagonal twill, 16 lines per tile
+        h = twill + 0.25 * blur(rng.random((n, n)), 3) * 4.0
+        col = 0.82 + 0.012 * mottle + 0.010 * fibre
+        img = bpy.data.images.new("uniform_canvas3_base", n, n, alpha=False)
         px = np.ones((n, n, 4), dtype=np.float32)
         px[:, :, 0] = px[:, :, 1] = px[:, :, 2] = col
         img.pixels = px.ravel().tolist()
@@ -1195,9 +1233,9 @@ def canvas_textures():
         gx = np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)
         gy = np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)
         nz = np.ones_like(h)
-        nx, ny = -gx * 0.6, -gy * 0.6
+        nx, ny = -gx * 0.10, -gy * 0.10
         L = np.sqrt(nx * nx + ny * ny + nz * nz)
-        img2 = bpy.data.images.new("uniform_canvas_normal", n, n, alpha=False)
+        img2 = bpy.data.images.new("uniform_canvas3_normal", n, n, alpha=False)
         px2 = np.ones((n, n, 4), dtype=np.float32)
         px2[:, :, 0], px2[:, :, 1], px2[:, :, 2] = nx / L * 0.5 + 0.5, ny / L * 0.5 + 0.5, nz / L * 0.5 + 0.5
         img2.pixels = px2.ravel().tolist()
@@ -1216,7 +1254,7 @@ def uniform_materials(ob, v):
     except ReferenceError:
         _UNI_MATS.clear()
     if not _UNI_MATS:
-        for nm_ in ("UniformBase", "SuitAccent", "Zip", "Leather", "Metal", "Apron", "Armor", "Rank"):
+        for nm_ in ("UniformBase", "SuitAccent", "Zip", "Leather", "Metal", "Apron", "Armor", "Rank", "Coat"):
             ph = bpy.data.materials.get(nm_)
             if ph is not None:
                 ph.name = nm_ + "_placeholder"          # the real materials take the exact contract names
@@ -1227,9 +1265,10 @@ def uniform_materials(ob, v):
             "Zip": plain_material("Zip", color=(0.07, 0.07, 0.08), rough=0.35),
             "Leather": plain_material("Leather", color=(0.10, 0.07, 0.05), rough=0.6),
             "Metal": plain_material("Metal", color=(0.60, 0.61, 0.63), rough=0.3),
-            "Apron": plain_material("Apron", base=cb, normal=cn, rough=0.85, color=(0.93, 0.93, 0.91)),
+            "Apron": plain_material("Apron", normal=cn, rough=0.85, color=(0.86, 0.86, 0.83)),
             "Armor": plain_material("Armor", color=(0.16, 0.17, 0.19), rough=0.5),
             "Rank": plain_material("Rank", color=(0.80, 0.64, 0.24), rough=0.35),
+            "Coat": plain_material("Coat", normal=cn, rough=0.8, color=(0.88, 0.89, 0.88)),
         })
     for i, m in enumerate(ob.data.materials):
         base = m.name.split(".")[0].replace("_placeholder", "") if m else "UniformBase"
@@ -1249,7 +1288,7 @@ def garment_layer(mhclo):
     return 1
 
 
-def tuck_under(inner, outers, reach=0.03, gap=0.004):
+def tuck_under(inner, outers, reach=0.03, gap=0.004, zmin=None):
     """Inner-layer vertices that stick out through an outer layer (within `reach`) move to just inside it."""
     import bmesh
     from mathutils.bvhtree import BVHTree
@@ -1267,6 +1306,8 @@ def tuck_under(inner, outers, reach=0.03, gap=0.004):
     for v in bm.verts:
         p = inner.matrix_world @ v.co
         n = (inner.matrix_world.to_3x3() @ v.normal).normalized()
+        if zmin is not None and p.z < zmin:
+            continue
         for t in trees:
             hit = t.ray_cast(p + n * 0.002, -n, reach)[0]
             if hit is not None:
@@ -1278,7 +1319,37 @@ def tuck_under(inner, outers, reach=0.03, gap=0.004):
     return moved
 
 
-def remove_covered(body, garments, reach=0.03, margin=0.05):
+def remove_inside_coverall(body, J):
+    """The coverall hides everything from 3 cm under its neckline to 4.5 cm up the sleeve from the wrist cut and
+    down to 3 cm above the trouser hem (people_uniform cut planes): those body vertices go (a rule, not rays)."""
+    import bmesh
+    nc = Vector((J["neck"].x, 0.0, J["neck"].z - 0.012))
+    no = Vector((0.21, 0.0, 1.0)).normalized()
+    hem = J["foot.L"].z + 0.080
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    kill = []
+    for v in bm.verts:
+        p = body.matrix_world @ v.co
+        if ((p - nc).dot(no) > -0.030 and Vector((p.x - nc.x, p.y, 0)).length < 0.095) or (p - nc).dot(no) > 0.02 \
+                or p.z < hem + 0.030:
+            continue
+        hand = False
+        for s in ("L", "R"):
+            a, b = J["forearm." + s], J["hand." + s]
+            d = b - a
+            t = (p - a).dot(d) / d.length_squared
+            if t > 1.0 - 0.063 / d.length and (p - (a + d * min(t, 1.0))).length < 0.16:
+                hand = True
+        if not hand:
+            kill.append(v)
+    bmesh.ops.delete(bm, geom=kill, context="VERTS")
+    bm.to_mesh(body.data)
+    bm.free()
+    return len(kill)
+
+
+def remove_covered(body, garments, reach=0.03, margin=0.05, zmin=None):
     """Delete body vertices under a garment: a ray along the vertex normal meets a garment within `reach`.  Vertices
     within `margin` of a garment's open edge (neckline, cuffs, hem) stay: the edge lifts off the body in motion."""
     import bmesh
@@ -1305,6 +1376,8 @@ def remove_covered(body, garments, reach=0.03, margin=0.05):
         p = body.matrix_world @ v.co
         n = (body.matrix_world.to_3x3() @ v.normal).normalized()
         if edge_pts and kd.find(p)[2] < margin:
+            continue
+        if zmin is not None and p.z < zmin:
             continue
         if any(t.ray_cast(p - n * 0.002, n, reach)[0] is not None for t in trees):
             kill.append(v)
@@ -1365,6 +1438,8 @@ def write_manifest(results):
                 for dept, d in PU.DEPARTMENTS.items():
                     outs[dept] = dict(mesh="Outfit_%s" % o, addons=["Addon_%s" % a for a in d["addons"]],
                                       base_rgb=[round(x, 3) for x in d["base"]])
+                    if "accent" in d:
+                        outs[dept]["accent_rgb"] = [round(x, 3) for x in d["accent"]]
             else:
                 outs[o] = "Outfit_%s" % o
         on_screen = {}

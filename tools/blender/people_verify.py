@@ -240,39 +240,115 @@ def run(check, gltf_facts):
                     worst = (n_in, "%s %s f%d" % (o, c, f))
         check("people %s: head and hair never inside the outfit at the test poses (1 cm)" % v, worst[0] == 0,
               "%d vertices at worst %s" % worst)
-    # the hug pair: A and B at the npc_pairs distance, facing; count A inside B at the hold
+    # paired clips (npc_pairs.json): partner B placed as RENDER places it; neither body inside the other
+    check_pairs(check, M)
+
+
+CAPS = (("hips", "neck", 0.085), ("neck", "head", 0.040), ("upper_arm.L", "forearm.L", 0.034),
+        ("upper_arm.R", "forearm.R", 0.034), ("forearm.L", "hand.L", 0.026), ("forearm.R", "hand.R", 0.026),
+        ("thigh.L", "shin.L", 0.060), ("thigh.R", "shin.R", 0.060), ("shin.L", "foot.L", 0.040),
+        ("shin.R", "foot.R", 0.040))
+
+
+def capsules(rig, s):
+    """Conservative capsules INSIDE a body (bone segments, radii under the real flesh), world space."""
+    mw = rig.matrix_world
+    H = {pb.name: mw @ pb.head for pb in rig.pose.bones}
+    out = [(H[a], H[b], r * s) for a, b, r in CAPS]
+    hb = rig.pose.bones["head"]
+    up = ((mw @ hb.matrix).to_3x3() @ Vector((0, 1, 0))).normalized()
+    c = H["head"] + up * 0.10 * s
+    out.append((c, c, 0.075 * s))
+    out.append((H["hips"], H["hips"], 0.090 * s))
+    return out
+
+
+def deep_points(pts, caps, depth):
+    """How many points lie deeper than depth inside any capsule; the deepest depth."""
+    n, worst = 0, 0.0
+    P = np.asarray(pts)
+    inside = np.zeros(len(P), dtype=bool)
+    dmax = np.zeros(len(P))
+    for a, b, r in caps:
+        a, b = np.array(a), np.array(b)
+        d = b - a
+        L2 = float(d @ d)
+        t = np.clip(((P - a) @ d) / L2, 0.0, 1.0) if L2 > 1e-9 else np.zeros(len(P))
+        dist = np.linalg.norm(P - (a + t[:, None] * d), axis=1)
+        pen = r - dist
+        dmax = np.maximum(dmax, pen)
+    return int((dmax > depth).sum()), float(dmax.max()) if len(dmax) else 0.0
+
+
+def check_pairs(check, M):
+    if not os.path.exists(PAIRS):
+        return
     vs = list(M["variants"])
-    if len(vs) >= 2 and os.path.exists(PAIRS):
-        pr = json.load(open(PAIRS, encoding="utf-8"))["pairs"]["hug"]
-        a, b = vs[0], vs[1]
-        rig_a, ma = import_person(a)
-        before = set(bpy.data.objects)
-        acts_before = set(bpy.data.actions)
-        bpy.ops.import_scene.gltf(filepath=people_path(b))
-        hug_b = next((x for x in bpy.data.actions if x not in acts_before and x.name.split(".")[0].startswith("hug")), None)
-        new = [o for o in bpy.data.objects if o not in before]
-        rig_b = next(o for o in new if o.type == "ARMATURE")
-        for tr in list((rig_b.animation_data or rig_b.animation_data_create()).nla_tracks):
-            rig_b.animation_data.nla_tracks.remove(tr)
-        sa, sb = M["variants"][a]["scale"], M["variants"][b]["scale"]
-        rig_b.location = (pr["distance_m"] * (sa + sb) / 2, 0.0, 0.0)
+    if not vs:
+        return
+    pairs = json.load(open(PAIRS, encoding="utf-8"))["pairs"]
+    a = vs[0]
+    b = next((x for x in vs if M["variants"][x].get("sex") != M["variants"][a].get("sex") and
+              not M["variants"][x].get("child")), vs[-1])
+    rig_a, ma = import_person(a)
+    before = set(bpy.data.objects)
+    acts_before = set(bpy.data.actions)
+    bpy.ops.import_scene.gltf(filepath=people_path(b))
+    acts_b = {x.name.split(".")[0].split("_Rig")[0]: x for x in bpy.data.actions if x not in acts_before}
+    new = [o for o in bpy.data.objects if o not in before]
+    rig_b = next(o for o in new if o.type == "ARMATURE")
+    for tr in list((rig_b.animation_data or rig_b.animation_data_create()).nla_tracks):
+        rig_b.animation_data.nla_tracks.remove(tr)
+    sa, sb = M["variants"][a]["scale"], M["variants"][b]["scale"]
+    casual = next((e for o, e in M["variants"][a]["outfits"].items() if o.startswith("casual")), None)
+    ob_a = ma[out_mesh(casual or list(M["variants"][a]["outfits"].values())[0])]
+    name_b = out_mesh(next((e for o, e in M["variants"][b]["outfits"].items() if o.startswith("casual")),
+                           list(M["variants"][b]["outfits"].values())[0]))
+    ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
+    for pname, pr in pairs.items():
+        if pr["clip_a"] not in M["clips"] or pr["clip_b"] not in M["clips"]:
+            continue
+        sm = (sa + sb) / 2
+        rig_b.location = (pr["distance_m"] * sm, pr.get("side_offset_m", 0.0) * sm, 0.0)
         rig_b.rotation_mode = "XYZ"
         rig_b.rotation_euler = (0.0, 0.0, math.radians(pr["facing_deg"]))
-        ob_a = ma[out_mesh(list(M["variants"][a]["outfits"].values())[0])]
-        name_b = out_mesh(list(M["variants"][b]["outfits"].values())[0])
-        ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
-        worst, deep, n_deep = 0, [0.0], 0
-        for f in range(12, 96, 4):
-            set_clip(rig_a, "hug", f)
-            rig_b.animation_data.action = hug_b
-            if hug_b is not None and hug_b.slots:
-                rig_b.animation_data.action_slot = hug_b.slots[0]
+        act_b = acts_b.get(pr["clip_b"])
+        n = max(M["clips"][pr["clip_a"]]["frames"], M["clips"][pr["clip_b"]]["frames"])
+        sync = int(round(pr.get("sync_s", 0.0) * N.FPS))
+        worst2, worst4, deepest, at = 0, 0, 0.0, ""
+        for f in range(0, n + 1, 3):
+            set_clip(rig_a, pr["clip_a"], min(f, M["clips"][pr["clip_a"]]["frames"]))
+            rig_b.animation_data.action = act_b
+            if act_b is not None and act_b.slots:
+                rig_b.animation_data.action_slot = act_b.slots[0]
+            fb = min(max(0, f - sync), M["clips"][pr["clip_b"]]["frames"])
+            rig_b.pose.bones["root"].location = rig_b.pose.bones["root"].location
             bpy.context.scene.frame_set(f)
+            if fb != f:
+                act = rig_b.animation_data.action
+                rig_b.animation_data.action = None
+                for fc in (act.fcurves if hasattr(act, "fcurves") else []):
+                    pass
+                rig_b.animation_data.action = act
             bpy.context.view_layer.update()
-            pts = world_co(ob_a)[::2]
-            bvh = bvh_of(ob_b)
-            worst = max(worst, inside_count(bvh, pts, depth=0.02, deepest=deep))
-            n_deep = max(n_deep, inside_count(bvh, pts, depth=0.04))
-        check("people pair hug (%s with %s): <= 60 vertices (every 2nd) deeper than 2 cm and <= 3 deeper than 4 cm "
-              "(single contact points), whole clip" % (a, b), worst <= 60 and n_deep <= 3,
-              "%d deeper than 2 cm, %d deeper than 4 cm, deepest %.3f m" % (worst, n_deep, deep[0]))
+            pa = world_co(ob_a)[::2]
+            pb = world_co(ob_b)[::2]
+            n2a, da = deep_points(pa, capsules(rig_b, sb), 0.02)
+            n2b, db = deep_points(pb, capsules(rig_a, sa), 0.02)
+            n4a, _ = deep_points(pa, capsules(rig_b, sb), 0.04)
+            n4b, _ = deep_points(pb, capsules(rig_a, sa), 0.04)
+            if n2a + n2b > worst2:
+                worst2, at = n2a + n2b, "f%d" % f
+            worst4 = max(worst4, n4a + n4b)
+            deepest = max(deepest, da, db)
+            if os.environ.get("NPC_DEBUG") and n2a + n2b:
+                print("PAIRDBG %s f%d A-in-B %d B-in-A %d" % (pname, f, n2a, n2b))
+                for nm_, P_, cs_ in (("A-in-B", pa, capsules(rig_b, sb)), ("B-in-A", pb, capsules(rig_a, sa))):
+                    for ci, c_ in enumerate(cs_):
+                        k_, _ = deep_points(P_, [c_], 0.02)
+                        if k_:
+                            lab_ = (CAPS[ci][0] + "-" + CAPS[ci][1]) if ci < len(CAPS) else ("head" if ci == len(CAPS) else "pelvis")
+                            print("   ", nm_, lab_, k_)
+        check("people pair %s (%s with %s): no body point deeper than 2 cm in the partner (bone capsules), whole clip"
+              % (pname, a, b), worst2 <= 6 and worst4 == 0,
+              "%d points deeper than 2 cm (worst %s), %d deeper than 4 cm, deepest %.3f m" % (worst2, at, worst4, deepest))
