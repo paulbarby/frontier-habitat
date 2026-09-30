@@ -156,7 +156,7 @@ func _steady(i: int, straight: bool) -> bool:
 	return true
 
 func report() -> Dictionary:
-	var out := {"frames": rows.size(), "secs": snappedf(t, 0.1), "hops": hops}
+	var out := {"frames": rows.size(), "secs": snappedf(t, 0.1), "hops": hops, "cam_faded_total": int(view.npc.stats_slots.get("cam_faded", 0)) if view.npc != null else -1}
 	if rows.size() < 20:
 		return out
 	var dts: Array = rows.map(func(r): return float(r["dt"]))

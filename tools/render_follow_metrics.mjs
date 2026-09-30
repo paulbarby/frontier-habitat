@@ -25,12 +25,14 @@ export function analyse(file) {
     if (i > 0 && (r.id !== R[i - 1].id || Math.hypot(r.bx - R[i - 1].bx, r.bz - R[i - 1].bz) > 2)) cutUntil = r.t + 1.0;
     r.cutx = r.cut === 1 || r.t < cutUntil;
   }
-  const steady = (i, straight) => {
+  // mode 'steady': straight AND the walker's speed (game m/s) within 5 % over the window.
+  const steady = (i, straight, flat = false) => {
     if (i < 6 || i + 6 >= R.length) return false;
     for (let j = i - 6; j <= i + 6; j++) {
       const r = R[j];
       if (r.cutx || !(r.key === 'walk' || r.key === 'run') || r.v < 0.5 || r.id !== R[i].id) return false;
       if (straight && Math.abs(ad(R[i - 6].yaw, r.yaw)) > 4 * Math.PI / 180) return false;
+      if (flat && Math.abs(r.v - R[i].v) > 0.05 * R[i].v) return false;
     }
     return true;
   };
@@ -49,11 +51,15 @@ export function analyse(file) {
     if (r.v > 0.3 || p.v > 0.3) { moveT += r.dt; if (r.key !== p.key) sw++; }
   }
   Object.assign(out, { pops, pulled_frames: pulled, move_s: +moveT.toFixed(1), clip_sw: sw, clip_sw_min: +(sw / Math.max(moveT / 60, 1e-3)).toFixed(1), flicker: flick });
-  for (const mode of ['walk', 'straight']) {
+  // clip changes inside steady-speed windows (the target: none)
+  let ssw = 0;
+  for (let i = 1; i < R.length; i++) if (R[i].key !== R[i - 1].key && R[i].id === R[i - 1].id && steady(i, false, true)) ssw++;
+  out.steady_clip_sw = ssw;
+  for (const mode of ['walk', 'straight', 'steady']) {
     const hj = [], hr = [], cj = [], cr = [], cy = [], yr = [], sr = [], ey = [];
     let n = 0;
     for (let i = 1; i < R.length - 1; i++) {
-      if (!steady(i, mode === 'straight')) continue;
+      if (!steady(i, mode !== 'walk', mode === 'steady')) continue;
       n++;
       const a = R[i - 1], b = R[i], c = R[i + 1];
       const k1 = H / Math.max(b.dt, 1e-3), k2 = H / Math.max(c.dt, 1e-3);
@@ -83,7 +89,7 @@ if (process.argv[1] && process.argv[1].endsWith('render_follow_metrics.mjs')) {
       const m = analyse(path.join(dir, f));
       if (!m) { console.log(dir, f, 'no data'); continue; }
       const s = m.straight, w = m.walk;
-      console.log(`${path.basename(dir)} ${f.replace('.csv', '')}: fps ${m.fps} late ${m.late_frames} | STRAIGHT n ${s.n} head ${s.head_jit_px}px (raw ${s.head_jit_raw_px}) cam ${s.cam_jerk_mm}mm (raw ${s.cam_jerk_raw_mm}) camyaw ${s.cam_yaw_deg}deg speed ${s.speed_rip_pct}% yaw ${s.yaw_rip_deg}deg | WALK n ${w.n} head ${w.head_jit_px}px cam ${w.cam_jerk_mm}mm speed ${w.speed_rip_pct}% | pops ${m.pops} pulled ${m.pulled_frames} clip_sw/min ${m.clip_sw_min} (${m.clip_sw} in ${m.move_s}s) flicker(<0.6s) ${m.flicker}`);
+      console.log(`${path.basename(dir)} ${f.replace('.csv', '')}: fps ${m.fps} late ${m.late_frames} | STRAIGHT n ${s.n} head ${s.head_jit_px}px (raw ${s.head_jit_raw_px}) cam ${s.cam_jerk_mm}mm (raw ${s.cam_jerk_raw_mm}) camyaw ${s.cam_yaw_deg}deg speed ${s.speed_rip_pct}% yaw ${s.yaw_rip_deg}deg | WALK n ${w.n} head ${w.head_jit_px}px cam ${w.cam_jerk_mm}mm speed ${w.speed_rip_pct}% | pops ${m.pops} pulled ${m.pulled_frames} | STEADY n ${m.steady.n} head ${m.steady.head_jit_px}px cam ${m.steady.cam_jerk_mm}mm speed ${m.steady.speed_rip_pct}% clip_sw ${m.steady_clip_sw} | clip_sw/min ${m.clip_sw_min} (${m.clip_sw} in ${m.move_s}s) flicker(<0.6s) ${m.flicker}`);
     }
   }
 }

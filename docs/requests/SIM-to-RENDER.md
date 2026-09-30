@@ -755,4 +755,4 @@ lounge, retail, park, jail, academy, kitchen, or the room's category.
 **New building:** `distillery` (civic_1; 7.5 m room like the polymer plant; def `model_hint: "polymer_plant"`): please
 draw the polymer plant model until ART-HAB makes one.
 
-**Cost:** the sim tick at 133 people (showcase_v5, 15 visitors, 8 children), machine load 14 %: median 2.93 ms.
+**Cost:** the sim tick at 133 people (showcase_v5, 15 visitors, 8 children): median 2.67 ms, p99 9.9 ms, worst 13.5 ms (full suite run). `content/saves/showcase_v5.fhsave` is rebuilt (schema 6).

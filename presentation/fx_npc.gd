@@ -81,6 +81,7 @@ var npc_ms := 0.0
 var game_rate := 1.0             # game seconds per real second (smoothed; 0 when paused)
 var _tick_s := 0.1               # game seconds per sim tick (set in sync from bal.tick_hz)
 var _follow_id := -1             # the person in the follow view (world_view.follow_id), -1 = none
+var _cam_pos := Vector3.INF      # the camera (the frame before) for the follow-view near fade
 var planner                     # fx_npc_path (created in setup)
 var _plans_frame := 0
 var _plan_us := 0
@@ -1397,6 +1398,8 @@ func sync(delta: float) -> bool:
 	_tick_s = 1.0 / maxf(float(sim.bal.get("tick_hz", 10)), 1.0)
 	var fid = view.get("follow_id")
 	_follow_id = int(fid) if fid != null else -1
+	var c3: Camera3D = view.get_viewport().get_camera_3d() if view.is_inside_tree() else null
+	_cam_pos = c3.global_position if c3 != null else Vector3.INF
 	_dyn_used = 0
 	_bd_used = 0
 	_plans_frame = 0
@@ -2269,7 +2272,10 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	var ta = view.get("tick_age")
 	var rem_eff: float = remaining + gu * (clampf(float(ta), 0.0, _tick_s) if ta != null else 0.0)
 	if rec.has("v_cap"):
-		vmax = minf(vmax, maxf(float(rec["v_cap"]), 0.3))
+		# Behind a leader in a doorway: its pace; a leader that barely moves (under 0.25 m/s) is a stop,
+		# not a creep (a creep at 0.03-0.3 m/s gave walk / idle / walk behind it, 2026-10-01).
+		var vc: float = float(rec["v_cap"])
+		vmax = minf(vmax, vc if vc >= 0.25 else 0.0)
 	var v: float = float(rec.get("v", 0.0))
 	var vdes: float = minf(vmax, sqrt(2.0 * ACCEL * rem_eff) + 0.05)
 	if vdes > v:
@@ -3075,6 +3081,14 @@ func _write_mm(variant: String, list: Array) -> void:
 		var lib: Dictionary = it[1]
 		var p: Vector3 = _dp(rec)
 		fades[n] = float(rec.get("fade", 1.0))
+		# Follow view: another person who passes through the camera fades out (dithered) inside
+		# 0.3-0.75 m of it, measured to the body's axis (feet to head), not only its root.
+		if _follow_id >= 0 and int(rec.get("id", -1)) != _follow_id:
+			var qa: Vector3 = Geometry3D.get_closest_point_to_segment(_cam_pos, p + Vector3(0, 0.1, 0), p + Vector3(0, 1.75, 0))
+			var cd: float = qa.distance_to(_cam_pos)
+			if cd < 0.75:
+				fades[n] = minf(fades[n], smoothstep(0.3, 0.75, cd))
+				stats_slots["cam_faded"] = int(stats_slots.get("cam_faded", 0)) + 1
 		var look_v: float = float(rec["look"])
 		if people:
 			look_v = float(rec.get("plook", rec["look"]))

@@ -32,6 +32,7 @@ const WALK_STOP := 0.06      # m/s: back to idle below this
 const STOP_HOLD := 0.15      # s (game): that long under WALK_STOP before the walk ends
 var _still_t := 0.0
 var _latch_t := 0.0
+var _start_t := 0.0
 
 var clips := {}              # name -> {len, loop, speed, stride, pose_from, pose_to, kind}
 var pose_state := "stand"
@@ -299,6 +300,11 @@ func _loop_step(dt: float) -> void:
 		_still_t = 0.0 if (moving or not loco) else _still_t + dt
 		if loco and not moving and _still_t < STOP_HOLD:
 			moving = true
+		# A standing body starts walking at once over 0.15 m/s; a slower start needs 0.1 s of it (a
+		# body inching behind a leader started and stopped the walk cycle every few frames).
+		_start_t = _start_t + dt if (not loco and moving) else 0.0
+		if not loco and moving and speed <= 0.15 and _start_t < 0.1:
+			moving = false
 		target = "loco" if moving else resolve_loop(idle_clip, "stand")
 	# A body that is already moving starts walking even while a cross-fade runs (a standing clip
 	# on a moving body reads as a slide; path check 2026-09-27).

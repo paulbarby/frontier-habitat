@@ -555,7 +555,7 @@ def move_weights(ob, bmap, rig):
     mod.object = rig
 
 
-def decimate(ob, target_tris, weight_at=None):
+def decimate(ob, target_tris, weight_at=None, edges=True):
     """Collapse decimation to target_tris; open edges are protected (weight 0), and weight_at(p) (0 = keep .. 1 =
     free) protects a region (the face)."""
     tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
@@ -568,7 +568,7 @@ def decimate(ob, target_tris, weight_at=None):
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(ob.data)
-    for vv in bm.verts:
+    for vv in (bm.verts if edges else []):
         if any(e.is_boundary for e in vv.link_edges):
             edge_v.add(vv.index)
             for e in vv.link_edges:
@@ -657,7 +657,12 @@ def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_b
     return img
 
 
+NORMAL_MAPS = False     # RENDER's people shader samples albedo only (shaders/npc_skin.gdshaderinc): no normal maps
+
+
 def plain_material(name, base=None, alpha=None, normal=None, rough=0.6, color=(1, 1, 1), cutoff=0.5):
+    if not NORMAL_MAPS:
+        normal = None
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -707,7 +712,7 @@ def material_from_mhmat(mhmat, name, v, detail=False, alpha=False, bake_rgb=None
         return texture(p, "%s_%s_%s" % (v, name.lower(), suffix), **kw) if os.path.exists(p) else None
     base = tex("diffuseTexture", "base", detail=detail, bake_rgb=bake_rgb, size=TEX_SIZE.get(name, TEX_DEFAULT),
                alpha_blur=0, alpha_dense=1.35 if name == "Hair_brows" else 0.0)
-    nrm = tex("normalmapTexture", "normal", size=TEX_NORMAL)
+    nrm = tex("normalmapTexture", "normal", size=TEX_NORMAL) if NORMAL_MAPS else None
     return plain_material(name, base=base, alpha="base" if alpha else None, normal=nrm,
                           cutoff=0.3 if name == "Hair_brows" else 0.5,
                           rough=float(d.get("roughness", 0.6) or 0.6))
@@ -1266,7 +1271,7 @@ def export_lod1(v, rig):
             target = LOD1["coat"]
         else:
             target = LOD1["addon"]
-        out[nm] = decimate(o, target)
+        out[nm] = decimate(o, target, edges=False)
     path = os.path.join(N.MODEL_DIR, "people_%s_lod1.glb" % v)
     N.reset_pose(rig)
     N.export_glb_skinned(path, animations=False)

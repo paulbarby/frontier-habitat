@@ -96,14 +96,14 @@ func v2_content(t) -> void:
 	var known := ["power_online", "network_water", "base_air", "all_housed", "o2_ratio", "water_days", "dish_days",
 		"night_no_shed", "nutrition_avg", "morale_avg", "produced", "techs_done", "pop", "max_level", "ship_stage",
 		"ship_readiness", "full_supply", "stat", "stored_total", "distinct_dishes", "distinct_buildings", "size_built",
-		"power_gen", "lander_survived", "cooked", "goal_done", "no_death_days", "victory"]
+		"power_gen", "lander_survived", "cooked", "goal_done", "no_death_days", "victory", "egg"]
 	var goals := 0
 	for ch in c["chapters"]:
 		for gl in ch["goals"]:
 			goals += 1
 			t.check(known.has(gl["kind"]), "goal %s kind %s is evaluated" % [gl["id"], gl["kind"]])
 	t.eq(c["chapters"].size(), 5, "chapters")
-	t.eq(c["awards"].size(), 32, "awards")
+	t.eq(c["awards"].size(), 35, "awards (32 + the three V5 Easter eggs)")
 	for id in c["awards"]:
 		t.check(known.has(c["awards"][id]["kind"]), "award %s kind %s is evaluated" % [id, c["awards"][id]["kind"]])
 	t.note("%d items, %d dishes, %d crops, %d techs, %d goals, %d awards" % [c["items"].size(), c["dishes"].size(), c["crops"].size(), c["techs"].size(), goals, c["awards"].size()])

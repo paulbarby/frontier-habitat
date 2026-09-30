@@ -798,3 +798,69 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
   test_alert_gate, test_alert_steady all pass.
 - Not done: students do not walk to the academy; prisoners are not walked to a cell; lock_down closes no doors;
   the party costs nothing; fights and security (next milestones in the section 13 order).
+
+## 2026-10-01, V5: the rest of section 13 item 1 (security, jail, families, venues, the dome, the Rag, eggs, schema 6, showcase)
+
+**Landed (new files `sim/security.gd`, `leisure.gd`, `families.gd`, `rag.gd`, `eggs.gd`; content in `society.json`):**
+- **Students walk to the academy.** A course moves only while the student sits in class (seat anchor, `sit_class`);
+  pace 1 with the teacher in the room (the teacher walks there: `teach`), 0.5 with the console (to level 3), 0 above
+  it without a teacher; research `education` adds 25 %. Children go to school by day (school uniform, school points).
+- **Fights and security.** Fights start from arguments (enemies 3 %/s, very bad attitude 5 %/s, hot heads in a bad
+  mood 1 %/s) and in riots; friends may join (max 4); blows 1-1.5 health/s, down at 35. The nearest free officer
+  walks there; on arrival the worst attitude is arrested. Without an officer a fight ends after 24 s (16 s with a
+  security office; research `security` shortens it). New role `security` (command `set_role`, security skill 40+;
+  shuttles bring officers after civic_1); officers patrol and never take other work.
+- **Jail.** An arrested or jailed person is walked to a free cell (`handcuffed_walk`; an officer `escort_walk`s
+  along), wears `prison`, eats prison rations (a dish from a store), drinks at the jail tap, sleeps in the cell, and is
+  released when the mod ends (log `released`). Without a free cell: confined to quarters.
+- **Lock-down** closes the base for 2 game hours: people stay in their rooms (critical needs still move them), riots
+  start fewer fights and loot less; `sim.unrest.locked(base)`.
+- **The party costs stock:** 1 drink/snack/ration per 2 people, refused (`no_stock`) when short.
+  `response_effect(base, response)`; unrest info has `damage`, `injured`, `looted`, `locked`.
+- **Protests** gather the unhappiest (up to 8) at the dome plaza or the largest leisure room and shout the demand.
+  **Riots** damage rooms (never under 30 health), loot leisure goods and rations, start fights.
+- **Housing, families, children.** Partners move in together (one's unit, else a free family unit, else a
+  `shared_home` request). Command `adopt` (partners, a free bunk, a medical bay; the child comes a day later);
+  shuttles may bring a family (30 %). Children: kind `child`, live in the parents' unit (bunks), never work, school
+  by day, play at leisure, grow up after 30 days into the role of their best school subject.
+- **Social log + the Rag.** `state.v5.slog` (600 entries) from 40 log codes with heat; an issue is made and stored
+  at each dawn (`state.v5.rag`, 30 kept): lead of 3-6 sentences, 3+ stories (the poll and the couples fill a thin
+  day), 3-5 gossip lines, watches with notes, poll with commander and change, 3-4 ads, serious {text, severity}.
+  245 headlines in 38 kinds; 710 dialogue lines in 43 topics.
+- **Venues, leisure economy, tourism, dome.** Items snacks, drinks, clothing, gifts, gadgets, luxury_goods (new
+  `distillery`, workshop, electronics fab, fabricator; traders sell them). Venues of the retail module, park and the
+  16 of the dome: open with staff (SIM proposes; command `staff`), power and goods (carriers stock `inv_in`); a visit
+  uses goods, adds the venue quality to comfort and a tourist pays (credits `tourism`). An open dome doubles a
+  liner's tourists. Dome build stages = ART-B's 9 ids, each logged; one dome a base (`one_per_base`).
+- **Eggs:** PRISM SHIFT records and champions (1 in 1,000), P. Barby (once, after the dome opens, 25 % a liner),
+  the dance code (friends join); hidden awards egg_prism, egg_barby, egg_dance.
+- **Save schema 6** (`_v5_to_v6`): old saves load with no relationships and one commander a base by seniority;
+  showcase_v4 (schema 5) and showcase_v31 load and run a day (test).
+- **Showcase** `content/saves/showcase_v5.fhsave` (script `tests/make_showcase_v5.gd`, ~4 min): 132 people (117
+  colonists, 8 children, 15 tourists in the dome), 2 bases, residence tubes (family + executive), apartment block,
+  retail, park, academy (3 students), security office (6 officers), jail (1 prisoner), distillery, a finished and
+  staffed dome (15 open venues), 5 couples, an affair, 6 stored Rag issues, calm unrest (0; the orchestrator's brief;
+  the contract asked for ~50). One dead agent in the state (lack of oxygen, before day 14).
+- **Cost work:** relationship index updated in place (was rebuilt every tick: 1.35 -> 0.24 ms/tick at 133 people);
+  ranks stored in `state.v5.ranks` once a game minute and after orders (no roster check a tick); people updated every
+  10 s (attitude rate doubled); id buckets for think/people/talk slices; venue stocking every 5 s.
+- **Tests** (new in `tests/cases_v5.gd`): v5_fight_arrest_jail, v5_lock_down_and_party, v5_families_and_children,
+  v5_venues_and_tourism, v5_dome_build_stages, v5_rag_stored_issues, v5_multistorey_paths, v5_migration_old_saves,
+  v5_eggs, v5_showcase, long_v5_perf_showcase, v5_showcase_deterministic (save/load at a tick inside a second),
+  v5_protest_and_riot; v5_appoint_home_enrol now checks the walk to class. Schema expectations 5 -> 6 in cases_v2,
+  v3, v31; v2_content_integrity knows the `egg` award kind (35 awards).
+- **Full suite: 134 passed, 3 failed (1,418 s).** Failed: v2_content_integrity (egg awards; fixed after the run,
+  passes alone), long_v3_perf_70_colonists 2.097 ms (limit 2.0), long_v4_perf 2.572 ms (limit 2.5; the showcase
+  build ran beside it for 4 min). Alone afterwards: v4 perf 2.301 ms PASS (CPU load 6-12 %); v3 perf 2.20-2.40 ms
+  FAIL at 14-25 % CPU load (other agents' Godot and Blender); the machine was never quiet. At 70 colonists the v5
+  systems cost about 0.25 ms a tick (profile: relations 0.16, people 0.13), so open item a stays open.
+- **V5 budget:** showcase_v5, 133 people: median 2.67 ms, mean 3.22, p99 9.9, worst 13.5 ms in the suite (budget 3.0
+  / 12 ms); 2.9-3.6 ms median alone at 18-30 % load. Largest costs: jobs 0.7 ms a tick (7 ms on its tick), act 0.45,
+  think 0.41, alerts 0.27, people 0.26, relations 0.24.
+- Exhaustion death fix of 2026-09-30 kept: long_v4_perf_100_colonists_6_vehicles reports deaths {}.
+
+**Not done / not tested:** entitlements seen as unfair do not add unrest; bystanders do not flee a fight; skills
+still grow by days, not by work done; best-dressed uses traits, not outfits; fit-out per dome venue is one stage
+(venues open by staff and goods); a real liner bringing P. Barby, the shuttle family and the `shared_home` request
+answers are not tested; the worst tick (13.5 ms) is over the 12 ms budget; the distillery has no model (ART-HAB).
+Notes to UI, RENDER and ART-HAB: SIM-to-UI.md, SIM-to-RENDER.md, SIM-to-ART-HAB.md (2026-10-01).

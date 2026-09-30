@@ -86,6 +86,7 @@ const SH_W_PIVOT := 10.0      # rad/s: pivot spring
 const SH_W_VEL := 6.0         # 1/s: body velocity low-pass (the fed-forward velocity)
 const SH_W_EYE := 4.0
 const SH_W_DIST := 8.0
+const SH_HACC := 5.0          # rad/s^2: the most the heading's turn rate changes (camera jerk at 4x)
 const SH_W_IN := 14.0         # wall pull-in: fast
 const SH_W_OUT := 2.5         # release: slow
 const SH_SOFT := 0.6          # m: the smoothed eye starts to pull in this far off a wall
@@ -183,9 +184,14 @@ func _shoulder_process(delta: float) -> bool:
 		# at most 2.2 x), so a runner at 4x does not leave the frame on a corner.
 		if (s as Array).size() > 4:
 			wh *= clampf(sqrt(maxf(float(s[4]), 1.0)), 1.0, 2.2)
-		var rh: Vector2 = _crit(e, _sh_hvel, 0.0, wh, dt)
-		_sh_heading = body_yaw + rh.x
-		_sh_hvel = rh.y
+		# Absolute heading and turn rate (the body yaw is the moving target). The turn rate changes by
+		# at most SH_HACC rad/s^2: at 4x a spring alone swung the camera round a 2 m circle at up to
+		# 12 rad/s^2 after each corner (7-15 mm camera jerk, 2026-10-01). The person stays in frame
+		# (the camera always looks along its heading at the pivot).
+		var rh: Vector2 = _crit(_sh_heading, _sh_hvel, _sh_heading - e, wh, dt)
+		var hv: float = clampf(rh.y, _sh_hvel - SH_HACC * dt, _sh_hvel + SH_HACC * dt)
+		_sh_heading = rh.x if hv == rh.y else _sh_heading + (_sh_hvel + hv) * 0.5 * dt
+		_sh_hvel = hv
 		var re: Vector2 = _crit(_sh_eh, _sh_ehv, eye_h, SH_W_EYE, dt)
 		_sh_eh = re.x
 		_sh_ehv = re.y
