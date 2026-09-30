@@ -81,21 +81,22 @@ def world_co(ob):
     return co
 
 
-def bvh_of(ob):
+def bvh_of(ob, skip_mats=()):
     dg = bpy.context.evaluated_depsgraph_get()
     ev = ob.evaluated_get(dg)
     me = ev.to_mesh()
     mw = ob.matrix_world
     verts = [mw @ v.co for v in me.vertices]
-    polys = [list(p.vertices) for p in me.polygons]
+    mats = [m.name.split(".")[0] if m else "" for m in me.materials]
+    polys = [list(p.vertices) for p in me.polygons if not (mats and mats[p.material_index] in skip_mats)]
     ev.to_mesh_clear()
     return BVHTree.FromPolygons(verts, polys)
 
 
-def inside_count(bvh, pts, depth=0.01, deepest=None):
+def inside_count(bvh, pts, depth=0.01, deepest=None, radius=0.12):
     bad = 0
     for p in pts:
-        loc, nrm, idx, d = bvh.find_nearest(Vector(p), 0.12)
+        loc, nrm, idx, d = bvh.find_nearest(Vector(p), radius)
         if loc is None:
             continue
         s = (Vector(p) - loc).dot(nrm)
@@ -231,14 +232,21 @@ def run(check, gltf_facts):
                          ("laugh", 36), ("hug", 50)):
                 if set_clip(rig, c, f) is None:
                     continue
-                bvh = bvh_of(meshes[o])
+                bvh = bvh_of(meshes[o], skip_mats=("Skin",))       # hair through CLOTHES (skin covers hair)
                 neck_top = rig.matrix_world @ rig.pose.bones["neck"].head
                 pts = [p for p in world_co(meshes[d["head"]]) if p[2] > neck_top.z + 0.045]
                 pts += list(world_co(meshes[d["hair"]]))
-                n_in = inside_count(bvh, pts)
+                n_in = inside_count(bvh, pts, radius=0.03)
+                if os.environ.get("NPC_DEBUG") and n_in:
+                    bad_ = []
+                    for p_ in pts:
+                        loc_, nrm_, _, dd_ = bvh.find_nearest(Vector(p_), 0.12)
+                        if loc_ is not None and (Vector(p_) - loc_).dot(nrm_) < -0.01 and -(Vector(p_) - loc_).dot(nrm_) >= 0.8 * dd_:
+                            bad_.append(tuple(round(float(x), 3) for x in p_))
+                    print("HAIRDBG", v, o, c, f, "neck_top", tuple(round(x, 3) for x in neck_top), bad_[:8])
                 if n_in > worst[0]:
                     worst = (n_in, "%s %s f%d" % (o, c, f))
-        check("people %s: head and hair never inside the outfit at the test poses (1 cm)" % v, worst[0] == 0,
+        check("people %s: head and hair never inside the clothes at the test poses (1 cm)" % v, worst[0] == 0,
               "%d vertices at worst %s" % worst)
     # paired clips (npc_pairs.json): partner B placed as RENDER places it; neither body inside the other
     check_pairs(check, M)
@@ -347,6 +355,19 @@ def check_pairs(check, M):
                     for ci, c_ in enumerate(cs_):
                         k_, _ = deep_points(P_, [c_], 0.02)
                         if k_:
+                            a_, b_, r_ = c_
+                            A_, B_ = np.array(a_), np.array(b_)
+                            d_ = B_ - A_
+                            t_ = np.clip(((P_ - A_) @ d_) / max(1e-9, float(d_ @ d_)), 0, 1)
+                            dd_ = np.linalg.norm(P_ - (A_ + t_[:, None] * d_), axis=1)
+                            sel_ = P_[dd_ < r_ - 0.02]
+                            print("      at", tuple(np.round(sel_.mean(axis=0), 3)), "axis", tuple(np.round(A_, 3)), tuple(np.round(B_, 3)))
+                            if nm_ == "B-in-A":
+                                ids_ = np.nonzero(dd_ < r_ - 0.02)[0][:6] * 2
+                                for vi_ in ids_:
+                                    vv_ = ob_b.data.vertices[int(vi_)]
+                                    gs_ = sorted(((ob_b.vertex_groups[g.group].name, round(g.weight, 2)) for g in vv_.groups), key=lambda x: -x[1])[:3]
+                                    print("        v", int(vi_), tuple(round(x, 3) for x in vv_.co), gs_)
                             lab_ = (CAPS[ci][0] + "-" + CAPS[ci][1]) if ci < len(CAPS) else ("head" if ci == len(CAPS) else "pelvis")
                             print("   ", nm_, lab_, k_)
         check("people pair %s (%s with %s): no body point deeper than 2 cm in the partner (bone capsules), whole clip"

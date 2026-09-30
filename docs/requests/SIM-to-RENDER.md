@@ -702,3 +702,57 @@ Answer to RENDER-to-SIM 2026-09-29 (talks() 26-28 ms, a 51-66 ms tick every 10th
   0 hazards, traffic, metrics; 1 build, upgrades; 2 vehicles, reactors; 3 explore, ship; 4 jobs; 5 production;
   6 morale; 7 research, goals, awards; 8 alerts. Please measure `simprof` again in the web build: I expect the old
   spike split over the ticks, with the jobs tick the largest (numbers in the report to the coordinator).
+
+## 2026-10-01 - V5 finished in SIM: what RENDER draws (fights, escorts, cells, class, venues, lock-down, eggs)
+
+**One call for the clip:** `sim.people.action(a)` -> `""` (the ordinary clip of the activity) or: `dance_c` (dance egg;
+friends in the room join), `fight_idle` | `punch` | `hit_react` (changes every 12 ticks, by person), `fall_down`
+(knocked down in a fight), `handcuffed_walk` (a prisoner walked to the cell), `escort_walk` (the officer with them),
+`sleep_cell`, `protest_fist`, `sit_class`, `teach`, `child_play` (a child at leisure), and the venue clips
+`shop_browse`, `sit_bench`, `drink_bar`, `play_arcade`, `dance_a` (the Club), `jog` (gym), `swim` (pool).
+
+**Pairs** (npc_pairs.json): a fight is `sim.security.fights()` -> `[{id, fighters [ids], bld, pos, start, until,
+officer, cause, base, injured}]` (fighters[0] and [1] face each other for punch / hit_react). An escort: the officer has
+`a.v5_escort` = the prisoner's id and `a.v5_hold` == "escort"; the prisoner `a.v5_hold` == "cuffed" (walk them together).
+
+**Anchors (agent.use)** - new steps and what they use:
+| step | use.kind | anchor |
+|---|---|---|
+| class (student or child at school) | seat | Academy `Anchor_Seat_<i>` / `Class_<i>` |
+| teach | work | `Anchor_Work_0` / `Teach` |
+| cell (a prisoner) | bed, pose sit | Jail `Anchor_Cell_<i>` (bed convention; furniture beds = cells 2/4/8) |
+| sleep in the jail | bed, pose lie | the same cell |
+| patrol (officer) | stand | any room of the patrol |
+| staff (a venue shift) | work | the venue's staff anchor (dome: `Anchor_Work_<venue>_<k>`) |
+| protest | stand | the protest place (dome: the plaza) |
+| fight | stand | where they stand |
+| sleep (a child) | child_bed | the bunks of the unit (`Bed_4i+2`, `Bed_4i+3` in a family tube) |
+
+**Venues:** `sim.leisure.venue_of(a)` -> `{building, venue, floor, act}` or `{}` while a person visits or staffs a
+venue (dome venue ids as in content: grocery, clothing, electronics_shop, pharmacy, cafe, restaurant, bar,
+gaming_lounge, club, barber, credit_office, post_office, gym, hotel_lobby, pool, plaza; retail = "shop", park =
+"park"). Place them at `Anchor_Venue_<id>` / its customer anchors. `sim.floors.agent_floor(a)` already gives the
+venue's floor. `sim.people.outfit(a)`: `swimwear` at the pool, `uniform_food` for venue staff on shift, `prison` in
+jail, `school` for a child in class. `sim.leisure.venues(b)` gives `open` per venue (lights, signs, robot dancers only
+when the Club is open, if you like).
+
+**Dome build stages:** content `build_stages` are now your 9 ids (foundation, level_1..level_5, dome_frame,
+dome_glass, fitout). `sim.leisure.dome_stage(b)` -> `{index (-1 site, 0..8, 9 finished), id, name, count, progress}`;
+it is `floor(progress / work_total * 9)`, the same as your `_dome_stage`. Each stage is logged (`dome_stage`).
+
+**Lock-down:** `sim.unrest.locked(base)` / `lock_info(base)` -> draw the corridor doors of that base closed while true
+(2 game hours). People stay in their rooms.
+
+**Children:** agents with `kind` "child" (identity variant c1/c2, age 6-12). They live in their parents' unit.
+
+**Eggs:** P. Barby: `identity.egg` == "barby" and `vip` true (outfit casual_b; a unique jacket if ART-NPC makes one).
+A PRISM SHIFT champion: `identity.egg` == "champion". The cabinet score: `sim.eggs.arcade()` -> `{best, holder, plays}`.
+
+**Rag photos:** `lead.photo.pose_hint` has new values (hug, kiss_brief, argue, punch, handcuffed_walk, cheer, sulk,
+wave, protest_fist, play_arcade, dance_a, dance_c, flirt_lean, laugh, talk_idle); `place_hint` is dome, cantina,
+lounge, retail, park, jail, academy, kitchen, or the room's category.
+
+**New building:** `distillery` (civic_1; 7.5 m room like the polymer plant; def `model_hint: "polymer_plant"`): please
+draw the polymer plant model until ART-HAB makes one.
+
+**Cost:** the sim tick at 133 people (showcase_v5, 15 visitors, 8 children), machine load 14 %: median 2.93 ms.

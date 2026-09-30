@@ -1038,3 +1038,42 @@ The follow view costs no more than the overview. Both are held down by SIM's onc
 - **Rig:** route A agreed with ART-NPC (`RENDER-to-ART-NPC.md`).
 - **Not done:** people loader (MPFB files not landed), robot dancers + Club reflection probe, the unit / penthouse follow shots ART-HAB named, the long-frame trace.
 - **Checks at the end of this milestone:** `check` 268 scripts, 0 failed (a first check run caught SIM mid-edit on `sim/people.gd`; waited until it compiled). Cut 37 types 0 above, doors 0 bad. Airlock all 0. **v4 path check PASS** after two fixes: the check now skips riders that fx_vehicles draws (SIM now gives riders `where = out`, so 86 "slides" were hidden records), and the rover depot is a walk-in hangar for outside bodies (view and check; a crew getting out at a bay had been pushed 4.9 m to the depot ring). **v3 path check FAIL: 3 wall samples** on `scene_final` (an old-save 2.8 m airlock: a suited body standing 0.04 m inside the hull, 32 deg beside the outer door, 3 frames). It was 0 on 2026-09-29; the cause is not traced yet. First item next.
+
+## 2026-10-01 v5 - follow view smoothness (Paul: "the follow cam shakes, the person jitters")
+
+**Probe (new):** `presentation/fx_follow_probe.gd` (debug `fprobe start <s> <in|out|any|b:<def>|keep> | get | csv | stop`; the rig calls it after each follow frame, so body and camera are from the same drawn frame), `tools/render_follow_probe.mjs` (web build, real GPU, headless; writes `<dir>/<case>.csv/.json`), `tools/render_follow_metrics.mjs` (one analyser for before and after). Second differences are per 1/60 s (each step scaled by (1/60) / frame time) so a late browser frame is not counted as a jerk; the plain per-frame value is kept as "raw". Steady walk = 13 frames of loco over 0.5 m/s, same person, no cut; "straight" = body yaw within 4 deg over them. Data: `build/web_render/fprobe_before/`, `fprobe_after/`, `fprobe_final/`.
+
+**Order check:** main.gd `_process` steps the sim and calls `view.sync`; the rig is a later child with no process_priority, so it runs after, in the same frame. Confirmed: body and camera are sampled after both moved.
+
+**Causes found (measured):**
+1. Camera: the "pulled-in eye taken at once" rule fired while walking forward (the lagging eye was further from the pivot than the wanted eye), 190 (in1) / 311 (out1) snaps in 20 s: a 5 cm sawtooth of the eye, 50-75 mm RMS camera jerk, 7-12 px head jitter.
+2. `game_rate`: a low-pass of sim_dt/delta rippled +-6.5 % at 10 Hz (0.92-1.08); every body's speed and clip rate rippled with it.
+3. Walker: the goal (sim position) moves in 10 Hz steps and the path end follows it in 0.25 m steps, so the stopping curve slowed the body every frame and each step sped it up (10-15 % ripple). Top speed drops (to_anchor 1.1 m/s) were taken in one frame (3.4 -> 1.1 m/s).
+4. 4x: the plan budget ran out and the followed body stood still every other frame; the frustum test (camera of the frame before) marked the followed body "far" (update every 3rd frame); a path that ran out inside a frame stopped the body; a task-walk body that stopped one frame held still until the goal was 0.4 m away (stop-go); a new plan started 0.3 m behind the body (one-frame 30-60 deg turn).
+5. Clips: one still frame gave idle for a frame; run/walk latch flipped on one slow frame; followers at doorways stopped dead and stepped aside behind a leader going the same way.
+
+**Fixes:**
+- `camera_rig.gd` follow mode rewritten: critically damped springs in closed form (frame-rate independent) for the pivot (body velocity fed forward: no lag on a steady walk), heading (rate blends 1.4-3.2 rad/s by turn size, x sqrt(game rate) up to 2.2 at 2x-4x), eye height (sit/stand/lie steps), wheel distance, shoulder side. Aim from the smoothed heading (no separately lagged look point). Wall pull-in: eases in fast (14 rad/s) toward a 0.6 m margin, out slow (2.5 rad/s) past a 4 % dead band or after 0.6 s; hard clamp at 0.2 m (the camera never passes a wall). §3 framing kept (0.55 m right, 1.9 m back, eye + 0.15 m, 10 deg down).
+- `world_view.gd`: `game_rate` from main.gd's continuous tick clock (stepped time + `_acc`): exactly 1.000 at 1x; `tick_age` exposed; `_follow_collide(pivot, eye, margin)`; `_follow_body` also returns the game rate; debug `fprobe`.
+- `fx_npc.gd`: goal-speed compensation (goal step / ticks x tick_age), remaining counts the drift to the goal, DECEL 4 m/s^2 with a hard stopping curve; the followed person always gets a plan and is never "far"; path run out -> on to the goal in sight; a finished path with the goal in sight -> no plan needed; `_trim_start` drops plan points behind a walking body; task hold only while the goal stands; doorway follower walks at the leader's pace (`v_cap`), no step aside behind a leader.
+- `fx_npc_pose.gd`: walk ends after 0.15 s under WALK_STOP; run latch changes after 0.15 s; in-fade walk start at 0.15 m/s (was 0.3: one path-check slide).
+
+**Before / after** (steady straight walk; per-1/60 s second differences; raw per-frame in brackets):
+| case | head jitter px | camera jerk mm | camera yaw deg | body speed ripple % | body yaw deg | clip switches / min while moving (short <0.6 s) |
+|---|---|---|---|---|---|---|
+| indoor 1x before | 11.78 (12.45) | 70.8 (74.7) | 0.097 | 4.38 | 0.039 | 31.7 (5) |
+| indoor 1x after | 0.13-0.18 (0.29-0.44) | 0.88-1.29 (10.5-10.9) | 0.017-0.023 | 0.75-2.17 | 0.02-0.06 | 10.6-11.9 (3-4, doorway waits) |
+| indoor 4x before | 8.85 | 26.9 (51.1) | 0.160 | 3.0 (walk 10.1) | 0.156 | 115 (19) |
+| indoor 4x after | 2.63 | 10.3 (39.6) | 0.101 | 2.18 (walk 7.0) | 0.098 | 75.6 (19) |
+| suit outside 1x before | 7.15 (7.41) | 50.6 (52.2) | 0.0037 | 5.22 | 0.043 | 0 |
+| suit outside 1x after | 0.07 (0.07-0.09) | 0.16-0.86 (3.2-5.6) | 0.003-0.014 | 0.41-0.51 | 0.04 | 0 |
+| suit outside 4x before | 2.43 (4.64) | 11.9 (37.2) | 0.060 | 5.87 | 0.043 | 3.3 |
+| suit outside 4x after | 0.80 (1.39) | 3.72 (15.2) | 0.069 | 0.80 | 0.050 | 0 |
+| super dome 1x after | 0.091 | 0.36 | 0.006 | 0.25 | 0.006 | 7.8 (0) |
+Wall pull-in pops (eye distance change > 8 % in one frame): 0 in every case before and after. game_rate at 1x: 0.92-1.08 before, 1.000 after. Targets at 1x (head < 0.5 px, camera < 2 mm, no pops, no flicker on a steady walk): met. Raw camera jerk at 1x stays 5-11 mm: it is the browser's late frames (42-149 frames over 25 ms in 20 s, machine loaded by other agents), not camera motion.
+
+**Not met / not tested:** 4x indoors is still busy (the person works, walks and waits at doors 4x as often; 19 short clip switches in 20 s; camera jerk 10 mm). Short walk/idle switches remain behind a leader at a doorway (creeping at 0.03-0.06 m/s). The dome "before" was not measured (the first probe could not pick a person in the dome; fixed afterwards); the apartment block case has no walking person in `civic_v5` (0 walking frames). Other people can pass through the camera position (no body collision for the camera). The strips are stills and cannot show jitter; the numbers carry it. Evidence: `art/critic_input/render/160_follow_before_strip.png`, `161_follow_after_strip.png` (6 frames each, 0.1 s + capture time apart).
+
+**Checks:** `check` 287 scripts, 0 failed (one run earlier caught SIM mid-edit: `sim/traffic.gd` missing; the export mirror passed on try 2). **v3 path check PASS** (wall 0, furniture 0.072 %, slide 0, teleport 0, void 126 on scene_final landers; the 3 wall samples of 2026-09-30 are gone; a first run after the walker change had 1 slide, fixed by the in-fade walk start). **v4 path check PASS** (wall 0, furniture 0.116 %). Airlock: all 0 (showcase_v31, showcase_v3_late). Cut: 37 types, 0 above 1.45 m; doors 99 rooms, 0 bad. `npc_check` FAIL 12: only "clip missing" for the v5 clips (talk_gesture_a, laugh, argue, hug, sit_bar_stool, dance_a) in the v3 astronaut GLBs; no pop failures. Export `build/web_render` pck 148.5 MB (ART-NPC people files landed during this work; 118 MB before).
+
+**Priority 2 status:** v3 path check FAIL -> PASS (above). Not started: people loader for the new MPFB files (ART-NPC was writing `people_m1.glb` / `people_manifest.json` at 07:01 during this work), robot dancers + club, egg_dance hook, unit / penthouse follow shots, long-frame trace, perf with 110 people.

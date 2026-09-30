@@ -270,3 +270,12 @@ S/M first standing anchor `Stand_0` (`Yard_0`) is on the yard strip. SIM uses `W
 
 The `civic` category colour is settled: RENDER uses **#34569c** for the category (your proposal). The security
 office and the jail keep their own materials. No change on your side.
+
+## 2026-10-01 - a new room: the distillery; jail cells are bed anchors
+
+- New def `distillery` (content/buildings.json; research civic_1; category food; radius S/M/L/XL 6/7.5/9.6/11.7 like
+  the polymer plant; furniture work 1/1/2/3, stands 1/2/2/3; recipes drinks and snacks; silhouette "copper stills and
+  tanks under a low roof, pipe racks"). Until you build it, RENDER draws the polymer plant (`model_hint`). Please
+  build `distillery_{s,m,l,xl}.glb` when you can and list its door angles in `content/door_blocked.json`.
+- Jail: the furniture `beds` are now the cells (2/4/8): SIM puts a prisoner on bed anchor i = your `Anchor_Cell_<i>`.
+  The jail has a tap now (`tap: true`) - prisoners drink in the cell block; no model change needed.

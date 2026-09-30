@@ -139,11 +139,11 @@ func _init() -> void:
 	sim.run_seconds(20.0)
 	# ---- people: settlers up to about 104 adults.
 	var guard := 0
-	while _colonists().size() < 104 and guard < 40:
+	while _colonists().size() < 104 and guard < 60:
 		guard += 1
-		_cmd("admit_settlers", {"count": mini(8, 104 - _colonists().size()), "roles": ["technician", "grower", "operator", "scientist", "technician", "operator", "grower", "medic"]})
+		_cmd("admit_settlers", {"count": mini(5, 104 - _colonists().size()), "roles": ["technician", "grower", "operator", "scientist", "technician", "operator", "grower", "medic"]})
 		H.fill_utilities(sim, 1.0, 0.9, true)
-		sim.run_seconds(30.0)
+		sim.run_seconds(40.0)
 	print("colonists: %d" % _colonists().size())
 	var ppl: Array = _colonists()
 	# ---- six security officers (SET-UP: trained at the academy before).
@@ -183,19 +183,6 @@ func _init() -> void:
 		sim.relations._bump()
 		if statuses[k] != "dating":
 			sim.families.on_partners(x, y)
-	# The affair: the dating partner of pair 4 and somebody else.
-	if pairs.size() >= 5:
-		var cheat: Dictionary = pairs[4][0]
-		for a in ppl:
-			if int(a["id"]) != int(cheat["id"]) and int(a["id"]) != int(pairs[4][1]["id"]) and sim.social.compatible(cheat, a) and sim.relations.partner_of(int(a["id"])) == -1 and String(a["role"]) != "security":
-				var ra: Dictionary = sim.relations._rel_w(cheat, a)
-				ra["aff"] = 40.0
-				ra["att"] = 85.0
-				ra["status"] = "affair"
-				ra["since"] = now
-				ra["talks"] = 12
-				sim.relations._bump()
-				break
 	var kids := 0
 	for k in mini(4, pairs.size()):
 		var x2: Dictionary = pairs[k][0]
@@ -228,6 +215,21 @@ func _init() -> void:
 			# Tourists for the dome: a liner lands before the save (debug command traffic_now).
 			if sim.traffic.ships().is_empty() and sim.traffic.forecast().is_empty():
 				_cmd("traffic_now", {"kind": "liner", "in": 30.0})
+	# The affair (SET-UP at the end, so that it is not found out before the save): the dating partner
+	# of pair 4 and somebody else.
+	now = int(sim.state["tick"])
+	if pairs.size() >= 5:
+		var cheat: Dictionary = pairs[4][0]
+		for a in ppl:
+			if a["state"] == "alive" and int(a["id"]) != int(cheat["id"]) and int(a["id"]) != int(pairs[4][1]["id"]) and sim.social.compatible(cheat, a) and sim.relations.partner_of(int(a["id"])) == -1 and String(a["role"]) != "security":
+				var ra: Dictionary = sim.relations._rel_w(cheat, a)
+				ra["aff"] = 40.0
+				ra["att"] = 85.0
+				ra["status"] = "affair"
+				ra["since"] = now
+				ra["talks"] = 12
+				sim.relations._bump()
+				break
 	# ---- students and a prisoner (SET-UP at the end).
 	if not academy.is_empty():
 		var n_enrol := 0

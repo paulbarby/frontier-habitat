@@ -29,6 +29,9 @@ const LOOPS := {
 }
 const WALK_START := 0.10     # m/s: start the walk cycle above this ground speed (V3_1: the walker ramps from 0, so the walk starts early and slow, never a slide)
 const WALK_STOP := 0.06      # m/s: back to idle below this
+const STOP_HOLD := 0.15      # s (game): that long under WALK_STOP before the walk ends
+var _still_t := 0.0
+var _latch_t := 0.0
 
 var clips := {}              # name -> {len, loop, speed, stride, pose_from, pose_to, kind}
 var pose_state := "stand"
@@ -289,12 +292,19 @@ func _loop_step(dt: float) -> void:
 		return
 	var target: String = resolve_loop(want_loop, pose_state) if want_pose == pose_state else ("loco" if loco else cur)
 	if target == "loco":
-		# Idle <-> walk <-> run by ground speed (with hysteresis).
+		# Idle <-> walk <-> run by ground speed (with hysteresis). A walking body stops only after
+		# STOP_HOLD s under WALK_STOP: one still frame (a door wait, a late plan) was an idle clip
+		# for a frame and a new walk cycle after it (clip flicker, 2026-10-01).
 		var moving: bool = speed > (WALK_STOP if loco else WALK_START)
+		_still_t = 0.0 if (moving or not loco) else _still_t + dt
+		if loco and not moving and _still_t < STOP_HOLD:
+			moving = true
 		target = "loco" if moving else resolve_loop(idle_clip, "stand")
 	# A body that is already moving starts walking even while a cross-fade runs (a standing clip
 	# on a moving body reads as a slide; path check 2026-09-27).
-	if target == "loco" and not loco and not can and speed > 0.3:
+	# (0.15 m/s: the path check's slide limit is 0.3 m/s of DRAWN speed, and the drawn speed adds the
+	# separation offset's 0.15 m/s; 2026-10-01 one slide at 0.24 m/s logical, 0.39 drawn)
+	if target == "loco" and not loco and not can and speed > 0.15:
 		_start_loco()
 		return
 	if can:
@@ -310,12 +320,19 @@ func _loop_step(dt: float) -> void:
 		var vr: float = _speed_of("run") if clips.has("run") else vw * 2.0
 		# Walk or run, latched with hysteresis (the measured speed is noisy): the blend lasts
 		# only the FADE of a change, both cycles on one shared phase (V3 §3.4).
+		# A change of the latch needs STOP_HOLD s of the new speed (one slow frame at a corner made a
+		# run -> walk -> run flicker at 4x, 2026-10-01).
+		var want_run: bool = run_latch
 		if injured or not clips.has("run"):
-			run_latch = false
+			want_run = false
 		elif speed > vw + (vr - vw) * 0.55:
-			run_latch = true
+			want_run = true
 		elif speed < vw + (vr - vw) * 0.3:
-			run_latch = false
+			want_run = false
+		_latch_t = _latch_t + dt if want_run != run_latch else 0.0
+		if want_run != run_latch and (_latch_t >= STOP_HOLD or injured or not clips.has("run")):
+			run_latch = want_run
+			_latch_t = 0.0
 		run_w = move_toward(run_w, 1.0 if run_latch else 0.0, dt / FADE)
 		cur = _walk_clip()
 		loco_phase = fposmod(loco_phase + dt * _loco_rate(), 1.0)

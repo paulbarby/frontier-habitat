@@ -179,6 +179,10 @@ func _shoulder_process(delta: float) -> bool:
 		# followed in about 1 s; the spring rate blends between the two (no switch).
 		var e: float = angle_difference(body_yaw, _sh_heading)
 		var wh: float = lerpf(1.4, 3.2, smoothstep(0.15, 0.6, absf(e)))
+		# At 2x-4x the person turns 2-4 times as fast on screen: the heading keeps up (sqrt of the rate,
+		# at most 2.2 x), so a runner at 4x does not leave the frame on a corner.
+		if (s as Array).size() > 4:
+			wh *= clampf(sqrt(maxf(float(s[4]), 1.0)), 1.0, 2.2)
 		var rh: Vector2 = _crit(e, _sh_hvel, 0.0, wh, dt)
 		_sh_heading = body_yaw + rh.x
 		_sh_hvel = rh.y

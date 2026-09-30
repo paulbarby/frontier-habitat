@@ -116,7 +116,7 @@ func ensure_commanders() -> void:
 		var key: String = "%d:commander" % int(b)
 		if not v["appoint"].has(key):
 			v["appoint"][key] = int(best[b]["id"])
-	_rank_sig = -1
+	ranks_dirty()
 
 ## Fills the caches after a load, so the first scan in a frame does not pay for everybody.
 func prewarm() -> void:
@@ -198,14 +198,14 @@ func set_demoted(a: Dictionary, until: int) -> void:
 		appt["demoted"] = {}
 	appt["demoted"][int(a["id"])] = until
 	rec_w(a)["demoted_until"] = until
-	_rank_sig = -1
+	ranks_dirty()
 
 func clear_demoted(a: Dictionary) -> void:
 	var appt: Dictionary = v5w()["appoint"]
 	if appt.has("demoted"):
 		appt["demoted"].erase(int(a["id"]))
 	rec_w(a).erase("demoted_until")
-	_rank_sig = -1
+	ranks_dirty()
 
 ## Drops the query caches of one person (after an order changed them).
 func invalidate(id: int) -> void:
@@ -215,17 +215,41 @@ func invalidate(id: int) -> void:
 	_skill_cache.erase(id)
 	_list_tick = -1
 
+## The agent ids with id % m == r, ascending (cost: a tick asks for one bucket instead of scanning
+## every person). Made again when the set of agents changes (a new id, a removed one, a load).
+var _bk_state = null
+var _bk_n := -1
+var _bk := {}                  # m -> [[ids with id % m == 0], [.. == 1], ...]
+
+func ids_mod(m: int, r: int) -> Array:
+	var agents: Dictionary = sim.state["agents"]
+	if not is_same(_bk_state, agents) or agents.size() != _bk_n:
+		_bk_state = agents
+		_bk_n = agents.size()
+		_bk = {}
+	if not _bk.has(m):
+		var lists: Array = []
+		for i in m:
+			lists.append([])
+		var ids: Array = agents.keys()
+		ids.sort()
+		for aid in ids:
+			(lists[int(aid) % m] as Array).append(int(aid))
+		_bk[m] = lists
+	return _bk[m][posmod(r, m)]
+
 ## Every tick (sim.step): the people whose turn it is (every update_every_s, by id) get their
-## satisfaction and attitude stored and their work flags set. About 1/50 of the people a tick.
+## satisfaction and attitude stored and their work flags set. About 1/100 of the people a tick.
 func tick() -> void:
 	var hz: int = int(sim.bal["tick_hz"])
 	var every: int = int(soc()["update_every_s"]) * hz
 	var now: int = int(sim.state["tick"])
 	var agents: Dictionary = sim.state["agents"]
-	var due: Array = []
-	for aid in agents:
-		if (now + int(aid)) % every == 0:
-			due.append(aid)
+	# (now + id) % every == 0  <=>  id % every == -now mod every
+	# The ranks are made again once a game minute (stored: see _refresh_ranks).
+	if now % (60 * hz) == 0 or not sim.state.get("v5", {}).has("ranks"):
+		store_ranks()
+	var due: Array = ids_mod(every, -now).duplicate()
 	if due.is_empty():
 		return
 	v5w()
@@ -514,10 +538,37 @@ func rank(a: Dictionary) -> Dictionary:
 	_refresh_ranks(false)
 	return _ranks.get(int(a["id"]), {"rank": "crew", "name": "Crew", "title": "Crew", "department": department(a), "base": -1})
 
-## Ranks are proposed again when the roster changes (who lives, their roles and homes, the day
-## of the skills, the appointments); a call from the interface checks the roster once a game
-## minute, the simulation (force) every time it asks. The result depends only on the state.
+## The ranks in force: state.v5.ranks {agent id: rank record} and state.v5.captains, made by the
+## simulation once a game minute (people.tick) and at once after an order that changes them
+## (ranks_dirty: appointments, demotions, a new role, a new home, a child who grew up). They are state,
+## so a loaded game has the same ranks as the game that was saved (cost: no roster check a tick).
+## A person who arrived since the last update has no record yet: rank() says crew.
 func _refresh_ranks(force: bool = false) -> void:
+	var v: Dictionary = sim.state.get("v5", {})
+	if v.has("ranks"):
+		if not is_same(_ranks, v["ranks"]):
+			_ranks = v["ranks"]
+			_captains = v.get("captains", {})
+		return
+	_compute_ranks(force)
+
+## Makes the ranks now and stores them (simulation only: commands and ticks, never the interface).
+func store_ranks() -> void:
+	_rank_sig = -1
+	_sig_tick = -1
+	_rank_tick = -1
+	_compute_ranks(true)
+	var v: Dictionary = v5w()
+	v["ranks"] = _ranks
+	v["captains"] = _captains
+
+## An order changed who holds a post, a role or a home: the ranks are made again now.
+func ranks_dirty() -> void:
+	store_ranks()
+
+## Ranks are proposed again when the roster changes (who lives, their roles and homes, the day
+## of the skills, the appointments). Used directly only before the first stored ranks.
+func _compute_ranks(force: bool = false) -> void:
 	var hz: int = int(sim.bal["tick_hz"])
 	var now: int = int(sim.state["tick"])
 	var tick: int = now / (60 * hz)

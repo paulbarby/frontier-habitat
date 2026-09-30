@@ -19,8 +19,35 @@ func _init() -> void:
 	var path: String = String(a[0]) if a.size() > 0 else "res://content/saves/showcase_v5.fhsave"
 	var n: int = int(a[1]) if a.size() > 1 else 1500
 	var sim = Sim.new()
-	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
-	sim.run_seconds(20.0)
+	if path == "v3perf":
+		var H = load("res://tests/helpers.gd")
+		var Reference = load("res://sim/reference.gd")
+		var g = H.Game.new(1001, false)
+		g.ref = Reference.new(g.sim, "all")
+		sim = g.sim
+		g.run_to_tick(12 * 6000)
+		sim.state["flags"]["unlock_all"] = true
+		var y := -110
+		while sim.state["buildings"].size() < 150 and y <= 110:
+			var x := -110
+			while sim.state["buildings"].size() < 150 and x <= 110:
+				var off := Vector2(x, y)
+				if off.length() > 70.0:
+					var def_id: String = "solar_array" if (x + y) % 2 == 0 else "battery"
+					var pos: Vector2 = sim.place.snap_pos(sim.world.center + off)
+					if sim.place.check_building(def_id, pos, 0.0) == "ok":
+						sim.build.spawn_active(def_id, pos, 0.0)
+				x += 9
+			y += 9
+		var guard := 0
+		while sim.alive_count() < 70 and guard < 30:
+			guard += 1
+			g.cmd("admit_settlers", {"count": mini(6, 70 - sim.alive_count())})
+			g.run(450)
+		g.run(600)
+	else:
+		sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
+		sim.run_seconds(20.0)
 	var hz: int = int(sim.bal["tick_hz"])
 	var steps: Array = []
 	for i in n:

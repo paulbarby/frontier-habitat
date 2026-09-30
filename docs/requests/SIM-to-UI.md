@@ -734,3 +734,68 @@ walked to a cell; `lock_down` records the time but closes no doors; `party` cost
 
 **Cost:** `talks()`, `talks_near`, `people.list()`, `unrest()` are cheap to call every frame (numbers in
 SIM-to-RENDER.md 2026-09-29). `people.list()` rows may be a few seconds old for part of the people.
+
+## 2026-10-01 - V5 finished in SIM: security, jail, families, venues, the dome, the Rag, eggs, schema 6
+
+Answers UI-to-SIM 2026-10-01 (test_rag) and critic round 30 (damage, injured, response_effect).
+
+**test_rag finding.** V5_DESIGN section 0 says an old save loads with **no relationships**, so SIM does not seed
+them. What changed: (1) every issue now has 3-5 gossip lines, Couple Watch and Feud Watch rows with a `note`, a poll
+with `commander` and `change`, 3-4 ads and `serious` rows `{text, severity}` - also for days before the v5 state
+(made from the colony now); (2) `tabloid.json` has 20 gossip lines, 12 ads, 245 headlines; (3)
+`content/saves/showcase_v5.fhsave` (schema 6) has relationships, couples, an affair and 5 stored issues. Please use
+it for test_rag.
+
+**Save schema 6.** `Persistence.SCHEMA` = 6. Old saves (schema 2-5) load: no relationships, one commander a base
+appointed by seniority (`state.v5.appoint`), the other ranks are SIM's proposal.
+
+**New commands** (results `{ok, code, text}`):
+| kind | payload | notes |
+|---|---|---|
+| `staff` | `{building, venue, agent}` | agent -1 clears; `invalid`, `refused` (another base) |
+| `adopt` | `{agent}` | partners or married, a family unit with a free bunk, a medical bay; the child comes 1 day later |
+| `set_role` | `{agent, role}` | `security` needs the security skill 40+ (`refused` otherwise); a post in the old department is left |
+| `answer_request` | `{id, answer}` | new kind `shared_home` (partners with no free unit): `allow` tries again, `refuse` = both unhappy |
+| `unrest_response` `party` | as before | now uses 1 drink/snack/ration per 2 people of the base; `no_stock` when short |
+
+**Queries**
+- `sim.unrest.response_effect(base, response)` -> `{unrest (delta), cost (text), ready}`.
+- `sim.unrest.info(base)` adds `damage` (rooms damaged in this riot), `injured`, `looted`, `locked`.
+  `sim.unrest.locked(base)`, `lock_info(base)` -> `{locked, until, seconds_left}`; `protest_place(base)`.
+- `sim.security.info(base)` -> `{officers, wanted (1 per 12 people), prisoners, cells, fights}`; `fights()` ->
+  `[{id, fighters [ids], bld, pos, start, until, officer, cause, base, injured}]`; `jails(base)`, `prisoners_in(jail)`.
+- `sim.leisure.venues(b)` for a retail module, a park or the dome -> `[{id, name, floor, open, why ("No staff." |
+  "No goods." | "No power." | ""), staff [ids], need_staff, job, items, stock {item: n}, price, fee, quality,
+  adults_only, act}]`; `sim.leisure.dome_stage(b)` -> `{index (-1 site, 0-8, 9 done), id, name, count 9, progress}`.
+- `sim.families.children_of(id)`, `unit_people(building, unit)`; `sim.education.seated(building)`.
+- `sim.rag.log_rows(n)`: the social log, newest first `[{tick, kind, actors, place, heat, text, code}]`.
+- `sim.eggs.found(id)` (`prism_shift`, `barby`, `dance`), `sim.eggs.arcade()` -> `{best, holder, plays}`.
+- `sim.relations.requests()` kinds: `leave_with_ship`, `shared_home`.
+- `people.list()` rows add `job` (shopkeeper, bartender, dj, lifeguard ...), `prisoner` (bool), `hold`
+  ("fight" | "cuffed" | "escort" | "respond" | ""), `egg` ("champion" | "barby" | "").
+- `people.identity(a)` adds `egg`; `vip` is true for P. Barby.
+
+**Rag issue shape** (stored at the turn of each day, key `stored: true`): the lead `text` has 3-6 sentences; each
+story has `place_id`; `poll` = `{approval, question, commander, change, unrest}`; `couple_watch`/`feud_watch` rows
+`{a, b, status, note}` (up to 4; an affair nobody found is never printed); `gossip` 3-5; `ads` 3-4 (shop stock, the next
+ship, columns); `serious` `[{text, severity}]`. New story kinds: move_in, visitor_romance, defection, demotion,
+punishment, release, family, birthday, arcade, barby, party, graduate, dance, strike, riot, best_dressed,
+commander_scandal, crush, poll, friends, research, award, hazard, goal.
+
+**Awards** (hidden until earned, `"hidden": true` in awards.json): `egg_prism` (Arcade Legend), `egg_barby`
+(The Maker Visits), `egg_dance` (Dance Floor Director). The Konami code submits `{kind: "dance", agent}` as before:
+friends in the room join in (result `joined`).
+
+**Behaviour now live** (was "not done" on 2026-09-30): students walk to the academy and the course moves only while
+they sit in class (a teacher doubles the pace; the console teaches to level 3); prisoners are walked to a free cell
+(an officer walks along) and eat, drink and sleep there; `lock_down` keeps people in their rooms for 2 game hours;
+the party costs stock; fights (enemies, very bad attitudes, riots), officers respond and arrest, riots damage rooms
+and loot goods; protests gather at the dome plaza (or the largest leisure room) and shout the demand.
+
+**Content.** New items (category `leisure`): snacks, drinks, clothing, gifts, gadgets, luxury_goods (recipes: the new
+**distillery** (research civic_1; drinks, snacks), workshop (clothing, gifts), electronics fab (gadgets), fabricator
+(luxury goods); traders sell them). The dome's `build_stages` are ART-B's 9 ids (foundation, level_1..5,
+dome_frame, dome_glass, fitout). Roles: `security` ("Security officer"), `child`. `update_every_s` is 10 s now.
+
+**Not done:** entitlements seen as unfair by others do not add unrest; best-dressed uses traits, not outfits.
+- Added for ui/v5_data.gd: `sim.ranks.commander(base = -1)` -> the commander's agent id (-1: none).

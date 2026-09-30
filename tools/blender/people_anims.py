@@ -24,7 +24,12 @@ from npc_common import sym, set_foot                             # noqa: E402
 
 # furniture for the new clips (character space, metres; the stool origin is the stool's centre on the floor)
 BAR_STOOL = dict(seat_z=0.76, footrest_z=0.30, footrest_r=0.20, counter_x=0.33, counter_z=1.07)
-HUG = dict(distance=0.40, facing_deg=180.0, sync_s=0.0)
+HUG = dict(distance=0.44, facing_deg=180.0, sync_s=0.0)
+# hug wrists at the hold (partner at +d): x behind the partner's centre, y outward, z (1.80 m frame)
+HUG_ARMS = dict(R=(0.23, 0.260, 1.300), L=(0.21, 0.260, 1.080))
+if os.environ.get("NPC_HUG"):                                          # tuning: "d rx ry rz lx ly lz"
+    _h = [float(x) for x in os.environ["NPC_HUG"].split()]
+    HUG["distance"], HUG_ARMS["R"], HUG_ARMS["L"] = _h[0], tuple(_h[1:4]), tuple(_h[4:7])
 
 # contact rules per clip: (support kind, support height, arms on the world: sides)
 CONTACT = {
@@ -320,15 +325,15 @@ def argue_keys():
     J2.update({"chest.rz": -11.0, "spine.ry": 10.0, "neck.ry": 15.0, "head.ry": -11.0, "hips.x": 0.050})
     OPEN = add(S, hips__x=-0.01, spine__ry=-2.0, chest__ry=-5.0, neck__ry=2.0, head__ry=-4.0, head__rz=6.0)
     for sd in ("L", "R"):
-        set_arm_ik(OPEN, sd, (0.230, 0.360, 1.180), (0.4, 1.0, 0.3), (0.0, 0.0, 1.0), w=1.0, pole=-20.0)
+        set_arm_ik(OPEN, sd, (0.230, 0.360, 1.180), (0.4, 1.0, 0.3), (0.0, -0.8, 0.6), w=1.0, pole=-20.0)
         OPEN["shoulder.%s.ry" % sd] = -6.0
     CHOP = Pose(S)
     set_arm_ik(CHOP, "L", (0.360, 0.120, 1.130), (0.9, -0.2, -0.5), (0.0, -1.0, 0.0), w=1.0, pole=-25.0)
-    set_arm_ik(CHOP, "R", (0.130, 0.220, 1.010), (0.6, -0.4, -0.6), (0.0, 0.2, -1.0), w=1.0, pole=10.0)
+    set_arm_ik(CHOP, "R", (0.180, 0.290, 1.030), (0.5, 0.3, -0.8), (0.0, -1.0, 0.0), w=1.0, pole=-10.0)
     CHOP.update({"chest.rz": 7.0, "neck.ry": 12.0, "head.ry": -8.0, "head.rz": -4.0, "hips.x": 0.045})
     keys = [S, J1, B1, J2, OPEN, CHOP, S]
     keys = [ik_to_fk(k) for k in keys]
-    return [(t, k) for t, k in zip((0.0, 0.40, 0.70, 1.00, 1.60, 2.25, 3.0), keys)]
+    return [(t, k) for t, k in zip((0.0, 0.62, 0.90, 1.16, 1.95, 2.48, 3.0), keys)]
 
 
 def hug_keys():
@@ -342,16 +347,17 @@ def hug_keys():
     K2 = add(S, hips__x=-0.04, spine__ry=7.0, chest__ry=7.0, neck__ry=0.0, head__ry=2.0, spine__rx=-6.0,
              chest__rx=-2.0, neck__rz=14.0, head__rz=30.0, head__rx=-8.0)
     # hips back, chests in, lean to the own left: the heads pass side by side
-    set_arm_ik(K2, "R", (d + 0.13, 0.120, 1.320), (0.3, -1.0, -0.15), (-1.0, 0.0, 0.0), w=1.0, pole=-60.0)
+    hr, hl = HUG_ARMS["R"], HUG_ARMS["L"]
+    set_arm_ik(K2, "R", (d + hr[0], hr[1], hr[2]), (0.3, -1.0, -0.15), (-1.0, 0.0, 0.0), w=1.0, pole=-60.0)
     elbow_to(K2, "R", (0.05, -1.0, 0.05), 0.95)
-    set_arm_ik(K2, "L", (d + 0.07, 0.200, 1.180), (0.3, -1.0, 0.0), (-1.0, 0.0, 0.0), w=1.0, pole=-50.0)
+    set_arm_ik(K2, "L", (d + hl[0], hl[1], hl[2]), (0.3, -1.0, 0.0), (-1.0, 0.0, 0.0), w=1.0, pole=-50.0)
     elbow_to(K2, "L", (0.05, 1.0, -0.15), 0.95)
     K3 = add(K2, hips__y=0.01, chest__rz=4.0, head__rz=4.0)
     # the hands go round the partner's sides on the way in and out (not through them)
     KM = add(S, spine__ry=2.5, chest__ry=2.5, neck__ry=3.0, spine__rx=-5.0, neck__rz=12.0, head__rz=26.0)
-    set_arm_ik(KM, "R", (d - 0.02, 0.36, 1.28), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
+    set_arm_ik(KM, "R", (d + 0.04, 0.42, 1.30), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
     elbow_to(KM, "R", (0.0, -1.0, 0.0), 0.7)
-    set_arm_ik(KM, "L", (d - 0.02, 0.34, 1.08), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
+    set_arm_ik(KM, "L", (d + 0.03, 0.40, 1.08), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
     elbow_to(KM, "L", (0.0, 1.0, -0.2), 0.7)
     keys = [(0.0, S, {"hold": True}), (0.75, KM), (1.20, K2), (1.65, K3), (2.05, K2), (2.50, KM),
             (3.30, Pose(STAND), {"hold": True})]
@@ -436,13 +442,13 @@ def dance_a_fn(n=120):
             set_foot(P, s, (ANK.x + 0.02 * lift, y, z), yaw=8.0, knee_out=5.0 + 8.0 * lift, pitch=-18.0 * lift,
                      toe=12.0 * lift)
         # arms: alternating pumps (2 beats), both up on beats 6.5-8
-        up = max(0.0, min(1.0, (beat - 6.0) / 0.8)) * max(0.0, min(1.0, (8.0 - beat) / 0.9))
+        up = max(0.0, min(1.0, (beat - 5.7) / 1.15)) * max(0.0, min(1.0, (8.0 - beat) / 1.15))
         up = up * up * (3 - 2 * up)
         for s, sg in (("L", 1.0), ("R", -1.0)):
             ph = TAU * beat / 2 + (0.0 if s == "L" else pi)
-            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 26.0 * sin(ph) * (1 - up) + 95.0 * up
+            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 26.0 * sin(ph) * (1 - up) + 70.0 * up
             P["upper_arm.%s.rx" % s] = base.g("upper_arm.%s.rx" % s) + sg * 10.0 * up
-            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) - 16.0 * sin(ph + 0.6) * (1 - up) + 40.0 * up
+            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) - 16.0 * sin(ph + 0.6) * (1 - up) + 30.0 * up
             P["shoulder.%s.rx" % s] = -3.0 * sg * (1.0 - bounce) + sg * 6.0 * up
         return P
     return fn, n

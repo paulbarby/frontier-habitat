@@ -207,6 +207,8 @@ func start_fight(x: Dictionary, y: Dictionary, cause: String) -> int:
 	var now: int = int(sim.state["tick"])
 	var base: int = _base_of(x)
 	var dur: float = float(cfg()["fight_s_office"]) if has_office(base) else float(cfg()["fight_s"])
+	# Research "security" (Security Training): officers calm fights sooner.
+	dur *= maxf(0.4, 1.0 - sim.research.bonus("security_response"))
 	var f := {"id": fid, "fighters": [int(x["id"]), int(y["id"])], "bld": int(x["bld"]), "pos": ((x["pos"] as Vector2) + (y["pos"] as Vector2)) * 0.5,
 		"start": now, "until": now + int(dur * float(_hz())), "officer": -1, "cause": cause, "base": base, "injured": 0}
 	v["fights"][fid] = f

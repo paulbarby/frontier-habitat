@@ -311,6 +311,9 @@ func _gen_construction() -> void:
 func _gen_venues() -> void:
 	if sim.get("leisure") == null:
 		return
+	# Every 5 s is enough for shop shelves (cost: 0.5 ms a call with a dome).
+	if (int(sim.state["tick"]) / int(sim.bal["tick_hz"])) % 5 != 2:
+		return
 	for w in sim.leisure.wants():
 		var b: Dictionary = sim.state["buildings"].get(int(w[2]), {})
 		if b.is_empty() or _parked(b):

@@ -442,9 +442,12 @@ func _leave_queues(a: Dictionary) -> void:
 func think_tick() -> void:
 	var tick: int = int(sim.state["tick"])
 	var n: int = int(hz())
-	for aid in sim.state["agents"]:
-		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "alive" and (tick + int(aid)) % n == 0:
+	# (tick + id) % n == 0  <=>  id % n == -tick mod n: one bucket of ids (people.ids_mod), in id
+	# order (the order of state.agents), instead of a scan of everybody each tick.
+	var agents: Dictionary = sim.state["agents"]
+	for aid in sim.people.ids_mod(n, -tick).duplicate():
+		var a: Dictionary = agents.get(aid, {})
+		if not a.is_empty() and a["state"] == "alive":
 			_think(a)
 
 func _think(a: Dictionary) -> void:

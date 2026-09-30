@@ -87,7 +87,7 @@ VARIANTS = {
                eye_mat="eyes/materials/brown.mhmat"),
     "f3": dict(sex="f", height=1.74, macro=dict(gender=0.0, age=0.70, muscle=0.40, weight=0.50, proportions=0.55,
                                                 race=(0.05, 0.75, 0.20)),
-               skin="skins/middleage_asian_female", hair="hair/ponytail01", brows="eyebrows/eyebrow006",
+               skin="skins/middleage_asian_female", hair="hair/rehmanpolanski_hair_bun_brown", brows="eyebrows/eyebrow006",
                eye_mat="eyes/materials/brownlight.mhmat"),
     "c1": dict(sex="m", height=1.38, child=True, macro=dict(gender=1.0, age=0.17, muscle=0.50, weight=0.50,
                                                              proportions=0.50, race=(0.20, 0.20, 0.60)),
@@ -95,7 +95,7 @@ VARIANTS = {
                eye_mat="eyes/materials/green.mhmat"),
     "c2": dict(sex="f", height=1.34, child=True, macro=dict(gender=0.0, age=0.16, muscle=0.50, weight=0.45,
                                                              proportions=0.50, race=(0.30, 0.30, 0.40)),
-               skin="skins/young_african_female", hair="hair/braid01", brows="eyebrows/eyebrow007",
+               skin="skins/young_african_female", hair="hair/bob02", brows="eyebrows/eyebrow007",
                eye_mat="eyes/materials/brown.mhmat"),
 }
 PILOT = ["m1", "f1"]
@@ -109,15 +109,54 @@ OUTFITS = {
     "uniform": dict(generator="coverall", who=["all roles on shift"], look="see people_uniform.DEPARTMENTS",
                     m=[("clothes/toigo_ankle_boots_male", "own")], f=[("clothes/toigo_ankle_boots_male", "own")]),
     "casual_a": dict(
-        who=["off duty"],
-        look="tee in the person's colour (over the waistband), dark cargo trousers, sneakers",
+        who=["off duty"], look="jeans / tee: a tee in the person's colour over the waistband, dark cargo trousers, sneakers",
         m=[("clothes/elvs_crude_t-shirt_male", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
            ("clothes/shoes06", "own")],
         f=[("clothes/joepal_crude_t-shirt_female", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
            ("clothes/shoes05", "own")]),
+    "casual_b": dict(
+        who=["off duty", "social events"], look="dress / jacket: a knit sweater and wool trousers (men), a shift dress "
+                                                "and flats (women); the knit and the dress take the person's colour",
+        m=[("clothes/toigo_fisherman_sweater", "tint:ClothTint"), ("clothes/toigo_wool_pants", "own"),
+           ("clothes/shoes01", "own")],
+        f=[("clothes/toigo_shift_dress", "tint:ClothTint"), ("clothes/toigo_flats", "own")]),
+    "casual_c": dict(
+        who=["off duty", "sport"], look="sport wear: a sports tee with jeans and sneakers (men), a sports top and leggings "
+                                          "with sneakers (women)",
+        m=[("clothes/male_casualsuit02", "own"), ("clothes/shoes06", "own")],
+        f=[("clothes/female_sportsuit01", "own"), ("clothes/shoes06", "own")]),
+    "swimwear": dict(
+        who=["pool"], look="modest one-piece (women, girls); swim trunks with a tee (men, boys); the person's colour",
+        m=[("gen:trunks", "tint:ClothTint"), ("clothes/elvs_crude_t-shirt_male", "tint:ClothTint")],
+        f=[("gen:swimsuit", "tint:ClothTint")]),
+    "school": dict(
+        who=["children at the academy"], look="school uniform: a white polo, grey wool trousers and black shoes (boys); a "
+                                                 "navy pinafore dress and flats (girls)",
+        m=[("clothes/namuhekam_male_polo_shirt", "tint:SchoolWhite"), ("clothes/toigo_wool_pants", "tint:SchoolGrey"),
+           ("clothes/shoes01", "own")],
+        f=[("clothes/toigo_shift_dress", "tint:SchoolNavy"), ("clothes/toigo_flats", "own")]),
 }
-PILOT_OUTFITS = ["uniform", "casual_a"]
-TINT_BASE = {"SuitAccent": (1.0, 1.0, 1.0), "Coverall": (0.34, 0.38, 0.43), "ClothTint": (1.0, 1.0, 1.0)}
+# per-variant garments (variety: 110 people, 6 bodies): outfit -> garment list, replacing the sex default
+VARIANT_OUTFITS = {
+    "m2": {"casual_a": [("clothes/namuhekam_male_polo_shirt", "tint:ClothTint"), ("clothes/toigo_wool_pants", "own"),
+                         ("clothes/shoes04", "own")]},
+    "m3": {"casual_b": [("clothes/male_casualsuit05", "own"), ("clothes/shoes02", "own")]},
+    "f2": {"casual_b": [("clothes/toigo_halter_dress_knee_length", "tint:ClothTint"), ("clothes/toigo_ballet_flats", "own")]},
+    "f3": {"casual_a": [("clothes/toigo_turtleneck_halter_top", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
+                         ("clothes/shoes05", "own")]},
+}
+ADULT_OUTFITS = ["uniform", "casual_a", "casual_b", "casual_c", "swimwear"]
+CHILD_OUTFITS = ["school", "casual_a", "casual_b", "swimwear"]
+PILOT_OUTFITS = ADULT_OUTFITS
+
+
+def garments_of(v, oid):
+    spec = VARIANTS[v]
+    return VARIANT_OUTFITS.get(v, {}).get(oid) or OUTFITS[oid][spec["sex"]]
+
+
+TINT_BASE = {"SuitAccent": (1.0, 1.0, 1.0), "Coverall": (0.34, 0.38, 0.43), "ClothTint": (1.0, 1.0, 1.0),
+             "SchoolWhite": (0.92, 0.92, 0.90), "SchoolGrey": (0.36, 0.37, 0.40), "SchoolNavy": (0.11, 0.15, 0.30)}
 
 # MPFB bone -> v3 bone.  First match wins; the "default" rig first, then "game_engine".  Unmapped bones give their
 # weights to the nearest mapped ancestor.  S = side placeholder (L/R and l/r).
@@ -741,13 +780,16 @@ def build_variant(m, v, outfits, stop=None):
     garments = {}
     for oid in outfits:
         garments[oid] = []
-        for folder, mat in OUTFITS[oid][spec["sex"]]:
+        for folder, mat in garments_of(v, oid):
+            if folder.startswith("gen:"):
+                garments[oid].append((None, folder, mat, []))       # built after the pose (people_uniform)
+                continue
             f = m.asset(folder)
             before = {md.name for md in base.modifiers}
             ob = m.add_asset(base, f, "Clothes")
             masks = [md.vertex_group for md in base.modifiers if md.name not in before and md.type == "MASK"]
             garments[oid].append((ob, f, mat, masks))
-    objs = [p[0] for p in parts.values()] + [g[0] for gs in garments.values() for g in gs]
+    objs = [p[0] for p in parts.values()] + [g[0] for gs in garments.values() for g in gs if g[0] is not None]
     report_mpfb(base, mh_rig, objs)
     if stop == "mpfb":
         out = os.path.join(os.environ.get("NPC_SCRATCH", os.path.dirname(N.MODEL_DIR)), "npc_mpfb_%s.blend" % v)
@@ -775,6 +817,12 @@ def build_variant(m, v, outfits, stop=None):
             shell, addon_objs = PU.make_uniform(base, J)
             garments[oid].insert(0, (shell, "gen:coverall", "shell", []))
             objs.append(shell)
+        for k, g in enumerate(garments[oid]):
+            if g[0] is None and g[1] in ("gen:trunks", "gen:swimsuit"):
+                ob = PU.make_trunks(base, J) if g[1] == "gen:trunks" else PU.make_swimsuit(base, J)
+                ob.name = ob.data.name = "%s_%s" % (g[1][4:], oid)
+                garments[oid][k] = (ob, g[1], g[2], [])
+                objs.append(ob)
     # ---- subdivision: only coarse garments keep one level -------------------------------------------------
     keep_subsurf = {g[0] for gs in garments.values() for g in gs} | {parts["eyes"][0]}
     for o in meshes:
@@ -806,7 +854,7 @@ def build_variant(m, v, outfits, stop=None):
     for o in list(bodies.values()) + [o for o in objs if o is not None] + list(addon_objs.values()):
         move_weights(o, bmap, rig)
     for a in addon_objs.values():                       # add-ons: coats <= 3000 triangles, the others <= 1600
-        cap = 2200 if a.name.split(".")[0] in ("Addon_labcoat", "Addon_tunic", "Addon_jacket") else 1500
+        cap = 2150 if a.name.split(".")[0] in ("Addon_labcoat", "Addon_tunic", "Addon_jacket") else 1500
         if ntris(a) > cap:
             decimate(a, cap)
     # ---- materials ----------------------------------------------------------------------------------------
@@ -834,7 +882,7 @@ def build_variant(m, v, outfits, stop=None):
     head = join(head_parts, "Head_%s" % v)
     tris[head.name] = ntris(head)
     hob, hf = parts["hair"]
-    soften_hair(hob, J)
+    soften_hair(hob, J, next(iter(bodies.values())))
     replace_materials(hob, material_from_mhmat(mhclo_material(hf), "Hair", os.path.basename(os.path.dirname(hf)),
                                                detail=True, alpha=True))
     hob.name = hob.data.name = "Hair_%s" % v
@@ -863,7 +911,7 @@ def build_variant(m, v, outfits, stop=None):
         if is_shell:
             room -= max(sum(ntris(addon_objs[a]) for a in PU.DEPARTMENTS[d_]["addons"] if a in addon_objs)
                         for d_ in PU.DEPARTMENTS)
-        body_t = min(ntris(body), BUDGET["body"])
+        body_t = min(ntris(body), BUDGET["body"] - (600 if is_shell else 0))
         face_z = J["neck"].z + 0.02
         tb = decimate(body, body_t, weight_at=lambda p: 0.30 if p.z > face_z else (0.55 if p.z > face_z - 0.28 else 0.9))
         g_budget = max(600, room - tb - shell_t)
@@ -874,14 +922,21 @@ def build_variant(m, v, outfits, stop=None):
                 uniform_materials(ob, v)                # built to its own budget (clean edges: no decimation)
                 pieces.append(ob)
                 continue
-            if mat.startswith("tint:"):
+            if f.startswith("gen:"):
+                cb, cn = canvas_textures()
+                nm = "%s_%s" % (mat[5:], f[4:])
+                mm = bpy.data.materials.get(nm) or plain_material(nm, base=cb, normal=cn, rough=0.55)
+            elif mat.startswith("tint:"):
                 nm = mat[5:]
                 plain = nm not in ("SuitAccent", "ClothTint")          # the game tints only these two
-                mm = material_from_mhmat(mhclo_material(f), nm, os.path.basename(os.path.dirname(f)),
-                                         detail=True, bake_rgb=TINT_BASE.get(nm) if plain else None)
+                gname = os.path.basename(os.path.dirname(f))
+                mname = nm + "_" + gname if nm == "ClothTint" else nm     # RENDER matches the prefix
+                mm = bpy.data.materials.get(mname) or material_from_mhmat(
+                    mhclo_material(f), mname, gname, detail=True, bake_rgb=TINT_BASE.get(nm) if plain else None)
             else:
                 nm = "Cloth_" + os.path.basename(os.path.dirname(f))
-                mm = material_from_mhmat(mhclo_material(f), nm, os.path.basename(os.path.dirname(f)))
+                mm = bpy.data.materials.get(nm) or material_from_mhmat(mhclo_material(f), nm,
+                                                                       os.path.basename(os.path.dirname(f)))
             replace_materials(ob, mm)
             if gsum > g_budget:
                 decimate(ob, int(g_budget * ntris(ob) / max(1, gsum)))
@@ -952,10 +1007,12 @@ def build_variant(m, v, outfits, stop=None):
     N.export_glb_skinned(path)
     n_img, saved = externalize_images(path)
     print("  %s: %d images to %s/ (%d bytes out of the GLB)" % (v, n_img, SHARED_TEX, saved))
+    lod1 = export_lod1(v, rig)
+    tris.update({"LOD1_" + k: n for k, n in lod1.items()})
     print("  %s: %s  %.1f s" % (v, tris, time.time() - t0))
     return dict(tris=tris, clips=meta, scale=s_, path=path, outfits=list(garments), addons=sorted(tris_addons(tris)),
                 sources=dict(skin=spec["skin"], hair=spec["hair"], brows=spec["brows"], eyes=spec["eye_mat"],
-                             outfits={o: [g[0] for g in OUTFITS[o][spec["sex"]]] for o in garments}))
+                             outfits={o: [g[0] for g in garments_of(v, o)] for o in garments}))
 
 
 PA_DEFAULTS = {}
@@ -1015,17 +1072,34 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
         PA.LIE_LIFT, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
 
 
-def soften_hair(ob, J):
+def soften_hair(ob, J, skin=None):
     """Hair below the jaw rests on the neck and the shoulders: at the tips the head weight becomes head 10 %, neck 50 %,
     chest 40 % (the collar moves with the chest, so the tips stay outside it)."""
     z_top, z_low = J["jaw"].z + 0.02, J["neck"].z
     gh, gn, gc = (ob.vertex_groups.get(n) for n in ("head", "neck", "chest"))
     if gh is None:
         return
-    z_min = J["neck"].z + 0.045                         # trim: no hair below the neck base + 4.5 cm (the collar)
+    z_min = J["neck"].z + 0.062                         # trim: no hair below the neck base + 6.2 cm (the collar)
     for v in ob.data.vertices:
         if v.co.z < z_min:
             v.co.z = z_min - 0.004 * (z_min - v.co.z) / max(1e-3, z_min - v.co.z + 0.02)
+    if skin is not None:                                 # below the jaw: 1.2 cm clear of the neck and nape skin
+        from mathutils.bvhtree import BVHTree
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(skin.data)
+        bm.transform(skin.matrix_world)
+        tree = BVHTree.FromBMesh(bm)
+        bm.free()
+        for v in ob.data.vertices:
+            if v.co.z > J["jaw"].z + 0.01:
+                continue
+            hit = tree.find_nearest(v.co, 0.03)
+            if hit[0] is None:
+                continue
+            s_ = (v.co - hit[0]).dot(hit[1])
+            if s_ < 0.012:
+                v.co = v.co + hit[1] * (0.012 - s_)
     gn = gn or ob.vertex_groups.new(name="neck")
     gc = gc or ob.vertex_groups.new(name="chest")
     for v in ob.data.vertices:
@@ -1164,6 +1238,43 @@ def tris_addons(tris):
     return [n for n in tris if n.startswith("Addon_")]
 
 
+LOD1 = dict(outfit=1900, hair=520, head=160, addon=340, coat=420)
+
+
+def export_lod1(v, rig):
+    """people_<v>_lod1.glb: the same skeleton and mesh names, no clips (RENDER samples the LOD0 file's clips).
+    Per person <= 3k triangles: Outfit 1.9k + its add-ons + Head (eyes and brows only) + Hair.  Called after the
+    LOD0 export: the meshes are decimated in place."""
+    import bmesh
+    out = {}
+    for o in [o for o in bpy.data.objects if o.type == "MESH"]:
+        nm = o.name.split(".")[0]
+        if nm.startswith("Head_"):
+            bm = bmesh.new()
+            bm.from_mesh(o.data)
+            mats = [m.name.split(".")[0] if m else "" for m in o.data.materials]
+            kill = [f for f in bm.faces if mats[f.material_index] in ("Hair_lashes", "Teeth")]
+            bmesh.ops.delete(bm, geom=kill, context="FACES")
+            bm.to_mesh(o.data)
+            bm.free()
+            target = LOD1["head"]
+        elif nm.startswith("Hair_"):
+            target = LOD1["hair"]
+        elif nm.startswith("Outfit_"):
+            target = LOD1["outfit"]
+        elif nm in ("Addon_labcoat", "Addon_tunic", "Addon_jacket"):
+            target = LOD1["coat"]
+        else:
+            target = LOD1["addon"]
+        out[nm] = decimate(o, target)
+    path = os.path.join(N.MODEL_DIR, "people_%s_lod1.glb" % v)
+    N.reset_pose(rig)
+    N.export_glb_skinned(path, animations=False)
+    externalize_images(path)
+    print("  %s LOD1: %s" % (v, out))
+    return out
+
+
 def extend_hem(top, others, band=0.08, drop=0.055, gap=0.006):
     """Lengthen a top: its lowest band moves down by up to `drop` (so it covers the waistband) and stays outside the
     body and the trousers (`gap`)."""
@@ -1278,7 +1389,7 @@ def uniform_materials(ob, v):
 
 def garment_layer(mhclo):
     if mhclo.startswith("gen:"):
-        return 3
+        return 2 if mhclo == "gen:trunks" else 3
     """Our layer order (the packs give most garments the same z_depth): tops 3, trousers / skirts 2, shoes 1."""
     n = os.path.basename(os.path.dirname(mhclo)).lower()
     if any(k in n for k in ("shirt", "t-shirt", "tee", "polo", "top", "sweater", "jacket", "suit", "dress")):
@@ -1324,7 +1435,7 @@ def remove_inside_coverall(body, J):
     down to 3 cm above the trouser hem (people_uniform cut planes): those body vertices go (a rule, not rays)."""
     import bmesh
     nc = Vector((J["neck"].x, 0.0, J["neck"].z - 0.012))
-    no = Vector((0.21, 0.0, 1.0)).normalized()
+    no = Vector((0.12, 0.0, 1.0)).normalized()
     hem = J["foot.L"].z + 0.080
     bm = bmesh.new()
     bm.from_mesh(body.data)
@@ -1420,15 +1531,15 @@ def write_manifest(results):
     import people_anims as PA
     MAN = PB.MANIFEST
     doc = json.load(open(MAN, encoding="utf-8")) if os.path.exists(MAN) else {}
-    doc["version"] = "5.0-mpfb-pilot"
+    doc["version"] = "5.0-mpfb"
     doc["skeleton"] = dict(bones=list(N.BONE_NAMES), face_bones=list(N.BONE_NAMES[24:]),
                            note=("The v3 skeleton (24 bones, the same names and hierarchy) plus face bones under head: "
                                  "jaw (lower face), lids (upper lids: blink), lids_low (lower lids), brow.L/R, mouth.L/R "
                                  "(corners).  Expressions (smile, laugh, frown, surprise) are keyed in the clips.  Joint "
-                                 "positions per body (MPFB)."))
-    doc["status"] = ("PILOT (MPFB): m1 and f1, outfits uniform_engineering and casual_a, 30 clips.  Bodies from MPFB "
-                     "(MakeHuman, CC0 assets) skinned to OUR skeleton (route A): names, bones, clips and the draw "
-                     "rule are as before.")
+                                 "positions per body (MPFB).  Children use the same skeleton (their own joint positions)."))
+    doc["status"] = ("FULL SET (MPFB): 6 adults (m1 m2 m3 f1 f2 f3) and 2 children (c1 c2); every outfit of V5 section 1; "
+                     "LOD0 in people_<v>.glb, LOD1 in people_<v>_lod1.glb.  Bodies from MPFB (MakeHuman, CC0 assets) "
+                     "skinned to OUR skeleton (route A).")
     variants = doc.get("variants", {})
     for v, r in results.items():
         spec = VARIANTS[v]
@@ -1442,46 +1553,79 @@ def write_manifest(results):
                         outs[dept]["accent_rgb"] = [round(x, 3) for x in d["accent"]]
             else:
                 outs[o] = "Outfit_%s" % o
-        on_screen = {}
+        on_screen, lod1 = {}, {}
+        T = r["tris"]
         for o, e in outs.items():
             mesh = e if isinstance(e, str) else e["mesh"]
             add = [] if isinstance(e, str) else e["addons"]
-            on_screen[o] = (r["tris"]["Head_%s" % v] + r["tris"]["Hair_%s" % v] + r["tris"][mesh] +
-                            sum(r["tris"].get(a, 0) for a in add))
-        variants[v] = dict(sex=spec["sex"], height_m=spec["height"], scale=round(r["scale"], 4),
-                           file="people_%s.glb" % v, head="Head_%s" % v, hair="Hair_%s" % v,
-                           outfits=outs, addons=r["addons"], triangles=r["tris"], triangles_on_screen=on_screen,
-                           source="MPFB 2.0.17 + CC0 MakeHuman assets", assets=r["sources"])
-    doc["variants"] = variants
+            on_screen[o] = dict(outfit_and_addons=T[mesh] + sum(T.get(a, 0) for a in add),
+                                with_head_and_hair=T[mesh] + sum(T.get(a, 0) for a in add) + T["Head_%s" % v] +
+                                T["Hair_%s" % v])
+            lod1[o] = (T.get("LOD1_" + mesh, 0) + sum(T.get("LOD1_" + a, 0) for a in add) +
+                       T.get("LOD1_Head_%s" % v, 0) + T.get("LOD1_Hair_%s" % v, 0))
+        variants[v] = dict(sex=spec["sex"], child=bool(spec.get("child")), height_m=spec["height"],
+                           scale=round(r["scale"], 4), file="people_%s.glb" % v, lod1_file="people_%s_lod1.glb" % v,
+                           head="Head_%s" % v, hair="Hair_%s" % v, outfits=outs, addons=r["addons"],
+                           triangles={k: n for k, n in T.items() if not k.startswith("LOD1_")},
+                           triangles_lod1={k[5:]: n for k, n in T.items() if k.startswith("LOD1_")},
+                           triangles_on_screen=on_screen, triangles_on_screen_lod1=lod1,
+                           look=dict(skin_tone_hint=LOOK_HINT.get(v)), source="MPFB 2.0.17 + CC0 MakeHuman assets",
+                           assets=r["sources"])
+    doc["variants"] = {k: variants[k] for k in VARIANTS if k in variants}
     doc["outfits"] = {o: dict(who=d["who"], look=d["look"]) for o, d in PU.DEPARTMENTS.items()}
-    doc["outfits"]["casual_a"] = dict(who=OUTFITS["casual_a"]["who"], look=OUTFITS["casual_a"]["look"])
+    for o, d in OUTFITS.items():
+        if not d.get("generator"):
+            doc["outfits"][o] = dict(who=d["who"], look=d["look"])
+    doc["addons"] = {
+        "Addon_toolbelt": "belt, buckle and three pouches (engineering, security)",
+        "Addon_apron": "white bib apron with neck straps and ties (food)",
+        "Addon_vest": "armoured vest with shoulder straps (security)",
+        "Addon_labcoat": "white knee-length lab coat, open below the waist; collar and sleeve bands are SuitAccent (science)",
+        "Addon_tunic": "white hip-length tunic; collar and sleeve bands are SuitAccent (medical)",
+        "Addon_jacket": "tailored hip-length jacket with a stand collar; body is UniformBase, collar and cuff bands "
+                        "SuitAccent (command)",
+        "Addon_rank1": "shoulder boards (UniformBase) with 1 gold bar (Rank); fits any uniform, with or without a coat",
+        "Addon_rank2": "as rank1 with 2 bars", "Addon_rank3": "as rank1 with 3 bars (commander default)"}
     draw = doc.get("draw", {})
-    draw["per_person"] = ("Draw Head_<variant> (eyes, brows, lashes, teeth), Hair_<variant> and ONE Outfit_<id> (the "
-                          "body skin it leaves visible + its garments).  Hide every other Outfit_*.")
+    draw["per_person"] = ("Draw Head_<variant> (eyes, brows, lashes, teeth), Hair_<variant> and ONE Outfit_<mesh> (the "
+                          "body skin it leaves visible + its garments) + the outfit's Addon_* list.  Hide every other "
+                          "Outfit_* and Addon_*.  Beyond 12 m draw the same names from people_<v>_lod1.glb (same "
+                          "skeleton and bind; it has no clips: use the LOD0 file's clips).")
     draw["materials"] = {
-        "Skin": "tint like v3 Skin (mode 2); the skin texture multiplies (a detail map around white)",
+        "Skin*": "tint like v3 Skin (mode 2); the texture is a detail map around 0.82 that keeps 28 % of the skin hue",
         "Hair*": "Hair, Hair_brows, Hair_lashes: tint like v3 Hair (mode 3); alpha MASK (clip 0.5); the texture "
                  "multiplies",
-        "SuitAccent": "department colour (mode 1): the uniform shirt; the texture multiplies",
-        "Coverall": "plain grey trousers (texture)", "ClothTint": "per-person clothes colour; the texture multiplies",
-        "Eye": "plain, textured", "Teeth": "plain", "Cloth_*": "plain, textured (the garment's own look)"}
-    draw["lod"] = "LOD0 only in this pilot (<= 24k triangles per person on screen).  LOD1 (<= 4k) follows."
+        "UniformBase*": "the outfit's base_rgb (mode 6): the coverall, the jacket body, the rank boards",
+        "SuitAccent*": "department colour (mode 1): the bands on the coverall and the coat collars and cuffs; "
+                       "accent_rgb in the outfit entry overrides it (prison)",
+        "ClothTint*": "per-person clothes colour (mode 5); several garments: ClothTint_<garment> (match the prefix)",
+        "Coat, Apron, Armor, Leather, Metal, Zip, Rank": "plain (colour baked)",
+        "School*": "plain (school uniform colours baked)", "Eye": "plain, textured", "Teeth": "plain",
+        "Cloth_*": "plain, textured (the garment's own look)"}
+    draw["lod"] = ("LOD0 (people_<v>.glb): outfit + add-ons <= 14k triangles; head + hair about 4-6k more.  LOD1 "
+                   "(people_<v>_lod1.glb, beyond 12 m): <= 3k per person including head and hair.")
     doc["draw"] = draw
     clips = {}
     for v, r in results.items():
         for name, mt in r["clips"].items():
             clips.setdefault(name, mt)
-    doc["clips"] = clips
-    doc["furniture"] = dict(bar_stool=PA.BAR_STOOL)
-    doc["textures"] = dict(note="embedded in each GLB, <= 1024 px; sources in assets/models/people_tex/ (.gdignore)")
+    old = doc.get("clips", {})
+    old.update(clips)
+    doc["clips"] = old
+    doc["furniture"] = PA.furniture_json() if hasattr(PA, "furniture_json") else dict(bar_stool=PA.BAR_STOOL)
+    doc["textures"] = dict(note=("external PNGs in assets/models/people_tex_shared/ (one file per texture, shared by "
+                                 "every variant that uses it); sources in assets/models/people_tex/ (.gdignore)"))
     doc["credits"] = ("MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, "
                       "pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01)")
     with open(MAN + ".tmp", "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=1)
     os.replace(MAN + ".tmp", MAN)
-    with open(PB.PAIRS + ".tmp", "w", encoding="utf-8") as fh:          # the pair offsets (hug distance)
+    with open(PB.PAIRS + ".tmp", "w", encoding="utf-8") as fh:
         json.dump(PA.pairs_json(), fh, indent=1)
     os.replace(PB.PAIRS + ".tmp", PB.PAIRS)
+
+
+LOOK_HINT = {"m1": 3, "m2": 0, "m3": 2, "f1": 2, "f2": 1, "f3": 3, "c1": 4, "c2": 1}
 
 
 def main():
@@ -1493,9 +1637,10 @@ def main():
         return
     variants = argv[argv.index("--variants") + 1].split(",") if "--variants" in argv else PILOT
     stop = argv[argv.index("--stop") + 1] if "--stop" in argv else None
-    outfits = argv[argv.index("--outfits") + 1].split(",") if "--outfits" in argv else PILOT_OUTFITS
+    given = argv[argv.index("--outfits") + 1].split(",") if "--outfits" in argv else None
     m = Mpfb(data, ext)
-    results = {v: build_variant(m, v, outfits, stop) for v in variants}
+    results = {v: build_variant(m, v, given or (CHILD_OUTFITS if VARIANTS[v].get("child") else ADULT_OUTFITS), stop)
+               for v in variants}
     if stop:
         return
     write_manifest(results)

@@ -156,7 +156,7 @@ func _demote(a: Dictionary, now: int) -> void:
 		elif int(v) == id:
 			appt.erase(k)
 	sim.people.set_demoted(a, now + 3 * int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"])))
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 
 ## Friends of a punished person see it: their fairness falls for some days.
 func _friends_see(a: Dictionary, uf: bool) -> void:

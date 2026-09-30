@@ -49,6 +49,7 @@
  "variants": {
   "m1": {
    "sex": "m",
+   "child": false,
    "height_m": 1.8,
    "scale": 1.0,
    "file": "people_m1.glb",
@@ -137,7 +138,10 @@
       0.78
      ]
     },
-    "casual_a": "Outfit_casual_a"
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
    },
    "addons": [
     "Addon_apron",
@@ -153,27 +157,33 @@
    "triangles": {
     "Head_m1": 2918,
     "Hair_m1": 1050,
-    "Outfit_uniform": 13710,
+    "Outfit_uniform": 11674,
     "Outfit_casual_a": 11980,
+    "Outfit_casual_b": 13996,
+    "Outfit_casual_c": 12606,
+    "Outfit_swimwear": 8764,
     "Addon_toolbelt": 416,
-    "Addon_apron": 725,
+    "Addon_apron": 669,
     "Addon_vest": 1500,
-    "Addon_labcoat": 2199,
-    "Addon_tunic": 2199,
-    "Addon_jacket": 2199,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176
    },
    "triangles_on_screen": {
-    "uniform_engineering": 18094,
-    "uniform_science": 19877,
-    "uniform_food": 18403,
-    "uniform_medical": 19877,
-    "uniform_security": 19594,
-    "uniform_command": 20053,
-    "prison": 17678,
-    "casual_a": 15948
+    "uniform_engineering": 16058,
+    "uniform_science": 17792,
+    "uniform_food": 16311,
+    "uniform_medical": 17792,
+    "uniform_security": 17558,
+    "uniform_command": 17968,
+    "prison": 15642,
+    "casual_a": 15948,
+    "casual_b": 17964,
+    "casual_c": 16574,
+    "swimwear": 12732
    },
    "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
    "assets": {
@@ -189,12 +199,26 @@
       "clothes/elvs_crude_t-shirt_male",
       "clothes/cortu_cargo_pants",
       "clothes/shoes06"
+     ],
+     "casual_b": [
+      "clothes/toigo_fisherman_sweater",
+      "clothes/toigo_wool_pants",
+      "clothes/shoes01"
+     ],
+     "casual_c": [
+      "clothes/male_casualsuit02",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:trunks",
+      "clothes/elvs_crude_t-shirt_male"
      ]
     }
    }
   },
   "f1": {
    "sex": "f",
+   "child": false,
    "height_m": 1.68,
    "scale": 0.9333,
    "file": "people_f1.glb",
@@ -283,7 +307,10 @@
       0.78
      ]
     },
-    "casual_a": "Outfit_casual_a"
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
    },
    "addons": [
     "Addon_apron",
@@ -299,27 +326,33 @@
    "triangles": {
     "Head_f1": 2922,
     "Hair_f1": 2852,
-    "Outfit_uniform": 13545,
+    "Outfit_uniform": 11693,
     "Outfit_casual_a": 11916,
+    "Outfit_casual_b": 13998,
+    "Outfit_casual_c": 11882,
+    "Outfit_swimwear": 7233,
     "Addon_toolbelt": 416,
-    "Addon_apron": 769,
+    "Addon_apron": 705,
     "Addon_vest": 1500,
-    "Addon_labcoat": 2199,
-    "Addon_tunic": 2199,
-    "Addon_jacket": 2199,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176
    },
    "triangles_on_screen": {
-    "uniform_engineering": 19735,
-    "uniform_science": 21518,
-    "uniform_food": 20088,
-    "uniform_medical": 21518,
-    "uniform_security": 21235,
-    "uniform_command": 21694,
-    "prison": 19319,
-    "casual_a": 17690
+    "uniform_engineering": 17883,
+    "uniform_science": 19617,
+    "uniform_food": 18172,
+    "uniform_medical": 19617,
+    "uniform_security": 19383,
+    "uniform_command": 19793,
+    "prison": 17467,
+    "casual_a": 17690,
+    "casual_b": 19772,
+    "casual_c": 17656,
+    "swimwear": 13007
    },
    "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
    "assets": {
@@ -329,12 +362,807 @@
     "eyes": "eyes/materials/green.mhmat",
     "outfits": {
      "uniform": [
-      "clothes/toigo_ankle_boots_male"
+      "clothes/toigo_ankle_boots_female"
      ],
      "casual_a": [
       "clothes/joepal_crude_t-shirt_female",
       "clothes/cortu_cargo_pants",
       "clothes/shoes05"
+     ],
+     "casual_b": [
+      "clothes/toigo_shift_dress",
+      "clothes/toigo_flats"
+     ],
+     "casual_c": [
+      "clothes/female_sportsuit01",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:swimsuit"
+     ]
+    }
+   }
+  },
+  "m2": {
+   "sex": "m",
+   "child": false,
+   "height_m": 1.76,
+   "scale": 0.9778,
+   "file": "people_m2.glb",
+   "head": "Head_m2",
+   "hair": "Hair_m2",
+   "outfits": {
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.3,
+      0.34,
+      0.4
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_labcoat"
+     ],
+     "base_rgb": [
+      0.52,
+      0.58,
+      0.66
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.5,
+      0.58,
+      0.47
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_tunic"
+     ],
+     "base_rgb": [
+      0.78,
+      0.86,
+      0.88
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_jacket",
+      "Addon_rank3"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [
+    "Addon_apron",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
+    "Addon_toolbelt",
+    "Addon_tunic",
+    "Addon_vest"
+   ],
+   "triangles": {
+    "Head_m2": 2914,
+    "Hair_m2": 3400,
+    "Outfit_uniform": 11855,
+    "Outfit_casual_a": 13996,
+    "Outfit_casual_b": 13998,
+    "Outfit_casual_c": 12596,
+    "Outfit_swimwear": 8789,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 665,
+    "Addon_vest": 1472,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
+   },
+   "triangles_on_screen": {
+    "uniform_engineering": 18585,
+    "uniform_science": 20319,
+    "uniform_food": 18834,
+    "uniform_medical": 20319,
+    "uniform_security": 20057,
+    "uniform_command": 20495,
+    "prison": 18169,
+    "casual_a": 20310,
+    "casual_b": 20312,
+    "casual_c": 18910,
+    "swimwear": 15103
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/middleage_african_male",
+    "hair": "hair/culturalibre_hair_02",
+    "brows": "eyebrows/eyebrow009",
+    "eyes": "eyes/materials/brown.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_male"
+     ],
+     "casual_a": [
+      "clothes/namuhekam_male_polo_shirt",
+      "clothes/toigo_wool_pants",
+      "clothes/shoes04"
+     ],
+     "casual_b": [
+      "clothes/toigo_fisherman_sweater",
+      "clothes/toigo_wool_pants",
+      "clothes/shoes01"
+     ],
+     "casual_c": [
+      "clothes/male_casualsuit02",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:trunks",
+      "clothes/elvs_crude_t-shirt_male"
+     ]
+    }
+   }
+  },
+  "m3": {
+   "sex": "m",
+   "child": false,
+   "height_m": 1.9,
+   "scale": 1.0556,
+   "file": "people_m3.glb",
+   "head": "Head_m3",
+   "hair": "Hair_m3",
+   "outfits": {
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.3,
+      0.34,
+      0.4
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_labcoat"
+     ],
+     "base_rgb": [
+      0.52,
+      0.58,
+      0.66
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.5,
+      0.58,
+      0.47
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_tunic"
+     ],
+     "base_rgb": [
+      0.78,
+      0.86,
+      0.88
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_jacket",
+      "Addon_rank3"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [
+    "Addon_apron",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
+    "Addon_toolbelt",
+    "Addon_tunic",
+    "Addon_vest"
+   ],
+   "triangles": {
+    "Head_m3": 2914,
+    "Hair_m3": 3344,
+    "Outfit_uniform": 11786,
+    "Outfit_casual_a": 11988,
+    "Outfit_casual_b": 13998,
+    "Outfit_casual_c": 12614,
+    "Outfit_swimwear": 8748,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 654,
+    "Addon_vest": 1472,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
+   },
+   "triangles_on_screen": {
+    "uniform_engineering": 18460,
+    "uniform_science": 20194,
+    "uniform_food": 18698,
+    "uniform_medical": 20194,
+    "uniform_security": 19932,
+    "uniform_command": 20370,
+    "prison": 18044,
+    "casual_a": 18246,
+    "casual_b": 20256,
+    "casual_c": 18872,
+    "swimwear": 15006
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/middleage_asian_male",
+    "hair": "hair/short02",
+    "brows": "eyebrows/eyebrow004",
+    "eyes": "eyes/materials/brownlight.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_male"
+     ],
+     "casual_a": [
+      "clothes/elvs_crude_t-shirt_male",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes06"
+     ],
+     "casual_b": [
+      "clothes/male_casualsuit05",
+      "clothes/shoes02"
+     ],
+     "casual_c": [
+      "clothes/male_casualsuit02",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:trunks",
+      "clothes/elvs_crude_t-shirt_male"
+     ]
+    }
+   }
+  },
+  "c1": {
+   "sex": "m",
+   "child": true,
+   "height_m": 1.38,
+   "scale": 0.7667,
+   "file": "people_c1.glb",
+   "head": "Head_c1",
+   "hair": "Hair_c1",
+   "outfits": {
+    "school": "Outfit_school",
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [],
+   "triangles": {
+    "Head_c1": 2912,
+    "Hair_c1": 1922,
+    "Outfit_school": 13998,
+    "Outfit_casual_a": 12048,
+    "Outfit_casual_b": 13998,
+    "Outfit_swimwear": 8745
+   },
+   "triangles_on_screen": {
+    "school": 18832,
+    "casual_a": 16882,
+    "casual_b": 18832,
+    "swimwear": 13579
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/young_caucasian_male",
+    "hair": "hair/short03",
+    "brows": "eyebrows/eyebrow005",
+    "eyes": "eyes/materials/green.mhmat",
+    "outfits": {
+     "school": [
+      "clothes/namuhekam_male_polo_shirt",
+      "clothes/toigo_wool_pants",
+      "clothes/shoes01"
+     ],
+     "casual_a": [
+      "clothes/elvs_crude_t-shirt_male",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes06"
+     ],
+     "casual_b": [
+      "clothes/toigo_fisherman_sweater",
+      "clothes/toigo_wool_pants",
+      "clothes/shoes01"
+     ],
+     "swimwear": [
+      "gen:trunks",
+      "clothes/elvs_crude_t-shirt_male"
+     ]
+    }
+   }
+  },
+  "f2": {
+   "sex": "f",
+   "child": false,
+   "height_m": 1.62,
+   "scale": 0.9,
+   "file": "people_f2.glb",
+   "head": "Head_f2",
+   "hair": "Hair_f2",
+   "outfits": {
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.3,
+      0.34,
+      0.4
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_labcoat"
+     ],
+     "base_rgb": [
+      0.52,
+      0.58,
+      0.66
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.5,
+      0.58,
+      0.47
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_tunic"
+     ],
+     "base_rgb": [
+      0.78,
+      0.86,
+      0.88
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_jacket",
+      "Addon_rank3"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [
+    "Addon_apron",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
+    "Addon_toolbelt",
+    "Addon_tunic",
+    "Addon_vest"
+   ],
+   "triangles": {
+    "Head_f2": 2920,
+    "Hair_f2": 2192,
+    "Outfit_uniform": 11788,
+    "Outfit_casual_a": 11904,
+    "Outfit_casual_b": 13998,
+    "Outfit_casual_c": 11884,
+    "Outfit_swimwear": 7256,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 716,
+    "Addon_vest": 1500,
+    "Addon_labcoat": 2149,
+    "Addon_tunic": 2149,
+    "Addon_jacket": 2149,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
+   },
+   "triangles_on_screen": {
+    "uniform_engineering": 17316,
+    "uniform_science": 19049,
+    "uniform_food": 17616,
+    "uniform_medical": 19049,
+    "uniform_security": 18816,
+    "uniform_command": 19225,
+    "prison": 16900,
+    "casual_a": 17016,
+    "casual_b": 19110,
+    "casual_c": 16996,
+    "swimwear": 12368
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/middleage_african_female",
+    "hair": "hair/afro01",
+    "brows": "eyebrows/eyebrow001",
+    "eyes": "eyes/materials/brown.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_female"
+     ],
+     "casual_a": [
+      "clothes/joepal_crude_t-shirt_female",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes05"
+     ],
+     "casual_b": [
+      "clothes/toigo_halter_dress_knee_length",
+      "clothes/toigo_ballet_flats"
+     ],
+     "casual_c": [
+      "clothes/female_sportsuit01",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:swimsuit"
+     ]
+    }
+   }
+  },
+  "f3": {
+   "sex": "f",
+   "child": false,
+   "height_m": 1.74,
+   "scale": 0.9667,
+   "file": "people_f3.glb",
+   "head": "Head_f3",
+   "hair": "Hair_f3",
+   "outfits": {
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.3,
+      0.34,
+      0.4
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_labcoat"
+     ],
+     "base_rgb": [
+      0.52,
+      0.58,
+      0.66
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.5,
+      0.58,
+      0.47
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_tunic"
+     ],
+     "base_rgb": [
+      0.78,
+      0.86,
+      0.88
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_jacket",
+      "Addon_rank3"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
+    "prison": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.36,
+      0.08
+     ],
+     "accent_rgb": [
+      0.8,
+      0.8,
+      0.78
+     ]
+    },
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "casual_c": "Outfit_casual_c",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [
+    "Addon_apron",
+    "Addon_jacket",
+    "Addon_labcoat",
+    "Addon_rank1",
+    "Addon_rank2",
+    "Addon_rank3",
+    "Addon_toolbelt",
+    "Addon_tunic",
+    "Addon_vest"
+   ],
+   "triangles": {
+    "Head_f3": 2916,
+    "Hair_f3": 3400,
+    "Outfit_uniform": 11892,
+    "Outfit_casual_a": 13996,
+    "Outfit_casual_b": 13998,
+    "Outfit_casual_c": 11884,
+    "Outfit_swimwear": 7236,
+    "Addon_toolbelt": 416,
+    "Addon_apron": 712,
+    "Addon_vest": 1500,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
+    "Addon_rank1": 128,
+    "Addon_rank2": 152,
+    "Addon_rank3": 176
+   },
+   "triangles_on_screen": {
+    "uniform_engineering": 18624,
+    "uniform_science": 20358,
+    "uniform_food": 18920,
+    "uniform_medical": 20358,
+    "uniform_security": 20124,
+    "uniform_command": 20534,
+    "prison": 18208,
+    "casual_a": 20312,
+    "casual_b": 20314,
+    "casual_c": 18200,
+    "swimwear": 13552
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/middleage_asian_female",
+    "hair": "hair/rehmanpolanski_hair_bun_brown",
+    "brows": "eyebrows/eyebrow006",
+    "eyes": "eyes/materials/brownlight.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_female"
+     ],
+     "casual_a": [
+      "clothes/toigo_turtleneck_halter_top",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes05"
+     ],
+     "casual_b": [
+      "clothes/toigo_shift_dress",
+      "clothes/toigo_flats"
+     ],
+     "casual_c": [
+      "clothes/female_sportsuit01",
+      "clothes/shoes06"
+     ],
+     "swimwear": [
+      "gen:swimsuit"
+     ]
+    }
+   }
+  },
+  "c2": {
+   "sex": "f",
+   "child": true,
+   "height_m": 1.34,
+   "scale": 0.7444,
+   "file": "people_c2.glb",
+   "head": "Head_c2",
+   "hair": "Hair_c2",
+   "outfits": {
+    "school": "Outfit_school",
+    "casual_a": "Outfit_casual_a",
+    "casual_b": "Outfit_casual_b",
+    "swimwear": "Outfit_swimwear"
+   },
+   "addons": [],
+   "triangles": {
+    "Head_c2": 2916,
+    "Hair_c2": 2248,
+    "Outfit_school": 13998,
+    "Outfit_casual_a": 12000,
+    "Outfit_casual_b": 13998,
+    "Outfit_swimwear": 7031
+   },
+   "triangles_on_screen": {
+    "school": 19162,
+    "casual_a": 17164,
+    "casual_b": 19162,
+    "swimwear": 12195
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/young_african_female",
+    "hair": "hair/bob02",
+    "brows": "eyebrows/eyebrow007",
+    "eyes": "eyes/materials/brown.mhmat",
+    "outfits": {
+     "school": [
+      "clothes/toigo_shift_dress",
+      "clothes/toigo_flats"
+     ],
+     "casual_a": [
+      "clothes/joepal_crude_t-shirt_female",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes05"
+     ],
+     "casual_b": [
+      "clothes/toigo_shift_dress",
+      "clothes/toigo_flats"
+     ],
+     "swimwear": [
+      "gen:swimsuit"
      ]
     }
    }
@@ -391,7 +1219,33 @@
    "who": [
     "off duty"
    ],
-   "look": "tee in the person's colour (over the waistband), dark cargo trousers, sneakers"
+   "look": "jeans / tee: a tee in the person's colour over the waistband, dark cargo trousers, sneakers"
+  },
+  "casual_b": {
+   "who": [
+    "off duty",
+    "social events"
+   ],
+   "look": "dress / jacket: a knit sweater and wool trousers (men), a shift dress and flats (women); the knit and the dress take the person's colour"
+  },
+  "casual_c": {
+   "who": [
+    "off duty",
+    "sport"
+   ],
+   "look": "sport wear: a sports tee with jeans and sneakers (men), a sports top and leggings with sneakers (women)"
+  },
+  "swimwear": {
+   "who": [
+    "pool"
+   ],
+   "look": "modest one-piece (women, girls); swim trunks with a tee (men, boys); the person's colour"
+  },
+  "school": {
+   "who": [
+    "children at the academy"
+   ],
+   "look": "school uniform: a white polo, grey wool trousers and black shoes (boys); a navy pinafore dress and flats (girls)"
   }
  },
  "draw": {

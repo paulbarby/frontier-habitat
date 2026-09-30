@@ -63,6 +63,30 @@ func venue_floor(b: Dictionary, vid: String) -> int:
 func is_venue_building(b: Dictionary) -> bool:
 	return sim.bdef(String(b["def"])).has("venues")
 
+## Ids of the buildings with venues (any state), ascending; made again when the number of
+## structures changes or another game is loaded.
+var _vb: Array = []
+var _vb_n := -1
+var _vb_state = null
+
+func venue_buildings() -> Array:
+	var blds: Dictionary = sim.state["buildings"]
+	# The key: the number of structures and the placement counters of the venue defs (a new venue
+	# building always moves a counter, so the list is exact).
+	var n: int = blds.size() * 1000003
+	var ctr: Dictionary = sim.state.get("counters", {})
+	for d in ["retail", "park", "super_dome"]:
+		n += int(ctr.get(d, 0)) * 7919
+	if n != _vb_n or not is_same(_vb_state, blds):
+		_vb_n = n
+		_vb_state = blds
+		_vb = []
+		for id in blds:
+			if is_venue_building(blds[id]):
+				_vb.append(int(id))
+		_vb.sort()
+	return _vb
+
 # ---------------------------------------------------------------- open, stock, staff
 func stock_inv(b: Dictionary) -> int:
 	return int(b.get("inv_in", -1))
@@ -398,11 +422,9 @@ func _candidate(base: int, share: float) -> Dictionary:
 ## For the job board: [[goods store, {item: units wanted}, building id, pos]] of venue buildings.
 func wants() -> Array:
 	var out: Array = []
-	var ids: Array = sim.state["buildings"].keys()
-	ids.sort()
-	for id in ids:
+	for id in venue_buildings():
 		var b: Dictionary = sim.state["buildings"][id]
-		if b["state"] != "active" or bool(b["demolish"]) or not is_venue_building(b) or stock_inv(b) == -1:
+		if b["state"] != "active" or bool(b["demolish"]) or stock_inv(b) == -1 or sim.inv.free_space(stock_inv(b)) <= 0:
 			continue
 		var target: int = int(cfg()["dome_stock_target"]) if String(b["def"]) == "super_dome" else int(cfg()["stock_target"])
 		var w := {}

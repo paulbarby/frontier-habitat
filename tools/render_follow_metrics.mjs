@@ -41,6 +41,7 @@ export function analyse(file) {
   let pops = 0, pulled = 0, sw = 0, moveT = 0, flick = 0, lastSw = -9;
   for (let i = 1; i < R.length; i++) {
     const r = R[i], p = R[i - 1];
+    if (r.id !== p.id) lastSw = -9;
     if (r.cutx || r.id !== p.id) continue;
     if (r.pull < 0.98) pulled++;
     if (Math.abs(r.pull - p.pull) > 0.08) pops++;

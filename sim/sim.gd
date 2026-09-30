@@ -472,6 +472,9 @@ static func is_colonist(a: Dictionary) -> bool:
 ## Forget the per-tick count (a colonist was added or removed during this tick).
 func alive_changed() -> void:
 	_alive_n = -1
+	# V5: the id buckets of people.ids_mod are made again (an agent was added or removed).
+	if people != null:
+		people._bk_n = -1
 
 func next_name() -> String:
 	var names: Array = content["names"]

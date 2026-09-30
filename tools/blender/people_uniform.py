@@ -22,7 +22,7 @@ from mathutils.bvhtree import BVHTree
 
 OFF = dict(torso=0.022, arm=0.015, leg=0.018)
 UV_REPEAT = 5.0
-SHELL_TRIS = 3700                    # the coverall before the bands, pockets and rims (decimated body copy)
+SHELL_TRIS = 2700                    # the coverall before the bands, pockets and rims (decimated body copy)
 
 # department looks: base colour (UniformBase tint), add-ons.  prison: the same coverall, orange, no stripe colour of
 # its own (accent = a light grey band, as prison overalls carry).
@@ -324,7 +324,7 @@ def clean_cuts(bm, J):
                         (f.calc_center_median() - b).length < 0.22), co, ax)
     # neckline: a plane through the neck base, 18 deg lower at the front
     nc = Vector((J["neck"].x, 0.0, L["neck"] - 0.012))
-    no = Vector((0.21, 0.0, 1.0)).normalized()
+    no = Vector((0.12, 0.0, 1.0)).normalized()
     _cut(bm, _faces(bm, lambda f: f.calc_center_median().z > L["shoulder"] - 0.08 and
                     Vector((f.calc_center_median().x - nc.x, f.calc_center_median().y, 0)).length < 0.13), nc, no)
     _drop_loose(bm)
@@ -470,7 +470,7 @@ def turn_down_collar(bm, dl, J, style="turn"):
             p2 = p1 + d * 0.0015 + up * 0.0015
             p3 = p2 + d * 0.0015 - up * 0.0015
         else:
-            p1 = p0 + up * 0.016 - d * 0.003
+            p1 = p0 + up * 0.012 - d * 0.003
             p2 = p1 + d * 0.008 + up * 0.002
             p3 = p2 + d * (0.027 + 0.008 * front) - up * (0.016 + 0.012 * front)
         th = 0.003
@@ -619,20 +619,7 @@ def _pockets(bm, J):
         planes = [(Vector((0, 0, z0)), Vector((0, 0, -1))), (Vector((0, 0, z1)), Vector((0, 0, 1))),
                   (Vector((0, sg * yi, 0)), Vector((0, -sg, 0))), (Vector((0, sg * yo, 0)), Vector((0, sg, 0)))]
         _pocket(bm, reg, planes, depth=0.0025)
-        # thigh cargo pocket, on the outer side of the thigh
-        k = J["shin." + s]
-        th = J["thigh." + s]
-        zt1 = th.z - 0.16
-        zt0 = zt1 - 0.17
-        xc = (k.x + th.x) / 2 + 0.005
-
-        def reg2(f, s=s, sg=sg):
-            c = f.calc_center_median()
-            r = _classify(c, J, True)
-            return r[0] == "leg" and r[3] == s and r[1] == 0 and sg * f.normal.y > 0.45 and zt0 - 0.03 < c.z < zt1 + 0.03
-        planes2 = [(Vector((0, 0, zt0)), Vector((0, 0, -1))), (Vector((0, 0, zt1)), Vector((0, 0, 1))),
-                   (Vector((xc - 0.075, 0, 0)), Vector((-1, 0, 0))), (Vector((xc + 0.075, 0, 0)), Vector((1, 0, 0)))]
-        _pocket(bm, reg2, planes2, depth=0.003)
+        # (no thigh pockets: at game size they read as stains, CRITIC round 40 follow-up)
 
 
 def make_shell(base, J, name="Outfit_uniform"):
@@ -1175,3 +1162,144 @@ def make_uniform(base, J):
         addons["rank%d" % k] = make_rank(st, base, J, k, tops)
     clean.free()
     return shell, addons
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# swimwear (V5 section 1: a modest one-piece, or trunks with a tee): tight garments from the body, clean cuts
+# ------------------------------------------------------------------------------------------------------------------
+def _tight(base, J, keep, cuts, off, name, straps=None):
+    """A tight garment: the body copy (no arms), cut by planes [(faces_pred, co, no)], offset `off` from the body,
+    smoothed, 3 mm clear of it, rolled hems; optional straps [(y, width)] over the shoulders from the top edge."""
+    src = body_copy(base, J)
+    bm = _bm_of(src)
+    bpy.data.objects.remove(src)
+    dl = bm.verts.layers.deform.active
+    kill = [f for f in bm.faces if not keep(f)]
+    bmesh.ops.delete(bm, geom=kill, context="FACES")
+    _drop_loose(bm)
+    for pred, co, no in cuts:
+        _cut(bm, _faces(bm, pred), co, no, clear=True)
+    _drop_loose(bm)
+    _keep_largest(bm)
+    btree = _tree(base)
+    bm.normal_update()
+    for v in bm.verts:
+        v.co += v.normal * off
+    boundary = {v for v in bm.verts if any(e.is_boundary for e in v.link_edges)}
+    _smooth(bm, [v for v in bm.verts if v not in boundary], 5)
+    _push_out(bm, btree, max(0.003, off * 0.6))
+    _relax_loops(bm, 4)
+    bm.normal_update()
+    if straps:
+        from mathutils.kdtree import KDTree
+        L = _levels(J)
+        kd = KDTree(len(bm.verts))
+        orig = list(bm.verts)
+        for k_, v in enumerate(orig):
+            kd.insert(v.co, k_)
+        kd.balance()
+        for y, w in straps:
+            for sg in (1.0, -1.0):
+                # the strap: from the front top edge over the shoulder to the back top edge
+                edge = [v for v in bm.verts if any(e.is_boundary for e in v.link_edges) and abs(v.co.y - sg * y) < 0.02
+                        and v.co.z > L["band"] - 0.08]
+                if len(edge) < 2:
+                    continue
+                fr = max(edge, key=lambda v: v.co.x)
+                bk = min(edge, key=lambda v: v.co.x)
+                rows = []
+                cx = (fr.co.x + bk.co.x) / 2
+                cz = min(fr.co.z, bk.co.z)
+                for k in range(11):
+                    ang = pi * k / 10
+                    d = Vector((cos(ang), 0.0, sin(ang)))
+                    o = Vector((cx, sg * y, cz - 0.02))              # inside the torso: the ray exits the shoulder
+                    hit = btree.ray_cast(o, d, 0.4)
+                    if hit[0] is None:
+                        continue
+                    p = hit[0] + d * (off + 0.002)
+                    if k == 0:
+                        p = fr.co.copy()
+                    if k == 10:
+                        p = bk.co.copy()
+                    row = []
+                    for dy in (-w / 2, w / 2):
+                        nv = bm.verts.new(p + Vector((0, dy, 0)))
+                        _, i, _ = kd.find(p)
+                        _copy_deform(nv, orig[i], dl)
+                        row.append(nv)
+                    rows.append(row)
+                for i in range(len(rows) - 1):
+                    bm.faces.new((rows[i][0], rows[i + 1][0], rows[i + 1][1], rows[i][1]))
+    bm.normal_update()
+    loops = _boundary_loops(bm)
+    faces = []
+    for loop in loops:                                    # a 6 mm turned hem on every opening
+        c = sum((v.co for v in loop), Vector()) / len(loop)
+        ring = []
+        for v in loop:
+            nrm = v.normal.normalized() if v.normal.length > 1e-6 else (v.co - c).normalized()
+            a = bm.verts.new(v.co + nrm * 0.0015)
+            b = bm.verts.new(v.co + nrm * 0.0015 + (c - v.co).normalized() * 0.006)
+            for nv in (a, b):
+                _copy_deform(nv, v, dl)
+            ring.append((v, a, b))
+        n = len(ring)
+        for i in range(n):
+            v0, a0, b0 = ring[i]
+            v1, a1, b1 = ring[(i + 1) % n]
+            for q in ((v0, v1, a1, a0), (a0, a1, b1, b0)):
+                try:
+                    faces.append(bm.faces.new(q))
+                except ValueError:
+                    pass
+    for f in bm.faces:
+        f.material_index = 0
+    bm.normal_update()
+    _orient_out(bm, bm.faces[:], lambda p: _body_axis(p, J))
+    ob = _obj(name, bm, base, ("ClothTint",))
+    bm.free()
+    uv = ob.data.uv_layers.active
+    for d in uv.data:
+        d.uv = (d.uv[0] * UV_REPEAT, d.uv[1] * UV_REPEAT)
+    return ob
+
+
+def _body_axis(p, J):
+    r = _classify(p, J, True)
+    if r[0] == "leg":
+        a, b = (J["thigh." + r[3]], J["shin." + r[3]]) if r[1] == 0 else (J["shin." + r[3]], J["foot." + r[3]])
+        t = max(0.0, min(1.0, _seg_t(p, a, b)[0]))
+        return a + (b - a) * t
+    return Vector((J["chest"].x, 0, p.z))
+
+
+def make_trunks(base, J):
+    """Swim trunks: from 5 cm above the hip joints to 40 % down the thigh, 7 mm off the body."""
+    L = _levels(J)
+    waist = J["hips"].z + 0.045
+    keep = lambda f: _classify(f.calc_center_median(), J) != "arm" and f.calc_center_median().z < waist + 0.06   # noqa
+    cuts = [(lambda f: True, Vector((0, 0, waist)), Vector((0, 0, 1)))]
+    for s in ("L", "R"):
+        a, b = J["thigh." + s], J["shin." + s]
+        ax = (b - a).normalized()
+        cuts.append((lambda f, s=s: _classify(f.calc_center_median(), J, True)[3] == s and
+                     f.calc_center_median().z < J["hips"].z - 0.10, a + (b - a) * 0.42, ax))
+    return _tight(base, J, keep, cuts, 0.007, "gen_trunks")
+
+
+def make_swimsuit(base, J):
+    """A modest one-piece: a scoop neckline at the front, a higher back, leg openings at the hip crease, 2.5 cm
+    straps over the shoulders; 2.5 mm off the body."""
+    L = _levels(J)
+    top_front = L["shoulder"] - 0.105
+    keep = lambda f: _classify(f.calc_center_median(), J) != "arm" and f.calc_center_median().z > J["shin.L"].z   # noqa
+    cuts = [(lambda f: True, Vector((J["chest"].x, 0, top_front)), Vector((0.30, 0.0, 1.0)).normalized())]
+    for s, sg in (("L", 1.0), ("R", -1.0)):
+        a, b = J["thigh." + s], J["shin." + s]
+        ax = (b - a).normalized()
+        # a leg opening plane through the hip crease, tilted up at the outer hip (modest, not high cut)
+        no = (ax + Vector((0.0, sg * 0.55, 0.0))).normalized()
+        cuts.append((lambda f, s=s, sg=sg: _classify(f.calc_center_median(), J, True)[3] == s or
+                     sg * f.calc_center_median().y > 0.02, a + (b - a) * 0.10, no))
+    return _tight(base, J, keep, cuts, 0.0025, "gen_swimsuit", straps=[(0.085, 0.026)])

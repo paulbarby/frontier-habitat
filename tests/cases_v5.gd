@@ -30,6 +30,8 @@ func tests() -> Array:
 		["v5_eggs", v5_eggs],
 		["v5_showcase", v5_showcase],
 		["long_v5_perf_showcase", long_v5_perf_showcase],
+		["v5_showcase_deterministic", v5_showcase_deterministic],
+		["v5_protest_and_riot", v5_protest_and_riot],
 	]
 
 static func _showcase():
@@ -952,6 +954,7 @@ func v5_dome_build_stages(t) -> void:
 	t.check(floors.has(0) and floors.has(1), "venues on floors 0 and 1")
 	t.check(String(sim.leisure.why_closed(b, "bar")) != "", "the bar is closed without staff: %s" % sim.leisure.why_closed(b, "bar"))
 	t.check(sim.leisure.why_closed(b, "plaza") == "" or not bool(b["powered"]), "the plaza needs no staff")
+	t.eq(sim.place.check_building("super_dome", sim.place.snap_pos(p + Vector2(0, 150)), 0.0, -1, 1), "one_per_base", "one super dome a base")
 	t.eq(sim.inv.audit(), {}, "ledger")
 	g.dispose()
 	t.done()
@@ -1220,5 +1223,82 @@ func long_v5_perf_showcase(t) -> void:
 	t.note("%d people: median %.3f ms, mean %.3f ms, p99 %.2f ms, worst %.2f ms" % [sim.state["agents"].size(), med, mean, p99, worst])
 	t.check(med <= 3.0, "median tick %.3f ms (budget 3.0)" % med)
 	t.check(worst <= 30.0, "worst tick %.2f ms (budget 12; fails over 30)" % worst)
+	sim.dispose()
+	t.done()
+## The v5 systems are part of the game state: showcase_v5 run twice for 90 s, the second time saved
+## and loaded at a tick that is not the start of a second, ends in the same state.
+func v5_showcase_deterministic(t) -> void:
+	var path := "res://content/saves/showcase_v5.fhsave"
+	if not FileAccess.file_exists(path):
+		t.fail("no %s" % path)
+		t.done()
+		return
+	var digests: Array = []
+	for run in 2:
+		var sim = H.Sim.new()
+		sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
+		for i in 453:
+			sim.step()
+		if run == 1:
+			var st: Dictionary = Persistence.decode(Persistence.encode(sim.state))["state"]
+			sim.dispose()
+			sim = H.Sim.new()
+			sim.load_state(st)
+		for i in 447:
+			sim.step()
+		digests.append(Persistence.digest(sim.state))
+		sim.dispose()
+	t.eq(digests[0], digests[1], "the same digest with and without a save at tick +453")
+	t.done()
+## A protest gathers the unhappiest people at the protest place (protest_fist, the demand shouted);
+## a riot starts fights, damages rooms (never under riot_min_health) and loots goods; the info counts it.
+func v5_protest_and_riot(t) -> void:
+	var sim = _showcase()
+	sim.run_seconds(20.0)
+	var base: int = int(sim.bases.ids()[0]) if sim.bases.count() > 0 else -1
+	var ppl: Array = _colonists(sim)
+	# TEST SET-UP: a protest with a demand; the people are very unhappy (stored satisfaction).
+	var ur: Dictionary = sim.unrest._rec_w(base)
+	ur["value"] = 60.0
+	ur["stage"] = "protest"
+	ur["demand"] = "Full rations now!"
+	for a in ppl:
+		sim.people.rec_w(a)["sat"] = 20.0
+	var protest := false
+	var shouted := false
+	for s in 60:
+		sim.run_seconds(1.0)
+		ur["value"] = 60.0                                                                # test set-up: hold the stage
+		ur["stage"] = "protest"
+		for a in ppl:
+			sim.people.rec_w(a)["sat"] = 20.0
+			if String(a.get("plan_kind", "")) == "protest" and sim.agents._step_op(a) == "protest" and sim.people.action(a) == "protest_fist":
+				protest = true
+				for l in sim.social.recent_lines(int(a["id"]), 3):
+					if String(l["text"]) == "Full rations now!":
+						shouted = true
+	t.check(protest, "people gather and protest (protest_fist)")
+	t.check(shouted, "a protester shouts the demand")
+	# TEST SET-UP: a riot.
+	ur["value"] = 90.0
+	ur["stage"] = "riot"
+	ur["damaged"] = []
+	ur["injured"] = 0
+	ur["looted"] = 0
+	var min_h := 100.0
+	var fights := 0
+	for s in 120:
+		sim.run_seconds(1.0)
+		ur["value"] = 90.0
+		ur["stage"] = "riot"
+		fights = maxi(fights, sim.security.fights().size())
+	var info: Dictionary = sim.unrest.info(base)
+	t.check(int(info["damage"]) > 0, "rooms are damaged in the riot (%d)" % int(info["damage"]))
+	for rid in ur.get("damaged", []):
+		min_h = minf(min_h, float(sim.state["buildings"][int(rid)]["health"]))
+	t.check(min_h >= float(sim.content["society"]["security"]["riot_min_health"]) - 0.01, "never under riot_min_health (%.1f)" % min_h)
+	t.check(not H.log_entries(sim, "fight").is_empty() or fights > 0, "fights break out in the riot")
+	t.note("damage %d, injured %d, looted %d" % [int(info["damage"]), int(info["injured"]), int(info["looted"])])
+	t.eq(sim.inv.audit(), {}, "ledger")
 	sim.dispose()
 	t.done()

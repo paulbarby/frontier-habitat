@@ -121,10 +121,11 @@ def import_person(variant, outfit, look=None, loc=(0, 0, 0), rot_z=0.0):
             elif base.startswith("Hair"):                  # Hair, Hair_brows, Hair_lashes
                 tint(sl.material, HAIR_COLOURS[L["hair"]])
             elif base == "SuitAccent":
-                tint(sl.material, DEPT_STRIPE.get(outfit, DEPT))
-            elif base == "UniformBase" and base_rgb:
+                acc = None if isinstance(entry, str) else entry.get("accent_rgb")
+                tint(sl.material, tuple(acc) if acc else DEPT_STRIPE.get(outfit, DEPT))
+            elif base.startswith("UniformBase") and base_rgb:
                 tint(sl.material, tuple(base_rgb))
-            elif base == "ClothTint":
+            elif base.startswith("ClothTint"):
                 tint(sl.material, L["cloth"])
     rig.location = loc
     rig.rotation_mode = "XYZ"
@@ -140,7 +141,7 @@ def manifest():
     return json.load(open(MANIFEST, encoding="utf-8"))
 
 
-MAIN_OUTFITS = ("uniform_engineering", "casual_a")
+MAIN_OUTFITS = ("uniform_engineering", "casual_a", "casual_b", "casual_c", "swimwear", "school", "prison")
 
 
 def variants_outfits():
@@ -154,6 +155,8 @@ def sheet_uniforms():
     rows = []
     for v, d in manifest()["variants"].items():
         row = []
+        if not any(o.startswith("uniform_") for o in d["outfits"]):
+            continue
         for k, o in enumerate([o for o in d["outfits"] if o.startswith("uniform_")]):
             studio(300, 560)
             rig, _ = import_person(v, o)
@@ -211,21 +214,48 @@ def sheet_closeup():
     return out
 
 
-def sheet_outfits():
+def sheet_outfits(variants=("m1", "f1")):
+    """Every outfit of two variants, front 3/4 and back 3/4 (idle)."""
     tmpdir()
+    M = manifest()
+    vs = [v for v in variants if v in M["variants"]]
+    outs = [o for o in MAIN_OUTFITS if any(o in M["variants"][v]["outfits"] for v in vs)]
     rows = []
-    for v, o in variants_outfits():
-        studio(360, 640)
-        rig, _ = import_person(v, o)
-        pose(rig, "idle", 0)
+    for o in outs:
         row = []
-        for k, az in enumerate((-30, 60, 150, 240)):
-            NR.clear_cameras()
-            NR.camera((0.0, 0.0, 0.88), az, 6, 5.0, lens=85)
-            row.append(("%s %s az %d" % (v, o, az), NR.render(os.path.join(TMP, "of_%s_%s_%d.png" % (v, o, k)))))
+        for v in vs:
+            if o not in M["variants"][v]["outfits"]:
+                continue
+            for k, az in enumerate((-30, 150)):
+                studio(300, 560)
+                rig, _ = import_person(v, o)
+                pose(rig, "idle", 0)
+                NR.clear_cameras()
+                NR.camera((0.0, 0.0, 0.90 * M["variants"][v]["scale"]), az, 6, 4.6, lens=85)
+                row.append(("%s %s az %d" % (v, o, az), NR.render(os.path.join(TMP, "of_%s_%s_%d.png" % (v, o, k)))))
         rows.append(row)
     out = os.path.join(ART, "people_outfits.png")
-    NR.compose(rows, out, title="people pilot outfits: four sides (idle)")
+    NR.compose(rows, out, title="outfits: every outfit on %s, front and back (idle)" % " and ".join(vs))
+    return out
+
+
+def sheet_wardrobe():
+    """Every variant (rows) in every outfit it has (columns), front 3/4."""
+    tmpdir()
+    M = manifest()
+    rows = []
+    for v, d in M["variants"].items():
+        row = []
+        for o in [o for o in MAIN_OUTFITS if o in d["outfits"]]:
+            studio(240, 470)
+            rig, _ = import_person(v, o)
+            pose(rig, "idle", 0)
+            NR.clear_cameras()
+            NR.camera((0.0, 0.0, 0.90 * d["scale"]), -25, 6, 4.4 * max(0.8, d["scale"]), lens=85)
+            row.append(("%s %s" % (v, o), NR.render(os.path.join(TMP, "wd_%s_%s.png" % (v, o)))))
+        rows.append(row)
+    out = os.path.join(ART, "people_wardrobe.png")
+    NR.compose(rows, out, title="wardrobe: every variant in every outfit (front 3/4, idle)")
     return out
 
 
@@ -339,7 +369,7 @@ FURNITURE_PROPS = {}
 LOW_CLIPS = set()
 
 
-SHEETS = dict(closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
+SHEETS = dict(wardrobe=sheet_wardrobe, closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
               uniforms=sheet_uniforms, tones=sheet_tones)
 
 

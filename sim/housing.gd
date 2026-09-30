@@ -38,6 +38,6 @@ func cmd_set_home(p: Dictionary) -> Dictionary:
 	else:
 		r.erase("unit")
 	sim.people.invalidate(int(a["id"]))
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 	sim.people.note(a, "Moved to %s." % String(b.get("name", b["def"])))
 	return {"ok": true, "code": "ok", "text": "%s moved to %s." % [String(a["name"]), String(b.get("name", b["def"]))]}

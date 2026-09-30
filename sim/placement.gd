@@ -34,6 +34,7 @@ const REASONS := {
 	"overlap_ship": "Overlaps the wreck of the Meridian.",
 	"door_blocked": "The door would open onto equipment. Choose another side of the room.",
 	"depot_blocked": "This would block the rover depot.",
+	"one_per_base": "Only one of these can stand at a base.",
 }
 
 func _init(s) -> void:
@@ -178,6 +179,13 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 	if not sim.world.in_map(pos, float(sim.world.margin) + r):
 		return "outside_map"
 	var blds: Dictionary = sim.state["buildings"]
+	# V5 section 8: one super dome a base (the base of the place it would stand at).
+	if bool(base.get("one_per_base", false)):
+		var here: int = sim.bases.base_at(pos) if sim.bases.count() > 1 else -1
+		for id2 in blds:
+			var o: Dictionary = blds[id2]
+			if id2 != ignore_id and String(o["def"]) == def_id and (here == -1 or sim.bases.base_of(int(id2)) == here):
+				return "one_per_base"
 	for id in blds:
 		if id == ignore_id:
 			continue

@@ -9,6 +9,18 @@ var sim
 func _init(s) -> void:
 	sim = s
 
+## The agent id of a base's commander (-1: any base; the lowest id), or -1 when there is none.
+func commander(base_id: int = -1) -> int:
+	var best := -1
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] != "alive":
+			continue
+		var rk: Dictionary = sim.people.rank(a)
+		if String(rk["rank"]) == "commander" and (base_id == -1 or int(rk["base"]) == base_id) and (best == -1 or int(aid) < best):
+			best = int(aid)
+	return best
+
 ## Command "set_role" {agent, role}: retraining (V5 section 6.5). A security officer needs the
 ## security skill at role_skill (content security) or more (the academy teaches it); the other roles
 ## are open to any adult colonist. A post in the old department is left.
@@ -40,7 +52,7 @@ func cmd_set_role(p: Dictionary) -> Dictionary:
 	var old: String = String(a["role"])
 	a["role"] = role
 	sim.people.invalidate(id)
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 	var names: Dictionary = sim.bal["role_names"]
 	sim.people.note(a, "Changed job: %s to %s." % [String(names.get(old, old)).to_lower(), String(names.get(role, role)).to_lower()])
 	sim.log_event("new_role", "%s is now a %s." % [String(a["name"]), String(names.get(role, role)).to_lower()], [id], 1)
@@ -96,7 +108,7 @@ func cmd_appoint(p: Dictionary) -> Dictionary:
 			appt[key] = arr
 	var rec: Dictionary = sim.people.rec_w(a)
 	sim.people.clear_demoted(a)
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 	sim.people._refresh_ranks(true)
 	var title: String = String(sim.people.rank(a)["title"])
 	sim.people.add_mod(a, {"kind": "promoted", "text": "Appointed " + title, "comp": "work", "sat": 10.0, "att": 8.0, "days": 2.0})

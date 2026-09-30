@@ -1,10 +1,10 @@
 {
   "_note": "V5 sections 5 and 6: attitude drift, reviews, discipline, unrest, responses. Times in game days (600 s) unless named _s. Deltas are points on the 0-100 satisfaction scale or the -100..100 attitude scale.",
-  "update_every_s": 5,
+  "update_every_s": 10,
   "attitude": {
     "_note": "Attitude moves toward its target: (satisfaction - 50) x from_satisfaction + trait mods + the sum of active discipline mods. rate: share of the gap closed per update.",
     "from_satisfaction": 1.2,
-    "rate": 0.05,
+    "rate": 0.1,
     "traits": {"loyal": 12, "workaholic": 8, "calm": 5, "honest": 4, "ambitious": 3, "lazy": -12, "hot-headed": -8, "greedy": -5, "jealous": -3},
     "slack_below": -30,
     "slack_work_mult": 0.85,

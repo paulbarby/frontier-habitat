@@ -80,6 +80,7 @@ var _buf_cache := {}
 var npc_ms := 0.0
 var game_rate := 1.0             # game seconds per real second (smoothed; 0 when paused)
 var _tick_s := 0.1               # game seconds per sim tick (set in sync from bal.tick_hz)
+var _follow_id := -1             # the person in the follow view (world_view.follow_id), -1 = none
 var planner                     # fx_npc_path (created in setup)
 var _plans_frame := 0
 var _plan_us := 0
@@ -1394,6 +1395,8 @@ func sync(delta: float) -> bool:
 	# Animation runs in game time: 2x speed plays the clips at 2x, a pause freezes them.
 	game_rate = float(view.game_rate)
 	_tick_s = 1.0 / maxf(float(sim.bal.get("tick_hz", 10)), 1.0)
+	var fid = view.get("follow_id")
+	_follow_id = int(fid) if fid != null else -1
 	_dyn_used = 0
 	_bd_used = 0
 	_plans_frame = 0
@@ -1471,6 +1474,10 @@ func sync(delta: float) -> bool:
 		# Off-screen bodies (outside the camera frustum, 2 m margin) update at the far rate too.
 		var far: bool = (rec["pos"] as Vector3).distance_squared_to(focus) > 8100.0 or cam_d > 160.0 \
 				or (cam3 != null and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + Vector3(0, 1.0, 0)) and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + (cam3.global_position - (rec["pos"] as Vector3)).normalized() * 2.0))
+		# The person in the follow view is updated every frame (the frustum test uses the camera of the
+		# frame before: on a quick turn the body tested "off screen" and moved every 3rd frame).
+		if far and int(id) == _follow_id:
+			far = false
 		rec["far"] = far
 		var step: float = delta
 		# V5 (the 8-10 ms fx_npc cost at 66 people, 2026-09-29): from 70 m camera distance every body
@@ -1907,7 +1914,9 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 		goal = ["stand", "loco"]
 		if lg != null and lg.has("yaw") and now.distance_to(target) < 0.12:
 			want_yaw = float(lg["yaw"])
-		if not dead and String(a.get("plan_kind", "")) == "task" and float(rec["speed"]) < 0.2 and a["where"] != "lock" and before.distance_to(target) < 0.4:
+		# (only while the goal itself stands: a body on a task WALK that stopped for one frame stood
+		# still until the goal was 0.4 m away, then walked, then stopped: stop-go at 4x, 2026-10-01)
+		if not dead and String(a.get("plan_kind", "")) == "task" and float(rec["speed"]) < 0.2 and float(rec.get("g_u", 0.0)) < 0.2 and a["where"] != "lock" and before.distance_to(target) < 0.4:
 			var wb: Dictionary = blds.get(bld, {})
 			goal = ["stand", "work_console" if not wb.is_empty() and String(wb["def"]) in CONSOLE_DEFS else "work_bench"]
 			# A working body stands still (no creep over the last 0.4 m while the work clip plays).
@@ -1993,10 +2002,13 @@ func _walk(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: flo
 		_t_walk += Time.get_ticks_usec() - tw0
 		return before
 	# Critic round 14: two bodies never pass through each other in a doorway; one waits.
+	rec.erase("v_cap")
+	rec.erase("yield_same")
 	if door_yield and r != before and _door_yield(rec, before, r, dt):
 		rec["v"] = 0.0
-		# The one who waits steps aside (up to 0.55 m, on free floor), off the other's way.
-		r = _step_aside(rec, before, r, dt, inside)
+		# The one who waits steps aside (up to 0.55 m, on free floor), off the other's way; behind a
+		# leader going the same way it only waits.
+		r = before if bool(rec.get("yield_same", false)) else _step_aside(rec, before, r, dt, inside)
 	else:
 		rec["yielding"] = false
 		rec["yield_t"] = 0.0
@@ -2138,9 +2150,14 @@ func _door_yield(rec: Dictionary, before: Vector3, now: Vector3, dt: float) -> b
 				var moving: bool = float(o.get("speed", 0.0)) > 0.15
 				var o_door: float = Vector2(op.x - dp.x, op.z - dp.z).length()
 				if moving and od.dot(dir) > 0.3:
-					# Same way: keep the gap.
+					# Same way: keep the gap. Close behind, walk at the leader's pace (next frame's top
+					# speed) instead of stop - ramp - catch up - stop (walk / idle flicker at doorways,
+					# 2026-10-01); a hard stop only inside the gap, and no step aside behind a leader.
+					if d_now < BODY_GAP + 0.35:
+						rec["v_cap"] = float(o.get("v", 0.0))
 					if d_now < BODY_GAP:
 						wait = true
+						rec["yield_same"] = true
 				elif moving:
 					# Coming the other way: whoever is nearer the doorway centre goes first.
 					var me_door: float = Vector2(before.x - dp.x, before.z - dp.z).length()
@@ -2191,7 +2208,7 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		rec["wp_goal"] = goal
 		pend = goal
 	# The person in the follow view always gets a plan (the budget is for the crowd).
-	var pri: bool = view.get("follow_id") != null and int(rec.get("id", -1)) == int(view.follow_id)
+	var pri: bool = int(rec.get("id", -1)) == _follow_id
 	if pend.distance_to(goal) > 0.8 or (wp.is_empty() and gap > 0.05):
 		if (_plans_frame < PLANS_PER_FRAME and _plan_us < plan_budget_us) or wp.is_empty() and gap < 1.5 or pri:
 			_plans_frame += 1
@@ -2251,6 +2268,8 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	rec["g_u"] = gu
 	var ta = view.get("tick_age")
 	var rem_eff: float = remaining + gu * (clampf(float(ta), 0.0, _tick_s) if ta != null else 0.0)
+	if rec.has("v_cap"):
+		vmax = minf(vmax, maxf(float(rec["v_cap"]), 0.3))
 	var v: float = float(rec.get("v", 0.0))
 	var vdes: float = minf(vmax, sqrt(2.0 * ACCEL * rem_eff) + 0.05)
 	if vdes > v:
@@ -2274,6 +2293,12 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		else:
 			now = now + (q - now) / d * left
 			left = 0.0
+	# The path ran out inside this frame while the goal is a little further on in plain sight (the
+	# path's end follows the goal in 0.25 m steps): walk on to it (the body stopped dead for a frame).
+	if left > 0.001 and wp.is_empty():
+		var dg: float = Vector2(goal.x - now.x, goal.z - now.z).length()
+		if dg > 0.01 and dg < 1.0 and planner.same_leg(now, goal, inside):
+			now = now.move_toward(goal, left)
 	rec["wp"] = wp
 	return now
 

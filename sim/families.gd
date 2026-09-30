@@ -184,7 +184,7 @@ func spawn_child(parents: Array, pos: Vector2, bld: int) -> Dictionary:
 	a["thirst"] = 20.0
 	sim.people.invalidate(int(a["id"]))
 	sim.people._id_cache.erase(int(a["id"]))
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 	if not parents.is_empty():
 		var p: Dictionary = sim.state["agents"].get(int(parents[0]), {})
 		if not p.is_empty():
@@ -293,7 +293,7 @@ func grow_up(a: Dictionary) -> void:
 		sim.state["v5"]["school"].erase(int(a["id"]))
 	sim.people._id_cache.erase(int(a["id"]))
 	sim.people.invalidate(int(a["id"]))
-	sim.people._rank_sig = -1
+	sim.people.ranks_dirty()
 	sim.agents._beds_tick = -1
 	sim.alive_changed()
 	sim.people.note(a, "Grew up and joined the crew as a %s." % String(sim.bal["role_names"].get(role, role)).to_lower())

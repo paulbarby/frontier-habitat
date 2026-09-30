@@ -93,8 +93,9 @@ func tick() -> void:
 	# rooms of this tick's slice are collected first; only people in those rooms are checked.)
 	var slice: Array = []
 	var rooms := {}
-	for aid in agents:
-		if (now + int(aid)) % hz != 0 or busy.has(int(aid)):
+	# (now + id) % hz == 0  <=>  id % hz == -now mod hz (people.ids_mod keeps the buckets).
+	for aid in sim.people.ids_mod(hz, -now):
+		if busy.has(int(aid)):
 			continue
 		var a0: Dictionary = agents[aid]
 		if can_talk(a0):
@@ -227,9 +228,14 @@ const ROMANTIC := ["dating", "partners", "married", "affair", "fling"]
 
 ## A person's partner (dating, partners or married; -1: none), from the stored pairs.
 func partner_of(id: int) -> int:
-	for key in _keys_of(id):
-		var r: Dictionary = v5r()["rel"][key]
-		if ["dating", "partners", "married"].has(String(r["status"])):
+	var keys: Array = _keys_of(id)
+	if keys.is_empty():
+		return -1
+	var rel: Dictionary = v5r()["rel"]
+	for key in keys:
+		var r: Dictionary = rel[key]
+		var st: String = r["status"]
+		if st == "dating" or st == "partners" or st == "married":
 			return int(r["b"]) if int(r["a"]) == id else int(r["a"])
 	return -1
 
@@ -447,7 +453,7 @@ func cmd_answer_request(p: Dictionary) -> Dictionary:
 		sim.people.note(a, "Left the colony with a visitor.")
 		sim.log_event("defected", "%s left the colony for love." % String(a["name"]), [int(a["id"])], 2)
 		sim.people.invalidate(int(a["id"]))
-		sim.people._rank_sig = -1
+		sim.people.ranks_dirty()
 		return {"ok": true, "code": "ok", "text": "%s will leave with the ship." % String(a["name"])}
 	sim.people.add_mod(a, {"kind": "refused_leave", "text": "Not allowed to leave", "comp": "freedom", "sat": -20.0, "att": -15.0, "days": 3.0})
 	sim.people.note(a, "Was not allowed to leave with the ship.")
@@ -519,19 +525,25 @@ func relationships_of(agent_id: int, n: int = 8) -> Array:
 
 ## {friends, best_friends, partner (id or -1), enemies, ex_recent (bool)} for satisfaction.
 func summary(id: int) -> Dictionary:
-	var out := {"friends": 0, "best_friends": 0, "partner": -1, "enemies": 0}
-	for key in _keys_of(id):
-		var r: Dictionary = v5r()["rel"][key]
-		match String(r["status"]):
-			"friend":
-				out["friends"] += 1
-			"best_friend":
-				out["best_friends"] += 1
-			"enemy", "rival":
-				out["enemies"] += 1
-			"dating", "partners", "married":
-				out["partner"] = int(r["b"]) if int(r["a"]) == id else int(r["a"])
-	return out
+	var fr := 0
+	var bf := 0
+	var en := 0
+	var partner := -1
+	var keys: Array = _keys_of(id)
+	if not keys.is_empty():
+		var rel: Dictionary = v5r()["rel"]
+		for key in keys:
+			var r: Dictionary = rel[key]
+			var st: String = r["status"]
+			if st == "friend":
+				fr += 1
+			elif st == "best_friend":
+				bf += 1
+			elif st == "enemy" or st == "rival":
+				en += 1
+			elif st == "dating" or st == "partners" or st == "married":
+				partner = int(r["b"]) if int(r["a"]) == id else int(r["a"])
+	return {"friends": fr, "best_friends": bf, "partner": partner, "enemies": en}
 
 ## The pairs with a status, for the Rag's Couple Watch and Feud Watch: [{a, b, status, aff, att}].
 func pairs_with(statuses: Array) -> Array:

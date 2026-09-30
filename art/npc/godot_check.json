@@ -1,16 +1,29 @@
 {
   "clips_shared_bake": true,
-  "failures": [],
-  "generated": "2026-09-30T11:20:36",
+  "failures": [
+    "suit: clip 'talk_gesture_a' missing",
+    "suit: clip 'laugh' missing",
+    "suit: clip 'argue' missing",
+    "suit: clip 'hug' missing",
+    "suit: clip 'sit_bar_stool' missing",
+    "suit: clip 'dance_a' missing",
+    "in: clip 'talk_gesture_a' missing",
+    "in: clip 'laugh' missing",
+    "in: clip 'argue' missing",
+    "in: clip 'hug' missing",
+    "in: clip 'sit_bar_stool' missing",
+    "in: clip 'dance_a' missing"
+  ],
+  "generated": "2026-09-30T21:11:23",
   "limits": {
     "bone_deg_per_frame": 15.0,
     "fps": 30,
     "root_m_per_frame": 0.1
   },
-  "ok": true,
+  "ok": false,
   "skeleton_identical": true,
   "source": "glb",
-  "summary": "165 tests, 0 failures",
+  "summary": "165 tests, 12 failures",
   "tests": [
     {
       "at_frame": 76,
@@ -1144,7 +1157,7 @@
       "variant": "suit"
     },
     {
-      "at_frame": 87,
+      "at_frame": 94,
       "clips": [
         "idle",
         "walk+idle",
@@ -1157,9 +1170,9 @@
         "idle"
       ],
       "frames": 225,
-      "max_bone": "shin.R",
-      "max_deg": 30.64,
-      "max_hips_m": 0.0226,
+      "max_bone": "shin.L",
+      "max_deg": 37.91,
+      "max_hips_m": 0.0272,
       "max_root_m": 0.0,
       "name": "locomotion idle -> walk -> run -> stop",
       "ok": true,
@@ -1183,6 +1196,7 @@
     {
       "at_frame": 60,
       "clips": [
+        "walk|carry_walk",
         "idle+walk|carry_idle",
         "idle|carry_idle",
         "walk+idle|carry_walk",
@@ -1200,6 +1214,7 @@
     {
       "at_frame": 207,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "sit_enter+idle",
@@ -1226,6 +1241,7 @@
     {
       "at_frame": 305,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "lie_enter+idle",
@@ -1252,6 +1268,7 @@
     {
       "at_frame": 217,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "kneel_enter+idle",
@@ -2456,7 +2473,7 @@
       "variant": "in"
     },
     {
-      "at_frame": 87,
+      "at_frame": 94,
       "clips": [
         "idle",
         "walk+idle",
@@ -2469,9 +2486,9 @@
         "idle"
       ],
       "frames": 225,
-      "max_bone": "shin.R",
-      "max_deg": 30.64,
-      "max_hips_m": 0.0226,
+      "max_bone": "shin.L",
+      "max_deg": 37.91,
+      "max_hips_m": 0.0272,
       "max_root_m": 0.0,
       "name": "locomotion idle -> walk -> run -> stop",
       "ok": true,
@@ -2495,6 +2512,7 @@
     {
       "at_frame": 60,
       "clips": [
+        "walk|carry_walk",
         "idle+walk|carry_idle",
         "idle|carry_idle",
         "walk+idle|carry_walk",
@@ -2512,6 +2530,7 @@
     {
       "at_frame": 207,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "sit_enter+idle",
@@ -2538,6 +2557,7 @@
     {
       "at_frame": 305,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "lie_enter+idle",
@@ -2564,6 +2584,7 @@
     {
       "at_frame": 217,
       "clips": [
+        "walk",
         "idle+walk",
         "idle",
         "kneel_enter+idle",
@@ -2710,7 +2731,14 @@
         "step_down",
         "step_down_r"
       ],
-      "clips_missing": [],
+      "clips_missing": [
+        "talk_gesture_a",
+        "laugh",
+        "argue",
+        "hug",
+        "sit_bar_stool",
+        "dance_a"
+      ],
       "file": "res://assets/models/astronaut_indoor.glb",
       "head_variants": 4,
       "in_clip_max_step_deg": {
@@ -2755,7 +2783,7 @@
       "triangles": 8868
     },
     "suit": {
-      "bake_ms": 81.0,
+      "bake_ms": 82.8,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",
@@ -2820,7 +2848,14 @@
         "step_down",
         "step_down_r"
       ],
-      "clips_missing": [],
+      "clips_missing": [
+        "talk_gesture_a",
+        "laugh",
+        "argue",
+        "hug",
+        "sit_bar_stool",
+        "dance_a"
+      ],
       "file": "res://assets/models/astronaut_suit.glb",
       "head_variants": 0,
       "in_clip_max_step_deg": {

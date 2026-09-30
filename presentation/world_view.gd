@@ -467,7 +467,7 @@ func follow_next() -> int:
 	follow_start(nx)
 	return nx
 
-## [ground point, body yaw, eye height] of the followed person, or null.
+## [ground point, body yaw, eye height, indoors, game rate] of the followed person, or null.
 func _follow_body(id: int):
 	if not sim.state["agents"].has(id) or sim.state["agents"][id]["state"] != "alive":
 		follow_id = -1
@@ -488,7 +488,7 @@ func _follow_body(id: int):
 		elif clip.begins_with("kneel") or clip == "repair_kneel":
 			eye = 1.05
 	var indoor: bool = String(sim.state["agents"][id].get("where", "")) != "out"
-	return [p, yaw, eye, indoor]
+	return [p, yaw, eye, indoor, game_rate]
 
 ## The rooms and exteriors whose walls a point or a segment meets (xz circles).
 func _follow_circles(center: Vector3, reach: float) -> Array:

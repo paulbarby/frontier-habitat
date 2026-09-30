@@ -1,9 +1,9 @@
 {
- "date": "2026-10-01 06:35",
+ "date": "2026-10-01 06:57",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 452,
- "failed": 4,
+ "passed": 456,
+ "failed": 0,
  "pending": 0,
  "info": 12,
  "tris": {
@@ -2147,7 +2147,7 @@
   {
    "check": "people m1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18094, 'uniform_science': 19877, 'uniform_food': 18403, 'uniform_medical': 19877, 'uniform_security': 19594, 'uniform_command': 20053, 'prison': 17678, 'casual_a': 15948}"
+   "detail": "{'uniform_engineering': 18121, 'uniform_science': 19905, 'uniform_food': 18430, 'uniform_medical': 19905, 'uniform_security': 19621, 'uniform_command': 20081, 'prison': 17705, 'casual_a': 15948}"
   },
   {
    "check": "people m1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2171,8 +2171,8 @@
   },
   {
    "check": "people m1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "20.89 deg (dance_a forearm.L f97)"
+   "status": "pass",
+   "detail": "14.37 deg (kneel_exit forearm.L f37)"
   },
   {
    "check": "people m1: loop seams <= 1 deg",
@@ -2205,7 +2205,7 @@
    "detail": "lowest point over the stool 0.765 m"
   },
   {
-   "check": "people m1: head and hair never inside the outfit at the test poses (1 cm)",
+   "check": "people m1: head and hair never inside the clothes at the test poses (1 cm)",
    "status": "pass",
    "detail": "0 vertices at worst "
   },
@@ -2227,7 +2227,7 @@
   {
    "check": "people f1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 19735, 'uniform_science': 21518, 'uniform_food': 20088, 'uniform_medical': 21518, 'uniform_security': 21235, 'uniform_command': 21694, 'prison': 19319, 'casual_a': 17690}"
+   "detail": "{'uniform_engineering': 19734, 'uniform_science': 21518, 'uniform_food': 20087, 'uniform_medical': 21518, 'uniform_security': 21234, 'uniform_command': 21694, 'prison': 19318, 'casual_a': 17690}"
   },
   {
    "check": "people f1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2251,8 +2251,8 @@
   },
   {
    "check": "people f1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "20.89 deg (dance_a hand.L f97)"
+   "status": "pass",
+   "detail": "14.29 deg (cheer upper_arm.L f19)"
   },
   {
    "check": "people f1: loop seams <= 1 deg",
@@ -2285,14 +2285,14 @@
    "detail": "lowest point over the stool 0.760 m"
   },
   {
-   "check": "people f1: head and hair never inside the outfit at the test poses (1 cm)",
-   "status": "FAIL",
-   "detail": "78 vertices at worst Outfit_uniform walk f8"
+   "check": "people f1: head and hair never inside the clothes at the test poses (1 cm)",
+   "status": "pass",
+   "detail": "0 vertices at worst "
   },
   {
    "check": "people pair hug (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
-   "status": "FAIL",
-   "detail": "20 points deeper than 2 cm (worst f60), 9 deeper than 4 cm, deepest 0.063 m"
+   "status": "pass",
+   "detail": "6 points deeper than 2 cm (worst f39), 0 deeper than 4 cm, deepest 0.035 m"
   },
   {
    "check": "robot: one skinned mesh Robot_dancer",
@@ -2365,5 +2365,5 @@
    "detail": "body vertices inside: 0 (); hand depth 0.009 m (robot_pole f98)"
   }
  ],
- "seconds": 19.5
+ "seconds": 18.9
 }

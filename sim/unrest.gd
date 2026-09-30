@@ -475,7 +475,7 @@ func cmd_unrest_response(p: Dictionary) -> Dictionary:
 					sim.people.note(a, "Replaced as captain after unrest.")
 					break
 			appt.erase(key2)
-			sim.people._rank_sig = -1
+			sim.people.ranks_dirty()
 		"arrest_ringleaders":
 			# The two with the worst attitude; fair only when their attitude is bad.
 			var ranked: Array = people.duplicate()
