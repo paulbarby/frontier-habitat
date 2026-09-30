@@ -239,6 +239,8 @@ func follow_changed(id: int) -> void:
 			(m as CanvasItem).modulate.a = dim
 	if id >= 0 and inspector != null:
 		inspector.visible = false
+	if poi_marks != null:
+		poi_marks.queue_redraw()   # no POI tags in the follow view
 
 ## An Easter egg was found (V5 §4.5): the device profile keeps it (the codex shows found eggs), a toast.
 const EGG_TEXT := {"dance": ["Dance Floor Director", "You found the dance code. The whole corridor dances."],

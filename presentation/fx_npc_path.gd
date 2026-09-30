@@ -505,8 +505,18 @@ func _blocked_out(q: Vector2, skip_a: Vector2, skip_b: Vector2) -> bool:
 			continue
 		var c: Vector2 = b["pos"]
 		var lim: float = float(b["radius"]) * (0.8 if b["kind"] == "exterior" else 1.0) + 0.3
-		if q.distance_to(c) < lim and skip_a.distance_to(c) >= lim and skip_b.distance_to(c) >= lim:
-			return true
+		if q.distance_to(c) < lim:
+			if skip_a.distance_to(c) >= lim and skip_b.distance_to(c) >= lim:
+				return true
+			# An end inside the keep-out (a porch at a door): the leg may go straight out through
+			# it, but not along the hull (2026-09-30: a suited body hugged an airlock wall beside
+			# the outer door). A point is fine within 25 deg of the inside end's direction.
+			var ok: bool = b["kind"] != "room"   # (exteriors and the lander keep the old rule)
+			for e in [skip_a, skip_b]:
+				if (e as Vector2).distance_to(c) < lim and absf(((e as Vector2) - c).angle_to(q - c)) < 0.44:
+					ok = true
+			if not ok:
+				return true
 	return false
 
 func _los_out(a: Vector2, b: Vector2) -> bool:
@@ -658,6 +668,9 @@ func outside_of_structures(p: Vector3) -> Vector3:
 	for bid in _near_structures(q):
 		var b: Dictionary = sim.state["buildings"].get(bid, {})
 		if b.is_empty():
+			continue
+		# The rover depot is a walk-in hangar: crews get out at the bays inside it (V4).
+		if String(b["def"]) == "rover_depot":
 			continue
 		var c: Vector2 = b["pos"]
 		var lim: float = float(b["radius"]) * (0.8 if b["kind"] == "exterior" else 1.0) + 0.35

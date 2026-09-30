@@ -189,6 +189,10 @@ func find_source(res: String, near: Vector2, skip_inv: int = -1) -> int:
 	var invs: Dictionary = sim.state["inventories"]
 	var blds: Dictionary = sim.state["buildings"]
 	var dish: bool = sim.items.is_dish(res)
+	# With several bases, a haul on foot never goes to another base (kilometres away, out of
+	# suit range): the goods would stay reserved for a walk nobody can make (SIM 2026-09-30: a
+	# kitchen's dishes were held for another base's dining room while its own people starved).
+	var here: int = sim.bases.base_at(near) if sim.bases.count() > 1 else -1
 	# Only inventories that held this item when the board was indexed this second.
 	for inv_id in _src_index.get(res, []):
 		if inv_id == skip_inv or not invs.has(inv_id):
@@ -210,11 +214,25 @@ func find_source(res: String, near: Vector2, skip_inv: int = -1) -> int:
 				continue
 			if inv["role"] == "out" and dish and not _surplus_dishes(inv_id):
 				continue
+			if here != -1 and sim.bases.base_of(int(inv["oid"])) != here:
+				continue
+		elif here != -1 and sim.bases.base_at(sim.inv.position_of(inv_id)) != here:
+			continue
 		var key: float = rank * 100000.0 + sim.inv.position_of(inv_id).distance_to(near)
 		if key < best_key:
 			best_key = key
 			best = inv_id
 	return best
+
+func _cross_base(t: Dictionary) -> bool:
+	var invs: Dictionary = sim.state["inventories"]
+	var a: Dictionary = invs.get(int(t["src"]), {})
+	var b: Dictionary = invs.get(int(t["dst"]), {})
+	if a.is_empty() or b.is_empty():
+		return false
+	var ba: int = sim.bases.base_of(int(a["oid"])) if a["ot"] == "b" else sim.bases.base_at(sim.inv.position_of(int(t["src"])))
+	var bb: int = sim.bases.base_of(int(b["oid"])) if b["ot"] == "b" else sim.bases.base_at(sim.inv.position_of(int(t["dst"])))
+	return ba != -1 and bb != -1 and ba != bb
 
 ## Dishes live in the kitchen buffer so people can eat them. Only what is above the keep
 ## level may leave, so a kitchen never empties itself and never blocks at its cap.
@@ -531,7 +549,10 @@ func _gen_dining() -> void:
 	var dishes: Array = sim.items.dishes()
 	for id in blds:
 		var b: Dictionary = blds[id]
-		if b["state"] != "active" or not bool(sim.bdef(b["def"]).get("dining", false)) or bool(b["demolish"]) or _parked(b):
+		# A broken kitchen cannot cook, but people still eat there (agents._try_eat): it is
+		# restocked from storage like any dining room (SIM 2026-09-30: with the only kitchen
+		# broken and no spares, stored meals never came and the colony starved).
+		if (b["state"] != "active" and b["state"] != "broken") or not bool(sim.bdef(b["def"]).get("dining", false)) or bool(b["demolish"]) or _parked(b):
 			continue
 		var have: int = sim.inv.count_any(b["inv_out"], dishes) + _inb_any(b["inv_out"], dishes)
 		if have >= below:
@@ -890,6 +911,11 @@ func _expire() -> void:
 		if t["kind"] == "haul":
 			if not bool(t["picked"]) and not holds.has(t["hold_out"]):
 				fail(tid, "source_gone")
+				continue
+			# A haul between two bases that nobody has picked up (made before the rule in
+			# find_source, in an old save) is let go, so its goods are free again.
+			if not bool(t["picked"]) and sim.bases.count() > 1 and _cross_base(t):
+				fail(tid, "other_base")
 				continue
 			if not holds.has(t["hold_in"]):
 				fail(tid, "destination_gone")

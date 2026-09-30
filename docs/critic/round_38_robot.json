@@ -1,0 +1,39 @@
+{
+  "round": 38,
+  "date": "2026-09-30",
+  "scope": "robot dancer (part of super_dome and people_animation): tone check under V5 section 0 and a quality rating. Evidence art/npc/robot_turnaround.png (4 views + face, hand, torso at 1.5 m, leg), art/npc/robot_clips.png (robot_idle, robot_dance_a, robot_dance_b, robot_dance_c, robot_pole with ART-B's podium and pole); assets/models/robot_dancer.glb (1 mesh, 5 materials RobotChrome / RobotJoint / RobotTrim / RobotLight / RobotVisor, 5 animations); ART-NPC log (npc_verify 455/0, max step 14.90 deg, nothing inside the pole).",
+  "pass_mark": 0.65,
+  "tone_check": {
+    "result": "PASS",
+    "checked": [
+      "Clearly a machine: chrome shell, ball joints at shoulder, elbow, wrist, hip, knee and ankle, a ribbed waist spring, a visor with a cyan light-bar for a face, a chest lamp. No face, no hair, no skin.",
+      "No human sexual anatomy: flat chest plate with a lamp; no breasts; a smooth pelvis with no genital detail.",
+      "Poses: the dances are arm waves, a pirouette with a passe leg and a jump; the pole routine is a walk round the pole, a climb, a hanging tuck and a spin with the legs folded, then a flourish. They read as gymnastic and performance, not sexual. No hip thrusts, no floor work, no body-rolls, no framing on the pelvis.",
+      "Children: the robot has no child role; the club rule (adults only, bouncer) is ART-B's and still owed in a render."
+    ],
+    "watch_items": [
+      "Seen from behind (az 180 and pole frames 160-180) the pelvis reads as two rounded cheeks. Make the pelvis a mechanical block (a flat-sided hip housing with a panel line and a joint cap) so no human body curve is suggested.",
+      "robot_pole frame 20: a hand-on-hip lean against the pole. It is fine as a pose; keep it short and do not add a slower version.",
+      "Camera: RENDER must never frame the robot's pelvis in close-up (club shots at the podium from mid-distance or wider)."
+    ]
+  },
+  "subjects": {
+    "robot_dancer": {"consistency": 0.76, "appeal": 0.68, "style": 0.72, "score": 0.72, "pass": true, "provisional": true,
+      "rolls_into": ["super_dome", "people_animation"],
+      "what_works": [
+        "Reads as a club robot at once: dark chrome with pink and cyan reflections under club light, cyan trim lines on the limbs, a Daft-Punk-like visor. It fits the dome's neon palette.",
+        "Model detail at 1.5 m is clean: the waist spring, the joint caps, the chest lamp, the visor light-bar and five-finger hands.",
+        "The pole routine is the best clip: the robot walks round, climbs, hangs and spins, and nothing passes through the pole (npc_verify)."
+      ],
+      "fixes": [
+        {"owner": "ART-NPC", "fix": "robot_dance_a and robot_dance_b look nearly the same (arms out to the sides, a small lean, legs almost still). Make them distinct: dance_a a robot-style popping loop (isolated arm and head snaps, a knee bend on the beat), dance_b a step routine (side steps, a turn, arm swings)."},
+        {"owner": "ART-NPC", "fix": "Legs in the dances barely move; add a knee bounce on every beat (4-6 cm hip drop) so the dance reads at the club camera."},
+        {"owner": "ART-NPC", "fix": "Pelvis: a mechanical hip housing (see tone watch item 1)."},
+        {"owner": "ART-NPC", "fix": "Silhouette: the legs are thin tapered sticks under a large head and shoulders; thicken the thighs 20% and add a knee guard plate so the figure reads as a sturdy robot, not a mannequin."},
+        {"owner": "RENDER / ART-B", "fix": "In game: show the robots on the club podiums, with the light show and the bouncer and ADULTS ONLY sign at the door in one frame."}
+      ]}
+  },
+  "notes": [
+    "Tone check PASS; watch items listed. Quality 0.72, provisional, until the robots dance in the game."
+  ]
+}

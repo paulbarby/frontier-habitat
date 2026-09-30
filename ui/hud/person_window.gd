@@ -180,7 +180,7 @@ func _file(p: Dictionary) -> void:
 	var home: Dictionary = p["home"]
 	for row in [["Rank", String(p["rank"]["title"])], ["Role", _role_name(String(p["role"]))], ["Department", String(p["rank"]["department"]).capitalize()],
 			["Traits", ", ".join(tr)], ["Home", "%s (quality %d of 4)" % [String(home.get("kind", "none")).capitalize(), int(home.get("quality", 0))]],
-			["Doing", String(p["activity"])], ["Wears", String(p["outfit"]).replace("_", " ")]]:
+			["Doing", String(p["activity"])], ["Wears", V5.outfit_name(String(p["outfit"]))]]:
 		g.add_child(Kit.dim(row[0], 13))
 		var l: Label = Kit.wrap(String(row[1]), 13, P.TEXT)
 		l.custom_minimum_size.x = 200
@@ -210,8 +210,8 @@ func _file(p: Dictionary) -> void:
 		r.tooltip_text = "%s: %d of 100\nThe mark is 50 (neutral). %s" % [COMP_NAME[k], int(cv), why.get(k, "")]
 		var wl: Label = Kit.label(String(why.get(k, "")), "SmallLabel", 12, P.TEXT_2 if cv >= 50.0 else P.AMBER)
 		wl.custom_minimum_size.x = 170
-		wl.clip_text = true
-		wl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		wl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # critic round 36: a reason is never cut
+		wl.name = "Reason"
 		r.add_child(wl)
 		parts.add_child(r)
 	# Attitude

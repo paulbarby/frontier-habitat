@@ -1,0 +1,14 @@
+[
+ {
+  "eval": "window.__fhr.cmd('loadurl dome_v5.fhsave')"
+ },
+ {
+  "wait": 14
+ },
+ {
+  "cmd": "speed 1"
+ },
+ {
+  "eval": "window.__fhr.cmd('follow near 1430.5 1296')"
+ }
+]

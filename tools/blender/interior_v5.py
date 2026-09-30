@@ -5,12 +5,12 @@ residence_tube
   cells; each cell is one unit (low partition walls, 1.30 m, so the roof cutaway shows the plan) or a shared
   commons.  Behind the cells, garden strips with planters; at the street ends, entry corners.
   Family unit (units M/L/XL 2/3/4): a living room with a kitchenette and the family table, a parents' room with
-    two beds, a children's room with a bunk bed.   Anchors per unit: 3 Bed (2 parents, the lower bunk),
+    two beds, a children's room with a bunk bed.   Anchors per unit: 4 Bed (2 parents, the lower bunk, the upper bunk),
     2 Seat (the parents' chairs at the table), 1 Stand (kitchenette), 1 Unit (the unit door, floor 0).
   Executive unit (units M/L/XL 1/2/3): bedroom (two beds), a private bath (en suite), an office (desk), a lounge
     (sofa, coffee table, media wall) and a kitchenette.  Anchors per unit: 2 Bed, 3 Seat (sofa 2, office chair 1),
     1 Stand, 1 Unit.
-  Anchor numbers run unit by unit: unit i owns Bed 3i..3i+2 (family) / 2i..2i+1 (executive), Seat 2i.. / 3i..,
+  Anchor numbers run unit by unit: unit i owns Bed 4i..4i+3 (family) / 2i..2i+1 (executive), Seat 2i.. / 3i..,
   Stand i, Unit i.
 """
 import random
@@ -394,10 +394,13 @@ def headboard_wall(c, uc, v_head, width=2.9):
     two reading-light strips."""
     n = c.plan.n
     with c.at(uc, v_head, 90.0):
-        bbox(n, -0.012, 0.010, -width / 2, width / 2, F + 0.84, F + 1.27, "Cushion", bevel=0.008)
-        bbox(n, -0.016, 0.014, -width / 2 - 0.02, width / 2 + 0.02, F + 1.27, F + 1.29, "Accent")
+        bbox(n, -0.030, 0.010, -width / 2 - 0.06, width / 2 + 0.06, F + 0.30, F + 1.29, "Wood")
+        bbox(n, -0.045, -0.02, -width / 2, width / 2, F + 0.62, F + 1.24, "Fabric", bevel=0.01)
+        for k_ in range(6):
+            yy_ = -width / 2 + width * (k_ + 0.5) / 6
+            bbox(n, -0.050, -0.035, yy_ - 0.01, yy_ + 0.01, F + 0.66, F + 1.20, "Cushion")
         for yy in (-0.72, 0.72):
-            plate_x(n, -0.0125, yy - 0.28, yy + 0.28, F + 0.93, F + 0.95, "LightStrip", facing=-1)
+            plate_x(n, -0.051, yy - 0.28, yy + 0.28, F + 1.18, F + 1.20, "LightStrip", facing=-1)
 
 
 def rug_pattern(p, hx, hy, seed=0):
@@ -443,13 +446,21 @@ def bench(p, L=1.4):
 # --------------------------------------------------------------------------------------
 # Units
 # --------------------------------------------------------------------------------------
+def V5_rug_big(p):
+    """A large bedroom rug with a patterned border (drawn under and round the executive beds)."""
+    FU.rug_rect(p, 1.75, 1.35, mat="RugLight", border="Fabric")
+    for sx in (-1, 1):
+        plate_z(p, F + 0.0135, sx * 1.55 - 0.05, sx * 1.55 + 0.05, -1.15, 1.15, "Accent")
+
+
 def exec_bed(p, duvet="CushionLight", throw="Fabric", seed=0):
     """Executive bed (the bed convention: centre at the origin, heads toward +Y, stand point (+0.55, 0)): an
     upholstered platform wider than the mattress, a deep duvet, two pillows and a bolster; no headboard (the
     headboard wall behind the pair)."""
     W, L = IR.BED_W, IR.BED_L
     zt = F + BED_Z
-    bbox(p, -W / 2 - 0.05, W / 2 + 0.05, -L / 2 - 0.05, L / 2, F + 0.06, zt - 0.17, "Cushion", bevel=0.04)
+    bbox(p, -W / 2 - 0.08, W / 2 + 0.08, -L / 2 - 0.08, L / 2, F + 0.06, zt - 0.17, "Wood", bevel=0.03)
+    bbox(p, -W / 2 - 0.08, W / 2 + 0.08, -L / 2 - 0.14, -L / 2 - 0.04, F + 0.06, zt + 0.02, "Cushion", bevel=0.03)
     bbox(p, -W / 2 + 0.06, W / 2 - 0.06, -L / 2 + 0.06, L / 2 - 0.08, F, F + 0.07, "FloorDark", mats={"-z": None})
     bbox(p, -W / 2 + 0.02, W / 2 - 0.02, -L / 2 + 0.02, L / 2 - 0.04, zt - 0.17, zt, "Hull", bevel=0.05)
     bbox(p, -W / 2 - 0.04, W / 2 + 0.04, -L / 2 - 0.02, L / 2 - 0.55, zt - 0.12, zt + 0.05, duvet, bevel=0.03)
@@ -475,7 +486,7 @@ def exec_bay(plan, c, uc, v_head, idx):
         wx, wy = to_w(xc, by)
         yaw = dirdeg - 90.0
         with n.at(T(wx, wy, 0.0), RZ(yaw)):
-            exec_bed(n, duvet=("CushionLight", "RugLight")[(idx + j) % 2], throw=("Fabric", "Accent")[j], seed=idx)
+            exec_bed(n, duvet=("Fabric", "Cushion")[(idx + j) % 2], throw=("CushionLight", "Accent")[j], seed=idx)
         plan.rect(wx, wy, IR.BED_L / 2 + 0.07, IR.BED_W / 2 + 0.05, dirdeg, tag="bed%d" % (idx + j))
         sx, sy = to_w(xc, by - BED_BACK)
         plan.anchor("Bed", sx, sy, yaw)
@@ -492,12 +503,18 @@ def _bay(plan, c, uc, v_head, idx):
 
 
 def _bunk(plan, c, u, v, yl, seed):
-    """A bunk bed centred at (u, v); yl = local yaw of the bed frame (+Y = heads).  Adds the lower bunk's Bed."""
+    """A bunk bed centred at (u, v); yl = local yaw of the bed frame (+Y = heads).  Adds two Beds: the lower bunk,
+    then the upper bunk (the same stand point lifted by BUNK_UP, so the lying pose lands on the upper mattress;
+    coordinator decision 2026-09-30: the children's bunks count as 2 beds)."""
     n = plan.n
     with c.at(u, v, yl):
         bunk_bed(n, blankets=(("Accent", "Fabric"), ("Fabric", "Cushion"), ("Cushion", "Accent"))[seed % 3], seed=seed)
     c.rect(u, v, 0.51, 1.06, yl, tag="bunk")
     c.anchor("Bed", u, v, yl, lx=BED_BACK)
+    c.anchor("Bed", u, v, yl, lx=BED_BACK, z=F + BUNK_UP)
+
+
+BUNK_UP = 1.12            # upper mattress top above the lower one (bunk_bed: z2 = z1 + 1.12)
 
 
 def c_off(u, v, yl, lx, ly):
@@ -643,6 +660,8 @@ def _bath(plan, c, u0, u1, v0, v1, seed, door="u0"):
     corner, WC on the far wall between them, basin near the door."""
     n = plan.n
     c.floor(u0 + 0.05, u1 - 0.05, v0 + 0.05, v1 - 0.05, "Frost")
+    with c.at(0.5 * (u0 + u1), v0 + 0.5 * (v1 - v0), 0.0):
+        FU.rug_rect(n, 0.45, 0.32, mat="CushionLight", border="Accent")         # a bath mat
     far = u0 if door == "u1" else u1          # the side away from the door
     sg = 1.0 if far == u1 else -1.0           # +1: far side is +u
     # tub along the back wall, pushed to the far side (long along u)
@@ -693,6 +712,12 @@ def _lounge(plan, c, u, v, yl, seed, seats=2, screen_d=2.3, vmax=None, fabric="C
     with c.at(u, v, yl):
         pts = FU.sofa(n, n=3, seat_w=0.62, fabric=fabric)
     c.rect(*c_off(u, v, yl, -0.03, 0.0), 0.42, 1.08, yl, tag="sofa")
+    if fabric != "Cushion":                                # the executive sectional: a chaise at one end
+        with c.at(u, v, yl):
+            bbox(n, -0.44, 0.95, 0.95, 1.55, F + 0.04, F + 0.22, "Frame", bevel=0.02)
+            bbox(n, -0.24, 0.93, 0.97, 1.53, F + 0.22, F + 0.46, fabric, bevel=0.04)
+            bbox(n, -0.44, -0.24, 0.97, 1.53, F + 0.22, F + 0.88, fabric, bevel=0.05)
+        c.rect(*c_off(u, v, yl, 0.25, 1.25), 0.70, 0.30, yl, tag="sofa")
     for k, (sx, sy) in enumerate(pts[:seats]):
         su, sv = c_off(u, v, yl, sx, sy)
         c.anchor("Seat", su, sv, yl, lx=SEAT_BACK)
@@ -742,6 +767,10 @@ def exec_unit(plan, c, s, idx, seed):
         exec_bay(plan, c, uc, Dp - 0.06, 2 * idx)
         headboard_wall(c, uc, Dp - 0.045)
         wall_art(c, 3.3 if W > 10.0 else 1.4, vb, 90.0, w=0.8, seed=seed + 1)
+        with c.at(uc, Dp - 1.3, 0.0):
+            V5_rug_big(n)
+        wall_art(c, ue if W > 10.0 else W, vb + 1.5 if W > 10.0 else vb + 2.2, 180.0, w=0.6, seed=seed + 7) \
+            if W <= 10.0 else None
         if W > 10.0:
             FU.pot_plant(n, *c.w(ub - 0.33, Dp - 1.25), r=0.20, h=0.40, s=1.0, seed=seed + 4)
             c.rect(ub - 0.33, Dp - 1.25, 0.22, 0.22, tag="plant")
@@ -792,6 +821,8 @@ def exec_unit(plan, c, s, idx, seed):
             c.rect(W - 0.10 - kw / 2, 0.37, kw / 2, 0.33, tag="counter")
             c.anchor("Stand", W - 0.10 - kw / 2 - 0.35, 0.06 + 1.05, -90.0)
             wall_art(c, 2.2, 0.0, 90.0, w=1.0, seed=seed + 3)
+            with c.at(u_door + 2.2, 0.5 * vb + 0.1, 0.0):
+                FU.rug_round(n, 1.25, mat="RugLight", ring="Fabric", seg=24)
             for k, uu in enumerate((5.0, 5.85)):
                 with c.at(uu, vb - 0.06, -90.0):
                     FU.wi_shelf(n, w=0.80, d=0.36, h=1.20, seed=seed + 5 + k)
@@ -813,6 +844,8 @@ def exec_unit(plan, c, s, idx, seed):
             wall(c, uo, 1.4, uo, vb)
             c.floor(0.05, uo - 0.05, 0.05, vb - 0.05, "Wood")
             c.floor(uo + 0.05, W - 0.05, 0.05, vb - 0.05, "Wood")
+            with c.at(0.5 * (uo + W), 0.5 * (1.4 + vb) + 0.2, 0.0):
+                FU.rug_rect(n, 1.2, 0.9, mat="Cushion", border="Accent")
             wall_art(c, 1.2, 0.0, 90.0, w=1.0, seed=seed + 3)
             wall_art(c, uo, 1.95, 0.0, w=0.7, seed=seed + 2)
             with c.at(1.8, vb - 0.06, -90.0):

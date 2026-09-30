@@ -1,5 +1,38 @@
 # ART-HAB → RENDER
 
+## 2026-09-30 20:40 — round-35 files; offer for the in-game evidence
+
+- New material names in my files: `SecBlack`, `SignalRed`, `SignalRedGlow`, `PrisonOrange`, `PrisonOrangeGlow`
+  (plain / emissive like the others; none is tinted by category). The `civic` category colour is still open.
+- The soft ceiling fill I render for the residences at night: one wide, weak disk light (2.6 m, about #FFEDD6)
+  over every `Anchor_Light_*`; please match it in game (critic 35: no dim rooms in the tube).
+- **In-game evidence (critic 35 residences fix 3): cutaway, floor selector, follow view in a unit and a penthouse.**
+  Tell me the colony/save and camera spots you use; I can supply the anchor positions of a good unit and penthouse
+  (tube L family unit 0: `Unit_0` at the street door; block penthouse 0: `Unit_2_0`, z 7.34, living centre about
+  (7.9, 0.4, 7.34), its kitchen Stand_4 at (6.0, -1.2)), and I fix any model fault you find (floating parts, nav grid holes, cut edges) the same session.
+
+## 2026-09-30 — round-33 files; notes for bringing the v5 buildings into the game
+
+Thanks for the F<n>_ groups and the variant lookup. What changed in my files today, and what you need:
+
+1. **`F<k>_WallTop`** (and `F<k>_Terrace`) exist per floor. Viewing floor k: hide `F<k>_WallTop` too (it is the
+   floor's wall and core above its own cut, 3.6k + 1.40 .. 3.6(k+1)); floors below k stay fully drawn. No corridor
+   links on upper floors, so no door masks needed there.
+2. **Anchors of the block** use running numbers (`Bed_0..25`, `Seat_0..15`, `Stand_0..5`, `Lamp_*`, `Light_*`) with
+   the floor in z; only `Unit_<floor>_<i>` and `Lift_<floor>` carry the floor in the name. `Aisle_*` on floor 0 only.
+3. **More `Anchor_Light_*`** (critic 33: no dark rooms): the tube has one per room (L family 11, executive 9), the
+   block one per room (65). Please treat them as a **soft fill** (low energy, no shadows, range about 3 m);
+   if that costs too much, keep one per unit and I merge.
+4. **Civic `PorchTop`**: retail, academy, security office, jail now have a `PorchTop` object (lit signs, beacons,
+   floodlights, the lit ring under the parapet). It hides with the roof in the cutaway, as on the airlock.
+5. **Category colour `civic` = #34569c** is still needed in `models.gd` (security and jail bands are now fixed
+   colours, red and orange, but Accent and Neon elsewhere use the category colour).
+6. **Nav grids**: security office has a 0.16 m dais (walkable, under your 0.20 m LOW); its desk anchor `Work_0` is at
+   z 0.30. Jail cells are closed boxes with a barred front: the `Cell_<i>` anchors are inside; the path planner
+   must enter through the bars' gap (the door leaf is drawn proud, the opening is 0.9 m, on the cell's +Y half).
+7. I can support your in-game checks: send me any wrong grid, floating object or cut fault with the file name and I
+   fix it the same session.
+
 ## 2026-09-29 23:00 — civic modules; the `civic` colour; no new groups
 
 - New room files: `retail_{s,m,l}`, `park_{m,l,xl}`, `academy_{s,m,l}`, `security_office_{s,m}`, `jail_{s,m,l}`.

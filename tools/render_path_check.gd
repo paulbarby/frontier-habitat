@@ -323,6 +323,10 @@ func _sample() -> void:
 		if a["state"] != "alive":
 			continue
 		var rec: Dictionary = npc.agents[id]
+		# Riders are drawn by fx_vehicles in their seats (fx_npc does not draw this record then).
+		if view.get("vehicles") != null and view.vehicles.hides(int(id)):
+			last.erase(id)
+			continue
 		var p: Vector3 = npc._dp(rec)
 		var q := Vector2(p.x, p.z)
 		cur["samples"] = int(cur["samples"]) + 1
@@ -357,11 +361,20 @@ func _sample() -> void:
 				var gs: float = dist / DT / gr
 				if not (clip in LOCO) and String(pz.get("b", "")) == "" and gs > 0.3:
 					cur["d_slide"] = int(cur["d_slide"]) + 1
+					if label.contains("dbg") and int(cur["d_slide"]) <= 12:
+						print("SLIDE f%d id %d clip %s %.2f m/s where %s veh_hidden %s pos %s sim %s" % [frames, int(id), clip, gs, String(a["where"]), str(view.vehicles.hides(int(id)) if view.get("vehicles") != null else "-"), str(Vector2(p.x, p.z).round()), str((a["pos"] as Vector2).round())])
 					_bump(cur["d_by_clip"], clip + ":" + mode)
 					var dl: Array = cur.get_or_add("d_detail", [])
 					if dl.size() < 40:
 						var lp0: Vector3 = last_logic.get(id, rec["pos"])
 						dl.append("id %d f %d sm %s/%s busy %s | %s %s gs %.2f logical %.2f m/s off %s->%s pz %s speed %.2f tgt %.2f wp %d fade %.2f" % [int(id), frames, rec["sm"].cur, rec["sm"].phase, str(rec["sm"].is_busy()), clip, mode, gs, Vector2(rec["pos"].x - lp0.x, rec["pos"].z - lp0.z).length() / DT / gr, str(last_off.get(id, Vector3.ZERO)), str((rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)), str(pz), float(rec.get("speed", 0.0)), (rec["pos"] as Vector3).distance_to(rec.get("tval", rec["pos"])), (rec.get("wp", []) as Array).size(), float(rec.get("fade", 1.0))])
+		if label.begins_with("trace:") and int(id) == int(label.split(":")[1]) and frames % 3 == 0:
+			var tb: Dictionary = main.sim.state["buildings"]
+			var near := ""
+			for bb in tb.values():
+				if bb["def"] == "airlock" and (bb["pos"] as Vector2).distance_to(q) < 5.0:
+					near = "airlock %s d %.2f" % [str(bb["pos"]), (bb["pos"] as Vector2).distance_to(q)]
+			print("TR f%d q %s sim %s where %s mode %s clip %s wp %d gate %s %s" % [frames, str(q.snappedf(0.01)), str((a["pos"] as Vector2).snappedf(0.01)), String(a["where"]), mode, clip, (rec.get("wp", []) as Array).size(), str(rec.get("door_wait", rec.get("waiting", "-"))), near])
 		last_logic[id] = rec["pos"]
 		last_off[id] = (rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)
 		last[id] = p
@@ -395,7 +408,7 @@ func _sample() -> void:
 					var al: Array = cur.get_or_add("a_detail", [])
 					if al.size() < 40:
 						var wq0 = (rec.get("wp", []) as Array)
-						al.append("%s d%.2f wall%.2f pos %s logical %s off %s mode %s where %s var %s clip %s reg %s wp0 %s goal %s fade %.2f" % [r["def"], d, wall_line, str(q.snappedf(0.01)), str(Vector2(rec["pos"].x, rec["pos"].z).snappedf(0.01)), str((rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)), mode, a["where"], rec["var"], clip, str(npc.planner.region_of(rec["pos"], true)), str(wq0[0] if not wq0.is_empty() else ""), str(rec.get("wp_goal", "")), float(rec.get("fade", 1.0))] + " wp %s tval %s" % [str((rec.get("wp", []) as Array).slice(0, 6).map(func(w): return Vector2(w.x, w.z).snappedf(0.01))), str(rec.get("tval", ""))] + " c %s opens %s" % [str((r["pos"] as Vector2).snappedf(0.01)), str(_openings(view, rid, r).map(func(o): return "%.0f/%.1f" % [rad_to_deg((o["dir"] as Vector2).angle_to(dir)), o["half"]]))])
+						al.append(("id %d f %d " % [int(id), frames]) + "%s d%.2f wall%.2f pos %s logical %s off %s mode %s where %s var %s clip %s reg %s wp0 %s goal %s fade %.2f" % [r["def"], d, wall_line, str(q.snappedf(0.01)), str(Vector2(rec["pos"].x, rec["pos"].z).snappedf(0.01)), str((rec.get("off", Vector3.ZERO) as Vector3).snappedf(0.01)), mode, a["where"], rec["var"], clip, str(npc.planner.region_of(rec["pos"], true)), str(wq0[0] if not wq0.is_empty() else ""), str(rec.get("wp_goal", "")), float(rec.get("fade", 1.0))] + " wp %s tval %s" % [str((rec.get("wp", []) as Array).slice(0, 6).map(func(w): return Vector2(w.x, w.z).snappedf(0.01))), str(rec.get("tval", ""))] + " c %s opens %s" % [str((r["pos"] as Vector2).snappedf(0.01)), str(_openings(view, rid, r).map(func(o): return "%.0f/%.1f" % [rad_to_deg((o["dir"] as Vector2).angle_to(dir)), o["half"]]))])
 			if d < wall_line - 0.25:
 				in_room = rid
 				# Furniture.
@@ -456,7 +469,7 @@ func _sample() -> void:
 						var lim: float = float(b["radius"]) * (0.8 if b["kind"] == "exterior" else 1.0) - 0.2
 						# The airlock and the lander hatch are the ways in; a body serving a machine
 						# kneels at its Anchor_Service, which is inside the machine's circle.
-						if (b["kind"] == "room" and String(b["def"]) == "airlock") or String(b["def"]) == "lander":
+						if (b["kind"] == "room" and String(b["def"]) == "airlock") or String(b["def"]) == "lander" or String(b["def"]) == "rover_depot":
 							continue
 						# (a body getting up at a machine's Anchor_Service, which lies inside the machine's circle)
 						if int(rec["use"].get("b", -2)) == int(bid) or (rec.has("left_from") and p.distance_to(rec["left_from"]) < 1.5) or (mode == "leaving" and not rec["anchor"].is_empty() and p.distance_to(rec["anchor"].get("pos", Vector3.INF)) < 0.5):

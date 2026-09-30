@@ -1,0 +1,47 @@
+{
+  "round": 35,
+  "date": "2026-09-30",
+  "scope": "residences and civic_modules after ART-HAB's round-33 fixes. Blender + game-camera identity shots, provisional. Renders updated 2026-09-29 19:50-19:51: v4_identity_v5civic_* and v4_identity_v5block_* (day/night, 110/250 m), retail_m (+ext, night), academy_m (+ext, night), security_office_m (+ext, night), jail_s (+ext, night), apartment_block_m floors/exterior/night, residence_tube_executive_l. NOT updated since round 33: jail_l and jail_l_exterior (19:27/19:32), park_l (19:27), retail_l (19:32).",
+  "pass_mark": 0.65,
+  "subjects": {
+    "civic_modules": {"consistency": 0.72, "appeal": 0.70, "style": 0.74, "score": 0.72, "pass": true, "provisional": true, "was": 0.65,
+      "identity_test": {
+        "110 m day": "5 of 5: retail (pink-and-white striped canopy roof, shopping-bag badge, billboard), academy (blue schoolhouse roof with a bell tower, mortarboard badge), security (lattice mast, shield badge, red rim), jail (four corner towers, lock badge), park (green glass dome, heart).",
+        "250 m day": "5 of 5 (art/critic/r35_civic250.png): the silhouettes carry it - canopy stripes, schoolhouse roof, mast, four towers, glass dome.",
+        "250 m night": "4 of 5 (r35_civic250n.png): lock, shield, mortarboard and heart glow; retail's bag is dim and the canopy stripes go dark."
+      },
+      "security_vs_jail": "Now distinct at 250 m by silhouette (mast vs four towers) and badge (shield vs lock). Colour is still wrong against V5 section 1: security reads orange-red (orange shield, red-orange band) and the jail band is yellow-amber, which is the housing accent. Security should be black and red; the jail prison orange.",
+      "round_33_fixes_checked": {
+        "1 own badges": "landed: bag, mortarboard, shield, lock.",
+        "2 silhouettes": "landed for retail, academy, security and jail S; jail L not re-rendered (still the old blue-shield drum with a fence).",
+        "3 retail awnings and signs": "landed (canopy roof, billboard); the drum wall has no shop-front signs.",
+        "4 empty floors": "partly: security office is fuller; retail M and academy M floors look the same as round 33 (40-50% empty tile); jail S adds a yard strip and a visitor table.",
+        "5 security command post": "landed: a curved monitor wall with four screens over a ringed command desk, a holding cell, lockers.",
+        "6 night": "landed: interiors lit, badges and bands glow at 250 m."
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Colours to the contract: security band and badge black and red (#1B1F24 band, #D93A3A shield); jail band prison orange (#FF7A1A), not the housing yellow."},
+        {"owner": "ART-HAB", "fix": "Re-render jail L (and its exterior), park L and retail L with the new kit; jail L still shows the old blue shield and band."},
+        {"owner": "ART-HAB", "fix": "Retail M and academy M: still 40-50% empty floor. Retail: two more shelf rows, a fitting room, a till queue rail. Academy: a second class group, a library corner, a lab bench."},
+        {"owner": "ART-HAB", "fix": "Retail at night: light the canopy stripes and the billboard so the shop reads at 250 m after dark."}
+      ]},
+    "residences": {"consistency": 0.80, "appeal": 0.76, "style": 0.80, "score": 0.79, "pass": true, "provisional": true, "was": 0.77,
+      "round_33_fixes_checked": {
+        "1 block floor-1 ring": "landed: balconies per unit with loungers, chairs and screens.",
+        "2 block exterior": "landed: striped balconies, a glazed top, the penthouse terrace with umbrellas and two pools; lit units at night.",
+        "3 executive furniture set": "not visible: residence_tube_executive_l looks the same as round 33 (wood floors, grey rooms, the same bed and sofa family).",
+        "4 night fill": "partly: the block at night is readable; tube rooms away from lamps are still dim grey.",
+        "5 in-game evidence": "still open."
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Show the executive set in a render (upholstered bed with headboard, armchairs, bookcase, art) or build it; it is not visible in the evidence."},
+        {"owner": "ART-HAB", "fix": "Tube rooms at night: a soft ceiling fill so no room is dim grey."},
+        {"owner": "RENDER / ART-HAB", "fix": "In-game cutaway in a real colony, the floor selector, and the follow view in a unit and a penthouse, for the final rating."}
+      ]}
+  },
+  "notes": [
+    "civic_modules 0.72 (was 0.65); residences 0.79 (was 0.77). Both provisional (no in-game evidence).",
+    "Evidence gap: jail L, park L and retail L renders predate the fixes.",
+    "My crops: art/critic/r35_civic250.png, r35_civic250n.png; grids r35_civic.png, r35_civic_ext.png, r35_id.png, r35_block.png, r35_new.png."
+  ]
+}

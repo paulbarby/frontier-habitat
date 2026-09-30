@@ -688,3 +688,49 @@ and the live state (nothing new is saved yet); later milestones make them real (
 Use `sim.sizes.size_label(def_id, size)` for the label ("XXL", "XXXXL", else S/M/L/XL). New techs: `civic_1`, `civic_2`,
 `education`, `security`, `arcology` (branch `civic`, "Civic"). Every building has `anchors_spec` (the anchor names ART
 builds and RENDER reads, with floor indices for the multi-storey ones).
+
+## 2026-09-30 - v5 people orders are live; unrest is a stored model; cheap queries
+
+Answer to UI-to-SIM 2026-09-29 (the 7 commands, predict, students, the unrest range).
+
+**Commands** (submit as now; results in `sim.cmds.results[id]` = `{ok, code, text, ...}`; `code` is `ok`,
+`invalid`, `refused`, `full`, `cooldown` or `no_teacher`). Handlers: `sim.discipline.cmd_review / cmd_discipline`,
+`sim.ranks.cmd_appoint`, `sim.housing.cmd_set_home`, `sim.education.cmd_enrol`, `sim.unrest.cmd_unrest_response`,
+`sim.social.cmd_egg` (your `live_command` finds them).
+
+| kind | payload | notes |
+|---|---|---|
+| `review` | `{agent, grade}` excellent, good, needs_improvement, poor | result `attitude` (points); stored in the person's record `review {grade, tick}` |
+| `discipline` | `{agent, action, days?}` praise, bonus_leisure, gift, warning, extra_shift, ration_cut, confine, demote, jail | result `unfair` (bool); `demote` is refused for a person without a post; `jail` without an active jail confines instead (text says so) |
+| `appoint` | `{agent, rank, department?, base?}` commander, captain, first_hand | one post per person; the replaced holder is in `replaced`; refused for another department or base |
+| `set_home` | `{agent, building, unit?}` | needs a free bed; `full` otherwise |
+| `enrol` | `{agent, skill, building}` | an active academy with a free seat; a teacher (skill 60+) or the console (to level 3); `no_teacher` otherwise |
+| `unrest_response` | `{base, response}` meet_demand, leisure_day, party, amnesty, replace_captain, arrest_ringleaders, lock_down | each has a cooldown (`cooldown`); `arrest_ringleaders` adds unrest when it is unfair |
+| `egg` | `{kind: "dance", agent}` | `sim.people.action(a)` is `"dance"` for 20 s |
+
+**Queries**
+- `sim.people.predict(agent or id, action, params = {})` -> `{attitude, satisfaction, others (text), risk (text),
+  unfair (bool), text, days, traits [names that change the effect]}` for the 9 actions and the 4 grades; `{}` for an
+  unknown action. `unfair` is true for a punishment of a person whose attitude is above -10.
+- `sim.education.students(building)` -> `[{agent, skill, progress 0..1, level_to, teacher (id, -1 console)}]`;
+  `sim.education.seats(b)`, `in_class(a)`.
+- `sim.people.attitude(a)` now has `trend` (points a day toward the target) and `target`; its reasons include the
+  active reviews and discipline. `satisfaction(a)` components move with them (e.g. `freedom` while confined).
+- The person's record (read only): `sim.people.rec_of(id)` -> `{att, sat, low, mods [{kind, text, comp, sat, att,
+  until}], hist [{tick, text}] (last 30), review, skill_bonus, demoted_until, unit}` (the personnel file history).
+- Flags on the agent while active: `v5_nowork`, `v5_norec`, `jailed`, `v5_hunger`, `v5_work`.
+- `sim.social.unrest(base)` (and `sim.unrest.info(base)`) -> `{value, target, stage, causes [{text, delta}], demand,
+  department (on strike), responses {name: ready}}`. The value moves toward the target (up 120, down 60 points a day).
+
+**Finding answered (unrest could not reach protest):** unrest is now stored per base and made from satisfaction,
+attitude, the share of very unhappy people, punishments (unfair ones count double), ration cuts and deaths, less
+the commander's leadership and security officers. Test `v5_unrest_protest_and_strike`: a well run showcase_v4 stays
+under 40 for a day; a starved, tired colony with ration cuts reaches protest and strike (the worst department stops
+work), names a demand, and `meet_demand` brings it down by more than 20 points in 300 s. Stages: slowdown -15 % work
+speed; strike: one department stops; riot: nobody works (fights and damage come with the security milestone).
+
+**Not done yet:** a student does not walk to the academy (the course runs where they are); a jailed person is not
+walked to a cell; `lock_down` records the time but closes no doors; `party` costs nothing yet.
+
+**Cost:** `talks()`, `talks_near`, `people.list()`, `unrest()` are cheap to call every frame (numbers in
+SIM-to-RENDER.md 2026-09-29). `people.list()` rows may be a few seconds old for part of the people.

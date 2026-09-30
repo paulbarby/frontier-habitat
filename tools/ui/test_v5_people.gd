@@ -57,6 +57,12 @@ func _process(_d: float) -> bool:
 			var t: String = _texts(hud.person)
 			for part in ["SATISFACTION", "ATTITUDE", "SKILLS", "Rank", "Traits", "Home"]:
 				check("file tab: %s" % part, t.contains(part))
+			check("the outfit has its player name, never the raw id (critic round 36)", not t.contains("uniform_") and not t.contains("uniform command") and not t.contains("casual_"), t.left(0))
+			var cut := false
+			for l in hud.person._body.find_children("Reason", "Label", true, false):
+				if (l as Label).text_overrun_behavior != TextServer.OVERRUN_NO_TRIMMING or (l as Label).clip_text:
+					cut = true
+			check("satisfaction reasons wrap, never cut", not cut)
 			check("personnel file inside the view", _inside(hud.person), str(hud.person.get_global_rect()))
 			var wa: Rect2 = hud.wm.work_area()
 			var pr: Rect2 = hud.person.get_global_rect()
@@ -149,7 +155,7 @@ func _process(_d: float) -> bool:
 			var cx = load("res://ui/codex.gd").new(hud)
 			var names: Array = cx.entries("society").map(func(e): return String(e["name"]))
 			check("a found egg is in the codex (People tab), the others stay hidden", names.has("Dance Floor Director") and not names.has("The dev in the dome"), str(names))
-			check("the codex has ranks, skills, discipline and unrest", names.has("Ranks") and names.has("Skills") and names.has("Reviews and discipline") and names.has("Unrest"))
+			check("the codex has ranks, skills, discipline and unrest", names.has("Ranks and departments") and names.has("Skills") and names.has("Reviews and discipline") and names.has("Unrest") and names.has("The Regolith Rag") and names.has("New structures") and names.has("Floor selector"))
 			main._on_cmd("open crew")
 			_step = 7
 			_n = 0
@@ -157,6 +163,7 @@ func _process(_d: float) -> bool:
 			var top = hud.screens.top_screen()
 			check("crew screen: org chart with the commander and 5 departments", hud.screen_name() == "crew" and top.slots.size() == 11, "%d slots" % top.slots.size())
 			check("crew: a mood face per person", top.find_children("Mood", "", true, false).size() >= 5, "%d faces" % top.find_children("Mood", "", true, false).size())
+			check("crew: each person's top skills in the org chart (critic round 36)", top.find_children("TopSkills", "", true, false).size() >= 5)
 			var cmdr: int = int(top.slots[0]["holder"])
 			check("SIM's commander is in the commander slot", cmdr >= 0 and String(sim.people.rank(sim.state["agents"][cmdr])["rank"]) == "commander")
 			top.dropped(pid, {"rank": "captain", "department": "food"})
@@ -227,6 +234,14 @@ func _process(_d: float) -> bool:
 			var cards: Dictionary = hud.build_bar._cards
 			check("apartment block card: XXL", cards.has("apartment_block") and _texts(cards["apartment_block"]).contains("XXL"))
 			main._on_cmd("unrest off")
+			hud.open_screen("help", "people")
+			var ht: String = _texts(hud.screens.top_screen())
+			var help_ok := true
+			for tp in load("res://ui/v5_help.gd").TOPICS:
+				if not ht.to_lower().contains(String(tp[1]).to_lower()):
+					help_ok = false
+			check("How to play, People tab: every v5 topic (STE)", hud.screen_name() == "help" and help_ok, ht.left(200))
+			hud.close_modal()
 			var Profile = load("res://ui/profile.gd")
 			Profile.data().erase("eggs")   # the test's egg does not stay on this device
 			Profile._save()

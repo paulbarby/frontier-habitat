@@ -1,28 +1,990 @@
 {
-  "_note": "V5 section 4.1: conversation lines. topic -> list of templates. A template is a string or {text, trait} (a trait-flavoured variant: used first when the speaker has that trait). Slots: {other} {building} {resource} {captain} {days} {base} {place}. STARTER SET for the API stubs (milestone 1); the full set (>= 600 templates, >= 25 topics) comes with the conversation milestone.",
-  "emotes": {"hungry": "sweat", "tired": "zzz", "romance": "heart", "angry": "anger", "happy": "music", "money": "credit", "question": "question"},
-  "topics": {
-    "air": ["The air feels thin in here.", "Is the oxygen plant keeping up?", {"text": "I can taste the scrubbers. Not good.", "trait": "honest"}],
-    "food": ["Food stores are low again.", "When did you last eat a real meal?", {"text": "If I see one more potato I will scream.", "trait": "funny"}],
-    "power": ["The lights keep dimming.", "We need more batteries before night."],
-    "hungry": ["I am starving.", "My stomach is making noises.", {"text": "Somebody feed me, please.", "trait": "lazy"}],
-    "tired": ["I need sleep. Now.", "I could sleep on this floor.", {"text": "One more shift and I drop.", "trait": "workaholic"}],
-    "work": ["Busy day at the {building}.", "{captain} wants the job done by tonight.", {"text": "I could run this place better.", "trait": "ambitious"}],
-    "overwork": ["Three shifts in a row. Again.", "Nobody here gets a break."],
-    "housing": ["My bunk is too small.", "I want a real room, not a dorm."],
-    "rank": ["Did you hear who got promoted?", {"text": "That promotion should have been mine.", "trait": "jealous"}],
-    "gossip": ["Did you see {other} at the bar last night?", {"text": "Oh, I have news. Big news.", "trait": "gossip"}],
-    "romance": ["You look nice today, {other}.", {"text": "Want to see the park with me later?", "trait": "romantic"}, {"text": "Um. Hi. Nice weather. Inside.", "trait": "shy"}],
-    "leisure": ["The lounge was fun yesterday.", "Anyone up for a game later?", {"text": "Party tonight. Tell everyone.", "trait": "party-animal"}],
-    "hazard": ["Did you feel that quake?", "Stay inside when the storm comes."],
-    "death": ["I still think about {other}.", "We lost a good one."],
-    "ship": ["A ship is coming in.", "Maybe the traders have coffee."],
-    "research": ["The lab finished something new.", "Science keeps us alive out here."],
-    "small_talk": ["How is it going?", "Long day.", "Did you see the sunrise?", {"text": "Why did the rover cross the crater? Nobody knows.", "trait": "funny"}],
-    "complaint": ["This place is a mess.", {"text": "I am not taking orders from {captain} much longer.", "trait": "hot-headed"}],
-    "praise": ["Good job on the {building}.", "Thanks for the help today."],
-    "visitor": ["First time on this planet?", "Where do you come from?"],
-    "visitor_says": ["Nice colony you have here.", "Is there a bar in this place?", "The view from the dome is something."],
-    "child": ["Can we go to the park?", "School was boring today.", "I want to be a pilot."]
-  }
+ "_note": "V5 section 4.1. Conversation lines by topic; plain short English. A line is text or {text, trait} (said only by a person with that trait, and more often). Slots: {other} {building} {place} {captain} {commander} {base} {days} {resource}. 'reply' lines are said by the listener between lines.",
+ "emotes": {
+  "hungry": "sweat",
+  "tired": "zzz",
+  "romance": "heart",
+  "breakup": "tears",
+  "angry": "anger",
+  "happy": "music",
+  "money": "credit",
+  "question": "question",
+  "leisure": "music",
+  "death": "tears",
+  "complaint": "anger",
+  "unrest": "anger",
+  "praise": "happy",
+  "ship": "question",
+  "discipline": "sweat",
+  "dome": "music",
+  "news": "question",
+  "child": "music",
+  "academy": "question"
+ },
+ "topics": {
+  "small_talk": [
+   "How is it going?",
+   "Long day.",
+   "Did you sleep well?",
+   "Nice to see you, {other}.",
+   "Same old, same old.",
+   "What are you up to later?",
+   "I like the new lights in here.",
+   "Busy day?",
+   "Is it day or night outside? I lost track.",
+   "{days} days on this rock now.",
+   "I found a quiet corner in the {place}.",
+   "Do you want some tea?",
+   "My boots are full of dust again.",
+   "Have you seen my gloves?",
+   "The coffee here is terrible.",
+   "This planet grows on you.",
+   "Did you hear that noise in the pipes?",
+   "I counted the rivets in the ceiling. Twice.",
+   "One more shift and I rest.",
+   "You look busy, {other}.",
+   "Nice weather for a walk outside. If you like dust.",
+   "Did the mail come in?",
+   {
+    "text": "Want to hear a joke? No? Too bad.",
+    "trait": "funny"
+   },
+   {
+    "text": "Why do rovers never get lost? They take the long way round.",
+    "trait": "funny"
+   },
+   {
+    "text": "Oh. Hello. Sorry. I was thinking.",
+    "trait": "shy"
+   },
+   {
+    "text": "You look great today, {other}.",
+    "trait": "charming"
+   },
+   {
+    "text": "I say a prayer for the colony every night.",
+    "trait": "pious"
+   },
+   {
+    "text": "Party in the lounge later? Say yes.",
+    "trait": "party-animal"
+   },
+   "Morning, {other}.",
+   "Evening already?",
+   "What day is it?",
+   "I fixed my radio.",
+   "Did you try the new soap?",
+   "My plant grew a new leaf.",
+   "I need new socks.",
+   "The corridor lights flicker.",
+   "I like this time of day."
+  ],
+  "work": [
+   "Busy day at the {building}.",
+   "{captain} wants the job done by tonight.",
+   "The {building} needs a check.",
+   "I fixed the valve. Again.",
+   "Who left the tools out?",
+   "The new parts came in.",
+   "The machines are running well today.",
+   "We are behind on the build.",
+   "I need two more hands for the job.",
+   "The {building} makes a strange noise.",
+   "I think we can finish early today.",
+   "The job list is long.",
+   "Can you carry this for me?",
+   "The storehouse is a maze.",
+   "I made a list of what we need.",
+   "Check the seals before you go out.",
+   "Good work is quiet work.",
+   "We need more {resource}.",
+   "The site outside is almost done.",
+   "I am on the next shift at the {building}.",
+   {
+    "text": "One more job, then one more.",
+    "trait": "workaholic"
+   },
+   {
+    "text": "Is it break time yet?",
+    "trait": "lazy"
+   },
+   {
+    "text": "I want to run this department one day.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "I did it right the first time. As always.",
+    "trait": "honest"
+   },
+   "The drill needs a new bit.",
+   "I checked every cable twice.",
+   "The haul took forever.",
+   "We need a second storehouse.",
+   "The crane is stuck again.",
+   "Nice clean weld, if I say so."
+  ],
+  "overwork": [
+   "Three shifts in a row. Again.",
+   "Nobody here gets a break.",
+   "My hands hurt.",
+   "I cannot feel my feet.",
+   "When did we last have a day off?",
+   "I work, I eat, I sleep. That is all.",
+   "{captain} forgets we are people.",
+   "I fell asleep standing up.",
+   "The job list never gets shorter.",
+   "My back is done for today.",
+   "I will ask for a rest day.",
+   "I have not seen the lounge in a week.",
+   "Too many jobs, too few people.",
+   "We need more people for this.",
+   "I dream about work now.",
+   "Tell {captain} I need a break.",
+   {
+    "text": "I love it. More work, please.",
+    "trait": "workaholic"
+   },
+   {
+    "text": "I am not doing another shift. No way.",
+    "trait": "lazy"
+   },
+   {
+    "text": "If this goes on, I will say something loud.",
+    "trait": "hot-headed"
+   }
+  ],
+  "hungry": [
+   "I am starving.",
+   "My stomach is making noises.",
+   "When is the next meal?",
+   "I could eat a whole greenhouse.",
+   "Is there any food left?",
+   "I skipped lunch. Big mistake.",
+   "The kitchen is too far away.",
+   "I smell soup. Or I dream it.",
+   "I need something to eat now.",
+   "Do you have a ration bar?",
+   "I would trade my boots for bread.",
+   "Food first, talk later.",
+   "My head hurts. I need food.",
+   "The last meal was too small.",
+   "Can we go to the kitchen?",
+   {
+    "text": "I will not work hungry.",
+    "trait": "lazy"
+   },
+   {
+    "text": "I share my last bar with you, {other}.",
+    "trait": "honest"
+   },
+   {
+    "text": "Rations again? This is unfair.",
+    "trait": "hot-headed"
+   }
+  ],
+  "tired": [
+   "I need sleep. Now.",
+   "I could sleep on this floor.",
+   "My eyes close by themselves.",
+   "One more hour and I fall over.",
+   "Did I sleep last night? I forget.",
+   "I am too tired to think.",
+   "My bed is calling me.",
+   "I yawned three times in a minute.",
+   "Wake me up tomorrow.",
+   "Too tired to eat. Almost.",
+   "Where is my bunk again?",
+   "I will rest after this job.",
+   "The night shift is hard.",
+   "I need a long sleep.",
+   "Coffee does not help any more.",
+   {
+    "text": "Sleep is for later.",
+    "trait": "workaholic"
+   },
+   {
+    "text": "Nap time. Every time.",
+    "trait": "lazy"
+   }
+  ],
+  "air": [
+   "The air feels thin in here.",
+   "Is the oxygen plant keeping up?",
+   "I have a headache. Is it the air?",
+   "Check the air readings, please.",
+   "I breathe slowly to save air. Silly, I know.",
+   "The fans sound tired.",
+   "We need a second oxygen plant.",
+   "My suit alarm went off twice today.",
+   "Do not leave the airlock open.",
+   "Is it just me, or is it stuffy?",
+   "The air smells of metal.",
+   "Breathing should not be this hard.",
+   "Somebody fix the air, please.",
+   "I keep my suit close today.",
+   "The air in the {building} is bad.",
+   {
+    "text": "I am not scared. Much.",
+    "trait": "calm"
+   },
+   {
+    "text": "If the air goes, we all go. Nice.",
+    "trait": "funny"
+   }
+  ],
+  "food": [
+   "Food stores are low again.",
+   "When did you last eat a real meal?",
+   "The greenhouse needs more hands.",
+   "Potatoes again.",
+   "We need more variety.",
+   "The kitchen ran out of salt.",
+   "I miss fresh fruit.",
+   "The crops look good this week.",
+   "Who ate the last of the soup?",
+   "We should grow more beans.",
+   "The meals are getting smaller.",
+   "The cook did well today.",
+   "Fungus again? I like fungus. Sometimes.",
+   "Food is the one thing we cannot run out of.",
+   "The cold store is almost empty.",
+   "I helped in the greenhouse today.",
+   {
+    "text": "I could cook better than this.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "Somebody takes more than a fair share.",
+    "trait": "greedy"
+   },
+   {
+    "text": "Good food is good for the soul.",
+    "trait": "pious"
+   }
+  ],
+  "power": [
+   "The lights keep dimming.",
+   "We need more batteries before night.",
+   "The solar arrays need a clean.",
+   "Is the power on in the {building}?",
+   "The night is long. The batteries are small.",
+   "Turn off what you do not use.",
+   "The heaters are off again.",
+   "We need a bigger power plant.",
+   "The wind turbine is broken again.",
+   "Power cut in the {building}.",
+   "I charge my suit when I can.",
+   "Dust on the panels means dark nights.",
+   "The grid is weak today.",
+   "Somebody check the cables.",
+   "Power first. Then the rest.",
+   {
+    "text": "Leave it to me. I know cables.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "Candles. We need candles.",
+    "trait": "funny"
+   }
+  ],
+  "hazard": [
+   "Did you feel that quake?",
+   "Stay inside when the storm comes.",
+   "The sky looks angry.",
+   "A dust storm is coming.",
+   "The sensors say radiation is up.",
+   "I saw a flash in the sky.",
+   "Keep your suit near you.",
+   "Meteors again tonight.",
+   "The storm broke two panels.",
+   "I do not like that noise.",
+   "Everybody inside, now.",
+   "Check the hull after the storm.",
+   "Solar flare warning. Stay in.",
+   "The ground shook in the {building}.",
+   "Is the shelter ready?",
+   "One more storm and I go home.",
+   {
+    "text": "Storms pass. We stay.",
+    "trait": "calm"
+   },
+   {
+    "text": "I told you this place is dangerous!",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "Pray it passes.",
+    "trait": "pious"
+   }
+  ],
+  "housing": [
+   "My bunk is too small.",
+   "I want a real room, not a dorm.",
+   "The walls are thin.",
+   "My roommate snores.",
+   "I want a window.",
+   "Did you see the new homes?",
+   "I put a plant in my room.",
+   "Our room is cold at night.",
+   "A family room would be nice.",
+   "The dorm is too loud.",
+   "I want my own door.",
+   "The new tube homes look good.",
+   "I would pay for a penthouse.",
+   "Home is where the air is.",
+   "Can I move to the new block?",
+   {
+    "text": "A captain should have a better room than this.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "My room is fine. Thanks for asking.",
+    "trait": "calm"
+   },
+   {
+    "text": "I deserve the penthouse.",
+    "trait": "greedy"
+   }
+  ],
+  "rank": [
+   "Did you hear who got promoted?",
+   "The new captain seems fair.",
+   "{commander} runs a tight base.",
+   "I want to be a first hand one day.",
+   "Ranks, ranks, ranks.",
+   "{captain} was a good choice.",
+   "Who picks the captains?",
+   "I work hard. Somebody should notice.",
+   "The commander walked past me today.",
+   "The captain has a nice room.",
+   "A title does not fix a pipe.",
+   "I got a good review.",
+   "I think I will get a promotion.",
+   "Reviews are coming.",
+   {
+    "text": "That promotion should have been mine.",
+    "trait": "jealous"
+   },
+   {
+    "text": "One day, I will be commander.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "I do not need a title. I need a nap.",
+    "trait": "lazy"
+   },
+   {
+    "text": "I follow {captain}. Always.",
+    "trait": "loyal"
+   }
+  ],
+  "gossip": [
+   "Did you see {other} at the bar last night?",
+   "I heard something about the captain.",
+   "You did not hear it from me.",
+   "Guess who was late again.",
+   "Two people were holding hands in the park.",
+   "Somebody got a letter from home.",
+   "I know a secret. Want to hear it?",
+   "Who is the new person in the {building}?",
+   "The commander was in a bad mood.",
+   "Somebody took two desserts.",
+   "They argued in the kitchen.",
+   "I heard a shouting match in the {building}.",
+   "Everybody talks about the new couple.",
+   "The Rag has a story about you.",
+   "Do not tell anyone. But.",
+   "The traders said strange things.",
+   "Somebody sings in the showers.",
+   {
+    "text": "Oh, I have news. Big news.",
+    "trait": "gossip"
+   },
+   {
+    "text": "Wait until you hear this one.",
+    "trait": "gossip"
+   },
+   {
+    "text": "I heard it from three people, so it is true.",
+    "trait": "gossip"
+   },
+   {
+    "text": "I do not like gossip. But tell me.",
+    "trait": "honest"
+   },
+   "The captain has a secret.",
+   "Somebody sleeps in the lounge.",
+   "I know who took the cake.",
+   "They were whispering in the lift."
+  ],
+  "romance": [
+   "You look nice today, {other}.",
+   "Do you want to have dinner with me?",
+   "I like your smile.",
+   "Walk with me later?",
+   "You make this place better.",
+   "I saved you a seat.",
+   "Can I sit with you?",
+   "I thought about you today.",
+   "You are funny, {other}.",
+   "Your hair looks good like that.",
+   "I like talking to you.",
+   "Tea later? Just us?",
+   "The stars are nice tonight. Want to see?",
+   "I made this for you.",
+   "You are my favourite person here.",
+   {
+    "text": "Want to see the park with me later?",
+    "trait": "romantic"
+   },
+   {
+    "text": "Every day with you is a good day.",
+    "trait": "romantic"
+   },
+   {
+    "text": "I wrote you a poem. It is short. Like me.",
+    "trait": "funny"
+   },
+   {
+    "text": "Um. Hi. You look. Nice.",
+    "trait": "shy"
+   },
+   {
+    "text": "Is it hot in here, or is it you?",
+    "trait": "charming"
+   }
+  ],
+  "breakup": [
+   "I think we need a break.",
+   "It is not you. It is this planet.",
+   "We should talk.",
+   "I need some space.",
+   "I saw you with somebody else.",
+   "It is over.",
+   "I am sorry. I cannot do this.",
+   "We want different things.",
+   "Let us stay friends.",
+   "Please do not be angry.",
+   "I need time alone.",
+   "Do not sit with me today.",
+   {
+    "text": "How could you!",
+    "trait": "jealous"
+   },
+   {
+    "text": "Fine. Go. See if I care.",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "I will always like you, {other}.",
+    "trait": "romantic"
+   }
+  ],
+  "leisure": [
+   "The lounge was fun yesterday.",
+   "Anyone up for a game later?",
+   "I finally beat the high score.",
+   "Music night tonight?",
+   "I watched an old film.",
+   "Cards later?",
+   "The park is nice at dusk.",
+   "I want to try the new bar.",
+   "I read a whole book today.",
+   "Let us play chess.",
+   "I painted a picture. It is bad.",
+   "The gym is always full.",
+   "I sang in the lounge. People clapped. Politely.",
+   "A day off would be perfect.",
+   "I learned a new card trick.",
+   "Want to go for a walk in the park?",
+   "Dancing later?",
+   {
+    "text": "Party tonight. Bring friends.",
+    "trait": "party-animal"
+   },
+   {
+    "text": "I stay in. I like quiet.",
+    "trait": "shy"
+   },
+   {
+    "text": "Let us make it a big night!",
+    "trait": "party-animal"
+   },
+   {
+    "text": "Ha. I told the best joke at the bar.",
+    "trait": "funny"
+   },
+   "The arcade has a new game.",
+   "I watched the sunset from the airlock.",
+   "Want to play cards tonight?",
+   "I joined the choir."
+  ],
+  "death": [
+   "I still think about {other}.",
+   "We lost a good one.",
+   "It could have been any of us.",
+   "I miss the old crew.",
+   "We should remember them.",
+   "It is too quiet without them.",
+   "I did not say goodbye.",
+   "Life is short out here.",
+   "Be careful out there. Please.",
+   "We will build something in their name.",
+   "I light a candle for them.",
+   "It still hurts.",
+   "This place takes too much.",
+   "Take care of yourself, {other}.",
+   {
+    "text": "They are in a better place.",
+    "trait": "pious"
+   },
+   {
+    "text": "Somebody is to blame for this.",
+    "trait": "hot-headed"
+   }
+  ],
+  "ship": [
+   "A ship is coming in.",
+   "Maybe the traders have coffee.",
+   "I hope the new people are nice.",
+   "Did you see the landing?",
+   "The pad crew did good work.",
+   "New faces soon.",
+   "I want to buy a jacket from the traders.",
+   "Mail from home, maybe?",
+   "The liner is full of tourists.",
+   "The shuttle is late.",
+   "I watched the ship land. Beautiful.",
+   "Traders bring good prices today.",
+   "Where do the ships go after here?",
+   "One day I will fly home on one of those.",
+   {
+    "text": "I will get the best deal. Watch me.",
+    "trait": "greedy"
+   },
+   {
+    "text": "Tourists! Time to show them the bar.",
+    "trait": "party-animal"
+   }
+  ],
+  "research": [
+   "The lab finished something new.",
+   "Science keeps us alive out here.",
+   "What are they working on now?",
+   "The scientists found a new ore.",
+   "I read the research report.",
+   "New tech means less work.",
+   "The lab is quiet today.",
+   "They say we can build a dome soon.",
+   "I want to learn how the reactor works.",
+   "Research takes too long.",
+   "The new suits are much better.",
+   "Did the lab need more packs?",
+   "The data from the satellite came in.",
+   "Knowledge is power. And power is knowledge.",
+   {
+    "text": "I could run that lab.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "Too many numbers for me.",
+    "trait": "lazy"
+   }
+  ],
+  "complaint": [
+   "This place is a mess.",
+   "Nobody cleans the kitchen.",
+   "The rules are stupid.",
+   "Why is it always me?",
+   "The showers are cold again.",
+   "I asked three times. Nothing.",
+   "The food is bad and the beds are worse.",
+   "Who planned this base?",
+   "Too many rules, not enough air.",
+   "I want to talk to {commander}.",
+   "Everybody complains. Nobody fixes.",
+   "My complaint is in writing now.",
+   "The lift is slow.",
+   "The walk to the {building} is too long.",
+   "We deserve better.",
+   "I am tired of this.",
+   {
+    "text": "I am not taking orders from {captain} much longer.",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "If they do not listen, we stop working.",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "It is not so bad. Really.",
+    "trait": "calm"
+   },
+   {
+    "text": "They pay us too little.",
+    "trait": "greedy"
+   },
+   "The lift takes ages.",
+   "The pay is too low.",
+   "Nobody answers my requests."
+  ],
+  "praise": [
+   "Good job on the {building}.",
+   "Thanks for the help today.",
+   "You did great, {other}.",
+   "That was quick work.",
+   "I could not do it without you.",
+   "Nice fix.",
+   "{captain} was pleased with us.",
+   "You make hard work easy.",
+   "The base looks good today.",
+   "We make a good team.",
+   "Thank you. Really.",
+   "I owe you one.",
+   "You are the best at this.",
+   "Well done out there.",
+   {
+    "text": "You are wonderful, {other}.",
+    "trait": "charming"
+   },
+   {
+    "text": "I tell everybody how good you are.",
+    "trait": "loyal"
+   }
+  ],
+  "visitor": [
+   "First time on this planet?",
+   "Where do you come from?",
+   "Welcome to {base}.",
+   "Do not go out without a suit.",
+   "The bar is that way.",
+   "Stay for the park. It is nice.",
+   "How was the flight?",
+   "Do you like it here?",
+   "Try the soup. Everybody does.",
+   "We do not get many visitors.",
+   "Mind the airlock. It bites.",
+   "The dome is the best part.",
+   "How long do you stay?",
+   "Buy something at the shop. Please.",
+   {
+    "text": "I can show you round. For a small fee.",
+    "trait": "greedy"
+   },
+   {
+    "text": "Party at the bar tonight. You are invited.",
+    "trait": "party-animal"
+   },
+   {
+    "text": "Um. Welcome.",
+    "trait": "shy"
+   }
+  ],
+  "visitor_says": [
+   "Nice colony you have here.",
+   "Is there a bar in this place?",
+   "It is smaller than in the brochure.",
+   "How do you live here?",
+   "The view is amazing.",
+   "Where can I buy a souvenir?",
+   "Is the air safe?",
+   "My room has no window.",
+   "I want to see the dome.",
+   "The food is interesting.",
+   "Do you ever go home?",
+   "I took two hundred photos today.",
+   "Is it always this dusty?",
+   "The flight was long.",
+   "Where is the pool?",
+   "Can I go outside?",
+   "I love it here!",
+   "The staff are very nice.",
+   "When does the club open?",
+   "My feet hurt from walking."
+  ],
+  "child": [
+   "Can we go to the park?",
+   "School was boring today.",
+   "Is it bedtime yet? No!",
+   "I want to go outside.",
+   "Why is the sky that colour?",
+   "I drew a rover.",
+   "Can I have a snack?",
+   "I want to be a pilot.",
+   "My friend took my ball.",
+   "Tell me a story.",
+   "Are we there yet?",
+   "I learned a big word today.",
+   "When I grow up I will build a dome.",
+   "Can I play with the robot?",
+   "Why do we wear suits?",
+   "I saw a meteor!",
+   "I am not tired.",
+   "Can we get a pet?",
+   "The teacher is nice.",
+   "I lost a tooth!",
+   "What is on the other side of the crater?",
+   "I want to see the ships.",
+   "Look at my drawing!",
+   "I can count to a thousand.",
+   "Can I stay up late?"
+  ],
+  "family": [
+   "How are the kids?",
+   "My daughter learned to read.",
+   "My son wants to be a pilot.",
+   "We need a bigger home.",
+   "The kids love the park.",
+   "Family dinner tonight.",
+   "I miss my parents.",
+   "The baby kept us up all night.",
+   "School is good for them.",
+   "They grow up so fast.",
+   "My partner cooks better than the kitchen.",
+   "We walked in the park together.",
+   "Family is why we came here.",
+   "I call home when the link is up.",
+   {
+    "text": "I love you all. Very much.",
+    "trait": "romantic"
+   },
+   {
+    "text": "My kids are the best kids.",
+    "trait": "ambitious"
+   },
+   "My sister is coming on the next ship.",
+   "We had a picnic in the park.",
+   "The kids share a bunk bed."
+  ],
+  "unrest": [
+   "People are angry.",
+   "Did you hear about the meeting?",
+   "They say there will be a protest.",
+   "Something has to change.",
+   "I signed the list.",
+   "{commander} does not listen.",
+   "We should stop work until they listen.",
+   "I do not want trouble.",
+   "Everybody is talking about the demands.",
+   "Is it safe to go to the {place}?",
+   "Security is everywhere.",
+   "A strike will not feed us.",
+   "We need fair rules.",
+   "I will stand with the others.",
+   {
+    "text": "Enough! We march today!",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "Stay calm. Talk first.",
+    "trait": "calm"
+   },
+   {
+    "text": "I stay loyal to {commander}.",
+    "trait": "loyal"
+   },
+   {
+    "text": "I heard who started it.",
+    "trait": "gossip"
+   }
+  ],
+  "discipline": [
+   "They cut my rations.",
+   "I got a warning. For nothing.",
+   "Did you see what they did to {other}?",
+   "Confined to quarters. Great.",
+   "That punishment was fair.",
+   "That punishment was not fair.",
+   "I will be good. For now.",
+   "Jail? For that?",
+   "I got an extra shift.",
+   "They took my post away.",
+   "Everybody saw it.",
+   "Rules are rules.",
+   "I got praise from {captain}.",
+   "A gift! For me?",
+   {
+    "text": "They will pay for this.",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "I deserved it. I am sorry.",
+    "trait": "honest"
+   },
+   {
+    "text": "I accept it. I will do better.",
+    "trait": "loyal"
+   }
+  ],
+  "academy": [
+   "I started a course.",
+   "The teacher is strict.",
+   "I learned a lot today.",
+   "Exams next week.",
+   "The console teaches fast.",
+   "I want to learn to fly.",
+   "Study, study, study.",
+   "My head is full.",
+   "I passed! Level up!",
+   "Can you help me with the lesson?",
+   "The academy is warm and quiet.",
+   "I sit in the front row.",
+   "Learning is better than working. Mostly.",
+   "The class is full.",
+   {
+    "text": "Top of the class. Again.",
+    "trait": "ambitious"
+   },
+   {
+    "text": "Is the lesson over yet?",
+    "trait": "lazy"
+   }
+  ],
+  "home_planet": [
+   "I miss the sea.",
+   "Do you remember rain?",
+   "My mother makes the best soup back home.",
+   "I miss green grass.",
+   "Home is so far away.",
+   "I had a dog back home.",
+   "I miss the sound of birds.",
+   "Would you go back?",
+   "I keep a photo of home.",
+   "The sky at home was blue.",
+   "I do not miss the traffic.",
+   "One day I will visit home.",
+   "This is home now.",
+   "Do you still dream about home?",
+   {
+    "text": "This is our home now. We make it good.",
+    "trait": "loyal"
+   },
+   {
+    "text": "I pray for everybody back home.",
+    "trait": "pious"
+   }
+  ],
+  "weather": [
+   "The sky is red today.",
+   "Dust everywhere.",
+   "It is cold outside.",
+   "The wind is strong tonight.",
+   "I saw the sunrise. Beautiful.",
+   "The dust gets into everything.",
+   "Clear skies today.",
+   "The nights are so long.",
+   "Two moons tonight? No. One. I need sleep.",
+   "The storm season is coming.",
+   "It is minus eighty outside.",
+   "The stars are bright tonight.",
+   "No clouds. Ever.",
+   "The ground frost is back.",
+   {
+    "text": "A perfect day for a walk. In a suit.",
+    "trait": "funny"
+   },
+   "The dust devils are back.",
+   "A beautiful cold morning."
+  ],
+  "news": [
+   "Did you read the Rag today?",
+   "The Rag says the commander is in trouble.",
+   "I was in the Rag! Page three.",
+   "The Rag makes things up.",
+   "Did you see the photo on the front page?",
+   "The poll is bad for {commander}.",
+   "Who writes the Rag?",
+   "The Rag had a story about a couple.",
+   "I only read the Rag for the ads.",
+   "The gossip column is the best part.",
+   "The Rag says a ship comes soon.",
+   "I do not believe the Rag.",
+   {
+    "text": "I gave the Rag that story.",
+    "trait": "gossip"
+   },
+   {
+    "text": "The Rag lies. Always.",
+    "trait": "honest"
+   },
+   "The Rag spelled my name wrong.",
+   "Front page! Can you believe it?"
+  ],
+  "dome": [
+   "The dome is amazing.",
+   "Have you been to the club?",
+   "The pool is so warm.",
+   "I bought shoes at the dome.",
+   "The gaming lounge is always full.",
+   "Dinner at the dome tonight?",
+   "The plaza is the best place to sit.",
+   "The dome lights at night are beautiful.",
+   "I got a haircut at the barber.",
+   "The gym has new machines.",
+   "The hotel is full of tourists.",
+   "I love the view from the top floor.",
+   "The dome feels like a city.",
+   {
+    "text": "I spent all my credits at the shops. Worth it.",
+    "trait": "greedy"
+   },
+   {
+    "text": "Club night! Let us go!",
+    "trait": "party-animal"
+   },
+   {
+    "text": "Too many people for me.",
+    "trait": "shy"
+   },
+   "The pharmacy has everything.",
+   "The post office lost my parcel.",
+   "The cafe makes real coffee."
+  ],
+  "reply": [
+   "Yes.",
+   "No.",
+   "Really?",
+   "I know.",
+   "Me too.",
+   "Hmm.",
+   "True.",
+   "Maybe.",
+   "Not really.",
+   "Tell me more.",
+   "That is right.",
+   "I do not think so.",
+   "Ha!",
+   "Oh no.",
+   "Good point.",
+   "Same here.",
+   "Wow.",
+   "Why?",
+   "I agree.",
+   "Let us see.",
+   "Sure.",
+   "You think so?",
+   "Interesting.",
+   "Hmm, maybe later.",
+   {
+    "text": "Ha! Good one.",
+    "trait": "funny"
+   },
+   {
+    "text": "Um. Okay.",
+    "trait": "shy"
+   },
+   {
+    "text": "No way!",
+    "trait": "hot-headed"
+   },
+   {
+    "text": "Of course.",
+    "trait": "loyal"
+   },
+   "Right.",
+   "Oh?",
+   "No idea.",
+   "Of course not."
+  ]
+ }
 }

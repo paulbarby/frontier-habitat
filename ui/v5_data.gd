@@ -164,6 +164,10 @@ func unrest(base_id: int = -1) -> Dictionary:
 	var s = _sim()
 	if not unrest_override.is_empty():
 		return unrest_override
+	# SIM's unrest system (sim.unrest.info) when it is there, else the social stub.
+	var un = s.get("unrest")
+	if un != null and un is Object and (un as Object).has_method("info"):
+		return un.info(base_id)
 	return s.social.unrest(base_id) if s.get("social") != null and s.social.has_method("unrest") else {}
 
 const STATUS_NAME := {"acquaintance": "Acquaintance", "friend": "Friend", "best_friend": "Best friend", "rival": "Rival", "enemy": "Enemy",
@@ -172,6 +176,19 @@ const STATUS_NAME := {"acquaintance": "Acquaintance", "friend": "Friend", "best_
 ## Mood face 0..4 from satisfaction (0 = very unhappy).
 static func mood(v: float) -> int:
 	return clampi(int(v / 20.0), 0, 4)
+
+## Player names of the outfits (critic round 36: never the raw id).
+const OUTFIT_NAME := {"uniform_engineering": "Engineering uniform", "uniform_science": "Science uniform", "uniform_food": "Food uniform",
+	"uniform_medical": "Medical uniform", "uniform_security": "Security uniform", "uniform_command": "Command uniform",
+	"casual_a": "Casual clothes", "casual_b": "Casual clothes", "casual_c": "Casual clothes", "swimwear": "Swimwear",
+	"prison": "Prison overalls", "school": "School uniform", "suit": "Space suit"}
+static func outfit_name(id: String) -> String:
+	if OUTFIT_NAME.has(id):
+		return String(OUTFIT_NAME[id])
+	var parts: PackedStringArray = id.split("_")
+	if parts.size() == 2 and parts[0] == "uniform":
+		return parts[1].capitalize() + " uniform"
+	return id.replace("_", " ").capitalize()
 
 ## Mood faces (critic round 30): very unhappy .. happy.
 const MOOD_ICON := ["mood_0", "mood_1", "mood_2", "mood_3", "mood_4"]
@@ -229,10 +246,13 @@ func predict(id: int, action: String) -> Dictionary:
 	var a: Dictionary = agent(id)
 	if a.is_empty():
 		return {}
-	if live("people") and s.people.has_method("predict"):
-		var r = s.people.predict(a, action, {})
-		if typeof(r) == TYPE_DICTIONARY and not (r as Dictionary).is_empty():
-			return r
+	# SIM's prediction: sim.discipline.predict (v5 discipline system), or sim.people.predict.
+	for sysn in ["discipline", "people"]:
+		var o = s.get(sysn)
+		if o != null and o is Object and (o as Object).has_method("predict"):
+			var r = o.predict(a, action, {})
+			if typeof(r) == TYPE_DICTIONARY and not (r as Dictionary).is_empty():
+				return r
 	var tr: Array = s.people.identity(a)["traits"] if live("people") else []
 	var hot: bool = tr.has("hot-headed")
 	var loyal: bool = tr.has("loyal") or tr.has("calm")

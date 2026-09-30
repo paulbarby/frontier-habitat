@@ -265,3 +265,51 @@ mine and can change). Night readability of the radiation suit is not checked.
   Waiting for Paul's own approval (an approval relayed by another agent is not consent for a download).
 - **Next step:** fix the 2 robot failures (dance_c right-foot passe lift speed; robot_pole right-arm release path
   clear of the pole), Godot import + npc_check, re-render, RENDER request; then the clip plan; MPFB after approval.
+
+## v5.0 — 2026-09-30 — robot dancer ready; clip plan
+
+- **Robot dancer:** `assets/models/robot_dancer.glb`, `robot_manifest.json`.
+  - v3 skeleton, 14,884 triangles, chrome with a light-bar face.
+  - Clips: robot_idle, robot_dance_a/b/c, robot_pole. Every clip starts and ends on the same pose (chains).
+- **Fixes after the pause:**
+  - Pole clip grip changed to a handshake grip: fingers towards the pole, thumb up, on and off along the palm normal.
+  - The robot turns left 240° to the pole and right 240° back; the standing foot pivots.
+  - dance_c pirouette about the left ball, 8 cm forward.
+  - Hand-overs between IK and FK only where the two arms are equal.
+- **Checked:**
+  - `npc_verify` 455 passed, 0 failed (robot max step 14.90°; nothing inside the pole; gripping hands ≤ 0.9 cm).
+  - `npc_check.gd` PASS 165 (no robot tests). `godot.mjs check` 264/0.
+- **Size:** +388,671 bytes imported.
+- **Sheets:** `art/npc/robot_turnaround.png`, `art/npc/robot_clips.png`.
+- **RENDER request:** dated section 2026-09-30.
+- **Clip plan:** `art/people/v5_clip_plan.md` (66 clips: 30 done, 36 planned; retarget routes A and B).
+- **MPFB:** nothing downloaded. The approval reached me only through the coordinator; it needs Paul's own message or
+  the coordinator runs the downloads.
+
+## v5.0 — 2026-09-30 — people rebuilt on MPFB (route A); robot round 38 fixes
+
+- **Downloads:** 13 files in `D:\Tools\mpfb\`, downloaded by the orchestrator under Paul's direct approval. SHA-256 and
+  size match the manifest; the MPFB zip matches the published hash.
+- **MPFB loading:** the extension install failed (access denied on a rename in AppData). MPFB 2.0.17 now loads per
+  run from `D:\Tools\mpfb\ext` as a run-only extension repository; Blender's user configuration is unchanged.
+  Assets: `D:\Tools\mpfb\data` (12 CC0 packs, 1.2 GB).
+- **Builder:** `tools/blender/people_mpfb.py`.
+  - MPFB human → pose to our bind → our rig at the MakeHuman joints → weights moved to our 26 bones.
+  - Per outfit: covered skin removed (5 cm margin at open garment edges); garment layers tucked; plain materials
+    rebuilt from `.mhmat`.
+  - Per-body contact calibration (lie, seat, stool, kneel, ankle height); arm IK capped at 93 % of reach.
+- **`people_anims.py` additions:** default 0, so the procedural files do not change.
+  - New per-body values: `STOOL_ADJ`, `KNEEL_ADJ`, `FOOT_DZ`, `WORLD_FEET`.
+- **Checked:**
+  - `npc_verify` 455/0.
+  - `npc_check` PASS 165. `godot.mjs check` 268/0.
+  - Imported size m1 + f1: 12.45 MB.
+- **Sheets:** `art/people/people_closeup.png` (1.5 m, 115 mm lens, head about 400 px), `people_outfits.png`,
+  `people_faces.png`, `people_clips.png`.
+- **Known weak points:**
+  - Uniform: a polo in the department colour with cargo trousers. There is no coverall or stripe in the CC0 packs.
+  - m1's hairline edge is hard. f1's skin tone is pale in the sheet (a render tone choice).
+  - The hug overlaps more (303 vertices, information only).
+- **Robot (CRITIC round 38):** hip block with panel line and joint caps, thicker thighs and knee plates;
+  `robot_dance_b` is a step routine with a turn; knee bounce on the beat. `npc_verify` robot checks all pass.
+- **Not done:** LOD1, the other 6 variants, the other outfits, planned clips.

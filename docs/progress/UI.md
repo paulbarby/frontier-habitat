@@ -954,3 +954,67 @@ its mood face; the inspector stays closed. Toasts move to the top edge, centred,
   test_find, test_locks), export to build/web_ui, take the ui14 shots, view them, report to the coordinator.
 - Open outside UI: `test_ships_ui` fails 1 check (landing pad not powered after SIM's 18:04–18:31 changes; in
   UI-to-SIM.md).
+
+## 2026-09-30 — RESUMED: round 30 evidence, follow-view POI tags, SIM wiring
+
+- UI suite after the round 30 work: test_v5_people, test_rag, test_wm, test_theme_v4, test_tooltips_clip,
+  test_v4_screens, test_bases_ui, test_find, test_locks, test_window_bounds: all PASS. `check` clean.
+- Export `build/web_ui` (pck 102.0 MB; the growth is other agents' assets). Shots:
+  `docs/shots/ui14_rag_special.png`, `ui14_rag_quiet_top.png`, `ui14_rag_quiet_bottom.png`, `ui14_person_file.png`,
+  `ui14_person_social.png`, `ui14_discipline_confirm.png` (Asha, attitude +11: ON ASHA, ON OTHERS with names,
+  RISK, UNFAIR), `ui14_follow_card.png` (needs rows, toast at the top edge), `ui14_unrest_protest.png`,
+  `ui14_unrest_riot.png`, `ui14_crew_org.png`, `ui14_crew_housing.png`, `ui14_crew_academy.png`,
+  `ui14_palette_civic.png`.
+- Unrest banner: centred in the free space between the left panels and the inspector (it overlapped the
+  inspector by 20 px); the response effects wrap to two lines (no cut text).
+- Debug `person ask <action> fair`: selects a colonist with attitude 0 or more first (the UNFAIR evidence).
+- Follow view: the POI / deposit tags (`ui/hud/poi_marks.gd`) do not draw (RENDER-to-UI 2026-09-29).
+- Floor selector: RENDER's `set_view_floor(building, k)` is live; the UI sends k = floor + 1, 0 = all.
+- SIM wiring (ready; each part switches on when SIM registers the system):
+  - `sim.discipline.predict` first, then `sim.people.predict` (SIM's `unfair` bool drives the UNFAIR line).
+  - `sim.unrest.info(base)` first, then the social stub; its `responses {id: ready}` disables a response used
+    recently ("not ready: used recently").
+  - Response effects from `content/society.json` "responses" (unrest, unfair_unrest, cost, lock_hours) when SIM
+    loads that file; the UI estimate until then.
+  - Commands: `live_command` finds `cmd_review`/`cmd_discipline` (sim.discipline), `cmd_appoint` (sim.ranks),
+    `cmd_set_home` (sim.housing), `cmd_enrol` (sim.education), `cmd_unrest_response` (sim.unrest). The files
+    exist in sim/ but sim.gd does not create these systems yet, so the orders still answer "not yet".
+
+## 2026-09-30 — v5 help, Codex, loader tips, What's new; critic round 36; SIM orders end to end
+
+Help and Codex (STE, one source `ui/v5_help.gd` TOPICS, 13 topics): over the shoulder (V, Tab, Esc, Q/E), speech
+bubbles, the Rag, personnel file, reviews and discipline (trade-offs, unfair), unrest stages, answering unrest,
+ranks and departments, skills, the academy, homes, new structures (XXL / XXXXL), floor selector.
+- How to play: new tab People (all 13); Controls: V (over the shoulder; Awards with nobody selected), Tab, Q/E,
+  U, J, PgUp/PgDn. The old line "V: Awards" is replaced.
+- Codex, People tab: the 13 topics + satisfaction, attitude, security, relationships + found eggs.
+- Title screen: a "What's new in 5.0" card (7 lines, icons; More opens How to play, People).
+- Loader tips (`templates/web_shell.src.html`): 6 v5 tips added (V, J, U, unfair punishment, homes, academy).
+  The coordinator runs make_shell.mjs.
+
+Critic round 36 (social_ui 0.76, regolith_rag 0.76):
+1. Satisfaction reasons wrap to a second line (never cut).
+2. Outfits have player names everywhere (`V5.outfit_name`: "Command uniform", "Prison overalls", …).
+3. Org chart: each person has a second line with their 2 best skills and levels.
+4. Skill table: 12 px headers with standard abbreviations (Eng, Min, Fab, Frm, Cook, Med, Sci, Pil, Sec, Lead,
+   Soc; tooltip = full name), each level a chip tinted by its level colour, tooltip with the level name and value.
+5. Toasts in the follow view: confirmed at the top edge, centred, two at most (`ui15_follow_toast.png`).
+6. Rag quiet day: the gossip column takes the full width in two columns (8 items; when SIM's column is short, more
+   lines from real relationships in the Rag's voice), then Couple Watch, Feud Watch and PHOTO OF THE DAY.
+
+SIM systems are registered (sim.discipline, ranks, housing, education, unrest; social.cmd_egg). New test
+`tools/ui/test_v5_orders.gd` (22 checks, PASS) runs every order through the player's path (button or drop →
+confirm → SIM → the answer shown): review (stored), praise (ok), demote a crew member (SIM refuses: "This person has
+no post to lose."), appoint First Hand (rank changes), set home (bed changes), enrol (SIM refuses without an
+academy: "Choose an academy."), unrest response party (ok; then on cooldown), egg dance (ok). Predictions and
+unrest now come from SIM (no "(estimate)"); response effects from content/society.json.
+
+- Not tested: enrol with a real academy (none in the save); the dance animation (RENDER `egg_dance` not there);
+  drag and drop with a real mouse.
+- Shots: `docs/shots/ui15_rag_quiet_middle.png`, `ui15_rag_quiet_bottom.png`, `ui15_person_file.png`,
+  `ui15_crew_org.png`, `ui15_crew_academy.png`, `ui15_help_people.png`, `ui15_codex_people.png`,
+  `ui15_follow_toast.png`, `ui15_title_whats_new.png`.
+- Tests: test_v5_people, test_rag, test_v5_orders, test_window_bounds, test_v4_screens, test_theme_v4,
+  test_tooltips_clip, test_wm, test_find: PASS. `check` clean (265 scripts).
+
+- 2026-09-30: scratch files of UI now start with `ui_` (coordinator rule); my earlier ones were renamed (e.g. `ui_edit.mjs`, `ui_r30shots.json`). Loader rebuilt by the coordinator with the v5 tips.

@@ -45,6 +45,9 @@ for (let i = 1; i <= tries; i++) {
   const parsed = /checked \d+ scripts, 0 failed/.test(c.out) && !/^FAILED |SCRIPT ERROR|Parse Error/m.test(c.out);
   if (c.code === 0 || parsed) {
     // Furniture grids (fx_nav) for the models in this mirror: never stale in my build.
+    // Import first: the bake must see the same imported models as the export (a .glb newer than the
+    // mirror's import cache was baked from the old import and its grid did not match, 2026-09-30).
+    run(['import']);
     const b = run(['script', 'res://tools/render_nav_bake.gd']);
     console.log((b.out.match(/render_nav_bake:[^\n]*/) || ['nav bake: no output'])[0]);
     const e = run(['export', OUT]);

@@ -23,7 +23,7 @@ HALF = D.SEC / 2
 MULLION = GRAPHITE
 FASCIA_H = 1.0
 FLOOR_LINE = {1: "SignMagenta", 2: "SignCyan", 3: "LightStrip", 4: "SignAmber", 5: "LightStrip"}
-SIGN_SHIFT = {"restaurant": 11.0, "electronics": 4.5, "clinic": 1.0, "hotel": -3.0, "barber": -2.0}     # degrees, away from the lift in front
+SIGN_SHIFT = {"restaurant": 13.0, "electronics": 4.5, "clinic": 1.0, "hotel": -3.0, "barber": -2.0}     # degrees, away from the lift in front
 
 # ---- L1 venues: (id, sign text, first sector, sectors, sign material, fascia colour, interior kind, floor colour)
 L1_VENUES = [
@@ -218,7 +218,7 @@ def venue_shell(p, lt, v, z0, z1, shifts=None, front=True):
     p.beam(bc + Vector((0, 0, bh / 2 + 0.1)) - tang * 0.015, Vector((bc.x, bc.y, z1)) - tang * 0.015, 0.03, 0.03, GRAPHITE)
     # interior floor and back lightbox
     D.sector_prism(p, D.R_FRONT - 0.2, D.R_WALL, a0, a1, z0, z0 + 0.012, "Palette:" + floor_col, None, None, None, n=3 * ns)
-    for k in (range(ns) if kind not in ("club", "arcade", "gym", "vacant") else ()):   # back lightbox (shops only)
+    for k in (range(ns) if kind not in ("club", "arcade", "gym", "vacant", "bar") else ()):   # back lightbox (shops only)
         with lt.at(RZ(sec_angle(s0 + k))):
             xb, hb = chord(D.R_WALL - 0.12)
             lt.poly([Vector((xb, -hb + 0.3, z0 + 2.4)), Vector((xb, -hb + 0.3, z0 + 3.6)), Vector((xb, hb - 0.3, z0 + 3.6)),
@@ -232,6 +232,18 @@ def radial_walls(p, n, boundaries, z0, z1):
 
 
 # ---- interior props (polar placements inside a venue span) ----
+BOTTLES = ("Palette:#2f6b3a", "Palette:#7a4a1a", "Palette:#c9a54a", "Palette:#e8eef0", "Palette:#7a2f3a", "Palette:#3a6b8a",
+           "Palette:#1f3a2a")
+
+
+def bottle(p, base, h, r, mat):
+    """a bottle: body, shoulder and neck (low poly)"""
+    b = Vector(base)
+    p.cyl(b, b + Vector((0, 0, h * 0.62)), r, seg=6, mat=mat, cap0=False)
+    p.cyl(b + Vector((0, 0, h * 0.62)), b + Vector((0, 0, h * 0.72)), r, r * 0.4, seg=6, mat=mat, cap0=False)
+    p.cyl(b + Vector((0, 0, h * 0.72)), b + Vector((0, 0, h)), r * 0.36, seg=4, mat=mat, cap0=False)
+
+
 def at(p, a, r, z, yaw=0.0):
     """transform context: a point at radius r, angle a, facing the atrium rotated by yaw"""
     c = pol(r, a, z)
@@ -324,10 +336,13 @@ def window_display(p, lt, kind, s, z0, k):
                 D.cups(p, Vector((x + 0.8, yy, z0 + 0.4)), n=3, seed=k)
                 D.menu_board(p, lt, Vector((x + 0.95, yy, z0 + 2.6)), Vector((0, -1, 0)), Vector((-1, 0, 0)), w=1.2, h=0.8,
                              seed=k + 2)
-            elif kind == "bar":
+            elif kind == "bar":                                                  # window: bottles on a stepped stand
+                p.box((x + 0.85, yy, z0 + 0.5), (0.2, 1.4, 0.2), "Palette:#241c2c")
                 for j in range(5):
-                    lt.cyl((x + 0.65, yy - 0.6 + j * 0.3, z0 + 0.4), (x + 0.65, yy - 0.6 + j * 0.3, z0 + 0.75), 0.05,
-                           seg=5, mat=("SignAmber", "SignMagenta", "SignGreen")[j % 3])
+                    bottle(lt, Vector((x + 0.62, yy - 0.6 + j * 0.3, z0 + 0.4)), 0.3, 0.05,
+                           ("SignAmber", "SignMagenta", "SignGreen")[j % 3])
+                for j in range(4):
+                    bottle(p, Vector((x + 0.85, yy - 0.45 + j * 0.3, z0 + 0.6)), 0.26, 0.045, BOTTLES[(j + k) % len(BOTTLES)])
             elif kind in ("electronics", "credit", "comms"):
                 for j in (-0.4, 0.4):
                     p.box((x + 0.65, yy + j, z0 + 0.5), (0.08, 0.06, 0.2), GRAPHITE)
@@ -439,13 +454,25 @@ def interior(p, lt, v, a0, a1, z0):
                 p.cyl((0, 0, 0), (0, 0, 0.75), 0.04, seg=4, mat=GRAPHITE, cap0=False)
                 p.cyl((0, 0, 0.75), (0, 0, 0.8), 0.2, seg=6, mat="Palette:#7a2f3a")
             anchors.append(("Seat", aa, 28.9))
-        for k in range(ns * 2):                                    # back shelf with lit bottles
+        for k in range(ns):                                        # dark back wall lining: no outside view behind the bar
+            with p.at(RZ(a0 + D.SEC * (k + 0.5))):
+                xb, hb = chord(D.R_WALL - 0.34)
+                p.poly([Vector((xb, -hb, z0)), Vector((xb, -hb, z0 + 4.5)), Vector((xb, hb, z0 + 4.5)),
+                        Vector((xb, hb, z0))], "Palette:#2a2030")
+        for k in range(ns * 2):                                    # back bar (critic round 34): mirror, 3 shelves of bottles
             aa = a0 + span * (k + 0.5) / (ns * 2)
-            with at(p, aa, D.R_WALL - 0.3, z0):
-                p.box((0, 0, 1.6), (0.4, 2.0, 1.6), "Palette:#241c2c")
-            with at(lt, aa, D.R_WALL - 0.52, z0):
-                lt.box((0, 0, 1.25), (0.02, 1.8, 0.05), "SignMagenta")
-                lt.box((0, 0, 1.85), (0.02, 1.8, 0.05), "SignAmber")
+            with at(p, aa, D.R_WALL - 0.68, z0), at(lt, aa, D.R_WALL - 0.68, z0):
+                p.box((0, 0, 1.35), (0.12, 2.8, 2.3), "Palette:#241c2c")                    # back panel
+                p.box((0.07, 0, 1.45), (0.02, 2.5, 1.2), "Palette:#aebcc6")                 # mirror
+                p.box((0.08, 0, 2.08), (0.04, 2.6, 0.06), D.WOOD)                           # mirror frame
+                p.box((0.08, 0, 0.83), (0.04, 2.6, 0.06), D.WOOD)
+                lt.box((0.1, 0, 2.3), (0.02, 2.6, 0.05), "SignMagenta")                     # top neon
+                for r_, zr in enumerate((0.9, 1.3, 1.7)):
+                    p.box((0.2, 0, zr), (0.26, 2.7, 0.03), D.WOOD)                          # shelf
+                    lt.box((0.33, 0, zr - 0.025), (0.01, 2.64, 0.02), "SignAmber")          # under-shelf light
+                    for j in range(12):
+                        bottle(p, Vector((0.2, -1.155 + j * 0.21, zr + 0.015)), 0.2 + 0.05 * ((j + r_) % 3 == 0), 0.032,
+                               BOTTLES[(j * 3 + r_ + k) % len(BOTTLES)])
         for k in range(2):
             table_set(p, a0 + span * (0.25 + 0.5 * k), 25.0, z0, seats=3, col="Palette:#3a2a26")
         anchors.append(("Work", mid, 30.6))

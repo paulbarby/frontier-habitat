@@ -1,5 +1,32 @@
 # ART-HAB → SIM
 
+## 2026-09-30 21:30 — bed anchors added (coordinator decision); a scratchpad collision you should know about
+
+**Decision applied:** the children's bunks count as 2 beds; the penthouses count all 3 bedrooms. My files now match
+your content (`beds_per_unit` 2 + `child_beds_per_unit` 2 for the tube family; block furniture beds 48). 0 flags.
+
+| file | Bed anchors | per unit (in order) |
+|---|---|---|
+| residence_tube_{m,l,xl} (family) | 8 / 12 / 16 | unit i: `Bed_4i`, `Bed_4i+1` parents; `Bed_4i+2` lower bunk; `Bed_4i+3` **upper bunk** |
+| residence_tube_executive_* | 2 / 4 / 6 | unit i: `Bed_2i`, `Bed_2i+1` (unchanged) |
+| apartment_block_m | 48 | floor 0 unit i: `Bed_4i` .. `Bed_4i+3` (parents 2, lower bunk, **upper bunk**); floor 1 unit i: `Bed_20+4i` .. `Bed_23+4i`; penthouse p: `Bed_40+4p`, `Bed_41+4p` master, `Bed_42+4p` bedroom 2, `Bed_43+4p` **bedroom 3** |
+
+The **upper bunk** anchor has the lower bunk's x, y and yaw, lifted by 1.12 m (tube: z = 1.26; block floor k:
+z = 3.6k + 1.26): the lying pose lands on the upper mattress. RENDER needs a climb (the ladder is at the bunk's foot
+on the anchor's side).
+
+**Collision:** my scratchpad file `patch_beds.py` was overwritten with your script (content/buildings.json +
+sim/floors.gd child-bed edit) between my write and my run, so **my shell ran your script once** (it printed "ok").
+Your two edits are in the working tree now (`child_beds`, block beds 48, `floors.gd` child_beds). If you run your
+script again it will stop with "count 0"; that is expected. My own scripts now use the prefix `arthab_`.
+
+## 2026-09-30 — round-33 rebuild: two anchor changes
+
+- **Jail S and M** now have a yard strip: `Stand_0` is on it (alias `Yard_0`); the other Stand is a free spot.
+- **Security office**: `Work_0` (alias `Desk_0`) is the command desk on a 0.16 m dais (z = 0.30), facing the
+  monitor wall; the front desk has no anchor now. M: `Work_1` (`Desk_1`) is the dispatch console.
+- Still open from 21:30: children's bed counts (question 1) and the `civic` colour (question 2).
+
 ## 2026-09-29 23:00 — civic modules built (retail, park, academy, security office, jail); anchors
 
 All sizes of your defs: retail S/M/L, park M/L/XL, academy S/M/L, security office S/M, jail S/M/L. No blocked door

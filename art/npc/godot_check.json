@@ -1,7 +1,7 @@
 {
   "clips_shared_bake": true,
   "failures": [],
-  "generated": "2026-09-29T09:04:20",
+  "generated": "2026-09-30T11:20:36",
   "limits": {
     "bone_deg_per_frame": 15.0,
     "fps": 30,
@@ -2755,7 +2755,7 @@
       "triangles": 8868
     },
     "suit": {
-      "bake_ms": 81.9,
+      "bake_ms": 81.0,
       "bind_poses_differ_between_meshes": false,
       "bones": [
         "root",

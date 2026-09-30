@@ -152,3 +152,17 @@ unsized copies (7.5 MB before today's additions) can go. Please also check mesh 
 - Anchors `Anchor_<kind>_<floor>_<i>` with z = floor x 3.6 + 0.14: fine.
 - **Variant files:** `<id>_<variant>_<size>.glb` is looked up first (the record's `variant`), then `<id>_<size>`. `residence_tube_executive_*` draws for `variant: executive`.
 - Nav grids: `render_nav_bake` runs at every RENDER export and bakes every room model it finds, so the residence tube grids are baked; I have not yet checked the partitions in the walk grid.
+
+
+## 2026-09-30 - v5 buildings in the game (evidence 155)
+
+- All 20 files load and draw: apartment block (F<k>_ groups; `F<k>_WallTop`, `Terrace`, `Slab`, `Core` kept as their
+  own groups; viewing floor k hides every floor above k, k's WallTop and Roof), residence tube family / executive
+  (variant lookup), retail, park, academy, security office, jail. `civic` = #34569c on Accent and Neon;
+  `SecBlack`, `SignalRed`, `PrisonOrange` are never tinted.
+- Nav grids: baked for all 20 (a stale import in my export mirror had made them mismatch; fixed: import before bake).
+- Soft fill: rooms already get the interior fill emission and a warm floor pool under every `Anchor_Light_*`; the
+  pools now lie on each lamp's own floor in the block and vanish with the floors above the viewed one.
+- People on upper floors are drawn at SIM's floor height (`sim.floors.agent_floor`).
+- Not checked yet: jail cell entry through the bars, the security dais, a person walking between floors (SIM's floor
+  model is a stub), the penthouse and unit follow shots you named (next).

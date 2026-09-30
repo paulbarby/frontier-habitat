@@ -316,7 +316,8 @@ func v3_furniture(t) -> void:
 			var e: Dictionary = sim.sizes.def_for(id, size)
 			t.check(int(f["stands"]) >= 1, "%s size %d has a standing spot" % [id, size])
 			if int(e.get("beds", 0)) > 0:
-				t.eq(int(f["beds"]), int(e["beds"]), "%s size %d beds" % [id, size])
+				# V5: bunk beds for children are furniture too (child_beds).
+				t.eq(int(f["beds"]), int(e["beds"]) + int(e.get("child_beds", 0)), "%s size %d beds" % [id, size])
 			if int(e.get("treatment_beds", 0)) > 0:
 				t.eq(int(f["beds"]), int(e["treatment_beds"]), "%s size %d treatment beds" % [id, size])
 			if e.has("work_slots") and not bool(e.get("automatic", false)):

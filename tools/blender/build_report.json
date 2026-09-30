@@ -149520,7 +149520,7 @@
    "size": "m",
    "footprint": 9.0,
    "tris": 23014,
-   "budget": 24000,
+   "budget": 27000,
    "tris_by_object": {
     "Base": 484,
     "Roof": 3924,
@@ -149578,15 +149578,17 @@
     "Anchor_Bed_1",
     "Anchor_Lamp_0",
     "Anchor_Bed_2",
+    "Anchor_Bed_3",
     "Anchor_Stand_0",
     "Anchor_Seat_0",
     "Anchor_Seat_1",
     "Anchor_Lamp_1",
     "Anchor_Unit_0",
-    "Anchor_Bed_3",
     "Anchor_Bed_4",
-    "Anchor_Lamp_2",
     "Anchor_Bed_5",
+    "Anchor_Lamp_2",
+    "Anchor_Bed_6",
+    "Anchor_Bed_7",
     "Anchor_Stand_1",
     "Anchor_Seat_2",
     "Anchor_Seat_3",
@@ -149671,16 +149673,16 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1730420,
+   "file_size": 1730660,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
+   "seconds": 7.3,
    "ao_rays": 2314272,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Bed": 6,
+     "Bed": 8,
      "Lamp": 7,
      "Stand": 2,
      "Seat": 4,
@@ -149760,6 +149762,15 @@
       "yaw": 0.0
      },
      {
+      "name": "Anchor_Bed_3",
+      "pos": [
+       3.738,
+       3.781,
+       1.26
+      ],
+      "yaw": 0.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
        -3.91,
@@ -149805,7 +149816,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Bed_3",
+      "name": "Anchor_Bed_4",
       "pos": [
        -2.173,
        -3.771,
@@ -149814,7 +149825,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_4",
+      "name": "Anchor_Bed_5",
       "pos": [
        -0.683,
        -3.771,
@@ -149832,11 +149843,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_5",
+      "name": "Anchor_Bed_6",
       "pos": [
        -3.738,
        -3.781,
        0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Bed_7",
+      "pos": [
+       -3.738,
+       -3.781,
+       1.26
       ],
       "yaw": 180.0
      },
@@ -150690,6 +150710,8 @@
      "Anchor_Bed_3",
      "Anchor_Bed_4",
      "Anchor_Bed_5",
+     "Anchor_Bed_6",
+     "Anchor_Bed_7",
      "Anchor_Door_0",
      "Anchor_Door_1",
      "Anchor_Door_2",
@@ -150725,12 +150747,12 @@
    "type": "residence_tube",
    "size": "m",
    "footprint": 9.0,
-   "tris": 22148,
-   "budget": 24000,
+   "tris": 22452,
+   "budget": 27000,
    "tris_by_object": {
     "Base": 484,
     "Roof": 3776,
-    "Interior": 9568,
+    "Interior": 9872,
     "PorchTop": 1290,
     "Upper_00": 50,
     "Upper_01": 60,
@@ -150874,12 +150896,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 1677448,
+   "file_size": 1700012,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
-   "ao_rays": 2217792,
+   "seconds": 7.5,
+   "ao_rays": 2248896,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -151699,7 +151721,7 @@
     "door_free_deg": 332.0
    },
    "verify": {
-    "tris": 22148,
+    "tris": 22452,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -151859,7 +151881,7 @@
    "size": "l",
    "footprint": 11.0,
    "tris": 33204,
-   "budget": 35200,
+   "budget": 39600,
    "tris_by_object": {
     "Base": 660,
     "Roof": 4292,
@@ -151917,24 +151939,27 @@
     "Anchor_Bed_1",
     "Anchor_Lamp_0",
     "Anchor_Bed_2",
+    "Anchor_Bed_3",
     "Anchor_Stand_0",
     "Anchor_Seat_0",
     "Anchor_Seat_1",
     "Anchor_Lamp_1",
     "Anchor_Unit_0",
-    "Anchor_Bed_3",
     "Anchor_Bed_4",
-    "Anchor_Lamp_2",
     "Anchor_Bed_5",
+    "Anchor_Lamp_2",
+    "Anchor_Bed_6",
+    "Anchor_Bed_7",
     "Anchor_Stand_1",
     "Anchor_Seat_2",
     "Anchor_Seat_3",
     "Anchor_Lamp_3",
     "Anchor_Unit_1",
-    "Anchor_Bed_6",
-    "Anchor_Bed_7",
-    "Anchor_Lamp_4",
     "Anchor_Bed_8",
+    "Anchor_Bed_9",
+    "Anchor_Lamp_4",
+    "Anchor_Bed_10",
+    "Anchor_Bed_11",
     "Anchor_Stand_2",
     "Anchor_Seat_4",
     "Anchor_Seat_5",
@@ -152011,16 +152036,16 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2413436,
+   "file_size": 2413904,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.5,
+   "seconds": 13.3,
    "ao_rays": 3356160,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Bed": 9,
+     "Bed": 12,
      "Lamp": 9,
      "Stand": 3,
      "Seat": 6,
@@ -152100,6 +152125,15 @@
       "yaw": -90.0
      },
      {
+      "name": "Anchor_Bed_3",
+      "pos": [
+       -1.16,
+       5.111,
+       1.26
+      ],
+      "yaw": -90.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
        -5.527,
@@ -152145,7 +152179,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Bed_3",
+      "name": "Anchor_Bed_4",
       "pos": [
        3.081,
        5.101,
@@ -152154,7 +152188,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_4",
+      "name": "Anchor_Bed_5",
       "pos": [
        1.591,
        5.101,
@@ -152172,11 +152206,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_5",
+      "name": "Anchor_Bed_6",
       "pos": [
        5.217,
        5.111,
        0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Bed_7",
+      "pos": [
+       5.217,
+       5.111,
+       1.26
       ],
       "yaw": -90.0
      },
@@ -152226,7 +152269,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Bed_6",
+      "name": "Anchor_Bed_8",
       "pos": [
        3.297,
        -5.101,
@@ -152235,7 +152278,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_7",
+      "name": "Anchor_Bed_9",
       "pos": [
        4.787,
        -5.101,
@@ -152253,11 +152296,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_8",
+      "name": "Anchor_Bed_10",
       "pos": [
        1.16,
        -5.111,
        0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Bed_11",
+      "pos": [
+       1.16,
+       -5.111,
+       1.26
       ],
       "yaw": 90.0
      },
@@ -152962,6 +153014,8 @@
      "Anchor_Aisle_9",
      "Anchor_Bed_0",
      "Anchor_Bed_1",
+     "Anchor_Bed_10",
+     "Anchor_Bed_11",
      "Anchor_Bed_2",
      "Anchor_Bed_3",
      "Anchor_Bed_4",
@@ -152969,6 +153023,7 @@
      "Anchor_Bed_6",
      "Anchor_Bed_7",
      "Anchor_Bed_8",
+     "Anchor_Bed_9",
      "Anchor_Door_0",
      "Anchor_Door_1",
      "Anchor_Door_2",
@@ -153015,12 +153070,12 @@
    "type": "residence_tube",
    "size": "l",
    "footprint": 11.0,
-   "tris": 28700,
-   "budget": 35200,
+   "tris": 29676,
+   "budget": 39600,
    "tris_by_object": {
     "Base": 660,
     "Roof": 4120,
-    "Interior": 15578,
+    "Interior": 16554,
     "PorchTop": 1450,
     "Upper_00": 50,
     "Upper_01": 60,
@@ -153176,12 +153231,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2109868,
+   "file_size": 2171600,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.7,
-   "ao_rays": 2877024,
+   "seconds": 10.6,
+   "ao_rays": 2976864,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -154039,7 +154094,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 28700,
+    "tris": 29676,
     "rmax": 10.900000305870508,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -154211,7 +154266,7 @@
    "size": "xl",
    "footprint": 13.0,
    "tris": 38996,
-   "budget": 48000,
+   "budget": 54000,
    "tris_by_object": {
     "Base": 668,
     "Roof": 4936,
@@ -154269,33 +154324,37 @@
     "Anchor_Bed_1",
     "Anchor_Lamp_0",
     "Anchor_Bed_2",
+    "Anchor_Bed_3",
     "Anchor_Stand_0",
     "Anchor_Seat_0",
     "Anchor_Seat_1",
     "Anchor_Lamp_1",
     "Anchor_Unit_0",
-    "Anchor_Bed_3",
     "Anchor_Bed_4",
-    "Anchor_Lamp_2",
     "Anchor_Bed_5",
+    "Anchor_Lamp_2",
+    "Anchor_Bed_6",
+    "Anchor_Bed_7",
     "Anchor_Stand_1",
     "Anchor_Seat_2",
     "Anchor_Seat_3",
     "Anchor_Lamp_3",
     "Anchor_Unit_1",
-    "Anchor_Bed_6",
-    "Anchor_Bed_7",
-    "Anchor_Lamp_4",
     "Anchor_Bed_8",
+    "Anchor_Bed_9",
+    "Anchor_Lamp_4",
+    "Anchor_Bed_10",
+    "Anchor_Bed_11",
     "Anchor_Stand_2",
     "Anchor_Seat_4",
     "Anchor_Seat_5",
     "Anchor_Lamp_5",
     "Anchor_Unit_2",
-    "Anchor_Bed_9",
-    "Anchor_Bed_10",
+    "Anchor_Bed_12",
+    "Anchor_Bed_13",
     "Anchor_Lamp_6",
-    "Anchor_Bed_11",
+    "Anchor_Bed_14",
+    "Anchor_Bed_15",
     "Anchor_Stand_3",
     "Anchor_Seat_6",
     "Anchor_Seat_7",
@@ -154444,16 +154503,16 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2843984,
+   "file_size": 2844612,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.7,
+   "seconds": 14.9,
    "ao_rays": 3953472,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Bed": 12,
+     "Bed": 16,
      "Lamp": 11,
      "Stand": 4,
      "Seat": 8,
@@ -154533,6 +154592,15 @@
       "yaw": -90.0
      },
      {
+      "name": "Anchor_Bed_3",
+      "pos": [
+       -1.16,
+       6.511,
+       1.26
+      ],
+      "yaw": -90.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
        -6.956,
@@ -154578,7 +154646,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Bed_3",
+      "name": "Anchor_Bed_4",
       "pos": [
        3.481,
        6.501,
@@ -154587,7 +154655,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_4",
+      "name": "Anchor_Bed_5",
       "pos": [
        1.991,
        6.501,
@@ -154605,11 +154673,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_5",
+      "name": "Anchor_Bed_6",
       "pos": [
        6.646,
        6.511,
        0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Bed_7",
+      "pos": [
+       6.646,
+       6.511,
+       1.26
       ],
       "yaw": -90.0
      },
@@ -154659,7 +154736,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Bed_6",
+      "name": "Anchor_Bed_8",
       "pos": [
        4.325,
        -6.501,
@@ -154668,7 +154745,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_7",
+      "name": "Anchor_Bed_9",
       "pos": [
        5.815,
        -6.501,
@@ -154686,11 +154763,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_8",
+      "name": "Anchor_Bed_10",
       "pos": [
        1.16,
        -6.511,
        0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Bed_11",
+      "pos": [
+       1.16,
+       -6.511,
+       1.26
       ],
       "yaw": 90.0
      },
@@ -154740,7 +154826,7 @@
       "yaw": 270.0
      },
      {
-      "name": "Anchor_Bed_9",
+      "name": "Anchor_Bed_12",
       "pos": [
        -3.481,
        -6.501,
@@ -154749,7 +154835,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_10",
+      "name": "Anchor_Bed_13",
       "pos": [
        -1.991,
        -6.501,
@@ -154767,11 +154853,20 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_11",
+      "name": "Anchor_Bed_14",
       "pos": [
        -6.646,
        -6.511,
        0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Bed_15",
+      "pos": [
+       -6.646,
+       -6.511,
+       1.26
       ],
       "yaw": 90.0
      },
@@ -156195,6 +156290,10 @@
      "Anchor_Bed_1",
      "Anchor_Bed_10",
      "Anchor_Bed_11",
+     "Anchor_Bed_12",
+     "Anchor_Bed_13",
+     "Anchor_Bed_14",
+     "Anchor_Bed_15",
      "Anchor_Bed_2",
      "Anchor_Bed_3",
      "Anchor_Bed_4",
@@ -156258,12 +156357,12 @@
    "type": "residence_tube",
    "size": "xl",
    "footprint": 13.0,
-   "tris": 35990,
-   "budget": 48000,
+   "tris": 37046,
+   "budget": 54000,
    "tris_by_object": {
     "Base": 668,
     "Roof": 4636,
-    "Interior": 21806,
+    "Interior": 22862,
     "PorchTop": 1592,
     "Upper_00": 50,
     "Upper_01": 60,
@@ -156479,12 +156578,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2628252,
+   "file_size": 2706012,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.2,
-   "ao_rays": 3625248,
+   "seconds": 14.3,
+   "ao_rays": 3732384,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -157891,7 +157990,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 35990,
+    "tris": 37046,
     "rmax": 12.900000159793313,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -158123,12 +158222,12 @@
    "type": "apartment_block",
    "size": "m",
    "footprint": 20.0,
-   "tris": 149993,
+   "tris": 150721,
    "budget": 180000,
    "tris_by_object": {
     "Base": 4272,
     "Roof": 7084,
-    "Interior": 47651,
+    "Interior": 47711,
     "F1_Slab": 3968,
     "F1_Wall": 1220,
     "F1_WallTop": 2296,
@@ -158136,8 +158235,8 @@
     "F2_Wall": 1144,
     "F2_WallTop": 2564,
     "PorchTop": 48,
-    "F1_Interior": 36208,
-    "F2_Interior": 15996,
+    "F1_Interior": 36268,
+    "F2_Interior": 16604,
     "F1_Terrace": 9900,
     "F2_Terrace": 6696,
     "Upper_00": 72,
@@ -158191,34 +158290,44 @@
     "Anchor_Bed_0",
     "Anchor_Bed_1",
     "Anchor_Lamp_0",
+    "Anchor_Bed_2",
+    "Anchor_Bed_3",
     "Anchor_Seat_0",
     "Anchor_Lamp_1",
     "Anchor_Lamp_2",
     "Anchor_Unit_0_0",
-    "Anchor_Bed_2",
-    "Anchor_Bed_3",
+    "Anchor_Bed_4",
+    "Anchor_Bed_5",
     "Anchor_Lamp_3",
+    "Anchor_Bed_6",
+    "Anchor_Bed_7",
     "Anchor_Seat_1",
     "Anchor_Lamp_4",
     "Anchor_Lamp_5",
     "Anchor_Unit_0_1",
-    "Anchor_Bed_4",
-    "Anchor_Bed_5",
+    "Anchor_Bed_8",
+    "Anchor_Bed_9",
     "Anchor_Lamp_6",
+    "Anchor_Bed_10",
+    "Anchor_Bed_11",
     "Anchor_Seat_2",
     "Anchor_Lamp_7",
     "Anchor_Lamp_8",
     "Anchor_Unit_0_2",
-    "Anchor_Bed_6",
-    "Anchor_Bed_7",
+    "Anchor_Bed_12",
+    "Anchor_Bed_13",
     "Anchor_Lamp_9",
+    "Anchor_Bed_14",
+    "Anchor_Bed_15",
     "Anchor_Seat_3",
     "Anchor_Lamp_10",
     "Anchor_Lamp_11",
     "Anchor_Unit_0_3",
-    "Anchor_Bed_8",
-    "Anchor_Bed_9",
+    "Anchor_Bed_16",
+    "Anchor_Bed_17",
     "Anchor_Lamp_12",
+    "Anchor_Bed_18",
+    "Anchor_Bed_19",
     "Anchor_Seat_4",
     "Anchor_Lamp_13",
     "Anchor_Lamp_14",
@@ -158227,37 +158336,47 @@
     "Anchor_Lamp_15",
     "Anchor_Stand_1",
     "Anchor_Lift_0",
-    "Anchor_Bed_10",
-    "Anchor_Bed_11",
+    "Anchor_Bed_20",
+    "Anchor_Bed_21",
     "Anchor_Lamp_16",
+    "Anchor_Bed_22",
+    "Anchor_Bed_23",
     "Anchor_Seat_5",
     "Anchor_Lamp_17",
     "Anchor_Lamp_18",
     "Anchor_Unit_1_0",
-    "Anchor_Bed_12",
-    "Anchor_Bed_13",
+    "Anchor_Bed_24",
+    "Anchor_Bed_25",
     "Anchor_Lamp_19",
+    "Anchor_Bed_26",
+    "Anchor_Bed_27",
     "Anchor_Seat_6",
     "Anchor_Lamp_20",
     "Anchor_Lamp_21",
     "Anchor_Unit_1_1",
-    "Anchor_Bed_14",
-    "Anchor_Bed_15",
+    "Anchor_Bed_28",
+    "Anchor_Bed_29",
     "Anchor_Lamp_22",
+    "Anchor_Bed_30",
+    "Anchor_Bed_31",
     "Anchor_Seat_7",
     "Anchor_Lamp_23",
     "Anchor_Lamp_24",
     "Anchor_Unit_1_2",
-    "Anchor_Bed_16",
-    "Anchor_Bed_17",
+    "Anchor_Bed_32",
+    "Anchor_Bed_33",
     "Anchor_Lamp_25",
+    "Anchor_Bed_34",
+    "Anchor_Bed_35",
     "Anchor_Seat_8",
     "Anchor_Lamp_26",
     "Anchor_Lamp_27",
     "Anchor_Unit_1_3",
-    "Anchor_Bed_18",
-    "Anchor_Bed_19",
+    "Anchor_Bed_36",
+    "Anchor_Bed_37",
     "Anchor_Lamp_28",
+    "Anchor_Bed_38",
+    "Anchor_Bed_39",
     "Anchor_Seat_9",
     "Anchor_Lamp_29",
     "Anchor_Lamp_30",
@@ -158268,8 +158387,8 @@
     "Anchor_Stand_3",
     "Anchor_Lamp_33",
     "Anchor_Lift_1",
-    "Anchor_Bed_20",
-    "Anchor_Bed_21",
+    "Anchor_Bed_40",
+    "Anchor_Bed_41",
     "Anchor_Lamp_34",
     "Anchor_Stand_4",
     "Anchor_Seat_10",
@@ -158278,10 +158397,11 @@
     "Anchor_Seat_12",
     "Anchor_Lamp_36",
     "Anchor_Lamp_37",
-    "Anchor_Bed_22",
+    "Anchor_Bed_42",
+    "Anchor_Bed_43",
     "Anchor_Unit_2_0",
-    "Anchor_Bed_23",
-    "Anchor_Bed_24",
+    "Anchor_Bed_44",
+    "Anchor_Bed_45",
     "Anchor_Lamp_38",
     "Anchor_Stand_5",
     "Anchor_Seat_13",
@@ -158290,7 +158410,8 @@
     "Anchor_Seat_15",
     "Anchor_Lamp_40",
     "Anchor_Lamp_41",
-    "Anchor_Bed_25",
+    "Anchor_Bed_46",
+    "Anchor_Bed_47",
     "Anchor_Unit_2_1",
     "Anchor_Lift_2",
     "Anchor_Door_0",
@@ -158526,16 +158647,16 @@
     "Soil",
     "Window"
    ],
-   "file_size": 10165056,
+   "file_size": 10222032,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 45.5,
-   "ao_rays": 15146160,
+   "seconds": 44.7,
+   "ao_rays": 15219888,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Bed": 26,
+     "Bed": 48,
      "Lamp": 46,
      "Seat": 16,
      "Unit_0": 5,
@@ -158621,6 +158742,24 @@
       "yaw": 0.0
      },
      {
+      "name": "Anchor_Bed_2",
+      "pos": [
+       2.471,
+       13.684,
+       0.14
+      ],
+      "yaw": -9.7
+     },
+     {
+      "name": "Anchor_Bed_3",
+      "pos": [
+       2.471,
+       13.684,
+       1.26
+      ],
+      "yaw": -9.7
+     },
+     {
       "name": "Anchor_Seat_0",
       "pos": [
        4.954,
@@ -158657,7 +158796,7 @@
       "yaw": 45.7
      },
      {
-      "name": "Anchor_Bed_2",
+      "name": "Anchor_Bed_4",
       "pos": [
        -1.818,
        13.773,
@@ -158666,7 +158805,7 @@
       "yaw": 12.7
      },
      {
-      "name": "Anchor_Bed_3",
+      "name": "Anchor_Bed_5",
       "pos": [
        -3.272,
        13.446,
@@ -158682,6 +158821,24 @@
        0.94
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_6",
+      "pos": [
+       -12.251,
+       6.579,
+       0.14
+      ],
+      "yaw": 62.3
+     },
+     {
+      "name": "Anchor_Bed_7",
+      "pos": [
+       -12.251,
+       6.579,
+       1.26
+      ],
+      "yaw": 62.3
      },
      {
       "name": "Anchor_Seat_1",
@@ -158720,7 +158877,7 @@
       "yaw": 117.7
      },
      {
-      "name": "Anchor_Bed_4",
+      "name": "Anchor_Bed_8",
       "pos": [
        -13.661,
        2.527,
@@ -158729,7 +158886,7 @@
       "yaw": 84.7
      },
      {
-      "name": "Anchor_Bed_5",
+      "name": "Anchor_Bed_9",
       "pos": [
        -13.799,
        1.043,
@@ -158745,6 +158902,24 @@
        0.94
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_10",
+      "pos": [
+       -10.042,
+       -9.618,
+       0.14
+      ],
+      "yaw": 134.3
+     },
+     {
+      "name": "Anchor_Bed_11",
+      "pos": [
+       -10.042,
+       -9.618,
+       1.26
+      ],
+      "yaw": 134.3
      },
      {
       "name": "Anchor_Seat_2",
@@ -158783,7 +158958,7 @@
       "yaw": 189.7
      },
      {
-      "name": "Anchor_Bed_6",
+      "name": "Anchor_Bed_12",
       "pos": [
        -6.625,
        -12.212,
@@ -158792,7 +158967,7 @@
       "yaw": 156.7
      },
      {
-      "name": "Anchor_Bed_7",
+      "name": "Anchor_Bed_13",
       "pos": [
        -5.256,
        -12.801,
@@ -158808,6 +158983,24 @@
        0.94
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_14",
+      "pos": [
+       6.044,
+       -12.523,
+       0.14
+      ],
+      "yaw": 206.3
+     },
+     {
+      "name": "Anchor_Bed_15",
+      "pos": [
+       6.044,
+       -12.523,
+       1.26
+      ],
+      "yaw": 206.3
      },
      {
       "name": "Anchor_Seat_3",
@@ -158846,7 +159039,7 @@
       "yaw": 261.7
      },
      {
-      "name": "Anchor_Bed_8",
+      "name": "Anchor_Bed_16",
       "pos": [
        9.567,
        -10.074,
@@ -158855,7 +159048,7 @@
       "yaw": 228.7
      },
      {
-      "name": "Anchor_Bed_9",
+      "name": "Anchor_Bed_17",
       "pos": [
        10.55,
        -8.955,
@@ -158871,6 +159064,24 @@
        0.94
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_18",
+      "pos": [
+       13.778,
+       1.879,
+       0.14
+      ],
+      "yaw": 278.3
+     },
+     {
+      "name": "Anchor_Bed_19",
+      "pos": [
+       13.778,
+       1.879,
+       1.26
+      ],
+      "yaw": 278.3
      },
      {
       "name": "Anchor_Seat_4",
@@ -158945,7 +159156,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_10",
+      "name": "Anchor_Bed_20",
       "pos": [
        12.537,
        5.986,
@@ -158954,7 +159165,7 @@
       "yaw": -59.3
      },
      {
-      "name": "Anchor_Bed_11",
+      "name": "Anchor_Bed_21",
       "pos": [
        11.777,
        7.267,
@@ -158970,6 +159181,24 @@
        8.14
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_22",
+      "pos": [
+       2.471,
+       13.684,
+       3.74
+      ],
+      "yaw": -9.7
+     },
+     {
+      "name": "Anchor_Bed_23",
+      "pos": [
+       2.471,
+       13.684,
+       4.86
+      ],
+      "yaw": -9.7
      },
      {
       "name": "Anchor_Seat_5",
@@ -159008,7 +159237,7 @@
       "yaw": 45.7
      },
      {
-      "name": "Anchor_Bed_12",
+      "name": "Anchor_Bed_24",
       "pos": [
        -1.818,
        13.773,
@@ -159017,7 +159246,7 @@
       "yaw": 12.7
      },
      {
-      "name": "Anchor_Bed_13",
+      "name": "Anchor_Bed_25",
       "pos": [
        -3.272,
        13.446,
@@ -159033,6 +159262,24 @@
        8.14
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_26",
+      "pos": [
+       -12.251,
+       6.579,
+       3.74
+      ],
+      "yaw": 62.3
+     },
+     {
+      "name": "Anchor_Bed_27",
+      "pos": [
+       -12.251,
+       6.579,
+       4.86
+      ],
+      "yaw": 62.3
      },
      {
       "name": "Anchor_Seat_6",
@@ -159071,7 +159318,7 @@
       "yaw": 117.7
      },
      {
-      "name": "Anchor_Bed_14",
+      "name": "Anchor_Bed_28",
       "pos": [
        -13.661,
        2.527,
@@ -159080,7 +159327,7 @@
       "yaw": 84.7
      },
      {
-      "name": "Anchor_Bed_15",
+      "name": "Anchor_Bed_29",
       "pos": [
        -13.799,
        1.043,
@@ -159096,6 +159343,24 @@
        8.14
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_30",
+      "pos": [
+       -10.042,
+       -9.618,
+       3.74
+      ],
+      "yaw": 134.3
+     },
+     {
+      "name": "Anchor_Bed_31",
+      "pos": [
+       -10.042,
+       -9.618,
+       4.86
+      ],
+      "yaw": 134.3
      },
      {
       "name": "Anchor_Seat_7",
@@ -159134,7 +159399,7 @@
       "yaw": 189.7
      },
      {
-      "name": "Anchor_Bed_16",
+      "name": "Anchor_Bed_32",
       "pos": [
        -6.625,
        -12.212,
@@ -159143,7 +159408,7 @@
       "yaw": 156.7
      },
      {
-      "name": "Anchor_Bed_17",
+      "name": "Anchor_Bed_33",
       "pos": [
        -5.256,
        -12.801,
@@ -159159,6 +159424,24 @@
        8.14
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_34",
+      "pos": [
+       6.044,
+       -12.523,
+       3.74
+      ],
+      "yaw": 206.3
+     },
+     {
+      "name": "Anchor_Bed_35",
+      "pos": [
+       6.044,
+       -12.523,
+       4.86
+      ],
+      "yaw": 206.3
      },
      {
       "name": "Anchor_Seat_8",
@@ -159197,7 +159480,7 @@
       "yaw": 261.7
      },
      {
-      "name": "Anchor_Bed_18",
+      "name": "Anchor_Bed_36",
       "pos": [
        9.567,
        -10.074,
@@ -159206,7 +159489,7 @@
       "yaw": 228.7
      },
      {
-      "name": "Anchor_Bed_19",
+      "name": "Anchor_Bed_37",
       "pos": [
        10.55,
        -8.955,
@@ -159222,6 +159505,24 @@
        8.14
       ],
       "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Bed_38",
+      "pos": [
+       13.778,
+       1.879,
+       3.74
+      ],
+      "yaw": 278.3
+     },
+     {
+      "name": "Anchor_Bed_39",
+      "pos": [
+       13.778,
+       1.879,
+       4.86
+      ],
+      "yaw": 278.3
      },
      {
       "name": "Anchor_Seat_9",
@@ -159314,7 +159615,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Bed_20",
+      "name": "Anchor_Bed_40",
       "pos": [
        4.867,
        -8.248,
@@ -159323,7 +159624,7 @@
       "yaw": -141.0
      },
      {
-      "name": "Anchor_Bed_21",
+      "name": "Anchor_Bed_41",
       "pos": [
        6.025,
        -7.311,
@@ -159404,13 +159705,22 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_22",
+      "name": "Anchor_Bed_42",
       "pos": [
        5.82,
        7.56,
        7.34
       ],
       "yaw": -39.0
+     },
+     {
+      "name": "Anchor_Bed_43",
+      "pos": [
+       1.917,
+       9.346,
+       7.34
+      ],
+      "yaw": -13.0
      },
      {
       "name": "Anchor_Unit_2_0",
@@ -159422,7 +159732,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_23",
+      "name": "Anchor_Bed_44",
       "pos": [
        -4.867,
        8.248,
@@ -159431,7 +159741,7 @@
       "yaw": 39.0
      },
      {
-      "name": "Anchor_Bed_24",
+      "name": "Anchor_Bed_45",
       "pos": [
        -6.025,
        7.311,
@@ -159512,13 +159822,22 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Bed_25",
+      "name": "Anchor_Bed_46",
       "pos": [
        -5.82,
        -7.56,
        7.34
       ],
       "yaw": 141.0
+     },
+     {
+      "name": "Anchor_Bed_47",
+      "pos": [
+       -1.917,
+       -9.346,
+       7.34
+      ],
+      "yaw": 167.0
      },
      {
       "name": "Anchor_Unit_2_1",
@@ -161560,7 +161879,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 149993,
+    "tris": 150721,
     "rmax": 19.900000689745397,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -161805,8 +162124,30 @@
      "Anchor_Bed_23",
      "Anchor_Bed_24",
      "Anchor_Bed_25",
+     "Anchor_Bed_26",
+     "Anchor_Bed_27",
+     "Anchor_Bed_28",
+     "Anchor_Bed_29",
      "Anchor_Bed_3",
+     "Anchor_Bed_30",
+     "Anchor_Bed_31",
+     "Anchor_Bed_32",
+     "Anchor_Bed_33",
+     "Anchor_Bed_34",
+     "Anchor_Bed_35",
+     "Anchor_Bed_36",
+     "Anchor_Bed_37",
+     "Anchor_Bed_38",
+     "Anchor_Bed_39",
      "Anchor_Bed_4",
+     "Anchor_Bed_40",
+     "Anchor_Bed_41",
+     "Anchor_Bed_42",
+     "Anchor_Bed_43",
+     "Anchor_Bed_44",
+     "Anchor_Bed_45",
+     "Anchor_Bed_46",
+     "Anchor_Bed_47",
      "Anchor_Bed_5",
      "Anchor_Bed_6",
      "Anchor_Bed_7",
@@ -161975,13 +162316,13 @@
    "type": "retail",
    "size": "s",
    "footprint": 6.0,
-   "tris": 14176,
-   "budget": 16000,
+   "tris": 14122,
+   "budget": 18000,
    "tris_by_object": {
     "Base": 324,
     "Roof": 1500,
-    "Interior": 4216,
-    "PorchTop": 356,
+    "Interior": 3930,
+    "PorchTop": 588,
     "Decal_00_Roof": 4,
     "Decal_02_Roof": 4,
     "Decal_03_Roof": 4,
@@ -162082,7 +162423,12 @@
     "Anchor_Aisle_20",
     "Anchor_Aisle_21",
     "Anchor_Aisle_22",
-    "Anchor_Aisle_23"
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28"
    ],
    "materials": [
     "Accent",
@@ -162101,12 +162447,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1106896,
+   "file_size": 1111184,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.8,
-   "ao_rays": 1385952,
+   "seconds": 4.4,
+   "ao_rays": 1373280,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -162115,7 +162461,7 @@
      "Stand": 3,
      "Browse": 3,
      "Light": 2,
-     "Aisle": 24
+     "Aisle": 29
     },
     "wall_tris": 6762,
     "interior_materials": [
@@ -162394,6 +162740,33 @@
      {
       "name": "Anchor_Aisle_18",
       "pos": [
+       -1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": -18.43
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       0.0,
+       -3.75,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
        1.25,
        1.25,
        0.14
@@ -162401,7 +162774,7 @@
       "yaw": 135.0
      },
      {
-      "name": "Anchor_Aisle_19",
+      "name": "Anchor_Aisle_22",
       "pos": [
        1.25,
        3.75,
@@ -162410,7 +162783,25 @@
       "yaw": 161.57
      },
      {
-      "name": "Anchor_Aisle_20",
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       2.5,
+       -2.5,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       2.5,
+       -1.25,
+       0.14
+      ],
+      "yaw": 63.43
+     },
+     {
+      "name": "Anchor_Aisle_25",
       "pos": [
        2.5,
        1.25,
@@ -162419,7 +162810,7 @@
       "yaw": 116.57
      },
      {
-      "name": "Anchor_Aisle_21",
+      "name": "Anchor_Aisle_26",
       "pos": [
        3.75,
        -1.25,
@@ -162428,7 +162819,7 @@
       "yaw": 71.57
      },
      {
-      "name": "Anchor_Aisle_22",
+      "name": "Anchor_Aisle_27",
       "pos": [
        3.75,
        0.0,
@@ -162437,7 +162828,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Aisle_23",
+      "name": "Anchor_Aisle_28",
       "pos": [
        3.75,
        1.25,
@@ -162457,7 +162848,7 @@
       4
      ],
      "Interior": [
-      17,
+      14,
       6
      ],
      "Tall_00": [
@@ -162470,7 +162861,7 @@
      "DecalR": 1,
      "Interior": 6,
      "NameSign": 3,
-     "PorchTop": 4,
+     "PorchTop": 5,
      "Roof": 4,
      "Tall": 2,
      "WallsUp": 3,
@@ -162499,14 +162890,14 @@
      5.12,
      4.43
     ],
-    "v4_empty_patch": 1.8,
+    "v4_empty_patch": 2.16,
     "door_lane_hit_angles": {},
     "door_slots": 9,
     "door_slot_deg": 38.4,
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 14176,
+    "tris": 14122,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -162620,6 +163011,11 @@
      "Anchor_Aisle_21",
      "Anchor_Aisle_22",
      "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
      "Anchor_Aisle_3",
      "Anchor_Aisle_4",
      "Anchor_Aisle_5",
@@ -162646,13 +163042,13 @@
    "type": "retail",
    "size": "m",
    "footprint": 7.5,
-   "tris": 17778,
-   "budget": 24000,
+   "tris": 19440,
+   "budget": 27000,
    "tris_by_object": {
     "Base": 412,
     "Roof": 1684,
-    "Interior": 6998,
-    "PorchTop": 410,
+    "Interior": 8378,
+    "PorchTop": 642,
     "Decal_00_Roof": 4,
     "Decal_01_Roof": 4,
     "Decal_03_Roof": 4,
@@ -162708,7 +163104,7 @@
     "Upper_31": 20,
     "NameSign": 16,
     "Wall_00..31": 7196,
-    "Tall_*": 50
+    "Tall_*": 100
    },
    "bbox_min": [
     -7.38,
@@ -162762,7 +163158,9 @@
     "Anchor_Aisle_22",
     "Anchor_Aisle_23",
     "Anchor_Aisle_24",
-    "Anchor_Aisle_25"
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27"
    ],
    "materials": [
     "Accent",
@@ -162781,12 +163179,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1346692,
+   "file_size": 1483408,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.4,
-   "ao_rays": 1738176,
+   "seconds": 6.1,
+   "ao_rays": 1899168,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -162795,7 +163193,7 @@
      "Stand": 4,
      "Browse": 4,
      "Light": 4,
-     "Aisle": 26
+     "Aisle": 28
     },
     "wall_tris": 7196,
     "interior_materials": [
@@ -163102,6 +163500,24 @@
      {
       "name": "Anchor_Aisle_17",
       "pos": [
+       -3.75,
+       -2.5,
+       0.14
+      ],
+      "yaw": -56.31
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       -3.75,
+       2.5,
+       0.14
+      ],
+      "yaw": 236.31
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
        -1.25,
        -5.0,
        0.14
@@ -163109,7 +163525,7 @@
       "yaw": -14.04
      },
      {
-      "name": "Anchor_Aisle_18",
+      "name": "Anchor_Aisle_20",
       "pos": [
        -1.25,
        5.0,
@@ -163118,7 +163534,7 @@
       "yaw": 194.04
      },
      {
-      "name": "Anchor_Aisle_19",
+      "name": "Anchor_Aisle_21",
       "pos": [
        0.0,
        -5.0,
@@ -163127,7 +163543,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Aisle_20",
+      "name": "Anchor_Aisle_22",
       "pos": [
        0.0,
        5.0,
@@ -163136,7 +163552,7 @@
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Aisle_21",
+      "name": "Anchor_Aisle_23",
       "pos": [
        1.25,
        -5.0,
@@ -163145,16 +163561,16 @@
       "yaw": 14.04
      },
      {
-      "name": "Anchor_Aisle_22",
+      "name": "Anchor_Aisle_24",
       "pos": [
-       2.5,
+       1.25,
        -3.75,
        0.14
       ],
-      "yaw": 33.69
+      "yaw": 18.43
      },
      {
-      "name": "Anchor_Aisle_23",
+      "name": "Anchor_Aisle_25",
       "pos": [
        5.0,
        -1.25,
@@ -163163,7 +163579,7 @@
       "yaw": 75.96
      },
      {
-      "name": "Anchor_Aisle_24",
+      "name": "Anchor_Aisle_26",
       "pos": [
        5.0,
        0.0,
@@ -163172,7 +163588,7 @@
       "yaw": 90.0
      },
      {
-      "name": "Anchor_Aisle_25",
+      "name": "Anchor_Aisle_27",
       "pos": [
        5.0,
        1.25,
@@ -163181,7 +163597,7 @@
       "yaw": 104.04
      }
     ],
-    "tall_parts": 2,
+    "tall_parts": 3,
     "surfaces": {
      "Base": [
       3,
@@ -163198,6 +163614,10 @@
      "Tall_00": [
       4,
       2
+     ],
+     "Tall_01": [
+      4,
+      2
      ]
     },
     "group_surfaces": {
@@ -163205,7 +163625,7 @@
      "DecalR": 1,
      "Interior": 6,
      "NameSign": 3,
-     "PorchTop": 4,
+     "PorchTop": 5,
      "Roof": 4,
      "Tall": 2,
      "WallsUp": 3,
@@ -163234,14 +163654,14 @@
      6.62,
      5.58
     ],
-    "v4_empty_patch": 1.72,
+    "v4_empty_patch": 1.91,
     "door_lane_hit_angles": {},
     "door_slots": 11,
     "door_slot_deg": 30.2,
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 17778,
+    "tris": 19440,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -163275,6 +163695,7 @@
      "PorchTop",
      "Roof",
      "Tall_00",
+     "Tall_01",
      "Upper_00",
      "Upper_01",
      "Upper_02",
@@ -163360,6 +163781,8 @@
      "Anchor_Aisle_23",
      "Anchor_Aisle_24",
      "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
      "Anchor_Aisle_3",
      "Anchor_Aisle_4",
      "Anchor_Aisle_5",
@@ -163390,13 +163813,13 @@
    "type": "retail",
    "size": "l",
    "footprint": 9.6,
-   "tris": 24425,
-   "budget": 35200,
+   "tris": 27639,
+   "budget": 39600,
    "tris_by_object": {
     "Base": 660,
     "Roof": 2061,
-    "Interior": 13042,
-    "PorchTop": 486,
+    "Interior": 15974,
+    "PorchTop": 718,
     "Decal_00_Roof": 4,
     "Decal_01_Roof": 4,
     "Decal_02_Roof": 4,
@@ -163458,7 +163881,7 @@
     "Upper_31": 46,
     "NameSign": 16,
     "Wall_00..31": 6970,
-    "Tall_*": 50
+    "Tall_*": 100
    },
    "bbox_min": [
     -9.48,
@@ -163527,7 +163950,17 @@
     "Anchor_Aisle_29",
     "Anchor_Aisle_30",
     "Anchor_Aisle_31",
-    "Anchor_Aisle_32"
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35",
+    "Anchor_Aisle_36",
+    "Anchor_Aisle_37",
+    "Anchor_Aisle_38",
+    "Anchor_Aisle_39",
+    "Anchor_Aisle_40",
+    "Anchor_Aisle_41",
+    "Anchor_Aisle_42"
    ],
    "materials": [
     "Accent",
@@ -163546,12 +163979,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1742376,
+   "file_size": 2006640,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.1,
-   "ao_rays": 2393808,
+   "seconds": 11.2,
+   "ao_rays": 2704464,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -163560,7 +163993,7 @@
      "Stand": 7,
      "Browse": 7,
      "Light": 5,
-     "Aisle": 33
+     "Aisle": 43
     },
     "wall_tris": 6970,
     "interior_materials": [
@@ -163993,6 +164426,24 @@
      {
       "name": "Anchor_Aisle_23",
       "pos": [
+       -6.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": -68.2
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       -6.25,
+       2.5,
+       0.14
+      ],
+      "yaw": 248.2
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
        -5.0,
        -5.0,
        0.14
@@ -164000,7 +164451,7 @@
       "yaw": -45.0
      },
      {
-      "name": "Anchor_Aisle_24",
+      "name": "Anchor_Aisle_26",
       "pos": [
        -5.0,
        5.0,
@@ -164009,7 +164460,7 @@
       "yaw": 225.0
      },
      {
-      "name": "Anchor_Aisle_25",
+      "name": "Anchor_Aisle_27",
       "pos": [
        -2.5,
        -6.25,
@@ -164018,7 +164469,7 @@
       "yaw": -21.8
      },
      {
-      "name": "Anchor_Aisle_26",
+      "name": "Anchor_Aisle_28",
       "pos": [
        -2.5,
        6.25,
@@ -164027,7 +164478,7 @@
       "yaw": 201.8
      },
      {
-      "name": "Anchor_Aisle_27",
+      "name": "Anchor_Aisle_29",
       "pos": [
        -1.25,
        -6.25,
@@ -164036,7 +164487,79 @@
       "yaw": -11.31
      },
      {
-      "name": "Anchor_Aisle_28",
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       0.0,
+       -6.25,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       0.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       1.25,
+       -5.0,
+       0.14
+      ],
+      "yaw": 14.04
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       1.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 26.57
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       1.25,
+       -1.25,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_36",
+      "pos": [
+       1.25,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_37",
+      "pos": [
+       1.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_38",
       "pos": [
        2.5,
        -6.25,
@@ -164045,34 +164568,34 @@
       "yaw": 21.8
      },
      {
-      "name": "Anchor_Aisle_29",
+      "name": "Anchor_Aisle_39",
       "pos": [
-       3.75,
+       2.5,
        -5.0,
        0.14
       ],
-      "yaw": 36.87
+      "yaw": 26.57
      },
      {
-      "name": "Anchor_Aisle_30",
+      "name": "Anchor_Aisle_40",
       "pos": [
-       5.0,
-       -5.0,
+       2.5,
+       1.25,
        0.14
       ],
-      "yaw": 45.0
+      "yaw": 116.57
      },
      {
-      "name": "Anchor_Aisle_31",
+      "name": "Anchor_Aisle_41",
       "pos": [
        5.0,
-       -3.75,
+       2.5,
        0.14
       ],
-      "yaw": 53.13
+      "yaw": 116.57
      },
      {
-      "name": "Anchor_Aisle_32",
+      "name": "Anchor_Aisle_42",
       "pos": [
        6.25,
        2.5,
@@ -164081,7 +164604,7 @@
       "yaw": 111.8
      }
     ],
-    "tall_parts": 2,
+    "tall_parts": 3,
     "surfaces": {
      "Base": [
       4,
@@ -164098,6 +164621,10 @@
      "Tall_00": [
       4,
       2
+     ],
+     "Tall_01": [
+      4,
+      2
      ]
     },
     "group_surfaces": {
@@ -164105,7 +164632,7 @@
      "DecalR": 1,
      "Interior": 6,
      "NameSign": 3,
-     "PorchTop": 4,
+     "PorchTop": 5,
      "Roof": 4,
      "Tall": 2,
      "WallsUp": 3,
@@ -164134,14 +164661,14 @@
      8.72,
      7.58
     ],
-    "v4_empty_patch": 1.8,
+    "v4_empty_patch": 2.11,
     "door_lane_hit_angles": {},
     "door_slots": 15,
     "door_slot_deg": 23.3,
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 24425,
+    "tris": 27639,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -164181,6 +164708,7 @@
      "PorchTop",
      "Roof",
      "Tall_00",
+     "Tall_01",
      "Upper_00",
      "Upper_01",
      "Upper_02",
@@ -164274,7 +164802,17 @@
      "Anchor_Aisle_30",
      "Anchor_Aisle_31",
      "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_36",
+     "Anchor_Aisle_37",
+     "Anchor_Aisle_38",
+     "Anchor_Aisle_39",
      "Anchor_Aisle_4",
+     "Anchor_Aisle_40",
+     "Anchor_Aisle_41",
+     "Anchor_Aisle_42",
      "Anchor_Aisle_5",
      "Anchor_Aisle_6",
      "Anchor_Aisle_7",
@@ -169835,12 +170373,12 @@
    "type": "academy",
    "size": "s",
    "footprint": 6.0,
-   "tris": 14394,
-   "budget": 16000,
+   "tris": 16430,
+   "budget": 18000,
    "tris_by_object": {
     "Base": 316,
     "Roof": 1756,
-    "Interior": 5162,
+    "Interior": 7198,
     "PorchTop": 208,
     "Upper_00": 20,
     "Upper_01": 36,
@@ -169901,10 +170439,11 @@
     "Anchor_Class_2",
     "Anchor_Seat_3",
     "Anchor_Class_3",
-    "Anchor_Stand_0",
     "Anchor_Lamp_1",
+    "Anchor_Stand_0",
     "Anchor_Lamp_2",
     "Anchor_Lamp_3",
+    "Anchor_Lamp_4",
     "Anchor_Light_0",
     "Anchor_Light_1",
     "Anchor_Aisle_0",
@@ -169924,13 +170463,7 @@
     "Anchor_Aisle_14",
     "Anchor_Aisle_15",
     "Anchor_Aisle_16",
-    "Anchor_Aisle_17",
-    "Anchor_Aisle_18",
-    "Anchor_Aisle_19",
-    "Anchor_Aisle_20",
-    "Anchor_Aisle_21",
-    "Anchor_Aisle_22",
-    "Anchor_Aisle_23"
+    "Anchor_Aisle_17"
    ],
    "materials": [
     "Accent",
@@ -169938,7 +170471,6 @@
     "FloorDark",
     "Frame",
     "Glass",
-    "Glow",
     "Hull",
     "HullDark",
     "L3Band",
@@ -169949,34 +170481,34 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1064004,
+   "file_size": 1192428,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.2,
-   "ao_rays": 1434240,
+   "seconds": 5.1,
+   "ao_rays": 1638624,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Lamp": 4,
+     "Lamp": 5,
      "Work": 1,
      "Teach": 1,
      "Seat": 4,
      "Class": 4,
      "Stand": 1,
      "Light": 2,
-     "Aisle": 24
+     "Aisle": 18
     },
     "wall_tris": 6072,
     "interior_materials": [
      "Accent",
      "Glass",
-     "Glow",
      "L3Band",
      "LightStrip",
      "Palette",
      "PaletteMetal",
-     "Screen"
+     "Screen",
+     "Window"
     ],
     "wall_materials": [
      "Accent",
@@ -169986,7 +170518,7 @@
      "Screen",
      "Window"
     ],
-    "file_materials": 15,
+    "file_materials": 14,
     "info": {},
     "anchors": [
      {
@@ -170089,16 +170621,25 @@
       "yaw": 0.0
      },
      {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -0.318,
+       1.802,
+       1.54
+      ],
+      "yaw": 0.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
-       -2.268,
-       2.11,
+       0.22,
+       1.814,
        0.14
       ],
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_1",
+      "name": "Anchor_Lamp_2",
       "pos": [
        5.118,
        1.352,
@@ -170107,7 +170648,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_2",
+      "name": "Anchor_Lamp_3",
       "pos": [
        -3.967,
        3.504,
@@ -170116,7 +170657,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_3",
+      "name": "Anchor_Lamp_4",
       "pos": [
        -1.719,
        -5.006,
@@ -170280,83 +170821,29 @@
      {
       "name": "Anchor_Aisle_15",
       "pos": [
-       -3.75,
-       0.0,
+       -2.5,
+       -2.5,
        0.14
       ],
-      "yaw": 270.0
+      "yaw": -45.0
      },
      {
       "name": "Anchor_Aisle_16",
       "pos": [
-       -3.75,
-       1.25,
+       -2.5,
+       -1.25,
        0.14
       ],
-      "yaw": 251.57
+      "yaw": -63.43
      },
      {
       "name": "Anchor_Aisle_17",
-      "pos": [
-       -2.5,
-       2.5,
-       0.14
-      ],
-      "yaw": 225.0
-     },
-     {
-      "name": "Anchor_Aisle_18",
       "pos": [
        -1.25,
        -3.75,
        0.14
       ],
       "yaw": -18.43
-     },
-     {
-      "name": "Anchor_Aisle_19",
-      "pos": [
-       -1.25,
-       3.75,
-       0.14
-      ],
-      "yaw": 198.43
-     },
-     {
-      "name": "Anchor_Aisle_20",
-      "pos": [
-       1.25,
-       -3.75,
-       0.14
-      ],
-      "yaw": 18.43
-     },
-     {
-      "name": "Anchor_Aisle_21",
-      "pos": [
-       2.5,
-       -2.5,
-       0.14
-      ],
-      "yaw": 45.0
-     },
-     {
-      "name": "Anchor_Aisle_22",
-      "pos": [
-       2.5,
-       1.25,
-       0.14
-      ],
-      "yaw": 116.57
-     },
-     {
-      "name": "Anchor_Aisle_23",
-      "pos": [
-       2.5,
-       2.5,
-       0.14
-      ],
-      "yaw": 135.0
      }
     ],
     "tall_parts": 1,
@@ -170370,7 +170857,7 @@
       5
      ],
      "Interior": [
-      18,
+      19,
       8
      ]
     },
@@ -170417,7 +170904,7 @@
      5.12,
      4.43
     ],
-    "v4_empty_patch": 1.86,
+    "v4_empty_patch": 1.3,
     "door_lane_hit_angles": {
      "board": [
       0,
@@ -170468,7 +170955,7 @@
     "door_free_deg": 322.0
    },
    "verify": {
-    "tris": 14394,
+    "tris": 16430,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -170556,13 +171043,7 @@
      "Anchor_Aisle_15",
      "Anchor_Aisle_16",
      "Anchor_Aisle_17",
-     "Anchor_Aisle_18",
-     "Anchor_Aisle_19",
      "Anchor_Aisle_2",
-     "Anchor_Aisle_20",
-     "Anchor_Aisle_21",
-     "Anchor_Aisle_22",
-     "Anchor_Aisle_23",
      "Anchor_Aisle_3",
      "Anchor_Aisle_4",
      "Anchor_Aisle_5",
@@ -170578,6 +171059,7 @@
      "Anchor_Lamp_1",
      "Anchor_Lamp_2",
      "Anchor_Lamp_3",
+     "Anchor_Lamp_4",
      "Anchor_Light_0",
      "Anchor_Light_1",
      "Anchor_Seat_0",
@@ -170596,12 +171078,12 @@
    "type": "academy",
    "size": "m",
    "footprint": 7.5,
-   "tris": 18162,
-   "budget": 24000,
+   "tris": 21214,
+   "budget": 27000,
    "tris_by_object": {
     "Base": 404,
     "Roof": 1972,
-    "Interior": 8198,
+    "Interior": 11250,
     "PorchTop": 240,
     "Upper_00": 20,
     "Upper_01": 36,
@@ -170670,10 +171152,11 @@
     "Anchor_Class_6",
     "Anchor_Seat_7",
     "Anchor_Class_7",
-    "Anchor_Stand_0",
     "Anchor_Lamp_1",
+    "Anchor_Stand_0",
     "Anchor_Lamp_2",
     "Anchor_Lamp_3",
+    "Anchor_Lamp_4",
     "Anchor_Light_0",
     "Anchor_Light_1",
     "Anchor_Light_2",
@@ -170699,13 +171182,7 @@
     "Anchor_Aisle_18",
     "Anchor_Aisle_19",
     "Anchor_Aisle_20",
-    "Anchor_Aisle_21",
-    "Anchor_Aisle_22",
-    "Anchor_Aisle_23",
-    "Anchor_Aisle_24",
-    "Anchor_Aisle_25",
-    "Anchor_Aisle_26",
-    "Anchor_Aisle_27"
+    "Anchor_Aisle_21"
    ],
    "materials": [
     "Accent",
@@ -170724,23 +171201,23 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1331472,
+   "file_size": 1538644,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.5,
-   "ao_rays": 1807872,
+   "seconds": 6.6,
+   "ao_rays": 2112384,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Lamp": 4,
+     "Lamp": 5,
      "Work": 1,
      "Teach": 1,
      "Seat": 8,
      "Class": 8,
      "Stand": 1,
      "Light": 4,
-     "Aisle": 28
+     "Aisle": 22
     },
     "wall_tris": 6412,
     "interior_materials": [
@@ -170937,16 +171414,25 @@
       "yaw": 0.0
      },
      {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -0.517,
+       2.935,
+       1.54
+      ],
+      "yaw": 0.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
-       -2.584,
-       2.658,
+       0.55,
+       2.285,
        0.14
       ],
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_1",
+      "name": "Anchor_Lamp_2",
       "pos": [
        6.553,
        1.787,
@@ -170955,7 +171441,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_2",
+      "name": "Anchor_Lamp_3",
       "pos": [
        -5.127,
        4.456,
@@ -170964,7 +171450,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_3",
+      "name": "Anchor_Lamp_4",
       "pos": [
        -2.155,
        -6.442,
@@ -171165,58 +171651,13 @@
       "name": "Anchor_Aisle_17",
       "pos": [
        -5.0,
-       -1.25,
-       0.14
-      ],
-      "yaw": -75.96
-     },
-     {
-      "name": "Anchor_Aisle_18",
-      "pos": [
-       -5.0,
-       0.0,
-       0.14
-      ],
-      "yaw": 270.0
-     },
-     {
-      "name": "Anchor_Aisle_19",
-      "pos": [
-       -5.0,
        1.25,
        0.14
       ],
       "yaw": 255.96
      },
      {
-      "name": "Anchor_Aisle_20",
-      "pos": [
-       -3.75,
-       -1.25,
-       0.14
-      ],
-      "yaw": -71.57
-     },
-     {
-      "name": "Anchor_Aisle_21",
-      "pos": [
-       -2.5,
-       -3.75,
-       0.14
-      ],
-      "yaw": -33.69
-     },
-     {
-      "name": "Anchor_Aisle_22",
-      "pos": [
-       -2.5,
-       3.75,
-       0.14
-      ],
-      "yaw": 213.69
-     },
-     {
-      "name": "Anchor_Aisle_23",
+      "name": "Anchor_Aisle_18",
       "pos": [
        -1.25,
        -5.0,
@@ -171225,7 +171666,7 @@
       "yaw": -14.04
      },
      {
-      "name": "Anchor_Aisle_24",
+      "name": "Anchor_Aisle_19",
       "pos": [
        0.0,
        -5.0,
@@ -171234,16 +171675,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Aisle_25",
-      "pos": [
-       0.0,
-       5.0,
-       0.14
-      ],
-      "yaw": 180.0
-     },
-     {
-      "name": "Anchor_Aisle_26",
+      "name": "Anchor_Aisle_20",
       "pos": [
        1.25,
        -5.0,
@@ -171252,7 +171684,7 @@
       "yaw": 14.04
      },
      {
-      "name": "Anchor_Aisle_27",
+      "name": "Anchor_Aisle_21",
       "pos": [
        1.25,
        5.0,
@@ -171272,7 +171704,7 @@
       5
      ],
      "Interior": [
-      18,
+      19,
       8
      ]
     },
@@ -171300,22 +171732,42 @@
      "shell": "podium",
      "name_sign_deg": 22.5
     },
-    "door_blocked": [],
-    "door_clear_min": 0.99,
-    "door_lane_hits": {},
+    "door_blocked": [
+     [
+      194.5,
+      195.5
+     ]
+    ],
+    "door_clear_min": 0.95,
+    "door_lane_hits": {
+     "board": 5.67
+    },
     "door_lane_ring": [
      6.08,
      6.62,
      5.58
     ],
-    "v4_empty_patch": 1.85,
-    "door_lane_hit_angles": {},
+    "v4_empty_patch": 1.56,
+    "door_lane_hit_angles": {
+     "board": [
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199
+     ]
+    },
     "door_slots": 11,
     "door_slot_deg": 30.2,
-    "door_free_deg": 360.0
+    "door_free_deg": 359.0
    },
    "verify": {
-    "tris": 18162,
+    "tris": 21214,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -171408,12 +171860,6 @@
      "Anchor_Aisle_2",
      "Anchor_Aisle_20",
      "Anchor_Aisle_21",
-     "Anchor_Aisle_22",
-     "Anchor_Aisle_23",
-     "Anchor_Aisle_24",
-     "Anchor_Aisle_25",
-     "Anchor_Aisle_26",
-     "Anchor_Aisle_27",
      "Anchor_Aisle_3",
      "Anchor_Aisle_4",
      "Anchor_Aisle_5",
@@ -171433,6 +171879,7 @@
      "Anchor_Lamp_1",
      "Anchor_Lamp_2",
      "Anchor_Lamp_3",
+     "Anchor_Lamp_4",
      "Anchor_Light_0",
      "Anchor_Light_1",
      "Anchor_Light_2",
@@ -171457,12 +171904,12 @@
    "type": "academy",
    "size": "l",
    "footprint": 9.6,
-   "tris": 28274,
-   "budget": 35200,
+   "tris": 30866,
+   "budget": 39600,
    "tris_by_object": {
     "Base": 644,
     "Roof": 2344,
-    "Interior": 17450,
+    "Interior": 20042,
     "PorchTop": 272,
     "Upper_00": 34,
     "Upper_01": 34,
@@ -171545,11 +171992,12 @@
     "Anchor_Class_13",
     "Anchor_Work_1",
     "Anchor_Console_0",
+    "Anchor_Lamp_1",
     "Anchor_Stand_0",
     "Anchor_Stand_1",
-    "Anchor_Lamp_1",
     "Anchor_Lamp_2",
     "Anchor_Lamp_3",
+    "Anchor_Lamp_4",
     "Anchor_Light_0",
     "Anchor_Light_1",
     "Anchor_Light_2",
@@ -171581,8 +172029,7 @@
     "Anchor_Aisle_23",
     "Anchor_Aisle_24",
     "Anchor_Aisle_25",
-    "Anchor_Aisle_26",
-    "Anchor_Aisle_27"
+    "Anchor_Aisle_26"
    ],
    "materials": [
     "Accent",
@@ -171601,16 +172048,16 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2022148,
+   "file_size": 2172720,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.1,
-   "ao_rays": 2824896,
+   "seconds": 13.8,
+   "ao_rays": 3076416,
    "trays": [],
    "v3": {
     "anchor_counts": {
-     "Lamp": 4,
+     "Lamp": 5,
      "Work": 2,
      "Teach": 1,
      "Seat": 14,
@@ -171618,7 +172065,7 @@
      "Console": 1,
      "Stand": 2,
      "Light": 5,
-     "Aisle": 28
+     "Aisle": 27
     },
     "wall_tris": 6460,
     "interior_materials": [
@@ -171941,10 +172388,19 @@
       "yaw": 115.0
      },
      {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -0.865,
+       4.904,
+       1.54
+      ],
+      "yaw": 0.0
+     },
+     {
       "name": "Anchor_Stand_0",
       "pos": [
-       -3.134,
-       3.61,
+       1.124,
+       3.105,
        0.14
       ],
       "yaw": 0.0
@@ -171952,14 +172408,14 @@
      {
       "name": "Anchor_Stand_1",
       "pos": [
-       -1.034,
-       3.61,
+       3.224,
+       3.105,
        0.14
       ],
       "yaw": 180.0
      },
      {
-      "name": "Anchor_Lamp_1",
+      "name": "Anchor_Lamp_2",
       "pos": [
        8.563,
        2.397,
@@ -171968,7 +172424,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_2",
+      "name": "Anchor_Lamp_3",
       "pos": [
        -6.75,
        5.788,
@@ -171977,7 +172433,7 @@
       "yaw": 0.0
      },
      {
-      "name": "Anchor_Lamp_3",
+      "name": "Anchor_Lamp_4",
       "pos": [
        -2.764,
        -8.451,
@@ -172240,41 +172696,32 @@
      {
       "name": "Anchor_Aisle_23",
       "pos": [
-       -5.0,
-       -5.0,
+       -6.25,
+       2.5,
        0.14
       ],
-      "yaw": -45.0
+      "yaw": 248.2
      },
      {
       "name": "Anchor_Aisle_24",
       "pos": [
-       -5.0,
-       5.0,
+       1.25,
+       -6.25,
        0.14
       ],
-      "yaw": 225.0
+      "yaw": 11.31
      },
      {
       "name": "Anchor_Aisle_25",
       "pos": [
-       3.75,
-       5.0,
+       2.5,
+       -6.25,
        0.14
       ],
-      "yaw": 143.13
+      "yaw": 21.8
      },
      {
       "name": "Anchor_Aisle_26",
-      "pos": [
-       5.0,
-       -5.0,
-       0.14
-      ],
-      "yaw": 45.0
-     },
-     {
-      "name": "Anchor_Aisle_27",
       "pos": [
        5.0,
        5.0,
@@ -172294,7 +172741,7 @@
       5
      ],
      "Interior": [
-      18,
+      19,
       8
      ]
     },
@@ -172330,14 +172777,14 @@
      8.72,
      7.58
     ],
-    "v4_empty_patch": 1.9,
+    "v4_empty_patch": 1.59,
     "door_lane_hit_angles": {},
     "door_slots": 15,
     "door_slot_deg": 23.3,
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 28274,
+    "tris": 30866,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -172435,7 +172882,6 @@
      "Anchor_Aisle_24",
      "Anchor_Aisle_25",
      "Anchor_Aisle_26",
-     "Anchor_Aisle_27",
      "Anchor_Aisle_3",
      "Anchor_Aisle_4",
      "Anchor_Aisle_5",
@@ -172462,6 +172908,7 @@
      "Anchor_Lamp_1",
      "Anchor_Lamp_2",
      "Anchor_Lamp_3",
+     "Anchor_Lamp_4",
      "Anchor_Light_0",
      "Anchor_Light_1",
      "Anchor_Light_2",
@@ -172586,8 +173033,6 @@
    ],
    "materials": [
     "Accent",
-    "Ember",
-    "Fabric",
     "FloorDark",
     "Frame",
     "Glass",
@@ -172598,13 +173043,15 @@
     "Palette",
     "PaletteMetal",
     "Screen",
+    "SecBlack",
+    "SignalRedGlow",
     "Window"
    ],
-   "file_size": 920980,
+   "file_size": 921028,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.6,
+   "seconds": 3.7,
    "ao_rays": 1217088,
    "trays": [],
    "v3": {
@@ -172945,7 +173392,7 @@
       2
      ],
      "Roof": [
-      6,
+      7,
       4
      ],
      "Interior": [
@@ -173135,7 +173582,7 @@
     "tris": 12232,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
-    "ao_min": 0.004776953253895044,
+    "ao_min": 0.002731743035838008,
     "ao_max": 1.0,
     "tray_err": null,
     "meshes": [
@@ -173358,8 +173805,6 @@
    ],
    "materials": [
     "Accent",
-    "Ember",
-    "Fabric",
     "FloorDark",
     "Frame",
     "Glass",
@@ -173371,13 +173816,15 @@
     "Palette",
     "PaletteMetal",
     "Screen",
+    "SecBlack",
+    "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1106208,
+   "file_size": 1106252,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 4.7,
    "ao_rays": 1450752,
    "trays": [],
    "v3": {
@@ -173854,7 +174301,7 @@
       2
      ],
      "Roof": [
-      6,
+      7,
       4
      ],
      "Interior": [
@@ -173901,7 +174348,7 @@
     "tris": 14574,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
-    "ao_min": 0.004776953253895044,
+    "ao_min": 0.002428215928375721,
     "ao_max": 1.0,
     "tray_err": null,
     "meshes": [
@@ -174129,24 +174576,24 @@
    ],
    "materials": [
     "Accent",
-    "BeaconAmber",
     "FloorDark",
     "Frame",
-    "Hazard",
     "Hull",
     "HullDark",
     "Light",
     "LightStrip",
     "Palette",
     "PaletteMetal",
+    "PrisonOrange",
+    "PrisonOrangeGlow",
     "Screen",
     "Window"
    ],
-   "file_size": 811720,
+   "file_size": 811724,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.8,
+   "seconds": 2.6,
    "ao_rays": 1062096,
    "trays": [],
    "v3": {
@@ -174872,10 +175319,8 @@
    ],
    "materials": [
     "Accent",
-    "BeaconAmber",
     "FloorDark",
     "Frame",
-    "Hazard",
     "Hull",
     "HullDark",
     "Light",
@@ -174883,14 +175328,16 @@
     "Neon",
     "Palette",
     "PaletteMetal",
+    "PrisonOrange",
+    "PrisonOrangeGlow",
     "Screen",
     "Window"
    ],
-   "file_size": 991348,
+   "file_size": 991352,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.4,
+   "seconds": 3.7,
    "ao_rays": 1317504,
    "trays": [],
    "v3": {
@@ -175629,10 +176076,8 @@
    ],
    "materials": [
     "Accent",
-    "BeaconAmber",
     "FloorDark",
     "Frame",
-    "Hazard",
     "Hull",
     "HullDark",
     "Light",
@@ -175640,14 +176085,16 @@
     "Neon",
     "Palette",
     "PaletteMetal",
+    "PrisonOrange",
+    "PrisonOrangeGlow",
     "Screen",
     "Window"
    ],
-   "file_size": 1353248,
+   "file_size": 1353252,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.9,
+   "seconds": 6.3,
    "ao_rays": 1895952,
    "trays": [],
    "v3": {

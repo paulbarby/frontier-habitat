@@ -1,0 +1,93 @@
+{
+  "_note": "V5 sections 5 and 6: attitude drift, reviews, discipline, unrest, responses. Times in game days (600 s) unless named _s. Deltas are points on the 0-100 satisfaction scale or the -100..100 attitude scale.",
+  "update_every_s": 5,
+  "attitude": {
+    "_note": "Attitude moves toward its target: (satisfaction - 50) x from_satisfaction + trait mods + the sum of active discipline mods. rate: share of the gap closed per update.",
+    "from_satisfaction": 1.2,
+    "rate": 0.05,
+    "traits": {"loyal": 12, "workaholic": 8, "calm": 5, "honest": 4, "ambitious": 3, "lazy": -12, "hot-headed": -8, "greedy": -5, "jealous": -3},
+    "slack_below": -30,
+    "slack_work_mult": 0.85,
+    "rebel_below": -70
+  },
+  "reviews": {
+    "excellent": {"attitude": 10, "satisfaction": 6, "days": 2, "traits": {"ambitious": 6, "greedy": 2}, "text": "Excellent review"},
+    "good": {"attitude": 5, "satisfaction": 3, "days": 2, "traits": {"ambitious": 3}, "text": "Good review"},
+    "needs_improvement": {"attitude": -3, "satisfaction": -3, "days": 2, "traits": {"hot-headed": -6, "workaholic": 6, "loyal": 3, "ambitious": 4}, "text": "Review: needs improvement"},
+    "poor": {"attitude": -8, "satisfaction": -6, "days": 2, "traits": {"hot-headed": -10, "loyal": 6, "workaholic": 6}, "text": "Poor review"}
+  },
+  "discipline": {
+    "praise": {"attitude": 8, "satisfaction": 5, "days": 1, "punish": false, "others": "Friends are pleased. Rivals are a little envious.", "text": "Praised"},
+    "bonus_leisure": {"attitude": 5, "satisfaction": 8, "days": 1, "punish": false, "leisure": true, "others": "Others may ask for the same.", "text": "Bonus leisure"},
+    "gift": {"attitude": 10, "satisfaction": 8, "days": 2, "punish": false, "others": "Rivals are envious.", "text": "Received a gift"},
+    "warning": {"attitude": 2, "satisfaction": -2, "days": 1, "punish": false, "traits": {"loyal": 4, "calm": 3, "hot-headed": -8}, "others": "None.", "text": "Verbal warning"},
+    "extra_shift": {"attitude": -3, "satisfaction": -10, "days": 1, "punish": true, "work_mult": 1.2, "fatigue": 20, "traits": {"lazy": -6, "workaholic": 6}, "others": "None.", "text": "Extra shift"},
+    "ration_cut": {"attitude": 6, "satisfaction": -20, "days": 2, "punish": true, "hunger_mult": 1.8, "traits": {"hot-headed": -12, "greedy": -4}, "others": "Friends feel it is unfair (fairness down).", "risk": "Hunger and health risk.", "text": "Rations cut"},
+    "confine": {"attitude": 4, "satisfaction": -15, "days": 1, "punish": true, "no_work": true, "no_rec": true, "traits": {"hot-headed": -12, "calm": 4}, "others": "Fairness down a little for friends.", "text": "Confined to quarters"},
+    "demote": {"attitude": -10, "satisfaction": -12, "days": 3, "punish": true, "demote": true, "traits": {"ambitious": -8, "loyal": 4}, "others": "A rival is happy. Drama.", "text": "Demoted"},
+    "jail": {"attitude": 0, "satisfaction": -25, "days": 2, "punish": true, "no_work": true, "no_rec": true, "jail": true, "traits": {"hot-headed": -15, "calm": 6, "honest": 4}, "others": "Fairness down if others think it is unfair.", "risk": "Attitude can reset or harden.", "text": "Jailed"}
+  },
+  "unfair_attitude_from": -10,
+  "friends_fairness": {"punish": -6, "unfair": -12, "days": 2},
+  "unrest": {
+    "_note": "Target = (sat_ref - mean satisfaction) x per_sat_point + (-mean attitude) x per_att_point + share of people under low_sat x low_share + punishments + rations + deaths - leadership - security - leisure. The value moves toward the target: rise per_day_up, fall per_day_down (points per game day, and never past the target).",
+    "sat_ref": 60,
+    "per_sat_point": 2.0,
+    "per_att_point": 0.5,
+    "low_sat": 40,
+    "low_share": 25,
+    "punish": 4,
+    "punish_unfair": 8,
+    "punish_days": 2,
+    "ration": 3,
+    "death": 6,
+    "death_days": 1,
+    "leadership": 8,
+    "security_per_officer": 2,
+    "security_max": 10,
+    "rise_per_day": 120,
+    "fall_per_day": 60,
+    "stages": [["calm", 0], ["grumbling", 25], ["slowdown", 40], ["protest", 55], ["strike", 70], ["riot", 85]],
+    "hysteresis": 3,
+    "slowdown_mult": 0.85,
+    "demands": {
+      "food": "Full rations now!",
+      "rest": "More rest and fewer shifts!",
+      "fair": "Stop the punishments!",
+      "housing": "Better homes for all!",
+      "safety": "Make the base safe!",
+      "leisure": "We want leisure time!"
+    }
+  },
+  "responses": {
+    "meet_demand": {"unrest": -25, "cooldown_days": 1, "text": "The demand is met."},
+    "leisure_day": {"unrest": -15, "cooldown_days": 1, "leisure": true, "text": "A leisure day for everybody."},
+    "party": {"unrest": -20, "cooldown_days": 2, "leisure": true, "cost": {"meal": 1}, "text": "A party at the bar."},
+    "amnesty": {"unrest": -12, "cooldown_days": 2, "release": true, "text": "All prisoners are released."},
+    "replace_captain": {"unrest": -8, "cooldown_days": 1, "text": "A captain is replaced."},
+    "arrest_ringleaders": {"unrest": -18, "unfair_unrest": 10, "cooldown_days": 1, "text": "The ringleaders are arrested."},
+    "lock_down": {"unrest": 6, "cooldown_days": 0, "lock_hours": 2, "text": "The base is locked down."}
+  },
+  "social": {
+    "_note": "V5 sections 4.1 and 4.2. A tenth of the people a tick may start a talk with a room-mate within near_m; a pair talks once per talk window with this chance. Each talk moves affinity (-100..100) and, for a compatible pair, attraction (0..100). Status thresholds; days are game days.",
+    "talk_window_s": 20,
+    "talk_chance": 0.5,
+    "talk_chance_social": 0.85,
+    "near_m": 3.5,
+    "keep_m": 6.0,
+    "talk": {"affinity": 2.0, "shared_trait": 1.0, "conflict_trait": -2.0, "same_department": 1.0, "argue_topics": ["complaint", "unrest", "discipline", "breakup"], "argue_affinity": -3.0, "gossip_affinity": 1.5, "romance_attraction": 6.0, "attraction_drift": 3.0, "charming": 1.0},
+    "status": {"acquaintance": 10, "friend": 40, "best_friend": 70, "rival": -15, "enemy": -30, "crush": 45, "dating_att": 60, "dating_aff": 25, "partners_days": 3, "partners_aff": 55, "married_days": 5, "wedding_chance": 0.3, "breakup_aff": 0},
+    "discover_chance": 0.2,
+    "discover_per_gossip": 0.02,
+    "defect_att": 85,
+    "defect_chance": 0.5,
+    "decay_per_day": 1.0
+  },
+  "education": {
+    "_note": "V5 section 5.3. A course takes a person one level up in one skill. Game hours are 1/24 of a day.",
+    "course_hours": 16,
+    "teacher_skill": 60,
+    "console_max_level": 3,
+    "seats": [4, 8, 14]
+  }
+}

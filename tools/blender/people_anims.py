@@ -24,7 +24,7 @@ from npc_common import sym, set_foot                             # noqa: E402
 
 # furniture for the new clips (character space, metres; the stool origin is the stool's centre on the floor)
 BAR_STOOL = dict(seat_z=0.76, footrest_z=0.30, footrest_r=0.20, counter_x=0.33, counter_z=1.07)
-HUG = dict(distance=0.30, facing_deg=180.0, sync_s=0.0)
+HUG = dict(distance=0.40, facing_deg=180.0, sync_s=0.0)
 
 # contact rules per clip: (support kind, support height, arms on the world: sides)
 CONTACT = {
@@ -43,6 +43,11 @@ POS_KEYS = ("hips.", "foot.", "arm.", "prop.")
 
 SEAT_DROP = -0.040        # the people pelvis sits 4 cm lower on a chair than the suit / jumpsuit body
 LIE_LIFT = 0.014          # and lies 1.4 cm higher on the ground
+STOOL_ADJ = 0.0           # the bar-stool hips (per body; the MPFB builds calibrate it, 0 for the procedural pilot)
+FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3 one (x s); MPFB builds set it
+KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
+ARM_IN = 0.0              # deg: standing FK arms closer to the body (MPFB builds: 5)
+WORLD_FEET = {"sit_bar_stool"}
 
 
 def people_fix(P, clip):
@@ -57,6 +62,20 @@ def people_fix(P, clip):
             world = CONTACT.get(clip, (None, 0, ()))[2]
             if side not in world and Q.g("arm.%s.ik" % side) > 0:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + SEAT_DROP * w
+    if clip in ("kneel_enter", "repair_kneel", "kneel_exit") and KNEEL_ADJ:
+        w = max(0.0, min(1.0, hz / A.KNEEL.g("hips.z")))
+        Q["hips.z"] = hz + KNEEL_ADJ * w
+        for side in ("L", "R"):
+            if Q.g("arm.%s.ik" % side) > 0 and side not in CONTACT.get(clip, (None, 0, ()))[2]:
+                Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + KNEEL_ADJ * w
+    if ARM_IN:
+        stand = max(0.0, min(1.0, (hz + 0.12) / 0.06))           # standing poses only
+        for side, sg in (("L", -1.0), ("R", 1.0)):
+            f = stand * (1.0 - max(0.0, min(1.0, Q.g("arm.%s.ik" % side))))
+            k = "upper_arm.%s.rx" % side
+            Q[k] = Q.g(k) + sg * ARM_IN * f
+    if clip == "sit_bar_stool" and STOOL_ADJ:
+        Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
     if clip in ("collapse", "dead", "lie_enter", "sleep", "lie_exit"):
         w = max(0.0, min(1.0, (-hz - 0.55) / 0.25))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
@@ -67,7 +86,16 @@ def people_fix(P, clip):
 
 
 def retarget(P, s, clip, settled_z=None):
-    """The pose for a variant of scale s."""
+    """The pose for a variant of scale s (and this body's ankle height: FOOT_DZ)."""
+    Q = _retarget(P, s, clip, settled_z)
+    if FOOT_DZ:
+        for side in ("L", "R"):                               # full for a flat foot, fading as it pitches onto the toes
+            flat = max(0.0, 1.0 - abs(Q.g("foot.%s.pitch" % side)) / 25.0)
+            Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + FOOT_DZ * flat
+    return Q
+
+
+def _retarget(P, s, clip, settled_z=None):
     P = people_fix(P, clip)
     if abs(s - 1.0) < 1e-6:
         return P
@@ -84,6 +112,8 @@ def retarget(P, s, clip, settled_z=None):
             continue
         if k.startswith("arm.") and len(parts) == 3 and parts[1] in world:
             continue                                          # hands on the world stay where the world is
+        if k.startswith("foot.") and clip in WORLD_FEET:
+            continue                                          # feet on furniture (the stool footrest) stay there
         Q[k] = v * s
     if kind:
         hz = P.g("hips.z")
@@ -144,9 +174,60 @@ def talk_jaw(t, dur, loop, rate=4.4, amp=9.0, seed=1, pause=(0.35, 0.55)):
     return amp * max(0.0, sin(ph)) ** 1.5 * (0.55 + 0.45 * sin(ph * 0.37 + seed)) * gate
 
 
+# expressions: weights 0..1 per clip over time (u = t / dur); loops use periodic or constant terms
+def _env(u, a=0.12, b=0.12):
+    """0 -> 1 -> 0 over a one-shot clip (smooth in over a, out over b)."""
+    return max(0.0, min(1.0, u / a, (1.0 - u) / b))
+
+
+def _bump(u, c, w):
+    d = (u - c + 0.5) % 1.0 - 0.5
+    x = d / w
+    return (1.0 - x * x) ** 2 if abs(x) < 1.0 else 0.0
+
+
+EXPRESSIONS = {
+    # name: fn(u) -> dict(smile, laugh, frown, surprise)
+    "idle": lambda u: dict(smile=0.10, surprise=0.35 * _bump(u, 0.55, 0.08)),
+    "idle_look": lambda u: dict(surprise=0.45 * _bump(u, 0.30, 0.07) + 0.3 * _bump(u, 0.75, 0.07)),
+    "talk": lambda u: dict(smile=0.30 + 0.15 * sin(TAU * u * 2), surprise=0.5 * _bump(u, 0.2, 0.06) + 0.4 * _bump(u, 0.65, 0.06)),
+    "talk_gesture_a": lambda u: dict(smile=0.40 + 0.20 * sin(TAU * u), surprise=0.55 * _bump(u, 0.30, 0.07)),
+    "laugh": lambda u: dict(laugh=_env(u, 0.18, 0.25)),
+    "argue": lambda u: dict(frown=0.85 + 0.15 * sin(TAU * u * 2), surprise=0.0),
+    "hug": lambda u: dict(smile=0.9 * _env(u, 0.15, 0.2)),
+    "cheer": lambda u: dict(laugh=_env(u, 0.12, 0.25)),
+    "dance_a": lambda u: dict(smile=0.65 + 0.15 * sin(TAU * u * 2)),
+    "sit_bar_stool": lambda u: dict(smile=0.30 + 0.20 * sin(TAU * u)),
+    "sit_eat": lambda u: dict(smile=0.25),
+    "work_console": lambda u: dict(frown=0.30), "work_bench": lambda u: dict(frown=0.30),
+    "repair_kneel": lambda u: dict(frown=0.35), "sit_type": lambda u: dict(frown=0.20),
+    "injured_walk": lambda u: dict(frown=0.80, laugh=0.0), "collapse": lambda u: dict(frown=0.8 * _env(u, 0.1, 0.3)),
+}
+
+
+def expression_pose(P, w):
+    """Face bone offsets for expression weights (degrees about world-aligned axes in the head frame).
+    mouth.S: pivot inside the cheek, the corner in front: ry < 0 lifts it, rz widens.  brow.S: pivot at the eye:
+    ry < 0 raises the brow, rz moves it in.  lids_low: ry < 0 lifts the lower lids.  lids: ry > 0 closes the upper lids."""
+    smile = w.get("smile", 0.0) + w.get("laugh", 0.0)
+    laugh = w.get("laugh", 0.0)
+    frown = w.get("frown", 0.0)
+    surprise = w.get("surprise", 0.0)
+    for s, sg in (("L", 1.0), ("R", -1.0)):
+        P["mouth.%s.ry" % s] = P.g("mouth.%s.ry" % s) - 13.0 * smile + 9.0 * frown
+        P["mouth.%s.rz" % s] = P.g("mouth.%s.rz" % s) + sg * (9.0 * smile - 3.0 * frown)
+        P["brow.%s.ry" % s] = P.g("brow.%s.ry" % s) + 9.0 * frown - 11.0 * surprise - 3.0 * laugh
+        P["brow.%s.rz" % s] = P.g("brow.%s.rz" % s) - sg * 6.0 * frown
+    P["lids_low.ry"] = P.g("lids_low.ry") - 9.0 * smile - 6.0 * laugh + 3.0 * surprise
+    P["lids.ry"] = P.g("lids.ry") + 14.0 * laugh + 6.0 * frown - 8.0 * surprise
+    P["jaw.ry"] = P.g("jaw.ry") + 9.0 * laugh + 4.0 * surprise
+    return P
+
+
 def with_face(fn, name, frames, loop, jaw=None):
     dur = frames / FPS
     starts = blink_times(name, dur, loop)
+    expr = EXPRESSIONS.get(name) if "mouth.L" in N.PARENT else None
 
     def g(f):
         P = Pose(fn(f))
@@ -154,6 +235,8 @@ def with_face(fn, name, frames, loop, jaw=None):
         P["lids.ry"] = P.g("lids.ry") + BLINK_DEG * blink_amount(t, starts)
         if jaw:
             P["jaw.ry"] = P.g("jaw.ry") + jaw(t, dur)
+        if expr:
+            expression_pose(P, expr(t / dur if dur > 0 else 0.0))
         return P
     return g
 
@@ -243,17 +326,24 @@ def hug_keys():
     partner's left shoulder, the left arm round the waist, the head to the left; 3.2 s from stand to stand."""
     d = HUG["distance"]
     S = Pose(STAND)
-    K1 = add(S, hips__x=0.02, spine__ry=4.0, chest__ry=3.0, neck__ry=2.0)
+    K1 = add(S, spine__ry=2.0, chest__ry=2.0, neck__ry=2.0, spine__rx=-4.0, neck__rz=10.0, head__rz=22.0)   # heads aside
     set_arm_ik(K1, "R", (0.230, 0.300, 1.250), (0.8, -0.5, 0.1), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
     set_arm_ik(K1, "L", (0.220, 0.300, 1.100), (0.8, -0.5, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-30.0)
-    K2 = add(S, hips__x=0.045, spine__ry=6.0, chest__ry=5.0, neck__ry=4.0, head__ry=4.0, neck__rz=10.0, head__rz=18.0,
-             head__rx=-6.0)
-    set_arm_ik(K2, "R", (d + 0.055, 0.050, 1.295), (0.3, -1.0, -0.15), (-1.0, 0.0, 0.0), w=1.0, pole=-60.0)
-    elbow_to(K2, "R", (0.25, -1.0, -0.1), 0.85)
-    set_arm_ik(K2, "L", (d + 0.045, 0.060, 1.060), (0.3, -1.0, 0.0), (-1.0, 0.0, 0.0), w=1.0, pole=-50.0)
-    elbow_to(K2, "L", (0.2, 1.0, -0.3), 0.85)
+    K2 = add(S, hips__x=-0.04, spine__ry=7.0, chest__ry=7.0, neck__ry=0.0, head__ry=2.0, spine__rx=-6.0,
+             chest__rx=-2.0, neck__rz=14.0, head__rz=30.0, head__rx=-8.0)
+    # hips back, chests in, lean to the own left: the heads pass side by side
+    set_arm_ik(K2, "R", (d + 0.13, 0.120, 1.320), (0.3, -1.0, -0.15), (-1.0, 0.0, 0.0), w=1.0, pole=-60.0)
+    elbow_to(K2, "R", (0.05, -1.0, 0.05), 0.95)
+    set_arm_ik(K2, "L", (d + 0.07, 0.200, 1.180), (0.3, -1.0, 0.0), (-1.0, 0.0, 0.0), w=1.0, pole=-50.0)
+    elbow_to(K2, "L", (0.05, 1.0, -0.15), 0.95)
     K3 = add(K2, hips__y=0.01, chest__rz=4.0, head__rz=4.0)
-    keys = [(0.0, S, {"hold": True}), (0.65, K1), (1.15, K2), (1.60, K3), (2.05, K2), (2.50, K1),
+    # the hands go round the partner's sides on the way in and out (not through them)
+    KM = add(S, spine__ry=2.5, chest__ry=2.5, neck__ry=3.0, spine__rx=-5.0, neck__rz=12.0, head__rz=26.0)
+    set_arm_ik(KM, "R", (d - 0.02, 0.36, 1.28), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
+    elbow_to(KM, "R", (0.0, -1.0, 0.0), 0.7)
+    set_arm_ik(KM, "L", (d - 0.02, 0.34, 1.08), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
+    elbow_to(KM, "L", (0.0, 1.0, -0.2), 0.7)
+    keys = [(0.0, S, {"hold": True}), (0.75, KM), (1.20, K2), (1.65, K3), (2.05, K2), (2.50, KM),
             (3.30, Pose(STAND), {"hold": True})]
     return [(t, ik_to_fk(k), *rest) for (t, k, *rest) in keys]
 

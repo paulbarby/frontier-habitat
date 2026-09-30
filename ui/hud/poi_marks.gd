@@ -75,6 +75,9 @@ func _on_screen() -> Array:
 	return out
 
 func _draw() -> void:
+	# The follow view (RENDER-to-UI 2026-09-29): the tags would draw through the dome walls; none there.
+	if hud != null and hud.get("follow_hud") != null and hud.follow_hud.visible:
+		return
 	var font: Font = Fonts.get_font("head")
 	var small: Font = Fonts.get_font("body")
 	for e in _on_screen():

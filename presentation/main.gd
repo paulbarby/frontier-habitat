@@ -648,6 +648,12 @@ func _on_cmd(text: String) -> String:
 			if view.selected_kind != "agent":
 				return "select a person first"
 			if w.size() > 2 and w[1] == "ask":
+				# person ask <action> fair: first a colonist with a fair or good attitude (the UNFAIR warning).
+				if w.size() > 3 and w[3] == "fair":
+					for r in hud.v5.people():
+						if String(r["kind"]) == "colonist" and float(hud.v5.person(int(r["id"]))["attitude"]["value"]) >= 0.0:
+							select("agent", int(r["id"]))
+							break
 				hud.open_person(view.selected_id, "review")
 				var is_review: bool = V5Data.REVIEWS.any(func(r): return String(r[0]) == w[2])
 				var nm: String = w[2].capitalize()

@@ -21,10 +21,7 @@ var sim
 var _recent := {}             # agent id -> [{tick, text, topic, to, emote}] (last 12, in memory)
 var _talk_tick := -1
 var _talks: Array = []
-var _scan_sec := -1           # the tick of the last search for new pairs
-var _sessions := {}           # pair key -> {a, b, w, start, lines, topic, bld, said {line index: line}}
-var _done := {}               # pair key -> the window of its last talk (one talk per window)
-var _rel_cache := {}          # agent id -> [game minute, n, list]
+var _said := {}               # [pair key, start, line index] -> line (made once)
 var _rag_cache := {}          # issue number -> issue (a finished day does not change)
 var _unrest_cache := {}       # base id -> [game second, record]
 var _iw_sec := -1
@@ -34,6 +31,8 @@ var _feud_pair: Array = []
 var _unrest_mem := {}         # base id -> {agent id: [satisfaction, attitude]}
 var _unrest_cur := {}         # base id -> index of the next slice
 var _iw := {}
+var _iw_dome := false
+var _iw_academy := false
 
 ## Cost rule (V5 section 13 budget): talks are kept as sessions. New pairs are searched at most
 ## once a game second (and only when somebody asks); the topic is chosen once per talk and each
@@ -49,10 +48,7 @@ func reset() -> void:
 	_recent = {}
 	_talk_tick = -1
 	_talks = []
-	_scan_sec = -1
-	_sessions = {}
-	_done = {}
-	_rel_cache = {}
+	_said = {}
 	_rag_cache = {}
 	_unrest_cache = {}
 	_iw_sec = -1
@@ -77,119 +73,38 @@ func _first(a: Dictionary) -> String:
 	return String(a.get("name", "")).split(" ")[0]
 
 # ---------------------------------------------------------------- conversations (section 4.1)
-func _can_talk(a: Dictionary) -> bool:
-	return a["state"] == "alive" and a["where"] == "in" and not bool(a.get("sleeping", false)) and String(a.get("plan_kind", "")) != "safety"
-
-func _social_room(bld: int) -> bool:
-	var b: Dictionary = sim.state["buildings"].get(bld, {})
-	if b.is_empty():
-		return false
-	var cat: String = String(sim.bdef(b["def"]).get("category", ""))
-	return cat == "comfort" or String(b["def"]) == "kitchen"
-
 ## Every talk going on now: [{id, a, b (agent ids), speaker, listener, topic, line, emote, anim,
-##  started (tick), line_index, lines, building, pos (Vector2, between the two)}].
+##  started (tick), line_index, lines, building, pos (Vector2, between the two)}]. The talks are
+## simulation state (relations.gd starts and ends them); the lines are made here once each.
 func talks() -> Array:
 	var tick: int = int(sim.state["tick"])
 	if tick == _talk_tick:
 		return _talks
 	_talk_tick = tick
 	var agents: Dictionary = sim.state["agents"]
-	# Each room is searched for new pairs once a game second, on its own tick of the second
-	# ((room id + tick) % tick_hz == 0), so the search is spread over the ticks. A call that
-	# skips ticks searches the rooms of the skipped ticks too (at most one second of them).
-	var hz: int = int(sim.bal["tick_hz"])
-	if _scan_sec == -1 or tick - _scan_sec >= hz or tick < _scan_sec:
-		_scan(tick, -1)
-	else:
-		for t in range(_scan_sec + 1, tick + 1):
-			_scan(t, t % hz)
-	_scan_sec = tick
+	var st: Dictionary = sim.state.get("v5", {}).get("talks", {})
 	_talks = []
-	var gone: Array = []
-	var keys: Array = _sessions.keys()
-	keys.sort()
-	for key in keys:
-		var s: Dictionary = _sessions[key]
+	for key in st:
+		var s: Dictionary = st[key]
 		var x: Dictionary = agents.get(int(s["a"]), {})
 		var y: Dictionary = agents.get(int(s["b"]), {})
 		var li: int = (tick - int(s["start"])) / LINE_TICKS
-		if x.is_empty() or y.is_empty() or li >= int(s["lines"]) or not _can_talk(x) or not _can_talk(y) or int(x["bld"]) != int(s["bld"]) or int(y["bld"]) != int(s["bld"]):
-			gone.append(key)
+		if x.is_empty() or y.is_empty() or li >= int(s["lines"]) or li < 0:
 			continue
 		var speaker: Dictionary = x if li % 2 == 0 else y
 		var listener: Dictionary = y if li % 2 == 0 else x
-		var said: Dictionary = s["said"]
-		if not said.has(li):
-			var ln: Dictionary = line_for(speaker, listener, String(s["topic"]), int(key) * 31 + int(s["w"]) * 7 + li, int(s["bld"]))
-			said[li] = ln
-			_remember(int(speaker["id"]), int(s["start"]) + li * LINE_TICKS, ln, String(s["topic"]), int(listener["id"]))
-		var line: Dictionary = said[li]
-		_talks.append({"id": int(key) * 1000 + int(s["w"]) % 1000, "a": int(s["a"]), "b": int(s["b"]), "speaker": int(speaker["id"]), "listener": int(listener["id"]),
+		var lk: Array = [key, int(s["start"]), li]
+		var line = _said.get(lk)
+		if line == null:
+			line = line_for(speaker, listener, String(s["topic"]), (int(key % 2147483647) * 31 + int(s["w"]) * 7 + li) % 2147483647, int(s["bld"]), li % 2 == 1)
+			_said[lk] = line
+			_remember(int(speaker["id"]), int(s["start"]) + li * LINE_TICKS, line, String(s["topic"]), int(listener["id"]))
+		_talks.append({"id": [key, int(s["start"])].hash(), "a": int(s["a"]), "b": int(s["b"]), "speaker": int(speaker["id"]), "listener": int(listener["id"]),
 			"topic": s["topic"], "line": line["text"], "emote": line["emote"], "anim": line["anim"], "started": int(s["start"]), "line_index": li, "lines": int(s["lines"]),
 			"building": int(s["bld"]), "pos": ((x["pos"] as Vector2) + (y["pos"] as Vector2)) * 0.5})
-	for key in gone:
-		_sessions.erase(key)
+	if _said.size() > 2000:
+		_said = {}
 	return _talks
-
-## Pairs of free people who stand together may start a talk. phase -1: every room; else only the
-## rooms with (id + phase) % tick_hz == 0.
-func _scan(tick: int, phase: int) -> void:
-	var hz: int = int(sim.bal["tick_hz"])
-	var agents: Dictionary = sim.state["agents"]
-	var busy := {}
-	for key in _sessions:
-		var s: Dictionary = _sessions[key]
-		var x: Dictionary = agents.get(int(s["a"]), {})
-		var y: Dictionary = agents.get(int(s["b"]), {})
-		if x.is_empty() or y.is_empty() or (x["pos"] as Vector2).distance_to(y["pos"]) > KEEP:
-			s["lines"] = 0      # ends on the next build of the list
-			continue
-		busy[int(s["a"])] = true
-		busy[int(s["b"])] = true
-	var by_bld := {}
-	var ids: Array = agents.keys()
-	ids.sort()
-	for aid in ids:
-		var a: Dictionary = agents[aid]
-		var b: int = int(a["bld"])
-		if (phase != -1 and posmod(b + phase, hz) != 0) or busy.has(int(aid)) or not _can_talk(a):
-			continue
-		if not by_bld.has(b):
-			by_bld[b] = []
-		by_bld[b].append(a)
-	var w: int = tick / TALK_WINDOW
-	var bids: Array = by_bld.keys()
-	bids.sort()
-	for b in bids:
-		var list: Array = by_bld[b]
-		if list.size() < 2:
-			continue
-		var chance: float = TALK_CHANCE_SOCIAL if _social_room(b) else TALK_CHANCE
-		for i in list.size():
-			var x: Dictionary = list[i]
-			if busy.has(int(x["id"])):
-				continue
-			for j in range(i + 1, list.size()):
-				var y: Dictionary = list[j]
-				if busy.has(int(y["id"])) or (x["pos"] as Vector2).distance_to(y["pos"]) > NEAR:
-					continue
-				var key: int = int(x["id"]) * 100003 + int(y["id"])
-				if int(_done.get(key, -1)) == w or _h(key, w) >= chance:
-					continue
-				_done[key] = w
-				busy[int(x["id"])] = true
-				busy[int(y["id"])] = true
-				_sessions[key] = {"a": int(x["id"]), "b": int(y["id"]), "w": w, "start": tick, "lines": 2 + int(_h(key, w + 7) * 5.0) % 5,
-					"topic": topic_for(x, y, key + w), "bld": b, "said": {}}
-				break
-	# The window marks of old windows are dropped.
-	if _done.size() > 4000:
-		var keep := {}
-		for k in _done:
-			if int(_done[k]) >= w - 1:
-				keep[k] = _done[k]
-		_done = keep
 
 func _remember(sid: int, at: int, line: Dictionary, topic: String, to: int) -> void:
 	var arr: Array = _recent.get(sid, [])
@@ -218,15 +133,16 @@ func recent_lines(agent_id: int, n: int = 3) -> Array:
 			break
 	return out
 
-## Kept for callers of milestone 1; the talks now move on when they are asked for.
+## Kept for callers of milestone 1 (the talks are simulation state now).
 func tick_second() -> void:
-	talks()
+	pass
 
 ## The topic a person talks about: a critical need first (the talk is a status channel), then
 ## colony problems, then work, gossip, romance, leisure and small talk (weights from state).
 ## Topic weights from the colony's problems (once a game second).
 func _issue_weights() -> Dictionary:
-	var sec: int = int(sim.state["tick"]) / int(sim.bal["tick_hz"])
+	# Once a tick (the simulation asks when a talk starts; the answer depends only on the state).
+	var sec: int = int(sim.state["tick"])
 	if sec == _iw_sec:
 		return _iw
 	_iw_sec = sec
@@ -242,7 +158,48 @@ func _issue_weights() -> Dictionary:
 			w["power"] = 3.0
 		elif code.begins_with("hazard") or code.begins_with("reactor"):
 			w["hazard"] = 3.0
+	# V5: talk follows what happened lately (the end of the log: the last game minutes).
+	var now: int = int(sim.state["tick"])
+	var hz: int = int(sim.bal["tick_hz"])
+	var lg: Array = sim.state["log"]
+	var codes := {}
+	for i in range(lg.size() - 1, maxi(-1, lg.size() - 60), -1):
+		var e: Dictionary = lg[i]
+		if int(e["tick"]) < now - 300 * hz:
+			break
+		codes[String(e["code"])] = true
+	if codes.has("death"):
+		w["death"] = 3.0
+	if codes.has("ship_landed") or codes.has("traffic_landed") or codes.has("settlers"):
+		w["ship"] = 2.0
+	if codes.has("research"):
+		w["research"] = 1.5
+	if codes.has("promotion"):
+		w["rank"] = 2.0
+	else:
+		w["rank"] = 0.4
+	if codes.has("discipline"):
+		w["discipline"] = 2.0
+	w["weather"] = 0.8
+	w["home_planet"] = 0.6
+	w["praise"] = 0.6
+	var day: int = now / int(float(sim.bal["day_length"]) * float(hz))
+	if day >= 2:
+		w["news"] = 0.8
+	if sim.get("unrest") != null:
+		var st: String = String(sim.unrest.info(-1)["stage"])
+		if st != "calm":
+			w["unrest"] = 3.0 if ["grumbling", "slowdown"].has(st) else 6.0
 	_iw = w
+	_iw_dome = false
+	_iw_academy = false
+	for id in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][id]
+		if b["state"] == "active":
+			if String(b["def"]) == "super_dome":
+				_iw_dome = true
+			elif String(b["def"]) == "academy":
+				_iw_academy = true
 	return _iw
 
 func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
@@ -265,8 +222,33 @@ func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
 		w["gossip"] = 3.0
 	if sim.people.has_trait(a, "romantic") and compatible(a, other):
 		w["romance"] = 2.0
-	if sim.people.has_trait(a, "hot-headed") or float(sim.people.attitude_soon(a)["value"]) < -30.0:
+	# V5: the person's own life (stored values only: the choice is simulation state).
+	var rec: Dictionary = sim.people.rec_of(int(a["id"]))
+	if sim.people.has_trait(a, "hot-headed") or float(rec.get("att", 0.0)) < -30.0:
 		w["complaint"] = 2.0
+	if sim.get("relations") != null:
+		var rel: Dictionary = sim.relations.rel_of(int(a["id"]), int(other["id"]))
+		if ["dating", "partners", "married", "affair", "fling", "crush"].has(String(rel.get("status", ""))):
+			w["romance"] = 4.0
+		elif String(rel.get("status", "")) == "ex":
+			w["breakup"] = 3.0
+		if sim.relations.partner_of(int(a["id"])) != -1:
+			w["family"] = 1.0
+	var now: int = int(sim.state["tick"])
+	for m in rec.get("mods", []):
+		if int(m["until"]) > now and ["ration_cut", "confine", "jail", "warning", "extra_shift", "demote", "praise", "gift", "friend_punished"].has(String(m["kind"])):
+			w["discipline"] = 4.0
+			break
+	if sim.get("education") != null and sim.education.in_class(a):
+		w["academy"] = 3.0
+	elif _iw_academy:
+		w["academy"] = 0.4
+	if _iw_dome:
+		w["dome"] = 1.5
+	if String(rec.get("low", "")) == "housing":
+		w["housing"] = 2.0
+	if String(rec.get("low", "")) == "work":
+		w["overwork"] = maxf(float(w.get("overwork", 0.0)), 1.5)
 	var keys: Array = w.keys()
 	keys.sort()
 	var total := 0.0
@@ -280,7 +262,10 @@ func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
 	return "small_talk"
 
 ## {text, emote, anim} for a line on a topic, with the speaker's trait variant when there is one.
-func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: int) -> Dictionary:
+func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: int, reply: bool = false) -> Dictionary:
+	# The listener's turn: often a short reply instead of a line on the topic.
+	if reply and dlg()["topics"].has("reply") and _h(salt, 77) < 0.5:
+		topic = "reply"
 	var lines: Array = dlg()["topics"].get(topic, dlg()["topics"]["small_talk"])
 	var flavoured: Array = []
 	var plain: Array = []
@@ -298,7 +283,7 @@ func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: i
 	var cap: String = _captain_name(a)
 	text = text.replace("{other}", _first(other)).replace("{building}", String(here.get("name", "base")).to_lower()).replace("{captain}", cap)
 	text = text.replace("{base}", sim.bases.name_of(sim.bases.base_of_agent(a)) if sim.bases.count() > 0 else "the base").replace("{days}", str(1 + int(sim.seconds() / float(sim.bal["day_length"]))))
-	text = text.replace("{place}", String(here.get("name", "lounge"))).replace("{resource}", "oxygen")
+	text = text.replace("{place}", String(here.get("name", "lounge"))).replace("{resource}", "oxygen").replace("{commander}", _commander_name(a))
 	var emotes: Dictionary = dlg().get("emotes", {})
 	var emote: String = String(emotes.get(topic, ""))
 	var anim := "talk_gesture_a" if int(salt) % 2 == 0 else "talk_gesture_b"
@@ -314,6 +299,13 @@ func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: i
 		"leisure", "ship":
 			anim = "laugh" if sim.people.has_trait(a, "funny") else anim
 	return {"text": text, "emote": emote, "anim": anim}
+
+func _commander_name(a: Dictionary) -> String:
+	var base: int = int(sim.people.rank(a)["base"])
+	var cid: int = int(sim.people.v5r().get("unrest", {}).get(base, {}).get("commander", -1))
+	if cid == -1 or not sim.state["agents"].has(cid):
+		return "the commander"
+	return _first(sim.state["agents"][cid])
 
 func _captain_name(a: Dictionary) -> String:
 	var dep: String = sim.people.department(a)
@@ -334,62 +326,14 @@ func compatible(a: Dictionary, b: Dictionary) -> bool:
 	var ok_b: bool = ib["attraction"] == "both" or (ib["attraction"] == "same") == same
 	return ok_a and ok_b
 
-## A pair's relationship: {other, affinity -100..100, attraction 0..100, status, known}.
+## A pair's relationship: {other, affinity -100..100, attraction 0..100, status, known, since, talks}
+## (relations.gd; stored when the two have talked).
 func relation(a: Dictionary, b: Dictionary) -> Dictionary:
-	var lo: int = mini(int(a["id"]), int(b["id"]))
-	var hi: int = maxi(int(a["id"]), int(b["id"]))
-	var key: int = lo * 100003 + hi
-	var aff: float = _h(key, 1) * 110.0 - 40.0
-	if sim.people.department(a) == sim.people.department(b) and sim.people.department(a) != "":
-		aff += 15.0
-	aff = clampf(aff, -100.0, 100.0)
-	var att: float = 0.0
-	if compatible(a, b):
-		att = _h(key, 2) * 100.0
-	var status := "stranger"
-	if aff >= 70.0:
-		status = "best_friend"
-	elif aff >= 40.0:
-		status = "friend"
-	elif aff >= 10.0:
-		status = "acquaintance"
-	elif aff <= -30.0:
-		status = "enemy"
-	elif aff <= -15.0:
-		status = "rival"
-	if att >= 88.0 and aff >= 30.0:
-		status = "dating"
-	elif att >= 75.0 and aff >= 0.0:
-		status = "crush"
-	return {"other": int(b["id"]), "affinity": snappedf(aff, 0.1), "attraction": snappedf(att, 0.1), "status": status, "known": status != "crush"}
+	return sim.relations.relation(a, b)
 
 ## The people a person knows (strangers left out), strongest first (at most n).
 func relationships_of(agent_id: int, n: int = 8) -> Array:
-	var a: Dictionary = sim.state["agents"].get(agent_id, {})
-	if a.is_empty():
-		return []
-	var minute: int = int(sim.state["tick"]) / (60 * int(sim.bal["tick_hz"]))
-	var hit = _rel_cache.get(agent_id)
-	if hit != null and int(hit[0]) == minute and int(hit[1]) == n:
-		return hit[2]
-	var res: Array = _relationships_of(a, agent_id, n)
-	_rel_cache[agent_id] = [minute, n, res]
-	return res
-
-func _relationships_of(a: Dictionary, agent_id: int, n: int) -> Array:
-	var out: Array = []
-	var base: int = sim.bases.home_of(a) if sim.bases.count() > 0 else -1
-	for oid in sim.state["agents"]:
-		var b: Dictionary = sim.state["agents"][oid]
-		if int(oid) == agent_id or b["state"] != "alive":
-			continue
-		if sim.bases.count() > 1 and sim.bases.home_of(b) != base:
-			continue
-		var r: Dictionary = relation(a, b)
-		if r["status"] != "stranger":
-			out.append(r)
-	out.sort_custom(func(x, y): return absf(float(x["affinity"])) + float(x["attraction"]) > absf(float(y["affinity"])) + float(y["attraction"]) if absf(float(x["affinity"])) + float(x["attraction"]) != absf(float(y["affinity"])) + float(y["attraction"]) else int(x["other"]) < int(y["other"]))
-	return out.slice(0, n)
+	return sim.relations.relationships_of(agent_id, n)
 
 # ---------------------------------------------------------------- the Regolith Rag (section 4.3)
 ## The issues so far, newest first (at most n): one per finished day. Each:
@@ -431,24 +375,12 @@ func _rag_ctx() -> Dictionary:
 		if a["state"] == "alive" and sim.people.identity(a)["kind"] == "colonist":
 			alive.append(a)
 			approval += float(sim.people.satisfaction_soon(a)["value"])
-	# The couple and feud candidates change with the roster (checked once a game minute).
-	sim.people._refresh_ranks()
-	if _pairs_sig == int(sim.people._rank_sig):
-		return {"by_day": by_day, "pairs": _pairs, "feud": _feud_pair, "approval": snappedf(approval / maxf(1.0, alive.size()), 0.1)}
+	# Couples and feuds from the stored relationships.
 	var pairs: Array = []
-	for i in alive.size():
-		for j in range(i + 1, mini(alive.size(), i + 12)):
-			# Cheap tests first: attraction over 50 needs a compatible pair and a high hash.
-			var lo: int = mini(int(alive[i]["id"]), int(alive[j]["id"]))
-			var hi: int = maxi(int(alive[i]["id"]), int(alive[j]["id"]))
-			if _h(lo * 100003 + hi, 2) * 100.0 <= 50.0 or not compatible(alive[i], alive[j]):
-				continue
-			var r: Dictionary = relation(alive[i], alive[j])
-			if float(r["attraction"]) > 50.0:
-				pairs.append([int(alive[i]["id"]), int(alive[j]["id"]), float(r["attraction"]) + float(r["affinity"]) * 0.3])
-	_pairs_sig = int(sim.people._rank_sig)
-	_pairs = pairs
-	_feud_pair = _feud(0)
+	for pr in sim.relations.pairs_with(["dating", "partners", "married", "fling", "crush"]):
+		pairs.append([int(pr["a"]), int(pr["b"]), float(pr["att"]) + float(pr["aff"]) * 0.3])
+	var feuds: Array = sim.relations.pairs_with(["enemy"])
+	_feud_pair = [{"a": int(feuds[0]["a"]), "b": int(feuds[0]["b"]), "status": "enemy"}] if not feuds.is_empty() else []
 	return {"by_day": by_day, "pairs": pairs, "feud": _feud_pair, "approval": snappedf(approval / maxf(1.0, alive.size()), 0.1)}
 
 func rag_issue(number: int) -> Dictionary:
@@ -544,28 +476,18 @@ func _top_pair(salt: int, pairs: Array) -> Array:
 			out = [int(pr[0]), int(pr[1])]
 	return out
 
-func _feud(_salt: int) -> Array:
-	var ids: Array = sim.state["agents"].keys()
-	ids.sort()
-	for i in ids.size():
-		var a: Dictionary = sim.state["agents"][ids[i]]
-		if a["state"] != "alive":
-			continue
-		for j in range(i + 1, mini(ids.size(), i + 10)):
-			# An enemy has affinity -30 or less; the same department adds 15 to the hash part.
-			var lo: int = mini(int(ids[i]), int(ids[j]))
-			var hi: int = maxi(int(ids[i]), int(ids[j]))
-			if _h(lo * 100003 + hi, 1) * 110.0 - 40.0 > -30.0:
-				continue
-			var b: Dictionary = sim.state["agents"][ids[j]]
-			if b["state"] == "alive" and relation(a, b)["status"] == "enemy":
-				return [{"a": int(ids[i]), "b": int(ids[j]), "status": "enemy"}]
-	return []
-
 # ---------------------------------------------------------------- unrest (section 6.4)
 ## {value 0..100, stage ("calm"|"grumbling"|"slowdown"|"protest"|"strike"|"riot"), causes [{text, delta}],
 ##  demand ("" or text)} for one base (-1: the whole colony). Stub: from satisfaction and attitude.
 func unrest(base_id: int = -1) -> Dictionary:
+	# V5 section 6.4: the stored model (sim/unrest.gd). The rolling estimate below is kept for a
+	# state without v5 data (before the first update).
+	if sim.get("unrest") != null:
+		if base_id == -1:
+			if not sim.state.get("v5", {}).get("unrest", {}).is_empty():
+				return sim.unrest.info(-1)
+		elif not sim.unrest.rec_of(base_id).is_empty():
+			return sim.unrest.info(base_id)
 	var tick: int = int(sim.state["tick"])
 	var hit = _unrest_cache.get(base_id)
 	if hit != null and int(hit[0]) == tick:
@@ -574,8 +496,17 @@ func unrest(base_id: int = -1) -> Dictionary:
 	_unrest_cache[base_id] = [tick, out]
 	return out
 
-## The mean satisfaction and attitude of a base's colonists. Each call (at most one a tick) asks
-## a tenth of them again, in turn; the others keep the values of their last turn.
+## Command "egg" {kind: "dance", agent}: the person dances for 20 s (V5 section 4.5).
+func cmd_egg(p: Dictionary) -> Dictionary:
+	var kind: String = String(p.get("kind", ""))
+	var a: Dictionary = sim.state["agents"].get(int(p.get("agent", -1)), {})
+	if kind != "dance":
+		return {"ok": false, "code": "invalid", "text": "Unknown."}
+	if a.is_empty() or a["state"] != "alive":
+		return {"ok": false, "code": "invalid", "text": "No such person."}
+	sim.people.add_mod(a, {"kind": "dance", "text": "Dancing", "comp": "comfort", "sat": 5.0, "att": 1.0, "days": 20.0 / float(sim.bal["day_length"])})
+	return {"ok": true, "code": "ok", "text": "%s dances." % _first(a)}
+
 func _unrest(base_id: int) -> Dictionary:
 	var sat := 0.0
 	var att := 0.0

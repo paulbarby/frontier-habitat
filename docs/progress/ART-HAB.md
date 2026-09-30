@@ -5,6 +5,61 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-09-30 (3) — bed anchors (coordinator decision) and critic round 37
+
+- **Beds:** upper bunk anchors in every family unit (tube, block), the third penthouse bedroom anchored; counts
+  match SIM's content (tube family 8/12/16, block 48). Names posted in `ART-HAB-to-SIM.md`.
+- **Round 37:** retail L — a second gadget run, a cafe zone (coffee bar, two or three tables with chairs, wood
+  floor), the filler now places short shelf runs and displays only (no small scatter); academy M/L — a library wall
+  of four shelves on the −X −Y arc and a second lab bench; the retail bag badge is white Light (bright at night);
+  executive — a large bordered rug under the beds, a round rug under the dining table, a rug in the XL office, a bath
+  mat, pictures in every room.
+- Build 0 flags; Godot check 265 scripts 0 failed; export 102.3 MB (all agents); my v5 share 11.93 MB.
+- Blender polishing stops here (coordinator); next is RENDER support in game.
+
+## 2026-09-30 (2) — critic round 35 fixes
+
+1. **Colours to the V5 contract:** new materials `SecBlack` #1B1F24, `SignalRed` #D93A3A (+ `SignalRedGlow`),
+   `PrisonOrange` #FF7A1A (+ `PrisonOrangeGlow`) in `build_assets.MATERIALS`. Security: black band, red coping, red
+   deck ring, red mast bands, red beacon, red glow ring, red shield. Jail: prison-orange band, orange top band on the
+   perimeter wall, orange tower bands, orange glow ring, orange padlock. No Fabric / Hazard / Ember / BeaconAmber left
+   on either.
+2. **Re-rendered with the new kit:** `jail_l`, `park_l`, `retail_l` (+ `_exterior`, `_night`), also `retail_m`,
+   `academy_m`, `security_office_m`, the tube L family and executive (+ night); identity shots with the L sizes
+   (`v4_identity_v5civic_{110m,250m}` + `_night_`).
+3. **Fuller floors:** retail — a gadget gondola row, a two-lane till queue, a second fitting booth (M, L), filler to
+   1.5 m; academy — a second class at −X (4 desks, own board; M, L), a library corner (arc of shelves, two armchairs,
+   rug, floor lamp), the lab bench moved, filler to 1.6 m.
+4. **Retail at night:** a light line on every canopy stripe edge, a Neon rim round the canopy, a Neon frame round
+   the billboard.
+5. **Executive set visible:** wood platform beds with a padded foot rail, deep red / dark duvets, a red tufted
+   headboard wall in a wood frame, a sectional sofa with a chaise. Night: a soft ceiling fill per room in the
+   residences' night render (a 2.6 m disk light over every `Anchor_Light_*`) — the look asked of RENDER.
+
+Build: 0 flags (v5 triangle budget now v3 × 1.8). Godot check 264 scripts 0 failed; export 102.2 MB (all agents);
+**my v5 share 11.92 MB**.
+
+## 2026-09-30 — critic round 33 fixes done (resumed)
+
+All fixes of `docs/critic/round_33_residences_civic.md` are in, built (21 files, 0 flags, verify ok), imported
+(import params: no LOD, no shadow meshes, no tangents), Godot check 258 scripts 0 failed, export `build/web_art_hab`
+101.8 MB (all agents). **My v5 share: 11.70 MB** (budget 25).
+
+| fix | what |
+|---|---|
+| 1 own badges | retail shopping bag, academy mortarboard, security shield with a star in red (Ember), jail padlock in amber (BeaconAmber); `rm.badge_family`, `rooms_identity.ICONS` |
+| 2 silhouettes | retail: striped canopy roof (a pink/white pinwheel from above), lit signs over every awning, a larger billboard; academy: schoolhouse hall with a gable roof and a clock tower, observatory; security: black drum, red band, red ring on the dark deck, 8 m lattice comms mast with a red beacon and dishes, watch tower with a light bar; jail: orange band, raised perimeter wall, four guard towers with floodlights, barred slits |
+| 3 fill empty floors | filler target 1.8–1.9 m with type items (display tables, mannequins, promo bins; group-work tables, shelf islands; equipment racks; day-room tables); a fitting booth at every retail size; the jail S/M yard strip |
+| 4 security command post | a raised dais (0.16 m, walkable) with the command desk facing a three-part monitor wall, a dispatch console (M), lockers, briefing table with a screen top, holding cell, front desk with the response line, map table |
+| 5 night | a lit ring under every civic parapet (white, red for security, amber for jail), lit badges (emissive icons), lit signs, beacons, floodlights |
+| 6 apartment block | a balcony per unit on the floor-1 band (wood deck, glass screens, table and chairs, loungers, planters, a lamp); bigger penthouse pools with a lit edge, parasols; lit eave bands on floor 0 and floor 1 |
+| 7 executive / night fill | an executive bed set (upholstered platform, deep duvet, bolster; shared headboard wall), a pale sofa; a ceiling light anchor over **every room** of the tube and the block |
+
+Identity shots re-rendered: `art/interiors/v4_identity_v5civic_{110m,250m}`, `_night_110m`, `_night_250m`;
+`v4_identity_v5block_*` (same four). At 110 m by day all five civic modules read apart without labels.
+
+Not tested: in the game (RENDER's floor rule for `F<k>_WallTop`, the extra Light anchors' cost).
+
 ## 2026-09-30 — PAUSED (Paul) during critic round 33 fixes
 
 - **Done (built, 0 flags, verify ok, not yet imported/exported):** own badges (shopping bag, mortarboard, red

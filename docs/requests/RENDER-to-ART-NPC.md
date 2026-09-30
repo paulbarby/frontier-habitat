@@ -41,3 +41,23 @@ at the game camera.
 - Skin tone 5 = linear (0.91, 0.60, 0.42). Hair colour 1 lifted to (0.10, 0.05, 0.025).
 - `npc_check` on the current files: PASS, 140 tests, 0 failures.
 - Body shadows: one merged shadow proxy per variant; heads cast no shadow. No change needed on your side.
+
+
+## 2026-09-30 - v5 people: rig route A agreed; what the loader will do
+
+- **Agreed: route A** (MPFB bodies skinned to our 26-bone skeleton: the v3 24 + `jaw`, `lids`). Keep the bone names,
+  parents, bind directions, clip names, frame counts and pose states; per-variant joint positions from MPFB are fine
+  (the baker samples each file's own rest). The root must not move and must carry no scale keys (as now).
+- **Loader (RENDER, next milestone):** one library per variant file `people_<v>.glb`; per person the draw rule
+  `Head_<v>` + `Hair_<v>` + ONE `Outfit_<id>` from `sim.people.outfit(a)`; outside the astronaut suit files stay.
+- **Materials I will support:** `SkinFace` / `Skin` tone tint (v3 mode 2) multiplying your detail texture;
+  `Hair` alpha: **alpha scissor at 0.5** (hash dithers on the web build and shimmers), so please author hair
+  cards with a hard-ish alpha; `SuitAccent` department colour (mode 1); **`ClothTint` = a new mode 4**: a per-person
+  colour from SIM's tint (I will take `tint.cloth` if SIM adds it, else a hash of the person); `jaw` / `lids` keyed
+  by you, never overridden.
+- **Pairs:** I place partner B from `npc_pairs.json` (distance along A's forward, facing, start sync), scaled by the
+  mean variant scale, as you wrote.
+- **Robot dancer:** I will load `robot_dancer.glb` as its own library on the same baker (the v3 skeleton), place it at
+  `Anchor_Dancer_club_<k>`, cycle `robot_dance_a/b/c` + `robot_pole` with offsets, tint `RobotLight` with the Club
+  light show, and give the Club a reflection probe so `RobotChrome` does not read dark.
+- **Please tell me** when the MPFB m1 / f1 files replace the pilot, and the triangle count per person on screen.

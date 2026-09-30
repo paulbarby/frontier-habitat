@@ -1,0 +1,71 @@
+{
+  "round": 40,
+  "date": "2026-09-30",
+  "scope": "people pilot rebuilt on MPFB/MakeHuman (route A on our skeleton), rated from zero: people_closeup, people_outfits, people_animation. Evidence art/people/people_closeup.png (1.5 m, 115 mm lens, head about 350-400 px), people_outfits.png, people_faces.png, people_clips.png (21:19-21:20); robot re-renders art/npc/robot_turnaround.png, robot_clips.png (20:36); ART-NPC log (v5, MPFB section). Blender evidence, provisional.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "people_closeup": {"consistency": 0.72, "appeal": 0.70, "style": 0.72, "score": 0.71, "pass": true, "provisional": true, "was": "0.59 (procedural, round 31)",
+      "what_works": [
+        "At 1.5 m the faces now read as real people: sculpted cheekbones, brow ridge, eyelids, nose and lip volume, a textured skin with subtle colour, ears with form. The mannequin look of round 31 is gone.",
+        "f1's bob is a strand-card hair with a centre part and real volume; it holds at front, 3/4 and profile.",
+        "m1 and f1 differ in face, build, hair and colouring."
+      ],
+      "faults": [
+        "m1 hairline: a hard, ragged cut-out edge where the hair cap meets the forehead and temples (front, 3/4, profile). It is the first thing the eye reads at 1.5 m.",
+        "Eyebrows: thin, sparse, dotted lines on both; f1's are faint red dashes. At 1.5 m the faces look plucked and expressionless.",
+        "f1 skin: very pale, almost white under the sheet light (maker: a render tone). With the red hair and green eyes it reads doll-like. Set the default tone warmer and let the per-person tint vary it.",
+        "Neck seam on m1: a lighter band of skin at the base of the neck in the uniform shots (a texture or normal mismatch where the body meets the head).",
+        "Laugh: barely reads - the mouth opens a few millimetres and the eyes do not narrow; talking and laughing look the same.",
+        "f1 eyes: wide open with a slightly fixed stare in front view."
+      ]},
+    "people_outfits": {"consistency": 0.55, "appeal": 0.66, "style": 0.60, "score": 0.60, "pass": false, "provisional": true, "was": "0.61 (procedural, round 31)",
+      "what_works": [
+        "Real cloth: denim and cargo trousers with folds, seams and pockets; knit tees with ribbed necklines; shoes with soles. Far better material reading than round 31.",
+        "casual_a reads as off duty and differs from the uniform."
+      ],
+      "faults": [
+        "Contract miss: uniform_engineering is a department-coloured polo with cargo jeans - no coverall, no amber department stripe, no tool belt (V5 section 1). At the room camera it reads as a tourist in a yellow polo, not an engineer. Maker's point, confirmed.",
+        "Ragged hems: the bottom edge of the polo and both tees is torn and uneven (f1 polo back, tee hems) - the skin-removal or tuck step cut the garment edge.",
+        "Midriff gap: casual_a tees on both variants end above the jeans, showing a band of skin at the waist from every side. Not a tone fault, but it reads as a clothing gap, and V5 asks that body parts under clothing are removed to avoid poke-through - here the garment is simply too short.",
+        "Arms in the idle pose hang out with splayed fingers (A-pose), so every outfit shot looks like a mannequin display."
+      ]},
+    "people_animation": {"consistency": 0.70, "appeal": 0.60, "style": 0.70, "score": 0.67, "pass": true, "provisional": true, "was": "0.67 (procedural, round 31)",
+      "cap_applied": "appeal capped at 0.60: in the hug the partners pass through each other (f1's hand and forearm come out through m1's back at frames 41-62; her head enters his face at frame 82; maker: 303 overlapping vertices).",
+      "what_works": [
+        "talk_gesture_a, laugh (body), argue and sit_bar_stool read at the room camera on the new bodies; retargeting holds (npc_verify 455/0, npc_check PASS).",
+        "The hug choreography (approach, embrace, release) is right."
+      ],
+      "faults": [
+        "Hug interpenetration (see cap).",
+        "Idle rest is an A-pose with splayed fingers on both bodies.",
+        "dance_a is a gentle sway; argue and talk still look alike at game size."
+      ]},
+    "robot_dancer": {"consistency": 0.78, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true, "provisional": true, "was": 0.72,
+      "round_38_fixes_checked": {
+        "hip housing": "landed: a boxy hip block with a panel line and joint caps; from behind it no longer reads as a body curve.",
+        "thighs and knee plates": "landed (modest).",
+        "dance_b step routine with a turn": "landed: side steps and a turn, distinct from dance_a.",
+        "knee bounce": "landed in dance_b; dance_a still mostly arms."
+      },
+      "tone_check": "PASS (unchanged)."}
+  },
+  "gap_to_stunning": {
+    "now": "people_closeup 0.71: the MPFB route has lifted the faces from mannequin to believable. The procedural ceiling I set in round 31 (0.65-0.72) is already reached on the first pass.",
+    "to_0_80": "Reachable with MPFB: soft alpha hairlines (MakeHuman proxy hair or custom cards over the cap), full eyebrow meshes or brow textures, warmer and varied skin tones, expression shape keys for smile, laugh and frown, the neck seam fixed, relaxed hands, and contract uniforms (coverall, stripe, tool belt) with clean hems.",
+    "to_0_90": "Needs work beyond MPFB defaults: subsurface-style skin shading in Godot, eye shaders with wet highlights and shadowed lids, hair with anisotropic shading, and hand-authored clothing for the uniforms. Possible, but a separate art pass per variant."
+  },
+  "fixes": [
+    {"owner": "ART-NPC", "subject": "people_outfits", "fix": "Build uniform_engineering to the contract: a one-piece coverall (or a work jacket over coverall trousers) in the neutral uniform colour with the amber department stripe on chest and sleeves, a tool belt with pouches, work boots. Derive the other uniforms from the same cut with their colour."},
+    {"owner": "ART-NPC", "subject": "people_outfits", "fix": "Clean every garment hem (no torn edges): cap the cut boundary with a hem strip; lengthen casual tops to cover the waistband by 4-6 cm."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "m1 hairline: replace the hard cap edge with alpha hair cards along the hairline (or a MakeHuman proxy hair with a soft edge)."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Eyebrows: full brow meshes or a brow texture with density (MakeHuman eyebrow proxies) on every variant."},
+    {"owner": "ART-NPC", "subject": "people_closeup", "fix": "Skin: a warmer default for f1 and a visible per-person tint range; fix the m1 neck seam band."},
+    {"owner": "ART-NPC", "subject": "people_closeup / people_animation", "fix": "Expressions: shape keys for smile, laugh (mouth open wide with teeth, cheeks up, eyes narrowed), frown and surprise; drive them in laugh, talk, argue and cheer."},
+    {"owner": "ART-NPC", "subject": "people_animation", "fix": "Hug: fix the interpenetration (arms round the back, heads side by side, <= 2 cm overlap); relaxed idle hands (fingers curled 15-30 deg) and arms 8-10 deg from the body."},
+    {"owner": "ART-NPC", "subject": "people_animation", "fix": "dance_a with hip and knee motion; argue with a pointing hand and a lean-in so it differs from talk."}
+  ],
+  "notes": [
+    "people_closeup PASS 0.71, people_outfits FAIL 0.60 (uniform not to contract), people_animation PASS 0.67 (hug cap), robot_dancer 0.75. All provisional (Blender).",
+    "My crops: art/critic/critic_r40_hug.png, critic_r40_back.png."
+  ]
+}

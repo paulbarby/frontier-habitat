@@ -60,6 +60,9 @@ func _process(_d: float) -> bool:
 				if lay == "quiet":
 					var qt: String = _texts(rag)
 					check("quiet day: SLOW NEWS DAY kicker and the bigger gossip box", qt.contains("SLOW NEWS DAY"))
+					var gg: Node = rag._body.find_child("GossipGrid", true, false)
+					check("quiet day: the gossip column is full width, 2 columns, 8 items (critic round 36)", gg != null and gg.get_child_count() >= 6, str(gg.get_child_count() if gg != null else -1))
+					check("quiet day: PHOTO OF THE DAY box", rag._body.find_child("PhotoOfDay", true, false) != null and qt.contains("PHOTO OF THE DAY"))
 					var any_line := false
 					for r in hud.v5.people():
 						if not hud.v5.recent_lines(int(r["id"]), 1).is_empty():

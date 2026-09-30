@@ -48,6 +48,8 @@ var _discs: Array = []               # built structures [[pos, radius]] (rover e
 var _rcc := PackedInt32Array()       # rover-grid areas (union-find ids per cell; 0 = unknown)
 var _rup: Array = [0]
 var _rpocket := {}
+var prof_on := false                 # developer timing (tests/dev/path_spikes.gd); off in play
+var prof: Array = []                 # [[kind, ms, detail]] while prof_on
 
 func _init(s) -> void:
 	super(s)
@@ -144,6 +146,12 @@ func _window_for(a: Vector2, b: Vector2):
 		# Near the map edge the edge margin does not apply.
 		if lo.x < x0 or lo.y < y0 or hi.x > x0 + WIN or hi.y > y0 + WIN:
 			return null
+	if prof_on:
+		var t0: int = Time.get_ticks_usec()
+		var n0: int = wins.size()
+		var w = _make_window(x0, y0)
+		prof.append(["window", float(Time.get_ticks_usec() - t0) / 1000.0, "%d,%d (%d windows before)" % [x0, y0, n0]])
+		return w
 	return _make_window(x0, y0)
 
 func _make_window(x0: int, y0: int) -> Dictionary:
@@ -471,6 +479,12 @@ func path_out(a: Vector2, b: Vector2) -> Dictionary:
 	grid = w["grid"]
 	var sa = _nearest_in(w, a, 4)
 	var sb = _nearest_in(w, b, 4)
+	# A person can stand on a closed cell (set down by a vehicle in a depot, or a structure
+	# finished round them): look further for the first open cell before giving up.
+	if sa == null:
+		sa = _nearest_in(w, a, 12)
+	if sb == null:
+		sb = _nearest_in(w, b, 12)
 	if sa == null or sb == null:
 		grid = null
 		return {"ok": false}
@@ -481,13 +495,19 @@ func path_out(a: Vector2, b: Vector2) -> Dictionary:
 	var smooth = cache.get(key)
 	if smooth == null:
 		# A closed pocket at either end: no search (the same answer A* gives, found cheaply).
+		var ta: int = Time.get_ticks_usec() if prof_on else 0
 		var ra: int = _area_of(w, ca)
 		var rb: int = _area_of(w, cb)
+		if prof_on:
+			prof.append(["area", float(Time.get_ticks_usec() - ta) / 1000.0, ""])
 		if ra != rb and ((w["cc_pocket"] as Dictionary).has(ra) or (w["cc_pocket"] as Dictionary).has(rb)):
 			smooth = []
 		else:
+			var t0: int = Time.get_ticks_usec() if prof_on else 0
 			var raw: PackedVector2Array = grid.get_point_path(ca, cb)
 			smooth = [] if raw.is_empty() else _smooth(raw)
+			if prof_on:
+				prof.append(["fine", float(Time.get_ticks_usec() - t0) / 1000.0, "%s->%s %d pts" % [str(ca), str(cb), raw.size()]])
 		if cache.size() >= PATH_CACHE_MAX:
 			cache.clear()
 		cache[key] = smooth
@@ -600,8 +620,11 @@ func _coarse_path(g: AStarGrid2D, a: Vector2, b: Vector2) -> Dictionary:
 	var key: int = ((int(ca.x) * cn + int(ca.y)) * cn + int(cb.x)) * cn + int(cb.y) + (0 if g == coarse else 1 << 40)
 	var smooth = _cpaths.get(key)
 	if smooth == null:
+		var t0: int = Time.get_ticks_usec() if prof_on else 0
 		var raw: PackedVector2Array = g.get_point_path(ca, cb)
 		smooth = [] if raw.is_empty() else _coarse_smooth(g, raw)
+		if prof_on:
+			prof.append(["coarse" if g == coarse else "rover", float(Time.get_ticks_usec() - t0) / 1000.0, "%s->%s %d pts" % [str(ca), str(cb), raw.size()]])
 		if _cpaths.size() >= 2000:
 			_cpaths = {}
 		_cpaths[key] = smooth

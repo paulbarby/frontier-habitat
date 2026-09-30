@@ -183,6 +183,16 @@ def night_lighting(objs, R, ceiling_w=90.0, lamp_w=14.0, pool_w=None, tid=None, 
             sc.collection.objects.link(so)
         else:
             continue
+        if nm.startswith("Anchor_Light_") and tid and tid.startswith(("residence_tube", "apartment_block")):
+            # 5.0 (critic 35): a soft ceiling fill over every room: a wide, weak disk light facing down
+            fd = bpy.data.lights.new("F_" + nm, "AREA")
+            fd.shape = "DISK"
+            fd.size = 2.6
+            fd.energy = 140.0
+            fd.color = (1.0, 0.93, 0.84)
+            fo = bpy.data.objects.new("F_" + nm, fd)
+            fo.location = o.matrix_world.translation
+            sc.collection.objects.link(fo)
         lo = bpy.data.objects.new("L_" + nm, ld)
         lo.location = o.matrix_world.translation
         sc.collection.objects.link(lo)

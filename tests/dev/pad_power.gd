@@ -56,6 +56,7 @@ func _init() -> void:
 	sim.run_seconds(200.0)
 	var l: Dictionary = sim.state["buildings"].get(int(lr.get("id", -1)), {})
 	print("cable state ", l.get("state"), " block ", l.get("block"), " unreach ", l.get("unreach_rev"), "/", sim.state["rev"]["walk"])
+	print("pad final ", pad.get("state"), " progress ", pad.get("progress"), " block ", pad.get("block"))
 	print("pad powered ", pad.get("powered"), " comp ", sim.topo.power_comp.get(pad["id"]), " 6507 comp ", sim.topo.power_comp.get(6507))
 	var comp = sim.topo.power_comp.get(pad["id"])
 	if comp != null:

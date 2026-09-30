@@ -1,0 +1,41 @@
+{
+  "round": 36,
+  "date": "2026-09-30",
+  "scope": "social_ui and regolith_rag after UI's round-29/30 fixes. Evidence docs/shots/ui14_{rag_special,rag_quiet_top,rag_quiet_bottom,person_file,person_social,discipline_confirm,follow_card,unrest_protest,unrest_riot,crew_org,crew_housing,crew_academy,palette_civic}.png (1600x900). SIM systems not wired (estimates marked), Rag content stub.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "social_ui": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "provisional": true, "was": 0.71,
+      "round_30_fixes_checked": {
+        "1 reading well behind lists": "landed: the personnel file, social tab, discipline list and civic palette now sit on a dark frosted well; the scene no longer shows sharply behind text.",
+        "2 one window per person": "landed: the file opens in the inspector's place.",
+        "3 discipline confirm": "landed: 'Ration cut: Asha Verrin?' with On Asha (attitude +8, satisfaction -15, estimate), On others (who sees it, by name), Risk, and an UNFAIR warning with the reason; Back / Ration cut.",
+        "4 riot vs protest": "landed: the riot banner is red-framed with a DAMAGE and INJURED line; protest stays amber.",
+        "5 banner button effects": "landed: each response has a sub-label (unrest -40, costs stock or a rule; unrest -15, uses drinks ...).",
+        "6 crew window": "landed: body font, mood face per person, the housing tab adds a 'waiting for a better home' list and beds by quality; the academy tab adds a skill matrix for the crew.",
+        "7 satisfaction parts": "landed: one 0-100 track per part with a marker, sorted worst first, with the reason beside it."
+      },
+      "fixes": [
+        {"owner": "UI", "fix": "Reason text is cut: 'Housing below what they ex...' in the personnel file. Wrap the reason to a second line or widen the column; a cut reason defeats the 'always find out why' aim."},
+        {"owner": "UI", "fix": "Raw ids in player text: 'Wears: uniform command'. Show 'Command uniform' (and the same for every outfit id)."},
+        {"owner": "UI", "fix": "Crew org chart: the lower half of every column is still empty; shrink the window to content height or show each person's two top skills in the row."},
+        {"owner": "UI", "fix": "Academy skill matrix: 12 columns of small digits (about 10 px) with truncated headers ('Engine', 'Fabric', 'Farmin'); use 12 px, full or standard abbreviations with a tooltip, and colour the cell by level."},
+        {"owner": "UI", "fix": "Follow card: a test toast ('Test: a toast while following') sits over the top of the view in the evidence; confirm toasts move to the top edge and do not cover the scene centre."}
+      ]},
+    "regolith_rag": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "provisional": true, "was": 0.75,
+      "round_30_fixes_checked": {
+        "1 special edition 2 lines": "landed: black masthead, red lead in 2 lines, the photo in view.",
+        "2 quiet day look": "partly: a SLOW NEWS DAY kicker and a smaller lead; the bottom half is the same as the normal issue (no bigger gossip or puzzle box).",
+        "poll line": "new: 'Commander Asha Verrin: 61% say yes, 39% say no' under the poll."
+      },
+      "fixes": [
+        {"owner": "UI", "fix": "Quiet day bottom: a larger gossip column and a puzzle, horoscope or 'photo of the day' box so the quiet issue looks different all the way down."},
+        {"owner": "SIM", "fix": "Content still stub (building stories that 'open their doors', one-line bodies, 61% every day)."},
+        {"owner": "RENDER", "fix": "photo() still missing."}
+      ]}
+  },
+  "notes": [
+    "social_ui 0.76 (was 0.71): all 7 round-30 fixes landed; the remaining faults are cut text and raw ids.",
+    "regolith_rag 0.76 (was 0.75): held down by stub content and the placeholder photo, which UI does not own.",
+    "Tone check: nothing explicit; no child in any shot."
+  ]
+}

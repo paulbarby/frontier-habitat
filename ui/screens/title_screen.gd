@@ -124,8 +124,48 @@ func _ready() -> void:
 	col.add_child(_live)
 	var foot: Label = Kit.label("Frontier Habitat %s  ·  Godot 4.4  ·  all models, code and text original" % version_text(), "SmallLabel", 11, P.TEXT_3)
 	col.add_child(foot)
+	_whats_new()
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.8)
+
+## "What's new in 5.0" (STE): a glass card at the bottom right; More opens How to play, People.
+const NEW_5 := [
+	["colonists", "People: ranks, skills, friends, homes and moods."],
+	["follow", "Over the shoulder: select a person and press V."],
+	["newspaper", "The Regolith Rag: the colony tabloid (key J)."],
+	["orders", "Reviews, rewards and discipline, each with its effect."],
+	["people", "Unrest: protests, strikes and riots, and 7 answers."],
+	["home", "Crew window (key U): ranks, homes and the academy."],
+	["cat_civic", "New: apartment block (XXL), super dome (XXXXL), jail, park, shop."],
+]
+func _whats_new() -> void:
+	var card := PanelContainer.new()
+	card.name = "WhatsNew"
+	card.theme_type_variation = "HudPanel"
+	Glass.attach(card)
+	card.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	card.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	card.offset_right = -40
+	card.offset_bottom = -40
+	card.custom_minimum_size.x = 440
+	add_child(card)
+	var v: VBoxContainer = Kit.vbox(6)
+	card.add_child(v)
+	var h: HBoxContainer = Kit.hbox(8)
+	v.add_child(h)
+	h.add_child(Kit.icon("sparkle", 18, P.GOLD))
+	var t: Label = Kit.head("What's new in %s" % version_text().get_slice(".", 0) + "." + version_text().get_slice(".", 1), P.GOLD, 14, "head_wide")
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(t)
+	for row in NEW_5:
+		var r: HBoxContainer = Kit.hbox(10)
+		r.add_child(Kit.icon(String(row[0]), 16, P.CYAN))
+		var l: Label = Kit.wrap(String(row[1]), 13, P.TEXT)
+		l.custom_minimum_size.x = 370
+		r.add_child(l)
+		v.add_child(r)
+	v.add_child(Kit.button("More", func(): hud.open_screen("help", "people"), "More\nHow to play, People: every new part in short steps.", "GhostButton", "info", 13))
 
 func _item(text: String, sub: String, icon: String, cb: Callable, primary: bool) -> Button:
 	var b: Button = Kit.button("", cb, "%s\n%s" % [text, sub], "PrimaryButton" if primary else "CardButton")

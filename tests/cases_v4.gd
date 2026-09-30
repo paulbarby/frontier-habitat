@@ -43,6 +43,7 @@ func tests() -> Array:
 		["v4_rover_tubes_and_blocks", v4_rover_tubes_and_blocks],
 		["v4_locks_explained", v4_locks_explained],
 		["v4_inventory_contents", v4_inventory_contents],
+		["v4_riders_come_home", v4_riders_come_home],
 		["v4_exteriors_in_reach", v4_exteriors_in_reach],
 	]
 
@@ -1706,6 +1707,8 @@ func long_v4_perf(t) -> void:
 	for vid in legs:
 		vst.append("%s:%s" % [sim.vehicles.get_v(vid)["kind"], sim.vehicles.get_v(vid)["block"]])
 	t.note("deaths %s, vehicles %s" % [str(causes), str(vst)])
+	var un: Dictionary = sim.unrest.info(-1)
+	t.note("unrest %.1f %s (target %.1f)" % [float(un["value"]), un["stage"], float(un["target"])])
 	var sorted_w: Array = wins.duplicate()
 	sorted_w.sort()
 	var ms: float = float(sorted_w[1])
@@ -2177,4 +2180,60 @@ func v4_exteriors_in_reach(t) -> void:
 				marked[plans[id]] = String(b["block"])
 	t.eq(marked, {}, "no plan within 60 m is shown too far or out of reach in play")
 	g.dispose()
+	t.done()
+
+
+## Riders are never left to die (SIM 2026-09-30): a vehicle far from air drives back when a rider has
+## a critical need (before: the crew of the parked expedition rover in showcase_v4 died of thirst and
+## exhaustion aboard), and a rider set down on closed ground (a depot footprint) still finds the way
+## to an airlock (before: "rescue" for ever, idle outside until the suit ran out).
+func v4_riders_come_home(t) -> void:
+	var dec: Dictionary = Persistence.decode(FileAccess.get_file_as_bytes("res://content/saves/showcase_v4.fhsave"))
+	var sim = H.Sim.new()
+	sim.load_state(dec["state"])
+	var rider: Dictionary = {}
+	var veh: Dictionary = {}
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] == "alive" and a["where"] == "vehicle":
+			var v: Dictionary = sim.vehicles.get_v(int(a.get("veh", -1)))
+			if not v.is_empty() and not sim.vehicles.near_air(v):
+				rider = a
+				veh = v
+				break
+	t.check(not rider.is_empty(), "a rider far from air in showcase_v4")
+	if rider.is_empty():
+		sim.dispose()
+		t.done()
+		return
+	rider["thirst"] = 90.0                                                                 # test set-up: a critical need
+	sim.run_seconds(2.0)
+	t.check(bool(veh.get("returning", false)) and veh["state"] == "driving", "the vehicle turns back for the rider (%s, %s)" % [veh["state"], str(veh.get("returning"))])
+	var logged := false
+	for e in sim.state["log"]:
+		if String(e["code"]) == "vehicle_needs":
+			logged = true
+	t.check(logged, "the player is told (vehicle_needs)")
+	var home := false
+	for s in 60:
+		sim.run_seconds(10.0)
+		if rider["state"] != "alive":
+			break
+		if rider["where"] == "in":
+			home = true
+			break
+	t.check(home, "the rider is inside again within 10 minutes (%s, %s, health %.0f)" % [rider["state"], rider["where"], float(rider["health"])])
+	# A rider set down on a closed cell: the depot centre.
+	var depot := {}
+	for bid in sim.state["buildings"]:
+		if String(sim.state["buildings"][bid]["def"]) == "rover_depot":
+			depot = sim.state["buildings"][bid]
+			break
+	if not depot.is_empty():
+		var p: Vector2 = depot["pos"]
+		t.check(not sim.nav.is_walkable(p), "the depot centre is closed ground")
+		var r: Dictionary = sim.nav.nearest_supplied_lock(p)
+		t.check(bool(r["ok"]), "the way to air is found from closed ground (%s)" % str(r))
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
 	t.done()

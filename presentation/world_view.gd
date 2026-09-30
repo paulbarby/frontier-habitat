@@ -26,6 +26,7 @@ const Vehicles = preload("res://presentation/fx_vehicles.gd")
 const Reactor = preload("res://presentation/fx_reactor.gd")
 const Explore = preload("res://presentation/fx_explore.gd")
 const Bubbles = preload("res://presentation/fx_bubbles.gd")
+const Photo = preload("res://presentation/fx_photo.gd")
 const Post = preload("res://presentation/fx_post.gd")
 const Particles = preload("res://presentation/fx_particles.gd")
 const Ghost = preload("res://presentation/fx_ghost.gd")
@@ -221,6 +222,10 @@ func setup(s) -> void:
 	bubbles.name = "Bubbles"
 	add_child(bubbles)
 	bubbles.setup(self)
+	photos = Photo.new()
+	photos.name = "Photos"
+	add_child(photos)
+	photos.setup(self)
 	interior = Interior.new()
 	interior.name = "InteriorLights"
 	add_child(interior)
@@ -363,15 +368,20 @@ func _floors_update(b: Dictionary, meta: Dictionary) -> void:
 			k = int(fa.get("floor", 0))
 	if k < 0 and dome_view_floor.has(int(b["id"])):
 		k = int(dome_view_floor[int(b["id"])]) - 1
+	elif k < 0 and float(meta["open"]) > 0.5:
+		k = int(sim.bdef(b["def"]).get("floors", 1)) - 1   # cutaway: the top floor viewed
 	var sig := str(k)
 	if sig == String(meta.get("floor_sig", "")):
 		return
 	meta["floor_sig"] = sig
+	if interior != null:
+		interior.mark_dirty()
 	for g in (meta["tpl"].get("groups", {}) as Dictionary):
 		var gs: String = g
 		var fl: int = Models.floor_of_group(gs)
 		if fl > 0:
-			inst.set_hidden(int(meta["h"]), gs, k >= 0 and fl > k)
+			var hide: bool = k >= 0 and (fl > k or (fl == k and gs.ends_with("_WallTop")))
+			inst.set_hidden(int(meta["h"]), gs, hide)
 	if k >= 0:
 		inst.set_hidden(int(meta["h"]), "Roof", true)
 
@@ -406,6 +416,7 @@ func _lift_y(t: float) -> float:
 
 # ---------------------------------------------------------------- V5 §3 follow view (RENDER camera)
 var bubbles
+var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
 var _follow_open := {}      # building id -> true: roofs cut away for the follow view
 
@@ -850,7 +861,7 @@ func sync(delta: float) -> void:
 	sky.update(t, day_len, daylight, delta, focus, camera_distance, wind)
 	_v4_light(focus)
 	post.apply(sky.grade, delta)
-	Models.set_night(maxf(sky.night, v4_dark * 0.85))
+	Models.set_night(maxf(sky.night, v4_dark * 0.85), float(sky.storm))
 	Models.animate(_time)
 	tp = _prof("sky", tp)
 	_camera_range()
@@ -888,6 +899,7 @@ func sync(delta: float) -> void:
 	if not _skip.has("explore"): explore.sync(delta)
 	_follow_sync()
 	bubbles.sync(delta)
+	photos.sync(delta)
 	_fly_step(delta)
 	_sync_selection(delta)
 	overlays.sync(delta)
@@ -2816,6 +2828,35 @@ func debug_cmd(text: String) -> String:
 			# viewfloor <building id> <floor 1..5 | 0 = off>: the floor cutaway (UI's floor selector calls set_view_floor)
 			set_view_floor(int(w[1]), int(w[2]))
 			return str(dome_view_floor)
+		"ragphoto":
+			# ragphoto <id,id> <place> <pose>: queue a tabloid photo; photoshow: show every photo made on screen.
+			var ids_p: Array = Array(w[1].split(",", false)).map(func(x): return int(x)) if w.size() > 1 else []
+			photos.photo(ids_p, w[2] if w.size() > 2 else "default", w[3] if w.size() > 3 else "idle")
+			return "queued %d" % photos._queue.size()
+		"photoshow":
+			var cl = get_node_or_null("PhotoShow")
+			if cl != null:
+				cl.queue_free()
+				if w.size() > 1 and w[1] == "off":
+					return "off"
+			var layer2 := CanvasLayer.new()
+			layer2.name = "PhotoShow"
+			layer2.layer = 90
+			add_child(layer2)
+			var gx := 0
+			for k in photos.cache:
+				var tr := TextureRect.new()
+				tr.texture = photos.cache[k]
+				tr.position = Vector2(20 + (gx % 3) * 524, 20 + (gx / 3) * 396)
+				tr.size = Vector2(512, 384)
+				layer2.add_child(tr)
+				var lb := Label.new()
+				lb.text = String(k)
+				lb.position = tr.position + Vector2(6, 386 - 24)
+				lb.add_theme_color_override("font_color", Color(1, 1, 0.6))
+				layer2.add_child(lb)
+				gx += 1
+			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
 		"followinfo":
 			var rf = rig()
 			var fp = agent_world_pos(follow_id) if follow_id >= 0 else null
@@ -3358,6 +3399,11 @@ func debug_cmd(text: String) -> String:
 				"particles": fx.visible = on
 				"dust": fx.field_on = on
 				"terrain": terrain.mesh_inst.visible = on
+				"npc": npc.visible = on
+				"npcshadow":
+					for c in npc.get_children():
+						if c is MultiMeshInstance3D and String(c.name).begins_with("Astronauts_p_"):
+							(c as MultiMeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				"crevices":
 					var cn = terrain.mesh_inst.get_node_or_null("Crevices")
 					if cn != null:

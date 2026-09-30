@@ -333,3 +333,17 @@ Size: 282 k tris, imported `.scn` 6.9 MB. `check` 257 scripts, 0 failed. Not tes
 Size: 256 k tris (dome, excluding the 53 k scaffold), imported `.scn` 7.74 MB (was 6.85). Merged template 119
 surfaces. `import` OK; `check` 258 scripts, 0 failed. Not tested: the game view of any of this; the §9 shader change
 (RENDER's file, not mine).
+
+## 2026-09-30 — v5 super dome, critic round 34 fixes (ART-B items 5, 6) + dome cost figures
+
+1. L1 bar: back bar with mirror, 3 shelves × 12 bottles × 4 units, lit shelf edges, dark back-wall lining, no back
+   lightbox; window display bottles with necks on a riser. Render `art/dome/L1_bar_back.png` (new view `bar_back`).
+2. RESTAURANT sign: `SIGN_SHIFT` 13° (from 11°). Checked in `pilot_atrium_pool.png`: clear of the lift and the palm.
+3. `ART-B-to-RENDER.md` §10: tris / primitives / materials per file and per group, and 4 reduction options for the fps
+   check (hide unit interiors when not cut away: −56.5 k tris; venue-interior distance LOD: −65 k tris at 250 m;
+   one emissive material: about −50 surfaces, needs RENDER's agreement; fewer leaves: −8 k).
+Size: 263 k tris (+53 k scaffold). Imported `.scn` 7.94 MB. `import` OK; `check` 259 scripts, 0 failed.
+Not tested: the game view of the bar and the sign; any fps effect (RENDER measures).
+- 2026-09-30 (later): critic round 38 asks for the bouncer + ADULTS ONLY door in one frame. `art/dome/L2_club_door.png`
+  covers it in Blender; `ART-B-to-RENDER.md` §11 gives RENDER the matching in-game camera (Godot axes, fov, lights,
+  anchor). Scratch files renamed with the `artb_` prefix (coordinator rule).

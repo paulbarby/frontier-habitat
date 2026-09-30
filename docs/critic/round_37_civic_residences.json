@@ -1,0 +1,41 @@
+{
+  "round": 37,
+  "date": "2026-09-30",
+  "scope": "civic_modules and residences after ART-HAB's round-35 fixes. Blender + game-camera identity shots, provisional. Renders 2026-09-30 20:14-20:16: jail_l, park_l, retail_l, retail_m, academy_m, security_office_m (each inside, exterior, night), residence_tube_l and residence_tube_executive_l (+ exterior, night), v4_identity_v5civic_{110m,250m,night_110m,night_250m}.",
+  "pass_mark": 0.65,
+  "subjects": {
+    "civic_modules": {"consistency": 0.78, "appeal": 0.72, "style": 0.76, "score": 0.75, "pass": true, "provisional": true, "was": 0.72,
+      "round_35_fixes_checked": {
+        "1 contract colours": "landed: security black-grey roof with a red rim, red shield and a red-and-white mast; jail L with prison-orange bands and an orange-yellow lock; both read apart by colour as well as silhouette.",
+        "2 re-render jail L, park L, retail L": "landed: jail L now has the four towers and the lock badge; retail L the striped canopy; park L unchanged in design (it was already good).",
+        "3 fill retail M and academy M": "partly: retail M gains a fitting-room pair, more shelves and pedestals; academy M adds a second desk group, a teacher board and a reading corner. Both still leave about a third of the floor as bare tile, retail L most (scattered small items).",
+        "4 retail at night": "partly: the canopy stripes show at 110 m by night; at 250 m the retail badge is dim."
+      },
+      "identity_test": {
+        "110 m day": "5 of 5",
+        "110 m night": "5 of 5 (lock, shield, mortarboard, heart and the bag all read)",
+        "250 m day": "5 of 5",
+        "250 m night": "5 of 5, the bag the weakest"
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Retail L: the large floor is scattered with small items (pedestals, boxes, tables); group them into aisles and a café zone, and add two more shelf runs so there is no empty patch wider than 2.5 m."},
+        {"owner": "ART-HAB", "fix": "Academy M: a library shelf wall and a lab bench on the empty south arc."},
+        {"owner": "ART-HAB", "fix": "Retail badge at night: raise the bag's emissive so it reads at 250 m like the other badges."}
+      ]},
+    "residences": {"consistency": 0.80, "appeal": 0.78, "style": 0.80, "score": 0.79, "pass": true, "provisional": true, "was": 0.79,
+      "round_35_fixes_checked": {
+        "1 executive set": "partly landed: the executive render now shows an upholstered bed with a red headboard, a sectional sofa, a bookcase, a media wall and warm wood; it reads richer than Family. Wall art and rugs are still few.",
+        "2 night ceiling fill": "landed: rooms in both tubes are evenly lit at night with warm lamp pools; no dim grey rooms.",
+        "3 in-game evidence": "still open (RENDER)."
+      },
+      "fixes": [
+        {"owner": "ART-HAB", "fix": "Executive: a rug in the lounge and bedroom, and one art frame per room."},
+        {"owner": "RENDER / ART-HAB", "fix": "In-game cutaway in a real colony, the floor selector for the apartment block, and the follow view in a unit and a penthouse - needed for a final score."}
+      ]}
+  },
+  "notes": [
+    "civic_modules 0.75 (was 0.72); residences 0.79 (was 0.79, fixes landed but the score is capped by the missing in-game evidence).",
+    "Both provisional until the in-game round.",
+    "My grids: art/critic/r37_in.png, r37_ext.png, r37_id.png, r37_res.png."
+  ]
+}

@@ -40,6 +40,10 @@ Date: 2026-09-29 · Critic · Contract: `docs/V5_DESIGN.md` (commit b4033f9), §
   | Text a player must read that is unreadable at 1600×900, 100% scale | appeal 0.60 |
   | A draw or size budget of §0 broken, as measured and reported | consistency 0.60 |
 
+> **Correction 2026-09-30.** The pck budget is 200 MB soft / 300 MB hard (V5_DESIGN §0, commit 15e507e);
+> allocations ART-NPC ≤ +50 MB, ART-HAB ≤ +25 MB, ART-B ≤ +30 MB, UI ≤ +5 MB. The size cap above uses these.
+> **fps measurement protocol** (agreed with RENDER): see `docs/requests/CRITIC-to-RENDER.md` 2026-09-30.
+
 ## 2. Distances and cameras I test at
 
 | name | how | people height on screen |
@@ -61,7 +65,7 @@ Date: 2026-09-29 · Critic · Contract: `docs/V5_DESIGN.md` (commit b4033f9), §
 - One shot outside in the suit, with the visor showing the face.
 - The same person at room and game-camera distance.
 - My own Blender render of each GLB: neutral light, a 50 mm camera at 1.5 m.
-- Triangle counts (LOD0 ≤ 14 k body+outfit, LOD1 ≤ 3 k) and the pck size effect (ART-NPC ≤ +6 MB).
+- Triangle counts (LOD0 ≤ 14 k body+outfit, LOD1 ≤ 3 k) and the pck size effect (ART-NPC ≤ +50 MB).
 
 **Consistency:**
 - Each adult is 1.62–1.92 m tall.
@@ -282,7 +286,7 @@ coveralls, department stripes, practical casual. The glass/metal colony palette 
 - In-game at 110 m and 250 m, the cutaway, and the floor cutaway of the apartment block at each
   floor.
 - The follow view inside one family unit and one penthouse.
-- The pck size effect (ART-HAB ≤ +4 MB).
+- The pck size effect (ART-HAB ≤ +25 MB).
 
 **Consistency:**
 - The **half-tube** silhouette (a vault lying on the ground, ribs, end walls with windows, porch doors
@@ -354,7 +358,7 @@ from the v3 greenhouse family).
 - The gaming lounge with the Prism Shift cabinet (the screen shader running).
 - Accommodation L3–L5, the floor cutaway, glass lifts moving.
 - The measured fps and draw calls (showcase ≥ 45 fps, ≤ 1,700 draws), and the pck effect
-  (ART-B ≤ +4 MB).
+  (ART-B ≤ +30 MB).
 
 **Consistency:**
 - Radius 48 m, about 38 m high, a 5-storey ring 14 m deep, a 40 m open atrium open to the dome sky.

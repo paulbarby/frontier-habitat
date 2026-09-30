@@ -1,0 +1,56 @@
+{
+  "round": 39,
+  "date": "2026-09-30",
+  "scope": "(a) the super_dome fps question, settled with RENDER's agreed method (tools/render_perf.mjs, presets tools/perf/*, 10 s settle, 30 s sampling, no capture, vsync, CPU load recorded); (b) in-game ratings from art/critic_input/render/154_v5_dome_glass_s9_arcade.png, 155_v5_civic_buildings_floors.png, 156_v5_photo_tabloid_portraits.png. Build build/web_render (index.pck 102.7 MB, 2026-09-30 20:43).",
+  "pass_mark": 0.65,
+  "fps": {
+    "method": "node tools/render_perf.mjs --dir build/web_render --query \"title=0&debug=1&seed=1001\" --pre tools/perf/<case>.json --secs 30 --settle 10 --vsync; outputs in art/critic/critic_r39/critic_perf_*.json",
+    "my_runs": [
+      {"case": "dome_v3_250_night", "cpu_load_pct": 19.7, "fps_median": 59.9, "fps_mean": 52.7, "fps_min_0_5s": 35, "over50": 1, "max_ms": 133, "draw_calls": 1378, "people": 66},
+      {"case": "dome_v5_250_night", "cpu_load_pct": 15.4, "fps_median": 59.9, "fps_mean": 57.9, "fps_min_0_5s": 47, "over50": 0, "max_ms": 33, "draw_calls": 1281, "people": 20},
+      {"case": "dome_v3_follow_pool (run 1)", "cpu_load_pct": 31.3, "fps_median": 30.0, "fps_mean": 37.6, "fps_min_0_5s": 31, "over50": 6, "max_ms": 50, "draw_calls": 1375, "people": 66},
+      {"case": "dome_v3_follow_pool (run 2)", "cpu_load_pct": 13.8, "fps_median": 59.9, "fps_mean": 53.6, "fps_min_0_5s": 49, "over50": 1, "max_ms": 50, "draw_calls": 1374, "people": 66},
+      {"case": "dome_v5_follow_pool", "cpu_load_pct": 10.3, "fps_median": 59.9, "fps_mean": 59.8, "fps_min_0_5s": 55, "over50": 1, "max_ms": 100, "draw_calls": 595, "people": 20}
+    ],
+    "verdict": "SETTLED in RENDER's favour for the budget: at low PC load (10-20 % CPU) every case meets >= 45 fps (mean 52.7-59.8, median 59.9). My round-34 33 fps was the method (one sample after a screenshot, a few seconds after a camera jump) plus other agents' load. One caveat stays on record: dome_v3 follow (66 people, dust storm) dropped to median 30 / mean 37.6 with 6 frames over 50 ms at 31 % CPU load; on a player's PC with background load this case sits close to the edge. SIM agents 3.4 ms and view 9 ms per frame in that run. No score cap applied."
+  },
+  "subjects": {
+    "super_dome": {"consistency": 0.82, "appeal": 0.80, "style": 0.80, "score": 0.81, "pass": true, "final": true, "was": 0.79,
+      "verified": [
+        "Glass: fresnel glass reads as glass by day (sky reflection at the rim) and as a warm-rimmed shell by night (154).",
+        "Night 250 m: the ring glows with multicoloured windows and neon under the lit shell; the brightest thing in the colony. Paul's 'glittering city under glass' is met at the colony camera.",
+        "Dust storm by night: windows and signs stay bright through the storm grade (154, last tile).",
+        "PRISM SHIFT: the attract loop shows the prism ship over the neon hexagon tunnel.",
+        "Performance within budget (above)."
+      ],
+      "carry_over_fixes_not_blocking": [
+        {"owner": "UI / RENDER", "fix": "POI labels (RICH DEPOSIT, METEORITE FIELD) still draw through the walls into the arcade (154)."},
+        {"owner": "ART-B", "fix": "Club door: bouncer post and ADULTS ONLY sign in view (round 32)."},
+        {"owner": "ART-NPC", "fix": "Robot dancer fixes from round 38."}
+      ]},
+    "civic_modules": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "final": true, "was": 0.75,
+      "verified": "In game (155): retail, park, academy, security office and jail read by silhouette and badge outside; the cutaways show furnished floors; the night group reads by badges. Floor hiding works on the apartment block (floors 1/2/3 viewed, upper floors, wall tops and roof hidden).",
+      "carry_over_fixes_not_blocking": [
+        {"owner": "ART-HAB", "fix": "Retail L and academy M empty floor patches (round 37)."}
+      ]},
+    "residences": {"consistency": 0.78, "appeal": 0.74, "style": 0.78, "score": 0.77, "pass": true, "final": false, "was": 0.79,
+      "verified": "Apartment block in game: stepped exterior, floor-by-floor cutaway with furnished units round the core and the penthouse terrace (155). Residence tubes Family and Executive outside and cut away, variant lookup correct.",
+      "why_not_final": "The follow view inside the tube (the one in-game close view of a home) fails: one tile is almost entirely black (camera behind or under geometry, only the sky visible), the other shows the person as a black silhouette against a bright appliance with no interior light on the face (155, last two tiles). The rubric asks for the follow view in a family unit and a penthouse.",
+      "fixes": [
+        {"owner": "RENDER", "fix": "Follow view inside a tube unit: keep the camera inside the unit's walls (pull-in), light the followed person with the room lights, and supply one family-unit and one penthouse follow shot."}
+      ]},
+    "regolith_rag": {"consistency": 0.78, "appeal": 0.74, "style": 0.76, "score": 0.76, "pass": true, "final": false, "was": 0.76,
+      "photo_check": "photo() works: named people, place backdrop, pose hint, paparazzi grain, 512x384, portraits (156). With the v3 stand-ins it reads as a placeholder: flat single-colour backdrops; hug and argue fall back to idle (two people standing apart); every indoor face shows a grey breathing-mask shape over the mouth; the club/cheer photo includes a suited astronaut in a club (outfit rule).",
+      "fixes": [
+        {"owner": "RENDER", "fix": "Paired poses in photos once the MPFB people land (hug, argue, handcuffed escort must show the pair in contact)."},
+        {"owner": "RENDER", "fix": "Backdrops: use the real 3D spot or a set with depth (bar counter, park bench and trees, cell bars) instead of a flat wall and one prop."},
+        {"owner": "RENDER / ART-NPC", "fix": "Indoor faces must not show the suit breathing mask; club photos must not include suited people."},
+        {"owner": "SIM", "fix": "Rag content still stub."}
+      ]}
+  },
+  "final_now": ["super_dome 0.81", "civic_modules 0.76"],
+  "not_final": ["residences 0.77 (follow view in a unit)", "regolith_rag 0.76 (photos with stand-ins, stub content)"],
+  "notes": [
+    "My runs of the perf presets: art/critic/critic_r39/critic_perf_*.json. Crops: art/critic/critic_r39_*.png."
+  ]
+}

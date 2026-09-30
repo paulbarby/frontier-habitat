@@ -23,8 +23,12 @@ detail is in `round_34_dome_ingame_follow.json`.
 - If a clean run confirms my numbers, the rubric cap applies: consistency 0.60, subject about 0.72.
   That would be a performance fix, not an art fix.
 
-**Build blocker (orchestrator).** `index.pck` is **101.6 MB**. That is over the 95 MB hard budget and
-over GitHub's 100 MB limit. The dome's own share is only +1.83 MB.
+- My method has known weaknesses: fps was read right after a screenshot and a few seconds after camera
+  jumps, in a dust storm. The method and a shared protocol are in
+  `docs/requests/CRITIC-to-RENDER.md` (2026-09-30).
+
+**Correction (2026-09-30).** The pck budget is 200 MB soft and 300 MB hard (V5_DESIGN §0, commit
+15e507e). The 101.6 MB pck is **not** a blocker; the earlier "build blocker" note is withdrawn.
 
 ## super_dome in game — what works
 

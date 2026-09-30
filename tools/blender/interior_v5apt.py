@@ -3,7 +3,8 @@
 Floor k's furniture is the object F<k>_Interior (floor 0: Interior), built at z = k * 3.6.  Every anchor carries its
 floor in its height: z = k * 3.6 + 0.14 (floor top).  Anchor numbers run over the whole building:
 
-  Bed    floor 0 unit i: 2i, 2i+1 | floor 1 unit i: 10+2i, 11+2i | penthouse p: 20+3p .. 22+3p (master 2, bedroom 1)
+  Bed    floor 0 unit i: 4i .. 4i+3 (parents 2, lower bunk, upper bunk) | floor 1 unit i: 20+4i .. 23+4i |
+         penthouse p: 40+4p .. 43+4p (master 2, bedroom 2, bedroom 3)
   Seat   floor 0 unit i: i (dining) | floor 1 unit i: 5+i | penthouse p: 10+3p (dining), 11+3p, 12+3p (sofa)
   Stand  0 mail wall (floor 0), 1 laundry (floor 0), 2 laundry (floor 1), 3 hobby bench (floor 1),
          4, 5 penthouse kitchens
@@ -382,9 +383,7 @@ def unit(plan, k, fl, idx, seed):
     w_.rect(0.0, 0.21, 0.40, 0.21, tag="wardrobe")
     # children's room: a bunk to the back wall (no anchor: content beds 2 per unit), a chest, a desk
     cB = room_cell(plan, bB[0], bB[1], 11.0, RU)
-    with cB.at(0.10 + 0.51, cB.Dp - 0.08 - 1.06, 0.0):
-        V5.bunk_bed(n, blankets=(("Accent", "Fabric"), ("Fabric", "Cushion"))[seed % 2], seed=seed)
-    cB.rect(0.61, cB.Dp - 1.14, 0.51, 1.06, tag="bunk")
+    V5._bunk(plan, cB, 0.10 + 0.51, cB.Dp - 0.08 - 1.06, 0.0, seed)       # 2 Beds (lower, upper)
     with cB.at(cB.W - 0.02, cB.Dp - 0.5, 180.0):
         V5.toy_chest(n, w=0.62, d=0.40, seed=seed)
     cB.rect(cB.W - 0.22, cB.Dp - 0.5, 0.21, 0.32, tag="chest")
@@ -552,8 +551,7 @@ def penthouse(plan, p, seed):
         with cr.at(bu, cr.Dp - 0.06 - 1.09, 0.0):
             FU.bed(n, dressing=j, pillows=1 + j, blanket=("Fabric", "Accent")[j], throw="Cushion", side=1, style=j)
         cr.rect(bu, cr.Dp - 1.15, 0.505, 1.09, tag="bed")
-        if j == 0:
-            cr.anchor("Bed", bu, cr.Dp - 0.06 - 1.09, 0.0, lx=BED_BACK)
+        cr.anchor("Bed", bu, cr.Dp - 0.06 - 1.09, 0.0, lx=BED_BACK)          # every penthouse bedroom counts
         with cr.at(cr.W - 0.02, cr.Dp - 0.6, 180.0):
             FU.wi_desk(n, w=0.9, d=0.44, seed=seed + j)
         cr.rect(cr.W - 0.24, cr.Dp - 0.6, 0.22, 0.45, tag="desk")

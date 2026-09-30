@@ -155,6 +155,9 @@ func productivity(a: Dictionary) -> float:
 		p *= 0.7
 	if a.has("nutrition"):
 		p *= sim.nutrition.work_mult(a)
+	# V5: discipline, attitude and unrest (people.gd sets the factor; absent = 1).
+	if a.has("v5_work"):
+		p *= float(a["v5_work"])
 	return p
 
 # ---------------------------------------------------------------- needs (every tick)
@@ -177,7 +180,8 @@ func needs_tick() -> void:
 		var a: Dictionary = agents[aid]
 		if a["state"] != "alive":
 			continue
-		a["hunger"] = minf(100.0, float(a["hunger"]) + hunger_inc)
+		# V5: a ration cut makes a person hungry sooner (people.gd v5_hunger; absent = 1).
+		a["hunger"] = minf(100.0, float(a["hunger"]) + (hunger_inc * float(a["v5_hunger"]) if a.has("v5_hunger") else hunger_inc))
 		a["thirst"] = minf(100.0, float(a["thirst"]) + thirst_inc)
 		if bool(a["sleeping"]):
 			a["fatigue"] = maxf(0.0, float(a["fatigue"]) - rest_dec)
@@ -511,11 +515,11 @@ func _think(a: Dictionary) -> void:
 		return
 	if float(a["health"]) < 55.0 and _try_heal(a):
 		return
-	# 5. Work.
-	if _try_work(a):
+	# 5. Work (V5: not while confined, jailed, in class or on strike).
+	if not a.has("v5_nowork") and _try_work(a):
 		return
-	# 6. Recreation, then idle somewhere safe.
-	if _wants_rec(a) and _try_rec(a):
+	# 6. Recreation (V5: not while confined or jailed), then idle somewhere safe.
+	if not a.has("v5_norec") and _wants_rec(a) and _try_rec(a):
 		return
 	_idle(a)
 
@@ -1277,6 +1281,11 @@ func _act_all(dt: float) -> void:
 		var plan: Array = a["plan"]
 		if plan.is_empty():
 			continue
+		# V5: riding the lift/stair core of a multi-storey building (floors.gd on_use).
+		if a.has("lift"):
+			if int(sim.state["tick"]) < int(a["lift"]["t1"]):
+				continue
+			a.erase("lift")
 		if int(a["pi"]) >= plan.size():
 			if a["plan_kind"] == "task":
 				_finish_task(a)
@@ -1820,7 +1829,8 @@ func _slot_cap(kind: String, bid: int) -> int:
 		return 0
 	var f: Dictionary = sim.sizes.furniture(String(b["def"]), int(b.get("size", 1)))
 	match kind:
-		"bed": return int(f["beds"])
+		"bed": return int(f["beds"]) - int(f.get("child_beds", 0))   # V5: bunks are for children
+		"child_bed": return int(f.get("child_beds", 0))
 		"seat": return int(f["seats"])
 		"work": return int(f["work_slots"])
 		"stand": return int(f["stands"])
@@ -1851,6 +1861,10 @@ func _sync_use(a: Dictionary) -> void:
 	if w.is_empty():
 		if not (a.get("use", {}) as Dictionary).is_empty():
 			a["use"] = {}
+		# V5: out of a multi-storey building the floor is forgotten.
+		if a.has("floor_b") and (a["where"] != "in" or int(a["floor_b"]) != int(a["bld"])):
+			a.erase("floor")
+			a.erase("floor_b")
 		return
 	var cur: Dictionary = a.get("use", {})
 	var kind: String = w[0]
@@ -1872,6 +1886,8 @@ func _sync_use(a: Dictionary) -> void:
 			pose = "stand"
 		i = _free_slot("stand", bid, _slot_cap("stand", bid), int(a["id"]))
 	a["use"] = {"kind": kind, "b": bid, "i": i, "pose": pose, "act": w[3]}
+	# V5: the floor of that anchor (multi-storey buildings; a lift ride when it changes).
+	sim.floors.on_use(a)
 
 # ---------------------------------------------------------------- visitors (v3.1)
 ## Colonists sleep in their bed; visitors in a free bed that no colonist needs.

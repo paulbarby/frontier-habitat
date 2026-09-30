@@ -108,6 +108,12 @@ MATERIALS = {
     "Cushion":    dict(color="#3c4a5e", rough=0.90),
     "Floor":      dict(color="#d9d4cb", rough=0.65),
     "FloorDark":  dict(color="#6b6f76", rough=0.70),
+    # 5.0 civic colours (critic round 35, V5 section 1): security black + red, jail prison orange
+    "SecBlack":   dict(color="#1b1f24", rough=0.60),
+    "SignalRed":  dict(color="#d93a3a", rough=0.50),
+    "SignalRedGlow": dict(color="#d93a3a", rough=0.40, emit="#d93a3a", emit_strength=2.2),
+    "PrisonOrange": dict(color="#ff7a1a", rough=0.55),
+    "PrisonOrangeGlow": dict(color="#ff7a1a", rough=0.40, emit="#ff7a1a", emit_strength=2.2),
 }
 
 SHARP_ANGLE = 50.0   # degrees; edges sharper than this get split normals on smooth faces

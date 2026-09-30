@@ -163,18 +163,18 @@ def dance_a_keys():
     P2 = arms(arms(body(hips__z=-0.040, head__rz=20.0, chest__rx=-5.0), "L", OUT_UP), "R", OUT_DOWN)
     P3 = arms(body(hips__z=-0.065, chest__rx=0.0), "LR", OUT)
     P4 = arms(arms(body(hips__z=-0.040, head__rz=-20.0, chest__rx=5.0), "L", OUT_DOWN), "R", OUT_UP)
-    P5 = arms(body(hips__z=-0.050, chest__rz=18.0, head__rz=26.0, hips__rz=4.0), "LR", BOX)
-    P6 = arms(body(hips__z=-0.050, chest__rz=-18.0, head__rz=-26.0, hips__rz=-4.0), "LR", BOX)
-    P7 = arms(body(hips__z=-0.080, head__ry=8.0, chest__ry=4.0), "LR", FWD)
-    ks = [(0.00, R0, 0.00), (0.45, P1, 0.05), (0.80, P2, 0.20), (1.30, P3, 0.20), (1.80, P4, 0.20), (2.35, P5, 0.15),
-          (2.80, P6, 0.10), (3.40, P7, 0.10)]
+    P5 = arms(body(hips__z=-0.050, chest__rz=14.0, head__rz=18.0, hips__rz=4.0), "LR", BOX)
+    P6 = arms(body(hips__z=-0.050, chest__rz=-14.0, head__rz=-18.0, hips__rz=-4.0), "LR", BOX)
+    P7 = arms(body(hips__z=-0.080, head__ry=8.0, chest__ry=4.0), "LR", dict(FWD, ua=(-16.0, -70.0, 0.0)))
+    ks = [(0.00, R0, 0.00), (0.45, P1, 0.05), (0.80, P2, 0.20), (1.30, P3, 0.20), (1.80, P4, 0.10), (2.40, P5, 0.10),
+          (2.80, P6, 0.08), (3.45, P7, 0.07)]
     keys = []
     for t, P, hold in ks:
         P = finish(Pose(P))
         keys.append((t, P, {"hold": True}))
         if hold > 0:
             keys.append((t + hold, P, {"hold": True}))
-    return keys, [0.80, 1.30, 1.80, 2.35, 2.80, 3.40]
+    return keys, [0.80, 1.30, 1.80, 2.40, 2.80, 3.45]
 
 
 def dance_a_fn():
@@ -183,38 +183,68 @@ def dance_a_fn():
 
     def g(f):
         P = Pose(fn(f))
-        for k, v in settle(f / FPS, hits).items():
+        t = f / FPS
+        for k, v in settle(t, hits).items():
             P[k] = P.g(k) + v
+        P["hips.z"] = P.g("hips.z") - 0.024 * (0.5 - 0.5 * cos(TAU * t / 0.5))      # knee bounce on every beat
         return P
     return g, n
 
 
+
 # ------------------------------------------------------------------------------------------------------------------
-# robot_dance_b (4 s): the arm wave travels from the left hand to the right hand and back; body roll
+# robot_dance_b (4 s): a step routine: step-touch right and left with "running man" arms (beats 1-4), then a full
+# turn to the left in four pivot steps with the arms out (beats 5-8); a knee bounce on every beat
 # ------------------------------------------------------------------------------------------------------------------
+TURN_B = (1.95, 3.85)
+PIVOT_B = (0.10, 0.0)          # the turn is about a point 10 cm forward (the arms stay clear of the pole behind)
+RUN_ARMS = dict(ua=(10.0, -10.0, 0.0), fa=(0.0, -88.0, 0.0), hd=(0.0, -10.0, 0.0))
+TURN_ARMS = dict(ua=(-19.0, -6.0, 6.0), fa=(1.0, -30.0, 8.0), hd=(3.0, -6.0, 0.0))   # close to the sides
+STEPS_B = [("L", 1.97, 2.42, 2.47, None), ("R", 2.40, 2.88, 2.92, None), ("L", 2.86, 3.34, 3.38, None),
+           ("R", 3.32, 3.82, 3.85, None), ("L", 3.78, 3.98, 3.85, None)]
+
+
 def dance_b_fn(n=120):
-    base = arms(body(hips__z=-0.030), "LR", OUT)
+    down = arms(body(), "LR", DOWN)
+    run = arms(body(), "LR", RUN_ARMS)
+    wide = arms(body(), "LR", TURN_ARMS)
+    def frame(t):
+        h = spin_h(t, *TURN_B, total=360.0, ramp=0.3)
+        px, py = rot2(PIVOT_B[0], PIVOT_B[1], h)
+        return h, (PIVOT_B[0] - px, PIVOT_B[1] - py)
+    st = Stepper(frame, STEPS_B, lift=0.05, pivot=0.9, pivot_windows=(TURN_B,))
 
     def fn(f):
         t = f / FPS
-        u = f / n
-        e = ease(t / 0.5) * ease((4.0 - t) / 0.5)          # arms out 0..0.5 s, back 3.5..4 s
-        P = mix(arms(body(), "LR", DOWN), base, e)
-        # travelling wave: joint j lags by 0.13 s; the wave goes L hand -> R hand in the first half, back after
-        chain = [("hand.L.rx", 26.0), ("forearm.L.rx", 20.0), ("upper_arm.L.rx", 12.0), ("chest.rx", 5.0),
-                 ("upper_arm.R.rx", -12.0), ("forearm.R.rx", -20.0), ("hand.R.rx", -26.0)]
-        for j, (k, amp) in enumerate(chain):
-            lag = 0.13 * j
-            w = sin(TAU * 1.0 * (t - lag))
-            P[k] = P.g(k) + amp * w * e
-        # body roll forward-back and a knee bounce on the beat
-        P["hips.x"] = P.g("hips.x") + 0.022 * sin(TAU * u * 4) * e
-        P["hips.z"] = P.g("hips.z") - 0.020 * (1 - cos(TAU * u * 8)) / 2 * e
-        P["spine.ry"] = P.g("spine.ry") + 5.0 * sin(TAU * u * 4 + 0.6) * e
-        P["chest.ry"] = P.g("chest.ry") + 5.0 * sin(TAU * u * 4 + 1.2) * e
-        P["head.ry"] = P.g("head.ry") + 6.0 * sin(TAU * u * 4 + 1.8) * e
-        P["head.rz"] = P.g("head.rz") + 16.0 * sin(TAU * u) * e
-        return finish(P)
+        beat = t / 0.5
+        e_run = seg(t, 0.0, 0.45) * (1 - seg(t, 1.75, 2.15))
+        e_wide = seg(t, 1.90, 2.30) * (1 - seg(t, 3.55, 3.98))
+        P = mix(mix(down, run, e_run), wide, e_wide * (1 - e_run))
+        # running-man arm swing on the beat
+        for side, sg in (("L", 1.0), ("R", -1.0)):
+            P["upper_arm.%s.ry" % side] = P.g("upper_arm.%s.ry" % side) - 20.0 * e_run * sin(TAU * beat / 2 + (0 if side == "L" else pi))
+        P["hips.z"] = P.g("hips.z") - 0.026 * (0.5 - 0.5 * cos(TAU * beat))            # knee bounce on every beat
+        P["head.ry"] = P.g("head.ry") + 4.0 * (0.5 - 0.5 * cos(TAU * beat))
+        if t < TURN_B[0]:
+            # step-touch: right out and back (beats 1-2), left out and back (beats 3-4), in the body frame
+            u = t / TURN_B[0]
+            side = sin(TAU * u)
+            P["hips.y"] = 0.05 * side
+            P["hips.rx"] = -4.0 * side
+            P["chest.rz"] = 8.0 * side
+            for sd, sg in (("L", 1.0), ("R", -1.0)):
+                lift = max(0.0, -sg * side) ** 2
+                x, y, yaw = stance_body(sd)
+                P["foot.%s.x" % sd] = x
+                P["foot.%s.y" % sd] = y + sg * 0.07 * lift
+                P["foot.%s.z" % sd] = ANK.z + 0.05 * sin(pi * lift)
+                P["foot.%s.yaw" % sd] = yaw
+                P["foot.%s.pitch" % sd] = -10.0 * lift
+            return rotate_pose(finish(P), 0.0)
+        h, o = frame(t)
+        Q = rotate_pose(finish(P), h, o)
+        put_feet(Q, st, t)
+        return Q
     return fn, n
 
 
@@ -229,10 +259,15 @@ class Stepper:
     """frame(t) -> (h, origin); steps: [(side, t0, t1, t_target, body_pose_or_None)].  A step lifts the foot at t0 and
     puts it down at t1 on its stance place in the body frame at t_target."""
 
-    def __init__(self, frame, steps, lift=0.07):
+    def __init__(self, frame, steps, lift=0.07, pivot=0.0, pivot_windows=()):
         self.frame = frame
         self.steps = sorted(steps, key=lambda s: s[1])
         self.lift = lift
+        self.pivot = pivot          # 0..1: a standing foot turns on its ball by this share of the body turn ...
+        self.windows = pivot_windows    # ... inside these time windows only
+
+    def _turned(self, t):
+        return sum(self.frame(min(max(t, w0), w1))[0] - self.frame(w0)[0] for w0, w1 in self.windows)
 
     def planted(self, s, t, P=None):
         h, o = self.frame(t)
@@ -240,23 +275,34 @@ class Stepper:
         x, y = rot2(x, y, h)
         return (x + o[0], y + o[1], yaw + h)
 
+    def _pivot(self, pose, t_from, t):
+        """A standing foot turned on its ball by pivot x the body turn since t_from (position kept)."""
+        if self.pivot <= 0:
+            return pose
+        dh = self._turned(t) - self._turned(t_from)
+        return (pose[0], pose[1], pose[2] + self.pivot * dh)
+
     def foot(self, s, t):
         """(x, y, z, yaw, pitch) of side s at time t (world)."""
         cur = self.planted(s, 0.0)
+        t_land = 0.0
         for (side, t0, t1, tt, P) in self.steps:
             if side != s:
                 continue
+            if t <= t0:
+                break
+            cur = self._pivot(cur, t_land, t0)                     # where the standing foot has turned to
             nxt = self.planted(s, tt, P)
             dy = (nxt[2] - cur[2] + 180.0) % 360.0 - 180.0          # the shortest turn (feet are periodic in yaw)
             nxt = (nxt[0], nxt[1], cur[2] + dy)
-            if t <= t0:
-                break
             if t < t1:
                 u = ease((t - t0) / (t1 - t0))
                 bump = sin(pi * (t - t0) / (t1 - t0))
                 return (lerp(cur[0], nxt[0], u), lerp(cur[1], nxt[1], u), ANK.z + self.lift * bump,
                         lerp(cur[2], nxt[2], u), -10.0 * bump)
             cur = nxt
+            t_land = t1
+        cur = self._pivot(cur, t_land, t)
         return (cur[0], cur[1], ANK.z, cur[2], 0.0)
 
 
@@ -283,9 +329,9 @@ def put_feet(Q, st, t, air=None):
 # ------------------------------------------------------------------------------------------------------------------
 # robot_dance_c (8 s): prep, pirouette on the left foot, land, arm circle with a squat, isolations, bow, R0
 # ------------------------------------------------------------------------------------------------------------------
-PIVOT = Vector((0.08, 0.0, N.BALL_JOINT.z))      # the left ball of the foot in the pirouette (body frame); 8 cm
+PIVOT = Vector((0.11, 0.0, N.BALL_JOINT.z))      # the left ball of the foot in the pirouette (body frame); 8 cm
                                                    # forward: the turned-out knee stays clear of the pole behind
-SPIN_C = (0.85, 2.15)                              # the turn
+SPIN_C = (0.90, 2.18)                              # the turn
 
 
 def spin_h(t, t0, t1, total=-360.0, ramp=0.22):
@@ -308,20 +354,20 @@ def spin_h(t, t0, t1, total=-360.0, ramp=0.22):
 
 def dance_c_upper():
     """Upper body keys (body frame), 8 s."""
-    Pprep = arms(body(hips__z=-0.060, hips__x=0.04, head__ry=-3.0), "LR", SECOND)
-    Prise = arms(body(hips__z=0.030, hips__x=0.050, head__ry=-2.0), "LR", FIFTH)
+    Pprep = arms(body(hips__z=-0.060, hips__x=0.06, head__ry=-3.0), "LR", dict(SECOND, ua=(72.0, -10.0, 0.0)))
+    Prise = arms(body(hips__z=0.030, hips__x=0.080, head__ry=-2.0), "LR", FIFTH)
     Pland = arms(body(hips__z=-0.070, head__ry=2.0), "LR", SECOND)
     Pup = arms(body(hips__z=-0.050, head__ry=-12.0, chest__ry=-6.0), "LR", UP)
     Pwide = arms(body(hips__z=-0.140, head__ry=0.0), "LR", V)
     Psq = arms(body(hips__z=-0.230, hips__x=-0.03, chest__ry=12.0, head__ry=6.0), "LR", OUT_DOWN)
     Prise2 = arms(body(hips__z=-0.050), "LR", OUT)
-    Pbox_l = arms(body(hips__z=-0.050, chest__rz=18.0, head__rz=28.0), "LR", BOX)
-    Pbox_r = arms(body(hips__z=-0.050, chest__rz=-18.0, head__rz=-28.0), "LR", BOX)
+    Pbox_l = arms(body(hips__z=-0.050, chest__rz=14.0, head__rz=20.0), "LR", BOX)
+    Pbox_r = arms(body(hips__z=-0.050, chest__rz=-14.0, head__rz=-20.0), "LR", BOX)
     Pbox_c = arms(body(hips__z=-0.050, head__ry=10.0), "LR", BOX)
     Pbow = arms(arms(body(hips__z=-0.040, hips__ry=16.0, spine__ry=10.0, chest__ry=10.0, head__ry=8.0), "R", ACROSS),
                 "L", dict(ua=(26.0, 30.0, 0.0), fa=(0.0, -8.0, 0.0), hd=(0.0, 0.0, 0.0)))
-    ks = [(0.00, R0, True), (0.45, Pprep, True), (0.85, Prise, True), (2.15, Prise, True), (2.60, Pland, True),
-          (2.95, Pland, False), (3.40, Pup, False), (3.85, Pwide, False), (4.40, Psq, False), (4.95, Prise2, True),
+    ks = [(0.00, R0, True), (0.45, Pprep, True), (0.90, Prise, True), (2.18, Prise, True), (2.75, Pland, True),
+          (3.05, Pland, False), (3.48, Pup, False), (3.90, Pwide, False), (4.40, Psq, False), (4.95, Prise2, True),
           (5.30, Pbox_c, True), (5.55, Pbox_l, True), (5.75, Pbox_l, True), (6.05, Pbox_r, True), (6.25, Pbox_r, True),
           (6.55, Pbox_c, True), (7.05, Pbow, True), (7.30, Pbow, True), (7.85, R0, True)]
     return [(t, finish(Pose(P)), {"hold": h}) for t, P, h in ks]
@@ -354,7 +400,7 @@ def dance_c_fn():
         set_foot(Pb, "L", (fx, fy, fz), pitch=fp, yaw=fyaw, knee_out=3.0, toe=toe)
         # right foot: passe from 0.62 to 2.20 (lift 0.62..0.85, down 2.20..2.45)
         rx_, ry_, ryaw = stance_body("R")
-        up = seg(t, 0.62, 0.85) * (1 - seg(t, 2.20, 2.45))
+        up = seg(t, 0.50, 0.86) * (1 - seg(t, 2.18, 2.62))
         passe = Vector((0.075, -0.015, 0.47))
         x = lerp(rx_, passe.x, up)
         y = lerp(ry_, passe.y, up)
@@ -362,12 +408,14 @@ def dance_c_fn():
         # world values for the right side (set_foot would mirror them)
         Pb["foot.R.x"], Pb["foot.R.y"], Pb["foot.R.z"] = x, y, z
         Pb["foot.R.pitch"] = 0.0
-        Pb["foot.R.yaw"] = lerp(ryaw, 30.0, up)
-        Pb["knee.R.out"] = -lerp(3.0, 62.0, up)
+        Pb["foot.R.yaw"] = lerp(ryaw, 24.0, up)
+        Pb["knee.R.out"] = -lerp(3.0, 42.0, up)
         Pb["foot.R.rel"] = up
         Pb["foot.R.rp"] = 40.0
         Pb["knee.R.body"] = 0.0
         # the squat (3.85..4.95): knees out
+        iso = seg(t, 4.95, 5.25) * (1 - seg(t, 6.40, 6.70))
+        Pb["hips.z"] = Pb.g("hips.z") - 0.024 * iso * (0.5 - 0.5 * cos(TAU * t / 0.5))   # knee bounce on every beat
         sq = seg(t, 3.9, 4.4) * (1 - seg(t, 4.5, 4.95))
         for s in ("L", "R"):
             Pb["knee.%s.out" % s] = Pb.g("knee.%s.out" % s) + 14.0 * sq
@@ -380,16 +428,16 @@ def dance_c_fn():
 # ------------------------------------------------------------------------------------------------------------------
 # robot_pole (8 s)
 # ------------------------------------------------------------------------------------------------------------------
-PB_GRIP = (0.10, -0.26)                  # the pole in the body frame while gripping (in front of the right shoulder)
-POLE_T = dict(turn=(0.0, 1.15), swing=(1.15, 1.55), spin=(1.55, 3.4), land=(3.4, 3.7), lean=(3.7, 5.4),
-              back=(5.4, 6.4), show=(6.4, 8.0))
-H_GRIP, H_SWING, H_SPIN, H_LAND = -120.0, -150.0, -450.0, -480.0
+PB_GRIP = (0.16, -0.28)                  # the pole in the body frame while gripping: front right, 18 cm from the shoulder
+POLE_T = dict(turn=(0.0, 1.40), swing=(1.40, 1.90), spin=(1.90, 3.4), land=(3.4, 3.7), lean=(3.7, 5.4),
+              back=(5.55, 6.85), show=(6.85, 8.0))
+H_GRIP, H_SWING, H_SPIN, H_LAND = 240.0, 210.0, -90.0, -120.0
 
 
 def pole_heading(t):
     T = POLE_T
     if t < T["turn"][1]:
-        return lerp(0.0, H_GRIP, seg(t, *T["turn"]))
+        return spin_h(t, *T["turn"], total=H_GRIP, ramp=0.25)
     if t < T["swing"][1]:
         return lerp(H_GRIP, H_SWING, seg(t, *T["swing"]))
     if t < T["spin"][1]:
@@ -400,19 +448,23 @@ def pole_heading(t):
     if t < T["back"][0]:
         return H_LAND
     if t < T["back"][1]:
-        return lerp(H_LAND, -360.0, seg(t, *T["back"]))
+        return H_LAND + spin_h(t, *T["back"], total=-360.0 - H_LAND, ramp=0.25)
     return -360.0
 
 
 def pole_pb(t):
     """The pole position in the body frame."""
-    u = seg(t, *POLE_T["turn"]) * (1 - seg(t, *POLE_T["back"]))
-    lean = pole_lean(t)
-    a0 = 180.0                                                        # behind
-    a1 = degrees(atan2(PB_GRIP[1], PB_GRIP[0])) % 360.0               # front right (291 deg): via 270 = the right side
+    a1 = degrees(atan2(PB_GRIP[1], PB_GRIP[0]))                       # front right (-60 deg)
     r0, r1 = abs(POLE_LOCAL[0]), (PB_GRIP[0] ** 2 + PB_GRIP[1] ** 2) ** 0.5
-    a = radians(lerp(a0, a1, u))
-    r = lerp(r0, r1, u) + 0.12 * sin(pi * u)                          # wider on the way round (clear of the arm)
+    if t < POLE_T["back"][0]:
+        u = seg(t, *POLE_T["turn"])
+        a = lerp(180.0, a1, u)                                        # behind -> left -> front -> front right
+    else:
+        u = 1.0 - seg(t, *POLE_T["back"])
+        a = lerp(180.0, a1, u)                                        # front right -> front -> left -> behind
+    bump = 0.15 if t < POLE_T["back"][0] else 0.18                   # wider on the way round (clear of arms, legs)
+    r = lerp(r0, r1, u) + bump * sin(pi * u)
+    a = radians(a)
     return (r * cos(a), r * sin(a))
 
 
@@ -427,9 +479,9 @@ def grip(P, s, pb, z, hips_dz=0.0, w=1.0, off=0.0, offn=0.0):  # noqa: E302
     """Side s grips the pole at body-frame point (pb, z): thumb up, palm towards the pole (from the shoulder)."""
     sg = 1.0 if s == "L" else -1.0
     sh = Vector((N.SH_JOINT.x, sg * N.SH_JOINT.y, N.SH_JOINT.z + hips_dz))
-    n = Vector((pb[0] - sh.x, pb[1] - sh.y, 0.0)).normalized()
-    up = Vector((0.0, 0.0, GRIP_THUMB[s]))                          # the thumb direction (along the pole)
-    d = n.cross(up) if s == "R" else up.cross(n)                 # R: thumb = d x n; L: thumb = n x d
+    d = Vector((pb[0] - sh.x, pb[1] - sh.y, 0.0)).normalized()     # the fingers: from the shoulder to the pole
+    up = Vector((0.0, 0.0, 1.0))                                    # the thumb: up the pole
+    n = up.cross(d) if s == "R" else d.cross(up)                 # R: thumb = d x n; L: thumb = n x d
     g = Vector((pb[0], pb[1], z))
     wrist = g - d * 0.060 - n * 0.059 + d * off + n * offn
     mir = (lambda v: Vector((v.x, -v.y, v.z))) if s == "R" else (lambda v: v)
@@ -439,20 +491,20 @@ def grip(P, s, pb, z, hips_dz=0.0, w=1.0, off=0.0, offn=0.0):  # noqa: E302
     return P
 
 
-GRIP_ELBOW = {"R": (0.15, -0.45, -0.88), "L": (0.1, 0.7, -0.7)}
+GRIP_ELBOW = {"R": (0.0, -0.5, -0.87), "L": (0.2, 0.4, -0.9)}
 # thumb up for the left hand, down for the right: both fists then open towards the front, so both hands meet the pole
 # from in front of the body (clear of the pole as it sweeps round the right side in the turn)
-GRIP_THUMB = {"R": -1.0, "L": 1.0}
-AWAY = (0.14, -0.07)       # the hand beside and behind the pole: along its fingers, off the palm (m)
+GRIP_THUMB = {"R": 1.0, "L": 1.0}
+AWAY = (0.0, -0.12)        # the hand beside the pole, 12 cm off it along the palm normal
 OFF = 0.085                # beside the pole, level with the grip: the wrist then slides on along the fingers
 # per side: IK weight in (the target starts ON the FK arm), a curve (through ctrl) to AWAY, onto the pole; the
 # release in reverse; the IK weight goes out where the target is back on the FK arm.
 REACH = {
     # the right hand rises along the right side of the body (the fist opens at the heel: it meets the pole from the
     # right and behind); the left hand crosses in front of the chest
-    "R": dict(w_in=(0.04, 0.28), path=(0.16, 1.10), on=(1.10, 1.32), off=(5.00, 5.30), back=(5.30, 6.30),
-              w_out=(6.27, 6.37), ctrl_in=(0.46, -0.28, 1.34), ctrl_out=(0.46, -0.28, 1.30)),
-    "L": dict(w_in=(0.42, 0.72), path=(0.56, 1.20), on=(1.20, 1.44), off=(3.60, 3.86), back=(3.86, 4.60),
+    "R": dict(w_in=(0.26, 0.56), path=(0.40, 1.42), on=(1.42, 1.62), off=(4.96, 5.24), back=(5.24, 6.12),
+              w_out=(6.00, 6.42), ctrl_in=(0.06, -0.42, 1.24), ctrl_out=(0.02, -0.47, 1.20)),
+    "L": dict(w_in=(1.00, 1.24), path=(1.10, 1.58), on=(1.58, 1.76), off=(3.60, 3.86), back=(3.86, 4.60),
               w_out=(4.57, 4.67), ctrl_in=(0.32, 0.08, 1.12), ctrl_out=(0.30, 0.28, 1.26)),
 }
 
@@ -479,7 +531,7 @@ def world_hand_q(s, d, n):
 
 # the right hand turns through "palm down, fingers forward" on its way to and from the pole: a plain slerp passes an
 # orientation where the palm normal lies along the forearm, where the solver cannot place the forearm twist
-MID_Q = {"R": ((1.0, 0.0, 0.0), (0.0, 0.0, -1.0))}
+MID_Q = {}
 
 
 def turn_q(s, q0, q1, u):
@@ -536,19 +588,11 @@ def reach(Pb, s, t):
         el = 0.8 * u
     elif t < R_["off"][0]:                                             # AWAY -> OFF -> on the pole (and held)
         u = seg(t, *R_["on"])
-        a = min(1.0, u * 2.0)
-        b = max(0.0, u * 2.0 - 1.0)
-        off = lerp(lerp(AWAY[0], OFF, ease(a)), 0.0, ease(b))
-        offn = lerp(AWAY[1], 0.0, ease(a))
-        w, q = grip_at(off, offn)
+        w, q = grip_at(lerp(AWAY[0], 0.0, u), lerp(AWAY[1], 0.0, u))
         el = 0.8
     elif t < R_["back"][0]:                                            # off the pole -> OFF -> AWAY
         u = seg(t, *R_["off"])
-        a = min(1.0, u * 2.0)
-        b = max(0.0, u * 2.0 - 1.0)
-        off = lerp(lerp(0.0, OFF, ease(a)), AWAY[0], ease(b))
-        offn = lerp(0.0, AWAY[1], ease(b))
-        w, q = grip_at(off, offn)
+        w, q = grip_at(lerp(0.0, AWAY[0], u), lerp(0.0, AWAY[1], u))
         el = 0.8
     else:                                                              # beside the pole (where it was) -> the FK arm
         u = seg(t, *R_["back"])
@@ -570,20 +614,22 @@ def pole_upper():
     lean = arms(arms(body(hips__z=-0.04, spine__rx=-7.0, chest__rx=-8.0, chest__rz=-8.0, head__rx=-6.0,
                           head__rz=24.0, head__ry=-10.0), "L", PRESENT), "R", DOWN)
     lean_hi = arms(Pose(lean), "L", dict(ua=(128.0, -14.0, 0.0), fa=(0.0, -10.0, 0.0), hd=(0.0, 6.0, 0.0)))
-    vpose = arms(body(hips__z=-0.02, head__ry=-8.0), "LR", V)
-    ks = [(0.00, R0, True), (0.30, add(turn, chest__rz=8.0, head__rz=10.0), False), (1.00, turn, False),
-          (1.30, swing, False), (1.78, hang, False), (3.30, hang2, False), (3.55, landed, False),
+    vpose = arms(body(hips__z=-0.02, head__ry=-8.0), "LR", dict(V, ua=(100.0, -8.0, 0.0)))
+    ks = [(0.00, R0, True), (0.35, add(turn, chest__rz=8.0, head__rz=10.0), False), (1.20, turn, False),
+          (1.65, swing, False), (2.18, hang, False), (3.30, hang2, False), (3.55, landed, False),
           (3.95, add(landed, hips__z=0.09), False), (4.62, lean, False), (5.10, lean_hi, True),
-          (5.30, lean_hi, False), (6.30, arms(body(hips__z=-0.03, head__rz=10.0), "LR", DOWN), False),
-          (6.40, arms(body(hips__z=-0.02), "LR", DOWN), False), (6.95, vpose, True), (7.25, vpose, True),
-          (7.85, R0, True)]
+          (5.24, lean_hi, False), (6.12, arms(body(hips__z=-0.03, head__rz=10.0), "LR", DOWN), False),
+          (6.80, arms(body(hips__z=-0.02), "LR", DOWN), False), (7.35, vpose, True), (7.48, vpose, True),
+           (7.95, R0, True)]
     return [(tt, finish(Pose(P)), {"hold": h}) for tt, P, h in ks]
 
 
-POLE_STEPS = [("R", 0.08, 0.40, 0.45, None), ("L", 0.42, 0.76, 0.80, None), ("R", 0.78, 1.12, 1.15, None),
+POLE_STEPS = [("L", 0.04, 0.32, 0.36, None), ("R", 0.30, 0.60, 0.64, None), ("L", 0.58, 0.88, 0.92, None),
+              ("R", 0.86, 1.16, 1.20, None), ("L", 1.14, 1.38, 1.40, None),
               ("L", 3.10, 3.11, 3.70, None), ("R", 3.10, 3.11, 3.70, None),       # landing targets (set in the air)
-              ("L", 5.50, 5.85, 5.90, None), ("R", 5.90, 6.30, 6.40, None), ("L", 6.35, 6.70, 6.40, None)]
-AIR = {"L": (1.30, 1.82), "R": (1.42, 1.88)}          # take-off (tuck) windows; landing LAND
+              ("R", 5.52, 5.88, 5.94, None), ("L", 5.86, 6.22, 6.26, None), ("R", 6.14, 6.52, 6.56, None),
+              ("L", 6.44, 6.88, 6.85, None), ("R", 6.80, 7.14, 6.85, None)]
+AIR = {"L": (1.76, 2.16), "R": (1.80, 2.22)}          # take-off (tuck) windows; landing LAND
 
 
 LAND = (3.28, 3.70)
@@ -591,12 +637,12 @@ LAND = (3.28, 3.70)
 
 def pole_fn():
     fn_u, n = keyed_clip(pole_upper(), loop=True, length=8.0)
-    st = Stepper(pole_frame, POLE_STEPS)
+    st = Stepper(pole_frame, POLE_STEPS, pivot=0.8, pivot_windows=(POLE_T["turn"], POLE_T["back"]))
 
     def fn(f):
         t = f / FPS
         h, o = pole_frame(t)
-        Pb = Pose(fn_u(f)) if t < 7.85 else Pose(R0)      # the last key is R0 (raw triples: no wrap spin)
+        Pb = Pose(fn_u(f)) if t < 7.95 else Pose(R0)      # the last key is R0 (raw triples: no wrap spin)
         dz = Pb.g("hips.z")
         for s in ("R", "L"):
             Pb = reach(Pb, s, t)
@@ -622,7 +668,8 @@ def robot_clips():
     fn, n = dance_a_fn()
     out.append(("robot_dance_a", fn, n, dict(kind="loop", bpm=120, note="popping: hits on the beat, holds")))
     fn, n = dance_b_fn()
-    out.append(("robot_dance_b", fn, n, dict(kind="loop", bpm=120, note="liquid arm wave hand to hand, body roll")))
+    out.append(("robot_dance_b", fn, n, dict(kind="loop", bpm=120, note="step routine: step-touch with running-man "
+                                                                         "arms, then a full turn in four pivot steps")))
     fn, n = dance_c_fn()
     out.append(("robot_dance_c", fn, n, dict(kind="loop", bpm=120, note="pirouette, arm circle and squat, "
                                              "isolations, bow; stays within 0.3 m of the origin")))

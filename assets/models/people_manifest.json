@@ -1,6 +1,6 @@
 {
- "version": "5.0-pilot",
- "status": "PILOT: m1 and f1, outfits uniform_engineering and casual_a, 24 v3 clips + 6 new clips. The other variants, children, outfits, clips, LOD1 and the robot dancers follow after the critic pilot.  Names and structure below are final unless a note says otherwise.",
+ "version": "5.0-mpfb-pilot",
+ "status": "PILOT (MPFB): m1 and f1, outfits uniform_engineering and casual_a, 30 clips.  Bodies from MPFB (MakeHuman, CC0 assets) skinned to OUR skeleton (route A): names, bones, clips and the draw rule are as before.",
  "skeleton": {
   "bones": [
    "root",
@@ -28,13 +28,23 @@
    "foot.R",
    "toe.R",
    "jaw",
-   "lids"
+   "lids",
+   "brow.L",
+   "brow.R",
+   "mouth.L",
+   "mouth.R",
+   "lids_low"
   ],
   "face_bones": [
    "jaw",
-   "lids"
+   "lids",
+   "brow.L",
+   "brow.R",
+   "mouth.L",
+   "mouth.R",
+   "lids_low"
   ],
-  "note": "The v3 skeleton (same names, hierarchy and bind directions) plus jaw and lids under head.  jaw: the lower face, lower lip, lower teeth; lids: both upper eyelids (blink). Each variant's rig is the v3 rig scaled by its height / 1.80 (applied, no scale keys).  The astronaut_* files are unchanged."
+  "note": "The v3 skeleton (24 bones, the same names and hierarchy) plus face bones under head: jaw (lower face), lids (upper lids: blink), lids_low (lower lids), brow.L/R, mouth.L/R (corners).  Expressions (smile, laugh, frown, surprise) are keyed in the clips.  Joint positions per body (MPFB)."
  },
  "variants": {
   "m1": {
@@ -45,18 +55,112 @@
    "head": "Head_m1",
    "hair": "Hair_m1",
    "outfits": {
-    "uniform_engineering": "Outfit_uniform_engineering",
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.33,
+      0.37,
+      0.42
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.88,
+      0.9
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.55,
+      0.62,
+      0.52
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.92,
+      0.93,
+      0.94
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_rank"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
     "casual_a": "Outfit_casual_a"
    },
+   "addons": [
+    "Addon_apron",
+    "Addon_rank",
+    "Addon_toolbelt",
+    "Addon_vest"
+   ],
    "triangles": {
-    "Head_m1": 3826,
-    "Hair_m1": 2520,
-    "Outfit_uniform_engineering": 5488,
-    "Outfit_casual_a": 5288
+    "Head_m1": 2918,
+    "Hair_m1": 3344,
+    "Outfit_uniform": 16048,
+    "Outfit_casual_a": 15028,
+    "Addon_toolbelt": 276,
+    "Addon_apron": 320,
+    "Addon_vest": 788,
+    "Addon_rank": 24
    },
    "triangles_on_screen": {
-    "uniform_engineering": 11834,
-    "casual_a": 11634
+    "uniform_engineering": 22586,
+    "uniform_science": 22310,
+    "uniform_food": 22630,
+    "uniform_medical": 22310,
+    "uniform_security": 23374,
+    "uniform_command": 22334,
+    "casual_a": 21290
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/young_caucasian_male",
+    "hair": "hair/short02",
+    "brows": "eyebrows/eyebrow008",
+    "eyes": "eyes/materials/brown.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_male"
+     ],
+     "casual_a": [
+      "clothes/toigo_basic_tucked_t-shirt",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes06"
+     ]
+    }
    }
   },
   "f1": {
@@ -67,18 +171,112 @@
    "head": "Head_f1",
    "hair": "Hair_f1",
    "outfits": {
-    "uniform_engineering": "Outfit_uniform_engineering",
+    "uniform_engineering": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.33,
+      0.37,
+      0.42
+     ]
+    },
+    "uniform_science": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.86,
+      0.88,
+      0.9
+     ]
+    },
+    "uniform_food": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_apron"
+     ],
+     "base_rgb": [
+      0.55,
+      0.62,
+      0.52
+     ]
+    },
+    "uniform_medical": {
+     "mesh": "Outfit_uniform",
+     "addons": [],
+     "base_rgb": [
+      0.92,
+      0.93,
+      0.94
+     ]
+    },
+    "uniform_security": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_vest",
+      "Addon_toolbelt"
+     ],
+     "base_rgb": [
+      0.1,
+      0.1,
+      0.12
+     ]
+    },
+    "uniform_command": {
+     "mesh": "Outfit_uniform",
+     "addons": [
+      "Addon_rank"
+     ],
+     "base_rgb": [
+      0.09,
+      0.13,
+      0.26
+     ]
+    },
     "casual_a": "Outfit_casual_a"
    },
+   "addons": [
+    "Addon_apron",
+    "Addon_rank",
+    "Addon_toolbelt",
+    "Addon_vest"
+   ],
    "triangles": {
-    "Head_f1": 3942,
-    "Hair_f1": 6368,
-    "Outfit_uniform_engineering": 5488,
-    "Outfit_casual_a": 5022
+    "Head_f1": 2922,
+    "Hair_f1": 2852,
+    "Outfit_uniform": 16536,
+    "Outfit_casual_a": 14972,
+    "Addon_toolbelt": 276,
+    "Addon_apron": 320,
+    "Addon_vest": 788,
+    "Addon_rank": 24
    },
    "triangles_on_screen": {
-    "uniform_engineering": 15798,
-    "casual_a": 15332
+    "uniform_engineering": 22586,
+    "uniform_science": 22310,
+    "uniform_food": 22630,
+    "uniform_medical": 22310,
+    "uniform_security": 23374,
+    "uniform_command": 22334,
+    "casual_a": 20746
+   },
+   "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
+   "assets": {
+    "skin": "skins/young_caucasian_female",
+    "hair": "hair/toigo_curled_under_bob",
+    "brows": "eyebrows/eyebrow010",
+    "eyes": "eyes/materials/green.mhmat",
+    "outfits": {
+     "uniform": [
+      "clothes/toigo_ankle_boots_male"
+     ],
+     "casual_a": [
+      "clothes/toigo_basic_tucked_t-shirt",
+      "clothes/cortu_cargo_pants",
+      "clothes/shoes05"
+     ]
+    }
    }
   }
  },
@@ -88,29 +286,62 @@
     "technician",
     "operator"
    ],
-   "stripe": "SuitAccent (department colour)",
-   "look": "coverall, tool belt, amber department stripe on chest and sleeves, work boots"
+   "look": "coverall, amber stripe on chest and sleeves, tool belt, work boots"
+  },
+  "uniform_science": {
+   "who": [
+    "scientist"
+   ],
+   "look": "light coverall, blue stripe on chest and sleeves"
+  },
+  "uniform_food": {
+   "who": [
+    "grower",
+    "kitchen",
+    "venue staff"
+   ],
+   "look": "sage coverall, green stripe, white apron"
+  },
+  "uniform_medical": {
+   "who": [
+    "medic"
+   ],
+   "look": "white coverall (scrubs), red stripe"
+  },
+  "uniform_security": {
+   "who": [
+    "security officer"
+   ],
+   "look": "black coverall, armoured vest, red stripe, belt"
+  },
+  "uniform_command": {
+   "who": [
+    "commander",
+    "captains"
+   ],
+   "look": "navy coverall, shoulder boards with rank"
   },
   "casual_a": {
    "who": [
     "off duty"
    ],
-   "look": "m: white tee, jeans, belt, sneakers; f: fitted tee (ClothTint), slim jeans, sneakers"
+   "look": "tee in the person's colour (over the waistband), dark cargo trousers, sneakers"
   }
  },
  "draw": {
-  "per_person": "Draw Head_<variant>, Hair_<variant> and ONE Outfit_<id> of the person's variant (the outfit mesh includes the skin it leaves visible: forearms, hands).  Hide every other Outfit_*.",
+  "per_person": "Draw Head_<variant> (eyes, brows, lashes, teeth), Hair_<variant> and ONE Outfit_<id> (the body skin it leaves visible + its garments).  Hide every other Outfit_*.",
   "materials": {
-   "SkinFace": "tint like v3 Skin (mode 2, replace albedo by the skin tone); the face texture multiplies (white = the tone).  Base colour factor is white.",
-   "Skin": "tint like v3 Skin (mode 2): arms and hands in the outfit meshes",
-   "Hair": "tint like v3 Hair (mode 3); people_hair.png multiplies (strands)",
-   "SuitAccent": "the department / role colour (v3 mode 1)",
-   "ClothTint": "a per-person clothes colour (new: please add a mode; until then it keeps its own colour)",
-   "Eye": "plain, textured (people_eyes.png: 4 irises)",
-   "others": "plain: Coverall, Cotton, Denim, Leather, Sole, Rubber, Metal, Nail, Mouth, Teeth"
+   "Skin": "tint like v3 Skin (mode 2); the skin texture multiplies (a detail map around white)",
+   "Hair*": "Hair, Hair_brows, Hair_lashes: tint like v3 Hair (mode 3); alpha MASK (clip 0.5); the texture multiplies",
+   "SuitAccent": "department colour (mode 1): the uniform shirt; the texture multiplies",
+   "Coverall": "plain grey trousers (texture)",
+   "ClothTint": "per-person clothes colour; the texture multiplies",
+   "Eye": "plain, textured",
+   "Teeth": "plain",
+   "Cloth_*": "plain, textured (the garment's own look)"
   },
   "vertex_color": "COLOR_0.r = baked ambient occlusion (as v3)",
-  "lod": "LOD0 only in the pilot (<= 24k triangles per person on screen).  LOD1 (<= 4k) follows."
+  "lod": "LOD0 only in this pilot (<= 24k triangles per person on screen).  LOD1 (<= 4k) follows."
  },
  "clips": {
   "idle": {
@@ -379,8 +610,7 @@
   }
  },
  "textures": {
-  "face": "people_tex/face_<variant>.png (1024 px, embedded in the GLB)",
-  "eyes": "people_tex/people_eyes.png (embedded)",
-  "hair": "people_tex/people_hair.png (embedded)"
- }
+  "note": "embedded in each GLB, <= 1024 px; sources in assets/models/people_tex/ (.gdignore)"
+ },
+ "credits": "MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01)"
 }

@@ -20,9 +20,9 @@ const RESPONSES := [
 	["meet_demand", "Meet the demand", "Do what they ask. Unrest falls fast. It can cost stock or rules.", "unrest -40 · costs stock or a rule"],
 	["leisure_day", "Leisure day", "Everyone gets a free day. Unrest falls. No work today.", "unrest -20 · no work today"],
 	["party", "Party at the bar", "Unrest falls. Uses drinks and snacks from storage.", "unrest -15 · uses drinks, snacks"],
-	["amnesty", "Amnesty", "Prisoners go free. Unrest falls. Security morale falls.", "unrest -25 · security morale down"],
+	["amnesty", "Amnesty", "Prisoners go free. Unrest falls. Security morale falls.", "unrest -25 · guards unhappy"],
 	["replace_captain", "Replace the captain", "A new captain for the angry department. The old one is unhappy.", "unrest -15 · old captain unhappy"],
-	["arrest_ringleaders", "Arrest the ringleaders", "Security arrests them. Unrest falls only if people think it is fair.", "unrest -10 if fair, +15 if not"],
+	["arrest_ringleaders", "Arrest the ringleaders", "Security arrests them. Unrest falls only if people think it is fair.", "unrest -10, or +15 if unfair"],
 	["lock_down", "Lock down", "The doors of the zone close. A riot cannot spread, but unrest rises.", "riot cannot spread · unrest +10"],
 ]
 ## The frame by stage (critic round 30, fix 4): protest amber, strike orange, riot red (pulsing).
@@ -41,6 +41,8 @@ var _poll := 1.0
 var last_result: Dictionary = {}
 var _damage: Label
 var _style: StyleBoxFlat
+var _btn := {}    # response -> Button
+var _eff := {}    # response -> effect Label
 
 func _ready() -> void:
 	_style = StyleBoxFlat.new()
@@ -91,10 +93,14 @@ func _ready() -> void:
 		b.set_meta("response", id)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.add_child(b)
+		_btn[id] = b
 		var el: Label = Kit.label(eff, "SmallLabel", 11, P.TEXT_2)
 		el.set_meta("effect", id)
 		el.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # two short lines, never cut
+		el.custom_minimum_size.x = 150
 		cell.add_child(el)
+		_eff[id] = el
 		grid.add_child(cell)
 
 func _process(delta: float) -> void:
@@ -112,7 +118,15 @@ func _process(delta: float) -> void:
 		_style.border_color = col.lerp(Color.WHITE, 0.35 * k)
 		_style.shadow_color = Color(col.r, col.g, col.b, 0.25 + 0.35 * k) if shown_stage == "riot" else Color(0, 0, 0, 0.35)
 		_style.shadow_size = int(6.0 + 10.0 * k) if shown_stage == "riot" else 4
-		position.x = floorf((get_viewport_rect().size.x - size.x) * 0.5)
+		# Centred in the free space between the left panels and the inspector (never over either).
+		var vw: float = get_viewport_rect().size.x
+		var lft: float = 8.0
+		var rgt: float = vw - 70.0
+		if hud.goals != null and (hud.goals as Control).is_visible_in_tree():
+			lft = (hud.goals as Control).get_global_rect().end.x + 8.0
+		if hud.inspector != null and hud.inspector.visible:
+			rgt = minf(rgt, hud.inspector.get_global_rect().position.x - 8.0)
+		position.x = floorf(lft + (rgt - lft - size.x) * 0.5) if rgt - lft >= size.x else floorf((vw - size.x) * 0.5)
 		# Under the reactor and hazard banners when they show.
 		var y := 76.0
 		for bnr in [hud.hazard_banner, hud.reactor_banner]:
@@ -151,6 +165,7 @@ func _update() -> void:
 	_text.add_theme_color_override("font_color", col)
 	_icon.modulate = col
 	_sub.text = STAGE_SUB[st]
+	_responses(best)
 	var dm: String = String(best.get("demand", ""))
 	_demand.text = ("They shout: \"%s\"" % dm) if dm != "" else ""
 	_demand.visible = dm != ""
@@ -159,6 +174,39 @@ func _update() -> void:
 		causes.append("%s (+%d)" % [String(c["text"]), int(float(c["delta"]))])
 	tooltip_text = "Unrest %d\nCauses: %s" % [int(best["value"]), ", ".join(causes) if not causes.is_empty() else "none named"]
 	Kit.fit(self)
+
+## Each response's effect from SIM's numbers (content/society.json "responses": unrest, cost,
+## unfair_unrest, lock_hours, cooldown_days) when they exist, else the UI's estimate; a response SIM
+## says is not ready (used recently) is disabled.
+func _responses(u: Dictionary) -> void:
+	var cfg: Dictionary = hud.main.sim.content.get("society", {}).get("responses", {}) if typeof(hud.main.sim.content) == TYPE_DICTIONARY else {}
+	var ready: Dictionary = u.get("responses", {})
+	for r in RESPONSES:
+		var id: String = r[0]
+		var c: Dictionary = cfg.get(id, {})
+		var txt: String = String(r[3])
+		var est := true
+		if not c.is_empty():
+			est = false
+			var parts: Array = ["unrest %+d" % int(c.get("unrest", 0))]
+			if c.has("unfair_unrest"):
+				parts[0] += ", or %+d if unfair" % int(c["unfair_unrest"])
+			for item in c.get("cost", {}):
+				parts.append("uses %d %s" % [int(c["cost"][item]), String(item).replace("_", " ")])
+			if c.has("lock_hours"):
+				parts.append("%d h lockdown" % int(c["lock_hours"]))
+			if bool(c.get("leisure", false)):
+				parts.append("no work")
+			if bool(c.get("release", false)):
+				parts.append("prisoners go free")
+			txt = " · ".join(parts)
+		var ok: bool = bool(ready.get(id, true))
+		if _eff.has(id):
+			(_eff[id] as Label).text = txt if ok else "not ready: used recently"
+		if _btn.has(id):
+			var b: Button = _btn[id]
+			b.disabled = not ok
+			b.tooltip_text = "%s\n%s\nEffect: %s%s.%s" % [r[1], r[2], txt, " (an estimate)" if est else "", "" if ok else "\nUsed recently: ready again after %s day(s)." % str(c.get("cooldown_days", 1))]
 
 func _ask(id: String, nm: String, what: String) -> void:
 	var danger: bool = id in ["lock_down", "arrest_ringleaders", "amnesty"]

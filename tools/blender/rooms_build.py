@@ -152,7 +152,7 @@ def variant_defs(bdef, s):
     for var in sorted(vs, key=lambda v_: (v_ != bdef.get("variant"), v_)):
         vd = vs[var]
         units = vd.get("units", [1, 1, 1, 1])
-        bpu = int(vd.get("beds_per_unit", 2))
+        bpu = int(vd.get("beds_per_unit", 2)) + int(vd.get("child_beds_per_unit", 0))    # the bunk counts 2
         spu = 3 if var == "executive" else 2
         d = dict(bdef)
         d["furniture"] = dict(bdef.get("furniture", {}),
@@ -359,7 +359,7 @@ def build_one(job):
     tris = sum(s["tris"] for s in stats.values())
     budget = int((V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]] * (1.4 if K.R_SCALE > 1.0 else 1.0))   # v4: 2.25x floor
     if bdef.get("v5"):
-        budget = int(V3_BUDGET[job["size"]] * 1.6)     # 5.0: pck budget +25 MB (V5_DESIGN 0): interior detail
+        budget = int(V3_BUDGET[job["size"]] * 1.8)     # 5.0: pck budget +25 MB (V5_DESIGN 0): interior detail
         if bdef.get("floors", 1) > 1:
             budget = 60000 * int(bdef["floors"])        # 5.0 multi-storey (XXL apartment block)
     flags += getattr(rm, "floor_flags", [])

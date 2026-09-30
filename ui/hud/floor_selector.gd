@@ -2,7 +2,7 @@ extends PanelContainer
 ## Floor selector (V5_DESIGN §7, §10): while a multi-storey building is selected (apartment block 3
 ## floors, super dome 5), a small strip on the right of the view with one button per floor (top
 ## floor at the top) and "All". The overview camera then cuts the building away above that floor
-## (RENDER view.set_view_floor(building_id, floor); -1 = all). PgUp / PgDn step one floor.
+## (RENDER view.set_view_floor(building_id, k): k = floor + 1, 0 = all). PgUp / PgDn step one floor.
 ## Data: sim.floors.floors_of(b).
 
 const P = preload("res://ui/theme/palette.gd")
@@ -71,7 +71,7 @@ func set_floor(f: int) -> void:
 	floor_shown = f
 	var v = hud.main.view
 	if v != null and v.has_method("set_view_floor") and building >= 0:
-		v.set_view_floor(building, f)
+		v.set_view_floor(building, f + 1 if f >= 0 else 0)   # RENDER: k 1..n = that floor, 0 = off (all)
 	_sync()
 
 func step(d: int) -> void:

@@ -4,7 +4,9 @@
 // Nothing opens on the desktop. Same page hooks as tools/shoot.mjs.
 //
 //   node tools/render_perf.mjs --dir build/web_render --query "..." [--size 1600x900]
-//        [--pre steps.json] --secs 10 [--label text] [--out perf.json]
+//        [--pre steps.json] --secs 10 [--settle 10] [--vsync] [--label text] [--out perf.json]
+// Agreed with CRITIC 2026-09-30 (docs/requests/RENDER-to-CRITIC.md): presets in tools/perf/*.json,
+// --vsync --settle 10 --secs 30; reports min / median / mean fps, frames over 50 ms, draw calls, CPU load.
 //
 // --pre: steps as in shoot.mjs ({cmd}|{eval}|{wait}) run before the measurement.
 // Then __fhr stats are sampled every 0.5 s for --secs seconds; prints mean / min fps, mean
@@ -24,6 +26,8 @@ const SECS = Number(opt('secs', '10'));
 const PRE = opt('pre', '') ? JSON.parse(fs.readFileSync(opt('pre', ''), 'utf8')) : [];
 const LABEL = opt('label', '');
 const OUT = opt('out', '');
+const VSYNC = args.includes('--vsync');   // keep the 60 fps cap (what the player sees); default: uncapped cost
+const SETTLE = Number(opt('settle', '10'));   // s after the last pre step, no capture (CRITIC/RENDER method 2026-09-30)
 const CHROME = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(p => fs.existsSync(p));
 
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.wasm': 'application/wasm', '.pck': 'application/octet-stream', '.png': 'image/png', '.json': 'application/json' };
@@ -40,7 +44,7 @@ const port = server.address().port;
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'fh-perf-'));
 const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, `--window-size=${W},${H}`,
   '--hide-scrollbars', '--mute-audio', '--no-first-run', '--no-default-browser-check', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist',
-  '--disable-gpu-vsync', '--disable-frame-rate-limit', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  ...(VSYNC ? [] : ['--disable-gpu-vsync', '--disable-frame-rate-limit']), 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 let wsUrl = '';
 for (let i = 0; i < 100 && !wsUrl; i++) {
   await new Promise(r => setTimeout(r, 100));
@@ -66,6 +70,12 @@ for (const st of PRE) {
   if (st.eval !== undefined) console.log('pre', st.eval, '->', JSON.stringify(await evaluate(st.eval)));
   if (st.wait !== undefined) await sleep(st.wait);
 }
+await sleep(SETTLE);
+// Machine load at the start of the window (other agents' Blender / Python / Godot share this PC).
+let cpu = -1;
+try { const { execSync } = await import('node:child_process'); cpu = Number(execSync("powershell -NoProfile -Command \"[math]::Round((Get-Counter '\\Processor(_Total)\\% Processor Time' -SampleInterval 1 -MaxSamples 2).CounterSamples[1].CookedValue,1)\"", { encoding: 'utf8' }).trim()); } catch {}
+// Every frame's time in the page (requestAnimationFrame), for frames over 50 ms and the median.
+await evaluate("(()=>{const R=window.__pf={t:[],last:0};const f=(ts)=>{if(R.last)R.t.push(ts-R.last);R.last=ts;if(!R.stop)requestAnimationFrame(f)};requestAnimationFrame(f);return 1})()");
 const samples = [];
 const tEnd = Date.now() + SECS * 1000;
 while (Date.now() < tEnd) {
@@ -76,7 +86,11 @@ while (Date.now() < tEnd) {
 const mean = (k) => samples.reduce((a, s) => a + Number(s[k] || 0), 0) / Math.max(1, samples.length);
 const min = (k) => Math.min(...samples.map(s => Number(s[k] || 0)));
 const last = samples[samples.length - 1] || {};
-const res = { label: LABEL, query: QUERY, samples: samples.length, fps_mean: +mean('fps').toFixed(1), fps_min: min('fps'),
+const ft = JSON.parse(await evaluate("(()=>{const R=window.__pf;R.stop=true;return JSON.stringify(R.t.slice(3))})()"));
+const fts = ft.slice().sort((a, b) => a - b);
+const frames = { n: ft.length, fps_mean_frames: ft.length ? +(1000 * ft.length / ft.reduce((a, b) => a + b, 0)).toFixed(1) : 0, fps_median: fts.length ? +(1000 / fts[Math.floor(fts.length / 2)]).toFixed(1) : 0,
+  over50: ft.filter(x => x > 50).length, max_ms: fts.length ? +fts[fts.length - 1].toFixed(0) : 0 };
+const res = { label: LABEL, query: QUERY, vsync: VSYNC, cpu_load_pct: cpu, secs: SECS, settle: SETTLE, ...frames, samples: samples.length, fps_mean: +mean('fps').toFixed(1), fps_min: min('fps'),
   draw_calls: Math.round(mean('draw_calls')), draw_calls_max: Math.max(...samples.map(s => Number(s.draw_calls || 0))),
   primitives: Math.round(mean('primitives')), view_ms: +mean('view_ms').toFixed(2), process_ms: +mean('process_ms').toFixed(2),
   colonists: last.colonists, structures: last.structures, quality: last.quality, prof: last.prof, npc_ms: last.npc && last.npc.ms, map: last.terrain && last.terrain.map, lod: last.lod };

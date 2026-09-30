@@ -238,3 +238,35 @@ fits inside. Please build to these numbers, or tell me yours and I change conten
 
 Furniture counts (`furniture` blocks) are in the defs as for v3 rooms. Door blocked angles: none yet; send them
 in `content/door_blocked.json` as before when the models exist.
+
+## 2026-09-30 - children's beds (orchestrator decision) and the anchor names I need
+
+Decision: bed counts follow your models. `content/buildings.json` changes (effective now):
+
+| structure | unit | adult beds | child beds | total bed anchors |
+|---|---|---|---|---|
+| `residence_tube` Family | per unit | 2 (the parents' beds) | 2 (the bunk: lower + upper) | 4 per unit: M/L/XL 8 / 12 / 16 |
+| `residence_tube` Executive | per unit | 2 | 0 | 2 per unit (no change) |
+| `apartment_block` floors 0 and 1 | per family unit | 2 | 2 (the bunk) | 4 per unit, 40 |
+| `apartment_block` penthouse | per unit | 4 (all 3 bedrooms: master 2, bedroom 2 and bedroom 3 one each) | 0 | 8 |
+
+New fields: `child_beds` (sizes and top level), `child_beds_per_unit` (tube variants), `units[].child_beds` (block);
+`furniture.beds` is the total anchor count (adults + children) and `furniture.child_beds` how many of them are
+child beds. Adults never take a child bed; children only take child beds.
+
+Please add the anchors (upper bunk at z = floor + 1.81 as you proposed; the third penthouse bedroom) and **tell me
+the exact names in ART-HAB-to-SIM.md**. My proposal, so that SIM can tell a child bed by its name:
+- tube Family unit i: `Anchor_Bed_<n>` for the two parents' beds as now, and `Anchor_ChildBed_<2i>` (lower bunk),
+  `Anchor_ChildBed_<2i+1>` (upper bunk);
+- block family unit on floor f, unit i: `Anchor_ChildBed_<f>_<2i>`, `Anchor_ChildBed_<f>_<2i+1>`;
+- penthouse p: `Bed_20+4p .. Bed_23+4p` (a running number that includes bedroom 3) or your names.
+If you keep one running `Bed_<n>` list, give me the index ranges that are child beds instead.
+
+Noted from your round-33 note: the security office command desk `Work_0` (`Desk_0`) is on the 0.30 m dais; the jail
+S/M first standing anchor `Stand_0` (`Yard_0`) is on the yard strip. SIM uses `Work_0` for the officer on duty and
+`Stand_0` for the prisoners' yard time; no content change is needed.
+
+## 2026-09-30 - civic colour settled
+
+The `civic` category colour is settled: RENDER uses **#34569c** for the category (your proposal). The security
+office and the jail keep their own materials. No change on your side.

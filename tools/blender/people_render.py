@@ -27,7 +27,7 @@ MANIFEST = os.path.join(N.MODEL_DIR, "people_manifest.json")
 # the game's palettes (shaders/npc_skin.gdshader, linear) and one department colour
 SKIN_TONES = NR.SKIN_TONES
 HAIR_COLOURS = [(0.010, 0.008, 0.007), (0.075, 0.035, 0.015), (0.34, 0.075, 0.018), (0.58, 0.40, 0.17)]
-LOOK = {"m1": dict(tone=2, hair=1, cloth=(0.60, 0.08, 0.05)), "f1": dict(tone=4, hair=2, cloth=(0.05, 0.20, 0.42))}
+LOOK = {"m1": dict(tone=2, hair=1, cloth=(0.60, 0.08, 0.05)), "f1": dict(tone=2, hair=2, cloth=(0.05, 0.20, 0.42))}
 DEPT = (1.0, 0.35, 0.01)          # technician amber
 
 
@@ -73,6 +73,11 @@ def tint(m, rgb):
         bsdf.inputs["Base Color"].default_value = (*rgb, 1.0)
 
 
+DEPT_STRIPE = {"uniform_engineering": (1.0, 0.35, 0.01), "uniform_science": (0.10, 0.35, 1.0),
+               "uniform_food": (0.15, 0.65, 0.15), "uniform_medical": (0.85, 0.08, 0.08),
+               "uniform_security": (0.80, 0.06, 0.06), "uniform_command": (0.95, 0.75, 0.20)}
+
+
 def import_person(variant, outfit, look=None, loc=(0, 0, 0), rot_z=0.0):
     """Import people_<variant>.glb, keep one outfit, tint like the game.  Returns (rig, meshes)."""
     before = set(bpy.data.objects)
@@ -84,15 +89,22 @@ def import_person(variant, outfit, look=None, loc=(0, 0, 0), rot_z=0.0):
         ad.nla_tracks.remove(tr)
     R.ao_materials()
     L = dict(LOOK[variant], **(look or {}))
+    entry = manifest()["variants"][variant]["outfits"].get(outfit, "Outfit_" + outfit)
+    keep_mesh = entry if isinstance(entry, str) else entry["mesh"]
+    keep_add = [] if isinstance(entry, str) else entry.get("addons", [])
+    base_rgb = None if isinstance(entry, str) else entry.get("base_rgb")
     meshes = []
     for o in new:
         if o.type != "MESH":
             continue
         nm = o.name.split(".")[0]
-        if nm.startswith("Outfit_") and nm != "Outfit_" + outfit:
+        if nm.startswith("Outfit_") and nm != keep_mesh:
             bpy.data.objects.remove(o)
             continue
-        if not (nm.startswith(("Outfit_", "Head_", "Hair_"))):
+        if nm.startswith("Addon_") and nm not in keep_add:
+            bpy.data.objects.remove(o)
+            continue
+        if not (nm.startswith(("Outfit_", "Head_", "Hair_", "Addon_"))):
             bpy.data.objects.remove(o)
             continue
         meshes.append(o)
@@ -103,10 +115,12 @@ def import_person(variant, outfit, look=None, loc=(0, 0, 0), rot_z=0.0):
             base = sl.material.name.split(".")[0]
             if base.startswith("Skin"):
                 tint(sl.material, SKIN_TONES[L["tone"]])
-            elif base == "Hair":
+            elif base.startswith("Hair"):                  # Hair, Hair_brows, Hair_lashes
                 tint(sl.material, HAIR_COLOURS[L["hair"]])
             elif base == "SuitAccent":
-                tint(sl.material, DEPT)
+                tint(sl.material, DEPT_STRIPE.get(outfit, DEPT))
+            elif base == "UniformBase" and base_rgb:
+                tint(sl.material, tuple(base_rgb))
             elif base == "ClothTint":
                 tint(sl.material, L["cloth"])
     rig.location = loc
@@ -123,9 +137,52 @@ def manifest():
     return json.load(open(MANIFEST, encoding="utf-8"))
 
 
+MAIN_OUTFITS = ("uniform_engineering", "casual_a")
+
+
 def variants_outfits():
     M = manifest()
-    return [(v, o) for v, d in M["variants"].items() for o in d["outfits"]]
+    return [(v, o) for v, d in M["variants"].items() for o in d["outfits"] if o in MAIN_OUTFITS]
+
+
+def sheet_uniforms():
+    """Every department look of the one uniform cut (tints and add-ons as the game shows them), per variant."""
+    tmpdir()
+    rows = []
+    for v, d in manifest()["variants"].items():
+        row = []
+        for k, o in enumerate([o for o in d["outfits"] if o.startswith("uniform_")]):
+            studio(300, 560)
+            rig, _ = import_person(v, o)
+            pose(rig, "idle", 0)
+            NR.clear_cameras()
+            NR.camera((0.0, 0.0, 0.90), 25, 6, 4.6, lens=85)
+            row.append(("%s %s" % (v, o[8:]), NR.render(os.path.join(TMP, "un_%s_%d.png" % (v, k)))))
+        rows.append(row)
+    out = os.path.join(ART, "people_uniforms.png")
+    NR.compose(rows, out, title="uniforms: one cut, six departments (base colour, stripe, add-ons)")
+    return out
+
+
+def sheet_tones():
+    """The skin tint range (the game's palette) on each face, with the hair colours."""
+    tmpdir()
+    rows = []
+    for v in manifest()["variants"]:
+        row = []
+        for k, tone in enumerate(range(len(SKIN_TONES))):
+            studio(260, 300)
+            rig, _ = import_person(v, "casual_a", look=dict(tone=tone, hair=k % len(HAIR_COLOURS)))
+            pose(rig, "idle", 0)
+            NR.clear_cameras()
+            eyes = rig.matrix_world @ rig.pose.bones["lids"].head
+            NR.camera(tuple(eyes + Vector((-0.04, 0.0, -0.05))), 12, 3, 0.9, lens=85)
+            row.append(("%s tone %d hair %d" % (v, tone, k % len(HAIR_COLOURS)),
+                        NR.render(os.path.join(TMP, "tn_%s_%d.png" % (v, k)))))
+        rows.append(row)
+    out = os.path.join(ART, "people_tones.png")
+    NR.compose(rows, out, title="skin tint range and hair colours (the game tints Skin and Hair*)")
+    return out
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -143,11 +200,11 @@ def sheet_closeup():
         row = []
         for k, (az, el) in enumerate(((0, 4), (38, 6), (-38, 6))):
             NR.clear_cameras()
-            NR.camera((0.03, 0.0, eye - 0.16), az, el, 1.5, lens=50)
+            NR.camera((0.03, 0.0, eye - 0.10), az, el, 1.5, lens=115)      # 1.5 m; head >= 350 px (CRITIC r31)
             row.append(("%s %s az %d, 1.5 m" % (v, o, az), NR.render(os.path.join(TMP, "cu_%s_%s_%d.png" % (v, o, k)))))
         rows.append(row)
     out = os.path.join(ART, "people_closeup.png")
-    NR.compose(rows, out, title="people pilot: the follow-view distance (1.5 m), idle frame 0")
+    NR.compose(rows, out, title="people pilot: 1.5 m from the camera (115 mm lens, head >= 350 px), idle frame 0")
     return out
 
 
@@ -186,7 +243,8 @@ def sheet_faces():
             tgt = hp + (rig.matrix_world.to_3x3() @ (hb.matrix.to_3x3() @ Vector((0.0, 0.07, 0.04)))) * 1.0
             NR.clear_cameras()
             fwd = rig.matrix_world.to_3x3() @ Vector((1, 0, 0))
-            NR.camera(tuple(hp + Vector((0.035, 0.0, 0.085)) * s), az, 3, 0.55, lens=85)
+            eyes = rig.matrix_world @ rig.pose.bones["lids"].head          # the eye line (lids bone)
+            NR.camera(tuple(eyes + Vector((-0.04, 0.0, -0.04))), az, 3, 0.75, lens=85)
             row.append(("%s %s" % (v, lab), NR.render(os.path.join(TMP, "fc_%s_%d.png" % (v, k)))))
         rows.append(row)
     out = os.path.join(ART, "people_faces.png")
@@ -239,7 +297,8 @@ def sheet_clips():
     return out
 
 
-SHEETS = dict(closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips)
+SHEETS = dict(closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
+              uniforms=sheet_uniforms, tones=sheet_tones)
 
 
 def main():

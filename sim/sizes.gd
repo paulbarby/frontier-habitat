@@ -151,8 +151,9 @@ func furniture(def_id: String, size: int) -> Dictionary:
 	var base: Dictionary = sim.content["buildings"].get(def_id, {})
 	var f: Dictionary = base.get("furniture", {})
 	var si: int = clampi(size, 0, 3) if base.has("sizes") else 1
-	var out := {"beds": 0, "seats": 0, "work_slots": 0, "stands": 0, "work_pose": String(f.get("work_pose", "stand"))}
-	for k in ["beds", "seats", "work_slots", "stands"]:
+	var out := {"beds": 0, "child_beds": 0, "seats": 0, "work_slots": 0, "stands": 0, "work_pose": String(f.get("work_pose", "stand"))}
+	# V5: "beds" counts every bed anchor; "child_beds" how many of them are bunks for children.
+	for k in ["beds", "child_beds", "seats", "work_slots", "stands"]:
 		var v = f.get(k, 0)
 		if typeof(v) == TYPE_ARRAY:
 			out[k] = int((v as Array)[si]) if si < (v as Array).size() else 0

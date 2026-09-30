@@ -1,0 +1,14 @@
+[
+ {
+  "eval": "window.__fhr.cmd('loadurl showcase_v3_late.fhsave')"
+ },
+ {
+  "wait": 14
+ },
+ {
+  "cmd": "speed 1"
+ },
+ {
+  "eval": "window.__fhr.cmd('follow 3745')"
+ }
+]

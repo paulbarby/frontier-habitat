@@ -374,6 +374,25 @@ def club_door():
     R.render_to(os.path.join(D.ART_DIR, "L2_club_door.png"))
 
 
+def bar_back():
+    """critic round 34: the L1 bar's back bar (mirror, 3 shelves of bottles) and the window display, at night"""
+    z = D.FLOOR_Z[0]
+    size = (1800, 1000)
+    night(size)
+    objs, by = load(hide_groups=("Floor_2", "Floor_3", "Floor_4", "Floor_5", "Floor_Roof", "Dome", "Lifts"))
+    glass_preview()
+    for (pos, col, e) in ((D.pol(28.0, 226.0, z + 3.0), (1.0, 0.75, 0.5), 500.0), (D.pol(28.0, 240.0, z + 3.0), (1.0, 0.4, 0.8), 350.0)):
+        ld = bpy.data.lights.new("P", "POINT")
+        ld.energy, ld.color = e, col
+        lo = bpy.data.objects.new("P", ld)
+        lo.location = pos
+        bpy.context.scene.collection.objects.link(lo)
+    R.ao_materials()
+    glare()
+    cam(D.pol(26.0, 221.0, z + 1.7), D.pol(33.0, 232.0, z + 1.3), focal=22.0)
+    R.render_to(os.path.join(D.ART_DIR, "L1_bar_back.png"))
+
+
 def hotel_room_night():
     z = D.FLOOR_Z[2]
     size = (1800, 1000)

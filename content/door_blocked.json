@@ -182,15 +182,34 @@
    "rooms": [
     "security_office_s"
    ]
+  },
+  {
+   "at": "2026-09-30 20:13",
+   "rooms": [
+    "academy",
+    "academy_m",
+    "academy_s"
+   ]
+  },
+  {
+   "at": "2026-09-30 20:14",
+   "rooms": [
+    "academy_s"
+   ]
   }
  ],
  "generator": "tools/blender/rooms_build.py",
  "lane_m": 0.9,
  "rooms": {
   "academy": {
-   "blocked": [],
-   "free_deg": 360.0,
-   "min_lane_m": 0.99
+   "blocked": [
+    [
+     194.5,
+     195.5
+    ]
+   ],
+   "free_deg": 359.0,
+   "min_lane_m": 0.95
   },
   "academy_l": {
    "blocked": [],
@@ -198,9 +217,14 @@
    "min_lane_m": 1.04
   },
   "academy_m": {
-   "blocked": [],
-   "free_deg": 360.0,
-   "min_lane_m": 0.99
+   "blocked": [
+    [
+     194.5,
+     195.5
+    ]
+   ],
+   "free_deg": 359.0,
+   "min_lane_m": 0.95
   },
   "academy_s": {
    "blocked": [

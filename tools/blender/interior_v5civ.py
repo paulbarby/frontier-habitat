@@ -262,6 +262,46 @@ def retail(rm):
         plan.circle(mx, y, 0.22, tag="mannequin")
         y += 1.6
         j += 1
+    # gadgets: a gondola row of boxed gadgets across +X (parallel to Y)
+    gx0 = R * 0.30
+    Lg = 2.0 * sqrt(max(0.0, (R - 0.5) ** 2 - (gx0 + 0.35) ** 2)) - 3.6
+    if Lg > 1.2:
+        with at(plan, gx0, -0.6, 0.0):
+            gondola(n, L=min(Lg, 2.6), seed=41 + s)
+        plan.rect(gx0, -0.6, 0.32, min(Lg, 2.6) / 2 + 0.03, 0.0, tag="shelf")
+        browse.append((gx0 + 0.78, -0.6, 180.0))
+    if R > 7.0 and Lg > 1.2:
+        # a second gadget run beside the first (L)
+        gx1 = gx0 + 1.75
+        Lg1 = 2.0 * sqrt(max(0.0, (R - 0.5) ** 2 - (gx1 + 0.35) ** 2)) - 3.6
+        if Lg1 > 1.2:
+            with at(plan, gx1, -0.6, 0.0):
+                gondola(n, L=min(Lg1, 2.6), seed=43 + s)
+            plan.rect(gx1, -0.6, 0.32, min(Lg1, 2.6) / 2 + 0.03, 0.0, tag="shelf")
+    if R > 5.0:
+        # the cafe: a coffee bar and small tables with two chairs each, on a wood floor
+        ca = -52.0
+        cxb, cyb = polar(R - 0.75, ca)
+        pie_floor(plan, R, ca - 16.0, ca + 16.0, "Wood", z=F + 0.005)
+        with at(plan, cxb, cyb, ca + 180.0):
+            bbox(n, -0.30, 0.30, -0.9, 0.9, F, F + 1.02, "HullDark", bevel=0.015)
+            bbox(n, -0.34, 0.34, -0.95, 0.95, F + 1.02, F + 1.06, "Wood", bevel=0.01)
+            bbox(n, -0.20, 0.10, 0.35, 0.70, F + 1.06, F + 1.46, "Metal", bevel=0.02)
+            plate_x(n, 0.301, -0.85, 0.85, F + 0.80, F + 0.84, "LightStrip")
+            for j in range(3):
+                n.vcyl(0.05, -0.6 + 0.25 * j, F + 1.06, F + 1.16, 0.045, seg=8, mat=("Hull", "Fabric", "Accent")[j])
+        plan.rect(cxb, cyb, 0.34, 0.95, ca + 180.0, tag="bar")
+        for k, (dr, da) in enumerate(((2.0, -9.0), (2.0, 9.0), (3.3, 0.0))[:(2 if R < 7.0 else 3)]):
+            tx_, ty_ = polar(R - 0.75 - dr, ca + da)
+            with at(plan, tx_, ty_, 0.0):
+                FU.table_round(n, r=0.36, h=0.74, top="Wood", edge="Accent")
+            plan.circle(tx_, ty_, 0.36, tag="table")
+            for sd in (-1, 1):
+                chx, chy = off(tx_, ty_, ca + 90.0, 0.0, 0.0)
+                chx, chy = tx_ + sd * 0.66 * cos(radians(ca + 90.0)), ty_ + sd * 0.66 * sin(radians(ca + 90.0))
+                with at(plan, chx, chy, ca - 90.0 if sd > 0 else ca + 90.0):
+                    FU.chair(n, seat=("Fabric", "CushionLight")[(k + sd) % 2])
+                plan.rect(chx, chy, 0.24, 0.24, ca, tag="chair")
     # gadgets: display tables at +X
     for k in range((1, 2, 3, 3)[s]):
         a = (0.0, -18.0, 18.0)[k]
@@ -270,6 +310,13 @@ def retail(rm):
             display_table(n, r=0.55, seed=k)
         plan.circle(x, y, 0.56, tag="display")
         browse.append(off(x, y, a + 180.0, 1.05) + (a,))
+    # the till queue: two rope lines forming a lane toward the counter
+    for yq in (-0.55, 0.55):
+        for xq in (cx + 1.2, cx + 2.4):
+            n.vcyl(xq, yq, F, F + 0.95, 0.03, seg=6, mat="Metal", cap0=False)
+            n.vcyl(xq, yq, F, F + 0.03, 0.14, seg=8, mat="Frame", cap0=False)
+        n.cyl((cx + 1.2, yq, F + 0.90), (cx + 2.4, yq, F + 0.90), 0.02, seg=4, mat="Accent")
+        plan.rect(cx + 1.8, yq, 0.62, 0.06, 0.0, tag="queue")
     # gift stacks by the till
     for k in range(1 + s):
         gx, gy = cx + 1.9, (-1) ** k * (0.9 + 0.5 * (k // 2))
@@ -286,6 +333,16 @@ def retail(rm):
             bbox(tp, -0.6, -0.55, -0.6, 0.6, F + 0.2, F + 1.85, "Cushion")
             plate_z(tp, F + 0.005, -0.55, 0.55, -0.55, 0.55, "RugLight")
         plan.rect(bx, by, 0.62, 0.62, 50.0, tag="curtain")
+        if R > 5.0:                                        # a second booth beside it
+            bx2, by2 = polar(R - 1.0, 68.0)
+            tp2 = plan.tall(bx2, by2)
+            with tp2.at(T(bx2, by2, 0.0), RZ(68.0 + 180.0)):
+                bbox(tp2, 0.55, 0.6, -0.6, 0.6, F, F + 1.9, "Frame")
+                bbox(tp2, -0.6, 0.6, -0.6, -0.55, F, F + 1.9, "Frame")
+                bbox(tp2, -0.6, 0.6, 0.55, 0.6, F + 0.2, F + 1.85, "Cushion")
+                bbox(tp2, -0.6, -0.55, -0.6, 0.6, F + 0.2, F + 1.85, "Fabric")
+                plate_z(tp2, F + 0.005, -0.55, 0.55, -0.55, 0.55, "RugLight")
+            plan.rect(bx2, by2, 0.62, 0.62, 68.0, tag="curtain")
     # browse stands (the first that stand free)
     k = 0
     for (x, y, yaw) in browse:
@@ -310,9 +367,9 @@ def retail(rm):
                 freezer=lambda p, w, d, k_: FU.wi_freezer(p, w=w, d=d))
     plan.wall_items(pattern, sets, open_every=4, seed=3 + s, depth_of=dict(IR.DEPTHS, fridge=0.42, freezer=0.42,
                                                                           bottles=0.30))
-    fill(plan, [(lambda p_, x, y, k_: _display(p_, x, y, k_), 0.6),
-                (lambda p_, x, y, k_: _promo_bin(p_, x, y, k_), 0.40),
-                (lambda p_, x, y, k_: _gift_stack(p_, x, y, k_ + 9), 0.35), (f_plant, 0.25)], target=1.8)
+    fill(plan, [(lambda p_, x, y, k_: _end_unit(p_, x, y, k_), 0.75),
+                (lambda p_, x, y, k_: _display(p_, x, y, k_), 0.6),
+                (lambda p_, x, y, k_: _promo_bin(p_, x, y, k_), 0.40)], target=2.2, max_items=40)
     plan.lights()
     plan.aisles()
     plan.v4_patch = IR.empty_patch(plan)[0]
@@ -328,6 +385,13 @@ def _display(plan, x, y, k):
         for j, dy in enumerate((-0.28, 0.28)):
             with at(plan, x, y + dy, degrees(atan2(-y, -x))):
                 mannequin(n, col=("Fabric", "Accent", "CushionLight", "Cushion")[(k + j) % 4])
+
+
+def _end_unit(plan, x, y, k):
+    """A short shelf run (1.2 m gondola) turned to the room centre: the filler's aisle-forming unit."""
+    yaw = degrees(atan2(y, x))
+    with at(plan, x, y, yaw):
+        gondola(plan.n, L=1.2, seed=70 + k)
 
 
 def _promo_bin(plan, x, y, k):
@@ -627,6 +691,58 @@ def academy(rm):
         ax, ay = off(x, y, a + 180.0, CONSOLE_AHEAD)
         plan.anchor("Work", ax, ay, a)
         rm.anchor("Console_%d" % (i - 1), (ax, ay, F), a)
+    # the second class at -X (M, L): four desks facing a wall board (the pupils face -X)
+    bx2 = -(R - 0.35)
+    if R > 5.0:
+        with at(plan, bx2, -0.6, 0.0):
+            teacher_board(n, w=1.6)
+        plan.rect(bx2, -0.6, 0.25, 0.9, 0.0, tag="board")
+    for ri in range(2 if R > 5.0 else 0):
+        for ci in range(2):
+            x = bx2 + 1.6 + 1.45 * ri
+            y = -0.6 + (ci - 0.5) * 1.0
+            with at(plan, x, y, 0.0):
+                school_desk(n, seed=20 + 2 * ri + ci)
+            plan.rect(x - 0.25, y, 0.25, 0.40, 0.0, tag="desk")
+            with at(plan, x + 0.30, y, 180.0):
+                FU.chair(n, seat=("Fabric", "CushionLight")[(ri + ci) % 2])
+            plan.rect(x + 0.30, y, 0.24, 0.24, 0.0, tag="chair2")
+    # the library corner at +Y: shelves in an arc, two armchairs on a rug, a floor lamp
+    la = 100.0
+    for j in range(3):
+        a = la - 14.0 + 14.0 * j
+        x, y = polar(R - 0.55, a)
+        with at(plan, x, y, a + 180.0):
+            FU.wi_shelf(n, w=0.9, d=0.34, h=1.30, seed=30 + j)
+        plan.rect(*off(x, y, a + 180.0, 0.17), 0.17, 0.46, a + 180.0, tag="shelf")
+    lx_, ly_ = polar(R - 2.0, la)
+    FU.rug_round(n, 1.0, lx_, ly_, mat="RugLight", ring="Accent", seg=18)
+    for j, da in enumerate((-18.0, 18.0)):
+        ax_, ay_ = polar(R - 2.0, la + da)
+        with at(plan, ax_, ay_, la + da + 180.0):
+            V5.armchair(n, fabric=("Fabric", "Cushion")[j])
+        plan.rect(ax_, ay_, 0.42, 0.47, la + da + 180.0, tag="armchair")
+    fx_, fy_ = polar(R - 2.6, la)
+    with at(plan, fx_, fy_, 0.0):
+        V5.floor_lamp(n, lamp_cb=IR.lamp_cb(plan, n))
+    plan.circle(fx_, fy_, 0.18, tag="lamp")
+    # the library wall on the -X -Y arc (4 shelves) and a second lab bench near the board side (M, L)
+    if R > 5.0:
+        for j in range(4):
+            a = 208.0 + 12.0 * j
+            x, y = polar(R - 0.42, a)
+            with at(plan, x, y, a + 180.0):
+                FU.wi_shelf(n, w=0.95, d=0.34, h=1.30, seed=50 + j)
+            plan.rect(*off(x, y, a + 180.0, 0.17), 0.17, 0.48, a + 180.0, tag="shelf")
+        lx2, ly2 = polar(0.62 * R, 318.0)
+        with at(plan, lx2, ly2, 138.0):
+            FU.lab_bench(n, w=1.6, d=0.7, seed=5)
+        plan.rect(*off(lx2, ly2, 138.0, -0.35), 0.35, 0.8, 138.0, tag="bench")
+        for sy in (-0.45, 0.45):
+            sx_, sy_ = off(lx2, ly2, 138.0, 0.55, sy)
+            with at(plan, sx_, sy_, 0.0):
+                FU.stool(n)
+            plan.circle(sx_, sy_, 0.2, tag="stool")
     # a reading corner for the children: a round rug, cushions, a low shelf
     rx, ry = polar(0.55 * R, -120.0)
     FU.rug_round(n, 0.9, rx, ry, mat="CushionLight", ring="Accent", seg=18)
@@ -635,7 +751,7 @@ def academy(rm):
         n.sphere((cx_, cy_, F + 0.14), 0.24, ("Fabric", "Accent", "Cushion")[j], seg=8, rings=4, scale=(1, 1, 0.55))
     plan.circle(rx, ry, 0.9, tag="rug")
     # stands at the globe / the shelves
-    gx, gy = polar(0.55 * R, 120.0)
+    gx, gy = polar(0.50 * R, 55.0)
     with at(plan, gx, gy, 0.0):
         FU.holo_table(n, r=0.55)
     plan.circle(gx, gy, 0.6, tag="holo")
@@ -645,7 +761,7 @@ def academy(rm):
             anchor(plan, "Stand", x, y, yaw)
             k += 1
     # the science corner: a lab bench with two stools
-    lx, ly = polar(0.62 * R, 180.0 + 40.0)
+    lx, ly = polar(0.62 * R, 262.0)
     with at(plan, lx, ly, 40.0):
         FU.lab_bench(n, w=1.6, d=0.7, seed=3)
     plan.rect(*off(lx, ly, 40.0, -0.35), 0.35, 0.8, 40.0, tag="bench")
@@ -657,7 +773,8 @@ def academy(rm):
     pattern = ["shelf", "cab_books", "poster", "shelf", "cab_plant", "desk", "shelf"]
     plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=9 + s, depth_of=IR.DEPTHS)
     fill(plan, [(lambda p_, x, y, k_: _group_table(p_, x, y, k_), 1.1),
-                (lambda p_, x, y, k_: _shelf_island(p_, x, y, k_), 0.55), (f_plant, 0.25)], target=1.9)
+                (lambda p_, x, y, k_: _shelf_island(p_, x, y, k_), 0.55), (f_plant, 0.25)], target=1.6,
+         max_items=80)
     plan.lights()
     plan.aisles()
     plan.v4_patch = IR.empty_patch(plan)[0]

@@ -27,6 +27,23 @@ func apply_pending() -> void:
 func _apply(kind: String, p: Dictionary) -> Dictionary:
 	var blds: Dictionary = sim.state["buildings"]
 	match kind:
+		# V5 people orders (docs/V5_DESIGN.md sections 5 and 6).
+		"review":
+			return sim.discipline.cmd_review(p)
+		"discipline":
+			return sim.discipline.cmd_discipline(p)
+		"appoint":
+			return sim.ranks.cmd_appoint(p)
+		"set_home":
+			return sim.housing.cmd_set_home(p)
+		"enrol":
+			return sim.education.cmd_enrol(p)
+		"unrest_response":
+			return sim.unrest.cmd_unrest_response(p)
+		"egg":
+			return sim.social.cmd_egg(p)
+		"answer_request":
+			return sim.relations.cmd_answer_request(p)
 		"place_building":
 			return sim.build.place_building(p["def"], Vector2(p["x"], p["y"]), float(p.get("rot", 0.0)), int(p.get("size", 1)))
 		"upgrade":

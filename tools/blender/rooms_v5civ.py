@@ -77,6 +77,19 @@ def build_retail(rm):
     ro.lathe_a([(rc + 0.05, D + 0.02), (rc + 0.05, D + 0.22), (rc - 0.05, D + 0.22)], reg_angles(48),
                lambda k, i: "Frame", smooth=False)
     ro.vcyl(0.0, 0.0, D + 0.2 + hc - 0.1, D + 0.2 + hc + 0.5, 0.05, seg=6, mat="Frame")
+    q = rm.porch
+    for k in range(n):                                   # a light line on every stripe edge (lit at night)
+        t = 2 * pi * k / n
+        c_, s_ = cos(t), sin(t)
+        nx, ny = -s_ * 0.045, c_ * 0.045
+        z0_, z1_ = D + 0.2 + 0.012, D + 0.2 + hc + 0.012
+        r0_, r1_ = 0.35, rc - 0.05
+        f0 = 1.0 - r0_ / rc
+        f1 = 1.0 - r1_ / rc
+        za, zb = D + 0.2 + hc * f0 + 0.015, D + 0.2 + hc * f1 + 0.015
+        q.quad((r1_ * c_ - nx, r1_ * s_ - ny, zb), (r1_ * c_ + nx, r1_ * s_ + ny, zb),
+               (r0_ * c_ + nx, r0_ * s_ + ny, za), (r0_ * c_ - nx, r0_ * s_ - ny, za), "LightStrip")
+    q.lathe_a([(rc + 0.07, D + 0.16), (rc + 0.07, D + 0.24)], reg_angles(64), lambda k_, i_: "Neon", smooth=False)
     rm.porch.sphere((0.0, 0.0, D + 0.2 + hc + 0.58), 0.14, "Light", seg=8, rings=4)
     # the billboard on legs, turned to the game camera
     px, py = 0.52 * Rw * cos(radians(125.0)), 0.52 * Rw * sin(radians(125.0))
@@ -91,6 +104,9 @@ def build_retail(rm):
         for sy in (-1, 1):
             rm.porch.box((0.0, sy * 0.175, 2.45), (sw - 0.2, 0.01, 1.4), "Screen")
             rm.porch.box((0.0, sy * 0.18, 1.62), (sw - 0.2, 0.01, 0.10), "LightStrip")
+            rm.porch.box((0.0, sy * 0.185, 3.18), (sw - 0.1, 0.01, 0.07), "Neon")
+            for sx in (-1, 1):
+                rm.porch.box((sx * (sw / 2 - 0.05), sy * 0.185, 2.45), (0.06, 0.01, 1.45), "Neon")
     rm.top_z = max(rm.top_z, zb + 3.5, D + 0.2 + hc + 0.8)
     _glow_ring(rm, D - 0.30)
     rm.no_extras = True
@@ -177,24 +193,24 @@ def build_security_office(rm):
     """A command post: a black drum with a red band, a red ring on the dark deck, a watch tower with a light bar,
     a tall lattice comms mast with a red beacon and dishes; the black-and-red shield badge."""
     s = rm.size
-    _base(rm, band="Fabric", wall="HullDark")
+    _base(rm, band="SecBlack", wall="HullDark")
     rm.badge_family = "security"
     D = 2.9
-    _civic_drum(rm, D, band="Fabric", wall="HullDark", coping="Fabric")
+    _civic_drum(rm, D, band="SecBlack", wall="HullDark", coping="SignalRed")
     ro = rm.roof
     Rw = rm.Rw
     # the red ring painted on the deck edge
-    ro.lathe_a([(Rw - 0.35, D + 0.035), (Rw - 1.05, D + 0.035)], reg_angles(64), lambda k, i: "Fabric", smooth=False)
+    ro.lathe_a([(Rw - 0.35, D + 0.035), (Rw - 1.05, D + 0.035)], reg_angles(64), lambda k, i: "SignalRed", smooth=False)
     # the watch tower: a drum on a stem, a glazed cab, a wide light bar
     cx, cy = 0.40 * Rw * cos(radians(135.0)), 0.40 * Rw * sin(radians(135.0))
     tr = 1.3 + 0.2 * s
     ro.vcyl(cx, cy, D + 0.02, D + 1.2, tr * 0.55, seg=10, mat="HullDark")
-    K.hex_pod(ro, cx, cy, tr, D + 1.2, 1.3, rot=0.0, wall="HullDark", band="Fabric", win="Window",
+    K.hex_pod(ro, cx, cy, tr, D + 1.2, 1.3, rot=0.0, wall="HullDark", band="SignalRed", win="Window",
               top="HullDark", windows=(0, 1, 2, 3, 4, 5))
     with rm.porch.at(T(cx, cy, D + 2.52), RZ(55.0)):
         rm.porch.box0(0.0, 0.0, 0.0, 2.4, 0.36, 0.16, "Frame")
         rm.porch.box((-0.62, 0.0, 0.26), (1.1, 0.32, 0.18), "Screen")
-        rm.porch.box((0.62, 0.0, 0.26), (1.1, 0.32, 0.18), "Ember")
+        rm.porch.box((0.62, 0.0, 0.26), (1.1, 0.32, 0.18), "SignalRedGlow")
     # the comms mast: a lattice tower, dishes, a red beacon on top
     mx, my = 0.30 * Rw * cos(radians(-40.0)), 0.30 * Rw * sin(radians(-40.0))
     hm = 7.0 + 0.8 * s
@@ -204,12 +220,12 @@ def build_security_office(rm):
     for k in range(int(hm / 1.2)):
         z = D + 0.6 + 1.2 * k
         f = 1.0 - (z - D) / hm * 0.7
-        ro.box0(mx, my, z, 0.62 * f, 0.62 * f, 0.05, "Fabric" if k % 2 else "HullDark")
+        ro.box0(mx, my, z, 0.62 * f, 0.62 * f, 0.05, "SignalRed" if k % 2 else "SecBlack")
     K.dish(ro, (mx + 0.35, my, D + 0.5 * hm), (1.0, -0.8, 0.5), 0.55)
     K.dish(ro, (mx - 0.3, my + 0.2, D + 0.7 * hm), (-0.6, 1.0, 0.4), 0.40)
-    rm.porch.sphere((mx, my, D + hm + 0.12), 0.20, "Ember", seg=8, rings=4)
+    rm.porch.sphere((mx, my, D + hm + 0.12), 0.20, "SignalRedGlow", seg=8, rings=4)
     rm.top_z = max(rm.top_z, D + hm + 0.4)
-    _glow_ring(rm, D - 0.30, mat="Ember")
+    _glow_ring(rm, D - 0.30, mat="SignalRedGlow")
     rm.no_extras = True
 
 
@@ -217,10 +233,10 @@ def build_jail(rm):
     """A walled block: a heavy drum with an orange band, a raised perimeter wall on the roof, four corner guard
     towers with floodlights, bars on the slit windows; the padlock badge."""
     s = rm.size
-    _base(rm, band="Hazard", wall="HullDark")
+    _base(rm, band="PrisonOrange", wall="HullDark")
     rm.badge_family = "jail"
     D = 3.0
-    _civic_drum(rm, D, heavy=True, band="Hazard")
+    _civic_drum(rm, D, heavy=True, band="PrisonOrange")
     ro = rm.roof
     Rw = rm.Rw
     # bars over the slit windows
@@ -233,19 +249,19 @@ def build_jail(rm):
     rp = Rw - 0.30
     ro.lathe_a([(rp + 0.18, D + 0.02), (rp + 0.18, D + 1.30), (rp + 0.18, D + 1.52), (rp - 0.18, D + 1.52),
                 (rp - 0.18, D + 0.02)], reg_angles(rm.seg * 2),
-               lambda k, i: ("HullDark", "Hazard", "Frame", "HullDark")[k], smooth=False)
+               lambda k, i: ("HullDark", "PrisonOrange", "Frame", "HullDark")[k], smooth=False)
     # four corner guard towers with floodlights
     for k in range(4):
         a = 45.0 + 90.0 * k
         tx, ty = (rp - 1.45) * cos(radians(a)), (rp - 1.45) * sin(radians(a))
         ro.box0(tx, ty, D + 0.02, 1.1, 1.1, 2.6, "HullDark", bevel=0.03)
-        K.hex_pod(ro, tx, ty, 0.85 + 0.1 * s, D + 2.6, 1.0, rot=30.0, wall="HullDark", band="Hazard", win="Window",
+        K.hex_pod(ro, tx, ty, 0.85 + 0.1 * s, D + 2.6, 1.0, rot=30.0, wall="HullDark", band="PrisonOrange", win="Window",
                   top="Frame", windows=(0, 1, 2, 3, 4, 5))
         with rm.porch.at(T(tx, ty, D + 3.66), RZ(a + 180.0), RY(30.0)):
             rm.porch.box0(0.0, 0.0, 0.0, 0.30, 0.9, 0.22, "HullDark")
             rm.porch.box((0.16, 0.0, 0.11), (0.01, 0.8, 0.16), "Light")
     rm.top_z = max(rm.top_z, D + 4.0)
-    _glow_ring(rm, D - 0.30, mat="BeaconAmber")
+    _glow_ring(rm, D - 0.30, mat="PrisonOrangeGlow")
     rm.no_extras = True
 
 

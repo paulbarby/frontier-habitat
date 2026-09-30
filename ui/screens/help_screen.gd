@@ -7,7 +7,7 @@ func _init() -> void:
 	title = "How to play"
 	subtitle = "You plan. The colonists do the work by themselves."
 	margins = Vector4(160, 50, 160, 50)
-	tabs = [["rules", "Rules", "info"], ["keys", "Controls", "keyboard"], ["mission", "Mission", "goals"]]
+	tabs = [["rules", "Rules", "info"], ["people", "People", "colonists"], ["keys", "Controls", "keyboard"], ["mission", "Mission", "goals"]]
 
 func _ready() -> void:
 	if typeof(arg) == TYPE_STRING and String(arg) != "":
@@ -25,12 +25,27 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 					["Middle mouse drag, Q and E", "Turn the camera."], ["Left click", "Select a structure or a colonist."], ["Right click, Esc", "Cancel the tool or clear the selection. Esc opens the menu."],
 					["Space", "Pause. You can plan while paused."], ["1, 2, 3", "Speed 1x, 2x, 4x."], ["R, Shift+R", "Turn the structure you place by 15 degrees."],
 					["Z and X", "Smaller or bigger size while placing (S, M, L, XL)."], ["Shift + click", "Place more than one, or chain corridors."], ["Delete", "Remove the selected structure."],
-					["F", "Follow the selected colonist."], ["/ or Ctrl+F", "Find a structure by name or type. Click a result: the camera goes there."],
+					["F", "Follow the selected colonist from above."], ["V", "Over the shoulder: the camera goes behind the selected person. V or Esc: back. With nobody selected: Awards."],
+					["Tab (over the shoulder)", "The next person."], ["Q and E (over the shoulder)", "The other shoulder."], ["U", "Crew: ranks, homes and the academy."], ["J", "The Regolith Rag, the colony tabloid."],
+					["PgUp, PgDn", "The floor selector of a structure with more than one floor."], ["/ or Ctrl+F", "Find a structure by name or type. Click a result: the camera goes there."],
 					["N", "Advisor: the biggest problems, the next goal steps, unused potential."], ["K", "Codex: every structure, item, research project and hazard, with crafting trees."],
 					["Esc, Shift+Esc", "Esc closes the last window first. Shift+Esc closes every window."], ["Drag a title bar", "Move a window. It snaps to edges and opens there again next time."], ["O", "Step through the overlays: power, water, air, walking."], ["G", "Goals."], ["T", "Research."], ["C", "Colony dashboard."],
-					["I", "Inventory."], ["P", "Colonists."], ["V", "Awards."], ["H", "Hide or show the interface."]]:
+					["I", "Inventory."], ["P", "Colonists."], ["H", "Hide or show the interface."]]:
 				g.add_child(Kit.num(pair[0], 13, P.CYAN))
 				g.add_child(Kit.wrap(pair[1], 14, P.TEXT))
+		"people":
+			# Version 5 (STE): one card for each topic; the same text is in the Codex, People tab.
+			body.add_child(Kit.wrap("Version 5: the colonists are people. They have ranks, skills, friends, homes and moods. They talk, and the Rag prints what they do.", 14, P.TEXT))
+			for tp in load("res://ui/v5_help.gd").TOPICS:
+				var row: HBoxContainer = Kit.hbox(14)
+				row.add_child(Kit.icon(String(tp[2]), 26, P.CYAN))
+				var v: VBoxContainer = Kit.vbox(2)
+				v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				v.add_child(Kit.head(String(tp[1]), P.TEXT, 13))
+				v.add_child(Kit.wrap(String(tp[4]), 14, P.TEXT_2))
+				row.add_child(v)
+				row.set_meta("topic", String(tp[0]))
+				body.add_child(row)
 		"mission":
 			for ch in hud.data.chapters():
 				var c: VBoxContainer = card(String(ch.get("name", "")), "chapter", P.CYAN)

@@ -29,9 +29,9 @@
  },
  "dome_floor1": {
   "file": "dome_floor1.glb",
-  "tris": 52064,
+  "tris": 59426,
   "tris_by_top": {
-   "Floor_1": 52064
+   "Floor_1": 59426
   },
   "materials": [
    "Accent",
@@ -55,8 +55,8 @@
   "n_nodes": 94,
   "n_mesh_nodes": 27,
   "anchors": 66,
-  "kb": 3453,
-  "seconds": 3.3
+  "kb": 3871,
+  "seconds": 3.1
  },
  "dome_floor2": {
   "file": "dome_floor2.glb",

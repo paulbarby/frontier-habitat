@@ -32,6 +32,16 @@ const PLANS_PER_FRAME := 8
 const PLAN_BUDGET_US := 2500
 var plan_budget_us := PLAN_BUDGET_US   # tests: a count-only budget (deterministic runs) with plan_budget_us = 1 << 30
 const SKIN_SHADER = preload("res://shaders/npc_skin.gdshader")
+const SKIN_SHADER_2S = preload("res://shaders/npc_skin_2s.gdshader")   # V5 hair cards (two-sided, alpha MASK)
+## V5 people (MPFB, ART-NPC 2026-09-30): one library "p_<variant>" per people_<variant>.glb that exists.
+## Indoors a person is drawn from the library of their SIM variant (sim.people.identity(a).variant);
+## outside every person keeps the suit. Draw rule: Head_<v> + Hair_<v> + ONE Outfit_<id>.
+const PEOPLE_MANIFEST := "res://assets/models/people_manifest.json"
+## Casual clothes colours (linear after conversion), mode 5 (ClothTint), chosen per person.
+const CLOTH_COLS := ["2b3a55", "7a2e35", "55603a", "3a3d42", "2f6f6a", "b08a2e", "5a6b8c", "d8d2c4"]
+## Department stripes (SIM marks(a).stripe; content/people.json departments), mode 1 on people.
+const STRIPES := ["amber", "blue", "green", "red", "", "gold"]
+const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a", "c9d3e0", "c9d3e0"]
 
 const FPS := 30.0
 const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
@@ -45,7 +55,9 @@ const ALL_CLIPS := ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idl
 	"kneel_enter", "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit",
 	"lie_enter", "sleep", "lie_exit", "injured_walk", "collapse", "dead", "cheer", "suit_swap",
 	# V4 vehicle crews (ART-NPC 2026-09-27): seat loops, door clips and the step chain.
-	"drive_sit", "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r"]
+	"drive_sit", "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r",
+	# V5 people (people_manifest.json): social clips, the bar stool and a dance.
+	"talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"]
 ## suit_swap (ART-NPC, V3_1 §5.4): the variant is cut at this clip time (frame 30 of 60).
 const SWAP_CUT := 1.0
 const ROLE_INDEX := {"technician": 0, "grower": 1, "operator": 2, "medic": 3, "scientist": 4}
@@ -126,7 +138,11 @@ func setup(v, fixture: bool = false) -> void:
 	libs = {}
 	_awards_seen = -1
 	_dyn_img = null
-	for variant in ["suit", "in"]:
+	var variants: Array = ["suit", "in"]
+	if not fixture:
+		for pv in people_variants():
+			variants.append("p_" + pv)
+	for variant in variants:
 		var lib: Dictionary = load_lib(variant, fixture)
 		status[variant] = String(lib.get("status", "missing"))
 		if bool(lib.get("ok", false)):
@@ -134,7 +150,12 @@ func setup(v, fixture: bool = false) -> void:
 			lib["head_bone"] = (lib["names"] as Array).find("head")
 			_make_mm(variant, lib)
 		else:
-			_log("lib_" + variant, "RENDER npc: %s falls back to the v2 rigid colonist (%s)" % [FILES[variant], lib.get("status", "?")])
+			_log("lib_" + variant, "RENDER npc: %s falls back to the v2 rigid colonist (%s)" % [FILES.get(variant, variant), lib.get("status", "?")])
+	# People carry the crate at prop.R like the astronauts (the people manifest has no carry block).
+	if libs.has("suit"):
+		for k in libs:
+			if String(k).begins_with("p_") and libs[k].get("crate_offset") == null:
+				libs[k]["crate_offset"] = libs["suit"].get("crate_offset")
 	_setup_dyn()
 	_make_lamps()
 	planner = NpcPath.new(self)
@@ -143,8 +164,10 @@ func setup(v, fixture: bool = false) -> void:
 func _setup_dyn() -> void:
 	if libs.is_empty():
 		return
-	var any: Dictionary = libs.values()[0]
-	_dyn_w = int(any["tex_info"]["row_w"])
+	# One dynamic row must hold the widest skeleton (people: 31 bones, astronauts: 24).
+	_dyn_w = 0
+	for k in libs:
+		_dyn_w = maxi(_dyn_w, int(libs[k]["tex_info"]["row_w"]))
 	_dyn_buf.resize(_dyn_w * DYN_ROWS * 4)
 	_dyn_buf.fill(0.0)
 	_dyn_img = Image.create_from_data(_dyn_w, DYN_ROWS, false, Image.FORMAT_RGBAF, _dyn_buf.to_byte_array())
@@ -179,16 +202,17 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 	if fixture:
 		root = Fixture.build("suit" if variant == "suit" else "indoor")
 		st = "fixture"
-	elif ResourceLoader.exists(FILES[variant]):
-		var ps = load(FILES[variant])
+	elif ResourceLoader.exists(_file_of(variant)):
+		var ps = load(_file_of(variant))
 		if ps is PackedScene:
 			root = (ps as PackedScene).instantiate()
 	if root == null:
 		_libs[key] = {"ok": false, "status": "missing file"}
 		return _libs[key]
-	var meta: Dictionary = Fixture.meta() if fixture else _read_meta()
+	var people: bool = variant.begins_with("p_")
+	var meta: Dictionary = Fixture.meta() if fixture else (_people_manifest() if people else _read_meta())
 	# V3.1 visitors (ART-NPC): Vis_<kind> attachments on the same skeleton, drawn like Head_N.
-	if not fixture:
+	if not fixture and not people:
 		_add_visitor_meshes(root, variant)
 	_baking_variant = variant
 	# Both variants share one skeleton and one clip set (§3.2): reuse the suit's baked clips
@@ -198,7 +222,25 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 		share = _libs["suit" + (":fixture" if fixture else "")]
 		if not bool(share.get("ok", false)):
 			share = null
+	_baking_people = people
 	var lib: Dictionary = bake(root, meta, share)
+	_baking_people = false
+	lib["people"] = people
+	if people and bool(lib.get("ok", false)):
+		lib["pvariant"] = variant.substr(2)
+		# UniformBase colour per outfit (mode 6), indexed by the outfit's idx.
+		var ub := PackedColorArray()
+		ub.resize(8)
+		ub.fill(Color(1, 1, 1))
+		var ot: Dictionary = outfit_table(lib)
+		for oid in ot:
+			ub[int(ot[oid]["idx"])] = ot[oid]["base"]
+		for p in lib["parts"]:
+			var pm: Mesh = p["mesh"]
+			for s in pm.get_surface_count():
+				var sm2 = pm.surface_get_material(s)
+				if sm2 is ShaderMaterial:
+					(sm2 as ShaderMaterial).set_shader_parameter("ubase_cols", ub)
 	lib["crate_offset"] = _crate_offset(meta)
 	lib["status"] = st if bool(lib.get("ok", false)) else String(lib.get("status", "bake failed"))
 	root.free()
@@ -220,6 +262,33 @@ const VIS_KINDS := ["trader", "tourist", "medical", "science", "inspector"]
 ## Look index v (ART-NPC visitors.looks) -> attachment kind index.
 const VIS_LOOK_KIND := [0, 1, 1, 1, 2, 3, 4]
 static var _baking_variant := ""
+static var _baking_people := false
+static var _pman = null
+
+static func _file_of(variant: String) -> String:
+	if variant.begins_with("p_"):
+		return "res://assets/models/people_%s.glb" % variant.substr(2)
+	return String(FILES.get(variant, ""))
+
+## people_manifest.json (cached); {} when it is missing.
+static func _people_manifest() -> Dictionary:
+	if _pman == null:
+		_pman = {}
+		if FileAccess.file_exists(PEOPLE_MANIFEST):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(PEOPLE_MANIFEST))
+			if parsed is Dictionary:
+				_pman = parsed
+	return _pman
+
+## Manifest variants whose people_<v>.glb exists (pilot: m1, f1).
+static func people_variants() -> Array:
+	var out: Array = []
+	var vs = _people_manifest().get("variants", {})
+	if vs is Dictionary:
+		for v in vs:
+			if ResourceLoader.exists("res://assets/models/people_%s.glb" % v):
+				out.append(String(v))
+	return out
 static var _vis_table = null
 
 ## Moves the Vis_* meshes of the visitor file under the body skeleton (same rig, verified by
@@ -601,6 +670,15 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 			var idxc: int = mesh.surface_get_array_index_len(s)
 			tris += (idxc if idxc > 0 else mesh.surface_get_array_len(s)) / 3
 		var pt := {"mesh": mesh, "head": head_id, "name": nm}
+		# V5 people: Outfit_<id> parts are drawn only for the people wearing that outfit; Head_<v>
+		# (eyes, brows, lashes, teeth) and Hair_<v> for everyone, with no shadow of their own.
+		if nm.begins_with("Outfit_"):
+			pt["outfit"] = nm.substr(7)
+		elif nm.begins_with("Addon_"):
+			pt["addon"] = nm.substr(6)
+			pt["face"] = true
+		elif _baking_people and (nm.begins_with("Head_") or nm.begins_with("Hair_")):
+			pt["face"] = true
 		if vis >= 0:
 			pt["vis"] = vis
 			pt["vh"] = vis_heads
@@ -610,11 +688,14 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 	# shadow (the body shadow covers them). If the mesh data cannot be read, the body casts
 	# its own shadow as before.
 	for p in parts.duplicate():
-		if int(p["head"]) < 0 and not p.has("vis"):
+		if int(p["head"]) < 0 and not p.has("vis") and not p.has("face"):
 			var pm: ArrayMesh = _skin_shadow_mesh(p["mesh"])
 			if pm != null:
 				p["proxied"] = true
-				parts.append({"mesh": pm, "head": -1, "name": String(p["name"]) + "_shadow", "shadow_only": true})
+				var sp := {"mesh": pm, "head": -1, "name": String(p["name"]) + "_shadow", "shadow_only": true}
+				if p.has("outfit"):
+					sp["outfit"] = p["outfit"]
+				parts.append(sp)
 	var prop_r: int = sk.find_bone("prop.R")
 	var ms: float = (Time.get_ticks_usec() - t0) / 1000.0
 	return {"ok": true, "parts": parts, "tex": tex, "tex_info": tex_info, "clips": clips, "rows": rows_total,
@@ -708,7 +789,19 @@ static func _skin_shadow_mesh(mesh: Mesh) -> ArrayMesh:
 
 static func _skin_material(src: Material, mname: String, tex: Texture2D, info: Dictionary, bind_slot: PackedInt32Array, head_id: int) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
-	m.shader = SKIN_SHADER
+	var hair: bool = mname.begins_with("Hair")
+	m.shader = SKIN_SHADER_2S if _baking_people and hair else SKIN_SHADER
+	if _baking_people:
+		m.set_shader_parameter("people", true)
+		m.set_shader_parameter("alpha_clip", hair)
+		var cc := PackedColorArray()
+		for h in CLOTH_COLS:
+			cc.append(Color(h).srgb_to_linear())
+		m.set_shader_parameter("cloth_cols", cc)
+		var sc := PackedColorArray()
+		for h in STRIPE_COLS:
+			sc.append(Color(h).srgb_to_linear())
+		m.set_shader_parameter("stripe_cols", sc)
 	m.resource_name = mname
 	m.set_shader_parameter("bind_slot", bind_slot)
 	m.set_shader_parameter("head_id", head_id)
@@ -745,6 +838,10 @@ static func _skin_material(src: Material, mname: String, tex: Texture2D, info: D
 		mode = 2
 	elif mname.begins_with("Hair"):
 		mode = 3
+	elif mname.begins_with("ClothTint"):
+		mode = 5
+	elif mname.begins_with("UniformBase"):
+		mode = 6
 	m.set_shader_parameter("mode", mode)
 	return m
 
@@ -764,13 +861,13 @@ func _make_mm(variant: String, lib: Dictionary) -> void:
 		mmi.custom_aabb = AABB(Vector3(-200, -200, -200), Vector3(3000, 600, 3000))
 		if bool(part.get("shadow_only", false)):
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		elif int(part["head"]) >= 0 or bool(part.get("proxied", false)) or part.has("vis"):
+		elif int(part["head"]) >= 0 or bool(part.get("proxied", false)) or part.has("vis") or part.has("face"):
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		else:
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		add_child(mmi)
-		list.append({"mm": m, "mmi": mmi, "head": int(part["head"]), "vis": int(part.get("vis", -1)), "vh": int(part.get("vh", 0))})
-	mm[variant] = {"parts": list, "heads": int(lib["heads"])}
+		list.append({"mm": m, "mmi": mmi, "head": int(part["head"]), "vis": int(part.get("vis", -1)), "vh": int(part.get("vh", 0)), "outfit": String(part.get("outfit", "")), "addon": String(part.get("addon", ""))})
+	mm[variant] = {"parts": list, "heads": int(lib["heads"]), "people": bool(lib.get("people", false))}
 
 ## Frame row of clip `c` at time t (with the fraction to the next row).
 func row_of(lib: Dictionary, c: String, t: float) -> float:
@@ -1114,6 +1211,145 @@ func _goal_for(use: Dictionary, b: Dictionary, found: bool) -> Array:
 			return ["kneel", "repair_kneel"]
 	return [pose, Pose.REST.get(pose, "idle")]
 
+## The library key a person is drawn from indoors: "p_<variant>" (their SIM variant, else a
+## pilot variant of the same sex), or the v3 indoor astronaut ("in") for children and when no
+## people library is loaded.
+var _pkey := {}
+func _people_key(a: Dictionary) -> String:
+	var id: int = int(a["id"])
+	if _pkey.has(id):
+		return _pkey[id]
+	var k := "in"
+	var pp = sim.get("people") if sim != null else null
+	if pp != null and String(a.get("kind", "")) != "child" and libs.has("in"):
+		var idn: Dictionary = pp.identity(a)
+		var v: String = String(idn.get("variant", ""))
+		if libs.has("p_" + v):
+			k = "p_" + v
+		elif not bool(idn.get("child", false)):
+			var keys: Array = libs.keys()
+			keys.sort()
+			for lk in keys:
+				if String(lk).begins_with("p_" + v.substr(0, 1)):
+					k = lk
+					break
+	elif pp == null and not libs.has("in"):
+		for lk in libs:
+			if String(lk).begins_with("p_"):
+				k = lk
+				break
+	_pkey[id] = k
+	return k
+
+## A body that changes library (suit <-> person at an airlock) keeps its clip state; the clip
+## table and the pose-angle function follow the new library.
+func _rebind(rec: Dictionary, lib: Dictionary) -> void:
+	rec["sm"].clips = lib["clips"]
+	rec["sm"].angle_fn = func(ca, ta, cb, tb): return pose_angle(lib, ca, ta, cb, tb)
+	rec.erase("g_frame")
+
+## Hair colour index (people shader, mode 3) from SIM's 0..0.85 hair parameter.
+static func _hair_index(h: float) -> int:
+	return 0 if h < 0.2 else (1 if h < 0.45 else (2 if h < 0.62 else 3))
+
+## The outfits a people library holds (from its Outfit_<id> parts).
+static func lib_outfits(lib: Dictionary) -> Array:
+	if not lib.has("outfits"):
+		var o: Array = []
+		for k in outfit_table(lib):
+			o.append(k)
+		o.sort()
+		lib["outfits"] = o
+	return lib["outfits"]
+
+## Outfit id -> {mesh (the Outfit_<mesh> part), addons [Addon_<name> parts], idx (0..7), base
+## (linear UniformBase colour)}. From the manifest variant (a mesh name, or ART-NPC's
+## {mesh, addons, base_rgb} form); outfits whose mesh the file lacks are left out. Without a
+## manifest entry every Outfit_<id> part is one outfit.
+static func outfit_table(lib: Dictionary) -> Dictionary:
+	if lib.has("outfit_table"):
+		return lib["outfit_table"]
+	var have := {}
+	var addons_have := {}
+	for p in lib["parts"]:
+		if p.has("outfit"):
+			have[String(p["outfit"])] = true
+		if p.has("addon"):
+			addons_have[String(p["addon"])] = true
+	var t := {}
+	var mv = _people_manifest().get("variants", {}).get(String(lib.get("pvariant", "")), {})
+	var outs = mv.get("outfits", {}) if mv is Dictionary else {}
+	var ids: Array = (outs as Dictionary).keys() if outs is Dictionary else []
+	ids.sort()
+	for id in ids:
+		var e = outs[id]
+		var mesh: String = ""
+		var adds: Array = []
+		var base := Color(1, 1, 1)
+		if e is String:
+			mesh = String(e).trim_prefix("Outfit_")
+		elif e is Dictionary:
+			mesh = String(e.get("mesh", "")).trim_prefix("Outfit_")
+			for ad in e.get("addons", []):
+				if addons_have.has(String(ad).trim_prefix("Addon_")):
+					adds.append(String(ad).trim_prefix("Addon_"))
+			var rgb = e.get("base_rgb", null)
+			if rgb is Array and (rgb as Array).size() >= 3:
+				base = Color(float(rgb[0]), float(rgb[1]), float(rgb[2])).srgb_to_linear()
+		if have.has(mesh) and t.size() < 8:
+			t[String(id)] = {"mesh": mesh, "addons": adds, "idx": t.size(), "base": base}
+	if t.is_empty():
+		var ms: Array = have.keys()
+		ms.sort()
+		for m in ms:
+			if t.size() < 8:
+				t[m] = {"mesh": m, "addons": [], "idx": t.size(), "base": Color(1, 1, 1)}
+	lib["outfit_table"] = t
+	return t
+
+## Sets a person's (or puppet's) outfit fields from an outfit id of the library.
+static func set_outfit(lib: Dictionary, rec: Dictionary, id: String) -> void:
+	var e: Dictionary = outfit_table(lib).get(id, {})
+	rec["outfit"] = id
+	rec["omesh"] = String(e.get("mesh", ""))
+	rec["addons"] = e.get("addons", [])
+	rec["oidx"] = int(e.get("idx", 0))
+
+## SIM's outfit id -> an outfit the library has (same family first: casual_*, uniform_*).
+static func outfit_for(lib: Dictionary, want: String) -> String:
+	var outs: Array = lib_outfits(lib)
+	if outs.is_empty() or outs.has(want):
+		return want if outs.has(want) else ""
+	var fam: String = "casual" if want.begins_with("casual") or want == "prison" or want == "school" else "uniform"
+	for o in outs:
+		if String(o).begins_with(fam):
+			return o
+	return outs[0]
+
+## Look code, outfit and clothes colour of a person (people libraries), refreshed every 30 frames:
+## role * 64 + hair colour * 8 + skin tone (0 dark .. 5 light, from identity.tint).
+func _people_look(a: Dictionary, rec: Dictionary, lib: Dictionary) -> void:
+	var id: int = int(a["id"])
+	if rec.has("plook") and (id + _frame) % 30 != 0:
+		return
+	var role: int = int(rec["look"]) / 64
+	var tone: int = int(rec["look"]) % 8
+	var hc: int = (int(rec["look"]) / 8) % 4
+	var want := "uniform_engineering"
+	var pp = sim.get("people") if sim != null else null
+	if pp != null:
+		var t: Dictionary = pp.identity(a).get("tint", {})
+		tone = 5 - clampi(int(float(t.get("skin", 0.5)) * 6.0), 0, 5)
+		hc = 4 if bool(t.get("grey", false)) else _hair_index(float(t.get("hair", 0.3)))
+		want = String(pp.outfit(a))
+		if role < 8:
+			# The stripe follows the department (role bits carry the stripe index on people).
+			var si: int = STRIPES.find(String(pp.marks(a).get("stripe", "")))
+			role = si if si >= 0 else 4
+	rec["plook"] = role * 64 + hc * 8 + tone
+	set_outfit(lib, rec, outfit_for(lib, want))
+	rec["cloth"] = int(Rng.hash2(id, 41, 13) * 8.0) % 8
+
 func _new_rec(a: Dictionary, lib: Dictionary) -> Dictionary:
 	var p: Vector2 = a["pos"]
 	var sm = Pose.new(lib["clips"])
@@ -1144,7 +1380,9 @@ func sync(delta: float) -> bool:
 				agents.erase(id)
 			else:
 				_drop(id)
-	var lists := {"suit": [], "in": []}
+	var lists := {}
+	for lk in libs:
+		lists[lk] = []
 	_walk_ghosts(delta, lists)
 	_sync_puppets(delta, lists)
 	_build_occ()
@@ -1212,12 +1450,20 @@ func sync(delta: float) -> bool:
 				variant = agents[id]["var"]
 		elif agents.has(id):
 			agents[id].erase("var_hold")
-		var lib: Dictionary = libs[variant]
+		# V5: indoors the body comes from the person's own people library when it exists.
+		var dk: String = _people_key(a) if variant == "in" else variant
+		var lib: Dictionary = libs[dk]
 		if not agents.has(id):
 			agents[id] = _new_rec(a, lib)
 		var rec: Dictionary = agents[id]
 		if rec["var"] != variant:
 			rec["var"] = variant
+		if String(rec.get("dk", "")) != dk:
+			if rec.has("dk"):
+				_rebind(rec, lib)
+			rec["dk"] = dk
+		if bool(lib.get("people", false)):
+			_people_look(a, rec, lib)
 		# Far bodies (and everything when zoomed far out) update at a lower rate.
 		# Off-screen bodies (outside the camera frustum, 2 m margin) update at the far rate too.
 		var far: bool = (rec["pos"] as Vector3).distance_squared_to(focus) > 8100.0 or cam_d > 160.0 \
@@ -1231,14 +1477,14 @@ func sync(delta: float) -> bool:
 		if far or mid:
 			var k: int = 3 if far else 2
 			if (int(id) + _frame) % k != 0:
-				(lists[variant] as Array).append([rec, lib])
+				(lists[dk] as Array).append([rec, lib])
 				continue
 			step = delta * k
 		var tb0: int = Time.get_ticks_usec()
 		_update_body(a, rec, lib, step, dead)
 		_t_body += Time.get_ticks_usec() - tb0
 		_n_body += 1
-		(lists[variant] as Array).append([rec, lib])
+		(lists[dk] as Array).append([rec, lib])
 	var ts1: int = Time.get_ticks_usec()
 	_sep_dt = delta
 	_separate()
@@ -1457,6 +1703,11 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 			y = _floor_y(bb)
 			if bb["def"] == "lander":
 				y += 1.6
+			# V5 §7 multi-storey buildings: the person walks on their floor (SIM floors.agent_floor).
+			if int(sim.bdef(bb["def"]).get("floors", 1)) > 1 and sim.get("floors") != null:
+				var fa: Dictionary = sim.floors.agent_floor(a)
+				if int(fa.get("building", -1)) == bld:
+					y += float(fa.get("height", 0.0))
 		else:
 			y = view.h(pos.x, pos.y) + 0.05 + FLOOR_Z
 	var spread := Vector3(sin(float(a["id"]) * 2.4), 0, cos(float(a["id"]) * 2.4)) * (0.35 if inside else 0.2)
@@ -2195,8 +2446,9 @@ func _walk_ghosts(delta: float, lists: Dictionary) -> void:
 				view.inst.remove(rec["crate"])
 			_ghosts.erase(id)
 			continue
-		var lib: Dictionary = libs.get(String(rec["var"]), libs.values()[0])
-		(lists[String(rec["var"])] as Array).append([rec, lib])
+		var dkr: String = String(rec.get("dk", rec["var"])) if libs.has(String(rec.get("dk", rec["var"]))) else String(libs.keys()[0])
+		var lib: Dictionary = libs[dkr]
+		(lists[dkr] as Array).append([rec, lib])
 
 # ---------------------------------------------------------------- puppets (V4 vehicle crews)
 ## View-only bodies driven by another module (fx_vehicles: boarding, seats, alighting). The
@@ -2213,6 +2465,12 @@ func puppet(key: String, variant: String = "suit", role: String = "engineer") ->
 	var rec: Dictionary = _new_rec({"id": absi(hash(key)) % 100000, "pos": Vector2.ZERO, "role": role}, lib)
 	rec["var"] = variant if libs.has(variant) else String(libs.keys()[0])
 	rec["mode"] = "puppet"
+	if bool(lib.get("people", false)):
+		# V5 people puppets (photo()): the owner may set outfit, plook and cloth.
+		rec["dk"] = rec["var"]
+		set_outfit(lib, rec, outfit_for(lib, "uniform_engineering"))
+		rec["plook"] = (int(rec["look"]) / 64) * 64 + ((int(rec["look"]) / 8) % 4) * 8 + int(rec["look"]) % 8
+		rec["cloth"] = absi(hash(key)) % 8
 	puppets[key] = rec
 	return rec
 
@@ -2226,8 +2484,9 @@ func _sync_puppets(delta: float, lists: Dictionary) -> void:
 		if float(rec.get("fade", 1.0)) <= 0.0:
 			continue
 		rec["sm"].advance(dtg)
-		var lib: Dictionary = libs.get(String(rec["var"]), libs.values()[0])
-		(lists[String(rec["var"])] as Array).append([rec, lib])
+		var dkr: String = String(rec.get("dk", rec["var"])) if libs.has(String(rec.get("dk", rec["var"]))) else String(libs.keys()[0])
+		var lib: Dictionary = libs[dkr]
+		(lists[dkr] as Array).append([rec, lib])
 
 func _drop(id: int) -> void:
 	var rec: Dictionary = agents[id]
@@ -2714,6 +2973,14 @@ func _write_mm(variant: String, list: Array) -> void:
 	head_of.resize(list.size())
 	var fades := PackedFloat32Array()
 	fades.resize(list.size())
+	# V5 people: the look code of the people shader, the outfit shown and the clothes colour.
+	var people: bool = bool(e.get("people", false))
+	var outfit_of: Array = []
+	var addons_of: Array = []
+	var cloth := PackedFloat32Array()
+	if people:
+		outfit_of.resize(list.size())
+		cloth.resize(list.size())
 	var k := 0
 	var n := 0
 	for it in list:
@@ -2721,6 +2988,13 @@ func _write_mm(variant: String, list: Array) -> void:
 		var lib: Dictionary = it[1]
 		var p: Vector3 = _dp(rec)
 		fades[n] = float(rec.get("fade", 1.0))
+		var look_v: float = float(rec["look"])
+		if people:
+			look_v = float(rec.get("plook", rec["look"]))
+			outfit_of[n] = String(rec.get("omesh", ""))
+			addons_of.append(rec.get("addons", []))
+			# INSTANCE_CUSTOM.w = clothes colour (0..7) + 8 x outfit index (UniformBase colour).
+			cloth[n] = float(int(rec.get("cloth", 0)) % 8 + 8 * int(rec.get("oidx", 0)))
 		var yaw: float = rec["yaw"]
 		var c: float = cos(yaw)
 		var s: float = sin(yaw)
@@ -2768,7 +3042,7 @@ func _write_mm(variant: String, list: Array) -> void:
 			write_row(lib, _globals_cached(rec, lib, pz), _dyn_buf, _dyn_used, _dyn_w)
 			all[k + 16] = float(DYN0 + _dyn_used)
 			all[k + 17] = -1.0
-			all[k + 18] = float(rec["look"])
+			all[k + 18] = look_v
 			all[k + 19] = -1.0
 			_dyn_used += 1
 			head_of[n] = ((int(rec["look"]) / 8) % 8) % heads
@@ -2780,7 +3054,7 @@ func _write_mm(variant: String, list: Array) -> void:
 			all[k + 17] = floor(row_of(lib, pz["b"], pz["tb"])) + clampf(float(pz["wb"]), 0.0, 1.0) * 0.998
 		else:
 			all[k + 17] = -1.0
-		all[k + 18] = float(rec["look"])
+		all[k + 18] = look_v
 		if String(pz["c"]) != "" and float(pz["wc"]) > 0.001:
 			all[k + 19] = floor(row_of(lib, pz["c"], pz["tc"])) + clampf(float(pz["wc"]), 0.0, 1.0) * 0.998
 		else:
@@ -2801,7 +3075,7 @@ func _write_mm(variant: String, list: Array) -> void:
 			_bd_buf[gi * 4 + 3] = all[b0 + 3]
 			all[b0] = float(gi)
 			all[b0 + 1] = fades[i]
-			all[b0 + 3] = 0.0
+			all[b0 + 3] = cloth[i] if people else 0.0
 		_bd_used = mini(BD_ROWS, _bd_used + n)
 	for part in e["parts"]:
 		var m: MultiMesh = part["mm"]
@@ -2817,6 +3091,22 @@ func _write_mm(variant: String, list: Array) -> void:
 				var lk: int = int(list[i][0]["look"])
 				var v: int = lk / 64 - 8
 				if v >= 0 and v < VIS_LOOK_KIND.size() and int(VIS_LOOK_KIND[v]) == vk and (vh == 0 or (vh & (1 << ((lk / 8) % 8))) != 0):
+					buf.append_array(all.slice(i * 20, i * 20 + 20))
+					cnt += 1
+		elif people and String(part.get("addon", "")) != "":
+			var ad: String = part["addon"]
+			buf = PackedFloat32Array()
+			cnt = 0
+			for i in n:
+				if (addons_of[i] as Array).has(ad):
+					buf.append_array(all.slice(i * 20, i * 20 + 20))
+					cnt += 1
+		elif people and String(part.get("outfit", "")) != "":
+			var of: String = part["outfit"]
+			buf = PackedFloat32Array()
+			cnt = 0
+			for i in n:
+				if outfit_of[i] == of:
 					buf.append_array(all.slice(i * 20, i * 20 + 20))
 					cnt += 1
 		elif h >= 0:
@@ -2840,6 +3130,14 @@ func stats() -> Dictionary:
 	var fr: float = maxf(1.0, float(_prof_frames))
 	var out := {"ms": snappedf(npc_ms, 0.01), "bodies": agents.size(), "game_rate": snappedf(game_rate, 0.01), "dyn_rows": _dyn_used,
 		"body_ms": snappedf(_t_body / fr / 1000.0, 0.01), "bodies_per_frame": snappedf(_n_body / fr, 0.1), "write_ms": snappedf(_t_write / fr / 1000.0, 0.01), "lamps_ms": snappedf(_t_lamps / fr / 1000.0, 0.01), "walk_ms": snappedf(_t_walk / fr / 1000.0, 0.01), "prof_ms": _pm.keys().map(func(k): return "%s %.2f" % [k, _pm[k] / fr / 1000.0]), "blend_why_per_frame": _why_avg(fr), "slots": stats_slots.duplicate(), "planner": planner.stats.duplicate() if planner != null else {}}
+	# V5 people: bodies per drawn library and outfit (evidence).
+	var dks := {}
+	for aid in agents:
+		var r: Dictionary = agents[aid]
+		var kk: String = String(r.get("dk", r["var"])) + ("/" + String(r["outfit"]) + "/" + String(r.get("omesh", "")) + "+" + ",".join(r.get("addons", [])) if r.has("outfit") and String(r.get("dk", "")).begins_with("p_") else "")
+		dks[kk] = int(dks.get(kk, 0)) + 1
+	out["draw_keys"] = dks
+	out["pkey_sample"] = _pkey.values().slice(0, 6)
 	_why = {}
 	_t_body = 0
 	_t_write = 0
@@ -2850,7 +3148,7 @@ func stats() -> Dictionary:
 	_prof_frames = 0
 	for v in libs:
 		var lib: Dictionary = libs[v]
-		out[v] = {"status": status.get(v, ""), "tris": lib["tris"], "clips": (lib["clips"] as Dictionary).size(), "missing": lib["missing"], "rows": lib["rows"], "bake_ms": snappedf(float(lib["bake_ms"]), 0.1), "parts": (lib["parts"] as Array).size(), "heads": lib["heads"], "shared": lib["shared"]}
+		out[v] = {"status": status.get(v, ""), "tris": lib["tris"], "clips": (lib["clips"] as Dictionary).size(), "missing": lib["missing"], "rows": lib["rows"], "bake_ms": snappedf(float(lib["bake_ms"]), 0.1), "parts": (lib["parts"] as Array).size(), "heads": lib["heads"], "shared": lib["shared"], "part_names": (lib["parts"] as Array).map(func(p): return String(p["name"]) + ":" + String(p.get("outfit", ""))), "outfits": lib_outfits(lib) if bool(lib.get("people", false)) else []}
 	for v in ["suit", "in"]:
 		if not libs.has(v):
 			out[v] = {"status": status.get(v, "missing")}

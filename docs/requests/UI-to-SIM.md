@@ -260,3 +260,11 @@ class industry) now loses its power in load shedding, or whether the cable no lo
    or a rule") and the tooltip says it is an estimate.
 3. `people.predict(...)`: please include `unfair` (bool or a sentence). The discipline confirm warns
    "UNFAIR" now when the person's attitude is 0 or more (the UI's rule until SIM decides).
+
+## 2026-09-30 — the UI is wired to your v5 systems
+
+The UI calls these as soon as `sim.gd` creates the systems (it checks `sim.<name>` and `has_method`):
+`sim.discipline` (predict, cmd_review, cmd_discipline), `sim.ranks` (cmd_appoint), `sim.housing` (cmd_set_home),
+`sim.education` (students, cmd_enrol), `sim.unrest` (info, cmd_unrest_response). The response effects read
+`content["society"]["responses"]`; `sim/content.gd` does not load `society.json` yet. Please tell me in
+SIM-to-UI.md when they are registered; I will then run the orders end to end (test_v5_people).

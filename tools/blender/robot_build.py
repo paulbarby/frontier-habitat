@@ -173,8 +173,8 @@ def patch(md, sts, z0, z1, th0, th1, off, bone, mat, rows=4, cols=12, n=2.4):
 # ------------------------------------------------------------------------------------------------------------------
 # the parts (bind pose, 1.80 m frame; left side built once and mirrored)
 # ------------------------------------------------------------------------------------------------------------------
-PELVIS = [(0.852, 0.0, 0.035, 0.040, 0.050), (0.875, 0.0, 0.062, 0.070, 0.105), (0.925, 0.0, 0.078, 0.088, 0.138),
-          (0.985, 0.0, 0.074, 0.084, 0.132), (1.035, 0.0, 0.064, 0.070, 0.112), (1.062, 0.0, 0.045, 0.050, 0.078)]
+PELVIS = [(0.855, 0.0, 0.040, 0.036, 0.060), (0.872, 0.0, 0.064, 0.056, 0.112), (0.925, 0.0, 0.076, 0.062, 0.132),
+          (0.985, 0.0, 0.074, 0.060, 0.128), (1.035, 0.0, 0.064, 0.056, 0.110), (1.062, 0.0, 0.045, 0.040, 0.078)]
 CHEST = [(1.180, 0.000, 0.055, 0.058, 0.085), (1.215, 0.004, 0.078, 0.074, 0.118), (1.275, 0.010, 0.098, 0.084, 0.142),
          (1.335, 0.014, 0.108, 0.089, 0.158), (1.390, 0.012, 0.104, 0.086, 0.160), (1.432, 0.008, 0.086, 0.076, 0.138),
          (1.462, 0.006, 0.058, 0.052, 0.080), (1.478, 0.005, 0.028, 0.028, 0.040)]
@@ -185,7 +185,15 @@ HEAD = [(1.583, 0.020, 0.028, 0.034, 0.030), (1.600, 0.020, 0.068, 0.064, 0.060)
 
 def build_core(md):
     """Pelvis, waist column, chest shell with its light, neck, head with visor and light bar, ear pods."""
-    stations(md, PELVIS, "hips", "RobotChrome", n=2.6, seg=24)
+    stations(md, PELVIS, "hips", "RobotChrome", n=4.5, seg=32)            # a block: flat sides and back
+    patch(md, PELVIS, 0.950, 0.958, -3.05, 3.05, 0.003, "hips", "RobotJoint", rows=1, cols=40, n=4.5)   # panel line
+    patch(md, PELVIS, 0.880, 1.030, 3.02, 3.26, 0.003, "hips", "RobotJoint", rows=4, cols=2, n=4.5)     # back seam
+    for sg in (1.0, -1.0):                                                   # joint caps over the hip joints
+        c = Vector((0.0, sg * 0.128, 0.935))
+        lathe_axis(md, c, (0, sg, 0), [(0.0, 0.052), (0.010, 0.056), (0.020, 0.050), (0.024, 0.030)], "hips",
+                   "RobotTrim", seg=20, ref=(1, 0, 0))
+        lathe_axis(md, c + Vector((0, sg * 0.024, 0)), (0, sg, 0), [(0.0, 0.020), (0.002, 0.021), (0.004, 0.010)],
+                   "hips", "RobotLight", seg=16, ref=(1, 0, 0))
     lathe_axis(md, (0, 0, 1.030), (0, 0, 1), [(0.0, 0.040), (0.005, 0.050), (0.19, 0.050), (0.195, 0.040)], "spine",
                "RobotJoint", seg=16)
     for k, z in enumerate((1.068, 1.100, 1.132, 1.164)):          # waist discs
@@ -281,12 +289,14 @@ def build_leg_left(md):
     th = (knee - hip).normalized()
     sh = (ank - knee).normalized()
     sphere(md, hip, 0.058, "thigh.L", "RobotJoint", seg=16, rows=9)
-    tube(md, hip + th * 0.045, knee - th * 0.034, [0.030, 0.066, 0.070, 0.066, 0.060, 0.053, 0.047, 0.030],
-         "thigh.L", "RobotChrome", seg=20)
-    tube(md, hip + th * 0.20, hip + th * 0.22, [0.063, 0.066, 0.066, 0.063], "thigh.L", "RobotTrim", seg=20)
+    tube(md, hip + th * 0.045, knee - th * 0.034, [0.034, 0.078, 0.084, 0.080, 0.072, 0.062, 0.052, 0.032],
+         "thigh.L", "RobotChrome", seg=22)
+    tube(md, hip + th * 0.20, hip + th * 0.22, [0.074, 0.078, 0.078, 0.074], "thigh.L", "RobotTrim", seg=22)
     sphere(md, knee, 0.044, "shin.L", "RobotJoint", seg=14, rows=8)
-    sphere(md, knee + Vector((0.036, 0.0, 0.004)), 0.030, "shin.L", "RobotChrome", seg=14, rows=8,
-           scale=(0.8, 1.15, 1.2))
+    sphere(md, knee + Vector((0.040, 0.0, 0.006)), 0.034, "shin.L", "RobotTrim", seg=16, rows=8,
+           scale=(0.45, 1.25, 1.45))                                         # knee plate
+    tube(md, knee + Vector((0.052, 0.0, -0.012)), knee + Vector((0.052, 0.0, 0.024)), [0.003, 0.005, 0.005, 0.003],
+         "shin.L", "RobotLight", seg=8, ref=(0, 1, 0))
     tube(md, knee + sh * 0.036, ank - sh * 0.030, [0.024, 0.050, 0.052, 0.047, 0.041, 0.035, 0.030, 0.018],
          "shin.L", "RobotChrome", seg=20)
     tube(md, knee + sh * 0.09 + Vector((0.049, 0, 0)), ank - sh * 0.11 + Vector((0.034, 0, 0)),

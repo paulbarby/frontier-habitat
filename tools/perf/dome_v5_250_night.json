@@ -1,0 +1,26 @@
+[
+ {
+  "eval": "window.__fhr.cmd('loadurl dome_v5.fhsave')"
+ },
+ {
+  "wait": 14
+ },
+ {
+  "cmd": "speed 1"
+ },
+ {
+  "cmd": "goto 1430.5 1296"
+ },
+ {
+  "cmd": "yaw 200"
+ },
+ {
+  "cmd": "zoom 250"
+ },
+ {
+  "cmd": "pitch 32"
+ },
+ {
+  "eval": "window.__fhr.cmd('time 560')"
+ }
+]

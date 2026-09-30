@@ -292,6 +292,10 @@ func board_point(v: Dictionary) -> Vector2:
 		return q0 if q0 != null else bay["exit"]
 	var side: Vector2 = Vector2(cos(float(v["rot"])), sin(float(v["rot"]))).orthogonal() * 3.0
 	var q = sim.nav.nearest_walkable((v["pos"] as Vector2) + side, 6)
+	# Parked on closed ground (a depot footprint): the nearest open ground further out, never a
+	# closed cell (a person set down there could not walk back to air).
+	if q == null:
+		q = sim.nav.nearest_walkable(v["pos"], 14)
 	return q if q != null else v["pos"]
 
 ## A colonist next to the vehicle gets in. false when full, too far or not outside.
@@ -348,6 +352,49 @@ func _air_guard(v: Dictionary) -> void:
 	if drive_to(v, back) == "ok":
 		v["returning"] = true
 		sim.log_event("vehicle_air", "%s turns back: the crew's suit air is low." % v["name"], [int(v["id"])], 2)
+
+## A vehicle far from air turns back to a depot when a rider needs food, water, sleep or care
+## (a need at need_critical, or health under 30). Without this a crew parked far out stayed aboard
+## until they died (the exhaustion deaths in long_v4_perf and in showcase_v4: a rover parked on the
+## crater rim, its crew never ordered back).
+func _needs_guard(v: Dictionary) -> void:
+	if (v["crew"] as Array).is_empty() or bool(v.get("returning", false)) or v["state"] == "broken" or near_air(v):
+		return
+	var crit: float = float(sim.bal["need_critical"])
+	var who := ""
+	for aid in v["crew"]:
+		var a: Dictionary = sim.state["agents"].get(int(aid), {})
+		if a.is_empty():
+			continue
+		if float(a["thirst"]) >= crit or float(a["hunger"]) >= crit or float(a["fatigue"]) >= crit or float(a["health"]) < 30.0:
+			who = String(a["name"])
+			break
+	if who == "":
+		return
+	v["route"] = {}
+	v.erase("explore")
+	var code: String = drive_to(v, return_point(v))
+	if code != "ok":
+		# No way into a depot bay: park next to the nearest airlock with air instead.
+		var door: Vector2 = _nearest_air_door(v["pos"])
+		if door.x > -1e8:
+			code = drive_to(v, door)
+	if code == "ok":
+		v["returning"] = true
+		sim.log_event("vehicle_needs", "%s turns back: %s needs food, water or rest." % [v["name"], who], [int(v["id"])], 2)
+
+func _nearest_air_door(p: Vector2) -> Vector2:
+	var best := Vector2(-1e9, -1e9)
+	var bd := 1e18
+	for comp in sim.topo.locks_by_comp:
+		if not sim.util.comp_supplied(comp):
+			continue
+		for lid in sim.topo.locks_by_comp[comp]:
+			var d: Vector2 = sim.nav.door_pos(sim.state["buildings"][lid])
+			if d.distance_squared_to(p) < bd:
+				bd = d.distance_squared_to(p)
+				best = d
+	return best
 
 func alight_all(v: Dictionary) -> void:
 	for aid in (v["crew"] as Array).duplicate():
@@ -581,8 +628,10 @@ func tick_second() -> void:
 					v["dest"] = null
 				continue
 			_air_guard(v)
+			_needs_guard(v)
 			continue
 		_air_guard(v)
+		_needs_guard(v)
 		if v["state"] == "driving":
 			continue
 		# Crew of a parked vehicle without a route get out after two minutes when air is near

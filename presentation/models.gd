@@ -15,6 +15,9 @@ const CATEGORY_COLOR := {
 	"life_support": Color("29b6c6"), "food": Color("6abf4b"), "housing": Color("f2c14e"),
 	"industry": Color("e07a3a"), "logistics": Color("9b6bd6"), "utilities": Color("4a90d9"),
 	"medical": Color("e85d75"), "comfort": Color("f08fc0"), "science": Color("7c8cff"), "space": Color("c9d3e0"),
+	# V5 civic buildings (ART-HAB #34569c on Accent and Neon). Security and jail keep their own fixed
+	# materials (SecBlack, SignalRed, PrisonOrange): the category colour never tints those.
+	"civic": Color("34569c"),
 }
 const ROLE_COLOR := {
 	"technician": Color("ff9f1c"), "grower": Color("5ac85a"), "operator": Color("4a90d9"), "medic": Color("e85d75"),
@@ -278,7 +281,11 @@ static func group_of(n: String) -> String:
 	# V5 super dome (dome_template): every node keeps its own group, prefixed D_.
 	# V5 multi-storey rooms (ART-HAB F<n>_ prefix): the group of floor n is F<n>_ + the plain group.
 	if n.length() > 3 and n[0] == "F" and n[1].is_valid_int() and n[2] == "_":
-		return n.substr(0, 3) + group_of(n.substr(3))
+		var rest: String = n.substr(3)
+		# (ART-HAB round 33: F<k>_WallTop is the floor's wall above its own cut, hidden when k is viewed)
+		if rest.begins_with("WallTop") or rest.begins_with("Terrace") or rest.begins_with("Slab") or rest.begins_with("Core"):
+			return n.substr(0, 3) + rest.rstrip("0123456789_")
+		return n.substr(0, 3) + group_of(rest)
 	if n.begins_with("D_"):
 		var fi: int = n.find("__Fit")
 		if fi > 0:
@@ -814,7 +821,7 @@ static func _interior_materials(parts: Array) -> void:
 		var mesh: Mesh = p["mesh"]
 		if not (mesh is ArrayMesh):
 			continue
-		var all: bool = p["group"] == "Interior"
+		var all: bool = p["group"] == "Interior" or String(p["group"]).ends_with("_Interior")
 		for si in mesh.get_surface_count():
 			var m: Material = mesh.surface_get_material(si)
 			if m == null or not (m is BaseMaterial3D):
@@ -1177,14 +1184,18 @@ static func near_fade(mn: float, mx: float) -> void:
 				(m as ShaderMaterial).set_shader_parameter("near_fade", v)
 
 ## Windows and lamps: dim by day, bright at night. `f` 0 = full day, 1 = night.
-static func set_night(f: float) -> void:
-	if absf(f - _night_f) < 0.01:
+## storm 0..1 (critic round 34): lit windows, signs and neon brighten in a dust storm, so a lit base
+## (the dome) still glitters through the storm grade instead of going dim and brown.
+static var _storm_f := 0.0
+static func set_night(f: float, storm: float = 0.0) -> void:
+	if absf(f - _night_f) < 0.01 and absf(storm - _storm_f) < 0.02:
 		return
 	_night_f = f
+	_storm_f = storm
 	for e in _night:
 		if String(e["name"]) == "Glow" or String(e["name"]) == "Plasma":
 			continue
-		var k: float = _night_k(String(e["name"]), f)
+		var k: float = _night_k(String(e["name"]), f) * _storm_k(String(e["name"]))
 		var m = e["mat"]
 		if m is StandardMaterial3D:
 			(m as StandardMaterial3D).emission_energy_multiplier = float(e["base"]) * k
@@ -1195,6 +1206,11 @@ static func set_night(f: float) -> void:
 	var fill: float = lerpf(FILL_DAY, FILL_NIGHT, f)
 	for m in _fill_mats:
 		(m as ShaderMaterial).set_shader_parameter("fill", fill)
+
+static func _storm_k(n: String) -> float:
+	if n.begins_with("Window") or n.begins_with("Sign") or n in ["CabinWindow", "Neon", "LightStrip", "Screen", "Light"]:
+		return 1.0 + 1.6 * _storm_f
+	return 1.0
 
 ## Emission multiplier of a material family by night amount f (0 day .. 1 night).
 ## Interior strips and screens (V3 §7.3) are on day and night, a little brighter at night.

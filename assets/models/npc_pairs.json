@@ -4,7 +4,7 @@
   "hug": {
    "clip_a": "hug",
    "clip_b": "hug",
-   "distance_m": 0.3,
+   "distance_m": 0.4,
    "facing_deg": 180.0,
    "sync_s": 0.0,
    "side_offset_m": 0.0

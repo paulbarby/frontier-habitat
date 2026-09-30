@@ -360,3 +360,82 @@ The pilot is ready for CRITIC. Structure and names are final unless a later date
 - **Checked:** `npc_verify` 441 passed, 0 failed (includes per-variant people checks). `npc_check.gd` PASS (165 tests).
   `godot.mjs check` 257 scripts, 0 failed.
 - **Not tested:** people in the game (no loader yet), tint modes on the new materials, the hug placement in the game.
+
+
+## 2026-09-30 — v5.0 robot dancer (V5 §1, §8: the Club)
+
+- **File:** `assets/models/robot_dancer.glb`, index `assets/models/robot_manifest.json`.
+  - Rig: the v3 skeleton (24 bones, 1.80 m, the same names, parents and bind as the astronauts).
+  - One skinned mesh: `Robot_dancer`, 14,884 triangles, rigid parts (1 bone per vertex), `COLOR_0.r` = AO.
+- **Materials:**
+  - `RobotChrome`: metallic 1, roughness 0.13. It needs a reflection probe or sky in the Club; without one, it reads dark.
+  - `RobotLight`: emissive, strength 3.0. Visor light bar, chest light, forearm and shin strips, waist ring, ear rings.
+    Please tint or pulse it per dancer with the Club light show (a mode-1 style tint on the emission).
+  - `RobotJoint`, `RobotTrim`, `RobotVisor`: plain.
+- **Clips (all loops, 30 fps):**
+
+  | clip | frames | what |
+  |---|---|---|
+  | `robot_idle` | 120 | servo idle between shows |
+  | `robot_dance_a` | 120 | popping hits on the beat (120 bpm) |
+  | `robot_dance_b` | 120 | liquid arm wave from hand to hand, body roll |
+  | `robot_dance_c` | 240 | pirouette, arm circle with a squat, isolations, bow |
+  | `robot_pole` | 240 | grip, a tucked spin once round the pole, land, lean, release, V pose |
+
+- **Chain rule:** every robot clip starts and ends on the same pose (stand, origin, facing +X). At a loop end, cut to any
+  other robot clip with no blend. Measured: all starts equal (≤ 1°, 1 mm), seams 0.000°.
+- **Placement:** at ART-B's `Anchor_Dancer_*` (podium top, 0.35 m in front of the pole, facing the room).
+  - `robot_pole` needs the pole at local (−0.35, 0), radius 0.045 m. ART-B's model matches.
+  - The other clips stay within 0.3 m of the origin. The feet stay ≤ 0.70 m from the pole axis (podium radius 0.80 m).
+- **Suggested use:** cycle `robot_dance_a/b/c` and `robot_pole` per dancer with a different start offset, and
+  `robot_idle` when the Club is closed.
+- **Size:** +388,671 bytes imported.
+- **Checked:**
+  - `npc_verify` 455 passed, 0 failed. Robot checks: step < 15°/frame (max 14.90°), seams, chain, podium top, feet on
+    the podium, nothing inside the pole (gripping hands ≤ 0.9 cm).
+  - `npc_check.gd` PASS (165; no robot tests yet). `godot.mjs check` 264 scripts, 0 failed.
+- **Not tested:** the robot in the game, in the Club light, with RENDER's materials.
+
+
+## 2026-09-30 — v5 people: rig decision = route A (MPFB bodies on OUR skeleton)
+
+- Paul chose MPFB / MakeHuman bodies. The orchestrator chose **route A**: the MPFB bodies are skinned to the v3
+  skeleton + `jaw` + `lids` (26 bones), exactly as in the pilot.
+- **For RENDER nothing changes:** the same `people_<v>.glb` names, `people_manifest.json` structure, draw rule
+  (`Head_<v>` + `Hair_<v>` + one `Outfit_<id>`), bone names, clips, pose states and pairs.
+- **What may change** (I will confirm per file in a dated note):
+  - Joint positions per variant come from the MPFB body; bone names and parents do not change.
+  - Hair becomes alpha cards: material `Hair` with an alpha texture. Please support alpha scissor (or hash) on `Hair`.
+  - The skin texture becomes a detail map that the tone tint multiplies, as `SkinFace` does now, on the whole skin.
+- **Timing:** the pilot is rebuilt first (m1, f1; uniform_engineering, casual_a), then CRITIC. The other variants
+  follow after that.
+
+
+## 2026-09-30 — v5 people: MPFB pilot built (m1, f1) — what your code must handle
+
+- **Files and names unchanged:** `people_m1.glb`, `people_f1.glb`, `people_manifest.json` (`version` 5.0-mpfb-pilot).
+  - The rig is ours: 26 bones, the same names and parents. All 30 clips, pose states and pairs are unchanged.
+  - Joint positions now come from each MPFB body.
+- **Draw rule unchanged:** `Head_<v>` + `Hair_<v>` + one `Outfit_<id>`.
+  - `Head_<v>` now holds only the eyes, brows, lashes and teeth.
+  - The face and all visible skin are in each `Outfit_<id>`. Covered skin is removed per outfit.
+- **Materials (please check your tint lookup):**
+
+  | material | handling |
+  |---|---|
+  | `Skin` | tint mode 2; the texture is a detail map around white. There is no `SkinFace` any more. |
+  | `Hair`, `Hair_brows`, `Hair_lashes` | tint mode 3, alpha MASK (cutoff 0.5). **Match on the name prefix `Hair`.** |
+  | `SuitAccent` | the uniform polo; department colour (mode 1); the texture multiplies |
+  | `ClothTint` | the casual tee; per-person colour (still needs your new mode) |
+  | `Coverall`, `Cloth_*`, `Eye`, `Teeth` | plain textured; the colour is baked in, do not tint |
+
+- **Normal maps:** some garments have them (256 px).
+- **Triangles on screen:** 23.4k per person (budget 24k). **No LOD1 yet.** The MakeHuman low proxies (about 3.2k
+  triangles) are the plan for LOD1.
+- **Size:** 12.45 MB imported for m1 + f1 (about 6.2 MB per variant).
+- **Robot dancer update (CRITIC round 38 fixes):**
+  - `robot_dance_b` is now a step routine with a full turn.
+  - Knee bounce on the beat in dances a, b and c.
+  - Hip block, thicker thighs, knee plates.
+  - The names, frames and chain rule do not change. 16,056 triangles, 412,530 bytes imported.
+- **Not tested:** people in the game, your tint modes on the new material set, alpha MASK hair in your shader.

@@ -342,10 +342,22 @@ func _stories(iss: Dictionary) -> void:
 func _columns(iss: Dictionary) -> void:
 	var row: HBoxContainer = Kit.hbox(14)
 	_body.add_child(row)
-	# The gossip column: a boxed column with a black heading.
-	var g: VBoxContainer = _box(row, "THE DUST-UP", "by Rag Snoop")
-	for it in _padded(iss.get("gossip", []), "gossip", 6 if layout == "quiet" else 3):
-		g.add_child(_rich("• " + String(it["text"]), it.get("actors", []), 15, INK, "rag_body_i"))
+	# The gossip column: a boxed column with a black heading. A quiet day (critic round 36): the
+	# column takes the whole width, 8 items in two columns, a bigger type; the watches go under it.
+	var g: VBoxContainer = _box(row, "THE DUST-UP", "by Rag Snoop" if layout != "quiet" else "by Rag Snoop  ·  a slow day, so we listened harder")
+	if layout == "quiet":
+		var gg: GridContainer = Kit.grid(2, 22, 8)
+		gg.name = "GossipGrid"
+		g.add_child(gg)
+		for it in _padded(iss.get("gossip", []), "gossip", 8):
+			var gr := _rich("• " + String(it["text"]), it.get("actors", []), 17, INK, "rag_body_i")
+			gr.custom_minimum_size.x = 420
+			gg.add_child(gr)
+		row = Kit.hbox(14)
+		_body.add_child(row)
+	else:
+		for it in _padded(iss.get("gossip", []), "gossip", 3):
+			g.add_child(_rich("• " + String(it["text"]), it.get("actors", []), 15, INK, "rag_body_i"))
 	# Couple Watch and Feud Watch.
 	var cw: VBoxContainer = _box(row, "COUPLE WATCH", "who is with whom")
 	for c in iss.get("couples", []):
@@ -365,6 +377,32 @@ func _columns(iss: Dictionary) -> void:
 		fw.add_child(_rich("[b]%s vs %s[/b] — %s" % [fa, fb, note], [int(f["a"]), int(f["b"])], 15, INK, "rag_body"))
 	if (iss.get("feuds", []) as Array).is_empty():
 		fw.add_child(_text("All quiet on the feud front.", "rag_body_i", 15, INK_2))
+	if layout == "quiet":
+		_photo_of_day(row, iss)
+
+## Quiet day: PHOTO OF THE DAY, two colonists caught on camera (RENDER's photo when it exists).
+func _photo_of_day(row: HBoxContainer, iss: Dictionary) -> void:
+	var ids: Array = []
+	for r in hud.v5.people():
+		if String(r["kind"]) == "colonist":
+			ids.append(int(r["id"]))
+	if ids.size() < 2:
+		return
+	var n: int = int(iss.get("no", iss.get("number", 1)))
+	var a: int = int(ids[n % ids.size()])
+	var b: int = int(ids[(n * 7 + 3) % ids.size()])
+	if a == b:
+		b = int(ids[(n + 1) % ids.size()])
+	var box: VBoxContainer = _box(row, "PHOTO OF THE DAY", "snapped by a reader")
+	box.get_parent().name = "PhotoOfDay"
+	var ph = RagPhoto.new()
+	ph.custom_minimum_size = Vector2(300, 190)
+	ph.pose = "talk"
+	ph.texture = hud.v5.photo([a, b], "corridor", "talk")
+	box.add_child(ph)
+	var na: String = hud.v5.agent_name(a)
+	var nb: String = hud.v5.agent_name(b)
+	box.add_child(_rich("%s and %s in the corridor. Just talking? The Rag wonders." % [na, nb], [a, b], 15, INK, "rag_body_i"))
 
 ## The Commander approval poll (from satisfaction): a big number, the change, a bar.
 ## A column with fewer items than room: more from SIM's own column lines (content/tabloid.json
@@ -388,6 +426,49 @@ func _padded(list: Array, column: String, want: int) -> Array:
 			out.append(d)
 		else:
 			out.append({"text": line, "actors": []})
+	if column == "gossip" and out.size() < want:
+		out.append_array(_gossip_from_people(want - out.size(), seen))
+	return out
+
+## More gossip from who really gets on with whom (sim relations), in the Rag's voice, when SIM's
+## column has too few lines (a quiet day wants 8). Real names; nothing that SIM does not know.
+const GOSSIP_T := {
+	"best_friend": ["%s and %s: joined at the hip again. Get a room. A bigger one.", "Rag spies report %s and %s share every meal. Every. Single. One."],
+	"friend": ["%s laughed at a joke by %s. Nobody else did.", "%s saved a seat for %s at dinner. Again. We are just saying."],
+	"rival": ["%s and %s both want the same shift. Only one can win.", "Tension at the tray racks: %s thinks %s works too slowly."],
+	"enemy": ["%s walked out when %s walked in. Frosty.", "%s and %s have not spoken for a week. The Rag has."],
+	"dating": ["Hand in hand in the corridor: %s and %s. The Rag saw it first.", "%s and %s: is it serious? Our spies say yes."],
+	"partners": ["%s and %s rearranged the furniture. Nesting?", "%s made breakfast for %s. Awww."],
+	"married": ["Still in love: %s and %s. The rest of us are jealous.", "%s and %s argued about the thermostat. Married life."],
+}
+func _gossip_from_people(n: int, seen: Dictionary) -> Array:
+	var out: Array = []
+	var done := {}
+	var k := 0
+	for r in hud.v5.people():
+		if out.size() >= n:
+			break
+		if String(r["kind"]) != "colonist":
+			continue
+		var a: int = int(r["id"])
+		for rel in hud.v5.relations(a, 4):
+			if out.size() >= n:
+				break
+			var st: String = String(rel["status"])
+			var b: int = int(rel["other"])
+			var key: String = "%d:%d" % [mini(a, b), maxi(a, b)]
+			if not GOSSIP_T.has(st) or done.has(key):
+				continue
+			done[key] = true
+			var tl: Array = GOSSIP_T[st]
+			var na: String = hud.v5.agent_name(a).get_slice(" ", 0)
+			var nb: String = hud.v5.agent_name(b).get_slice(" ", 0)
+			var line: String = String(tl[k % tl.size()]) % [na, nb]
+			k += 1
+			if seen.has(line):
+				continue
+			seen[line] = true
+			out.append({"text": line, "actors": [a, b]})
 	return out
 
 func _poll(parent: VBoxContainer, poll: Dictionary) -> void:

@@ -392,3 +392,70 @@ opacity the ring building shows through clearly. Check it against `art/dome/over
 
 Sizes after this round: imported `.scn` total 7.74 MB (8 files); glb 21.4 MB on disk. Merged template: 119 surfaces
 (your probe, `merged`), unchanged.
+
+## 10. Critic round 34 fixes + dome cost figures for the fps check — 2026-09-30
+
+**Changed (`dome_floor1.glb` only; imported, `check` 259 scripts, 0 failed):**
+
+1. **L1 bar back bar:** four units, each with a mirror (`Palette:#aebcc6`, wood frame), 3 wood shelves of 12 bottles
+   (body + shoulder + neck), a `SignAmber` light under each shelf and a `SignMagenta` bar on top. There is a dark lining
+   on the back wall (no outside view behind the bar). The bar has no back lightbox now. Window display: 5 lit bottles
+   plus 4 bottles on a riser. Picture: `art/dome/L1_bar_back.png`.
+2. **RESTAURANT sign:** `SIGN_SHIFT` 11° → 13°, at the far end of the restaurant front, next to CREDIT. The lift frame
+   posts are at 131.5–138.5°; the plate is now 151.6–159.4°. A very oblique camera can still put a post in front of
+   a sign; no sign position removes that for every camera.
+
+**Dome cost (from the glb files, 2026-09-30).** Total 263 k tris (+53 k scaffold, construction only).
+
+| file | tris | primitives | materials | biggest groups |
+|---|---|---|---|---|
+| dome_shell | 24 412 | 16 | 10 | Promenade_Props 11 040, Dome_Frame 7 208 |
+| dome_floor1 | 59 426 | 85 | 16 | Venue_* 38 004, VenueLamps_* 18 022 |
+| dome_floor2 | 61 386 | 105 | 18 | Venue_* 27 085, VenueLamps_* 19 489, Lamps_2 8 594 |
+| dome_floor3 | 43 476 | 100 | 16 | **Unit_* 29 712**, Shell_3 5 628 |
+| dome_floor4 | 23 016 | 53 | 19 | **Unit_* 8 256**, Lamps_4 5 748 |
+| dome_floor5 | 37 226 | 89 | 18 | **Unit_* 18 540**, Shell_5 5 474 |
+| dome_atrium | 14 424 | 27 | 11 | Atrium_Ground 10 948 |
+
+The merged dome is 119 surfaces of about 1,100–1,360 draws in the scene (about 10 %). So by draw calls the dome is not
+the main cost. If your fps check still points at the dome, these are the reductions, in order of value:
+
+1. **Hide the unit interiors unless that floor is cut away (no art change).** The L3–L5 fronts and outer windows are
+   opaque tone quads, so no `Unit_<n>_<s>` interior can be seen from outside or from the atrium while its floor is
+   closed. In the merged template, keep `Unit_*` of each floor as a separate merged group ("fit-out units") and show
+   it only when that floor is the cut floor. Saving: **56.5 k tris (21 %)**, and the surfaces of that group on 3 floors.
+2. **Distance LOD for the L1/L2 venue interiors (no art change).** Beyond about 150 m, hide `Venue_*` and keep
+   `VenueLamps_*` (the lit parts: bottles, screens, signs). Saving: 65 k tris at 250 m. At that distance the lit
+   parts carry the "city under glass".
+3. **Fewer emissive materials (art change, mine, on request).** Each floor has 16–19 materials, of which about 10 are
+   emissive (`Window*`, `Sign*`, `Light*`, `Screen`). I can bake them into ONE emissive material with vertex colour and
+   an emission-strength channel (COLOR_0 alpha). That takes each floor from 16–19 to about 7 surfaces
+   (about −50 surfaces for the dome). It needs your night curve to read one material instead of ten. Tell me before
+   I start; it changes the material contract.
+4. **Promenade_Props (11 k) and Atrium_Ground (11 k):** I can halve the tree and palm leaf counts (−8 k) if needed.
+
+**A possible cause outside the dome.** I ran Blender renders on this machine on 2026-09-29 from about 19:20 to 19:47
+(critic images are stamped 19:51), and on 2026-09-30 about 20:00–20:15. Your note in `docs/progress/RENDER.md` measured
+39–42 fps with Blender running against 56 fps without. I do not know when the critic's perf runs took place. Please
+check it against the run times before you cut geometry.
+
+## 11. Club door frame for critic round 38 — please match in game — 2026-09-30
+
+CRITIC round 38 asks for the bouncer and the ADULTS ONLY sign at the club door in one frame, in game. The Blender
+version exists: `art/dome/L2_club_door.png` (bouncer at the lectern, both rope lines, the lit door frame, ADULTS ONLY /
+21+). Please shoot the same frame in game. Numbers in Godot axes (Y up), relative to the dome origin, before the
+building transform:
+
+| item | value |
+|---|---|
+| camera position | (−11.62, 7.80, 15.41) — L2 gallery, 2.5 m above the L2 floor (5.30) |
+| look-at point | (−10.88, 6.60, 20.04) |
+| fov | vertical 64° (16 mm on a 36 mm sensor at 1800 × 1000; horizontal 97°) |
+| bouncer | `Anchor_Bouncer_club_0` at (−9.01, 5.30, 18.75), extras `adults_only` true; clip idle |
+| light | night; two point lights near the door help: warm at (−10.60, 8.50, 18.36), magenta at (−12.93, 8.30, 16.55) |
+| show | Floor_1, Floor_2 and the atrium; floors 3–5, roof and dome may stay (the camera is under the L3 slab) |
+
+The club has blacked-out outer windows and a closed front. The robot dancers are inside, so this frame cannot also
+show them. For "robots + light show + bouncer + sign in one frame", use the L2 cutaway (floors 3–5 and the roof off)
+from above the atrium at mid-distance, looking down at sectors 13–18 (angle 195°–285°): the door and the sign face
+the atrium at 240°, and the podiums are behind them.

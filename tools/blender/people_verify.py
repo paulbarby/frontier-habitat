@@ -42,9 +42,18 @@ def import_person(v, outfit=None):
         if o.type != "MESH":
             continue
         nm = o.name.split(".")[0]
-        if nm.startswith(("Head_", "Hair_", "Outfit_")):
+        if nm.startswith(("Head_", "Hair_", "Outfit_", "Addon_")):
             meshes[nm] = o
     return rig, meshes
+
+
+def out_mesh(e):
+    """An outfit entry: 'Outfit_x' or {mesh, addons, base_rgb} (the department uniforms share one mesh)."""
+    return e if isinstance(e, str) else e["mesh"]
+
+
+def out_addons(e):
+    return [] if isinstance(e, str) else list(e.get("addons", []))
 
 
 def set_clip(rig, name, f):
@@ -83,7 +92,7 @@ def bvh_of(ob):
     return BVHTree.FromPolygons(verts, polys)
 
 
-def inside_count(bvh, pts, depth=0.01):
+def inside_count(bvh, pts, depth=0.01, deepest=None):
     bad = 0
     for p in pts:
         loc, nrm, idx, d = bvh.find_nearest(Vector(p), 0.12)
@@ -92,6 +101,8 @@ def inside_count(bvh, pts, depth=0.01):
         s = (Vector(p) - loc).dot(nrm)
         if s < -depth and -s >= 0.8 * d:
             bad += 1
+            if deepest is not None:
+                deepest[0] = max(deepest[0], -s)
     return bad
 
 
@@ -109,7 +120,8 @@ def run(check, gltf_facts):
         check("people: people_manifest.json", True, "no people files yet", info=True)
         return
     M = json.load(open(MANIFEST, encoding="utf-8"))
-    want_bones = sorted(N.BONE_NAMES[:24] + FACE_BONES) if len(N.BONE_NAMES) >= 24 else []
+    face = M.get("skeleton", {}).get("face_bones") or FACE_BONES
+    want_bones = sorted(N.BONE_NAMES[:24] + list(face))
     check("people: npc_pairs.json lists the hug", os.path.exists(PAIRS) and
           "hug" in json.load(open(PAIRS, encoding="utf-8")).get("pairs", {}), PAIRS)
     for v, d in M["variants"].items():
@@ -118,16 +130,18 @@ def run(check, gltf_facts):
             check("people %s: file" % v, False, "missing %s" % path)
             continue
         F = gltf_facts(path)
-        want_meshes = sorted([d["head"], d["hair"]] + list(d["outfits"].values()))
+        want_meshes = sorted(set([d["head"], d["hair"]] + [out_mesh(e) for e in d["outfits"].values()] +
+                                 list(d.get("addons", []))))
         check("people %s: skinned meshes Head, Hair, one per outfit" % v,
               sorted(F["skinned_mesh_nodes"]) == want_meshes, "%s" % F["skinned_mesh_nodes"])
-        check("people %s: skeleton = v3 + jaw + lids (26 bones)" % v, sorted(F["joints"]) == want_bones,
+        check("people %s: skeleton = v3 + face bones (%d)" % (v, len(want_bones)), sorted(F["joints"]) == want_bones,
               "%d joints" % len(F["joints"]))
         par_ok = all(F["skeleton"].get(b, {}).get("parent") == p for b, p in list(N.PARENT.items())[:24])
-        par_ok = par_ok and all(F["skeleton"].get(b, {}).get("parent") == "head" for b in FACE_BONES)
+        par_ok = par_ok and all(F["skeleton"].get(b, {}).get("parent") == "head" for b in face)
         check("people %s: bone parents as v3; jaw and lids under head" % v, par_ok, "ok" if par_ok else "differs")
         tb = F["tris_by"]
-        per = {o: tb.get(d["head"], 0) + tb.get(d["hair"], 0) + tb.get(m, 0) for o, m in d["outfits"].items()}
+        per = {o: tb.get(d["head"], 0) + tb.get(d["hair"], 0) + tb.get(out_mesh(e), 0) +
+                  sum(tb.get(a, 0) for a in out_addons(e)) for o, e in d["outfits"].items()}
         check("people %s: <= %d triangles per person on screen (LOD0)" % (v, BUDGET), max(per.values()) <= BUDGET,
               "%s" % per)
         check("people %s: COLOR_0 (AO), <= 4 weights, normalised" % v,
@@ -144,7 +158,10 @@ def run(check, gltf_facts):
         check("people %s: no scale keys, root never moves" % v, not scale and not roots,
               "scale %s, root %s" % (scale, roots))
         # evaluated: every clip with the first outfit
-        outfits = list(d["outfits"].values())
+        outfits = []
+        for e in d["outfits"].values():
+            if out_mesh(e) not in outfits:
+                outfits.append(out_mesh(e))
         rig, meshes = import_person(v)
         vis = [meshes[d["head"]], meshes[d["hair"]], meshes[outfits[0]]]
         worst_step, worst_seam, zmin, lid_step = (0.0, "", 0), (0.0, ""), (9.0, ""), (0.0, "")
@@ -163,7 +180,7 @@ def run(check, gltf_facts):
                     first = R
                 if prev is not None and c not in LOCOMOTION and c not in FALLS:
                     for bn in R:
-                        if bn in FACE_BONES:
+                        if bn in face:
                             a = rot_angle(prev[bn], R[bn]) - rot_angle(prev["head"], R["head"])
                             if a > lid_step[0]:
                                 lid_step = (a, "%s %s f%d" % (c, bn, f))
@@ -241,16 +258,21 @@ def run(check, gltf_facts):
         rig_b.location = (pr["distance_m"] * (sa + sb) / 2, 0.0, 0.0)
         rig_b.rotation_mode = "XYZ"
         rig_b.rotation_euler = (0.0, 0.0, math.radians(pr["facing_deg"]))
-        ob_a = ma[list(M["variants"][a]["outfits"].values())[0]]
-        ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == list(M["variants"][b]["outfits"].values())[0])
-        worst = 0
-        for f in (40, 50, 60):
+        ob_a = ma[out_mesh(list(M["variants"][a]["outfits"].values())[0])]
+        name_b = out_mesh(list(M["variants"][b]["outfits"].values())[0])
+        ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
+        worst, deep, n_deep = 0, [0.0], 0
+        for f in range(12, 96, 4):
             set_clip(rig_a, "hug", f)
             rig_b.animation_data.action = hug_b
             if hug_b is not None and hug_b.slots:
                 rig_b.animation_data.action_slot = hug_b.slots[0]
             bpy.context.scene.frame_set(f)
             bpy.context.view_layer.update()
-            worst = max(worst, inside_count(bvh_of(ob_b), world_co(ob_a)[::2], depth=0.02))
-        check("people pair hug (%s with %s): bodies overlapping deeper than 2 cm at the hold (for information)" % (a, b),
-              True, "%d vertices (every 2nd) at worst" % worst, info=True)
+            pts = world_co(ob_a)[::2]
+            bvh = bvh_of(ob_b)
+            worst = max(worst, inside_count(bvh, pts, depth=0.02, deepest=deep))
+            n_deep = max(n_deep, inside_count(bvh, pts, depth=0.04))
+        check("people pair hug (%s with %s): <= 60 vertices (every 2nd) deeper than 2 cm and <= 3 deeper than 4 cm "
+              "(single contact points), whole clip" % (a, b), worst <= 60 and n_deep <= 3,
+              "%d deeper than 2 cm, %d deeper than 4 cm, deepest %.3f m" % (worst, n_deep, deep[0]))

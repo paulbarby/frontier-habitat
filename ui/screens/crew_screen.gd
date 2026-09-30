@@ -31,6 +31,11 @@ class PersonChip extends Button:
 		set_drag_preview(prev)
 		return {"agent": agent_id}
 
+## Standard skill abbreviations (critic round 36); the header tooltip has the full name.
+const SKILL_ABBR := {"engineering": "Eng", "mining": "Min", "fabrication": "Fab", "farming": "Frm", "cooking": "Cook", "medicine": "Med",
+	"science": "Sci", "piloting": "Pil", "security": "Sec", "leadership": "Lead", "social": "Soc"}
+const LEVEL_COL := [Color("8A97A6"), Color("B7C6D6"), Color("3EE0FF"), Color("5EE07A"), Color("FFD166")]
+
 ## A mood face (critic round 30, fix 6): very unhappy (red) .. happy (gold), from satisfaction.
 static func mood_face(sv: float) -> TextureRect:
 	var m: int = V5.mood(sv)
@@ -216,7 +221,22 @@ func _holder(r: Dictionary, starred: bool) -> Control:
 	h.add_child(c)
 	if not starred:
 		h.add_child(Kit.label(String(r["rank"]).capitalize(), "SmallLabel", 11, P.TEXT_3))
-	return h
+	# Critic round 36: the columns carry each person's two best skills (who is good at what).
+	var v: VBoxContainer = Kit.vbox(1)
+	v.add_child(h)
+	var a: Dictionary = hud.v5.agent(int(r["id"]))
+	if not a.is_empty():
+		var s = hud.main.sim
+		var sk: Dictionary = s.people.skills(a)
+		var names: Array = sk.keys()
+		names.sort_custom(func(x, y): return float(sk[x]) > float(sk[y]))
+		var parts: Array = []
+		for n in names.slice(0, 2):
+			parts.append("%s L%d" % [String(n).capitalize(), int(s.people.level_of(float(sk[n])))])
+		var sl: Label = Kit.label("    " + "  ·  ".join(parts), "SmallLabel", 12, P.TEXT_2)
+		sl.name = "TopSkills"
+		v.add_child(sl)
+	return v
 
 ## A person dropped on a slot: the confirm, then the order.
 func dropped(agent: int, spec: Dictionary) -> void:
@@ -453,18 +473,20 @@ func _skill_table(box: VBoxContainer, skills: Array) -> void:
 	var s = hud.main.sim
 	box.add_child(Kit.sep())
 	box.add_child(Kit.head("Skill levels of the crew (1 Novice .. 5 Master)", P.CYAN, 12))
-	var g: GridContainer = Kit.grid(skills.size() + 2, 10, 3)
+	var g: GridContainer = Kit.grid(skills.size() + 2, 6, 4)
 	g.name = "SkillTable"
 	var well: PanelContainer = Kit.well_scroll(g, true)
 	box.add_child(well)
 	g.add_child(Kit.dim("", 12))
 	g.add_child(Kit.dim("Person", 12))
 	for k in skills:
-		var h: Label = Kit.dim(String(k).capitalize().left(6), 12)
-		h.tooltip_text = String(k).capitalize()
+		var h: Label = Kit.head(String(SKILL_ABBR.get(String(k), String(k).left(3))).to_upper(), P.TEXT_2, 12)
+		h.tooltip_text = "%s\nLevel 1 Novice .. 5 Master." % String(k).capitalize()
 		h.mouse_filter = Control.MOUSE_FILTER_PASS
+		h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		h.custom_minimum_size.x = 56
 		g.add_child(h)
-	var cols := [P.TEXT_3, P.TEXT_2, P.CYAN, P.GREEN, P.GOLD]
+	var cols := LEVEL_COL
 	for r in _rows():
 		var a: Dictionary = hud.v5.agent(int(r["id"]))
 		if a.is_empty():
@@ -475,8 +497,21 @@ func _skill_table(box: VBoxContainer, skills: Array) -> void:
 		nl.custom_minimum_size.x = 150
 		g.add_child(nl)
 		for k in skills:
-			var lv: int = int(s.people.level_of(float(sk.get(String(k), 0.0))))
-			var c: Label = Kit.num("%d" % lv, 13, cols[clampi(lv - 1, 0, 4)])
+			var val: float = float(sk.get(String(k), 0.0))
+			var lv: int = int(s.people.level_of(val))
+			var col: Color = cols[clampi(lv - 1, 0, 4)]
+			# A chip coloured by level (critic round 36): the number on a tint of the level colour.
+			var chip := PanelContainer.new()
+			var st := StyleBoxFlat.new()
+			st.bg_color = Color(col.r, col.g, col.b, 0.10 + 0.07 * float(lv))
+			st.set_corner_radius_all(3)
+			st.content_margin_top = 1
+			st.content_margin_bottom = 1
+			chip.add_theme_stylebox_override("panel", st)
+			chip.custom_minimum_size.x = 56
+			chip.tooltip_text = "%s: %s\nLevel %d, %s (skill %d)." % [String(r["name"]), String(k).capitalize(), lv, String(s.people.level_name(val)), int(val)]
+			chip.mouse_filter = Control.MOUSE_FILTER_PASS
+			var c: Label = Kit.label("%d" % lv, "", 13, col.lightened(0.15))
 			c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			c.custom_minimum_size.x = 52
-			g.add_child(c)
+			chip.add_child(c)
+			g.add_child(chip)

@@ -21,7 +21,9 @@ var _id_cache := {}          # agent id -> identity (derived; the same every cal
 var _rank_tick := -1
 var _skill_cache := {}       # agent id -> [day, role, skills] (skills change once a day in the stub)
 var _ranks := {}             # agent id -> rank record
-var _rank_sig := -1          # roster signature of _ranks (ids, roles, homes, the day)
+var _rank_sig := -1          # roster signature of _ranks (ids, roles, beds, the day, appointments)
+var _sig_tick := -1
+var _role_hash := {}
 var _captains := {}          # "base:department" -> agent id of the captain
 var _dep_of := {}            # role -> department (content, fixed)
 var _sat_cache := {}         # agent id -> [phase key, satisfaction record]
@@ -100,6 +102,188 @@ func prewarm() -> void:
 func cfg() -> Dictionary:
 	return sim.content["people"]
 
+func soc() -> Dictionary:
+	return sim.content["society"]
+
+# ---------------------------------------------------------------- stored state (schema 6: state.v5)
+## Read only: state.v5 or {} (the interface never writes the state).
+func v5r() -> Dictionary:
+	return sim.state.get("v5", {})
+
+## The simulation's copy, made when first needed: {people {id: record}, appoint, unrest, courses}.
+func v5w() -> Dictionary:
+	if not sim.state.has("v5"):
+		sim.state["v5"] = {"people": {}, "appoint": {}, "unrest": {}, "courses": {}}
+	return sim.state["v5"]
+
+## A person's stored record (read only; {} before the first update):
+## {att, sat, low (lowest component), mods [{kind, text, comp, sat, att, until, flags...}],
+##  hist [{tick, text}], review {grade, tick}, skill_bonus {skill: points}, demoted_until, unit}.
+func rec_of(id: int) -> Dictionary:
+	return v5r().get("people", {}).get(id, {})
+
+func rec_w(a: Dictionary) -> Dictionary:
+	var ppl: Dictionary = v5w()["people"]
+	var id: int = int(a["id"])
+	if not ppl.has(id):
+		ppl[id] = {"att": float(attitude_target(a, float(_satisfaction(a)["value"]))["value"]), "sat": 50.0, "low": "", "mods": [], "hist": []}
+	return ppl[id]
+
+## A dated line in a person's history (last 30 kept).
+func note(a: Dictionary, text: String) -> void:
+	var h: Array = rec_w(a)["hist"]
+	h.append({"tick": int(sim.state["tick"]), "text": text})
+	while h.size() > 30:
+		h.pop_front()
+
+## Adds a timed effect: m = {kind, text, comp, sat, att, days, flags...}.
+func add_mod(a: Dictionary, m: Dictionary) -> void:
+	var r: Dictionary = rec_w(a)
+	var mm: Dictionary = m.duplicate()
+	mm["until"] = int(sim.state["tick"]) + int(float(m.get("days", 1.0)) * float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))
+	mm.erase("days")
+	r["mods"].append(mm)
+	_apply_flags(a, r)
+	invalidate(int(a["id"]))
+
+## Removes the active effects of these kinds (amnesty, a met demand).
+func end_mods(a: Dictionary, kinds: Array) -> void:
+	var r: Dictionary = rec_w(a)
+	var keep: Array = []
+	for m in r["mods"]:
+		if not kinds.has(String(m["kind"])):
+			keep.append(m)
+	r["mods"] = keep
+	_apply_flags(a, r)
+	invalidate(int(a["id"]))
+
+func has_mod(a: Dictionary, kind: String) -> bool:
+	var now: int = int(sim.state["tick"])
+	for m in rec_of(int(a["id"])).get("mods", []):
+		if String(m["kind"]) == kind and int(m["until"]) > now:
+			return true
+	return false
+
+## A demotion: no post is proposed for this person until the tick given (the rank check reads it).
+func set_demoted(a: Dictionary, until: int) -> void:
+	var appt: Dictionary = v5w()["appoint"]
+	if not appt.has("demoted"):
+		appt["demoted"] = {}
+	appt["demoted"][int(a["id"])] = until
+	rec_w(a)["demoted_until"] = until
+	_rank_sig = -1
+
+func clear_demoted(a: Dictionary) -> void:
+	var appt: Dictionary = v5w()["appoint"]
+	if appt.has("demoted"):
+		appt["demoted"].erase(int(a["id"]))
+	rec_w(a).erase("demoted_until")
+	_rank_sig = -1
+
+## Drops the query caches of one person (after an order changed them).
+func invalidate(id: int) -> void:
+	_sat_cache.erase(id)
+	_att_cache.erase(id)
+	_row_cache.erase(id)
+	_skill_cache.erase(id)
+	_list_tick = -1
+
+## Every tick (sim.step): the people whose turn it is (every update_every_s, by id) get their
+## satisfaction and attitude stored and their work flags set. About 1/50 of the people a tick.
+func tick() -> void:
+	var hz: int = int(sim.bal["tick_hz"])
+	var every: int = int(soc()["update_every_s"]) * hz
+	var now: int = int(sim.state["tick"])
+	var agents: Dictionary = sim.state["agents"]
+	var due: Array = []
+	for aid in agents:
+		if (now + int(aid)) % every == 0:
+			due.append(aid)
+	if due.is_empty():
+		return
+	v5w()
+	_refresh_ranks(true)
+	due.sort()
+	var ppl: Dictionary = sim.state["v5"]["people"]
+	for aid in due:
+		var a: Dictionary = agents[aid]
+		if a["state"] != "alive":
+			if ppl.has(int(aid)):
+				ppl.erase(int(aid))
+			continue
+		_update(a)
+
+func _update(a: Dictionary) -> void:
+	var r: Dictionary = rec_w(a)
+	var now: int = int(sim.state["tick"])
+	var keep: Array = []
+	for m in r["mods"]:
+		if int(m["until"]) > now:
+			keep.append(m)
+	r["mods"] = keep
+	var s: Dictionary = _satisfaction(a)
+	var lo := ""
+	var lov := 1e9
+	for k in s["components"]:
+		if float(s["components"][k]) < lov:
+			lov = float(s["components"][k])
+			lo = k
+	r["sat"] = float(s["value"])
+	r["low"] = lo
+	var tg: float = float(attitude_target(a, float(s["value"]))["value"])
+	r["att"] = snappedf(float(r["att"]) + (tg - float(r["att"])) * float(soc()["attitude"]["rate"]), 0.01)
+	_apply_flags(a, r)
+
+## The flags the rest of the simulation reads on the agent (absent = normal):
+## v5_nowork (no work: confined, jailed, in class, on strike), v5_norec (no leisure),
+## v5_hunger (hunger rate), v5_work (work speed), jailed.
+func _apply_flags(a: Dictionary, r: Dictionary) -> void:
+	var now: int = int(sim.state["tick"])
+	var nowork := false
+	var norec := false
+	var jail := false
+	var hunger := 1.0
+	var work := 1.0
+	for m in r["mods"]:
+		if int(m["until"]) <= now:
+			continue
+		nowork = nowork or bool(m.get("no_work", false))
+		norec = norec or bool(m.get("no_rec", false))
+		jail = jail or bool(m.get("jail", false))
+		hunger = maxf(hunger, float(m.get("hunger_mult", 1.0)))
+		work *= float(m.get("work_mult", 1.0))
+	if float(r.get("att", 0.0)) <= float(soc()["attitude"]["slack_below"]):
+		work *= float(soc()["attitude"]["slack_work_mult"])
+	if sim.get("unrest") != null:
+		work *= sim.unrest.work_mult(a)
+		nowork = nowork or sim.unrest.on_strike(a)
+	if sim.get("education") != null and sim.education.in_class(a):
+		nowork = true
+	_flag(a, "v5_nowork", nowork, true)
+	_flag(a, "v5_norec", norec, true)
+	_flag(a, "jailed", jail, true)
+	_flag(a, "v5_hunger", hunger != 1.0, snappedf(hunger, 0.01))
+	_flag(a, "v5_work", absf(work - 1.0) > 0.001, snappedf(work, 0.001))
+
+func _flag(a: Dictionary, key: String, on: bool, value) -> void:
+	if on:
+		a[key] = value
+	elif a.has(key):
+		a.erase(key)
+
+## What an order would do (the interface asks before the player confirms): {attitude, satisfaction,
+## others (text), risk (text), unfair (bool), text, days, traits}. a: the agent or its id; action: a
+## discipline action or a review grade. {} for an unknown action.
+func predict(a, action: String, params: Dictionary = {}) -> Dictionary:
+	var ag: Dictionary = a if typeof(a) == TYPE_DICTIONARY else sim.state["agents"].get(int(a), {})
+	if ag.is_empty():
+		return {}
+	return sim.discipline.predict(ag, action, params)
+
+## What a person is doing for show (RENDER): "dance" during the dance egg, else "".
+func action(a: Dictionary) -> String:
+	return "dance" if has_mod(a, "dance") else ""
+
 func _h(id: int, salt: int) -> float:
 	return Rng.hash2(id, salt, int(sim.state.get("seed", 1)) ^ 0x5EED)
 
@@ -167,9 +351,12 @@ func skills(a: Dictionary) -> Dictionary:
 	var st: Dictionary = c["start_skill"]
 	var id: int = int(a["id"])
 	var mine: Array = c["role_skills"].get(String(a.get("role", "")), [])
-	var days: float = float(int((int(sim.state["tick"]) - int(a.get("born", 0))) / int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))))
+	# Days here: whole game days since the person arrived (the day turns for everybody at once).
+	var dt: int = int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))
+	var days: float = float(maxi(0, int(sim.state["tick"]) / dt - int(a.get("born", 0)) / dt))
+	var bonus: Dictionary = rec_of(id).get("skill_bonus", {})
 	var hit = _skill_cache.get(id)
-	if hit != null and hit[0] == days and hit[1] == String(a.get("role", "")):
+	if hit != null and hit[0] == days and hit[1] == String(a.get("role", "")) and hit[3] == bonus.hash():
 		return hit[2]
 	var out := {}
 	var i := 0
@@ -182,8 +369,9 @@ func skills(a: Dictionary) -> Dictionary:
 			v = _h(id, 200 + i) * float(st["other_to"])
 		if sk == "leadership" or sk == "social":
 			v += 20.0 * _h(id, 300 + i)
-		out[sk] = clampi(int(round(v)), 0, int(st["cap"]))
-	_skill_cache[id] = [days, String(a.get("role", "")), out]
+		v += float(bonus.get(sk, 0))
+		out[sk] = clampi(int(round(v)), 0, 100)
+	_skill_cache[id] = [days, String(a.get("role", "")), out, bonus.hash()]
 	return out
 
 ## Level 1..5 of a skill value.
@@ -219,7 +407,7 @@ func department(a: Dictionary) -> String:
 
 ## The agent id of the captain of a department in a base (-1: none). Cached with the ranks.
 func captain_of(dep: String, base: int) -> int:
-	_refresh_ranks()
+	_refresh_ranks(false)
 	return int(_captains.get("%d:%s" % [base, dep], -1))
 
 # ---------------------------------------------------------------- ranks (V5 section 5.1)
@@ -227,30 +415,51 @@ func captain_of(dep: String, base: int) -> int:
 ##  name ("Base Commander", "Captain", ...), title ("Captain of Food", ...), department, base}
 ## Stub: SIM's proposal (the best candidates) is the rank; appointments come later.
 func rank(a: Dictionary) -> Dictionary:
-	_refresh_ranks()
+	_refresh_ranks(false)
 	return _ranks.get(int(a["id"]), {"rank": "crew", "name": "Crew", "title": "Crew", "department": department(a), "base": -1})
 
-func _refresh_ranks() -> void:
-	# Ranks are proposed again when the roster changes (who lives, their roles and homes, the
-	# day of the skills); the roster is checked once a game minute (60 s).
+## Ranks are proposed again when the roster changes (who lives, their roles and homes, the day
+## of the skills, the appointments); a call from the interface checks the roster once a game
+## minute, the simulation (force) every time it asks. The result depends only on the state.
+func _refresh_ranks(force: bool = false) -> void:
 	var hz: int = int(sim.bal["tick_hz"])
-	var tick: int = int(sim.state["tick"]) / (60 * hz)
-	if tick == _rank_tick and _rank_sig != -1:
+	var now: int = int(sim.state["tick"])
+	var tick: int = now / (60 * hz)
+	if not force and tick == _rank_tick and _rank_sig != -1:
+		return
+	# One check a tick at most (the simulation asks for several people on one tick).
+	if force and now == _sig_tick and _rank_sig != -1:
 		return
 	_rank_tick = tick
+	_sig_tick = now
 	var nb: int = sim.bases.count()
-	var day: int = int(sim.state["tick"]) / int(float(sim.bal["day_length"]) * float(hz))
-	var sig: int = day * 7919
-	var homes := {}
+	var day: int = now / int(float(sim.bal["day_length"]) * float(hz))
+	var appt: Dictionary = v5r().get("appoint", {})
+	var sig: int = day * 7919 + appt.hash() % 1000003
+	# Demotions in force (a few at most) change the proposal while they last.
+	for did in appt.get("demoted", {}):
+		if int(appt["demoted"][did]) > now:
+			sig = (sig * 31 + int(did)) & 0x3FFFFFFFFFFF
+	# The roster: ids, roles and beds (a bed fixes the home base); cheap enough for every tick.
 	for aid in sim.state["agents"]:
 		var a: Dictionary = sim.state["agents"][aid]
 		if a["state"] != "alive":
 			continue
-		var hb: int = sim.bases.home_of(a) if nb > 0 else -1
-		homes[int(aid)] = hb
-		sig = (sig * 31 + int(aid) * 131 + String(a.get("role", "")).hash() + hb * 17) & 0x3FFFFFFFFFFF
+		var rh = _role_hash.get(a.get("role", ""))
+		if rh == null:
+			rh = String(a.get("role", "")).hash() & 0xFFFFFF
+			_role_hash[a.get("role", "")] = rh
+		var hb: int = int(a.get("bed", -1))
+		if hb == -1 and nb > 1:
+			hb = -1000 - sim.bases.base_of_agent(a)
+		sig = (sig * 31 + int(aid) * 131 + int(rh) + hb * 17) & 0x3FFFFFFFFFFF
 	if sig == _rank_sig:
 		return
+	var homes := {}
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] == "alive":
+			homes[int(aid)] = sim.bases.home_of(a) if nb > 0 else -1
 	_rank_sig = sig
 	_ranks = {}
 	_captains = {}
@@ -269,14 +478,23 @@ func _refresh_ranks() -> void:
 	for b in by_base:
 		var people: Array = by_base[b]
 		people.sort_custom(func(x, y): return int(x["id"]) < int(y["id"]))
-		# Commander: the best leader (ties: the longest here, then id).
-		var best: Dictionary = {}
-		var best_v := -1.0
+		var here := {}
 		for a in people:
-			var v: float = float(skills(a)["leadership"]) - float(a.get("born", 0)) / 1e9
-			if v > best_v:
-				best_v = v
-				best = a
+			here[int(a["id"])] = a
+		# Commander: the appointed one, else the best leader (ties: the longest here, then id).
+		var best: Dictionary = {}
+		var appointed: int = int(appt.get("%d:commander" % b, -1))
+		if here.has(appointed):
+			best = here[appointed]
+		else:
+			var best_v := -1.0
+			for a in people:
+				if int(appt.get("demoted", {}).get(int(a["id"]), -1)) > now:
+					continue
+				var v: float = float(skills(a)["leadership"]) - float(a.get("born", 0)) / 1e9
+				if v > best_v:
+					best_v = v
+					best = a
 		var taken := {}
 		if not best.is_empty():
 			taken[int(best["id"])] = true
@@ -297,13 +515,39 @@ func _refresh_ranks() -> void:
 			members = []
 			for kx in keyed:
 				members.append(kx[2])
+			# Appointed captain and first hands first, then the proposal; a person demoted in
+			# the last days is not proposed for a post.
+			var cap_id: int = int(appt.get("%d:%s:captain" % [b, dep], -1))
+			var fh_ids: Array = appt.get("%d:%s:first_hand" % [b, dep], [])
+			var head: Array = []
+			var tail: Array = []
+			var cap_row = null
+			for a in members:
+				var aid2: int = int(a["id"])
+				if aid2 == cap_id:
+					cap_row = a
+				elif fh_ids.has(aid2):
+					head.append(a)
+				else:
+					tail.append(a)
+			var demoted: Array = []
+			var free: Array = []
+			for a in tail:
+				if int(appt.get("demoted", {}).get(int(a["id"]), -1)) > now:
+					demoted.append(a)
+				else:
+					free.append(a)
+			if cap_row == null and not free.is_empty() and members.size() >= 2:
+				cap_row = free.pop_front()
+			members = ([cap_row] if cap_row != null else []) + head + free + demoted
 			var fh_n: int = 0 if members.size() < 3 else (1 if members.size() < 6 else 2)
+			fh_n = maxi(fh_n, head.size())
 			for i in members.size():
 				var a: Dictionary = members[i]
 				var r: String
-				if i == 0 and members.size() >= 2:
+				if i == 0 and cap_row != null:
 					r = "captain"
-				elif i >= 1 and i <= fh_n:
+				elif i >= (1 if cap_row != null else 0) and i < (1 if cap_row != null else 0) + fh_n and int(appt.get("demoted", {}).get(int(a["id"]), -1)) <= now:
 					r = "first_hand"
 				else:
 					var v2: int = int(skills(a)[sk])
@@ -361,7 +605,11 @@ func home(a: Dictionary) -> Dictionary:
 	if def.has("units"):
 		var units: Array = sim.floors.units(b)
 		if not units.is_empty():
-			var u: Dictionary = units[int(_h(int(a["id"]), 12) * units.size()) % units.size()]
+			var pick: int = int(_h(int(a["id"]), 12) * units.size()) % units.size()
+			var want_u: int = int(rec_of(int(a["id"])).get("unit", -1))
+			if want_u >= 0 and want_u < units.size():
+				pick = want_u
+			var u: Dictionary = units[pick]
 			kind = String(u["quality"])
 			unit = int(u["index"])
 			fl = int(u["floor"])
@@ -396,12 +644,20 @@ func _satisfaction(a: Dictionary) -> Dictionary:
 	comp["housing"] = clampf(50.0 + 20.0 * float(int(h["quality"]) - want), 0.0, 100.0)
 	var gap_days: float = float(int(sim.state["tick"]) - int(a.get("last_rec", -1000000))) / (float(sim.bal["tick_hz"]) * float(sim.bal["day_length"]))
 	comp["comfort"] = clampf(90.0 - gap_days * 25.0, 10.0, 90.0)
-	comp["social"] = clampf(45.0 + 30.0 * _h(int(a["id"]), 13) + (10.0 if has_trait(a, "charming") else 0.0) - (10.0 if has_trait(a, "shy") else 0.0), 0.0, 100.0)
+	# V5 section 4.2: friends, a partner and enemies (relations.gd).
+	var so: Dictionary = sim.relations.summary(int(a["id"])) if sim.get("relations") != null else {"friends": 0, "best_friends": 0, "partner": -1, "enemies": 0}
+	var social: float = 50.0 + 6.0 * minf(4.0, float(so["friends"])) + 10.0 * minf(2.0, float(so["best_friends"])) + (15.0 if int(so["partner"]) != -1 else 0.0) - 6.0 * minf(3.0, float(so["enemies"]))
+	comp["social"] = clampf(social + (8.0 if has_trait(a, "charming") else 0.0) - (8.0 if has_trait(a, "shy") else 0.0), 0.0, 100.0)
 	comp["work"] = clampf(75.0 - maxf(0.0, float(a.get("fatigue", 0.0)) - 60.0), 0.0, 100.0)
 	comp["fairness"] = 70.0
 	var safety: float = 90.0 - float(a.get("dose", 0.0)) / 10.0 - (30.0 if sim.hazards.sheltered() else 0.0)
 	comp["safety"] = clampf(safety - (100.0 - float(a.get("health", 100.0))) * 0.3, 0.0, 100.0)
-	comp["freedom"] = 20.0 if bool(a.get("jailed", false)) else 80.0
+	comp["freedom"] = 20.0 if bool(a.get("jailed", false)) else (40.0 if a.has("v5_norec") else 80.0)
+	# V5 section 6: reviews, discipline and punishments seen move one component each.
+	var now: int = int(sim.state["tick"])
+	for m in rec_of(int(a["id"])).get("mods", []):
+		if int(m["until"]) > now and comp.has(String(m.get("comp", ""))):
+			comp[m["comp"]] = clampf(float(comp[m["comp"]]) + float(m.get("sat", 0.0)), 0.0, 100.0)
 	var w: Dictionary = SAT_W
 	var s := 0.0
 	var ws := 0.0
@@ -433,15 +689,34 @@ func attitude(a: Dictionary) -> Dictionary:
 	return out
 
 func _attitude(a: Dictionary) -> Dictionary:
-	var sat: float = float(satisfaction(a)["value"])
-	var v: float = (sat - 50.0) * 1.2
+	var tg: Dictionary = attitude_target(a, float(satisfaction(a)["value"]))
+	var rec: Dictionary = rec_of(int(a["id"]))
+	var v: float = float(tg["value"])
+	var trend := 0.0
+	if rec.has("att"):
+		v = float(rec["att"])
+		# Points a day toward the target at the present gap.
+		var per_day: float = float(sim.bal["day_length"]) / float(soc()["update_every_s"])
+		trend = snappedf((float(tg["value"]) - v) * float(soc()["attitude"]["rate"]) * per_day, 0.1)
+	return {"value": snappedf(clampf(v, -100.0, 100.0), 0.1), "trend": trend, "target": tg["value"], "reasons": tg["reasons"]}
+
+## Where a person's attitude goes: {value, reasons [{text, delta}]} from satisfaction, traits and
+## the active reviews and discipline.
+func attitude_target(a: Dictionary, sat: float) -> Dictionary:
+	var ac: Dictionary = soc()["attitude"]
+	var v: float = (sat - 50.0) * float(ac["from_satisfaction"])
 	var reasons: Array = [{"text": "Satisfaction %d" % int(sat), "delta": snappedf(v, 0.1)}]
-	var mods := {"loyal": 12.0, "workaholic": 8.0, "calm": 5.0, "honest": 4.0, "lazy": -12.0, "hot-headed": -8.0, "greedy": -5.0}
-	for t in identity(a)["traits"]:
-		if mods.has(t):
-			v += float(mods[t])
-			reasons.append({"text": "Trait: %s" % t, "delta": mods[t]})
-	return {"value": snappedf(clampf(v, -100.0, 100.0), 0.1), "trend": 0.0, "reasons": reasons}
+	var mods: Dictionary = ac["traits"]
+	for tr in identity(a)["traits"]:
+		if mods.has(tr):
+			v += float(mods[tr])
+			reasons.append({"text": "Trait: %s" % tr, "delta": float(mods[tr])})
+	var now: int = int(sim.state["tick"])
+	for m in rec_of(int(a["id"])).get("mods", []):
+		if int(m["until"]) > now and float(m.get("att", 0.0)) != 0.0:
+			v += float(m["att"])
+			reasons.append({"text": String(m.get("text", m["kind"])), "delta": float(m["att"])})
+	return {"value": snappedf(clampf(v, -100.0, 100.0), 0.1), "reasons": reasons}
 
 # ---------------------------------------------------------------- lists
 ## One row per living person (colonists, visitors, children) for the crew list and the follow HUD.

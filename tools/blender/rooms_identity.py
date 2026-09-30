@@ -141,7 +141,7 @@ ICONS = {
     "utilities": [[[(0.10, 0.78), (-0.42, -0.06), (-0.04, -0.06), (-0.18, -0.78), (0.44, 0.10), (0.04, 0.10),
                     (0.22, 0.78)]]],
 }
-ICON_MAT = {"security": "Ember", "jail": "BeaconAmber"}      # security red, jail amber (critic round 33)
+ICON_MAT = {"security": "SignalRedGlow", "jail": "PrisonOrangeGlow", "shop": "Light"}   # critic 37: bright bag      # security red, jail amber (critic round 33)
 
 
 def _signed_area(loop):

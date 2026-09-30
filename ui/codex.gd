@@ -133,16 +133,13 @@ func entries(kind: String) -> Array:
 	out.sort_custom(func(a, b): return String(a["name"]).naturalnocasecmp_to(String(b["name"])) < 0)
 	return out
 
+## Codex-only people entries; the v5 topics (follow, the Rag, ranks, discipline, unrest, homes,
+## the academy, the new structures, floors) come from ui/v5_help.gd TOPICS (also the How to play tab).
 const SOCIETY := [
-	["ranks", "Ranks", "People", "people", "Each base has a Base Commander; each department (Industry, Science, Food, Maintenance, Security) a Captain and up to 2 First Hands. The rest are Specialists, Crew or Trainees by skill. Leaders speed up their department. Appoint them in the Crew window (key U): drag a person onto a rank. A rank expects a home: the commander and the captains an executive unit."],
-	["skills", "Skills", "People", "research", "11 skills from 0 to 100, shown as levels 1 to 5: Novice, Trained, Skilled, Expert, Master. A higher level works faster (Novice x0.7, Master x1.4) and makes fewer mistakes. Skills grow with work and at the academy; they fall a little when not used for long."],
 	["satisfaction", "Satisfaction", "People", "morale", "0 to 100: needs, food, housing, leisure, friends, work, fairness, safety and freedom. The personnel file shows each part and its reason. Low satisfaction makes attitudes worse."],
 	["attitude", "Attitude", "People", "trend_down", "-100 to 100: how a person treats work and rules. Bad (-30 and below): slow work, long breaks, backtalk. Very bad (-70 and below): protests and fights. It follows satisfaction, traits, the captain, friends and discipline."],
-	["discipline", "Reviews and discipline", "People", "orders", "Reviews (Excellent to Poor) and actions: praise, bonus leisure, gifts, warnings, extra shifts, ration cuts, confinement, demotion and jail. Each shows its expected effect before you confirm. Punishment works now and costs later: friends see it, and unfair punishment raises unrest."],
-	["unrest", "Unrest", "Society", "people", "0 to 100 per base, from low satisfaction and bad attitudes, punishments, unmet entitlements, deaths and food cuts. Grumbling from 25, slowdown (work -15 %) from 40, protest from 55, strike from 70, riot from 85. Answer with the demand, a leisure day, a party, amnesty, a new captain, arrests or a lockdown."],
 	["security", "Security and jail", "Society", "shelter", "Security officers patrol, stop fights and take arrested people to jail. One officer for about 12 people. A jail holds 2, 4 or 8 prisoners; without one, arrested people are confined to their quarters."],
 	["relationships", "Relationships", "Society", "heart", "People become friends, rivals or enemies at work, at meals and in leisure places. Adults can fall in love, date, move in together and marry; affairs and break-ups make news in The Regolith Rag (key J). Crushes stay secret until the Rag or a speech bubble tells."],
-	["follow", "Over the shoulder", "Society", "follow", "Select a person and press V: the camera goes behind them and you see what people say. Tab: the next person. Esc: back."],
 ]
 const EGGS := {"dance": ["Dance Floor Director", "In the over-the-shoulder view, the old code makes the person dance, and their friends join in."],
 	"arcade": ["Prism Shift", "A neon tunnel racer on an arcade cabinet in the gaming lounge. Some colonists are champions."],
@@ -150,6 +147,8 @@ const EGGS := {"dance": ["Dance Floor Director", "In the over-the-shoulder view,
 
 func society_entries() -> Array:
 	var out: Array = []
+	for tp in load("res://ui/v5_help.gd").TOPICS:
+		out.append({"id": String(tp[0]), "kind": "society", "name": String(tp[1]), "cat": String(tp[3]), "desc": String(tp[4]), "icon": String(tp[2]), "fallback_icon": "people", "color": P.CYAN})
 	for s in SOCIETY:
 		out.append({"id": String(s[0]), "kind": "society", "name": String(s[1]), "cat": String(s[2]), "desc": String(s[4]), "icon": String(s[3]), "fallback_icon": "people", "color": P.CYAN})
 	var found: Dictionary = hud.eggs_found() if hud.has_method("eggs_found") else {}

@@ -53,6 +53,12 @@ const Reactors = preload("res://sim/reactors.gd")
 const Explore = preload("res://sim/explore.gd")
 const People = preload("res://sim/people.gd")
 const Social = preload("res://sim/social.gd")
+const Ranks = preload("res://sim/ranks.gd")
+const Discipline = preload("res://sim/discipline.gd")
+const Unrest = preload("res://sim/unrest.gd")
+const Education = preload("res://sim/education.gd")
+const Housing = preload("res://sim/housing.gd")
+const Relations = preload("res://sim/relations.gd")
 const Floors = preload("res://sim/floors.gd")
 const Text = preload("res://sim/text.gd")
 
@@ -95,6 +101,12 @@ var reactors
 var explore
 var people
 var social
+var ranks
+var discipline
+var unrest
+var education
+var housing
+var relations
 var floors
 var pending: Array = []
 var _cmd_seq := 0
@@ -138,12 +150,18 @@ func _init() -> void:
 	explore = Explore.new(self)
 	people = People.new(self)
 	social = Social.new(self)
+	ranks = Ranks.new(self)
+	discipline = Discipline.new(self)
+	unrest = Unrest.new(self)
+	education = Education.new(self)
+	housing = Housing.new(self)
+	relations = Relations.new(self)
 	floors = Floors.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -305,6 +323,8 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	# The v5 people and social caches are derived from the old state.
 	people.reset()
 	social.reset()
+	unrest.reset()
+	relations.reset()
 	if bool(opts.get("debug", false)):
 		if not state.has("options"):
 			state["options"] = {}
@@ -514,6 +534,11 @@ func step() -> void:
 		awards.tick_second()
 	if phase == _phase_of(8, hz):
 		alerts.tick_second()
+	# V5: people (a slice a tick), courses and unrest (each base on its own tick).
+	people.tick()
+	relations.tick()
+	education.tick()
+	unrest.tick()
 	if phase == 0:
 		metrics.tick_second()
 

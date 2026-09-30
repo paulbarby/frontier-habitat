@@ -773,3 +773,28 @@ Full suite 60 of 60 pass (606 s). Campaign: hull day 25.2 (limit 27), 26 alive, 
   long_campaign failed once (passes alone, hull day 25.8), long_v3_perf 2.49 ms (limit 2.0, machine loaded).
 - Next: full suite + UI sim-state tests (test_ships_ui, test_v5_people); fix the pad regression of the personal
   suit_range rule; SIM-to-UI note; then UI's unrest range and cmd_* items; then the V5 section 13 order.
+
+## 2026-09-30, V5: query cost, UI's orders and unrest, two bug fixes (resumed after the pause)
+- Query cost (RENDER 2026-09-29): talks are sessions; caches per person and second with a per-tick budget; ranks on
+  a roster signature (0.07 ms a check at 110 people); Rag issues made once. `sim.step()` runs the once-a-second
+  systems on different ticks of the second. Native, showcase_v3_late, 110 people: talks_near mean 0.21 ms, max 0.53;
+  worst tick-of-second median 3.4-5.3 ms (jobs) against 9.0 ms before; first rag_issues(30) 12 ms (was 495 ms).
+- UI's orders: `review`, `discipline`, `appoint`, `set_home`, `enrol`, `unrest_response`, `egg` (new sim/ranks.gd,
+  discipline.gd, unrest.gd, education.gd, housing.gd; content/society.json); `people.predict` with `unfair`;
+  `education.students`. State: `state.v5` {people, appoint, unrest, courses} (schema 6 migration still to write).
+- Unrest is stored per base and reaches every stage in a badly run colony (UI finding); a well run one stays calm
+  (long_v4_perf 100 colonists: 9.0, calm). Slowdown -15 %, strike stops one department, riot stops all work.
+- Bug (open item b): the exhaustion deaths were riders in a vehicle parked far from air, never ordered back (they
+  died of thirst and exhaustion aboard). New `vehicles._needs_guard`: the vehicle drives back (or to the nearest
+  airlock) when a rider has a critical need. long_v4_perf now has no deaths.
+- test_ships_ui passes again (the pad is built and powered); I did not change the suit_range rule; the earlier
+  failure was a timing effect of that rule at that spot.
+- Children's beds (orchestrator decision): tube family unit 2 + 2 bunk, block family unit 2 + 2, penthouse 4;
+  furniture counts include the bunks; anchor names asked of ART-HAB.
+- Tests: v5_unrest_protest_and_strike, v5_discipline_and_reviews, v5_appoint_home_enrol, v5_society_deterministic.
+  Full suite 118 of 119 (1,145 s): long_v3_perf_70_colonists 2.16 ms (limit 2.0; 2.0-2.9 ms in runs today with other
+  agents' Godot processes; the machine was never quiet, so open item a stays open). UI tests that touch sim state:
+  test_v5_people, test_ships_ui, test_rag, test_reach, test_storage, test_locks, test_bases_ui, test_v4_live,
+  test_alert_gate, test_alert_steady all pass.
+- Not done: students do not walk to the academy; prisoners are not walked to a cell; lock_down closes no doors;
+  the party costs nothing; fights and security (next milestones in the section 13 order).

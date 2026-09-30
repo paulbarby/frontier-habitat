@@ -137,10 +137,21 @@ func _rebuild_pools() -> void:
 		# so the wall ring reads about 25 % darker than the middle.
 		var rr: float = float(b["radius"])
 		var c0: Vector3 = (meta["xf"] as Transform3D).origin
+		# V5 multi-storey rooms: a lamp's pool lies on its own floor; floors above the viewed floor
+		# (world_view floor cutaway, meta.floor_sig) get none.
+		var nfl: int = int(sim.bdef(b["def"]).get("floors", 1))
+		var fh: float = float(sim.floors.floor_height(b)) if (nfl > 1 and sim.get("floors") != null) else 0.0
+		var kview: int = int(String(meta.get("floor_sig", "-1"))) if nfl > 1 else -1
 		for p in lamps:
 			var dc: float = Vector2((p as Vector3).x - c0.x, (p as Vector3).z - c0.z).length()
 			var r: float = clampf(maxf(rr * 0.55 - dc * 0.5, rr * 0.3), 1.2, 2.8)
-			list.append([Vector3((p as Vector3).x, fy, (p as Vector3).z), r, WARM])
+			var fy2: float = fy
+			if fh > 0.1:
+				var fi: int = clampi(int(floor(((p as Vector3).y - c0.y) / fh)), 0, nfl - 1)
+				if kview >= 0 and fi > kview:
+					continue
+				fy2 = fy + float(fi) * fh
+			list.append([Vector3((p as Vector3).x, fy2, (p as Vector3).z), r, WARM])
 		# J4 family accent: a coloured floor spill under every Anchor_Accent_<i> (1.8 m disk
 		# light 1 m above the floor -> about 1.3 m radius on the floor).
 		var fam: Color = family_color(String(b["def"])).srgb_to_linear()

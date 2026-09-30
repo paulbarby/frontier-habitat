@@ -2,7 +2,7 @@
  "version": "5.0",
  "file": "robot_dancer.glb",
  "mesh": "Robot_dancer",
- "triangles": 14884,
+ "triangles": 16056,
  "skeleton": {
   "bones": [
    "root",
@@ -62,7 +62,7 @@
    "loop": true,
    "kind": "loop",
    "bpm": 120,
-   "note": "liquid arm wave hand to hand, body roll"
+   "note": "step routine: step-touch with running-man arms, then a full turn in four pivot steps"
   },
   "robot_dance_c": {
    "frames": 240,
