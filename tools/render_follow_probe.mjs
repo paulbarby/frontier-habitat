@@ -45,7 +45,7 @@ for (const name of list) {
   }
   const sf = path.join(os.tmpdir(), `render_fprobe_${name}.json`);
   fs.writeFileSync(sf, JSON.stringify(steps));
-  const r = spawnSync('node', [path.join(ROOT, 'tools', 'shoot.mjs'), '--dir', path.join(ROOT, 'build', 'web_render'), '--gpu', '--wait', '120', '--settle', '2',
+  const r = spawnSync('node', [path.join(ROOT, 'tools', 'shoot.mjs'), '--dir', path.resolve(ROOT, opt('dir', 'build/web_render')), '--gpu', '--wait', '120', '--settle', '2',
     '--query', 'title=0', '--steps', sf], { encoding: 'utf8', maxBuffer: 64 << 20, env: { ...process.env, FH_ORCHESTRATOR: '1' } });
   fs.writeFileSync(path.join(OUT, `${name}.log`), (r.stdout || '') + '\n--- stderr\n' + (r.stderr || ''));
   const lines = (r.stdout || '').split('\n');
