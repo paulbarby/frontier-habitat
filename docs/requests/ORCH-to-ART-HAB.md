@@ -25,3 +25,13 @@ Do:
 - Add a check to your builder: a seat anchor is never inside a desk or table footprint and faces its screen.
 - Rebuild, `node tools/godot.mjs import`, `check`; renders in art/interiors/. Tell RENDER to rebake nav grids
   (tools/render_nav_bake.gd) and to check the sit placement (ORCH-to-RENDER.md has the RENDER part).
+
+## 2026-10-01 — Paul: interiors are "blocks and lanes"; scope change to high detail (V5_DESIGN.md §15)
+
+Paul's words (summary): interiors must be highly detailed, with pop-culture references and grounding in 2026
+woven into the settings, including ridiculous details that make fun of the crazy AI boom of now.
+See §15 of docs/V5_DESIGN.md for the rules (original parody names only, no copied logos or characters).
+Start with the rooms the over-the-shoulder camera sees most: habitat, cantina/kitchen, lab, command, the
+residences, the dome venues. Per room: dense props at human scale (desks with personal items, posters,
+screens with content, cables, signs, plants, clutter by role), wall and floor detail, lighting accents.
+Keep the triangle and pck budgets; reuse a shared prop kit.

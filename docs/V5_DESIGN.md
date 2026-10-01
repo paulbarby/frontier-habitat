@@ -481,3 +481,31 @@ so UI and RENDER start at once.
 1–4 → §1 · 5–6 → §3 · 7 → §4.1 · 8 → §4.5 · 9 → §4.2 · 10 → §4.3–4.4 · 11 → design aim · 12–13 → §7 ·
 14–15 → §7, §9 · 16 → §6.5, §7 · 17 → §5.3, §7 · 18 → §5.1 · 19 → §5.2 · 20 → §6.2 · 21 → §6.1, §6.3 ·
 22 → §6.4 · 23–26 → §8.
+
+## 15. Scope change, 2026-10-01 (Paul): realism in close view, viewer experience, styled interiors
+
+Paul's words (summary): animations and rigging must look natural, because they break the realism of the
+over-the-shoulder view; the over-the-shoulder camera needs more freedom to look around; "in the future we
+will make this a viewer-centric experience for the players who like to watch the action unfold and just take
+in the amazing 3D environment"; habitat interiors are "just blocks and lanes" and must be highly detailed,
+"have pop culture references and some grounding in 2026 woven in to the settings, including being
+ridiculous to highlight the crazy AI boom now". He asked to record this styling preference as a scope change.
+
+Rules:
+1. **Close-view realism is a quality gate.** Every clip and every seated/working pose is checked at the
+   follow-camera distance. Faults that fail: floating or sinking feet, broken joints, body through furniture,
+   snaps. (ART-NPC, RENDER; requests of 2026-10-01.)
+2. **Viewer experience (future version).** Camera code must allow a later "watch" mode: free orbit, cinematic
+   automatic shots of people and events, no HUD. Not in 5.0 unless Paul says so; 5.0 gets the freer
+   over-the-shoulder camera.
+3. **Interior style.** High-detail interiors, set in a future colony that still carries 2026 culture:
+   - pop-culture references as parody or homage, with ORIGINAL names, text and art (no real logos, brand
+     names, characters, lyrics or copied artwork; the title screen states all content is original);
+   - 2026 grounding: everyday objects, habits and in-jokes of 2026 carried to the colony;
+   - AI-boom satire, deliberately ridiculous: e.g. a kettle with a chatbot, motivational posters by an AI,
+     "AI-powered" labels on everything, a GPU shrine, a toaster that asks for a subscription, a meeting
+     room booked by agents arguing with each other, a "prompt engineer" desk plate. Keep it playful, never
+     mean about real people or companies.
+   - The Regolith Rag, dialogue lines and help text may carry the same tone.
+4. Budgets stay: triangles per room as §7, the pck soft budget 200 MB; use a shared prop kit and texture
+   atlases.
