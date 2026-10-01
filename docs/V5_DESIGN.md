@@ -516,3 +516,6 @@ Rules:
 6. **Window layout (Paul, 2026-10-01).** The centre of the view stays clear: banners, request cards and
    event cards go to a tabbed panel on the left (Goals, Alerts, Events, Traffic, Requests, …) with count
    badges, collapsible, sized to the view. A test checks that no default HUD window covers the centre.
+7. **Planets differ (Paul, 2026-10-01).** Bug: atmospheric events must not happen on the airless planet;
+   each planet has its own hazard table (SIM). Terrain, sky, light, fog and weather effects follow the
+   planet option: airless black sky and hard shadows, cold frost and ice, dry dust (RENDER).
