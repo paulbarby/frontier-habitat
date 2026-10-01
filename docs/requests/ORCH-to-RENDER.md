@@ -18,3 +18,15 @@ seated body capsule vs furniture boxes, every seat anchor of every room type, 0 
    (re-run tools/render_follow_probe.mjs after the change).
 3. Scope change (V5_DESIGN.md §15): a viewer mode is coming. Design the camera code so that a cinematic
    "watch" mode (automatic shots of people and the colony) can be added later.
+
+## 2026-10-01 — Paul: roofs ON in the over-the-shoulder view; an "all roofs off" toggle
+
+1. Over-the-shoulder view: keep every roof and upper wall ON (no cutaway), for an enclosed feel. Today the
+   follow view cuts away rooms near the camera, and `_follow_collide` skips walls of open rooms; with roofs
+   on, the camera must stay inside the room by the wall rule and under the ceiling (add a ceiling height
+   limit per room/floor). Light the interior so it reads with the roof on. Re-run the follow probe.
+2. All-roofs-off toggle (Paul and a friend asked for it): one view state that cuts away every roof and upper
+   wall in the whole colony at once (the same cutaway rule as today: nothing above 1.40 m except allowed
+   parts), in the normal camera; off = today's automatic cutaway. Expose it as `view.set_roofs_off(bool)` and
+   a debug command; UI adds the button, key and setting (ORCH-to-UI.md). In the follow view the toggle does
+   not apply (roofs stay on), unless Paul asks otherwise. Check perf with all roofs off on showcase_v5.

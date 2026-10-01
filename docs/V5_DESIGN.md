@@ -509,3 +509,7 @@ Rules:
    - The Regolith Rag, dialogue lines and help text may carry the same tone.
 4. Budgets stay: triangles per room as §7, the pck soft budget 200 MB; use a shared prop kit and texture
    atlases.
+5. **Roofs (Paul, 2026-10-01).** In the over-the-shoulder view every roof stays on, for an enclosed feel
+   (the camera stays inside under the ceiling). A new player toggle "all roofs off" cuts away every roof and
+   upper wall in the whole colony in the normal view (Paul and a friend asked for it). RENDER draws it; UI
+   adds the button, key and setting.
