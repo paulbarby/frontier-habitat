@@ -519,3 +519,6 @@ Rules:
 7. **Planets differ (Paul, 2026-10-01).** Bug: atmospheric events must not happen on the airless planet;
    each planet has its own hazard table (SIM). Terrain, sky, light, fog and weather effects follow the
    planet option: airless black sky and hard shadows, cold frost and ice, dry dust (RENDER).
+8. **One panel manager (Paul, 2026-10-01).** Every alert, request, banner, toast and info card goes through one
+   UI manager with one look: a tabbed left dock, minimise / close / pin / mute per type, a Notifications
+   settings section, the centre zone free. Spec in docs/UI_PANELS.md (UI writes it first). Replaces §15.6.
