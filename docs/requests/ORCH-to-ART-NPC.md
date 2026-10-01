@@ -24,3 +24,14 @@ Do:
    `mesh-gen` skill with a merged animation pack, used for Ben's RPG); CC0 / free motion-capture libraries.
    Write a short comparison (quality, licence, cost, rig fit) for Paul in docs/requests/ORCH-to-PAUL.md.
 6. Report numbers before/after; sheets in art/people/ for the critic.
+
+## 2026-10-01 (later) — Paul: sleep pose, the arm goes through the body
+
+Evidence: `docs/requests/shots/paul_2026-10-01_sleep_arm.webp` (f-variant asleep on a bed, on her side, knees
+up: the lower arm passes through the torso; also seen: the tee ends above the trousers (midriff gap), the
+body looks to hover above the mattress, shoes on the bed).
+Paul: "don't let that happen, fix the pose".
+Do: fix the sleep and lie poses of every body so no limb passes through the body or the bed (arm in front of
+the chest or under the pillow); body rests ON the mattress (contact, no gap); add a self-intersection check
+for every pose and every clip frame (limb capsules vs torso capsule) to npc_verify, failing at any overlap.
+Also check the outfit midriff gap in the lying pose.

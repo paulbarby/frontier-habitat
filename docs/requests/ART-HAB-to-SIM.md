@@ -1,5 +1,18 @@
 # ART-HAB → SIM
 
+
+## 2026-10-01 — distillery built; jail bed anchors; door file changed
+
+- **Distillery** `distillery_{s,m,l,xl}.glb` (content radii 6 / 7.5 / 9.6 / 11.7): `Anchor_Work_<i>` 1/1/2/3 (stand,
+  at the spirit-safe consoles), `Anchor_Stand_<i>` 1/2/2/3. You can drop the `model_hint`.
+- **Door angles:** `content/door_blocked.json` rewritten by the build. Distillery S/M/L/XL: no blocked angles
+  (360° free; door slots 9 / 11 / 15 / 18; narrowest lane 0.82 m on S). Plain key `distillery` = M.
+- **Jail:** `Anchor_Bed_<i>` now exists at the same point and yaw as `Anchor_Cell_<i>` (2 / 4 / 8). Jail door angles
+  unchanged.
+- **Seats moved 0.12 m** (Paul 2026-10-01, people inside desks and tables): the stand point of every table chair is
+  now 0.12 m off the table edge (tube family table, block family table, security briefing table, jail visiting
+  table); research-lab desk pods are rebuilt back to back. Counts and names are unchanged.
+
 ## 2026-09-30 21:30 — bed anchors added (coordinator decision); a scratchpad collision you should know about
 
 **Decision applied:** the children's bunks count as 2 beds; the penthouses count all 3 bedrooms. My files now match

@@ -1,5 +1,24 @@
 # ART-HAB → RENDER
 
+
+## 2026-10-01 — desks fixed (Paul's screenshot); please rebake nav grids and check the sit placement
+
+**Cause (mine):** the research-lab desk pods and the `deskpod` decor placed the two desks of a pair 0.04 m apart
+(lab) / 0.68 m apart (decor) with 0.62 m deep tops: the tops overlapped, so each sitter's stand point and chair lay
+inside the other desk. **Fix:** each top now runs from the divider out to its open side (pair 1.30 m deep), the
+monitors stand at the divider and face out, the chair and `Anchor_Work_*` / `Anchor_Seat_*` are on the open side
+facing the monitors (stand point 0.12 m off the desk edge, seat 0.30 m behind it, seat top 0.46 m). Table chairs
+in the tube, block, security office and jail moved 0.12 m out for the same reason.
+**New build check** (`interior_kit.check_desk_seats`): no Seat / Work / Bed / Stand anchor inside a desk top or a
+table footprint; every desk seat faces its own screens (≤ 30°, 0.3–1.2 m). All rebuilt files pass.
+
+**Rebake `tools/render_nav_bake.gd` for these files (rebuilt 2026-10-01):** research_lab_{s,m,l,xl},
+research_assembler_{s,m,l,xl}, academy_{s,m,l}, electronics_fab_{s,m,l,xl}, medical_{s,m,l,xl},
+security_office_{s,m}, residence_tube_{m,l,xl}, residence_tube_executive_{m,l,xl}, jail_{s,m,l} (new
+`Anchor_Bed_<i>` = `Anchor_Cell_<i>`), apartment_block_m, habitat_{s,m,l,xl}, kitchen_{s,m,l,xl},
+cantina_{s,m,l,xl}, lounge_{s,m,l,xl}, retail_{s,m,l}, park_{m,l,xl}, and the new distillery_{s,m,l,xl}
+(room, category food; replaces the polymer-plant stand-in). More files follow with the detail pass (§15.3).
+
 ## 2026-09-30 20:40 — round-35 files; offer for the in-game evidence
 
 - New material names in my files: `SecBlack`, `SignalRed`, `SignalRedGlow`, `PrisonOrange`, `PrisonOrangeGlow`

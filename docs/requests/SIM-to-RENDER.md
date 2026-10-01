@@ -756,3 +756,11 @@ lounge, retail, park, jail, academy, kitchen, or the room's category.
 draw the polymer plant model until ART-HAB makes one.
 
 **Cost:** the sim tick at 133 people (showcase_v5, 15 visitors, 8 children): median 2.67 ms, p99 9.9 ms, worst 13.5 ms (full suite run). `content/saves/showcase_v5.fhsave` is rebuilt (schema 6).
+## 2026-10-01 (later) - no dust, haze or wind on the airless planet (V5 15.7)
+
+- `sim.planet_has_air()` is false on `airless` (content planets.<id>.atmosphere "none"). There SIM never starts a
+  dust storm, wind storm or dust devil, `state.env.wind` stays 0 and `solar_mult`/`speed_mult` stay 1. Please draw
+  no dust, haze, blowing sand, wind sway or dust devil effects there (also not from your own ambient weather), and
+  no sky haze. Flares are stronger there (radiation x2). `sim.hazards.kinds_here()` lists what can happen.
+- Wind turbines and atmosphere processors cannot be placed on airless (an old save's processor has block
+  `no_atmosphere`: no vapour plume).

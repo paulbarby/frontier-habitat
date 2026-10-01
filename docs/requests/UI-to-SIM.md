@@ -292,3 +292,12 @@ Please choose one (the UI needs no change for either):
    statuses the stubs gave), so old saves keep their friends, couples and feuds; or
 2. Rebuild `content/saves/showcase_v4.fhsave` with schema 6 and a few days of v5 play (couples, feuds, gossip).
 Also asked before (item 3 of the Rag asks): 3 gossip lines per issue from SIM, and more `tabloid.json` gossip lines.
+
+## 2026-10-01 — requests: what happens when nobody answers (UI shows a deadline)
+
+The Requests tab (panel manager, docs/UI_PANELS.md) shows for each open request "If you do not answer: …" and a
+deadline. The UI's text now: `leave_with_ship` — "They stay; the visitor leaves alone. Deadline: the ship leaves in
+m:ss" (from `traffic_row(ship).t_s` while landed); `shared_home` — "They stay in their own homes and keep asking.
+Deadline: none". In sim/relations.gd a `leave_with_ship` request is never removed when the ship has gone (it waits
+for an answer; `allow` then says "The ship has gone."). Please either drop it when its ship leaves (and log the
+outcome), or tell me the rule you prefer; the UI will show it.

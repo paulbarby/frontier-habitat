@@ -799,3 +799,17 @@ dome_frame, dome_glass, fitout). Roles: `security` ("Security officer"), `child`
 
 **Not done:** entitlements seen as unfair by others do not add unrest; best-dressed uses traits, not outfits.
 - Added for ui/v5_data.gd: `sim.ranks.commander(base = -1)` -> the commander's agent id (-1: none).
+
+## 2026-10-01 (later) - Paul's bug: no atmospheric events on the airless planet (V5 15.7)
+
+- Planets have `atmosphere` ("thin" dry, "thin_cold" cold, "none" airless), `pressure_kpa`, `temp_range_c` [min, max]
+  and a `hazards` table of rate multipliers (content/scenarios.json). `sim.planet_has_air()`.
+- `sim.hazards.kinds_here()` -> the hazard kinds that can happen on this planet (airless: meteor, meteor_shower,
+  quake, solar_flare). Please build the forecast list, the hazard texts and the codex hazard pages from it; airless
+  never shows dust storm, wind storm or dust devil. Flares there are stronger (radiation x2, 1.5 x as often), meteors
+  1.4 x as often. `sim.events.enabled()` (the v2 storm API) is false on airless.
+- Structures with `needs_atmosphere: true` (wind_turbine, atmo_processor) are refused on airless: placement code
+  `no_atmosphere` ("This planet has no air: this structure cannot work here."); `place.lock_info(def)` gives
+  `{locked: true, kind: "planet", text}` so the palette can show the lock. An old save's atmosphere processor shows
+  block `no_atmosphere` and makes no oxygen.
+- Old airless saves drop pending dust storms, wind storms and dust devils at load.
