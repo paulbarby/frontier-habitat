@@ -54,6 +54,34 @@ const HUGE_AABB := AABB(Vector3(-900, -200, -900), Vector3(4400, 700, 4400))   #
 
 var field_on := true        # the camera dust motes (off for critic stills: `toggle dust 0`)
 var field_light := 1.0      # V4: motes dim in a shadowed crater (no bright streaks on a dark floor)
+## Weather kinds clipped by the room / corridor volumes (Paul 2026-10-01: no storm inside habitats).
+const CLIP_KINDS := ["dust", "devil", "impact_dust", "dust_column"]
+var clip := {"rooms": [], "tubes": [], "tube_y": PackedFloat32Array(), "n_r": 0, "n_t": 0}
+
+## The volumes near the field (world_view, a few times a second): rooms [Vector4(x, z, r, top)], corridors
+## [Vector4(x0, z0, x1, z1)] with their top y. At most 32 of each (the nearest).
+func set_clip(rooms: Array, tubes: Array, tube_y: PackedFloat32Array) -> void:
+	var r: Array = rooms.slice(0, 32)
+	var t: Array = tubes.slice(0, 32)
+	var ty: PackedFloat32Array = tube_y.slice(0, 32)
+	clip = {"rooms": r.duplicate(), "tubes": t.duplicate(), "tube_y": ty, "n_r": r.size(), "n_t": t.size()}
+	while r.size() < 32:
+		r.append(Vector4.ZERO)
+	while t.size() < 32:
+		t.append(Vector4.ZERO)
+	while ty.size() < 32:
+		ty.append(-1.0e6)
+	var mats: Array = [_field_mat, _storm_mat]
+	for k in CLIP_KINDS:
+		if pools.has(k):
+			mats.append(pools[k]["mat"])
+	for m in mats:
+		(m as ShaderMaterial).set_shader_parameter("clip_on", 1.0)
+		(m as ShaderMaterial).set_shader_parameter("clip_room_n", int(clip["n_r"]))
+		(m as ShaderMaterial).set_shader_parameter("clip_rooms", r)
+		(m as ShaderMaterial).set_shader_parameter("clip_tube_n", int(clip["n_t"]))
+		(m as ShaderMaterial).set_shader_parameter("clip_tubes", t)
+		(m as ShaderMaterial).set_shader_parameter("clip_tube_y", ty)
 
 func setup(v) -> void:
 	view = v

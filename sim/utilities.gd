@@ -626,7 +626,7 @@ func o2_capacity_per_day() -> float:
 		for pr in ap["prod"]:
 			var b: Dictionary = pr[0]
 			var d: Dictionary = pr[1]
-			if b["state"] != "active" or not bool(b["enabled"]) or not bool(b["powered"]) or b["block"] == "no_water":
+			if b["state"] != "active" or not bool(b["enabled"]) or not bool(b["powered"]) or b["block"] == "no_water" or b["block"] == "no_atmosphere":
 				continue
 			if d.has("o2_out"):
 				total += float(d["o2_out"]) * o2_mult * float(b["out_rate"])
@@ -699,6 +699,10 @@ func atmo_tick() -> void:
 			if b["state"] != "active":
 				continue
 			var algae: bool = not def.has("o2_out")
+			# V5 15.7: a producer that takes air from outside makes nothing on an airless planet.
+			if bool(def.get("needs_atmosphere", false)) and not sim.planet_has_air():
+				b["block"] = "no_atmosphere"
+				continue
 			if not bool(b["enabled"]):
 				if not algae:
 					b["block"] = "disabled"

@@ -120,6 +120,11 @@ func _ready() -> void:
 	_boot_frames = 3
 	if boot.has("open") and not on_title:
 		hud.open_screen(String(boot["open"]))
+	# cmd=<a;b;c> (debug=1 only): debug commands in order after the load, for tools/audio_probe.mjs and
+	# screenshots (for example cmd=hazard%20wind_storm%201;select%20habitat;zoom%2018).
+	if debug_mode() and boot.has("cmd"):
+		for c in String(boot["cmd"]).split(";", false):
+			_on_cmd(c)
 
 func _options_from_boot() -> Dictionary:
 	var o := {}
@@ -631,6 +636,28 @@ func _on_cmd(text: String) -> String:
 			hud.v5.unrest_override = {"value": val, "stage": w[1], "causes": [{"text": "Low satisfaction", "delta": val * 0.7}, {"text": "Ration cuts seen as unfair", "delta": val * 0.3}], "demand": "Full rations now!"}
 			hud.unrest_banner._update()
 			return "unrest %s %d" % [w[1], int(val)]
+		"panels":
+			# panels tab <id> | minimise | close | open | pin: the panel manager's dock (screenshots, tests).
+			if w.size() < 2:
+				return "panels tab <id>|minimise|close|open|pin"
+			match w[1]:
+				"tab": hud.panels.open_tab(w[2] if w.size() > 2 else "goals", true)
+				"minimise": hud.panels.minimise_dock(true)
+				"close": hud.panels.toggle_dock(false)
+				"open": hud.panels.toggle_dock(true)
+				"pin": hud.panels.pin_dock(not hud.panels.pinned)
+			return "tab %s open %s min %s pin %s" % [hud.panels.tab, hud.panels.dock_open, hud.panels.minimised, hud.panels.pinned]
+		"roofs":
+			# roofs: the all-roofs-off toggle (key Y).
+			toggle_roofs()
+			return "roofs_off %s" % str(Settings.get_value("roofs_off"))
+		"screenscroll":
+			# screenscroll <px>: scrolls the open screen (screenshots of a long screen).
+			var ts = hud.screens.top_screen()
+			if ts == null or ts.get("_scroll") == null:
+				return "no screen"
+			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
+			return str(ts._scroll.scroll_vertical)
 		"request":
 			# request [home|off]: shows a "leave with a ship" (or shared-home) request card for the selected person (the UI's view
 			# only; SIM is not changed; an answer gets SIM's "No such request."). For screenshots.
@@ -878,6 +905,7 @@ func apply_settings() -> void:
 	if not is_equal_approx(get_tree().root.content_scale_factor, sc):
 		get_tree().root.content_scale_factor = sc
 	Glass.set_enabled(bool(Settings.get_value("glass")))
+	_apply_roofs()
 	rig.edge_pan = bool(Settings.get_value("edge_pan"))
 	rig.pan_speed = float(Settings.get_value("camera_speed"))
 	# Camera shake (quakes, landings, impacts): RENDER's rig and view read `shake_enabled`.
@@ -1266,6 +1294,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_PAGEUP: hud.floor_sel.step(1)
 			KEY_PAGEDOWN: hud.floor_sel.step(-1)
 			KEY_H: hud.set_hud_visible(not hud.hud_visible())
+			KEY_L: hud.panels.toggle_dock()   # the panel manager's dock (docs/UI_PANELS.md)
+			KEY_Y: toggle_roofs()             # all roofs off (Paul, 2026-10-01)
 			KEY_F1: hud.toggle_screen("help")
 			KEY_ESCAPE:
 				# Shift+Esc closes every window (V4 window manager); Esc closes the last one first.
@@ -1366,6 +1396,27 @@ func close_all_windows() -> int:
 ## The over-the-shoulder follow of a person: RENDER's camera (view.follow_start), the UI's follow HUD
 ## (ui/hud/follow_hud.gd), the rest of the HUD dimmed. Keys while following: Tab next person, Esc exit,
 ## the Konami code (§4.5 egg). Returns false when the person cannot be followed.
+# ---------------------------------------------------------------- all roofs off (Paul, 2026-10-01)
+## Every roof and upper wall in the colony cut away in the normal view (RENDER view.set_roofs_off).
+## Key Y, the nav rail, kept on the device. In the over-the-shoulder view the roofs stay on (Paul: an
+## enclosed feel): the toggle is disabled there.
+func toggle_roofs() -> void:
+	if in_follow():
+		hud.toast("Roofs stay on in the over-the-shoulder view.", "info", "roof_off", "system")
+		return
+	var on: bool = not bool(Settings.get_value("roofs_off"))
+	Settings.set_value("roofs_off", on)
+	_apply_roofs()
+	if view != null and view.has_method("set_roofs_off"):
+		hud.toast("Roofs off: you see into every building." if on else "Roofs on.", "info", "roof_off", "system")
+	else:
+		hud.toast("Roofs off is kept; the 3D view does not draw it yet.", "info", "roof_off", "system")
+
+## Roofs as the setting says, except in the follow view (always on there).
+func _apply_roofs() -> void:
+	if view != null and view.has_method("set_roofs_off"):
+		view.set_roofs_off(bool(Settings.get_value("roofs_off")) and not in_follow())
+
 func follow_person(id: int) -> bool:
 	if view == null or not view.has_method("follow_start") or not view.follow_start(id):
 		hud.toast("This person cannot be followed now.", "warn", "follow")
@@ -1374,12 +1425,14 @@ func follow_person(id: int) -> bool:
 	if hud.is_modal_open():
 		hud.close_modal()
 	hud.follow_changed(id)
+	_apply_roofs()
 	return true
 
 func follow_end() -> void:
 	if view != null and view.has_method("follow_stop") and view.in_follow():
 		view.follow_stop()
 	hud.follow_changed(-1)
+	_apply_roofs()
 
 func in_follow() -> bool:
 	return view != null and view.has_method("in_follow") and view.in_follow()

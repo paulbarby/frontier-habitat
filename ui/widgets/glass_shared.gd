@@ -17,6 +17,13 @@ func _ready() -> void:
 func add_panel(p: Control, ch: PackedFloat32Array) -> void:
 	_panels.append([weakref(p), ch])
 
+func remove_panel(p: Control) -> void:
+	var keep: Array = []
+	for rec in _panels:
+		if (rec[0] as WeakRef).get_ref() != p:
+			keep.append(rec)
+	_panels = keep
+
 func _process(_d: float) -> void:
 	queue_redraw()
 

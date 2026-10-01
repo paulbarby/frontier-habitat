@@ -121,10 +121,11 @@ OUTFITS = {
            ("clothes/shoes01", "own")],
         f=[("clothes/toigo_shift_dress", "tint:ClothTint"), ("clothes/toigo_flats", "own")]),
     "casual_c": dict(
-        who=["off duty", "sport"], look="sport wear: a sports tee with jeans and sneakers (men), a sports top and leggings "
-                                          "with sneakers (women)",
+        who=["off duty", "sport"], look="sport wear: a sports tee with jeans and sneakers (men), a tee with soft joggers "
+                                          "and sneakers (women)",
         m=[("clothes/male_casualsuit02", "own"), ("clothes/shoes06", "own")],
-        f=[("clothes/female_sportsuit01", "own"), ("clothes/shoes06", "own")]),
+        f=[("clothes/joepal_crude_t-shirt_female", "tint:ClothTint"), ("clothes/toigo_wool_pants", "own"),
+           ("clothes/shoes06", "own")]),          # (no crop top: Paul 2026-10-01, the midriff gap in bed)
     "swimwear": dict(
         who=["pool"], look="modest one-piece (women, girls); swim trunks with a tee (men, boys); the person's colour",
         m=[("gen:trunks", "tint:ClothTint"), ("clothes/elvs_crude_t-shirt_male", "tint:ClothTint")],
@@ -909,6 +910,11 @@ def build_variant(m, v, outfits, stop=None):
                 zlim = (J["foot.L"].z + 0.080 + 0.012) if any(o2 is g[0] for g in gs if g[2] == "shell" for o2 in outer) else None
                 tuck_under(ob, outer, zmin=zlim)
                 remove_covered(ob, outer, zmin=zlim)
+                if garment_layer(f) == 2 and zlim is None:
+                    # trousers under a top: everything 4 cm above the top's lowest edge goes (the waistband never
+                    # shows through the top's back when the body bends: 2026-10-01 run and sleep sheets)
+                    zt = min(min((o2.matrix_world @ v.co).z for v in o2.data.vertices) for o2 in outer)
+                    remove_above(ob, zt + 0.04)
         gsum = sum(ntris(ob) for ob, _, m_, _ in gs if m_ != "shell")
         shell_t = sum(ntris(ob) for ob, _, m_, _ in gs if m_ == "shell")
         # V5 section 1: <= 14k triangles per body + outfit at LOD0 (the outfit mesh with its largest add-on set)
@@ -1026,6 +1032,7 @@ def build_variant(m, v, outfits, stop=None):
 
 PA_DEFAULTS = {}
 FINGER_CURL_SIGN = 1.0      # + curls the MakeHuman finger bones towards the palm (checked in the hand render)
+A_BED_Z = 0.55             # the mattress top (npc_anims FURNITURE bed_z)
 REACH_MAX = 0.93            # arm IK targets beyond this share of the arm length are pulled in (the elbow keeps a bend)
 
 
@@ -1051,7 +1058,15 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     import numpy as np
     import people_anims as PA
     if not PA_DEFAULTS:
-        PA_DEFAULTS.update(LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0)
+        PA_DEFAULTS.update(LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0,
+                           BED_ADJ=0.0)
+    # the torso vertices (strongest weight on hips / spine / chest) of the first object: the bed contact
+    o0 = obs[0]
+    names = {g.index: g.name for g in o0.vertex_groups}
+    torso_ix = np.array([v.index for v in o0.data.vertices if v.groups and
+                         names.get(max(v.groups, key=lambda g: g.weight).group) in ("hips", "spine", "chest")],
+                        dtype=np.int64)
+    n0 = len(o0.data.vertices)
     for k, v in PA_DEFAULTS.items():
         setattr(PA, k, v)
     clips = {c[0]: c[6] for c in PA.people_clips()}
@@ -1061,6 +1076,11 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
         PA.FOOT_DZ += 0.002 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["dead"](0), s, "dead"), obs)
         PA.LIE_LIFT += 0.004 - co[:, 2].min()
+        co = pose_eval(rig, solver, PA.retarget(clips["sleep"](0), s, "sleep"), obs)
+        tc = co[:n0][torso_ix]
+        m_ = (tc[:, 2] > 0.35) & (np.abs(tc[:, 0] + 0.55) < 0.45)
+        if m_.any():
+            PA.BED_ADJ += (A_BED_Z + 0.004) - float(tc[m_, 2].min())
         co = pose_eval(rig, solver, PA.retarget(clips["repair_kneel"](0), s, "repair_kneel"), obs)
         PA.KNEEL_ADJ += 0.004 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["sit_idle"](0), s, "sit_idle"), obs)
@@ -1077,8 +1097,8 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                     tuple(round(x, 3) for x in rig.pose.bones["hips"].location)))
             PA.STOOL_ADJ += 0.762 - co[m, 2].min()
     N.reset_pose(rig)
-    print("  contacts: LIE_LIFT %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f" % (
-        PA.LIE_LIFT, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
+    print("  contacts: LIE_LIFT %.3f  BED_ADJ %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f" % (
+        PA.LIE_LIFT, PA.BED_ADJ, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
 
 
 def soften_hair(ob, J, skin=None):
@@ -1437,6 +1457,17 @@ def tuck_under(inner, outers, reach=0.03, gap=0.004, zmin=None):
     bm.to_mesh(inner.data)
     bm.free()
     return moved
+
+
+def remove_above(ob, z):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    kill = [v for v in bm.verts if (ob.matrix_world @ v.co).z > z]
+    bmesh.ops.delete(bm, geom=kill, context="VERTS")
+    bm.to_mesh(ob.data)
+    bm.free()
+    return len(kill)
 
 
 def remove_inside_coverall(body, J):

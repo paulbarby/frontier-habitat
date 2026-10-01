@@ -1,87 +1,47 @@
 extends PanelContainer
-## Request card (V5_DESIGN §4.2, §10): a person asks the player something (SIM sim.relations.requests()).
-## The card shows at the top centre, under the unrest banner, until the player answers. Kinds:
+## Requests (V5_DESIGN §4.2, §10; docs/UI_PANELS.md): the questions people ask the player (SIM
+## sim.relations.requests()), one row each, oldest first, in the Requests tab of the panel manager (it
+## places this card; Paul, 2026-10-01: "the alerts ... need to be able to be minimised"). Each row: the
+## kind and the person, SIM's text, the two answers with their effects, what happens when nobody answers
+## and the deadline, File and Show. A row can be minimised (one line) or put off (Later: off the urgent
+## line until a new request comes). Kinds:
 ##   leave_with_ship  a colonist in love with a visitor wants to leave on the ship. Let them go (confirm
 ##                    first: they leave for good) or Refuse (they stay; unhappy for 3 days).
 ##   shared_home      partners want a home together and there is no free unit. Try again (after you
 ##                    build a home) or Keep apart (both unhappy for 3 days).
-## File opens the personnel file; Show moves the camera to the person.
 ## Answer: command answer_request {id, answer "allow" | "refuse"} (sim/relations.gd).
 
 const P = preload("res://ui/theme/palette.gd")
 const Kit = preload("res://ui/kit.gd")
-const Glass = preload("res://ui/widgets/glass.gd")
+const PM = preload("res://ui/hud/panel_manager.gd")
 
-## kind -> [head, icon, colour, allow button, allow effect, confirm the allow, refuse button, refuse effect]
+## kind -> [head, icon, colour, allow button, allow effect, confirm the allow, refuse button, refuse effect,
+##          what happens when nobody answers]
 const KIND := {
 	"leave_with_ship": ["LEAVE WITH A SHIP", "heart", Color("F472B6"), "Let them go", "They leave the colony on the ship. You lose a colonist and their skills.", true,
-		"Refuse", "They stay. Satisfaction (freedom) and attitude fall for 3 days."],
+		"Refuse", "They stay. Satisfaction (freedom) and attitude fall for 3 days.", "They stay; the visitor leaves alone."],
 	"shared_home": ["A HOME FOR TWO", "home", Color("4FC3F7"), "Try again", "They move in together when a unit for two is free. Build a residence tube or an apartment block first.", false,
-		"Keep apart", "They stay in their homes. Satisfaction (housing) and attitude fall for 3 days."],
+		"Keep apart", "They stay in their homes. Satisfaction (housing) and attitude fall for 3 days.", "They stay in their own homes and keep asking."],
 }
-const OTHER := ["A REQUEST", "people", Color("4FC3F7"), "Allow", "The simulation does what they ask.", true, "Refuse", "They do not get what they asked for."]
+const OTHER := ["A REQUEST", "people", Color("4FC3F7"), "Allow", "The simulation does what they ask.", true, "Refuse", "They do not get what they asked for.", "Nothing changes."]
 
 var hud
-var request: Dictionary = {}     # the request shown now (tests)
+var request: Dictionary = {}     # the oldest open request (tests)
 var last_result: Dictionary = {}  # tests
-var _icon: TextureRect
-var _head: Label
-var _text: Label
-var _more: Label
-var _allow: Button
+var later := {}                  # request id -> true: off the urgent line (the player chose Later)
+var _list: VBoxContainer
+var _allow: Button               # the oldest row's buttons (tests)
 var _refuse: Button
-var _eff: Label
-var _style: StyleBoxFlat
 var _poll := 1.0
 var _sig := ""
+var _min := {}                   # request id -> minimised
 
 func _ready() -> void:
-	_style = StyleBoxFlat.new()
-	_style.bg_color = Color(0.07, 0.07, 0.12, 0.92)
-	_style.border_color = Color("F472B6")
-	_style.set_border_width_all(2)
-	_style.border_width_left = 6
-	_style.set_corner_radius_all(4)
-	_style.content_margin_left = 16
-	_style.content_margin_right = 14
-	_style.content_margin_top = 10
-	_style.content_margin_bottom = 12
-	add_theme_stylebox_override("panel", _style)
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	grow_horizontal = Control.GROW_DIRECTION_BOTH
-	offset_top = 76
-	custom_minimum_size.x = 520
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	name = "Requests"
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	visible = false
-	name = "RequestCard"
-	var v: VBoxContainer = Kit.vbox(6)
-	add_child(v)
-	var h: HBoxContainer = Kit.hbox(10)
-	v.add_child(h)
-	_icon = Kit.icon("heart", 22, Color("F472B6"))
-	h.add_child(_icon)
-	var tv: VBoxContainer = Kit.vbox(0)
-	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(tv)
-	_head = Kit.head("", Color("F472B6"), 13, "head_wide")
-	tv.add_child(_head)
-	_text = Kit.wrap("", 14, P.TEXT, 440.0)
-	tv.add_child(_text)
-	_more = Kit.label("", "SmallLabel", 12, P.TEXT_3)
-	v.add_child(_more)
-	var row: HBoxContainer = Kit.hbox(8)
-	v.add_child(row)
-	_allow = Kit.button("Allow", func(): _ask_allow(), "", "DangerButton", "sev_ok", 14)
-	row.add_child(_allow)
-	_refuse = Kit.button("Refuse", func(): _answer("refuse"), "", "PrimaryButton", "close", 14)
-	row.add_child(_refuse)
-	row.add_child(Kit.spacer())
-	row.add_child(Kit.button("File", func(): hud.open_person(int(request.get("agent", -1)), "file"), "Personnel file\nMood, skills and relationships of this person.", "GhostButton", "colonists", 14))
-	row.add_child(Kit.button("Show", func(): _show(), "Show\nThe camera goes to this person.", "GhostButton", "target", 14))
-	_eff = Kit.wrap("", 12, P.TEXT_2, 440.0)
-	_eff.name = "Effect"
-	v.add_child(_eff)
+	_list = Kit.vbox(10)
+	add_child(_list)
 
 func _process(delta: float) -> void:
 	if hud == null or hud.v5 == null:
@@ -90,67 +50,114 @@ func _process(delta: float) -> void:
 	if _poll >= 1.0:
 		_poll = 0.0
 		update()
-	if visible:
-		# Under the hazard, reactor and unrest banners when they show.
-		var y := 76.0
-		for bnr in [hud.hazard_banner, hud.reactor_banner, hud.unrest_banner]:
-			if bnr != null and bnr.visible:
-				y = maxf(y, bnr.get_global_rect().end.y + 8.0)
-		offset_top = y
 
-func _spec() -> Array:
-	return KIND.get(String(request.get("kind", "")), OTHER)
+func _spec(q: Dictionary = request) -> Array:
+	return KIND.get(String(q.get("kind", "")), OTHER)
 
-## Shows the oldest open request (or hides the card).
+## The requests now (rebuilt when the set changes; the deadlines update every second).
 func update() -> void:
 	var reqs: Array = hud.v5.requests()
 	visible = not reqs.is_empty()
-	if reqs.is_empty():
-		request = {}
-		_sig = ""
-		return
-	request = reqs[0]
-	var sig: String = "%d:%s:%d:%d" % [int(request.get("id", -1)), String(request.get("kind", "")), int(request.get("agent", -1)), reqs.size()]
-	if sig == _sig:
-		return
-	_sig = sig
-	var spec: Array = _spec()
-	_head.text = "%s  ·  %s" % [spec[0], hud.v5.agent_name(int(request.get("agent", -1))).to_upper()]
-	_head.add_theme_color_override("font_color", spec[2])
-	Kit.set_icon(_icon, spec[1], 22, spec[2])
-	_style.border_color = spec[2]
-	_text.text = String(request.get("text", ""))
-	_allow.text = String(spec[3])
-	_allow.theme_type_variation = "DangerButton" if bool(spec[5]) else ""
-	_allow.tooltip_text = "%s\n%s%s" % [spec[3], spec[4], "\nYou confirm first." if bool(spec[5]) else ""]
-	_refuse.text = String(spec[6])
-	_refuse.tooltip_text = "%s\n%s" % [spec[6], spec[7]]
-	_eff.text = "%s: %s\n%s: %s" % [spec[3], spec[4], spec[6], spec[7]]
-	_more.text = ("%s more after this one." % Kit.plural(reqs.size() - 1, "request")) if reqs.size() > 1 else ""
-	_more.visible = reqs.size() > 1
-	Kit.fit(self)
+	request = reqs[0] if not reqs.is_empty() else {}
+	var sig := ""
+	for q in reqs:
+		sig += "%d:%s:%d:%s|" % [int(q.get("id", -1)), String(q.get("kind", "")), int(q.get("agent", -1)), _min.has(int(q.get("id", -1)))]
+	if sig != _sig:
+		_sig = sig
+		Kit.clear(_list)
+		_allow = null
+		_refuse = null
+		for q in reqs:
+			_list.add_child(_row(q))
+	for r in _list.get_children():
+		var dl: Label = r.find_child("Deadline", true, false)
+		if dl != null:
+			dl.text = _deadline(r.get_meta("req"))
 
-func _show() -> void:
-	var id: int = int(request.get("agent", -1))
+func _row(q: Dictionary) -> Control:
+	var spec: Array = _spec(q)
+	var rid: int = int(q.get("id", -1))
+	var v: VBoxContainer = Kit.vbox(4)
+	v.set_meta("req", q)
+	v.name = "Request_%d" % rid
+	var h: HBoxContainer = Kit.hbox(6)
+	v.add_child(h)
+	h.add_child(Kit.icon(String(spec[1]), 16, spec[2]))
+	var hd: Label = Kit.head("%s  ·  %s" % [spec[0], hud.v5.agent_name(int(q.get("agent", -1))).to_upper()], spec[2], 11)
+	hd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	h.add_child(hd)
+	var mn: bool = _min.has(rid)
+	h.add_child(PM._ib("chevron_down" if mn else "chevron_up", func():
+		if _min.has(rid):
+			_min.erase(rid)
+		else:
+			_min[rid] = true
+		_sig = ""
+		update(), "Minimise\nOnly this line shows. The request stays open.", "GhostButton", 12, 22))
+	h.add_child(PM._ib("clock", func():
+		later[rid] = true
+		hud.toast("Later: the request waits in the Requests tab.", "info", "heart", "request"), "Later\nOff the urgent line. It stays here until you answer.", "GhostButton", 12, 22))
+	if mn:
+		return v
+	v.add_child(Kit.wrap(String(q.get("text", "")), 13, P.TEXT))
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
+	v.add_child(row)
+	var ab: Button = Kit.button(String(spec[3]), func(): _ask_allow(q), "%s\n%s%s" % [spec[3], spec[4], "\nYou confirm first." if bool(spec[5]) else ""], "DangerButton" if bool(spec[5]) else "", "sev_ok", 13)
+	var rb: Button = Kit.button(String(spec[6]), func(): _answer("refuse", q), "%s\n%s" % [spec[6], spec[7]], "PrimaryButton", "close", 13)
+	row.add_child(ab)
+	row.add_child(rb)
+	row.add_child(Kit.button("File", func(): hud.open_person(int(q.get("agent", -1)), "file"), "Personnel file\nMood, skills and relationships of this person.", "GhostButton", "colonists", 13))
+	row.add_child(Kit.button("Show", func(): _show(q), "Show\nThe camera goes to this person.", "GhostButton", "target", 13))
+	if _allow == null:
+		_allow = ab
+		_refuse = rb
+	var eff: Label = Kit.wrap("%s: %s\n%s: %s" % [spec[3], spec[4], spec[6], spec[7]], 12, P.TEXT_2)
+	eff.name = "Effect"
+	v.add_child(eff)
+	var dl: Label = Kit.wrap(_deadline(q), 12, P.AMBER)
+	dl.name = "Deadline"
+	v.add_child(dl)
+	return v
+
+## "If you do not answer: … Deadline: …" (leave_with_ship: when the ship leaves).
+func _deadline(q: Dictionary) -> String:
+	var spec: Array = _spec(q)
+	var when := "none"
+	if String(q.get("kind", "")) == "leave_with_ship":
+		when = "when the ship leaves"
+		var sid: int = int(q.get("ship", -1))
+		var tr: Dictionary = hud.data.traffic_row(sid) if sid >= 0 and hud.data.has_method("traffic_row") else {}
+		if not tr.is_empty() and String(tr.get("phase", "")) == "landed":
+			when = "the ship leaves in %s" % Kit.clock(float(tr.get("t_s", 0.0)))
+		elif sid < 0 or tr.is_empty():
+			when = "the ship has gone"
+	return "If you do not answer: %s  Deadline: %s." % [spec[8], when]
+
+func _show(q: Dictionary) -> void:
+	var id: int = int(q.get("agent", -1))
 	var a: Dictionary = hud.v5.agent(id)
 	if not a.is_empty():
 		hud.main.select("agent", id)
 		hud.main.focus_on(a["pos"])
 
 ## Allow: at once, or after a confirm when it cannot be undone (a colonist leaving).
-func _ask_allow() -> void:
-	var spec: Array = _spec()
+func _ask_allow(q: Dictionary = request) -> void:
+	var spec: Array = _spec(q)
 	if not bool(spec[5]):
-		_answer("allow")
+		_answer("allow", q)
 		return
-	var nm: String = hud.v5.agent_name(int(request.get("agent", -1)))
-	hud.confirm("%s: %s?" % [spec[3], nm], [spec[4], "This cannot be undone."], func(): _answer("allow"), String(spec[3]), true)
+	var nm: String = hud.v5.agent_name(int(q.get("agent", -1)))
+	hud.confirm("%s: %s?" % [spec[3], nm], [spec[4], "This cannot be undone."], func(): _answer("allow", q), String(spec[3]), true)
 
-func _answer(ans: String) -> void:
-	if request.is_empty():
+func _answer(ans: String, q: Dictionary = request) -> void:
+	if q.is_empty():
 		return
-	last_result = hud.v5.command("answer_request", {"id": int(request["id"]), "answer": ans})
-	hud.toast(String(last_result.get("text", "")), "info" if bool(last_result.get("ok", false)) else "warn", String(_spec()[1]))
+	last_result = hud.v5.command("answer_request", {"id": int(q["id"]), "answer": ans})
+	hud.toast(String(last_result.get("text", "")), "info" if bool(last_result.get("ok", false)) else "warn", String(_spec(q)[1]), "request")
 	hud.v5.request_override = []
+	later.erase(int(q["id"]))
 	_sig = ""
 	update()

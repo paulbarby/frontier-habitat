@@ -771,11 +771,31 @@ def academy(rm):
         with at(plan, sx_, sy_, 0.0):
             FU.stool(n)
         plan.circle(sx_, sy_, 0.2, tag="stool")
-    pattern = ["shelf", "cab_books", "poster", "shelf", "cab_plant", "desk", "shelf"]
+    pattern = ["shelf", "cab_books", "aiposter", "shelf", "cab_plant", "desk", "notice", "shelf"] + \
+        (["filmposter"] if s else [])          # S: triangle budget
     plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=9 + s, depth_of=IR.DEPTHS)
     fill(plan, [(lambda p_, x, y, k_: _group_table(p_, x, y, k_), 1.1),
                 (lambda p_, x, y, k_: _shelf_island(p_, x, y, k_), 0.55), (f_plant, 0.25)], target=1.6,
          max_items=80)
+    # critic 37/39 (academy M bare floor) + V5 15.3: a painted floor timeline of AI along the walking ring, from
+    # "1956 THE WORD AI" to "2048 THIS COLONY" (flat: walkable, no footprint)
+    import interior_props as PR
+    rt = plan.r_max - 0.42
+    labels = [PR.TIMELINE[i] for i in ((), (0, 1, 2, 3, 4, 5, 7), range(8), range(8))[s]]
+    a0, a1 = 175.0, 345.0
+    nseg = (0, 48, 48, 48)[s]                # S: no timeline (the S floor is full; triangle budget)
+    for j in range(nseg):
+        t0, t1 = radians(a0 + (a1 - a0) * j / nseg), radians(a0 + (a1 - a0) * (j + 1) / nseg)
+        for (r0, r1, m) in ((rt + 0.16, rt + 0.20, "Accent"),):
+            n.quad((r0 * cos(t0), r0 * sin(t0), F + 0.005), (r1 * cos(t0), r1 * sin(t0), F + 0.005),
+                   (r1 * cos(t1), r1 * sin(t1), F + 0.005), (r0 * cos(t1), r0 * sin(t1), F + 0.005), m)
+    for k, lab in enumerate(labels):
+        a = a0 + (a1 - a0) * (k + 0.5) / len(labels)
+        x, y = polar(rt + 0.18, a)
+        with n.at(T(x, y, 0.0)):
+            n.cap_disc(0.07, F + 0.007, "Neon" if lab.startswith("2026") else "Hull", seg=10)
+        tx, ty = polar(rt - 0.05, a)
+        PR.floor_text(n, lab, tx, ty, a + 180.0, 0.06, "HullDark" if not lab.startswith("2026") else "Accent")
     plan.lights()
     plan.aisles()
     plan.v4_patch = IR.empty_patch(plan)[0]
@@ -867,7 +887,7 @@ def security_office(rm):
     for k in range(fu["seats"]):
         sy = -1 if k % 2 == 0 else 1
         cx_ = bx + (-0.35 + 0.7 * (k // 2))
-        cy_ = by + sy * 0.70
+        cy_ = by + sy * 0.82                  # the stand point 0.12 off the table edge (check_desk_seats)
         yaw = 90.0 if sy < 0 else -90.0
         with at(plan, cx_, cy_, yaw):
             FU.office_chair(n)
@@ -893,7 +913,7 @@ def security_office(rm):
     with at(plan, 0.4, -0.2, 0.0):
         FU.holo_table(n, r=0.55)
     plan.circle(0.4, -0.2, 0.58, tag="holo")
-    pattern = ["lockers", "rack", "panel", "lockers", "cab_lamp", "rack"]
+    pattern = ["lockers", "rack", "agents", "lockers", "aiposter", "cab_lamp", "rack", "notice", "kettle"]
     sets = IR.wall_set(plan)
     sets.update(rack=lambda p, w, d, k_: FU.wi_rack(p, w=w, d=d, seed=k_, mats=("HullDark", "Accent", "Hull")))
     plan.wall_items(pattern, sets, open_every=3, seed=4 + s, depth_of=dict(IR.DEPTHS, rack=0.42))
@@ -1005,7 +1025,7 @@ def jail(rm):
     plan.rect(vx, vy, 0.5, 0.35, 0.0, tag="table")
     for k in range(fu["seats"]):
         sy = -1 if k == 0 else 1
-        cy_ = vy + sy * 0.65
+        cy_ = vy + sy * 0.77                  # the stand point 0.12 off the table edge (check_desk_seats)
         yaw = 90.0 if sy < 0 else -90.0
         with at(plan, vx, cy_, yaw):
             FU.stool(n)

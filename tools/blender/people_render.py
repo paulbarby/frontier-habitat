@@ -193,24 +193,26 @@ def sheet_tones():
 
 # ------------------------------------------------------------------------------------------------------------------
 def sheet_closeup():
-    """The follow view distance: 1.5 m from the camera; front and 3/4, idle."""
+    """The follow view distance: 1.5 m from the camera (115 mm lens); per variant the work outfit (uniform or
+    school) and casual_a, front and 3/4, idle frame 0."""
     tmpdir()
     rows = []
-    for v, o in variants_outfits():
-        studio(640, 720)
-        rig, _ = import_person(v, o)
-        pose(rig, "idle", 0)
-        h = 1.66 * (rig.dimensions.z if False else 1.0)
-        top = max(p.head.z for p in rig.data.bones) * 1.0
-        eye = 1.66 * manifest()["variants"][v]["scale"]
+    M = manifest()
+    for v, d in M["variants"].items():
         row = []
-        for k, (az, el) in enumerate(((0, 4), (38, 6), (-38, 6))):
-            NR.clear_cameras()
-            NR.camera((0.03, 0.0, eye - 0.10), az, el, 1.5, lens=115)      # 1.5 m; head >= 350 px (CRITIC r31)
-            row.append(("%s %s az %d, 1.5 m" % (v, o, az), NR.render(os.path.join(TMP, "cu_%s_%s_%d.png" % (v, o, k)))))
+        work = "uniform_engineering" if "uniform_engineering" in d["outfits"] else "school"
+        for o in (work, "casual_a"):
+            for k, (az, el) in enumerate(((0, 4), (38, 6))):
+                studio(420, 470)
+                rig, _ = import_person(v, o)
+                pose(rig, "idle", 0)
+                eye = (rig.matrix_world @ rig.pose.bones["lids"].head).z
+                NR.clear_cameras()
+                NR.camera((0.03, 0.0, eye - 0.10 * d["scale"]), az, el, 1.5, lens=115)
+                row.append(("%s %s az %d" % (v, o, az), NR.render(os.path.join(TMP, "cu_%s_%s_%d.png" % (v, o, k)))))
         rows.append(row)
     out = os.path.join(ART, "people_closeup.png")
-    NR.compose(rows, out, title="people pilot: 1.5 m from the camera (115 mm lens, head >= 350 px), idle frame 0")
+    NR.compose(rows, out, title="people: 1.5 m from the camera (115 mm lens), work outfit and casual_a, idle frame 0")
     return out
 
 
@@ -297,6 +299,17 @@ PAIRS = os.path.join(N.MODEL_DIR, "npc_pairs.json")
 CLIP_GROUPS = {
     "pilot": ["talk_gesture_a", "laugh", "argue", "hug", "sit_bar_stool", "dance_a"],
     "hug": ["hug"],
+    "v3": ["idle", "idle_look", "walk", "run", "carry_walk", "carry_idle", "work_console", "work_bench", "talk", "kneel_enter",
+           "repair_kneel", "kneel_exit", "sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit", "injured_walk",
+           "collapse", "dead", "cheer"],
+    "sleep": ["lie_enter", "sleep", "sleep_turn", "lie_exit", "sleep_cell"],
+    "social": ["talk_idle", "talk_gesture_b", "listen_nod", "wave", "shout", "sulk", "flirt_lean", "protest_fist",
+               "fight_idle"],
+    "paired": ["handshake", "kiss_brief", "hold_hands_walk", "slap", "punch", "escort_walk"],
+    "venues": ["sit_bench", "drink_bar", "dance_b", "dance_c", "swim", "lounge_pool", "jog", "play_arcade",
+               "shop_browse", "drive_sit"],
+    "school": ["sit_class", "teach", "fall_down", "get_up", "hit_react"],
+    "children": ["child_play", "child_run"],
 }
 
 
@@ -365,8 +378,32 @@ def sheet_clips(group="pilot", variants=None, outfit="casual_a", frames=6):
     return out
 
 
-FURNITURE_PROPS = {}
-LOW_CLIPS = set()
+def _bed(z=0.55):
+    NR.add_box("Bed", (-0.55, 0.05, z / 2), (0.90, 2.0, z), (0.42, 0.28, 0.26))
+
+
+def _chair(z=0.46, back=True):
+    NR.add_box("Seat", (-0.30, 0.0, z - 0.02), (0.44, 0.46, 0.04), (0.3, 0.3, 0.32))
+    NR.add_box("SeatLeg", (-0.30, 0.0, (z - 0.04) / 2), (0.06, 0.06, z - 0.04), (0.45, 0.45, 0.47))
+    if back:
+        NR.add_box("Back", (-0.53, 0.0, z + 0.25), (0.04, 0.44, 0.50), (0.3, 0.3, 0.32))
+
+
+def _desk(z, ahead):
+    NR.add_box("Desk", (ahead + 0.25, 0.0, z - 0.02), (0.55, 1.0, 0.04), (0.45, 0.33, 0.22))
+
+
+FURNITURE_PROPS = {
+    "lie_enter": _bed, "sleep": _bed, "lie_exit": _bed, "sleep_turn": _bed, "lie_enter_r": _bed, "sleep_r": _bed,
+    "lie_exit_r": _bed, "sleep_cell": lambda: _bed(0.45),
+    "sit_enter": _chair, "sit_idle": _chair, "sit_exit": _chair, "sit_eat": lambda: (_chair(), _desk(0.74, 0.20)),
+    "sit_type": lambda: (_chair(), _desk(0.74, 0.25)), "sit_class": lambda: (_chair(), _desk(0.72, 0.25)),
+    "sit_bench": lambda: _chair(0.45, False), "drive_sit": lambda: _chair(0.46, False),
+    "work_console": lambda: _desk(1.0, 0.40), "work_bench": lambda: _desk(0.90, 0.30),
+    "play_arcade": lambda: _desk(0.98, 0.38), "lounge_pool": lambda: NR.add_box("Lounger", (0.15, 0.0, 0.17), (1.9, 0.6, 0.34), (0.8, 0.8, 0.82)),
+}
+LOW_CLIPS = {"lie_enter", "sleep", "lie_exit", "sleep_turn", "sleep_cell", "dead", "collapse", "fall_down", "get_up",
+             "swim", "lounge_pool", "child_play", "repair_kneel", "kneel_enter", "kneel_exit"}
 
 
 SHEETS = dict(wardrobe=sheet_wardrobe, closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,

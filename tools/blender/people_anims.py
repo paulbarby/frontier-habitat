@@ -13,6 +13,7 @@ import os
 import sys
 import zlib
 from math import sin, cos, pi, radians, exp
+from mathutils import Vector, Quaternion
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -44,11 +45,11 @@ CONTACT = {
     "drink_bar": ("seat", BAR_STOOL["seat_z"], (), (BAR_STOOL["seat_z"] + 0.187) - 0.98),
     "lounge_pool": ("seat", 0.35, (), (0.35 + 0.115) - 0.98),
     "sleep_cell": ("bed", 0.45, ()), "lie_enter_r": ("bed", 0.55, ()), "sleep_r": ("bed", 0.55, ()),
-    "lie_exit_r": ("bed", 0.55, ()), "drive_sit": ("seat", 0.46, ("L", "R")),
+    "lie_exit_r": ("bed", 0.55, ()), "sleep_turn": ("bed", 0.55, ()), "drive_sit": ("seat", 0.46, ("L", "R")),
     "play_arcade": (None, 0.0, ("L", "R")), "shop_browse": (None, 0.0, ("R",)),
 }
-LIE_CLIPS = ("collapse", "dead", "lie_enter", "sleep", "lie_exit", "fall_down", "get_up", "sleep_cell", "lie_enter_r",
-             "sleep_r", "lie_exit_r")
+LIE_CLIPS = ("collapse", "dead", "fall_down", "get_up")                 # on the ground: LIE_LIFT
+BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "sleep_cell", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn")
 STOOL_CLIPS = ("sit_bar_stool", "drink_bar")
 # the settled hips offset of each support (s = 1), for the blend weight
 SETTLED = {"seat": A.SIT.g("hips.z"), "bed": None}
@@ -61,8 +62,11 @@ LIE_LIFT = 0.014          # and lies 1.4 cm higher on the ground
 STOOL_ADJ = 0.0           # the bar-stool hips (per body; the MPFB builds calibrate it, 0 for the procedural pilot)
 FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3 one (x s); MPFB builds set it
 KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
+BED_ADJ = 0.0             # the lying hips on a bed (per body; MPFB builds calibrate it: torso on the mattress)
 ARM_IN = 0.0              # deg: standing FK arms closer to the body (MPFB builds: 5)
 WORLD_FEET = {"sit_bar_stool", "drink_bar"}
+LOCO_CLIPS = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk", "hold_hands_walk_r",
+              "handcuffed_walk", "escort_walk"}
 
 
 def people_fix(P, clip):
@@ -83,14 +87,27 @@ def people_fix(P, clip):
         for side in ("L", "R"):
             if Q.g("arm.%s.ik" % side) > 0 and side not in CONTACT.get(clip, (None, 0, ()))[2]:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + KNEEL_ADJ * w
-    if ARM_IN:
-        stand = max(0.0, min(1.0, (hz + 0.12) / 0.06))           # standing poses only
+    if ARM_IN and clip not in LOCO_CLIPS:
+        stand = max(0.0, min(1.0, (hz + 0.12) / 0.06))           # standing poses only (gaits set their own)
         for side, sg in (("L", -1.0), ("R", 1.0)):
             f = stand * (1.0 - max(0.0, min(1.0, Q.g("arm.%s.ik" % side))))
             k = "upper_arm.%s.rx" % side
             Q[k] = Q.g(k) + sg * ARM_IN * f
+            # IK arms that hang (wrist well below the shoulder): the wrist turns in about the shoulder by the same
+            # angle, so IK clips match the FK idle at their ends
+            wi = stand * max(0.0, min(1.0, Q.g("arm.%s.ik" % side)))
+            if wi > 0:
+                sh = N.SH_JOINT if side == "L" else Vector((N.SH_JOINT.x, -N.SH_JOINT.y, N.SH_JOINT.z))
+                t = Vector((Q.g("arm.%s.x" % side), Q.g("arm.%s.y" % side), Q.g("arm.%s.z" % side)))
+                low = max(0.0, min(1.0, (sh.z - 0.25 - t.z) / 0.15))
+                if low > 0:
+                    r = Quaternion((1.0, 0.0, 0.0), radians(sg * ARM_IN * wi * low)) @ (t - sh) + sh
+                    Q["arm.%s.x" % side], Q["arm.%s.y" % side], Q["arm.%s.z" % side] = r.x, r.y, r.z
     if clip in STOOL_CLIPS and STOOL_ADJ:
         Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
+    if clip in BED_CLIPS and BED_ADJ:                       # on the mattress: the torso rests ON it (per body)
+        w = max(0.0, min(1.0, abs(P.g("hips.rx")) / 90.0)) ** 2             # rolled onto the side or back
+        Q["hips.z"] = Q.g("hips.z") + BED_ADJ * w
     if clip in LIE_CLIPS:
         w = max(0.0, min(1.0, (-hz - 0.55) / 0.25))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
@@ -177,6 +194,7 @@ def blink_amount(t, starts):
 
 
 BLINK_DEG = 50.0
+EYES_CLOSED = {"sleep", "sleep_r", "sleep_cell", "sleep_turn", "dead"}
 LID_REST = 0.0            # deg: the upper lids a little lower at rest (per body; no fixed stare), MPFB builds set it
 
 
@@ -274,7 +292,10 @@ def with_face(fn, name, frames, loop, jaw=None):
     def g(f):
         P = Pose(fn(f))
         t = f / FPS
-        P["lids.ry"] = P.g("lids.ry") + LID_REST + (BLINK_DEG - LID_REST) * blink_amount(t, starts)
+        if name in EYES_CLOSED:
+            P["lids.ry"] = P.g("lids.ry") + BLINK_DEG                        # asleep: the eyes stay shut
+        else:
+            P["lids.ry"] = P.g("lids.ry") + LID_REST + (BLINK_DEG - LID_REST) * blink_amount(t, starts)
         if jaw:
             P["jaw.ry"] = P.g("jaw.ry") + jaw(t, dur)
         if expr:

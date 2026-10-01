@@ -138,8 +138,7 @@ func check() -> void:
 	if ch != _chapter:
 		var chs: Array = d.chapters()
 		if ch > _chapter and ch < chs.size() and not quiet:
-			hud.toast("Chapter %d opens: %s. %s" % [ch + 1, chs[ch].get("name", ""), chs[ch].get("desc", "")], "goal", "chapter")
-			hud.screens.chapter_banner(ch)
+			hud.screens.chapter_banner(ch)   # one message in the panel manager (was a toast and a banner)
 		_chapter = ch
 	# Research
 	var done: Dictionary = d.research().get("done", {})
@@ -172,7 +171,7 @@ func check() -> void:
 	# after it cleared. The alert cards read the same gate.
 	for issue in gate.update(hud.main.sim.alerts.incidents(), hud.main.sim.seconds(), quiet):
 		var sv: int = int(issue.get("severity", 2))
-		hud.toast(String(issue.get("text", "")), "bad" if sv >= 3 else "warn", "sev_critical" if sv >= 3 else "sev_warning")
+		hud.toast(String(issue.get("text", "")), "bad" if sv >= 3 else "warn", "sev_critical" if sv >= 3 else "sev_warning", "alert")
 	# Log: finished structures, settlers, pods, upgrades, deaths
 	var log: Array = st.get("log", [])
 	if not quiet:
@@ -201,15 +200,16 @@ func check() -> void:
 					hud.toast(String(e["text"]), "good", "wind")
 				"crop_lost":
 					# "broken" is not here: the alert gate toasts the broken:<id> alert once.
-					hud.toast(String(e["text"]), "warn", "sev_warning")
+					hud.toast(String(e["text"]), "warn", "sev_warning", "alert")
 				"research_paid":
 					hud.toast(String(e["text"]), "research", "exotic")
 				"death":
-					hud.toast(String(e["text"]), "bad", "sev_critical")
+					hud.toast(String(e["text"]), "bad", "sev_critical", "people")
 				var code:
 					if HAZARD_LOG.has(String(code)):
 						var spec: Array = HAZARD_LOG[String(code)]
-						hud.toast(String(e["text"]), spec[0], spec[1])
+						var ty: String = "request" if String(code).begins_with("request_") or String(code) == "defect_request" else ({"unrest": "unrest", "dome_stage": "build", "graduated": "people"}.get(String(code), ""))
+						hud.toast(String(e["text"]), spec[0], spec[1], ty)
 						if String(code) == "ship_landed" and hud.main.audio != null:
 							hud.main.audio.music.cue("mus_arrival")   # also started by RENDER's ship_touchdown sound
 						elif String(code) == "trade":

@@ -8,6 +8,10 @@
       "wind_max": 8.0,
       "wind_var": 2.6,
       "radiation_mult": 1.0,
+      "atmosphere": "thin",
+      "pressure_kpa": 0.6,
+      "temp_range_c": [-80, 20],
+      "hazards": {"_note": "Event rate multiplier per hazard kind on this planet (missing = 1; 0 = never). Atmospheric kinds: dust_storm, wind_storm, dust_devil."},
       "terrain": {
         "amplitude": 7.0,
         "roughness": 0.5,
@@ -23,6 +27,10 @@
       "wind_max": 10.0,
       "wind_var": 3.0,
       "radiation_mult": 1.0,
+      "atmosphere": "thin_cold",
+      "pressure_kpa": 0.9,
+      "temp_range_c": [-120, -20],
+      "hazards": {"dust_storm": 0.5, "dust_devil": 0.4},
       "terrain": {
         "amplitude": 9.0,
         "roughness": 0.55,
@@ -38,6 +46,10 @@
       "wind_max": 0.0,
       "wind_var": 0.0,
       "radiation_mult": 2.0,
+      "atmosphere": "none",
+      "pressure_kpa": 0.0,
+      "temp_range_c": [-170, 120],
+      "hazards": {"_note": "No air: no dust storms, wind storms or dust devils; more meteors and stronger flares (no air shield).", "dust_storm": 0, "wind_storm": 0, "dust_devil": 0, "meteor": 1.4, "meteor_shower": 1.4, "solar_flare": 1.5},
       "terrain": {
         "amplitude": 6.0,
         "roughness": 0.6,

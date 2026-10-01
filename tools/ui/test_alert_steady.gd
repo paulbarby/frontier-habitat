@@ -101,19 +101,26 @@ func _process(_d: float) -> bool:
 			var s2: Array = idents.duplicate()
 			s2.sort()
 			last_set = s2
-			if keys.size() == last_keys.size() and keys != last_keys:
+			# A live alert that clears goes down the list (the gate holds it, greyed): a change of state, not a
+			# reorder. Only the live alerts must keep their order (2026-10-01: the dock shows 8 cards).
+			var held: Array = []
+			for x in disp:
+				if bool(x["cleared"]):
+					held.append(String(x["issue"].get("key", "")))
+			var live_keys: Array = keys.filter(func(k): return not held.has(k))
+			if live_keys.size() == last_keys.size() and live_keys != last_keys:
 				var same := true
-				for k in keys:
+				for k in live_keys:
 					if not last_keys.has(k):
 						same = false
 				if same:
-					reorders.append("%d: %s -> %s" % [secs, str(last_keys), str(keys)])
+					reorders.append("%d: %s -> %s" % [secs, str(last_keys), str(live_keys)])
 			if secs == 30:
 				hud.alerts.max_changes = 0   # after the load settles: count only changes in play
 			max_changes = hud.alerts.max_changes
 			if secs % 60 == 0:
-				samples.append("t%.1f %d:%s max=%d tight=%s more=%s pos=%s size=%s floor=%.0f cut=%.0f th=%.0f inc=%d" % [float(Time.get_ticks_msec()) / 1000.0, secs, str(keys), hud.alerts._max, hud.alerts._tight, hud.alerts._more.visible, hud.alerts.position, hud.alerts.size, hud.minimap.position.y - 8.0, hud.alerts._cut_h, hud.alerts._tight_gain, sim.alerts.incidents().size()])
-			last_keys = keys
+				samples.append("t%.1f %d:%s max=%d more=%s size=%s inc=%d" % [float(Time.get_ticks_msec()) / 1000.0, secs, str(keys), hud.alerts._max, hud.alerts._more.visible, hud.alerts.size, sim.alerts.incidents().size()])   # 2026-10-01: no fit to the minimap (the dock scrolls)
+			last_keys = keys.filter(func(k): return not held.has(k))
 			if secs >= 600:
 				_step = 2
 			_n = 7

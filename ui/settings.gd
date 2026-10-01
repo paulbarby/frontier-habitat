@@ -6,6 +6,12 @@ const DEFAULTS := {
 	"quality": 2, "ui_scale": 1.0, "glass": true, "edge_pan": false, "camera_speed": 1.0,
 	"vol_master": 0.8, "vol_music": 0.5, "vol_sfx": 0.8, "vol_ui": 0.7, "vol_ambience": 0.6,
 	"tutorial_tips": true, "camera_shake": true,
+	# Panel manager (docs/UI_PANELS.md): the dock open or closed; each message type: popup | badge | off.
+	"dock_open": true, "notify_alert": "popup", "notify_hazard": "popup", "notify_reactor": "popup", "notify_unrest": "popup",
+	"notify_request": "popup", "notify_traffic": "popup", "notify_people": "popup", "notify_goal": "popup", "notify_award": "popup",
+	"notify_research": "popup", "notify_build": "popup", "notify_system": "popup",
+	# All roofs off (Paul, 2026-10-01): key Y, the nav rail button; RENDER view.set_roofs_off.
+	"roofs_off": false,
 }
 
 static var values := {}

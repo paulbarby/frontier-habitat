@@ -9,8 +9,8 @@ extends Node
 ##   edge lines up with it.
 ## - Stacking: a click on a window brings it to the front; the order is also the Esc order.
 ## - Esc closes the last window first (close_last); close_all closes every window.
-## - The nav rail is not part of the work area; a window never stays over it. The goals, hazard
-##   and traffic panels are snap targets, and fold while a window covers them (critic round 15).
+## - The nav rail is not part of the work area; a window never stays over it. The panel manager's dock
+##   (docs/UI_PANELS.md) is a snap target and folds to its tabs while a window covers it, unless pinned.
 ## - Bounds (v3.1 rule): ui/hud/bounds_keeper.gd keeps every window inside the view, also while
 ##   dragging; the drag itself stops the title bar at the view edges.
 ## A window is any Control. Optional methods on it: wm_close() (else it is hidden), wm_title().
@@ -33,13 +33,12 @@ func _init() -> void:
 
 ## The HUD panels a window may cover: they fold (collapse to their header) while a window lies
 ## over them, and open again when it leaves. Each has `collapsed` and `_toggle()`.
+## Since 2026-10-01 that is the panel manager's dock (docs/UI_PANELS.md): it folds to its tabs unless pinned.
 func foldable() -> Array:
-	var out: Array = []
-	for k in ["goals", "alerts", "hazard", "traffic"]:
-		var p = hud.get(k) if hud != null else null
-		if p != null and is_instance_valid(p) and p.visible and "collapsed" in p and (p.has_method("fold_set") or p.has_method("_toggle")):
-			out.append(p)
-	return out
+	var pm = hud.get("panels") if hud != null else null
+	if pm != null and is_instance_valid(pm) and pm._dock.visible and not pm.pinned:
+		return [pm]
+	return []
 
 ## Each frame: (1) no window stays over the nav rail (critic round 15, fix 2): a window that grew
 ## or was dragged into the rail strip moves left, unless it is being dragged now; (2) the goals,
@@ -66,7 +65,7 @@ func _process(_delta: float) -> void:
 				w.global_position.x = wa.end.x - r.size.x
 		rects.append(w.get_global_rect())
 	for p in foldable():
-		var own: Rect2 = _folded.get(p, (p as Control).get_global_rect())
+		var own: Rect2 = _folded.get(p, (p._dock as Control).get_global_rect() if p.get("_dock") != null else (p as Control).get_global_rect())
 		var hit := false
 		for r in rects:
 			if (r as Rect2).grow(-2.0).intersects(own):
@@ -84,13 +83,9 @@ func _process(_delta: float) -> void:
 		if not is_instance_valid(p):
 			_folded.erase(p)
 
-## Folds or opens a HUD panel: fold_set(on) when it has one (the alerts panel, whose _toggle(key)
-## opens a card's consequences), else _toggle().
+## Folds or opens the dock (panel manager fold_set).
 func _fold(p, on: bool) -> void:
-	if p.has_method("fold_set"):
-		p.fold_set(on)
-	elif p.collapsed != on:
-		p._toggle()
+	p.fold_set(on)
 
 ## Names of the HUD panels folded now under a window (tests).
 func folded_names() -> Array:
@@ -201,13 +196,10 @@ func snap(id: String) -> void:
 			var orr: Rect2 = o.get_global_rect()
 			xs.append_array([orr.position.x, orr.end.x])
 			ys.append_array([orr.position.y, orr.end.y])
-	# The goals, hazard and traffic panels are snap targets too (their unfolded edges).
+	# The dock's right edge is a snap target too (its height changes with every alert: no bottom edge).
 	for p in foldable():
-		if p == hud.get("alerts"):
-			continue   # the alerts panel folds but is no snap target: its height changes with every alert
-		var pr: Rect2 = _folded.get(p, (p as Control).get_global_rect())
+		var pr: Rect2 = _folded.get(p, (p._dock as Control).get_global_rect())
 		xs.append(pr.end.x + 8.0)
-		ys.append(pr.end.y + 8.0)
 	var pos: Vector2 = r.position
 	for x in xs:
 		if absf(r.position.x - float(x)) < SNAP:

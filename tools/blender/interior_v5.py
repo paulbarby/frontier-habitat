@@ -151,10 +151,8 @@ def kitchenette(p, w=2.0, fridge=True, seed=0):
             p.cap_disc(0.075, zt + 0.014, "Ember" if (dx + dy) < 0 else "Frame", seg=10)
     # splash panel and a shelf with jars
     plate_x(p, 0.005, y0 + 0.02, yf - 0.02, zt, F + WALL_H - 0.05, "Frost")
-    rng = random.Random(seed)
-    for k in range(4):
-        yy = y0 + 0.2 + (yf - y0 - 0.4) * k / 3.0
-        p.vcyl(0.12, yy, zt, zt + rng.uniform(0.10, 0.20), 0.045, seg=8, mat=rng.choice(("Accent", "Cushion", "Hull")))
+    import interior_props as PR          # 5.0 (V5 15.3): the chatbot kettle, the subscription toaster, sourdough
+    PR.counter_set(p, 0.10, y0 + 0.02, yf - 0.02, zt, seed=seed)
     if fridge:
         bbox(p, 0.0, 0.62, yf + 0.02, y1, F, F + 1.82, "Hull", bevel=0.02)
         plate_x(p, 0.623, yf + 0.05, y1 - 0.03, F + 1.12, F + 1.14, "Frame")
@@ -365,6 +363,12 @@ def wall_art(c, u, v, yl, w=0.9, seed=0):
     """A framed picture on a partition face: (u, v) on the wall centre line, yl = the direction it faces."""
     n = c.plan.n
     rng = random.Random(seed)
+    if seed % 2 == 0:
+        import interior_props as PR      # 5.0 (V5 15.3): original parody posters
+        with c.at(u, v, yl):
+            with n.at(T(0.048, 0.0, 0.0)):
+                PR.poster(n, w=min(0.68, w), kind=("ai", "film", "band")[(seed // 2) % 3], seed=seed // 2, off=0.0)
+        return
     with c.at(u, v, yl):
         bbox(n, 0.048, 0.072, -w / 2, w / 2, F + 0.70, F + 1.22, "Frame")
         plate_x(n, 0.073, -w / 2 + 0.04, w / 2 - 0.04, F + 0.74, F + 1.18, "Hull")
@@ -536,7 +540,7 @@ def _table(plan, c, u, v, yl, seed, anchors=2, n_chairs=4, hx=0.62, hy=0.40):
         for sx in (-0.30, 0.30):
             if k >= n_chairs:
                 break
-            lx, ly = sx, sy * (hy + 0.30)
+            lx, ly = sx, sy * (hy + 0.42)        # the stand point 0.12 off the table edge (check_desk_seats)
             cu, cv = c_off(u, v, yl, lx, ly)
             cy_ = yl - 90.0 * sy            # faces the table
             with c.at(cu, cv, cy_):
@@ -1047,8 +1051,10 @@ def residence_tube(rm):
     _yards(plan, cells, units, exe, yb, s)
     _entries(plan, r_o, xe, yb, s)
     # the ring wall items (behind the aisle ring)
-    pattern = ["planter", "shelf", "lockers", "cab_plant", "tap", "cab_books", "planter", "wardrobe"]
-    plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=5 + s, depth_of=IR.DEPTHS)
+    pattern = ["planter", "shelf", "notice", "lockers", "cab_plant", "tap", "aiposter", "cab_books", "planter",
+               "wardrobe", "filmposter"]
+    plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=5 + s, depth_of=IR.DEPTHS,
+                    open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     # link ports (SIM anchors_spec): the porch doors at 0 / 180 deg and the side doors; on the wall line, facing out.
     # The model takes a doorway at any angle (no blocked angles); these are where the design puts them.
     Rw = rm.R - 0.32

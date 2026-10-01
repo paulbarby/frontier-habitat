@@ -40,7 +40,7 @@ func _place(def_id: String, near: Vector2, size: int, base_id: int = -1) -> Dict
 	print("  %s %s" % [def_id, "at %s" % str(b["pos"]) if not b.is_empty() else "NOT PLACED"])
 	return b
 
-func _exterior(def_id: String, near: Vector2, size: int, base_id: int = -1) -> Dictionary:
+func _exterior(def_id: String, near: Vector2, size: int, base_id: int = -1, gaps: Array = [7.0, 12.0, 18.0]) -> Dictionary:
 	var rooms: Array = []
 	for id in sim.state["buildings"]:
 		var rb: Dictionary = sim.state["buildings"][id]
@@ -51,7 +51,7 @@ func _exterior(def_id: String, near: Vector2, size: int, base_id: int = -1) -> D
 	var errs: Array = []
 	for e in rooms.slice(0, 40):
 		var rb2: Dictionary = sim.state["buildings"][int(e[1])]
-		for gap in [7.0, 12.0, 18.0]:
+		for gap in gaps:
 			for k in 24:
 				var p: Vector2 = sim.place.snap_pos((rb2["pos"] as Vector2) + Vector2.RIGHT.rotated(k * TAU / 24.0) * (float(rb2["radius"]) + r0 + gap))
 				if sim.place.check_building(def_id, p, 0.0, -1, size) != "ok":
@@ -124,7 +124,8 @@ func _init() -> void:
 		if String(sim.state["buildings"][id]["def"]) == "landing_pad" and sim.state["buildings"][id]["state"] == "active":
 			pad = sim.state["buildings"][id]
 	if pad.is_empty():
-		pad = _exterior("landing_pad", lp, 1, base)
+		pad = _exterior("landing_pad", lp, 1, base, [8.0, 14.0, 20.0, 28.0, 36.0])
+	print("  landing pad %s" % (str(pad["id"]) if not pad.is_empty() else "NONE"))
 	# ---- stock (SET-UP: as if made over the weeks before).
 	if not stores.is_empty():
 		var st0: int = int(stores[0]["inv_out"])

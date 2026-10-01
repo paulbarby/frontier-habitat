@@ -35,6 +35,7 @@ const REASONS := {
 	"door_blocked": "The door would open onto equipment. Choose another side of the room.",
 	"depot_blocked": "This would block the rover depot.",
 	"one_per_base": "Only one of these can stand at a base.",
+	"no_atmosphere": "This planet has no air: this structure cannot work here.",
 }
 
 func _init(s) -> void:
@@ -70,6 +71,11 @@ func lock_info(def_id: String, size: int = 1) -> Dictionary:
 		out["text"] = "This structure does not exist."
 		return out
 	var base: Dictionary = sim.bdef(def_id)
+	if bool(base.get("needs_atmosphere", false)) and not sim.planet_has_air():
+		out["locked"] = true
+		out["kind"] = "planet"
+		out["text"] = "This planet has no air: %s cannot work here." % String(base.get("name", def_id))
+		return out
 	var need: int = int(base.get("stage", 0))
 	var now: int = int(sim.state["progress"]["stage"])
 	if need > now and not sim.unlocked_all():
@@ -171,6 +177,9 @@ func check_building(def_id: String, pos: Vector2, rot: float, ignore_id: int = -
 		return "locked"
 	if not sim.research.building_unlocked(def_id):
 		return "locked_research"
+	# V5 15.7: a wind turbine or an atmosphere processor needs air outside.
+	if bool(base.get("needs_atmosphere", false)) and not sim.planet_has_air():
+		return "no_atmosphere"
 	var allowed: Dictionary = sim.sizes.allowed(def_id, size)
 	if not bool(allowed["ok"]):
 		return String(allowed["code"])

@@ -5,10 +5,10 @@ extends CanvasLayer
 ## Every status is a word or a number as well as a colour.
 ##
 ## Layout (logical 1600 x 900, anchored, so it holds from 1280 x 720 up):
-##   top-left KPI bar · top-right time panel · right nav rail · left goals + alerts ·
-##   bottom-left minimap · bottom build bar · right inspector · top-right toasts ·
-##   hazard forecast right of the goals · hazard banner top centre (version 3) ·
-##   ship traffic under the hazard panel (version 3.1).
+##   top-left KPI bar · top-right time panel · right nav rail · bottom-left minimap · bottom build
+##   bar · right inspector · left column: the panel manager (docs/UI_PANELS.md, Paul 2026-10-01):
+##   urgent line, pop-ups and the tabbed dock (goals, alerts, events, traffic, requests, news).
+##   The centre of the view stays free.
 ## Screens (research, goals, dashboard, ...) open over the HUD from ui/screens/.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -23,7 +23,7 @@ const AlertsPanel = preload("res://ui/hud/alerts_panel.gd")
 const BuildBar = preload("res://ui/hud/build_bar.gd")
 const Inspector = preload("res://ui/hud/inspector.gd")
 const Minimap = preload("res://ui/hud/minimap.gd")
-const Toasts = preload("res://ui/hud/toasts.gd")
+const PanelManager = preload("res://ui/hud/panel_manager.gd")
 const PlaceHint = preload("res://ui/hud/place_hint.gd")
 const ScreenHost = preload("res://ui/screens/screen_host.gd")
 const Watchers = preload("res://ui/hud/watchers.gd")
@@ -51,7 +51,8 @@ var alerts
 var build_bar
 var inspector
 var minimap
-var toasts
+var toasts      # = panels (old name: hud.toast and the tests)
+var panels      # the panel manager: the one place for alerts, events, requests and messages
 var hint
 var screens
 var watchers
@@ -124,6 +125,8 @@ func _ready() -> void:
 	hazard = _add(HazardPanel.new())
 	hazard_banner = _add(HazardBanner.new())
 	traffic = _add(TrafficPanel.new())
+	panels = _add(PanelManager.new())     # over the map and the build bar, under the windows
+	toasts = panels
 	inspector = _add(Inspector.new())
 	find = _add(FindWindow.new())
 	advisor = _add(load("res://ui/hud/advisor_window.gd").new())
@@ -142,9 +145,6 @@ func _ready() -> void:
 	screens = ScreenHost.new()
 	screens.hud = self
 	root.add_child(screens)
-	toasts = Toasts.new()
-	toasts.hud = self
-	root.add_child(toasts)
 	watchers = Watchers.new(self)
 	bounds = BoundsKeeper.new()
 	bounds.hud = self
@@ -160,6 +160,15 @@ func _ready() -> void:
 	rag.register_window(wm)
 	person.register_window(wm)
 	load("res://ui/theme/bubble_style.gd").apply(main.view)
+	# Every module the game shows by itself goes into the panel manager's dock (docs/UI_PANELS.md §7).
+	panels.host("goals", goals, "Mission", "goals", func(): return String(goals._head.text))
+	panels.host("alerts", alerts, "Alerts", "sev_warning", func(): return String(alerts._summary.text))
+	panels.host("events", hazard_banner, "Countdown", "hazard", func(): return String(hazard_banner._title.text))
+	panels.host("events", reactor_banner, "Reactor", "reactor", func(): return String(reactor_banner._text.text))
+	panels.host("events", unrest_banner, "Unrest", "people", func(): return String(unrest_banner._text.text))
+	panels.host("events", hazard, "Hazard forecast", "meteor", func(): return String(hazard._head_next.text))
+	panels.host("traffic", traffic, "Ships", "ship", func(): return String(traffic._sub.text))
+	panels.host("requests", request_card, "Requests", "heart", func(): return "%d open" % v5.requests().size())
 
 func _add(m: Control) -> Control:
 	m.set("hud", self)
@@ -236,7 +245,7 @@ func follow_changed(id: int) -> void:
 	load("res://ui/theme/bubble_style.gd").apply(main.view)
 	follow_hud.show_for(id)
 	var dim: float = 0.28 if id >= 0 else 1.0
-	for m in [goals, alerts, minimap, build_bar, nav, top_bar, hazard, traffic, inspector]:
+	for m in [minimap, build_bar, nav, top_bar, inspector, panels._dock if panels != null else null]:
 		if m != null:
 			(m as CanvasItem).modulate.a = dim
 	if id >= 0 and inspector != null:
@@ -289,15 +298,33 @@ func rebuild_all() -> void:
 func set_hud_visible(on: bool) -> void:
 	_hud_visible = on
 	hud_root.visible = on
-	toasts.visible = on
 
 func hud_visible() -> bool:
 	return _hud_visible
 
 # ---------------------------------------------------------------- public API (main.gd)
-func toast(text: String, kind: String = "info", icon: String = "") -> void:
-	if toasts != null:
-		toasts.push(text, kind, icon)
+## A message (docs/UI_PANELS.md §5): the panel manager shows it (News; a pop-up when its type pops up).
+## kind: info | good | warn | bad | award | research | goal | save. type: a panel manager type; when
+## it is empty, it comes from the kind and the icon.
+func toast(text: String, kind: String = "info", icon: String = "", type: String = "") -> void:
+	if panels == null:
+		return
+	var t: String = type if type != "" else _type_of(kind, icon, text)
+	var pr: String = {"bad": "critical", "warn": "warning", "good": "notice"}.get(kind, "info")
+	var ic: String = icon if icon != "" else {"good": "sev_ok", "warn": "sev_warning", "bad": "sev_critical", "award": "medal", "research": "research", "goal": "goals", "save": "save"}.get(kind, "")
+	panels.post(t, text, pr, ic)
+
+const ICON_TYPE := {"heart": "people", "people": "people", "home": "people", "colonists": "people", "ship": "traffic", "credits": "traffic",
+	"hazard": "hazard", "meteor": "hazard", "wind": "hazard", "shelter": "hazard", "turret": "hazard", "breach": "hazard", "wrench": "hazard",
+	"build": "build", "upgrade": "build", "research": "research", "exotic": "research", "medal": "award", "trophy": "award",
+	"goals": "goal", "sev_critical": "alert", "sev_warning": "alert", "lock": "unrest", "reactor": "reactor"}
+func _type_of(kind: String, icon: String, _text: String) -> String:
+	match kind:
+		"award": return "award"
+		"research": return "research"
+		"goal": return "goal"
+		"save": return "system"
+	return String(ICON_TYPE.get(icon, "system"))
 
 func open_modal(kind: String) -> void:
 	open_screen(kind)

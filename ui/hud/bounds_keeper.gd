@@ -1,7 +1,7 @@
 extends Node
 ## Keeps every window inside the view (Paul, 2026-09-25: "make it so info and UI windows can
 ## not open outside the view panel"). ONE place for the rule: every HUD panel, every screen
-## frame and dialog, toasts, medal pop-ups, banners and the placement hint.
+## frame and dialog, the panel manager's column (alerts, banners, pop-ups) and the placement hint.
 ##
 ## Each frame, after every panel has placed itself (process_priority 1000 = it runs last):
 ## 1. a window whose rect leaves the view by any part moves back inside, MARGIN px from the edge;
@@ -39,17 +39,13 @@ func windows() -> Array:
 			if s is Control and (s as Control).visible:
 				if s.get("frame") is Control:
 					out.append(s.frame)
-		var pops = host.get("_popups")
-		if pops is Control:
-			for c in (pops as Control).get_children():
-				if c is Control and (c as Control).visible:
-					out.append(c)
-	if hud.toasts != null and hud.toasts.visible:
-		var box = hud.toasts.get("_box")
-		if box is Control:
-			for t in (box as Control).get_children():
-				if t is Control:
-					out.append(t)
+	# The panel manager places its own column (urgent line, pop-ups, dock) inside the view; its rects:
+	if hud.panels != null and hud.panels.has_method("shown_rects") and hud.hud_root.visible:
+		for c in [hud.panels._urgent, hud.panels._dock]:
+			if (c as Control).is_visible_in_tree():
+				out.append(c)
+		for t in hud.panels._pops.get_children():
+			out.append(t)
 	return out
 
 ## Full-screen layers that are not windows (the door-sector overlay).

@@ -1117,3 +1117,64 @@ feedback. At 100 % in 1920x1080 the layout is the same as before.
 ## 2026-10-01 — PAUSED (coordinator): showcase_v5 work half-done
 - Done, not yet tested: lockdown banner mode + Crew Security "Lock down this base" (SIM lock_info, response_effect); SIM's response_effect on the unrest banner; tourism (Venues tab line, dashboard People "Tourism" card + visitors chart); venue staff picker (command `staff`); a child's School section in the file; dome stages 9 in help. test_rag now loads showcase_v5: PASS.
 - Half-done: `tools/ui/test_v5_showcase.gd` (new) loops on step 0: the pairs query right after `_import_bytes` finds no couples; move the queries one step later (after a few frames). No ui17 shots, no export, no title load-time measure yet (the title already picks showcase_v5: newest name).
+
+## 2026-10-01 (resumed): ONE panel manager for every alert, request and message (Paul); roofs off; v5 windows on showcase_v5
+
+Spec first: `docs/UI_PANELS.md` (STE, one page). Code: `ui/hud/panel_manager.gd` (`hud.panels`).
+- One placement authority. Left column, top: urgent line (at most 1: request > reactor > hazard countdown >
+  unrest/lockdown > critical alert; click opens its tab), pop-ups (at most 3; 5 s, 8 s warnings; Pin keeps one;
+  oldest drop when the view is short), the dock (tabs Goals, Alerts, Events, Traffic, Requests, News with a count
+  badge and the colour of the most urgent item; a new urgent item flashes its tab once). Width: a quarter of the
+  view less 16 px (260-380); above the minimap; the body scrolls. Nothing in the centre zone.
+- One look: every card and pop-up is the HUD glass with a priority colour on its left edge (info, notice, warning,
+  critical, needs-answer). The hosted modules lost their own frames, glass and fixed widths.
+- Controls: each card Minimise / Pin / Close; the dock Minimise / Pin / Close and a mute per tab; key L and a rail
+  button open and close the dock; a window over the dock folds it unless pinned (the window manager's fold target
+  is now the dock only). Settings, Notifications: each of 12 types Pop up / Badge only / Off (kept on the device).
+- Moved onto the manager (their placement code deleted): goals tracker, alerts panel (its minimap fit and
+  hysteresis code removed; 8 cards; the tab scrolls), hazard forecast, hazard countdown banner, traffic panel,
+  reactor banner, unrest banner (+ lockdown), request card (now a list of every request with buttons, the outcome
+  when nobody answers and the deadline, Minimise and Later), toasts (`ui/hud/toasts.gd` deleted; `hud.toast()`
+  posts a typed message), medal pop-ups (`ui/screens/award_popup.gd` deleted), chapter banners, follow-view toasts,
+  life-event messages, order answers.
+- `Kit.fit` does nothing for a child of a container (it fought the dock's layout). Glass `detach()` added.
+- Nav rail: buttons capped by `icon_max_width` so the rail can shrink (54 to 28 px); two new buttons.
+- All roofs off: key Y, rail button (pressed look), setting `roofs_off`; calls `view.set_roofs_off(bool)` when RENDER
+  has it; roofs stay on in the over-the-shoulder view (button disabled there). Help topics "The left dock and
+  messages" and "Roofs off" (STE); keys L and Y in Settings, How to play.
+- v5 on showcase_v5 (`tools/ui/test_v5_showcase.gd`, its loop fixed): Family and Adopt (SIM answers "No free bunk"),
+  a child's School, Security with 6 officers and the prisoner, Academy with 3 students, lockdown through SIM (banner
+  and Crew show "DOORS OPEN IN 0:50"), dome Venues (16 rows, staff, prices, tourism line, a staff order through
+  SIM), dashboard Tourism card, SIM's response effects, STAGE 4 OF 9 on RENDER's dome_v5_stage_3 save.
+  test_rag now runs on showcase_v5.
+- New test `tools/ui/test_panels.gd`: every type at 80/100/140 % in 1920x1080 and 1280x720 (36 cases: nothing in
+  the centre, inside the view, off the minimap), urgent order, Later, dock minimise (News badge counts what came
+  meanwhile), close, key L, fold under a window, pin, tab mute, type Off, card minimise/close, Settings list.
+  test_window_bounds adds the centre rule; test_wm, test_rag, test_v5_people, test_v5_social follow the dock;
+  test_alert_steady compares only live alerts (a clearing alert sinks; that is not a reorder).
+- Requests: UI-to-SIM.md asks what happens to a `leave_with_ship` request when its ship has gone (never removed).
+- Storm sounds indoors (Paul): `ui/audio.gd`. Wind and night loops and the storm loop play on outdoor copies of the
+  Ambience and SFX buses, each with a low-pass filter. Indoors (follow view of a person inside; or a camera closer
+  than 32 m whose focus is in a room with air, a corridor or the dome) those buses go to -24 dB with the filter at
+  400 Hz, the room tone (hum) +6 dB; fade 0.5 s. New boot parameter `cmd=` (debug=1 only) runs debug commands after
+  the load. Test `tools/ui/test_indoor_sound.gd` PASS (buses -24.0 dB / 400 Hz indoors, 0.0 dB / 20000 Hz outdoors).
+  `tools/audio_probe.mjs build/web_ui --music 0` (5 s, showcase_v5, debug wind_storm severity 1):
+  | place | storm | peak dBFS | rms dBFS |
+  |---|---|---|---|
+  | outdoors (goto 40 40, zoom 18) | no | -30.1 | -38.6 |
+  | outdoors | yes | -17.3 | -28.0 |
+  | in a habitat (select habitat, zoom 18) | no | -23.7 | -35.1 |
+  | in a habitat | yes | -23.8 | -35.5 |
+  The storm adds +10.6 dB rms outdoors and nothing measurable indoors (room tone and machines set the level).
+- Title background: `showcase_path()` takes the newest showcase name, so the title already loads showcase_v5 since SIM
+  added it. Web ready time (one run each, --gpu, 1920x1080): title 41.8 s; load showcase_v4 38.0 s; load showcase_v5
+  36.1 s (headless import of showcase_v5: 2.7 s). No change made; the loader budget is the coordinator's call.
+- Export `build/web_ui` (pck 160.0 MB). Shots: before `docs/shots/ui18_before_1920.png`, `ui18_before_1280.png`;
+  after `ui18_after_{1920,1280}.png`, `ui18_requests_tab_*`, `ui18_events_tab_*`, `ui18_dock_minimised_*`,
+  `ui18_dock_closed_*`, `ui18_roofs_off_*` (RENDER's set_roofs_off draws it), `ui18_settings_notifications_*`.
+- Tests (one at a time): test_panels, test_window_bounds (132), test_wm, test_v5_people, test_v5_social,
+  test_v5_orders, test_v5_showcase, test_rag, test_alert_steady, test_alert_gate, test_bases_ui, test_v4_live,
+  test_v4_screens, test_tiers, test_storage, test_reach, test_theme_v4, test_tooltips_clip, test_helpers, test_find,
+  test_locks, test_indoor_sound: PASS. test_ships_ui FAIL 1 (the landing pad has no power: SIM, reported 2026-09-29).
+- Not done: tab labels are icons with counts only (names in tooltips); at 1280x720 three pop-ups leave the dock body
+  about 80 px until they fade; the urgent line and pop-ups are not draggable; the follow view's bubble click.

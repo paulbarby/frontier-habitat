@@ -1954,7 +1954,16 @@ func _sync_use(a: Dictionary) -> void:
 # ---------------------------------------------------------------- visitors (v3.1)
 ## Colonists sleep in their bed; visitors in a free bed that no colonist needs.
 func _sleep_any(a: Dictionary) -> bool:
-	return _visitor_sleep(a) if a["kind"] == "visitor" else _try_sleep(a)
+	if (_visitor_sleep(a) if a["kind"] == "visitor" else _try_sleep(a)):
+		return true
+	# No free bed anywhere (a crowded colony): an exhausted person sleeps on the floor of the room
+	# they are in, if it has air, rather than work on until exhaustion kills them (the death in
+	# long_v4_perf: 100 colonists, 30 beds). The crowding morale penalty still applies.
+	if a["where"] == "in" and breathable(a) and float(a["fatigue"]) >= float(sim.bal["need_critical"]):
+		abort_plan(a, "need_sleep")
+		_start_plan(a, "sleep", [{"op": "sleep"}], "Sleeping on the floor (no free bed)")
+		return true
+	return false
 
 ## A visitor's day (docs/V3_1_DESIGN.md section 6.1): needs first, then back to the ship
 ## when it boards, else what the visitor came for. Never work.

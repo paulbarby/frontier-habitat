@@ -774,6 +774,16 @@ def main():
         focus = [c + Vector((dx, dy, dz)) for dx in (-1.6, 1.6) for dy in (-1.6, 1.6) for dz in (0.0, 1.4)]
         shot_room(file, R, base + "_detail.png", size=(1400, 900), elevation=40.0, azimuth=th + 180.0 + 30.0,
                   focus=focus, margin=1.0)
+    if "props" in only:
+        # 5.0 detail pass (V5 15.3): close views of the wall and the furniture near it at three angles
+        Rw = R - 0.32
+        angs = [float(a_) for a_ in argv[argv.index("--angles") + 1].split(",")] if "--angles" in argv \
+            else [30.0, 150.0, 270.0]
+        for j, th in enumerate(angs):
+            c = Vector(((Rw - 1.3) * cos(radians(th)), (Rw - 1.3) * sin(radians(th)), 0))
+            focus = [c + Vector((dx, dy, dz)) for dx in (-1.5, 1.5) for dy in (-1.5, 1.5) for dz in (0.0, 1.5)]
+            shot_room(file, R, base + "_props%d.png" % j, size=(1400, 900), elevation=26.0, azimuth=th + 180.0 + 15.0,
+                      focus=focus, margin=1.0)
     if "cutproof" in only:
         # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
         # the cutaway may stand above the ring

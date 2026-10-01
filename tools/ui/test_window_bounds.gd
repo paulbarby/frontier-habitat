@@ -2,7 +2,8 @@ extends SceneTree
 ## Window bounds test (Paul, 2026-09-25: "info and UI windows can not open outside the view").
 ##   node tools/godot.mjs script res://tools/ui/test_window_bounds.gd
 ## For views 1920x1080, 1280x720 and 800x600: the HUD with every panel full (hazards, traffic,
-## alerts, inspector on a structure and on a colonist, toasts, medal pop-up, chapter banner),
+## alerts, inspector on a structure and on a colonist, toasts, medal pop-up, chapter banner; since
+## 2026-10-01 all of them in the panel manager, out of the centre of the view),
 ## then every screen and tab, one at a time. Asserts that every window rect the bounds keeper
 ## covers is inside the view (ui/hud/bounds_keeper.gd `outside`). Also: selections at the four
 ## corners of the colony, and a resize from 1920x1080 to 800x600 with screens open.
@@ -80,6 +81,17 @@ func _plan() -> void:
 			main._on_cmd("award first_breath")
 			main._on_cmd("chapter 2"), 8)
 		q(func(): check("%s HUD: panels, inspector on a structure, toasts, medal, banner" % tag, outside()), 1)
+		# Paul, 2026-10-01: nothing the game shows by itself covers the centre (the middle half of the width
+		# and of the height): the panel manager's urgent line, pop-ups and dock (docs/UI_PANELS.md).
+		if sz.x >= 1280:
+			q(func():
+				var v: Vector2 = vp()
+				var centre := Rect2(v * 0.25, v * 0.5)
+				var bad: Array = []
+				for r in main.hud.panels.shown_rects():
+					if (r as Rect2).grow(-0.5).intersects(centre):
+						bad.append("%s in the centre %s" % [str(r), str(centre)])
+				check("%s HUD: alerts, events, messages, medal and chapter keep out of the centre" % tag, bad), 1)
 		q(func(): main._on_cmd("idof agent 0"); main._on_cmd("follow " + String(main._on_cmd("idof agent 0"))), 6)
 		q(func(): check("%s HUD: inspector on a colonist" % tag, outside()), 1)
 		for spec in SCREENS:
@@ -153,9 +165,9 @@ func _plan() -> void:
 				var bb: Rect2 = main.hud.build_bar._tab_panel.get_global_rect()
 				if mm.grow(-0.5).intersects(bb):
 					bad.append("build bar %s overlaps the minimap %s" % [str(bb), str(mm)])
-				var al: Control = main.hud.alerts
+				var al: Control = main.hud.panels._dock   # 2026-10-01: the alerts are in the panel manager's dock
 				if al.visible and al.get_global_rect().grow(-0.5).intersects(mm):
-					bad.append("alerts %s overlap the minimap %s" % [str(al.get_global_rect()), str(mm)])
+					bad.append("dock %s overlaps the minimap %s" % [str(al.get_global_rect()), str(mm)])
 				var tb: Rect2 = main.hud.top_bar.get_global_rect()
 				if tb.grow(-0.5).intersects(main.hud.time_panel.get_global_rect()):
 					bad.append("top bar %s overlaps the time panel %s in view %s, factor %.2f" % [str(tb), str(main.hud.time_panel.get_global_rect()), str(vp()), root.content_scale_factor])

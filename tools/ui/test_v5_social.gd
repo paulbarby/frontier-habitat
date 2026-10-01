@@ -60,6 +60,7 @@ func _process(_d: float) -> bool:
 			root.size = Vector2i(1600, 900)
 			main._import_bytes(FileAccess.get_file_as_bytes("res://content/saves/showcase_v4.fhsave"))
 			main._on_cmd("speed 0")
+			main.leave_title()   # the HUD shows (headless stays on the title after an import)
 			for r in hud.v5.people():
 				if String(r["kind"]) == "colonist":
 					pid = int(r["id"])
@@ -68,6 +69,7 @@ func _process(_d: float) -> bool:
 			check("no request card without a request", not hud.request_card.visible)
 			_request(1, pid)
 			hud.request_card.update()
+			hud.panels.open_tab("requests", true)   # 2026-10-01: requests live in the dock's Requests tab
 			_step = 1
 			_n = 0
 		1:
@@ -113,10 +115,15 @@ func _process(_d: float) -> bool:
 			_step = 5
 			_n = 0
 		5:
-			var ub: Rect2 = hud.unrest_banner.get_global_rect()
-			var rr: Rect2 = hud.request_card.get_global_rect()
-			check("with a protest banner: the card is under it, no overlap", hud.unrest_banner.visible and hud.request_card.visible and not ub.grow(-0.5).intersects(rr) and rr.position.y >= ub.end.y, "banner %s card %s" % [str(ub), str(rr)])
-			check("with a protest banner: the card is inside the view", Rect2(Vector2.ZERO, hud.root.get_viewport_rect().size).grow(0.5).encloses(rr), str(rr))
+			# 2026-10-01 (docs/UI_PANELS.md): both are cards in the left dock; the urgent line names the request.
+			var v: Vector2 = hud.root.get_viewport_rect().size
+			var centre := Rect2(v * 0.25, v * 0.5)
+			check("a request and a protest: the urgent line shows the request first", String(hud.panels.urgent_now.get("tab", "")) == "requests" or String(hud.panels.urgent().get("tab", "")) == "requests", str(hud.panels.urgent()))
+			check("a request and a protest: the Events and Requests tabs count them", int(hud.panels.tab_state("events")["count"]) >= 1 and int(hud.panels.tab_state("requests")["count"]) >= 1)
+			var ok := true
+			for r in hud.panels.shown_rects():
+				ok = ok and not (r as Rect2).grow(-0.5).intersects(centre)
+			check("a request and a protest: nothing in the centre of the view", ok, str(hud.panels.shown_rects()))
 			main._on_cmd("unrest off")
 			sim.relations._w()["requests"].clear()
 			hud.request_card.update()
@@ -132,8 +139,9 @@ func _process(_d: float) -> bool:
 			if _n < 40:
 				return false
 			var t: String = _texts(hud.toasts)
+			var ft: String = " | ".join(hud.panels.feed.map(func(x): return String(x["text"])))
 			for c in ["got married", "Scandal!", "broke up", "asks to leave"]:
-				check("a toast for '%s'" % c, t.contains(c), t.left(200))
+				check("a message for '%s' (News; the newest 3 pop up)" % c, ft.contains(c), ft.left(200))
 			var r1: String = main._on_cmd("request")
 			check("debug request shows the card", hud.request_card.visible and r1.begins_with("request for"), r1)
 			main._on_cmd("request off")

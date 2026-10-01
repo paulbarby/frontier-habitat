@@ -210,6 +210,9 @@ static func clear(node: Node) -> void:
 
 ## Shrinks a free-standing panel to its content when the content got smaller.
 static func fit(c: Control) -> void:
+	# A container sizes its children (a HUD module docked in the panel manager): nothing to do.
+	if c.get_parent() is Container:
+		return
 	var m: Vector2 = c.get_combined_minimum_size()
 	if c.size.y > m.y + 0.5 or c.size.x > m.x + 0.5:
 		c.reset_size()

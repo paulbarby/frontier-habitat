@@ -174,8 +174,8 @@
    "loop": true
   },
   "lie_enter": {
-   "frames": 112,
-   "duration_s": 3.7333,
+   "frames": 229,
+   "duration_s": 7.6333,
    "kind": "enter",
    "pose_from": "stand",
    "pose_to": "lie",
@@ -190,8 +190,8 @@
    "loop": true
   },
   "lie_exit": {
-   "frames": 95,
-   "duration_s": 3.1667,
+   "frames": 194,
+   "duration_s": 6.4667,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",

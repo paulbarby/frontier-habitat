@@ -1,5 +1,5 @@
 extends PanelContainer
-## Ship traffic (docs/V3_1_DESIGN.md §6.5), under the hazard panel, right of the goals.
+## Ship traffic (docs/V3_1_DESIGN.md §6.5): a card in the Traffic tab of the panel manager (it places it).
 ## One card per arrival that the player can see (forecast one day ahead) and per ship in orbit,
 ## landing, landed, boarding or taking off: kind icon, name, phase, countdown, SIM's one-line
 ## offer, what it brings and wants, and the choices: Grant / Deny (until it lands), Settlers
@@ -13,7 +13,7 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 
 const MAX_CARDS := 3
-const WIDTH := 318.0
+
 
 var hud
 var collapsed := false
@@ -29,12 +29,6 @@ var _notes := {}        # arrival id -> [notice texts] (SIM traffic notices, by 
 var _loose: Label       # notices with no ship on show
 
 func _ready() -> void:
-	theme_type_variation = "HudPanel"
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	offset_left = 282
-	offset_top = 58
-	custom_minimum_size.x = WIDTH
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var v: VBoxContainer = Kit.vbox(7)
@@ -51,23 +45,15 @@ func _ready() -> void:
 	tv.add_child(_sub)
 	_chev = Kit.icon_button("chevron_up", func(): _toggle(), "Hide or show the ship cards.", "GhostButton", 14, 26)
 	head.add_child(_chev)
+	_chev.visible = false   # the card's Minimise does this now (panel manager)
 	_list = Kit.vbox(6)
 	v.add_child(_list)
 	_more = Kit.label("", "SmallLabel", 11, P.TEXT_3)
 	_more.visible = false
 	v.add_child(_more)
-	_loose = Kit.wrap("", 12, P.AMBER, WIDTH - 30.0)
+	_loose = Kit.wrap("", 12, P.AMBER)
 	_loose.visible = false
 	v.add_child(_loose)
-
-func _process(_delta: float) -> void:
-	if hud == null or hud.goals == null or not visible:
-		return
-	Kit.fit(self)
-	var g: Control = hud.goals
-	position.x = g.position.x + g.size.x + 10.0
-	var hp: Control = hud.hazard
-	position.y = (hp.position.y + hp.size.y + 8.0) if hp != null and hp.visible else 58.0
 
 func rebuild() -> void:
 	_sig = ""
@@ -179,7 +165,13 @@ func _make_card(r: Dictionary) -> Dictionary:
 	var top: HBoxContainer = Kit.hbox(6)
 	v.add_child(top)
 	top.add_child(Kit.icon(d.ship_icon(kind), 16, col))
-	top.add_child(Kit.head(String(r.get("name", kind)), P.TEXT, 12))
+	var nm: Label = Kit.head(String(r.get("name", kind)), P.TEXT, 12)
+	nm.clip_text = true   # the dock is narrow: a long ship name ends in ...
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.tooltip_text = String(r.get("name", kind))
+	nm.mouse_filter = Control.MOUSE_FILTER_PASS
+	top.add_child(nm)
 	var bd: Control = Kit.badge("DENIED" if denied and ["forecast", "orbit"].has(ph) else String(d.SHIP_PHASE.get(ph, ph.to_upper())), col)
 	bd.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(bd)
@@ -190,7 +182,7 @@ func _make_card(r: Dictionary) -> Dictionary:
 	# A trader's sentence lists every item; the chips below show them, so it gets the short kind text.
 	var line: String = String(d.ship_kind(kind).get("desc", "")) if offer0.has("sells") or offer0.has("buys") else String(r.get("text", ""))
 	var txt: Label = Kit.wrap(line, 12, P.TEXT_2)
-	txt.custom_minimum_size.x = WIDTH - 40.0
+	txt.custom_minimum_size.x = 0.0   # wraps to the dock width
 	v.add_child(txt)
 	var offer: Dictionary = r.get("offer", {}) if typeof(r.get("offer", {})) == TYPE_DICTIONARY else {}
 	if offer.has("sells"):
@@ -209,7 +201,7 @@ func _make_card(r: Dictionary) -> Dictionary:
 	for note in _notes.get(id, []):
 		var nr: HBoxContainer = Kit.hbox(5)
 		nr.add_child(Kit.icon("sev_warning", 13, P.AMBER))
-		nr.add_child(Kit.wrap(String(note), 12, P.AMBER, WIDTH - 60.0))
+		nr.add_child(Kit.wrap(String(note), 12, P.AMBER))
 		v.add_child(nr)
 	# Choices
 	var row: HBoxContainer = Kit.hbox(5)

@@ -266,6 +266,11 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 	goals.tick_second()
 	log_event("landed", "The lander is down. %s, shelter for %s." % [Text.n(i, "colonist"), Text.n(int(bdef("lander")["shelter_days"]), "day")], [lander["id"]], 1)
 
+## Does the planet have an atmosphere (V5 section 15.7)? content planets.<id>.atmosphere: "none" on the
+## airless world.
+func planet_has_air() -> bool:
+	return String(planet.get("atmosphere", "thin")) != "none"
+
 ## Is a deposit known to the colony (surveyed)? Saves before V4 know every deposit.
 static func deposit_known(d: Dictionary) -> bool:
 	return bool(d.get("surveyed", true))
@@ -370,6 +375,8 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	explore.ensure()
 	if nav.has_method("prewarm"):
 		nav.prewarm()
+	# V5 15.7: an old save on an airless planet drops its pending atmospheric events.
+	hazards.drop_atmospheric()
 	# A rider saved outside the vehicle is put back aboard (vehicles.repair_crews).
 	vehicles.repair_crews()
 	# V5: a save from before schema 6 gets one commander a base, chosen by seniority.

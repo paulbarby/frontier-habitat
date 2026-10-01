@@ -58,9 +58,25 @@ var _t := 0.0
 var shoulder_fn: Callable
 var collide_fn: Callable
 var sh_side := 1.0            # 1 = right shoulder, -1 = left (Q/E swap)
-var sh_dist := 1.9            # m behind; wheel 1.2..4
-var sh_orbit := 0.0           # rad, drag orbit about the person, clamp +-70 deg
-var sh_pitch := 0.0           # rad, extra pitch from the drag
+var sh_dist := 1.9            # m behind; wheel SH_DMIN..SH_DMAX (face close-up .. 8 m)
+var sh_orbit := 0.0           # rad, drag orbit about the person, a full circle (0 = behind)
+var sh_pitch := 0.0           # rad, tilt from the drag (SH_PMIN near the floor .. SH_PMAX high above)
+var sh_look_yaw := 0.0        # rad, free-look: the aim only (middle drag)
+var sh_look_pitch := 0.0
+var ceil_fn: Callable         # (feet, eye) -> ceiling y over the eye, INF outdoors (world_view.follow_ceiling)
+var _sh_o := 0.0
+var _sh_ov := 0.0
+var _sh_pt := 0.0
+var _sh_ptv := 0.0
+var _sh_ly := 0.0
+var _sh_lyv := 0.0
+var _sh_lp := 0.0
+var _sh_lpv := 0.0
+var _sh_cy := INF
+var _sh_cyv := 0.0
+var _sh_idle := 0.0          # s without camera input (the auto return)
+var _sh_returning := false
+var _sh_look_drag := false
 var _sh_heading := 0.0
 var _sh_hvel := 0.0
 var _sh_p := Vector3.ZERO     # smoothed body point
@@ -75,6 +91,8 @@ var _sh_side_s := 1.0         # smoothed shoulder side (Q/E swap slides across)
 var _sh_sv := 0.0
 var _sh_f := 1.0              # smoothed wall pull-in (fraction of the free eye offset)
 var _sh_fv := 0.0
+var _sh_push := Vector3.ZERO  # smoothed wall correction of the eye (world)
+var _sh_pushv := Vector3.ZERO
 var _sh_fhold := 0.0          # s the wall has been further off than the eye (release after 0.6 s)
 var _sh_eye := Vector3.ZERO
 var _sh_new := true
@@ -88,9 +106,9 @@ const SH_W_EYE := 4.0
 const SH_W_DIST := 8.0
 const SH_HACC := 5.0          # rad/s^2: the most the heading's turn rate changes (camera jerk at 4x)
 const SH_HRATE := 1.75        # rad/s (100 deg/s): the fastest the camera heading turns
-const SH_W_IN := 14.0         # wall pull-in: fast
+const SH_W_IN := 7.0          # wall correction in: fast (14 gave 7-20 mm camera jerk with the roofs-on walls)
 const SH_W_OUT := 2.5         # release: slow
-const SH_SOFT := 0.6          # m: the smoothed eye starts to pull in this far off a wall
+const SH_SOFT := 0.8          # m: the smoothed eye keeps this far off a wall (eased)
 const SH_HARD := 0.2          # m: the eye is never closer than this to a wall (no easing)
 
 ## One exact step of a critically damped spring (x, v) toward `target` with angular frequency w.
@@ -101,7 +119,13 @@ static func _crit(x: float, v: float, target: float, w: float, dt: float) -> Vec
 	return Vector2(target + (e + tmp) * ex, (v - w * tmp) * ex)
 const SH_SIDE := 0.55
 const SH_UP := 0.15
-const SH_ORBIT_MAX := 1.2217  # 70 deg
+const SH_DMIN := 0.5
+const SH_DMAX := 8.0
+const SH_PMIN := -0.6         # rad: the camera low, near the floor, looking up
+const SH_PMAX := 1.35         # rad: high above, looking down
+const SH_W_ORBIT := 8.0       # rad/s: orbit / tilt / free-look follow the mouse
+const SH_W_RETURN := 2.5      # rad/s: the return behind the shoulder
+const SH_RETURN_S := 4.0      # s without camera input while the person walks: back behind the shoulder
 
 func shoulder_start(fn: Callable) -> void:
 	shoulder_fn = fn
@@ -124,22 +148,60 @@ func swap_shoulder() -> void:
 	sh_side = -sh_side
 
 func _shoulder_input(event: InputEvent) -> void:
+	# Paul 2026-10-01: right drag orbits a full circle round the person and tilts from near the floor to
+	# high above; middle drag (or Alt + right drag) is free-look (the aim only, the camera stays put);
+	# the wheel zooms from a face close-up (0.5 m) to 8 m; R (or 4 s without camera input while the person
+	# walks) brings the camera back behind the shoulder, smoothly.
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
-			sh_dist = maxf(1.2, sh_dist * 0.88)
+			sh_dist = maxf(SH_DMIN, sh_dist * 0.88)
+			_sh_idle = 0.0
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
-			sh_dist = minf(4.0, sh_dist * 1.13)
-		elif mb.button_index == MOUSE_BUTTON_MIDDLE or mb.button_index == MOUSE_BUTTON_RIGHT:
+			sh_dist = minf(SH_DMAX, sh_dist * 1.13)
+			_sh_idle = 0.0
+		elif mb.button_index == MOUSE_BUTTON_RIGHT:
 			_sh_drag = mb.pressed
+			_sh_look_drag = mb.pressed and mb.alt_pressed
+		elif mb.button_index == MOUSE_BUTTON_MIDDLE:
+			_sh_drag = mb.pressed
+			_sh_look_drag = mb.pressed
 	elif event is InputEventMouseMotion and _sh_drag:
 		var mm: InputEventMouseMotion = event
-		sh_orbit = clampf(sh_orbit - mm.relative.x * 0.006, -SH_ORBIT_MAX, SH_ORBIT_MAX)
-		sh_pitch = clampf(sh_pitch + mm.relative.y * 0.004, -0.35, 0.6)
+		_sh_idle = 0.0
+		_sh_returning = false
+		if _sh_look_drag:
+			sh_look_yaw = clampf(sh_look_yaw - mm.relative.x * 0.005, -PI, PI)
+			sh_look_pitch = clampf(sh_look_pitch - mm.relative.y * 0.004, -1.2, 1.2)
+		else:
+			sh_orbit = wrapf(sh_orbit - mm.relative.x * 0.006, -PI, PI)
+			sh_pitch = clampf(sh_pitch + mm.relative.y * 0.004, SH_PMIN, SH_PMAX)
 	elif event is InputEventKey and event.pressed and not event.echo and not _typing():
 		var k: int = (event as InputEventKey).physical_keycode
 		if k == KEY_Q or k == KEY_E:
 			swap_shoulder()
+		elif k == KEY_R:
+			shoulder_return()
+
+## Back behind the shoulder (orbit, tilt and free-look to 0; the zoom stays), smoothly.
+func shoulder_return() -> void:
+	sh_orbit = 0.0
+	sh_pitch = 0.0
+	sh_look_yaw = 0.0
+	sh_look_pitch = 0.0
+	_sh_returning = true
+
+## One camera "shot" relative to the person: distance, orbit (rad, 0 = behind), tilt, free-look yaw and
+## pitch. The follow view's mouse sets these; a later "watch" mode (V5 §15.2: cinematic automatic shots)
+## drives the same targets, so it gets the same springs, wall rule and ceiling.
+func set_shot(dist: float, orbit: float, pitch: float, look_yaw: float = 0.0, look_pitch: float = 0.0) -> void:
+	sh_dist = clampf(dist, SH_DMIN, SH_DMAX)
+	sh_orbit = wrapf(orbit, -PI, PI)
+	sh_pitch = clampf(pitch, SH_PMIN, SH_PMAX)
+	sh_look_yaw = clampf(look_yaw, -PI, PI)
+	sh_look_pitch = clampf(look_pitch, -1.2, 1.2)
+	_sh_idle = 0.0
+	_sh_returning = false
 
 ## One frame of the follow view. Returns false when the person is gone.
 func _shoulder_process(delta: float) -> bool:
@@ -167,6 +229,16 @@ func _shoulder_process(delta: float) -> bool:
 		_sh_dv = 0.0
 		_sh_side_s = sh_side
 		_sh_sv = 0.0
+		_sh_o = sh_orbit
+		_sh_ov = 0.0
+		_sh_pt = sh_pitch
+		_sh_ptv = 0.0
+		_sh_ly = sh_look_yaw
+		_sh_lyv = 0.0
+		_sh_lp = sh_look_pitch
+		_sh_lpv = 0.0
+		_sh_cy = INF
+		_sh_idle = 0.0
 	elif dt > 0.0:
 		# The body's velocity, low-passed, is fed forward: a steady walk has no lag and the small
 		# ripple of the drawn walk is filtered. The spring takes the rest (per axis, relative velocity).
@@ -186,12 +258,9 @@ func _shoulder_process(delta: float) -> bool:
 		if (s as Array).size() > 4:
 			wh *= clampf(sqrt(maxf(float(s[4]), 1.0)), 1.0, 2.2)
 		# Absolute heading and turn rate (the body yaw is the moving target). The turn rate changes by
-		# at most SH_HACC rad/s^2: at 4x a spring alone swung the camera round a 2 m circle at up to
-		# 12 rad/s^2 after each corner (7-15 mm camera jerk, 2026-10-01). The person stays in frame
-		# (the camera always looks along its heading at the pivot).
+		# at most SH_HACC rad/s^2 and is at most SH_HRATE: the camera circles the person at ~2 m, so its
+		# acceleration is 2 m x rate^2 (at 4x a spring alone gave 7-15 mm camera jerk, 2026-10-01).
 		var rh: Vector2 = _crit(_sh_heading, _sh_hvel, _sh_heading - e, wh, dt)
-		# ... and the turn rate itself is at most SH_HRATE: the camera circles the person at ~2 m, so its
-		# acceleration is 2 m x rate^2 (240 deg/s at 4x = 35 m/s^2, 10 mm per 1/60 s^2; 100 deg/s = 1.7 mm).
 		var hv: float = clampf(clampf(rh.y, _sh_hvel - SH_HACC * dt, _sh_hvel + SH_HACC * dt), -SH_HRATE, SH_HRATE)
 		_sh_heading = rh.x if hv == rh.y else _sh_heading + (_sh_hvel + hv) * 0.5 * dt
 		_sh_hvel = hv
@@ -204,55 +273,105 @@ func _shoulder_process(delta: float) -> bool:
 		var rs: Vector2 = _crit(_sh_side_s, _sh_sv, sh_side, 6.0, dt)
 		_sh_side_s = rs.x
 		_sh_sv = rs.y
+		# Orbit, tilt and free-look ease to their targets (the mouse sets the targets); a return eases slower.
+		_sh_idle += dt
+		var moving: bool = _sh_bu.length() > 0.5
+		if _sh_idle > SH_RETURN_S and moving and (absf(sh_orbit) > 0.001 or absf(sh_pitch) > 0.001 or absf(sh_look_yaw) > 0.001 or absf(sh_look_pitch) > 0.001):
+			shoulder_return()
+		var wo: float = SH_W_RETURN if _sh_returning else SH_W_ORBIT
+		var ro: Vector2 = _crit(_sh_o, _sh_ov, _sh_o + angle_difference(_sh_o, sh_orbit), wo, dt)
+		_sh_o = wrapf(ro.x, -PI, PI)
+		_sh_ov = ro.y
+		var rp: Vector2 = _crit(_sh_pt, _sh_ptv, sh_pitch, wo, dt)
+		_sh_pt = rp.x
+		_sh_ptv = rp.y
+		var rly: Vector2 = _crit(_sh_ly, _sh_lyv, _sh_ly + angle_difference(_sh_ly, sh_look_yaw), wo, dt)
+		_sh_ly = rly.x
+		_sh_lyv = rly.y
+		var rlp: Vector2 = _crit(_sh_lp, _sh_lpv, sh_look_pitch, wo, dt)
+		_sh_lp = rlp.x
+		_sh_lpv = rlp.y
+		if _sh_returning and absf(angle_difference(_sh_o, 0.0)) < 0.01 and absf(_sh_pt) < 0.01 and absf(_sh_ly) < 0.01:
+			_sh_returning = false
 	# V5 §3 (critic round 29): exactly eye height + 0.15 m; a seated or lying person gets a little more
 	# height so the camera still sees over them.
 	var lift: float = maxf(0.0, 1.65 - _sh_eh) * 0.5
-	var hd: float = _sh_heading + sh_orbit
+	var hd: float = _sh_heading + _sh_o
 	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
 	var right := Vector3(sin(hd), 0.0, cos(hd))
 	var pivot: Vector3 = _sh_p + Vector3(0.0, _sh_eh + SH_UP, 0.0)
-	var shoulder_pt: Vector3 = pivot + right * SH_SIDE * _sh_side_s
-	var free: Vector3 = pivot - fwd * _sh_d * cos(sh_pitch) + right * SH_SIDE * _sh_side_s + Vector3(0.0, lift + _sh_d * sin(sh_pitch), 0.0)
+	# The shoulder offset shrinks with the zoom (a face close-up looks at the face, not past it).
+	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0)
+	var shoulder_pt: Vector3 = pivot + right * side
+	var free: Vector3 = pivot - fwd * _sh_d * cos(_sh_pt) + right * side + Vector3(0.0, lift + _sh_d * sin(_sh_pt), 0.0)
 	# The camera never passes a wall. The eye eases in when a wall comes within SH_SOFT of it (fast)
 	# and out when the wall is gone (slow, with a dead band, so a wall at the edge does not make it
 	# pump); it is never closer than SH_HARD to a wall (a hard clamp, only if the easing is too late).
-	var f_soft := 1.0
-	var f_hard := 1.0
+	# Indoors (roofs on) the walls are the room's and corridor's own (world_view._follow_collide).
+	# The camera never passes a wall: the wall rule (world_view._follow_collide) moves the eye to the nearest
+	# clear point; that correction eases in fast (SH_W_IN) and out slowly (SH_W_OUT, after a 4 % dead band
+	# or 0.6 s), per axis; then the final eye point is kept SH_HARD clear of every wall (no easing).
+	var push_t := Vector3.ZERO
 	if collide_fn.is_valid():
-		var ol: float = maxf(shoulder_pt.distance_to(free), 0.001)
-		f_soft = shoulder_pt.distance_to(collide_fn.call(shoulder_pt, free, SH_SOFT)) / ol
-		f_hard = shoulder_pt.distance_to(collide_fn.call(shoulder_pt, free, SH_HARD)) / ol
+		push_t = (collide_fn.call(shoulder_pt, free, SH_SOFT) as Vector3) - free
 	if _sh_new:
-		_sh_f = f_soft
-		_sh_fv = 0.0
+		_sh_push = push_t
+		_sh_pushv = Vector3.ZERO
 	elif dt > 0.0:
-		var tgt: float = _sh_f
-		var wf: float = SH_W_OUT
-		# Out: at once past the dead band, else after 0.6 s of free room (no pumping at a wall edge,
-		# and never left a little short for good).
-		_sh_fhold = _sh_fhold + dt if f_soft > _sh_f + 0.005 else 0.0
-		if f_soft < _sh_f - 0.005:
-			tgt = f_soft
-			wf = SH_W_IN
-		elif f_soft > _sh_f + 0.04 or _sh_fhold > 0.6:
-			tgt = f_soft
-		var rf: Vector2 = _crit(_sh_f, _sh_fv, tgt, wf, dt)
-		_sh_f = rf.x
-		_sh_fv = rf.y
-	if f_hard < _sh_f:
-		_sh_f = f_hard
-		_sh_fv = 0.0
-	_sh_f = clampf(_sh_f, 0.08, 1.0)
-	var eye: Vector3 = shoulder_pt + (free - shoulder_pt) * _sh_f
+		var more: bool = push_t.length() > _sh_push.length() + 0.005
+		var tgt_p: Vector3 = _sh_push
+		var wp: float = SH_W_OUT
+		_sh_fhold = _sh_fhold + dt if push_t.length() < _sh_push.length() - 0.005 else 0.0
+		if more or (push_t - _sh_push).length() > 0.05 and push_t.length() >= _sh_push.length():
+			tgt_p = push_t
+			wp = SH_W_IN
+		elif _sh_push.length() - push_t.length() > 0.04 * _sh_d or _sh_fhold > 0.6:
+			tgt_p = push_t
+		for ax in 3:
+			var rq: Vector2 = _crit(_sh_push[ax], _sh_pushv[ax], tgt_p[ax], wp, dt)
+			_sh_push[ax] = rq.x
+			_sh_pushv[ax] = rq.y
+	var eye: Vector3 = free + _sh_push
+	if collide_fn.is_valid():
+		eye = collide_fn.call(shoulder_pt, eye, SH_HARD, true)
+	_sh_f = clampf(1.0 - (eye - free).length() / maxf(shoulder_pt.distance_to(free), 0.01), 0.0, 1.0)	# Under the ceiling (Paul 2026-10-01, roofs on): eased like the walls (the ceiling changes in steps
+	# between a room and a corridor), never closer than 0.12 m; never below the person's floor + 0.25 m.
+	if ceil_fn.is_valid():
+		var cy: float = float(ceil_fn.call(pos, eye))
+		# (the soft target also looks 0.6 m toward the person: a lower ceiling ahead is eased into early)
+		var tw: Vector3 = Vector3(pivot.x - eye.x, 0.0, pivot.z - eye.z)
+		var cy_soft: float = minf(cy, float(ceil_fn.call(pos, eye + tw.normalized() * minf(0.6, tw.length())))) if tw.length() > 0.01 else cy
+		if cy < INF:
+			if _sh_cy == INF or _sh_new:
+				_sh_cy = cy_soft
+				_sh_cyv = 0.0
+			else:
+				var rc: Vector2 = _crit(_sh_cy, _sh_cyv, cy_soft, SH_W_IN if cy_soft < _sh_cy else SH_W_OUT, dt)
+				_sh_cy = rc.x
+				_sh_cyv = rc.y
+			eye.y = minf(eye.y, minf(_sh_cy - 0.3, cy - 0.12))
+		else:
+			_sh_cy = INF
+	eye.y = maxf(eye.y, pos.y + 0.25)
 	if height_fn.is_valid():
 		eye.y = maxf(eye.y, float(height_fn.call(eye.x, eye.z)) + 0.35)
 	_sh_pull = _sh_f
 	_sh_eyeh = _sh_eh
 	_sh_new = false
-	# The camera looks along the (smoothed) heading, 10 deg down (plus the drag pitch): the person stands
-	# on the left third (right shoulder) with room to look ahead (critic round 29).
-	var dn: float = deg_to_rad(10.0) + sh_pitch + lift * 0.25
-	var aim: Vector3 = fwd * cos(dn) - Vector3(0.0, sin(dn), 0.0)
+	# The aim keeps the framing of critic round 29 at any orbit, tilt, zoom and wall pull-in: the person
+	# stands where the free (unpulled) camera would see them: on the left third (right shoulder), the
+	# head SH_DOWN above the centre. The aim is turned from the line to the person by those two angles,
+	# then by the free-look offsets.
+	# (from the eye; from the FREE camera point when the eye is pressed close to the head: from beside the
+	# head the line to the person swung the aim by up to 1300 deg/s, 2026-10-01)
+	var src: Vector3 = eye.lerp(free, clampf((1.2 - eye.distance_to(pivot)) / 0.6, 0.0, 1.0))
+	var to_p: Vector3 = pivot - src
+	var yaw_p: float = atan2(-to_p.z, to_p.x)
+	var pit_p: float = atan2(to_p.y, Vector2(to_p.x, to_p.z).length())
+	var off_yaw: float = atan2(side, maxf(_sh_d * cos(_sh_pt), 0.05))
+	var ay: float = yaw_p - off_yaw + _sh_ly
+	var ap: float = clampf(pit_p - deg_to_rad(10.0) - lift * 0.25 + _sh_lp, -1.45, 1.3)
+	var aim := Vector3(cos(ay) * cos(ap), sin(ap), -sin(ay) * cos(ap))
 	_sh_eye = eye
 	focus = pos
 	distance = eye.distance_to(pos)

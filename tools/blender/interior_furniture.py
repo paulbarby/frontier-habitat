@@ -415,7 +415,11 @@ def desk(p, w=1.2, d=0.65, monitors=2, lamp_cb=None, seed=0):
             bbox(p, -0.02, 0.02, -0.02, 0.02, 0.02, 0.16, "Frame")
             bbox(p, -0.02, 0.01, -0.26, 0.26, 0.12, 0.44, "Frame", bevel=0.005)
             plate_x(p, 0.011, -0.24, 0.24, 0.14, 0.42, "Screen")
+            import interior_props as PR                 # 5.0 (V5 15.3): screens with content
+            PR.screen_content(p, 0.48, 0.28, kind=seed + m, x=0.013, yc=0.0, zc=0.28)
     bbox(p, -0.30, -0.12, -0.20, 0.20, zt, zt + 0.015, "Frame")
+    import interior_props as PR
+    PR.desk_clutter(p, d=d, w=w, seed=seed)
     if lamp_cb:
         y = w / 2 - 0.14
         p.vcyl(-d + 0.12, y, zt, zt + 0.02, 0.06, seg=8, mat="Frame", cap0=False)
@@ -505,6 +509,15 @@ def wi_cabinet(p, w=0.80, d=0.42, h=0.90, top="Wood", deco=None, seed=0, lamp_cb
         plate_x(p, d + 0.006, y0 + 0.04, y1 - 0.04, F + h - 0.16, F + h - 0.14, "Frame")
     zt = F + h
     deco = deco or ""
+    if w >= 0.6 and h <= 1.0:
+        # 5.0 (V5 15.3): a small framed picture on the wall over the cabinet
+        o, yc = 0.035, -w * 0.05
+        bbox(p, o, o + 0.02, yc - 0.15, yc + 0.15, zt + 0.12, zt + 0.36, "Frame")
+        plate_x(p, o + 0.021, yc - 0.13, yc + 0.13, zt + 0.14, zt + 0.34, ("Hull", "CushionLight", "Wood")[seed % 3])
+        cols = ("Accent", "Fabric", "PlantDark", "WaterBlue", "Hazard")
+        for j in range(2):
+            plate_x(p, o + 0.023, yc - 0.10 + 0.11 * j, yc - 0.01 + 0.11 * j, zt + 0.17 + 0.03 * j, zt + 0.30 - 0.04 * j,
+                    cols[(seed + 2 * j) % len(cols)])
     if "plant" in deco:
         p.vcyl(d * 0.5, -w * 0.22, zt, zt + 0.16, 0.08, 0.10, seg=8, mat="Hull", cap0=False)
         leafy_plant(p, d * 0.5, -w * 0.22, zt + 0.14, s=min(0.42, max(0.2, (0.28 * w - 0.03) / 0.48)), n=6, seed=seed)
@@ -559,6 +572,8 @@ def wi_desk(p, w=0.80, d=0.44, seed=0):
     with p.at(T(0.03, 0, zt + 0.33)):
         ui_screen(p, w * 0.78, 0.42, seed=seed)
     bbox(p, 0.06, 0.22, -0.10, 0.10, zt, zt + 0.015, "Frame")
+    import interior_props as PR
+    PR.mug(p, 0.14, -w / 2 + 0.12, zt, mat=("Hull", "Accent", "Fabric")[seed % 3], tall=seed % 2 == 0)
     with p.at(T(d - 0.12, w * 0.12, 0)):
         stool(p)
 
@@ -592,7 +607,10 @@ POSTER = (("Cushion", "Accent"), ("HullDark", "Fabric"), ("Accent", "Cushion"), 
 
 
 def wi_poster(p, w=0.70, d=0.08, seed=0, colours=POSTER):
-    """Open wall: a framed poster (abstract planet and rings, no text)."""
+    """Open wall: a framed poster.  5.0 (V5 15.3): original parody posters (AI slogans, films, bands, notices)."""
+    import interior_props as PR
+    PR.poster(p, w=w, kind=("ai", "film", "band", "notice", "ai")[seed % 5], seed=seed)
+    return
     bg, fg = colours[seed % len(colours)]
     ww = min(0.52, w - 0.14)
     bbox(p, 0.0, 0.03, -ww / 2, ww / 2, F + 0.62, F + 1.18, "Frame")

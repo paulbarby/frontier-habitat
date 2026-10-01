@@ -442,6 +442,7 @@ def q_from_frames(u0, w0, u1, w1):
     return (M1 @ M0.transposed()).to_quaternion()
 
 
+ELBOW_GUARD = True       # 2026-10-01: IK elbows never inside the torso (Solver._elbow_out)
 FK_BONES = ["hips", "spine", "chest", "neck", "head"] + ["%s.%s" % (b, s) for s in SIDES for b in
                                                          ("shoulder", "upper_arm", "forearm", "hand")]
 
@@ -569,6 +570,9 @@ class Solver:
             a = (l1 * l1 - l2 * l2 + dist * dist) / (2 * dist)
             h = sqrt(max(0.0, l1 * l1 - a * a))
             elbow = S_ + dn * a + pv * h
+            if ELBOW_GUARD and h > 1e-3:
+                pv = self._elbow_out(S_, dn, a, h, pv, pos, D, sgn)
+                elbow = S_ + dn * a + pv * h
             wrist = S_ + dn * dist
             # FK directions for the blend
             y_ua_rest = (self.head[fa] - self.head[ua]).normalized()
@@ -617,6 +621,51 @@ class Solver:
         Q[pr] = Quaternion()
         D[pr] = D[hd]
         pos[pr] = pos[hd] + D[hd] @ (self.head[pr] - self.head[hd])
+
+    def _inside_torso(self, p, pos, D):
+        """How far p (an elbow centre) is inside the torso: an elliptic cylinder from the hips to the neck in the
+        chest frame, half width 78 % of half the shoulder span, half depth 0.11 m x scale, plus 4.5 cm for the arm.
+        > 0 = inside."""
+        hp, nk = pos["hips"], pos["neck"]
+        ax = nk - hp
+        L2 = ax.length_squared
+        t = (p - hp).dot(ax) / L2 if L2 > 0 else 0.0
+        if t < -0.20 or t > 1.0:
+            return -1.0
+        c = hp + ax * max(0.0, min(1.0, t))
+        loc = D["chest"].inverted() @ (p - c)
+        sc = (self.head["neck"] - self.head["hips"]).length / 0.49
+        half_w = 0.5 * (self.head["upper_arm.L"] - self.head["upper_arm.R"]).length * 0.78 + 0.045
+        half_d = 0.11 * sc + 0.045
+        return 1.0 - sqrt((loc.x / half_d) ** 2 + (loc.y / half_w) ** 2)
+
+    def _elbow_out(self, S_, dn, a, h, pv, pos, D, side=1.0):
+        """ELBOW GUARD (2026-10-01, Paul: broken arms): an IK elbow inside the torso is moved out to the torso's
+        surface along the line from the spine (in the chest frame), and the elbow plane turns to pass through that
+        point.  A radial projection: continuous as the target moves (no jumps between two exits)."""
+        e = S_ + dn * a + pv * h
+        hp, nk = pos["hips"], pos["neck"]
+        ax = nk - hp
+        L2 = ax.length_squared
+        t = (e - hp).dot(ax) / L2 if L2 > 0 else 0.0
+        if t < -0.20 or t > 1.0:
+            return pv
+        c = hp + ax * max(0.0, min(1.0, t))
+        Dc = D["chest"]
+        loc = Dc.inverted() @ (e - c)
+        sc = (self.head["neck"] - self.head["hips"]).length / 0.49
+        hw = 0.5 * (self.head["upper_arm.L"] - self.head["upper_arm.R"]).length * 0.78 + 0.045
+        hd = 0.11 * sc + 0.045
+        rho = sqrt((loc.x / hd) ** 2 + (loc.y / hw) ** 2)
+        if rho >= 1.0:
+            return pv
+        if rho < 1e-4:
+            loc2 = Vector((0.0, side * hw, loc.z))
+        else:
+            loc2 = Vector((loc.x / rho, loc.y / rho, loc.z))
+        v = (c + Dc @ loc2) - (S_ + dn * a)
+        v = v - dn * v.dot(dn)
+        return v.normalized() if v.length > 1e-6 else pv
 
     def _leg(self, P, s, D, Q, pos):
         th, sh, ft, to = "thigh." + s, "shin." + s, "foot." + s, "toe." + s

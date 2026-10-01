@@ -26,7 +26,7 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 					["Space", "Pause. You can plan while paused."], ["1, 2, 3", "Speed 1x, 2x, 4x."], ["R, Shift+R", "Turn the structure you place by 15 degrees."],
 					["Z and X", "Smaller or bigger size while placing (S, M, L, XL)."], ["Shift + click", "Place more than one, or chain corridors."], ["Delete", "Remove the selected structure."],
 					["F", "Follow the selected colonist from above."], ["V", "Over the shoulder: the camera goes behind the selected person. V or Esc: back. With nobody selected: Awards."],
-					["Tab (over the shoulder)", "The next person."], ["Q and E (over the shoulder)", "The other shoulder."], ["U", "Crew: ranks, homes and the academy."], ["J", "The Regolith Rag, the colony tabloid."],
+					["Tab (over the shoulder)", "The next person."], ["Q and E (over the shoulder)", "The other shoulder."], ["U", "Crew: ranks, homes and the academy."], ["J", "The Regolith Rag, the colony tabloid."], ["L", "The left dock: goals, alerts, events, traffic, requests and news."], ["Y", "Roofs off: see into every building."],
 					["PgUp, PgDn", "The floor selector of a structure with more than one floor."], ["/ or Ctrl+F", "Find a structure by name or type. Click a result: the camera goes there."],
 					["N", "Advisor: the biggest problems, the next goal steps, unused potential."], ["K", "Codex: every structure, item, research project and hazard, with crafting trees."],
 					["Esc, Shift+Esc", "Esc closes the last window first. Shift+Esc closes every window."], ["Drag a title bar", "Move a window. It snaps to edges and opens there again next time."], ["O", "Step through the overlays: power, water, air, walking."], ["G", "Goals."], ["T", "Research."], ["C", "Colony dashboard."],

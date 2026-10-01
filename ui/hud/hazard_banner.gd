@@ -1,8 +1,8 @@
 extends PanelContainer
-## The hazard banner (docs/V3_DESIGN.md §8): top centre, for the soonest detected event that
-## is less than 30 seconds away. "METEOR STRIKE IN 0:24", the place, covered or not, the
-## advice, and a Shelter button for a solar flare. It sits right of the hazard panel. It
-## plays the warning sound once per event and never takes the mouse except on its buttons.
+## The hazard countdown (docs/V3_DESIGN.md §8), for the soonest detected event that is less than
+## 30 seconds away: "METEOR STRIKE IN 0:24", the place, covered or not, the advice, and a Shelter
+## button for a solar flare. A card in the Events tab, and the urgent line, of the panel manager
+## (Paul, 2026-10-01: nothing over the centre). It plays the warning sound once per event.
 ## Hidden (no draw calls) otherwise.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -20,26 +20,22 @@ var _btns: HBoxContainer
 var _ev_id = null
 
 func _ready() -> void:
-	theme_type_variation = "ToastPanel"
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	custom_minimum_size.x = 460
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
-	var h: HBoxContainer = Kit.hbox(14)
+	var h: HBoxContainer = Kit.hbox(10)
 	add_child(h)
-	_icon = Kit.icon("meteor", 34, P.RED)
+	_icon = Kit.icon("meteor", 26, P.RED)
 	h.add_child(_icon)
 	var v: VBoxContainer = Kit.vbox(1)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
-	_title = Kit.label("", "TitleLabel", 22, P.RED)
+	_title = Kit.label("", "TitleLabel", 18, P.RED)
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_title)
-	_line = Kit.wrap("", 13, P.TEXT, 360)
+	_line = Kit.wrap("", 13, P.TEXT)
 	v.add_child(_line)
 	_btns = Kit.hbox(6)
-	_btns.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(_btns)
+	v.add_child(_btns)   # under the text: the dock is narrow
 
 func refresh() -> void:
 	var soon = null
@@ -66,32 +62,10 @@ func refresh() -> void:
 			_btns.add_child(show)
 		if String(soon["kind"]) == "solar_flare":
 			_btns.add_child(HazardPanel.shelter_button(hud))
-		Kit.set_icon(_icon, hud.data.hazard_icon(String(soon["kind"])), 34, col)
+		Kit.set_icon(_icon, hud.data.hazard_icon(String(soon["kind"])), 26, col)
 		Kit.sfx("alert_critical" if col == P.RED else "alert_warning")
 		modulate.a = 0.0
 		create_tween().tween_property(self, "modulate:a", 1.0, 0.2)
 	_title.text = ("%s in %s" % [soon["name"], Kit.clock(soon["eta_s"])]).to_upper()
 	_title.add_theme_color_override("font_color", col)
 	_line.text = "%s.  %s.  %s" % [hud.data.place_text(soon["pos"]), "Covered" if bool(soon["countered"]) else "Not covered", String(soon["advice"])]
-	Kit.fit(self)
-	_place()
-
-## Top, centred, but never over the hazard panel or the inspector: it moves right of the
-## panel when needed; when the top has no room, it goes above the build bar.
-func _place() -> void:
-	var vp: Vector2 = get_viewport_rect().size
-	var w: float = size.x
-	var x: float = (vp.x - w) * 0.5
-	var lo: float = 0.0
-	var hp: Control = hud.hazard
-	if hp != null and hp.visible:
-		lo = hp.position.x + hp.size.x + 12.0
-	var hi: float = vp.x - 70.0 - hud.right_inset() - w
-	x = clampf(x, lo, maxf(lo, hi))
-	if x <= hi:
-		position = Vector2(x, 80.0)
-		return
-	var mm: Control = hud.minimap
-	var left: float = mm.position.x + mm.size.x + 12.0 if mm != null else 0.0
-	var bottom: float = hud.build_bar.tabs_top() - 12.0 if hud.build_bar != null else vp.y - 90.0
-	position = Vector2(clampf((vp.x - w) * 0.5, left, maxf(left, vp.x - 70.0 - hud.right_inset() - w)), bottom - size.y)

@@ -78,20 +78,21 @@ func _process(_d: float) -> bool:
 			var nav5: Rect2 = main.hud.nav.get_global_rect()
 			var r5: Rect2 = insp().get_global_rect()
 			check("a drag into the rail strip ends clear of the rail", r5.end.x <= nav5.position.x - 7.5, "%s vs rail %s" % [str(r5), str(nav5)])
-			var g: Control = main.hud.goals
+			var g: Control = main.hud.panels._dock   # 2026-10-01: the panel manager's dock (docs/UI_PANELS.md)
+			main.hud.panels.pin_dock(false)
 			set_meta("goals_h", g.size.y)
 			main._on_cmd("drag inspector %d %d" % [int(g.global_position.x + 30.0), int(g.global_position.y + 20.0)])
 			_step = 6
 			_n = 0
 		6:
-			var g6: Control = main.hud.goals
-			check("the goals panel folds while the window covers it", g6.collapsed and main.hud.wm.folded_names().size() >= 1, "collapsed=%s folded=%s" % [g6.collapsed, str(main.hud.wm.folded_names())])
+			var g6 = main.hud.panels
+			check("the dock folds to its tabs while the window covers it", g6.collapsed and main.hud.wm.folded_names().size() >= 1, "collapsed=%s folded=%s" % [g6.collapsed, str(main.hud.wm.folded_names())])
 			main._on_cmd("drag inspector 700 260")
 			_step = 7
 			_n = 0
 		7:
-			var g7: Control = main.hud.goals
-			check("the goals panel opens again when the window leaves", not g7.collapsed and main.hud.wm.folded_names().is_empty(), "collapsed=%s" % g7.collapsed)
+			var g7 = main.hud.panels
+			check("the dock opens again when the window leaves", not g7.collapsed and main.hud.wm.folded_names().is_empty(), "collapsed=%s" % g7.collapsed)
 			root.size = Vector2i(1280, 720)
 			_step = 3
 			_n = 0

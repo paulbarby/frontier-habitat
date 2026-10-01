@@ -69,6 +69,14 @@ static func attach(panel: Control, ch: Array = [12, 0, 12, 0]) -> Node2D:
 	panel.resized.connect(g.queue_redraw)
 	return g
 
+## The panel no longer draws glass (the panel manager hosts a HUD module inside its own card).
+static func detach(panel: Control) -> void:
+	if shared != null and is_instance_valid(shared):
+		shared.remove_panel(panel)
+	for c in panel.get_children():
+		if c.get_script() == load("res://ui/widgets/glass.gd"):
+			c.queue_free()
+
 static func set_enabled(on: bool) -> void:
 	enabled = on
 	if shared != null and is_instance_valid(shared):

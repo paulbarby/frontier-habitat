@@ -14,7 +14,7 @@ func cfg() -> Dictionary:
 	return sim.bal.get("storm", {})
 
 func enabled() -> bool:
-	return bool(cfg().get("enabled", false)) and bool(sim.state.get("options", {}).get("storms", true)) and sim.hazards.level() > 0.0
+	return bool(cfg().get("enabled", false)) and bool(sim.state.get("options", {}).get("storms", true)) and sim.hazards.level() > 0.0 and sim.hazards.planet_factor("dust_storm") > 0.0
 
 ## The storm record ({} before the first storm is planned or when storms are off).
 func storm() -> Dictionary:

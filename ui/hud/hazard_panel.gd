@@ -1,5 +1,5 @@
 extends PanelContainer
-## Hazard forecast (docs/V3_DESIGN.md §8), top left, right of the goals tracker.
+## Hazard forecast (docs/V3_DESIGN.md §8): a card in the Events tab of the panel manager (it places it).
 ## One card per detected event: icon, name, severity (1..3 as dots and a word), time to it
 ## (or "NOW" and the time left), the place (click the card: the camera goes there),
 ## "COVERED" or "NOT COVERED", and one line of advice. A solar flare card has a Shelter
@@ -13,7 +13,7 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 
 const MAX_CARDS := 3
-const WIDTH := 318.0
+
 
 var hud
 var collapsed := false
@@ -29,12 +29,6 @@ var _rows: Array = []
 var _risk_n := 0
 
 func _ready() -> void:
-	theme_type_variation = "HudPanel"
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	offset_left = 282
-	offset_top = 58
-	custom_minimum_size.x = WIDTH
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var v: VBoxContainer = Kit.vbox(7)
@@ -51,6 +45,7 @@ func _ready() -> void:
 	tv.add_child(_head_next)
 	_chev = Kit.icon_button("chevron_up", func(): _toggle(), "Hide or show the hazard cards.", "GhostButton", 14, 26)
 	head.add_child(_chev)
+	_chev.visible = false   # the card's Minimise does this now (panel manager)
 	_list = Kit.vbox(6)
 	v.add_child(_list)
 	_more = Kit.label("", "SmallLabel", 11, P.TEXT_3)
@@ -62,13 +57,6 @@ func _ready() -> void:
 	_risk.add_theme_font_size_override("font_size", 12)
 	_risk.visible = false
 	v.add_child(_risk)
-
-func _process(_delta: float) -> void:
-	if hud == null or hud.goals == null or not visible:
-		return
-	Kit.fit(self)
-	var g: Control = hud.goals
-	position.x = g.position.x + g.size.x + 10.0
 
 func rebuild() -> void:
 	_sig = ""
@@ -165,6 +153,9 @@ func _make_card(r: Dictionary) -> Dictionary:
 	v.add_child(top)
 	top.add_child(Kit.icon(d.hazard_icon(String(r["kind"])), 16, col))
 	var nm: Label = Kit.head(String(r["name"]), P.TEXT, 12)
+	nm.clip_text = true   # the dock is narrow: a long name ends in ... (tooltip: the card)
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(nm)
 	top.add_child(_pips(int(r["severity"]), col))
 	top.add_child(Kit.spacer())
@@ -174,17 +165,18 @@ func _make_card(r: Dictionary) -> Dictionary:
 	place.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
 	place.custom_minimum_size.x = 200
 	v.add_child(place)
-	var row: HBoxContainer = Kit.hbox(6)
+	var row := HFlowContainer.new()   # wraps in the narrow dock (the Shelter button goes under the badges)
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 4)
 	v.add_child(row)
 	var cov: bool = bool(r["countered"])
 	for bd in [Kit.badge("COVERED" if cov else "NOT COVERED", P.GREEN if cov else P.AMBER), Kit.badge("SEVERITY %d" % int(r["severity"]), P.sev(int(r["severity"])))]:
 		bd.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(bd)
 	if String(r["kind"]) == "solar_flare":
-		row.add_child(Kit.spacer())
 		row.add_child(shelter_button(hud))
 	var adv: Label = Kit.wrap(String(r["advice"]), 12, P.TEXT_2)
-	adv.custom_minimum_size.x = WIDTH - 40.0
+	adv.custom_minimum_size.x = 0.0   # wraps to the dock width
 	v.add_child(adv)
 	return {"root": card, "eta": eta}
 

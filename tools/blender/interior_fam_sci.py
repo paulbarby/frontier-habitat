@@ -31,17 +31,20 @@ def research_lab(rm):
     plan.circle(0.0, 0.0, 0.66 + 0.08 * s, tag="holo")
     nw = fu["work_slots"]
     npods = max((nw + 1) // 2, (1, 2, 3, 4)[s])      # more desks than staff in the big labs (unstaffed stations)
-    rp = min(rmax - 1.25, 2.3 + 0.35 * s)
+    rp = min(rmax - 1.80, 2.5 + 0.35 * s)
     for k in range(npods):
         a = 90.0 + 360.0 * k / max(1, npods) + (0.0 if npods > 1 else 180.0)
         px, py = rp * cos(radians(a)), rp * sin(radians(a))
-        # the pod runs tangentially; desk A faces the room centre side, desk B faces the wall side
+        # the pod runs tangentially, two desks back to back: each desk top runs from the divider out to its open
+        # side, the monitors stand at the divider and face out, the sitter is on the open side facing the divider
+        # (Paul 2026-10-01: the desks were overlapped, the sitter inside the other desk)
         tang = a + 90.0
         for j, side in enumerate((-1, 1)):
             if 2 * k + j >= max(nw, 2 * npods):
                 break
-            dx, dy = side * 0.02 * cos(radians(a)), side * 0.02 * sin(radians(a))
-            yaw = a + (180.0 if side < 0 else 0.0)        # +X of the desk frame points to the sitter
+            off = side * (0.62 + 0.03)
+            dx, dy = off * cos(radians(a)), off * sin(radians(a))
+            yaw = a + (180.0 if side < 0 else 0.0)        # +X of the desk frame points from the divider to the sitter
             sit_desk(plan, px + dx, py + dy, yaw, w=1.25, d=0.62, monitors=2, seed=2 * k + j,
                      work=(2 * k + j < nw), chair=(2 * k + j < nw) or (j == 0))
         # low divider between the two desks with a light line
@@ -52,8 +55,10 @@ def research_lab(rm):
                seed=151 + s, walk=0.6)
     ws = wall_set(plan, {"screenwall": lambda p, w, d, k: wi_screenwall(p, w=w, seed=k),
                          "samples": lambda p, w, d, k: wi_samples(p, w=w, d=min(d, 0.32), seed=k)})
-    plan.wall_items(["samples", "screenwall", "samples", "desk", "screenwall", "shelf", "medcab", "samples"], ws,
-                    open_every=4, seed=151 + s, depth_of=dict(DEPTHS, screenwall=0.08, samples=0.32))
+    plan.wall_items(["samples", "screenwall", "shrine", "samples", "agents", "desk", "aiposter", "screenwall", "shelf",
+                     "kettle", "medcab", "samples", "aiposter"], ws,
+                    open_every=4, seed=151 + s, depth_of=dict(DEPTHS, screenwall=0.08, samples=0.32),
+                    open_kinds=("poster", "aiposter", "notice", "plant", "panel"))
     plan.stands(fu["stands"], [(1.3, 0.0, 180.0), (-1.3, 0.0, 0.0), (0.0, 1.3, -90.0)])
     finish(plan)
 

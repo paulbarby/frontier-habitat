@@ -318,10 +318,8 @@ func _dome_update(b: Dictionary, meta: Dictionary, delta: float) -> void:
 	# The floor the player views: the followed person's floor inside this dome, else the selector,
 	# else the top floor when the camera is close (roof and dome off), else no cut.
 	var k := 0
-	if follow_id >= 0 and sim.get("floors") != null:
-		var fa: Dictionary = sim.floors.agent_floor(sim.state["agents"].get(follow_id, {}))
-		if int(fa.get("building", -1)) == int(b["id"]):
-			k = int(fa.get("floor", 0)) + 1
+	# (2026-10-01: no floor cut for the followed person any more: roofs and upper floors stay on in the
+	# over-the-shoulder view, V5 §15.5)
 	if k == 0 and dome_view_floor.has(int(b["id"])):
 		k = int(dome_view_floor[int(b["id"])])
 	elif k == 0 and float(meta["open"]) > 0.5:
@@ -364,10 +362,7 @@ func _dome_update(b: Dictionary, meta: Dictionary, delta: float) -> void:
 ## else no cut. (Floor 0 keeps the plain group names.)
 func _floors_update(b: Dictionary, meta: Dictionary) -> void:
 	var k := -1
-	if follow_id >= 0 and sim.get("floors") != null:
-		var fa: Dictionary = sim.floors.agent_floor(sim.state["agents"].get(follow_id, {}))
-		if int(fa.get("building", -1)) == int(b["id"]):
-			k = int(fa.get("floor", 0))
+	# (2026-10-01: no floor cut for the followed person: roofs and upper floors stay on, V5 §15.5)
 	if k < 0 and dome_view_floor.has(int(b["id"])):
 		k = int(dome_view_floor[int(b["id"])]) - 1
 	elif k < 0 and float(meta["open"]) > 0.5:
@@ -386,6 +381,9 @@ func _floors_update(b: Dictionary, meta: Dictionary) -> void:
 			inst.set_hidden(int(meta["h"]), gs, hide)
 	if k >= 0:
 		inst.set_hidden(int(meta["h"]), "Roof", true)
+	else:
+		# (the roof came back only with the next roof cutaway change: no floor cut = the roof as _apply_roof has it)
+		inst.set_hidden(int(meta["h"]), "Roof", float(meta["open"]) >= 1.0)
 
 static func _dome_is_structure(g: String) -> bool:
 	if g in ["D_Foundation", "D_Site", "D_Gates", "D_Lifts", "D_Dome"] or g.begins_with("D_Crane") or g.begins_with("D_Scaffold_") or g.begins_with("D_Lift_") or g.begins_with("D_Dome__"):
@@ -420,7 +418,8 @@ func _lift_y(t: float) -> float:
 var bubbles
 var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
-var _follow_open := {}      # building id -> true: roofs cut away for the follow view
+var _follow_open := {}      # building id -> true: interior drawn under the closed roof (follow view)
+var roofs_off := false      # Paul 2026-10-01: every roof and upper wall cut away (normal view only)
 var fprobe                   # fx_follow_probe (measurement only, debug "fprobe")
 
 ## Over-the-shoulder follow of a person (V5 §3). UI binds V / the Follow button / Esc / Tab to
@@ -434,6 +433,8 @@ func follow_start(id: int) -> bool:
 	r.shoulder_start(func(): return _follow_body(id))
 	Models.near_fade(0.8, 1.4)
 	r.collide_fn = _follow_collide
+	if "ceil_fn" in r:
+		r.ceil_fn = follow_ceiling
 	return true
 
 func follow_stop() -> void:
@@ -446,6 +447,12 @@ func follow_stop() -> void:
 	bubbles.follow_id = -1
 	_follow_open = {}
 	Models.near_fade(0.0, 0.001)
+
+## Paul 2026-10-01 (V5 §15.5): one view state that cuts away every roof and upper wall in the colony at
+## once (the same cutaway as near the camera: nothing above 1.40 m but the allowed parts). Off = the
+## automatic cutaway near the camera. The follow view ignores it (roofs stay on there). UI: button, key, setting.
+func set_roofs_off(on: bool) -> void:
+	roofs_off = on
 
 func in_follow() -> bool:
 	return follow_id >= 0
@@ -504,48 +511,302 @@ func _follow_circles(center: Vector3, reach: float) -> Array:
 			out.append([int(id), bp, r, b["kind"] == "room"])
 	return out
 
-## The camera never passes a wall: from the shoulder to the wanted eye, stop `margin` m before the
-## first wall (a person inside a room: the eye stays inside it; outside: it does not enter one).
-func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3) -> Vector3:
+## The camera never passes a wall (V5 §3; roofs on, Paul 2026-10-01). Returns the eye moved out of every
+## wall: `margin` m clear of it, PUSHED to the nearest clear point (a continuous move as the person walks
+## along a wall). A first-hit pull along the line from the shoulder jumped by up to 1.4 m in one frame
+## when the line swept past a wall edge (2026-10-01). Then, unless point_only: if the pushed eye cannot
+## see the shoulder (a wall between them), it is pulled in along that line to the first wall.
+## Indoors (SIM where != out): the eye stays inside the union of the rooms and corridors round the person
+## (a doorway is no wall). Outdoors: it stays out of every structure circle and ship / vehicle box.
+func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_only: bool = false) -> Vector3:
+	var fb = agent_world_pos(follow_id) if follow_id >= 0 else null
+	var fin: bool = follow_id >= 0 and String(sim.state["agents"].get(follow_id, {}).get("where", "out")) != "out"
+	if fb != null and fin:
+		var vols: Array = _follow_volumes(pivot, (eye - pivot).length() + 2.0)
+		if _vol_inside(vols, fb as Vector3, 0.0):
+			var q: Vector3 = eye if _vol_inside(vols, eye, margin) else _vol_project(vols, eye, margin)
+			if point_only and q.distance_to(eye) > 0.05:
+				fc_dbg.append("t%.2f indoor hard %.2f" % [_time, q.distance_to(eye)])
+			if point_only or _vol_line_inside(vols, pivot, q, margin * 0.5):
+				return q
+			return _vol_first_exit(vols, pivot, q, margin * 0.5)
+	# Outdoors: out of the structure circles (the person is outside them) ...
+	var q2: Vector3 = eye
 	var a := Vector2(pivot.x, pivot.z)
-	var b2 := Vector2(eye.x, eye.z)
-	var d: Vector2 = b2 - a
-	var len: float = d.length()
-	if len < 0.01:
-		return eye
-	var best: float = 1.0
-	for c in _follow_circles(pivot, len + 1.0):
-		# A room open in the cutaway has no wall above 1.40 m: the camera (above 2 m) passes over it.
-		if bmeta.has(c[0]) and float(bmeta[c[0]].get("open", 0.0)) > 0.5 and eye.y - pivot.y > -1.0:
-			continue
+	for c in _follow_circles(eye, margin + 0.5):
 		var cp: Vector2 = c[1]
-		var r: float = c[2]
-		var inside: bool = a.distance_to(cp) < r - 0.05
-		var rr: float = (r - margin) if inside else (r + margin)
-		# |a + d t - cp| = rr
+		var r: float = float(c[2])
+		if a.distance_to(cp) < r - 0.05:
+			continue
+		var e2 := Vector2(q2.x, q2.z)
+		var dd: float = e2.distance_to(cp)
+		if dd < r + margin:
+			var dir: Vector2 = (e2 - cp) / maxf(dd, 0.001) if dd > 0.001 else (a - cp).normalized()
+			var np: Vector2 = cp + dir * (r + margin)
+			q2 = Vector3(np.x, q2.y, np.y)
+			if point_only and r + margin - dd > 0.05:
+				fc_dbg.append("t%.2f circle %d %s r%.2f in %.2f" % [_time, int(c[0]), String(sim.state["buildings"][c[0]]["def"]), r, r + margin - dd])
+	# ... and out of the ship and vehicle boxes (pushed out on the shortest side, in xz).
+	for ab in _follow_obstacles():
+		var bx: AABB = (ab as AABB).grow(margin)
+		if bx.has_point(pivot) or not bx.has_point(q2):
+			continue
+		var outs := [bx.position.x - q2.x, bx.end.x - q2.x, bx.position.z - q2.z, bx.end.z - q2.z]
+		var k := 0
+		for i in 4:
+			if absf(outs[i]) < absf(outs[k]):
+				k = i
+		if k < 2:
+			q2.x += outs[k]
+		else:
+			q2.z += outs[k]
+		if point_only and absf(outs[k]) > 0.05:
+			fc_dbg.append("t%.2f box %.2f" % [_time, absf(outs[k])])
+	if point_only:
+		return q2
+	# The sight line from the shoulder to the pushed eye: a structure (its wall, no margin) across it
+	# pulls the eye in to the first one.
+	var d3: Vector3 = q2 - pivot
+	var d: Vector2 = Vector2(d3.x, d3.z)
+	if d.length() < 0.01:
+		return q2
+	var best: float = 1.0
+	for c in _follow_circles(pivot, d.length() + 1.0):
+		var cp: Vector2 = c[1]
+		var r: float = float(c[2])
+		if a.distance_to(cp) < r - 0.05:
+			continue
 		var f: Vector2 = a - cp
 		var qa: float = d.dot(d)
 		var qb: float = 2.0 * f.dot(d)
-		var qc: float = f.dot(f) - rr * rr
+		var qc: float = f.dot(f) - r * r
 		var disc: float = qb * qb - 4.0 * qa * qc
 		if disc < 0.0:
 			continue
-		var s: float = sqrt(disc)
-		var t: float = (-qb + s) / (2.0 * qa) if inside else (-qb - s) / (2.0 * qa)
+		var t: float = (-qb - sqrt(disc)) / (2.0 * qa)
 		if t > 0.0 and t < best:
 			best = t
-	# Ship hulls and vehicles (critic round 29: the camera was pressed against a ship hull): their world
-	# boxes, grown by 0.3 m (the camera sphere), cut the segment too.
-	var d3: Vector3 = eye - pivot
 	for ab in _follow_obstacles():
-		var bx: AABB = (ab as AABB).grow(margin)
-		if bx.has_point(pivot):
+		var bx2: AABB = ab as AABB
+		if bx2.has_point(pivot):
 			continue
-		var hit = bx.intersects_segment(pivot, eye)
+		var hit = bx2.intersects_segment(pivot, q2)
 		if hit != null:
-			var th: float = ((hit as Vector3) - pivot).length() / maxf(d3.length(), 0.001)
-			best = minf(best, th)
-	return pivot.lerp(eye, clampf(best, 0.08, 1.0))
+			best = minf(best, ((hit as Vector3) - pivot).length() / maxf(d3.length(), 0.001))
+	if best >= 1.0:
+		return q2
+	return pivot.lerp(q2, clampf(best - margin / maxf(d3.length(), 0.01), 0.08, 1.0))
+
+## The point inside the volumes (margin off the walls) nearest p, in xz (y kept).
+static func _vol_project(vols: Array, p: Vector3, margin: float) -> Vector3:
+	var q := Vector2(p.x, p.z)
+	var best := Vector2.INF
+	var bd := INF
+	for v in vols:
+		var c: Vector2
+		if v[0] == "room":
+			var cp: Vector2 = v[1]
+			var r: float = maxf(float(v[2]) - margin, 0.05)
+			c = q if q.distance_to(cp) <= r else cp + (q - cp).normalized() * r
+		else:
+			var s: Vector2 = Geometry2D.get_closest_point_to_segment(q, v[1], v[2])
+			var r2: float = maxf(float(v[3]) - (clampf(margin, 0.3, 0.5) if margin > 0.0 else 0.0), 0.05)
+			c = q if q.distance_to(s) <= r2 else s + (q - s).normalized() * r2
+		var dd: float = c.distance_to(q)
+		if dd < bd:
+			bd = dd
+			best = c
+	if best == Vector2.INF:
+		return p
+	return Vector3(best.x, p.y, best.y)
+
+## Does the line a-b stay inside the volumes (8 cm steps)?
+static func _vol_line_inside(vols: Array, a: Vector3, b: Vector3, margin: float) -> bool:
+	var n: int = maxi(2, int(ceil(a.distance_to(b) / 0.08)))
+	for i in n + 1:
+		if not _vol_inside(vols, a.lerp(b, float(i) / float(n)), margin):
+			return false
+	return true
+
+## The last point inside the volumes on a-b before the first exit (8 cm steps, refined by halving).
+static func _vol_first_exit(vols: Array, a: Vector3, b: Vector3, margin: float) -> Vector3:
+	var n: int = maxi(2, int(ceil(a.distance_to(b) / 0.08)))
+	var last_in := 0.0
+	for i in n + 1:
+		var t: float = float(i) / float(n)
+		if _vol_inside(vols, a.lerp(b, t), margin):
+			last_in = t
+		else:
+			var lo: float = last_in
+			var hi: float = t
+			for _k in 5:
+				var mid: float = (lo + hi) * 0.5
+				if _vol_inside(vols, a.lerp(b, mid), margin):
+					lo = mid
+				else:
+					hi = mid
+			return a.lerp(b, maxf(lo, 0.08))
+	return b
+
+var fc_dbg: Array = []       # measurement: the last hard pull-in causes (fprobe get)
+const FOLLOW_TUBE_R := 1.15   # m: corridor inside radius for the camera (fx_npc_path.TUBE_R)
+## Rooms (xz circles) and corridors (xz capsules) within `reach` of p: [["room", centre, r, id] | ["tube", p0, p1, r, id]].
+func _follow_volumes(p: Vector3, reach: float) -> Array:
+	var out: Array = []
+	var q := Vector2(p.x, p.z)
+	for id in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(id, {})
+		if b.is_empty():
+			continue
+		if b["kind"] == "room":
+			var r: float = float(b["radius"])
+			if (b["pos"] as Vector2).distance_to(q) < r + reach:
+				out.append(["room", b["pos"], r, int(id)])
+		elif b["def"] == "corridor":
+			var c: Vector2 = Geometry2D.get_closest_point_to_segment(q, b["p0"], b["p1"])
+			if c.distance_to(q) < FOLLOW_TUBE_R + reach:
+				out.append(["tube", b["p0"], b["p1"], FOLLOW_TUBE_R, int(id)])
+	return out
+
+## Is p (xz) inside one of the volumes, `margin` m off its wall? (a corridor keeps at most 0.35 m)
+static func _vol_inside(vols: Array, p: Vector3, margin: float) -> bool:
+	var q := Vector2(p.x, p.z)
+	for v in vols:
+		if v[0] == "room":
+			if q.distance_to(v[1]) < float(v[2]) - margin:
+				return true
+		else:
+			if Geometry2D.get_closest_point_to_segment(q, v[1], v[2]).distance_to(q) < float(v[3]) - (clampf(margin, 0.3, 0.5) if margin > 0.0 else 0.0):
+				return true
+	return false
+
+## The ceiling (world y) over a camera point p for a person standing at `feet` (Paul 2026-10-01: the
+## camera stays under the ceiling): a room's from its model height, a corridor 2.3 m over its floor, a
+## floor of a multi-storey building (super dome, apartment block) 3.4 m over the person's feet. INF outdoors.
+func follow_ceiling(feet: Vector3, p: Vector3) -> float:
+	if follow_id >= 0 and String(sim.state["agents"].get(follow_id, {}).get("where", "out")) == "out":
+		return INF
+	var vols: Array = _follow_volumes(p, 0.0)
+	var best := INF
+	for v in vols:
+		if not _vol_inside([v], p, 0.0):
+			continue
+		var c := INF
+		if v[0] == "room":
+			var b: Dictionary = sim.state["buildings"][v[3]]
+			var meta: Dictionary = bmeta[v[3]]
+			if String(b["def"]) == "super_dome" or int(sim.bdef(b["def"]).get("floors", 1)) > 1:
+				c = feet.y + 3.4
+			else:
+				# The underside of the roof over the camera point, from the model (_roof_ceiling).
+				c = _roof_ceiling(b, meta, p)
+				if c == INF:
+					c = (meta["xf"] as Transform3D).origin.y + clampf(float(meta["top"]) - 0.6, 2.4, 6.0)
+		else:
+			var b2: Dictionary = sim.state["buildings"][v[4]]
+			c = _roof_ceiling(b2, bmeta[v[4]], p) if bmeta.has(v[4]) else INF
+			if c == INF:
+				c = feet.y + 2.3
+		best = minf(best, c)
+	return best
+
+## Paul 2026-10-01 (roofs on in the follow view): the roof shell is drawn single-sided (from outside), so
+## from inside a room the upper walls and the roof were see-through. The shell materials of the Roof group
+## (PaletteShell, Accent, Glass) become two-sided per template (their back faces light as a ceiling). Seen
+## from outside nothing changes (the front faces hide the back faces).
+func _roof_inside(tpl: Dictionary) -> void:
+	if bool(tpl.get("roof_ds", false)):
+		return
+	tpl["roof_ds"] = true
+	for part in (tpl.get("parts", []) as Array):
+		if String(part["group"]) != "Roof":
+			continue
+		var m: Mesh = part["mesh"]
+		if not (m is ArrayMesh):
+			continue
+		for si in m.get_surface_count():
+			var mat = m.surface_get_material(si)
+			if mat is BaseMaterial3D and String(mat.resource_name) in ["PaletteShell", "Accent", "Glass"] and (mat as BaseMaterial3D).cull_mode == BaseMaterial3D.CULL_BACK:
+				var dm: BaseMaterial3D = (mat as BaseMaterial3D).duplicate()
+				dm.cull_mode = BaseMaterial3D.CULL_DISABLED
+				(m as ArrayMesh).surface_set_material(si, dm)
+
+const ROOF_CELL := 0.4
+## The ceiling (world y) over p in a room or corridor: the lowest roof surface above 1.6 m (model space)
+## in a 0.4 m grid of the template's Roof triangles, built once per template. INF where the model has none.
+func _roof_ceiling(b: Dictionary, meta: Dictionary, p: Vector3) -> float:
+	var tpl: Dictionary = meta["tpl"]
+	if not tpl.has("roof_grid"):
+		tpl["roof_grid"] = _build_roof_grid(tpl)
+	var g: Dictionary = tpl["roof_grid"]
+	if g.is_empty():
+		return INF
+	var xf: Transform3D = meta["xf"]
+	var s: float = float(tpl.get("scale", 1.0))
+	var full: Transform3D = xf * Transform3D(Basis.from_scale(Vector3(s, s, s)), Vector3.ZERO)
+	var lp: Vector3 = full.affine_inverse() * p
+	# Bilinear over the 4 nearest cell centres (a nearest-cell lookup stepped by up to 0.9 m between two
+	# cells and dropped the camera in one frame, 2026-10-01); a missing neighbour takes the lowest found.
+	var cells: Dictionary = g["cells"]
+	var gx: float = lp.x / ROOF_CELL - 0.5
+	var gz: float = lp.z / ROOF_CELL - 0.5
+	var x0: int = int(floor(gx))
+	var z0: int = int(floor(gz))
+	var fx: float = gx - x0
+	var fz: float = gz - z0
+	var vals: Array = [cells.get(Vector2i(x0, z0), INF), cells.get(Vector2i(x0 + 1, z0), INF), cells.get(Vector2i(x0, z0 + 1), INF), cells.get(Vector2i(x0 + 1, z0 + 1), INF)]
+	var lo := INF
+	for v in vals:
+		lo = minf(lo, float(v))
+	if lo == INF:
+		return INF
+	for i in 4:
+		if float(vals[i]) == INF:
+			vals[i] = lo
+	var ly: float = lerpf(lerpf(float(vals[0]), float(vals[1]), fx), lerpf(float(vals[2]), float(vals[3]), fx), fz)
+	return (full * Vector3(lp.x, ly, lp.z)).y
+
+static func _build_roof_grid(tpl: Dictionary) -> Dictionary:
+	var cells := {}
+	for part in (tpl.get("parts", []) as Array):
+		if String(part["group"]) != "Roof":
+			continue
+		var xf: Transform3D = part["xf"]
+		var f: PackedVector3Array = (part["mesh"] as Mesh).get_faces()
+		for i in range(0, f.size() - 2, 3):
+			var a: Vector3 = xf * f[i]
+			var b: Vector3 = xf * f[i + 1]
+			var c: Vector3 = xf * f[i + 2]
+			if minf(a.y, minf(b.y, c.y)) < 1.6:
+				continue
+			var x0: int = int(floor(minf(a.x, minf(b.x, c.x)) / ROOF_CELL))
+			var x1: int = int(floor(maxf(a.x, maxf(b.x, c.x)) / ROOF_CELL))
+			var z0: int = int(floor(minf(a.z, minf(b.z, c.z)) / ROOF_CELL))
+			var z1: int = int(floor(maxf(a.z, maxf(b.z, c.z)) / ROOF_CELL))
+			for cx in range(x0, x1 + 1):
+				for cz in range(z0, z1 + 1):
+					var q := Vector2((cx + 0.5) * ROOF_CELL, (cz + 0.5) * ROOF_CELL)
+					var bc = Geometry2D.point_is_inside_triangle(q, Vector2(a.x, a.z), Vector2(b.x, b.z), Vector2(c.x, c.z))
+					var y: float
+					if bc:
+						# barycentric height
+						var v0 := Vector2(b.x - a.x, b.z - a.z)
+						var v1 := Vector2(c.x - a.x, c.z - a.z)
+						var v2 := q - Vector2(a.x, a.z)
+						var den: float = v0.x * v1.y - v1.x * v0.y
+						if absf(den) < 1e-6:
+							continue
+						var u: float = (v2.x * v1.y - v1.x * v2.y) / den
+						var w: float = (v0.x * v2.y - v2.x * v0.y) / den
+						y = a.y + u * (b.y - a.y) + w * (c.y - a.y)
+					elif (x1 - x0) == 0 or (z1 - z0) == 0:
+						# a thin triangle that covers no cell centre: its lowest point counts for its cell
+						y = minf(a.y, minf(b.y, c.y))
+					else:
+						continue
+					var key := Vector2i(cx, cz)
+					cells[key] = minf(float(cells.get(key, INF)), y)
+	return {} if cells.is_empty() else {"cells": cells}
 
 var _obst: Array = []
 var _obst_t := -10.0
@@ -603,6 +864,7 @@ func follow_los(a3: Vector3, b3: Vector3) -> bool:
 ## cut away), as the cutaway rule does near the camera.
 func _follow_sync() -> void:
 	if follow_id < 0:
+		_follow_indoor(Vector3.INF)
 		if not _follow_open.is_empty():
 			_follow_open = {}
 		return
@@ -628,6 +890,70 @@ func _follow_sync() -> void:
 		var q: Vector2 = Geometry2D.get_closest_point_to_segment(Vector2(p.x, p.z), b["p0"], b["p1"])
 		if q.distance_to(Vector2(p.x, p.z)) < 5.0:
 			_follow_open[int(id)] = true
+	_follow_indoor(cam)
+
+var _indoor := 0.0
+var _fill: OmniLight3D
+## The follow camera inside a room under its roof (Paul 2026-10-01): the sky drops the outdoor haze and
+## lifts the ambient (fx_sky.indoor), and a soft fill light rides above the camera (no shadow, 7 m) so the
+## interior reads with the roof on. Eased over about 0.5 s (a doorway is not a flash).
+func _follow_indoor(cam: Vector3) -> void:
+	var want: float = 0.0
+	if cam != Vector3.INF and follow_id >= 0:
+		var fb = agent_world_pos(follow_id)
+		if fb != null and follow_ceiling(fb as Vector3, cam) < INF:
+			want = 1.0
+	_indoor = move_toward(_indoor, want, get_process_delta_time() * 2.0)
+	sky.indoor = _indoor
+	if _indoor <= 0.0:
+		if _fill != null:
+			_fill.visible = false
+		return
+	if _fill == null:
+		_fill = OmniLight3D.new()
+		_fill.name = "FollowFill"
+		_fill.shadow_enabled = false
+		_fill.omni_range = 7.0
+		_fill.omni_attenuation = 1.4
+		_fill.light_color = Color("ffe9d2")
+		add_child(_fill)
+	_fill.visible = true
+	_fill.light_energy = 0.9 * _indoor
+	if cam != Vector3.INF:
+		_fill.global_position = cam + Vector3(0.0, 0.25, 0.0)
+
+var _clip_clock := 0.0
+## Paul 2026-10-01: weather particles (storm field, camera dust, dust bursts, devils) are never drawn inside a
+## room or corridor (roof on or off, any camera). The rooms and corridors within 75 m of the focus and the
+## camera go to the particle shader (fx_particles.set_clip; the nearest 32 of each).
+func _weather_clip(focus: Vector3, cam: Vector3) -> void:
+	var rooms: Array = []
+	var tubes: Array = []
+	for id in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(id, {})
+		if b.is_empty() or String(b.get("state", "")) == "blueprint":
+			continue
+		if b["kind"] == "room":
+			var bp: Vector2 = b["pos"]
+			var d: float = minf(bp.distance_to(Vector2(focus.x, focus.z)), bp.distance_to(Vector2(cam.x, cam.z)))
+			if d < 75.0 + float(b["radius"]):
+				var meta: Dictionary = bmeta[id]
+				var top: float = (meta["xf"] as Transform3D).origin.y + float(meta.get("top", 4.0)) + 0.3
+				rooms.append([d, Vector4(bp.x, bp.y, float(b["radius"]) + 0.15, top)])
+		elif b["def"] == "corridor":
+			var p0: Vector2 = b["p0"]
+			var p1: Vector2 = b["p1"]
+			var mid: Vector2 = (p0 + p1) * 0.5
+			var d2: float = minf(Geometry2D.get_closest_point_to_segment(Vector2(focus.x, focus.z), p0, p1).distance_to(Vector2(focus.x, focus.z)),
+				Geometry2D.get_closest_point_to_segment(Vector2(cam.x, cam.z), p0, p1).distance_to(Vector2(cam.x, cam.z)))
+			if d2 < 75.0:
+				tubes.append([d2, Vector4(p0.x, p0.y, p1.x, p1.y), h(mid.x, mid.y) + 2.8])
+	rooms.sort_custom(func(x, y): return x[0] < y[0])
+	tubes.sort_custom(func(x, y): return x[0] < y[0])
+	var ty := PackedFloat32Array()
+	for t in tubes.slice(0, 32):
+		ty.append(float(t[2]))
+	fx.set_clip(rooms.slice(0, 32).map(func(x): return x[1]), tubes.slice(0, 32).map(func(x): return x[1]), ty)
 
 func rig():
 	var cam: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
@@ -929,6 +1255,10 @@ func sync(delta: float) -> void:
 		_sites_clock = 1.0
 		if not _skip.has("sites"): _refresh_sites()
 	tp = _prof("status", tp)
+	_clip_clock -= delta
+	if _clip_clock <= 0.0:
+		_clip_clock = 0.25
+		_weather_clip(focus, cam.global_position if cam != null else focus)
 	if not _skip.has("fx"): fx.sync(delta, sim_dt, cam, focus, wind, sky.night, sky.storm, sky.sun_dir)
 	tp = _prof("fx", tp)
 	var show_words: bool = labels_visible and time_override < 0.0 and not _photo_mode()
@@ -1426,6 +1756,7 @@ func _make_building(b: Dictionary, mode: String) -> void:
 		return
 	var tpl: Dictionary = _template(b)
 	meta["tpl"] = tpl
+	_roof_inside(tpl)
 	var xf: Transform3D = _bxf(b)
 	meta["xf"] = xf
 	var s: float = float(tpl.get("scale", 1.0))
@@ -1564,9 +1895,11 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 		elif gs.begins_with("DecalL"):
 			inst.set_hidden(hnd, gs, o > 0.0 or lvl < int(gs.substr(6)))
 	if not bool(meta["glass_roof"]):
-		inst.set_hidden(hnd, "Interior", o <= 0.0)
-		inst.set_hidden(hnd, "Tall", o <= 0.0)
-		inst.set_hidden(hnd, "WallsIn", o <= 0.0)
+		# (closed roof: the interior is not drawn, unless the follow camera is in or next to the room)
+		var shut: bool = o <= 0.0 and not bool(meta.get("show_in", false))
+		inst.set_hidden(hnd, "Interior", shut)
+		inst.set_hidden(hnd, "Tall", shut)
+		inst.set_hidden(hnd, "WallsIn", shut)
 	# Coordinator 2026-09-26: a record drawn larger than its model (old-save radius, uniform
 	# scale s > 1) would carry the cut up to 1.40 * s. In the cutaway the wall groups get Y scale
 	# 1/s, so the cut stays at 1.40 m in world space. Floors, doors and walk grids keep scale s.
@@ -1594,7 +1927,16 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 		# Roof cutaway: nearby roofs open when the camera is close; the selected one always.
 		if b["kind"] != "link" or b["def"] == "corridor":
 			var near: bool = camera_distance < 44.0 and (meta["xf"] as Transform3D).origin.distance_to(_focus_now) < camera_distance * 1.1 + 8.0 and not _no_cutaway
-			var want: float = 1.0 if (near or _force_open_all or _follow_open.has(id) or (selected_kind == "building" and selected_id == id)) else 0.0
+			var want: float = 1.0 if (near or _force_open_all or roofs_off or (selected_kind == "building" and selected_id == id)) else 0.0
+			# Paul 2026-10-01 (V5 §15.5): in the over-the-shoulder view every roof and upper wall stays ON
+			# (an enclosed feel); the rooms round the person and the camera draw their interior under it.
+			# The "all roofs off" toggle does not apply there.
+			if follow_id >= 0:
+				want = 0.0
+			var show_in: bool = follow_id >= 0 and _follow_open.has(id)
+			if show_in != bool(meta.get("show_in", false)):
+				meta["show_in"] = show_in
+				_apply_roof(b, meta)
 			# 4.0 exteriors whose roof is part of the silhouette (depot hangar, reactor, plants, pad):
 			# never cut away (UI shot 2026-09-27: the depot read as a plain box without it).
 			if String(b["def"]) in NO_CUTAWAY:
@@ -2804,10 +3146,14 @@ func debug_cmd(text: String) -> String:
 			var rs = rig()
 			if rs == null:
 				return "no rig"
-			rs.sh_dist = clampf(float(w[1]), 1.2, 4.0) if w.size() > 1 else rs.sh_dist
-			rs.sh_orbit = clampf(deg_to_rad(float(w[2])), -1.2217, 1.2217) if w.size() > 2 else rs.sh_orbit
+			# shoulder <dist 0.5-8> <orbit deg> <side 1|-1> [tilt deg] [look yaw deg] [look pitch deg] | shoulder return
+			if w.size() > 1 and w[1] == "return":
+				rs.shoulder_return()
+				return "return"
 			rs.sh_side = (1.0 if float(w[3]) >= 0.0 else -1.0) if w.size() > 3 else rs.sh_side
-			rs.sh_pitch = deg_to_rad(float(w[4])) if w.size() > 4 else rs.sh_pitch
+			rs.set_shot(float(w[1]) if w.size() > 1 else rs.sh_dist, deg_to_rad(float(w[2])) if w.size() > 2 else rs.sh_orbit,
+				deg_to_rad(float(w[4])) if w.size() > 4 else rs.sh_pitch, deg_to_rad(float(w[5])) if w.size() > 5 else rs.sh_look_yaw,
+				deg_to_rad(float(w[6])) if w.size() > 6 else rs.sh_look_pitch)
 			return "d %.2f orbit %.0f side %d" % [rs.sh_dist, rad_to_deg(rs.sh_orbit), int(rs.sh_side)]
 		"bubbles":
 			# bubbles stub|sim: evidence staging only (RENDER stub lines) or SIM's talks (default).
@@ -2837,6 +3183,7 @@ func debug_cmd(text: String) -> String:
 						if rr != null:
 							rr.shoulder_start(func(): return [ax.origin, ay, 1.65, true])
 							rr.collide_fn = Callable()
+							rr.ceil_fn = Callable()
 						return "%s at %s" % [an2, str(ax.origin.snapped(Vector3.ONE * 0.1))]
 			return "not found"
 		"viewfloor":
@@ -2872,6 +3219,10 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"roofs":
+			# roofs off|on: Paul's all-roofs-off toggle (set_roofs_off).
+			set_roofs_off(w.size() > 1 and w[1] == "off")
+			return "roofs off" if roofs_off else "roofs on"
 		"fprobe":
 			# fprobe start <secs> [in|out|any|keep] | get | csv | stop: follow-view smoothness probe (measurement).
 			var rp = rig()

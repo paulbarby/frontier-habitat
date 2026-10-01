@@ -75,6 +75,7 @@ for _m in ("interior_rooms",):
         if exc.name != _m:
             raise
 V3_BUDGET = (10000, 15000, 22000, 30000)
+DETAIL_TYPES = ("habitat", "kitchen", "cantina", "lounge", "research_lab")   # 5.0 detail pass (V5 15.3)
 V3_MAX_MATERIALS = 14            # per object (Interior; each Wall_k); see docs/progress/ART-HAB.md
 ROOM_MESHES = ["Base", "Roof", "Interior", "L2", "L3", "L4", "L5"]
 ALLOWED = set(K.MATERIALS) | set(K.PER_FILE)
@@ -360,6 +361,8 @@ def build_one(job):
     stats = {p.name: K.part_stats(p) for p in rm.parts() if p.faces}
     tris = sum(s["tris"] for s in stats.values())
     budget = int((V3_BUDGET if rm.v3 else K.BUDGET)[job["size"]] * (1.4 if K.R_SCALE > 1.0 else 1.0))   # v4: 2.25x floor
+    if job["tid"] in DETAIL_TYPES:
+        budget = int(V3_BUDGET[job["size"]] * 1.8)     # 5.0 detail pass (V5_DESIGN 15.3): the v5 interior budget
     if bdef.get("v5"):
         budget = int(V3_BUDGET[job["size"]] * 1.8)     # 5.0: pck budget +25 MB (V5_DESIGN 0): interior detail
         if bdef.get("floors", 1) > 1:
@@ -409,6 +412,7 @@ def build_one(job):
         flags += IK.check_anchors(rm)
         flags += IK.check_furniture(rm)
         flags += IK.check_standpoints(rm)
+        flags += IK.check_desk_seats(rm)
         for oname, mats in info["mats_by"].items():
             if len(mats) > V3_MAX_MATERIALS:
                 flags.append("%s has %d materials > %d" % (oname, len(mats), V3_MAX_MATERIALS))

@@ -23,6 +23,14 @@ uniform vec3 field_size = vec3(60.0, 14.0, 60.0);
 uniform float field_amount = 1.0;
 uniform float radial = 0.0;       // outward speed from the emitter centre (dust rings)
 uniform int yaw_dir = 0;          // 1: INSTANCE_CUSTOM.w turns `dir` about +Y (per-emitter direction)
+// Weather clip (Paul 2026-10-01: no storm streaks inside habitats): rooms (x, z, radius, top y) and corridors
+// (x0, z0, x1, z1; top y in clip_tube_y; radius 1.35 m) near the field. A particle inside one is not drawn.
+uniform float clip_on = 0.0;
+uniform int clip_room_n = 0;
+uniform vec4 clip_rooms[32];
+uniform int clip_tube_n = 0;
+uniform vec4 clip_tubes[32];
+uniform float clip_tube_y[32];
 
 varying vec4 v_col;
 varying vec2 v_uv;
@@ -64,6 +72,18 @@ void particle_vertex(inout vec3 vtx, vec2 uv, mat4 model, vec4 custom, mat4 view
 		float sp = mix(speed_min, speed_max, r3.z);
 		vec3 vel = d * sp + (rr > 0.001 ? normalize(off) : vec3(0.0)) * radial * (0.6 + 0.4 * r3.z);
 		p = origin + off + vel * t + 0.5 * gravity * t * t + wind * t * (0.4 + r3.y * 0.6);
+	}
+	if (clip_on > 0.5) {
+		for (int i = 0; i < clip_room_n; i++) {
+			vec4 c = clip_rooms[i];
+			if (p.y < c.w && distance(p.xz, c.xy) < c.z) { alive = 0.0; }
+		}
+		for (int i = 0; i < clip_tube_n; i++) {
+			vec4 s = clip_tubes[i];
+			vec2 ab = s.zw - s.xy;
+			float tt = clamp(dot(p.xz - s.xy, ab) / max(dot(ab, ab), 0.0001), 0.0, 1.0);
+			if (p.y < clip_tube_y[i] && distance(p.xz, s.xy + ab * tt) < 1.35) { alive = 0.0; }
+		}
 	}
 	float size = mix(size0, size1, age) * (0.7 + 0.6 * r3.z) * max(inten, 0.2);
 	col = mix(color0, color1, age);

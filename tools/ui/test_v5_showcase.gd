@@ -62,10 +62,17 @@ func _process(_d: float) -> bool:
 			root.size = Vector2i(1600, 900)
 			main._import_bytes(FileAccess.get_file_as_bytes("res://content/saves/showcase_v5.fhsave"))
 			main._on_cmd("speed 0")
+			_step = 20   # the queries one step later: the import settles first (it looped here before)
+			_n = 0
+		20:
 			check("showcase_v5: 100 or more people, children, couples", hud.v5.people().size() >= 100 and not sim.relations.pairs_with(["married", "partners"]).is_empty(), "%d people" % hud.v5.people().size())
 			# 1. A married parent: Family (children, Adopt).
-			var pr: Dictionary = sim.relations.pairs_with(["married", "partners"])[0]
-			var par: int = int(pr["a"])
+			var prs: Array = sim.relations.pairs_with(["married", "partners"])
+			if prs.is_empty():
+				print("RESULT FAIL (no couples in the save)")
+				quit(1)
+				return true
+			var par: int = int(prs[0]["a"])
 			for c in sim.relations.pairs_with(["married", "partners"]):
 				if not sim.families.children_of(int(c["a"])).is_empty():
 					par = int(c["a"])

@@ -118,7 +118,92 @@ def rot_angle(Ra, Rb):
     return degrees(2 * math.acos(min(1.0, abs(q.w))))
 
 
+SELF_TOL = 0.005
+# limb capsules (a fraction of the bone from its head, radius at s = 1) tested against the torso and the head
+LIMBS = (("upper_arm", "forearm", 0.5, 0.034), ("forearm", "hand", 0.0, 0.029), ("hand", "prop", 0.0, 0.024))
+
+
+def _seg_dist(p1, q1, p2, q2):
+    d1, d2, r = q1 - p1, q2 - p2, p1 - p2
+    a, e, f = d1.dot(d1), d2.dot(d2), d2.dot(r)
+    if a <= 1e-12 and e <= 1e-12:
+        return r.length
+    if a <= 1e-12:
+        s, t = 0.0, max(0.0, min(1.0, f / e))
+    else:
+        c = d1.dot(r)
+        if e <= 1e-12:
+            t, s = 0.0, max(0.0, min(1.0, -c / a))
+        else:
+            b = d1.dot(d2)
+            den = a * e - b * b
+            s = max(0.0, min(1.0, (b * f - c * e) / den)) if den > 1e-12 else 0.0
+            t = (b * s + f) / e
+            if t < 0:
+                t, s = 0.0, max(0.0, min(1.0, -c / a))
+            elif t > 1:
+                t, s = 1.0, max(0.0, min(1.0, (b - c) / a))
+    return ((p1 + d1 * s) - (p2 + d2 * t)).length
+
+
+def self_overlap(rig, s):
+    """The deepest overlap of a limb capsule with the torso capsule or the head sphere, and of the two thighs
+    (conservative capsules INSIDE the flesh: any overlap is a limb through the body).  (depth m, where)."""
+    mw = rig.matrix_world
+    H = {pb.name: mw @ pb.head for pb in rig.pose.bones}
+    T0 = H["hips"] + (H["neck"] - H["hips"]) * 0.15
+    torso = (T0, H["neck"], 0.085 * s)
+    hb = rig.pose.bones["head"]
+    up = ((mw @ hb.matrix).to_3x3() @ Vector((0, 1, 0))).normalized()
+    hc = H["head"] + up * 0.10 * s
+    worst = (0.0, "")
+    for side in ("L", "R"):
+        for a, b, f0, r in LIMBS:
+            pa, pb_ = H["%s.%s" % (a, side)], H["%s.%s" % (b, side)]
+            p = pa + (pb_ - pa) * f0
+            pen = (r * s + torso[2]) - _seg_dist(p, pb_, torso[0], torso[1])
+            if pen > worst[0]:
+                worst = (pen, "%s.%s in the torso" % (a, side))
+            pen = (r * s + 0.075 * s) - _seg_dist(p, pb_, hc, hc)
+            if pen > worst[0]:
+                worst = (pen, "%s.%s in the head" % (a, side))
+    tl = (H["thigh.L"] + (H["shin.L"] - H["thigh.L"]) * 0.25, H["shin.L"])
+    tr = (H["thigh.R"] + (H["shin.R"] - H["thigh.R"]) * 0.25, H["shin.R"])
+    pen = 0.11 * s - _seg_dist(tl[0], tl[1], tr[0], tr[1])
+    if pen > worst[0]:
+        worst = (pen, "thigh through thigh")
+    return worst
+
+
+def self_check_file(check, path, label):
+    """Every clip, every frame of an astronaut file: no limb inside the body."""
+    if not os.path.exists(path):
+        return
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.context.scene.render.fps = N.FPS
+    bpy.ops.import_scene.gltf(filepath=path)
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    ad = rig.animation_data or rig.animation_data_create()
+    for tr in list(ad.nla_tracks):
+        ad.nla_tracks.remove(tr)
+    worst = (0.0, "")
+    for act in list(bpy.data.actions):
+        ad.action = act
+        if act.slots:
+            ad.action_slot = act.slots[0]
+        a, b = (int(round(x)) for x in act.frame_range)
+        for f in range(a, b + 1):
+            bpy.context.scene.frame_set(f)
+            pen, where = self_overlap(rig, 1.0)
+            if pen > worst[0]:
+                worst = (pen, "%s %s f%d" % (act.name.split("_Rig")[0], where, f))
+    check("%s: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)" % label, worst[0] <= SELF_TOL,
+          "deepest %.3f m (%s)" % worst)
+
+
 def run(check, gltf_facts):
+    for lab in ("suit", "indoor"):
+        self_check_file(check, os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % lab), lab)
     if not os.path.exists(MANIFEST):
         check("people: people_manifest.json", True, "no people files yet", info=True)
         return
@@ -169,6 +254,7 @@ def run(check, gltf_facts):
         rig, meshes = import_person(v)
         vis = [meshes[d["head"]], meshes[d["hair"]], meshes[outfits[0]]]
         worst_step, worst_seam, zmin, lid_step = (0.0, "", 0), (0.0, ""), (9.0, ""), (0.0, "")
+        worst_self = (0.0, "")
         jaw_max, lids_max = {}, 0.0
         for c, m in ((c, M["clips"][c]) for c in vclips if c in M["clips"]):
             act = set_clip(rig, c, 0)
@@ -193,6 +279,9 @@ def run(check, gltf_facts):
                         if a > worst_step[0]:
                             worst_step = (a, "%s %s f%d" % (c, bn, f), f)
                 prev = R
+                pen, where = self_overlap(rig, d.get("scale", 1.0))
+                if pen > worst_self[0]:
+                    worst_self = (pen, "%s %s f%d" % (c, where, f))
                 if f % 6 == 0 and c not in NO_FLOOR:
                     lo = min(float(world_co(o)[:, 2].min()) for o in vis)
                     if lo < zmin[0]:
@@ -205,6 +294,8 @@ def run(check, gltf_facts):
                 seam = max(rot_angle(first[bn], prev[bn]) for bn in first)
                 if seam > worst_seam[0]:
                     worst_seam = (seam, c)
+        check("people %s: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)" % v,
+              worst_self[0] <= SELF_TOL, "deepest %.3f m (%s)" % worst_self)
         check("people %s: bone step per frame < %.0f deg (not locomotion, not falls)" % (v, STEP_LIMIT),
               worst_step[0] < STEP_LIMIT, "%.2f deg (%s)" % (worst_step[0], worst_step[1]))
         check("people %s: loop seams <= 1 deg" % v, worst_seam[0] <= 1.0, "%.3f deg (%s)" % worst_seam)
@@ -317,6 +408,11 @@ def check_pairs(check, M):
     name_b = out_mesh(next((e for o, e in M["variants"][b]["outfits"].items() if o.startswith("casual")),
                            list(M["variants"][b]["outfits"].values())[0]))
     ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
+    def hand_mask(ob):
+        names = {g.index: g.name for g in ob.vertex_groups}
+        return np.array([bool(v.groups) and names.get(max(v.groups, key=lambda g: g.weight).group, "").startswith(
+            ("hand.", "prop.")) for v in ob.data.vertices], dtype=bool)
+    hand_a, hand_b = hand_mask(ob_a), hand_mask(ob_b)
     for pname, pr in pairs.items():
         if pr["clip_a"] not in M["clips"] or pr["clip_b"] not in M["clips"]:
             continue
@@ -341,8 +437,11 @@ def check_pairs(check, M):
             set_clip(rig_a, pr["clip_a"], min(f, M["clips"][pr["clip_a"]]["frames"]))
             bpy.context.scene.frame_set(f)
             bpy.context.view_layer.update()
-            pa = world_co(ob_a)[::2]
-            pb = world_co(ob_b)[::2]
+            pa = world_co(ob_a)
+            pb = world_co(ob_b)
+            if pr.get("hand_contact"):                  # the gripping hands touch by design
+                pa, pb = pa[~hand_a], pb[~hand_b]
+            pa, pb = pa[::2], pb[::2]
             n2a, da = deep_points(pa, capsules(rig_b, sb), 0.02)
             n2b, db = deep_points(pb, capsules(rig_a, sa), 0.02)
             n4a, _ = deep_points(pa, capsules(rig_b, sb), 0.04)

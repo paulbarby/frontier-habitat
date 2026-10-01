@@ -780,6 +780,41 @@ def _fp_dist(fp, x, y):
     return max(0.0, hypot(x - cx, y - cy) - r)
 
 
+def check_desk_seats(rm):
+    """Paul 2026-10-01 (people sat inside a desk): no seated people anchor (Seat, or Work with work_pose "sit") and no
+    stand point lies inside a desk top (rm.desk_bodies, recorded by sit_desk) or a table footprint (tag "table");
+    a desk's seat faces its own screens (within 30 deg) from 0.3-1.2 m."""
+    flags = []
+    bodies = list(getattr(rm, "desk_bodies", []))
+    plan = getattr(rm, "plan", None)
+    if plan is not None:
+        bodies += [fp[:5] for fp in plan.rects if fp[5] in ("table",)]
+    for a in rm.anchors:
+        name = a[0]
+        if not name.startswith(("Anchor_Seat_", "Anchor_Work_", "Anchor_Bed_", "Anchor_Stand_")):
+            continue
+        if a[1][2] > WALL_TOP and not getattr(rm, "floor_shim", False):
+            continue
+        x, y = a[1][0], a[1][1]
+        for (cx, cy, hx, hy, yaw) in bodies:
+            if _fp_dist((cx, cy, hx, hy, yaw, ""), x, y) <= 0.0:
+                flags.append("%s inside a desk or table top" % name)
+                break
+    names = {a[0]: a for a in rm.anchors}
+    for nm, (sx, sy) in getattr(rm, "desk_seats", []):
+        a = names.get(nm)
+        if a is None:
+            continue
+        x, y = a[1][0], a[1][1]
+        yaw = a[2] if len(a) > 2 else 0.0
+        dx, dy = sx - x, sy - y
+        d = hypot(dx, dy)
+        cosang = (dx * cos(radians(yaw)) + dy * sin(radians(yaw))) / max(d, 1e-6)
+        if not (0.3 <= d <= 1.2) or cosang < cos(radians(30.0)):
+            flags.append("%s does not face its desk screens (%.2f m, %.0f deg)" % (nm, d, degrees(acos(max(-1.0, min(1.0, cosang))))))
+    return flags
+
+
 def check_standpoints(rm, free=STAND_FREE):
     """A person's stand point must not stand on or next to furniture other than its own: its own item (the bed or
     seat 0.55 / 0.30 behind it, the console or bench 0.45 ahead) and, for a seat, the table it faces are allowed;

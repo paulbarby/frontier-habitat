@@ -52,8 +52,9 @@ func _process(_d: float) -> bool:
 			check("the lead headline is on the page", t.contains(String(rag._issues[0]["lead"]["headline"])))
 			check("a lead photo (placeholder until RENDER's photo())", rag._body.find_child("LeadPhoto", true, false) != null)
 			check("names are links", rag.links.size() >= 2, str(rag.links.slice(0, 3)))
-			var al: Rect2 = hud.alerts.get_global_rect()
-			check("a covered alerts panel folds (critic round 25)", not rag.get_global_rect().intersects(hud.alerts._folded_rect if "_folded_rect" in hud.alerts else al) or hud.alerts.collapsed, "alerts %s rag %s" % [str(al), str(rag.get_global_rect())])
+			# 2026-10-01: the alerts are in the panel manager's dock; a window over the dock folds it.
+			var al: Rect2 = hud.panels._dock.get_global_rect()
+			check("a covered dock folds (critic round 25, now the panel manager)", not rag.get_global_rect().grow(-2.0).intersects(al) or hud.panels.collapsed or hud.panels.pinned, "dock %s rag %s" % [str(al), str(rag.get_global_rect())])
 			for lay in ["special", "quiet", "standard"]:
 				main._on_cmd("raglayout " + lay)
 				check("layout %s builds, lead headline at most 2 lines (critic round 30)" % lay, rag.layout == lay and rag.lead_lines >= 1 and rag.lead_lines <= 2, "%d lines" % rag.lead_lines)

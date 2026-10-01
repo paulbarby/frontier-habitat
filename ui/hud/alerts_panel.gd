@@ -1,5 +1,6 @@
 extends PanelContainer
-## Left column, below the goals: incidents from sim.alerts.incidents(). Each card says
+## The alerts: a card in the Alerts tab of the panel manager (ui/hud/panel_manager.gd places it; the tab
+## body scrolls, so every card shows). Incidents from sim.alerts.incidents(). Each card says
 ## what is failing (severity icon + word), why, how long is left, what to do, and hangs
 ## the consequences under the root cause. "Show" moves the camera to the cause.
 
@@ -8,7 +9,7 @@ const Kit = preload("res://ui/kit.gd")
 const Glass = preload("res://ui/widgets/glass.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 
-const MAX_CARDS := 4
+const MAX_CARDS := 8   # the Alerts tab scrolls (panel manager); the rest are counted ("+ n more")
 var _max := MAX_CARDS
 
 var hud
@@ -20,25 +21,15 @@ var _more: Label
 var _sig := ""
 var _cards: Array = []
 var _open := {}          # issue key -> consequences expanded
-# Fit hysteresis (Paul, 2026-09-28: "Output blocked" popped in and out every few seconds). The panel
-# dropped its last card when it reached the minimap and took it back when 170 px were free; a card
-# taller than that came back, overflowed and went again, over and over. Now a card comes back only
-# when the room it needed is free, and not within HOLD_S of the cut; the same for the tight mode.
+# Paul, 2026-09-28 ("Output blocked" popped in and out): the card count no longer follows the free height;
+# the Alerts tab scrolls. max_changes stays for the steadiness test; hold_s is kept for old tests.
 const HOLD_S := 6.0
-var hold_s := HOLD_S     # tests shorten it (a test runs 600 game seconds in a few real seconds)
-var _cut_h := 0.0        # height the last removed card needed
-var _cut_t := -100.0     # time of the last cut (engine seconds)
-var _tight_gain := 0.0   # height the tight mode saved (the "Do:" lines and the "more" line)
-var _tight_t := -100.0
+var hold_s := HOLD_S
 var max_changes := 0     # tests: how often the number of cards changed
+var live_count := 0      # alerts now, for the Alerts tab badge (panel manager)
+var worst_sev := 0
 
 func _ready() -> void:
-	theme_type_variation = "HudPanel"
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	offset_left = 8
-	offset_top = 300
-	custom_minimum_size.x = 334
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var v: VBoxContainer = Kit.vbox(8)
 	add_child(v)
@@ -59,71 +50,16 @@ func _ready() -> void:
 	_more.visible = false
 	v.add_child(_more)
 
-func _process(_delta: float) -> void:
-	# Sit under the goals tracker, whatever its height, and above the minimap: when the
-	# cards do not fit, fewer are shown (the rest are counted).
-	if hud == null or hud.goals == null:
-		return
-	Kit.fit(self)
-	var g: Control = hud.goals
-	position.y = g.position.y + g.size.y + 8.0
-	var floor_y: float = hud.minimap.position.y - 8.0
-	var now: float = float(Time.get_ticks_msec()) / 1000.0
-	var free: float = floor_y - (position.y + size.y)
-	if free < 0.0 and _max > 1 and _cards.size() > 1:
-		var last: Control = _cards[_cards.size() - 1]["root"]
-		_cut_h = clampf(last.size.y + 14.0, 40.0, 260.0)   # a card measured mid-layout can be huge
-		_cut_t = now
-		_max -= 1
-		max_changes += 1
-		_sig = ""
-	elif _max < MAX_CARDS and _more.visible and free > _room_for_one(now) + 16.0 and now - _cut_t > hold_s:
-		_max += 1
-		max_changes += 1
-		_sig = ""
-	# Still too tall with one card (small view or large text): hide the "more" line and the
-	# card's "Do:" line, so the panel never covers the minimap (critic round 21 bottom row).
-	var over: bool = position.y + size.y > floor_y
-	if over and not _tight and (_max <= 1 or _cards.size() <= 1):
-		var before: float = size.y
-		_tight_t = now
-		_set_tight(true)
-		_tight_gain = clampf(before - size.y, 20.0, 200.0)
-	elif over and _tight and _list.visible:
-		_list.visible = false        # last step: only the summary line ("1 warning · 2 notices")
-		_list_hidden_tight = true
-		Kit.fit(self)
-	elif _tight and free > _tight_gain + 16.0 and now - _tight_t > hold_s:
-		_list_hidden_tight = false
-		_list.visible = not collapsed
-		_set_tight(false)
-	visible = position.y + 40.0 < floor_y
-
-## The room one more card needs: the mean height of the cards shown (at least 60 px); for 30 s (5 holds)
-## after a cut, at least the height of the card that was cut.
-func _room_for_one(now: float) -> float:
-	var h := 0.0
-	for c in _cards:
-		h += (c["root"] as Control).size.y + 6.0
-	var mean: float = maxf(60.0, h / maxf(1.0, float(_cards.size())))
-	return maxf(mean, _cut_h) if now - _cut_t < hold_s * 5.0 else mean
+# Placement and fit: the panel manager (Paul, 2026-10-01). The old fit to the minimap (cards dropped and
+# taken back with hysteresis) is gone: the Alerts tab scrolls.
 
 ## Folded by the window manager while a window covers the panel (V5 critic round 25): only the
 ## summary line shows ("2 critical · 1 warning"); it opens again when the window leaves.
 var collapsed := false
 func fold_set(on: bool) -> void:
 	collapsed = on
-	_list.visible = not on and not (_tight and _list_hidden_tight)
+	_list.visible = not on
 	_more.visible = _more.visible and not on
-	Kit.fit(self)
-
-var _list_hidden_tight := false
-var _tight := false
-func _set_tight(on: bool) -> void:
-	_tight = on
-	_more.visible = _more.visible and not on
-	for c in _cards:
-		(c["act"] as Control).visible = not on
 	Kit.fit(self)
 
 func rebuild() -> void:
@@ -155,6 +91,8 @@ func refresh() -> void:
 			crit += 1
 		elif sv == 2:
 			warn += 1
+	live_count = live.size()
+	worst_sev = 3 if crit > 0 else (2 if warn > 0 else (1 if not live.is_empty() else 0))
 	if live.is_empty():
 		_summary.text = "ALL SYSTEMS NORMAL"
 		_summary.add_theme_color_override("font_color", P.GREEN)
@@ -182,12 +120,11 @@ func refresh() -> void:
 		_cards = []
 		for i in shown:
 			var card: Dictionary = _make_card(i)
-			(card["act"] as Control).visible = not _tight
 			_list.add_child(card["root"])
 			_cards.append(card)
 	for k in mini(_cards.size(), shown.size()):
 		_update_card(_cards[k], shown[k])
-	_more.visible = inc.size() > shown.size() and not _tight and not collapsed
+	_more.visible = inc.size() > shown.size() and not collapsed
 	_more.text = "%s not shown. The dashboard lists every one." % Kit.plural(inc.size() - shown.size(), "more alert")
 
 func _make_card(i: Dictionary) -> Dictionary:
@@ -215,10 +152,8 @@ func _make_card(i: Dictionary) -> Dictionary:
 		var show: Button = Kit.icon_button("target", func(): _focus(first), "Show\nMoves the camera to the cause and selects it.", "GhostButton", 14, 24)
 		top.add_child(show)
 	var text: Label = Kit.wrap(String(issue["text"]), 13, P.TEXT)
-	text.custom_minimum_size.x = 290
 	v.add_child(text)
 	var act: Label = Kit.wrap("Do: " + String(issue["action"]), 12, P.TEXT_2)
-	act.custom_minimum_size.x = 290
 	v.add_child(act)
 	var cons: Array = i["consequences"]
 	var cons_box: VBoxContainer = Kit.vbox(2)
@@ -236,7 +171,6 @@ func _make_card(i: Dictionary) -> Dictionary:
 				var row: HBoxContainer = Kit.hbox(5)
 				row.add_child(Kit.icon("arrow_right", 11, P.sev(int(c["severity"]))))
 				var cl: Label = Kit.wrap(String(c["text"]), 12, P.TEXT_2)
-				cl.custom_minimum_size.x = 270
 				row.add_child(cl)
 				cons_box.add_child(row)
 	return {"root": card, "left": left, "text": text, "key": key, "act": act}

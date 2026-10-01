@@ -729,8 +729,9 @@ def apartment_block(rm):
             rm.anchor("Light_%d" % li, (x, y, H * fl + 2.9), 0.0)
             li += 1
     # the ground floor: wall items, aisle points; the density and stand-point checks per floor
-    pattern = ["planter", "shelf", "lockers", "cab_plant", "tap", "cab_books"]
-    plan0.wall_items(pattern, IR.wall_set(plan0), open_every=3, seed=5, depth_of=IR.DEPTHS)
+    pattern = ["planter", "shelf", "notice", "lockers", "cab_plant", "tap", "aiposter", "cab_books", "filmposter"]
+    plan0.wall_items(pattern, IR.wall_set(plan0), open_every=3, seed=5, depth_of=IR.DEPTHS,
+                     open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     plan0.aisles()
     rm.floor_flags = []
     info = {}

@@ -1,9 +1,9 @@
 {
- "date": "2026-10-01 07:42",
+ "date": "2026-10-01 14:15",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 543,
- "failed": 13,
+ "passed": 536,
+ "failed": 30,
  "pending": 0,
  "info": 12,
  "tris": {
@@ -27,7 +27,7 @@
   {
    "check": "file astronaut_suit.glb",
    "status": "pass",
-   "detail": "1408260 bytes"
+   "detail": "1479332 bytes"
   },
   {
    "check": "suit: skinned mesh objects ['Body']",
@@ -42,7 +42,7 @@
   {
    "check": "file astronaut_indoor.glb",
    "status": "pass",
-   "detail": "1353292 bytes"
+   "detail": "1424368 bytes"
   },
   {
    "check": "indoor: skinned mesh objects ['Body', 'Head_0', 'Head_1', 'Head_2', 'Head_3']",
@@ -167,7 +167,7 @@
   {
    "check": "suit: Vis_trader stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0099 m (lie_exit frame 12)"
+   "detail": "worst 0.0099 m (lie_exit frame 27)"
   },
   {
    "check": "suit: Vis_trader never below z -0.01",
@@ -177,7 +177,7 @@
   {
    "check": "suit: Vis_tourist stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0000 m (step_down frame 12)"
+   "detail": "worst 0.0000 m (lie_enter frame 90)"
   },
   {
    "check": "suit: Vis_tourist never below z -0.01",
@@ -207,7 +207,7 @@
   {
    "check": "suit: Vis_inspector stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0111 m (lie_exit frame 36)"
+   "detail": "worst 0.0111 m (lie_exit frame 90)"
   },
   {
    "check": "suit: Vis_inspector never below z -0.01",
@@ -216,8 +216,8 @@
   },
   {
    "check": "suit: Vis_radiation stays on the body in every clip (<= 2 cm drift)",
-   "status": "pass",
-   "detail": "worst 0.0191 m (sit_eat frame 0)"
+   "status": "FAIL",
+   "detail": "worst 0.0235 m (lie_exit frame 108)"
   },
   {
    "check": "suit: Vis_radiation never below z -0.01",
@@ -437,7 +437,7 @@
   {
    "check": "suit: run largest bone step per frame (locomotion: no fixed limit)",
    "status": "info",
-   "detail": "22.12 deg (shin.L local, frame 7) at 1x"
+   "detail": "47.21 deg (shin.L local, frame 9) at 1x"
   },
   {
    "check": "suit: run mesh never below z -0.01",
@@ -467,7 +467,7 @@
   {
    "check": "suit: work_console bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "1.36 deg (forearm.L world, frame 54)"
+   "detail": "1.09 deg (upper_arm.L world, frame 55)"
   },
   {
    "check": "suit: work_console mesh never below z -0.01",
@@ -477,7 +477,7 @@
   {
    "check": "suit: work_bench bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.95 deg (forearm.L world, frame 61)"
+   "detail": "2.26 deg (upper_arm.R world, frame 21)"
   },
   {
    "check": "suit: work_bench mesh never below z -0.01",
@@ -577,7 +577,7 @@
   {
    "check": "suit: lie_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.03 deg (shin.L world, frame 76)"
+   "detail": "9.28 deg (hand.R world, frame 174)"
   },
   {
    "check": "suit: lie_enter mesh never below z -0.01",
@@ -587,17 +587,17 @@
   {
    "check": "suit: sleep bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.07 deg (upper_arm.L local, frame 1)"
+   "detail": "0.45 deg (upper_arm.L local, frame 28)"
   },
   {
    "check": "suit: sleep mesh never below z -0.01",
    "status": "pass",
-   "detail": "z min 0.5227 m"
+   "detail": "z min 0.5128 m"
   },
   {
    "check": "suit: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.94 deg (forearm.R local, frame 27)"
+   "detail": "4.52 deg (upper_arm.R world, frame 113)"
   },
   {
    "check": "suit: lie_exit mesh never below z -0.01",
@@ -617,7 +617,7 @@
   {
    "check": "suit: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "22.28 deg (forearm.R local, frame 34) at 1x"
+   "detail": "25.67 deg (upper_arm.R world, frame 51) at 1x"
   },
   {
    "check": "suit: collapse mesh never below z -0.01",
@@ -777,7 +777,7 @@
   {
    "check": "suit: run foot slide during contact <= 2 cm",
    "status": "pass",
-   "detail": "worst 0.0100 m over 219 contact runs"
+   "detail": "worst 0.0098 m over 219 contact runs"
   },
   {
    "check": "suit: run stride = speed x duration",
@@ -797,7 +797,7 @@
   {
    "check": "suit: run is the travel pace (3.2-3.6 m/s) with a flight phase",
    "status": "pass",
-   "detail": "3.40 m/s, 6 of 20 frames in flight, hips bob 0.035 m"
+   "detail": "3.40 m/s, 4 of 20 frames in flight, hips bob 0.028 m"
   },
   {
    "check": "suit: walk knee bend with the heel down 8-18 deg (critic: 10-15)",
@@ -947,7 +947,7 @@
   {
    "check": "suit: alight left palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.006 m"
+   "detail": "0.009 m"
   },
   {
    "check": "suit: step_up end = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1012,12 +1012,12 @@
   {
    "check": "suit: sleep on the mattress (suits do not sleep in beds; for information)",
    "status": "info",
-   "detail": "lowest 0.524 m (the thicker suit sinks 2.6 cm)"
+   "detail": "lowest 0.513 m (the thicker suit sinks 3.7 cm)"
   },
   {
    "check": "suit: lie_enter / lie_exit and the bed (suits never use beds; for information)",
    "status": "info",
-   "detail": "68 vertices inside the bed box at worst"
+   "detail": "192 vertices inside the bed box at worst"
   },
   {
    "check": "suit: dead lies on the ground (lowest point -0.01..0.05 m)",
@@ -1046,13 +1046,13 @@
   },
   {
    "check": "suit: work_console hands on a 1.00 m surface",
-   "status": "pass",
-   "detail": "lowest hand point 0.996 m, 100% of frames within 3.5 cm, hands reach x 0.54 m"
+   "status": "FAIL",
+   "detail": "lowest hand point 0.987 m, 100% of frames within 3.5 cm, hands reach x 0.53 m"
   },
   {
    "check": "suit: work_bench hands on a 0.90 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.894 m, 100% of frames within 3.5 cm, hands reach x 0.50 m"
+   "detail": "lowest hand point 0.903 m, 100% of frames within 3.5 cm, hands reach x 0.49 m"
   },
   {
    "check": "suit: sit_type hands on a 0.74 m surface",
@@ -1072,7 +1072,7 @@
   {
    "check": "indoor: Vis_trader stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0172 m (lie_exit frame 12)"
+   "detail": "worst 0.0173 m (lie_exit frame 27)"
   },
   {
    "check": "indoor: Vis_trader never below z -0.01",
@@ -1082,7 +1082,7 @@
   {
    "check": "indoor: Vis_tourist stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0190 m (lie_enter frame 69)"
+   "detail": "worst 0.0191 m (lie_enter frame 99)"
   },
   {
    "check": "indoor: Vis_tourist never below z -0.01",
@@ -1112,7 +1112,7 @@
   {
    "check": "indoor: Vis_radiation stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0074 m (lie_exit frame 12)"
+   "detail": "worst 0.0074 m (lie_exit frame 27)"
   },
   {
    "check": "indoor: Vis_radiation never below z -0.01",
@@ -1352,7 +1352,7 @@
   {
    "check": "indoor: run largest bone step per frame (locomotion: no fixed limit)",
    "status": "info",
-   "detail": "22.12 deg (shin.L local, frame 7) at 1x"
+   "detail": "47.21 deg (shin.L local, frame 9) at 1x"
   },
   {
    "check": "indoor: run mesh never below z -0.01",
@@ -1382,7 +1382,7 @@
   {
    "check": "indoor: work_console bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "1.36 deg (forearm.L world, frame 54)"
+   "detail": "1.09 deg (upper_arm.L world, frame 55)"
   },
   {
    "check": "indoor: work_console mesh never below z -0.01",
@@ -1392,7 +1392,7 @@
   {
    "check": "indoor: work_bench bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.95 deg (forearm.L world, frame 61)"
+   "detail": "2.26 deg (upper_arm.R world, frame 21)"
   },
   {
    "check": "indoor: work_bench mesh never below z -0.01",
@@ -1492,7 +1492,7 @@
   {
    "check": "indoor: lie_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.03 deg (shin.L world, frame 76)"
+   "detail": "9.28 deg (hand.R world, frame 174)"
   },
   {
    "check": "indoor: lie_enter mesh never below z -0.01",
@@ -1502,7 +1502,7 @@
   {
    "check": "indoor: sleep bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.07 deg (upper_arm.L local, frame 1)"
+   "detail": "0.45 deg (upper_arm.L local, frame 28)"
   },
   {
    "check": "indoor: sleep mesh never below z -0.01",
@@ -1512,7 +1512,7 @@
   {
    "check": "indoor: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.94 deg (forearm.R local, frame 27)"
+   "detail": "4.52 deg (upper_arm.R world, frame 113)"
   },
   {
    "check": "indoor: lie_exit mesh never below z -0.01",
@@ -1532,7 +1532,7 @@
   {
    "check": "indoor: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "22.28 deg (forearm.R local, frame 34) at 1x"
+   "detail": "25.67 deg (upper_arm.R world, frame 51) at 1x"
   },
   {
    "check": "indoor: collapse mesh never below z -0.01",
@@ -1692,7 +1692,7 @@
   {
    "check": "indoor: run foot slide during contact <= 2 cm",
    "status": "pass",
-   "detail": "worst 0.0100 m over 219 contact runs"
+   "detail": "worst 0.0098 m over 219 contact runs"
   },
   {
    "check": "indoor: run stride = speed x duration",
@@ -1712,7 +1712,7 @@
   {
    "check": "indoor: run is the travel pace (3.2-3.6 m/s) with a flight phase",
    "status": "pass",
-   "detail": "3.40 m/s, 6 of 20 frames in flight, hips bob 0.035 m"
+   "detail": "3.40 m/s, 4 of 20 frames in flight, hips bob 0.028 m"
   },
   {
    "check": "indoor: walk knee bend with the heel down 8-18 deg (critic: 10-15)",
@@ -1862,7 +1862,7 @@
   {
    "check": "indoor: alight left palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.006 m"
+   "detail": "0.009 m"
   },
   {
    "check": "indoor: step_up end = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1931,8 +1931,8 @@
   },
   {
    "check": "indoor: lie_enter / lie_exit do not pass through the bed (front 5 cm of the mattress soft)",
-   "status": "pass",
-   "detail": "0 vertices inside the bed box at worst"
+   "status": "FAIL",
+   "detail": "207 vertices inside the bed box at worst"
   },
   {
    "check": "indoor: dead lies on the ground (lowest point -0.01..0.05 m)",
@@ -1957,12 +1957,12 @@
   {
    "check": "indoor: work_console hands on a 1.00 m surface",
    "status": "pass",
-   "detail": "lowest hand point 1.009 m, 100% of frames within 3.5 cm, hands reach x 0.51 m"
+   "detail": "lowest hand point 1.000 m, 100% of frames within 3.5 cm, hands reach x 0.51 m"
   },
   {
    "check": "indoor: work_bench hands on a 0.90 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.911 m, 100% of frames within 3.5 cm, hands reach x 0.48 m"
+   "detail": "lowest hand point 0.919 m, 100% of frames within 3.5 cm, hands reach x 0.47 m"
   },
   {
    "check": "indoor: sit_type hands on a 0.74 m surface",
@@ -2125,6 +2125,16 @@
    "detail": "0 vertices (every 2nd) at worst, deepest 0.000 m in None"
   },
   {
+   "check": "suit: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.119 m (lie_enter upper_arm.R in the torso f145)"
+  },
+  {
+   "check": "indoor: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.119 m (lie_enter upper_arm.R in the torso f145)"
+  },
+  {
    "check": "people: npc_pairs.json lists the hug",
    "status": "pass",
    "detail": "C:\\Users\\paulb\\Claude\\frontier-habitat\\assets\\models\\npc_pairs.json"
@@ -2147,7 +2157,7 @@
   {
    "check": "people m1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 16058, 'uniform_science': 17792, 'uniform_food': 16311, 'uniform_medical': 17792, 'uniform_security': 17558, 'uniform_command': 17968, 'prison': 15642, 'casual_a': 15948, 'casual_b': 17964, 'casual_c': 16574, 'swimwear': 12732}"
+   "detail": "{'uniform_engineering': 16058, 'uniform_science': 17792, 'uniform_food': 16311, 'uniform_medical': 17792, 'uniform_security': 17558, 'uniform_command': 17968, 'prison': 15642, 'casual_a': 15900, 'casual_b': 17966, 'casual_c': 16574, 'swimwear': 12716}"
   },
   {
    "check": "people m1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2155,9 +2165,9 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people m1: every clip the manifest lists for it (66)",
+   "check": "people m1: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people m1: durations match the manifest",
@@ -2170,9 +2180,14 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people m1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.118 m (lie_enter_r upper_arm.L in the torso f141)"
+  },
+  {
    "check": "people m1: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "69.92 deg (punch hand.R f14)"
+   "detail": "170.92 deg (hit_react upper_arm.L f31)"
   },
   {
    "check": "people m1: loop seams <= 1 deg",
@@ -2227,7 +2242,7 @@
   {
    "check": "people m2: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18403, 'uniform_science': 20137, 'uniform_food': 18652, 'uniform_medical': 20137, 'uniform_security': 19875, 'uniform_command': 20313, 'prison': 17987, 'casual_a': 20310, 'casual_b': 20312, 'casual_c': 18910, 'swimwear': 15103}"
+   "detail": "{'uniform_engineering': 18403, 'uniform_science': 20137, 'uniform_food': 18652, 'uniform_medical': 20137, 'uniform_security': 19875, 'uniform_command': 20313, 'prison': 17987, 'casual_a': 20310, 'casual_b': 20310, 'casual_c': 18910, 'swimwear': 15103}"
   },
   {
    "check": "people m2: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2235,14 +2250,14 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people m2: every clip the manifest lists for it (66)",
+   "check": "people m2: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people m2: durations match the manifest",
-   "status": "pass",
-   "detail": "ok"
+   "status": "FAIL",
+   "detail": "['kiss_brief', 'lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people m2: no scale keys, root never moves",
@@ -2250,9 +2265,14 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people m2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.115 m (sleep_turn upper_arm.R in the torso f278)"
+  },
+  {
    "check": "people m2: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "69.92 deg (punch hand.R f14)"
+   "detail": "47.21 deg (punch hand.R f16)"
   },
   {
    "check": "people m2: loop seams <= 1 deg",
@@ -2307,7 +2327,7 @@
   {
    "check": "people m3: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18347, 'uniform_science': 20081, 'uniform_food': 18585, 'uniform_medical': 20081, 'uniform_security': 19819, 'uniform_command': 20257, 'prison': 17931, 'casual_a': 18246, 'casual_b': 20256, 'casual_c': 18872, 'swimwear': 15006}"
+   "detail": "{'uniform_engineering': 18347, 'uniform_science': 20081, 'uniform_food': 18585, 'uniform_medical': 20081, 'uniform_security': 19819, 'uniform_command': 20257, 'prison': 17931, 'casual_a': 18206, 'casual_b': 20256, 'casual_c': 18872, 'swimwear': 15014}"
   },
   {
    "check": "people m3: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2315,14 +2335,14 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people m3: every clip the manifest lists for it (66)",
+   "check": "people m3: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people m3: durations match the manifest",
-   "status": "pass",
-   "detail": "ok"
+   "status": "FAIL",
+   "detail": "['kiss_brief', 'lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people m3: no scale keys, root never moves",
@@ -2330,9 +2350,14 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people m3: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.125 m (sleep_turn upper_arm.R in the torso f43)"
+  },
+  {
    "check": "people m3: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "69.92 deg (punch hand.R f14)"
+   "detail": "47.21 deg (punch hand.R f16)"
   },
   {
    "check": "people m3: loop seams <= 1 deg",
@@ -2387,7 +2412,7 @@
   {
    "check": "people f1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 17863, 'uniform_science': 19597, 'uniform_food': 18152, 'uniform_medical': 19597, 'uniform_security': 19363, 'uniform_command': 19773, 'prison': 17447, 'casual_a': 17690, 'casual_b': 19772, 'casual_c': 17656, 'swimwear': 13007}"
+   "detail": "{'uniform_engineering': 17863, 'uniform_science': 19597, 'uniform_food': 18152, 'uniform_medical': 19597, 'uniform_security': 19363, 'uniform_command': 19773, 'prison': 17447, 'casual_a': 17658, 'casual_b': 19772, 'casual_c': 18406, 'swimwear': 13007}"
   },
   {
    "check": "people f1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2395,9 +2420,9 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people f1: every clip the manifest lists for it (66)",
+   "check": "people f1: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people f1: durations match the manifest",
@@ -2410,9 +2435,14 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people f1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.111 m (argue upper_arm.R in the torso f31)"
+  },
+  {
    "check": "people f1: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "69.92 deg (punch hand.R f14)"
+   "detail": "104.50 deg (hit_react upper_arm.L f26)"
   },
   {
    "check": "people f1: loop seams <= 1 deg",
@@ -2442,7 +2472,7 @@
   {
    "check": "people f1: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
    "status": "pass",
-   "detail": "lowest point over the stool 0.749 m"
+   "detail": "lowest point over the stool 0.762 m"
   },
   {
    "check": "people f1: head and hair never inside the clothes at the test poses (1 cm)",
@@ -2467,7 +2497,7 @@
   {
    "check": "people f2: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 17202, 'uniform_science': 18935, 'uniform_food': 17502, 'uniform_medical': 18935, 'uniform_security': 18702, 'uniform_command': 19111, 'prison': 16786, 'casual_a': 17016, 'casual_b': 19110, 'casual_c': 16996, 'swimwear': 12368}"
+   "detail": "{'uniform_engineering': 17202, 'uniform_science': 18935, 'uniform_food': 17502, 'uniform_medical': 18935, 'uniform_security': 18702, 'uniform_command': 19111, 'prison': 16786, 'casual_a': 16980, 'casual_b': 19110, 'casual_c': 17734, 'swimwear': 12368}"
   },
   {
    "check": "people f2: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2475,14 +2505,14 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people f2: every clip the manifest lists for it (66)",
+   "check": "people f2: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people f2: durations match the manifest",
    "status": "FAIL",
-   "detail": "['wave']"
+   "detail": "['kiss_brief', 'lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people f2: no scale keys, root never moves",
@@ -2490,14 +2520,19 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people f2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.107 m (fight_idle upper_arm.L in the torso f7)"
+  },
+  {
    "check": "people f2: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "175.61 deg (drink_bar forearm.R f60)"
+   "detail": "47.21 deg (punch hand.R f16)"
   },
   {
    "check": "people f2: loop seams <= 1 deg",
-   "status": "FAIL",
-   "detail": "17.141 deg (swim)"
+   "status": "pass",
+   "detail": "0.000 deg ()"
   },
   {
    "check": "people f2: face bones (jaw, lids) move <= 25 deg per frame (a blink closes in 0.1 s)",
@@ -2522,7 +2557,7 @@
   {
    "check": "people f2: sit_bar_stool rests on the 0.76 m stool (+- 2.5 cm)",
    "status": "FAIL",
-   "detail": "lowest point over the stool 0.729 m"
+   "detail": "lowest point over the stool 0.727 m"
   },
   {
    "check": "people f2: head and hair never inside the clothes at the test poses (1 cm)",
@@ -2547,7 +2582,7 @@
   {
    "check": "people f3: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18407, 'uniform_science': 20140, 'uniform_food': 18703, 'uniform_medical': 20140, 'uniform_security': 19907, 'uniform_command': 20316, 'prison': 17991, 'casual_a': 20312, 'casual_b': 20314, 'casual_c': 18200, 'swimwear': 13552}"
+   "detail": "{'uniform_engineering': 18406, 'uniform_science': 20139, 'uniform_food': 18702, 'uniform_medical': 20139, 'uniform_security': 19906, 'uniform_command': 20315, 'prison': 17990, 'casual_a': 20312, 'casual_b': 20314, 'casual_c': 18874, 'swimwear': 13552}"
   },
   {
    "check": "people f3: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2555,14 +2590,14 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people f3: every clip the manifest lists for it (66)",
+   "check": "people f3: every clip the manifest lists for it (67)",
    "status": "pass",
-   "detail": "66 clips"
+   "detail": "67 clips"
   },
   {
    "check": "people f3: durations match the manifest",
-   "status": "pass",
-   "detail": "ok"
+   "status": "FAIL",
+   "detail": "['kiss_brief', 'lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people f3: no scale keys, root never moves",
@@ -2570,9 +2605,14 @@
    "detail": "scale [], root []"
   },
   {
+   "check": "people f3: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.115 m (sleep_turn upper_arm.R in the torso f275)"
+  },
+  {
    "check": "people f3: bone step per frame < 15 deg (not locomotion, not falls)",
    "status": "FAIL",
-   "detail": "69.92 deg (punch hand.R f14)"
+   "detail": "47.21 deg (punch hand.R f16)"
   },
   {
    "check": "people f3: loop seams <= 1 deg",
@@ -2627,7 +2667,7 @@
   {
    "check": "people c1: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'school': 18832, 'casual_a': 16882, 'casual_b': 18832, 'swimwear': 13579}"
+   "detail": "{'school': 18832, 'casual_a': 16858, 'casual_b': 18830, 'swimwear': 13505}"
   },
   {
    "check": "people c1: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2635,19 +2675,24 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people c1: every clip the manifest lists for it (52)",
+   "check": "people c1: every clip the manifest lists for it (53)",
    "status": "pass",
-   "detail": "52 clips"
+   "detail": "53 clips"
   },
   {
    "check": "people c1: durations match the manifest",
-   "status": "pass",
-   "detail": "ok"
+   "status": "FAIL",
+   "detail": "['lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people c1: no scale keys, root never moves",
    "status": "pass",
    "detail": "scale [], root []"
+  },
+  {
+   "check": "people c1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.091 m (sleep_turn upper_arm.R in the torso f43)"
   },
   {
    "check": "people c1: bone step per frame < 15 deg (not locomotion, not falls)",
@@ -2710,19 +2755,24 @@
    "detail": "max influences 4, max |sum - 1| 0.00000"
   },
   {
-   "check": "people c2: every clip the manifest lists for it (52)",
+   "check": "people c2: every clip the manifest lists for it (53)",
    "status": "pass",
-   "detail": "52 clips"
+   "detail": "53 clips"
   },
   {
    "check": "people c2: durations match the manifest",
-   "status": "pass",
-   "detail": "ok"
+   "status": "FAIL",
+   "detail": "['lie_enter', 'lie_enter_r', 'lie_exit', 'lie_exit_r', 'sleep_turn', 'wave']"
   },
   {
    "check": "people c2: no scale keys, root never moves",
    "status": "pass",
    "detail": "scale [], root []"
+  },
+  {
+   "check": "people c2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
+   "status": "FAIL",
+   "detail": "deepest 0.088 m (sleep_turn upper_arm.R in the torso f44)"
   },
   {
    "check": "people c2: bone step per frame < 15 deg (not locomotion, not falls)",
@@ -2772,12 +2822,12 @@
   {
    "check": "people pair kiss_brief (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "FAIL",
-   "detail": "449 points deeper than 2 cm (worst f21), 210 deeper than 4 cm, deepest 0.084 m"
+   "detail": "118 points deeper than 2 cm (worst f24), 29 deeper than 4 cm, deepest 0.060 m"
   },
   {
    "check": "people pair hold_hands_walk (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "FAIL",
-   "detail": "11 points deeper than 2 cm (worst f12), 0 deeper than 4 cm, deepest 0.034 m"
+   "detail": "10 points deeper than 2 cm (worst f12), 0 deeper than 4 cm, deepest 0.033 m"
   },
   {
    "check": "people pair slap (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
@@ -2792,7 +2842,7 @@
   {
    "check": "people pair escort (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "pass",
-   "detail": "2 points deeper than 2 cm (worst f24), 0 deeper than 4 cm, deepest 0.024 m"
+   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.013 m"
   },
   {
    "check": "robot: one skinned mesh Robot_dancer",
@@ -2865,5 +2915,5 @@
    "detail": "body vertices inside: 0 (); hand depth 0.009 m (robot_pole f98)"
   }
  ],
- "seconds": 60.7
+ "seconds": 75.7
 }

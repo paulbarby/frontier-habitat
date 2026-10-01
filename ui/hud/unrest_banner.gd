@@ -1,6 +1,6 @@
 extends PanelContainer
-## Unrest banner (V5_DESIGN §6.4, §10): a banner at the top centre while a base is at Protest,
-## Strike or Riot: the stage, the base, the demand the people shout, and the response buttons. Each
+## Unrest (V5_DESIGN §6.4, §10): a card in the Events tab, and the urgent line, of the panel manager (it
+## places it; Paul, 2026-10-01: nothing over the centre) while a base is at Protest, Strike or Riot, or locked down: the stage, the base, the demand the people shout, and the response buttons. Each
 ## response says its cost and asks to confirm, then goes to SIM (command unrest_response). Riot pulses
 ## red. The top bar's unrest meter shows every stage; this banner only the three loud ones.
 ## Data: ui/v5_data.gd unrest(base) (SIM sim.social.unrest).
@@ -56,12 +56,7 @@ func _ready() -> void:
 	_style.content_margin_right = 14
 	_style.content_margin_top = 10
 	_style.content_margin_bottom = 12
-	add_theme_stylebox_override("panel", _style)
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	grow_horizontal = Control.GROW_DIRECTION_BOTH
-	offset_top = 76
-	custom_minimum_size.x = 680
+	# _style keeps the stage colours (the panel manager colours the card by them); it is not this node's frame.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var v: VBoxContainer = Kit.vbox(4)
@@ -86,7 +81,7 @@ func _ready() -> void:
 	_lock = Kit.head("", Color("7FD4FF"), 13, "head")
 	_lock.name = "Lockdown"
 	v.add_child(_lock)
-	var grid: GridContainer = Kit.grid(4, 8, 6)
+	var grid: GridContainer = Kit.grid(2, 6, 6)   # 2 columns: the dock is narrow
 	_grid = grid
 	v.add_child(grid)
 	for r in RESPONSES:
@@ -105,7 +100,6 @@ func _ready() -> void:
 		el.set_meta("effect", id)
 		el.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # two short lines, never cut
-		el.custom_minimum_size.x = 150
 		cell.add_child(el)
 		_eff[id] = el
 		grid.add_child(cell)
@@ -125,21 +119,6 @@ func _process(delta: float) -> void:
 		_style.border_color = col.lerp(Color.WHITE, 0.35 * k)
 		_style.shadow_color = Color(col.r, col.g, col.b, 0.25 + 0.35 * k) if shown_stage == "riot" else Color(0, 0, 0, 0.35)
 		_style.shadow_size = int(6.0 + 10.0 * k) if shown_stage == "riot" else 4
-		# Centred in the free space between the left panels and the inspector (never over either).
-		var vw: float = get_viewport_rect().size.x
-		var lft: float = 8.0
-		var rgt: float = vw - 70.0
-		if hud.goals != null and (hud.goals as Control).is_visible_in_tree():
-			lft = (hud.goals as Control).get_global_rect().end.x + 8.0
-		if hud.inspector != null and hud.inspector.visible:
-			rgt = minf(rgt, hud.inspector.get_global_rect().position.x - 8.0)
-		position.x = floorf(lft + (rgt - lft - size.x) * 0.5) if rgt - lft >= size.x else floorf((vw - size.x) * 0.5)
-		# Under the reactor and hazard banners when they show.
-		var y := 76.0
-		for bnr in [hud.hazard_banner, hud.reactor_banner]:
-			if bnr != null and bnr.visible:
-				y = maxf(y, bnr.get_global_rect().end.y + 8.0)
-		offset_top = y
 
 ## The loudest base (the whole colony when there are no bases).
 func _update() -> void:

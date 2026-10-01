@@ -32,6 +32,9 @@ func tests() -> Array:
 		["long_v5_perf_showcase", long_v5_perf_showcase],
 		["v5_showcase_deterministic", v5_showcase_deterministic],
 		["v5_protest_and_riot", v5_protest_and_riot],
+		["v5_planet_hazards", v5_planet_hazards],
+		["v5_flee_privilege_skills", v5_flee_privilege_skills],
+		["v5_liner_family_shared_home", v5_liner_family_shared_home],
 	]
 
 static func _showcase():
@@ -1156,6 +1159,7 @@ func v5_showcase(t) -> void:
 	for d in ["residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail", "super_dome"]:
 		t.check(defs.has(d), "has a %s" % d)
 	t.check(sim.bases.count() >= 2, "2 bases")
+	t.check(not sim.traffic._pads(true).is_empty(), "a powered landing pad (ships and tourists)")
 	var prisoners := 0
 	var students := 0
 	for a in sim.state["agents"].values():
@@ -1301,4 +1305,234 @@ func v5_protest_and_riot(t) -> void:
 	t.note("damage %d, injured %d, looted %d" % [int(info["damage"]), int(info["injured"]), int(info["looted"])])
 	t.eq(sim.inv.audit(), {}, "ledger")
 	sim.dispose()
+	t.done()
+## Paul 2026-10-01 (V5 15.7): atmospheric events never happen on the airless planet. 40 days of the
+## hazard planner per planet (hazards "hard"), events counted by kind; then 2 days of play on the
+## airless planet; an old save's pending atmospheric event is dropped at load; wind turbines and
+## atmosphere processors are refused there.
+func v5_planet_hazards(t) -> void:
+	var counts := {}
+	for planet in ["dry", "cold", "airless"]:
+		var g = H.Game.new(1001, false)
+		var sim = g.sim
+		sim.new_game(1001, "frontier", {"planet": planet, "hazards": "hard"})
+		var seen := {}
+		var per := {}
+		var dt: int = sim.hazards.day_ticks()
+		for d in 40:
+			sim.state["tick"] = int(sim.state["tick"]) + dt                                  # test set-up: the planner only
+			sim.hazards._plan()
+			for ev in sim.hazards.hs()["queue"]:
+				if not seen.has(int(ev["id"])):
+					seen[int(ev["id"])] = true
+					per[String(ev["kind"])] = int(per.get(String(ev["kind"]), 0)) + 1
+		counts[planet] = per
+		g.dispose()
+	t.note("events in 40 days (hard): %s" % str(counts))
+	var air := 0
+	for k in ["dust_storm", "wind_storm", "dust_devil"]:
+		air += int(counts["airless"].get(k, 0))
+	t.eq(air, 0, "airless: 0 atmospheric events")
+	t.check(int(counts["airless"].get("meteor", 0)) > 0 and int(counts["airless"].get("solar_flare", 0)) > 0 and int(counts["airless"].get("quake", 0)) > 0, "airless keeps meteors, flares and quakes")
+	t.check(int(counts["dry"].get("dust_storm", 0)) > 0 and int(counts["dry"].get("dust_devil", 0)) > 0 and int(counts["dry"].get("wind_storm", 0)) > 0, "the dry world has dust and wind")
+	t.check(int(counts["cold"].get("dust_devil", 0)) < int(counts["dry"].get("dust_devil", 0)), "the cold world has fewer dust devils than the dry world")
+	# Two days of play on the airless planet: no atmospheric event starts, no wind power.
+	var g2 = H.Game.new(1002, false)
+	var s2 = g2.sim
+	s2.new_game(1002, "frontier", {"planet": "airless", "hazards": "hard"})
+	s2.state["hazards"]["start_tick"] = 0                                                 # test set-up: no quiet first days
+	var bad: Array = []
+	var wind_max := 0.0
+	for i in 1200:
+		s2.run_seconds(1.0)
+		wind_max = maxf(wind_max, float(s2.state["env"]["wind"]))
+		for ev in s2.hazards.hs()["active"]:
+			if ["dust_storm", "wind_storm", "dust_devil"].has(String(ev["kind"])) and not bad.has(int(ev["id"])):
+				bad.append(int(ev["id"]))
+	t.eq(bad, [], "no atmospheric event runs on the airless planet")
+	t.eq(wind_max, 0.0, "no wind on the airless planet")
+	t.eq(s2.place.check_building("wind_turbine", s2.world.center + Vector2(60, 0), 0.0), "no_atmosphere", "a wind turbine is refused")
+	t.eq(String(s2.place.lock_info("atmo_processor")["kind"]), "planet", "the atmosphere processor is locked by the planet")
+	t.check(s2.hazards.kinds_here().size() == 4 and not s2.hazards.kinds_here().has("dust_storm"), "kinds_here: %s" % str(s2.hazards.kinds_here()))
+	# An old save on airless with a pending dust storm (TEST SET-UP: the event written as an old build did).
+	var h: Dictionary = s2.hazards.hs()
+	h["queue"].append({"id": 999, "kind": "dust_storm", "at": int(s2.state["tick"]) + 3000, "end": int(s2.state["tick"]) + 6000, "pos": Vector2.ZERO, "radius": 0.0, "severity": 1, "detected_tick": -1, "phase": "scheduled", "countered": false, "hits": [], "result": {}})
+	h["next_at"]["dust_storm"] = int(s2.state["tick"]) + 3000
+	var st: Dictionary = Persistence.decode(Persistence.encode(s2.state))["state"]
+	var s3 = H.Sim.new()
+	s3.load_state(st)
+	var left := 0
+	for ev in s3.hazards.hs()["queue"]:
+		if String(ev["kind"]) == "dust_storm":
+			left += 1
+	t.eq(left, 0, "the pending dust storm of an old airless save is dropped at load")
+	t.check(not s3.hazards.hs()["next_at"].has("dust_storm"), "its plan is dropped too")
+	s3.dispose()
+	t.eq(s2.inv.audit(), {}, "ledger")
+	g2.dispose()
+	t.done()
+## Bystanders flee a fight; officers in luxury while the crew sleep in dorms raise unrest; role
+## skills grow with the work done.
+func v5_flee_privilege_skills(t) -> void:
+	var sim = _showcase()
+	sim.state["flags"]["unlock_all"] = true                                              # test set-up
+	sim.run_seconds(5.0)
+	var ppl: Array = _awake_inside(sim)
+	var x: Dictionary = ppl[0]
+	var room: int = int(x["bld"])
+	var others: Array = []
+	for a in ppl.slice(1, 5):
+		H.put_inside(sim, a, room)                                                       # test set-up: four in one room
+		others.append(a)
+	var y: Dictionary = others[0]
+	var fid: int = sim.security.start_fight(x, y, "test")
+	sim.run_seconds(2.0)
+	var f: Dictionary = sim.state["v5"]["fights"].get(fid, {})
+	var fled := 0
+	for a in others.slice(1):
+		if String(a.get("goal", "")) == "Getting away from a fight" or (f.get("fled", []) as Array).has(int(a["id"])):
+			fled += 1
+	t.check(fid != -1 and fled >= 1, "bystanders flee the fight (%d of %d; fled %s)" % [fled, others.size() - 1, str(f.get("fled", []))])
+	# Privilege: the commander in an executive home, the crew in dorms (habitats).
+	var lander: Vector2 = sim.state["buildings"][int(sim.state["lander_id"])]["pos"]
+	var exe: Dictionary = H.attach(sim, "residence_tube", lander, 2)
+	exe["variant"] = "executive"                                                          # test set-up
+	var cmd: int = sim.ranks.commander(-1)
+	t.check(cmd != -1 and not exe.is_empty(), "a commander and an executive tube")
+	var r1: Dictionary = _cmd(sim, "set_home", {"agent": cmd, "building": int(exe["id"])})
+	t.check(bool(r1.get("ok", false)) and int(sim.people.home(sim.state["agents"][cmd])["quality"]) >= 3, "the commander lives in an executive unit: %s" % str(r1))
+	sim.run_seconds(25.0)
+	var base: int = int(sim.bases.ids()[0]) if sim.bases.count() > 0 else -1
+	var ur: Dictionary = sim.unrest.rec_of(base)
+	var has_cause := false
+	for c in ur.get("causes", []):
+		if String(c["text"]).begins_with("Officers live in luxury"):
+			has_cause = true
+	t.check(float(ur.get("privilege", 0.0)) > 0.0 and has_cause, "privilege is an unrest cause (%.1f)" % float(ur.get("privilege", 0.0)))
+	# Skills from work: somebody who worked gained work points in the main role skill.
+	var before := {}
+	for a in _colonists(sim):
+		var xp: Dictionary = sim.people.rec_of(int(a["id"])).get("xp", {})
+		var mine: Array = sim.content["people"]["role_skills"].get(String(a["role"]), [])
+		if not mine.is_empty():
+			before[int(a["id"])] = float(xp.get(mine[0], 0.0))
+	sim.run_seconds(600.0)
+	var grew := 0
+	for aid in before:
+		var a2: Dictionary = sim.state["agents"][aid]
+		var mine2: Array = sim.content["people"]["role_skills"].get(String(a2["role"]), [])
+		if mine2.is_empty():
+			continue
+		if float(sim.people.rec_of(int(aid)).get("xp", {}).get(mine2[0], 0.0)) > float(before[aid]) + 0.01:
+			grew += 1
+	t.check(grew >= 3, "role skills grew with work for %d people in a day" % grew)
+	# Decay after days without work (TEST SET-UP: last work 5 days ago).
+	var p: Dictionary = _colonists(sim)[0]
+	var rec: Dictionary = sim.people.rec_w(p)
+	rec["worked"] = int(sim.state["tick"]) - 5 * 6000
+	var mine3: Array = sim.content["people"]["role_skills"].get(String(p["role"]), [])
+	var x0: float = float(rec["xp"].get(mine3[0], 0.0))
+	sim.people._grow(p, rec, int(sim.state["tick"]))
+	t.check(float(rec["xp"].get(mine3[0], 0.0)) < x0 or x0 == 0.0, "unused skills fall a little (%.3f -> %.3f)" % [x0, float(rec["xp"].get(mine3[0], 0.0))])
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+
+## A real tourist liner brings P. Barby once the dome is open; a shuttle brings a family; a pair with
+## no free unit asks for a shared home, and both answers work.
+func v5_liner_family_shared_home(t) -> void:
+	var path := "res://content/saves/showcase_v5.fhsave"
+	var sim = H.Sim.new()
+	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"], {"debug": true})
+	# TEST SET-UP: the next arrival number is one whose liner carries P. Barby (the egg's hash).
+	var ts: Dictionary = sim.traffic.ts()
+	var k: int = int(ts["n"])
+	while sim.eggs._h(100000 + k, 99) >= 0.25:
+		k += 1
+	ts["n"] = k
+	# The liner of the showcase is still on the pad: wait until it has gone.
+	for s0 in 90:
+		if sim.traffic.ships().is_empty():
+			break
+		sim.run_seconds(10.0)
+	t.check(sim.traffic.ships().is_empty(), "the pad is free")
+	var barby := false
+	if not sim.eggs.found("barby"):
+		_cmd(sim, "traffic_now", {"kind": "liner", "in": 5.0})
+		for s in 400:
+			sim.run_seconds(1.0)
+			if sim.eggs.found("barby"):
+				barby = true
+				break
+	else:
+		barby = true
+	var named := false
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and String(a["name"]) == "P. Barby":
+			named = true
+	t.check(barby and named and not H.log_entries(sim, "barby").is_empty(), "P. Barby came on a real liner")
+	# A shuttle with a family (TEST SET-UP: an arrival number whose shuttle carries children). The
+	# liner leaves the pad first.
+	for s1 in 90:
+		if sim.traffic.ships().is_empty():
+			break
+		sim.run_seconds(10.0)
+	k = int(ts["n"])
+	while sim.traffic._h(100000 + k, 760) >= float(sim.content["society"]["families"]["shuttle_family_chance"]) or sim.traffic._hi(100000 + k, 3, 2, 6) < 2:
+		k += 1
+	ts["n"] = k
+	var kids0: int = 0
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and String(a.get("kind", "")) == "child":
+			kids0 += 1
+	var r: Dictionary = _cmd(sim, "traffic_now", {"kind": "shuttle", "in": 5.0})
+	_cmd(sim, "traffic_answer", {"id": int(r.get("id", -1)), "grant": true, "accept_idx": [0, 1]})
+	var landed := false
+	for s in 400:
+		sim.run_seconds(1.0)
+		var arr: Dictionary = sim.traffic.find(int(r.get("id", -1)))
+		if not arr.is_empty() and arr.get("result", {}).has("settlers"):
+			landed = true
+			break
+	var kids1: int = 0
+	var with_parents := true
+	for a in sim.state["agents"].values():
+		if a["state"] == "alive" and String(a.get("kind", "")) == "child":
+			kids1 += 1
+			with_parents = with_parents and not (a.get("parents", []) as Array).is_empty()
+	t.check(landed and kids1 > kids0 and with_parents, "a shuttle brought a family (%d -> %d children)" % [kids0, kids1])
+	sim.dispose()
+	# Shared home: showcase_v4 has no units, so a new pair must ask.
+	var s2 = _showcase()
+	var ppl: Array = _colonists(s2)
+	var pairs: Array = []
+	for i in ppl.size():
+		for j in range(i + 1, ppl.size()):
+			if pairs.size() < 2 and s2.social.compatible(ppl[i], ppl[j]) and s2.relations.partner_of(int(ppl[i]["id"])) == -1 and s2.relations.partner_of(int(ppl[j]["id"])) == -1:
+				var used := false
+				for pr in pairs:
+					used = used or pr.has(ppl[i]) or pr.has(ppl[j])
+				if not used:
+					pairs.append([ppl[i], ppl[j]])
+	for pr in pairs:
+		var rel: Dictionary = s2.relations._rel_w(pr[0], pr[1])                         # test set-up: partners
+		rel["aff"] = 70.0
+		rel["att"] = 80.0
+		rel["status"] = "partners"
+		s2.relations._bump()
+		s2.families.on_partners(pr[0], pr[1])
+	var reqs: Array = s2.relations.requests()
+	t.check(reqs.size() >= 2 and String(reqs[0]["kind"]) == "shared_home", "pairs without a free unit ask for a shared home (%d)" % reqs.size())
+	if reqs.size() >= 2:
+		var no: Dictionary = _cmd(s2, "answer_request", {"id": int(reqs[0]["id"]), "answer": "refuse"})
+		var a0: Dictionary = s2.state["agents"][int(reqs[0]["agent"])]
+		t.check(bool(no.get("ok", false)) and s2.people.has_mod(a0, "apart"), "refuse: they stay apart, unhappy")
+		var lander: Vector2 = s2.state["buildings"][int(s2.state["lander_id"])]["pos"]
+		var tube: Dictionary = H.attach(s2, "residence_tube", lander, 2)
+		var yes: Dictionary = _cmd(s2, "answer_request", {"id": int(reqs[1]["id"]), "answer": "allow"})
+		var a1: Dictionary = s2.state["agents"][int(reqs[1]["agent"])]
+		var b1: Dictionary = s2.state["agents"][int(reqs[1]["other"])]
+		t.check(bool(yes.get("ok", false)) and int(a1["bed"]) == int(tube.get("id", -2)) and int(b1["bed"]) == int(a1["bed"]), "allow after a tube is built: they move in together (%s)" % str(yes))
+	t.eq(s2.inv.audit(), {}, "ledger")
+	s2.dispose()
 	t.done()

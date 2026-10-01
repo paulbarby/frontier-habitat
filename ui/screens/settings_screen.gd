@@ -72,9 +72,33 @@ func build() -> void:
 	for pair in [["W A S D, arrows", "move the camera"], ["Mouse wheel", "zoom"], ["Middle drag, Q E", "turn"], ["Space; 1 2 3", "pause; speed 1x 2x 4x"],
 			["R; Z X", "turn; size while placing"], ["Shift + click", "keep placing"], ["Esc; right click", "cancel; menu"], ["F", "follow a colonist"], ["/ or Ctrl+F", "find a structure"], ["N", "advisor"], ["K", "codex"], ["Shift+Esc", "close every window"],
 			["O", "overlay"], ["Delete", "remove the selection"], ["G T C", "goals, research, colony"], ["I P U", "inventory, people, crew"], ["J", "The Regolith Rag"],
-			["V", "person's view; else awards"], ["H", "hide the interface"]]:
+			["V", "person's view; else awards"], ["H", "hide the interface"], ["L", "the left dock"], ["Y", "roofs off"]]:
 		grid.add_child(Kit.num(pair[0], 12, P.CYAN))
 		grid.add_child(Kit.label(pair[1], "", 12, P.TEXT_2))
+	# Notifications (docs/UI_PANELS.md): every message type: Pop up, Badge only or Off.
+	var nt: VBoxContainer = card("Notifications", "sev_info", P.CYAN)
+	card_panel(nt).name = "Notifications"
+	right.add_child(card_panel(nt))
+	nt.add_child(Kit.wrap("Pop up: a message shows at the top left and its tab gets a badge. Badge only: no message, only the badge. Off: no message and no badge; the tab still lists it.", 12, P.TEXT_2))
+	var PM = load("res://ui/hud/panel_manager.gd")
+	var ng: GridContainer = Kit.grid(2, 10, 4)
+	nt.add_child(ng)
+	for t in PM.TYPES:
+		var tt: String = t
+		ng.add_child(Kit.label(String(PM.TYPES[t][0]), "", 13, P.TEXT))
+		var ob := OptionButton.new()
+		ob.name = "Notify_" + tt
+		ob.focus_mode = Control.FOCUS_NONE
+		ob.add_theme_font_size_override("font_size", 12)
+		ob.tooltip_text = "%s
+Pop up, Badge only or Off. Kept on this device." % String(PM.TYPES[t][0])
+		for m in PM.MODES:
+			ob.add_item(String(PM.MODE_NAME[m]))
+		ob.select(PM.MODES.find(hud.panels.mode(tt)) if hud.panels != null else 0)
+		ob.item_selected.connect(func(i: int):
+			if hud.panels != null:
+				hud.panels.set_mode(tt, String(PM.MODES[i])))
+		ng.add_child(ob)
 	# About (V4_DESIGN §7): the version.
 	var ab: VBoxContainer = card("About", "info", P.CYAN)
 	right.add_child(card_panel(ab))

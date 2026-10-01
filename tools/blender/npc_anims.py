@@ -14,7 +14,7 @@ KNEEL and DEAD the suit (the indoor jumpsuit has knee pads of the same size).
 """
 import os
 import sys
-from math import sin, cos, pi, radians, degrees, sqrt, ceil
+from math import sin, cos, pi, radians, degrees, sqrt, ceil, acos
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -243,11 +243,13 @@ def make_lie():
         P["knee.%s.body" % s] = 1.0
         P["foot.%s.rel" % s] = 1.0
         P["foot.%s.rp" % s] = 24.0
-    # bottom hand by the face on the mattress, top hand resting in front of the chest
-    set_arm_ik(P, "L", (-0.140, 0.640, 0.615), (0.35, 1.0, 0.0), (1.0, 0.0, 0.0), w=1.0, pole=0.0)
-    elbow_to(P, "L", (0.25, -1.0, 0.05))                 # bottom elbow along the mattress, towards the feet
+    # bottom arm in front of the body on the mattress, the hand by the face (2026-10-01, Paul: the arm went through
+    # the torso: the elbow now points forward, never under or behind the body); top hand in front of the chest
+    set_arm_ik(P, "L", (-0.250, 0.600, 0.632), (0.25, 1.0, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(P, "L", (1.0, 0.15, 0.0))
     # (set_arm_ik mirrors y for the right side: these values put the right hand at y +0.30, pointing to +Y)
     set_arm_ik(P, "R", (-0.230, -0.300, 0.640), (0.6, -0.6, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(P, "R", (0.8, 0.0, 0.4), 1.0)                # the top elbow forward and up, in front of the chest
     return P
 
 
@@ -272,6 +274,7 @@ def make_dead():
     set_arm_ik(P, "L", (0.560, 0.700, 0.100), (1.0, 0.3, 0.0), (0.0, 1.0, 0.0), w=1.0, pole=0.0)
     elbow_to(P, "L", (0.0, -0.4, 1.0))                   # arm stretched along the ground, elbow not into it
     set_arm_ik(P, "R", (0.250, -0.300, 0.130), (0.8, -0.4, -0.2), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(P, "R", (0.6, 0.0, 0.8), 1.0)                # the top arm fallen in front, the elbow up (not through the body)
     return P
 
 
@@ -472,14 +475,19 @@ def knee_flex(P, s):
 def hips_for(P, legs, target):
     """Highest hips.z (bisection) at which every leg in `legs` has reach <= target[leg]."""
     lo, hi = -0.60, 0.10
-    for _ in range(26):
-        mid = (lo + hi) / 2
-        Q = setp(P, hips__z=mid)
-        ok = all(leg_reach(Q, s) <= target[s] for s in legs)
-        if ok:
-            lo = mid
-        else:
-            hi = mid
+    g0 = N.ELBOW_GUARD
+    N.ELBOW_GUARD = False                 # the legs only: the arm guard is not needed here (speed)
+    try:
+        for _ in range(26):
+            mid = (lo + hi) / 2
+            Q = setp(P, hips__z=mid)
+            ok = all(leg_reach(Q, s) <= target[s] for s in legs)
+            if ok:
+                lo = mid
+            else:
+                hi = mid
+    finally:
+        N.ELBOW_GUARD = g0
     return lo
 
 
@@ -560,13 +568,14 @@ def _walk_upper(phi, P, arms=True, lean=1.0):
         q = phi + off
         P["shoulder.%s.rx" % s] = -2.0 * sg
         P["shoulder.%s.rz" % s] = -2.5 * cos(TAU * (q - 0.03)) * sg
-        P["upper_arm.%s.rx" % s] = -17.0 * sg
+        # 2026-10-01 (Paul: arms held out): the arms hang close to the body (6 deg out) and swing fore and aft
+        P["upper_arm.%s.rx" % s] = -23.0 * sg
         P["upper_arm.%s.ry" % s] = -5.0 + 20.0 * cos(TAU * (q - 0.03))
-        P["upper_arm.%s.rz" % s] = 6.0 * sg
+        P["upper_arm.%s.rz" % s] = 3.0 * sg
         fl = 0.5 - 0.5 * cos(TAU * (q - 0.11))
         P["forearm.%s.ry" % s] = -15.0 - 20.0 * fl
         P["forearm.%s.rx" % s] = 1.0 * sg
-        P["forearm.%s.rz" % s] = 8.0 * sg
+        P["forearm.%s.rz" % s] = 5.0 * sg
         P["hand.%s.ry" % s] = -6.0 - 4.0 * fl
         P["hand.%s.rx" % s] = 3.0 * sg
 
@@ -593,12 +602,12 @@ def _run_upper(phi, P):
     P["hips.y"] = 0.012 * sin(TAU * (phi - 0.10))
     P["hips.rx"] = 3.0 * sin(TAU * (phi - 0.10))
     P["hips.rz"] = -9.0 * c1
-    P["hips.ry"] = 6.0 + 1.5 * cos(2 * TAU * (phi - 0.12))
+    P["hips.ry"] = 8.5 + 1.5 * cos(2 * TAU * (phi - 0.12))                     # a forward lean (2026-10-01)
     P["spine.rz"] = 5.5 * cos(TAU * (phi - 0.03))
     P["chest.rz"] = 6.5 * cos(TAU * (phi - 0.06))
     P["spine.rx"] = -1.8 * sin(TAU * (phi - 0.12))
-    P["spine.ry"] = 3.0
-    P["chest.ry"] = 1.0 + 2.0 * cos(2 * TAU * (phi - 0.18))
+    P["spine.ry"] = 4.0
+    P["chest.ry"] = 1.5 + 2.0 * cos(2 * TAU * (phi - 0.18))
     P["head.aim"] = 0.9
     P["head.wy"] = 5.0 + 1.5 * cos(2 * TAU * (phi - 0.25))
     for s, off in (("L", 0.0), ("R", 0.5)):
@@ -606,12 +615,14 @@ def _run_upper(phi, P):
         q = phi + off
         sw = cos(TAU * (q - 0.04))                                   # +1 arm back, -1 arm forward
         P["shoulder.%s.rx" % s] = -1.0 * sg
+        # 2026-10-01 (Paul: the run holds the arms out): elbows in by the ribs, the hands swing to the hip and to
+        # the chest line, slightly across the body
         P["shoulder.%s.rz" % s] = -4.0 * sw * sg
-        P["upper_arm.%s.rx" % s] = -16.0 * sg
+        P["upper_arm.%s.rx" % s] = -25.0 * sg
         P["upper_arm.%s.ry" % s] = -10.0 + 34.0 * sw
-        P["upper_arm.%s.rz" % s] = 10.0 * sg
-        P["forearm.%s.ry" % s] = -68.0 - 10.0 * (0.5 - 0.5 * cos(TAU * (q - 0.12)))    # elbows 68-78 deg
-        P["forearm.%s.rz" % s] = 16.0 * sg
+        P["upper_arm.%s.rz" % s] = 3.0 * sg
+        P["forearm.%s.ry" % s] = -74.0 - 10.0 * (0.5 - 0.5 * cos(TAU * (q - 0.12)))    # elbows 74-84 deg
+        P["forearm.%s.rz" % s] = 7.0 * sg
         P["hand.%s.ry" % s] = -12.0
         P["hand.%s.rx" % s] = 6.0 * sg
 
@@ -623,11 +634,12 @@ def run_reach(u, s):
 
 def run_hips(phi):
     """3.6 cm bob: lowest at mid-stance of each foot (phase 0.185 and 0.685), highest in flight."""
-    return 0.018 * cos(2 * TAU * (phi - 0.165 - 0.25))
+    return 0.014 * cos(2 * TAU * (phi - 0.20 - 0.25))
 
 
 RUN = dict(frames=20, stride=2.27, reach=run_reach, smooth=1, flight_h=0.006, hips_curve=run_hips,
-           feet={s: _foot(off, 0.33, 0.255, p_hs=7.0, p_to=44.0, hs_end=0.05, flat_end=0.15, clear=0.30,
+           # 2026-10-01 (Paul: the run floats): longer ground contact (40 %), a lower swing
+           feet={s: _foot(off, 0.40, 0.255, p_hs=7.0, p_to=40.0, hs_end=0.05, flat_end=0.17, clear=0.24,
                           lift_skew=0.62, lift_pow=0.9, swing_pitch=4.0, toe_relax=0.45, swing_out=0.018, y=0.095,
                           yaw=3.0, to_pow=1.3)
                  for s, off in (("L", 0.0), ("R", 0.5))},
@@ -678,7 +690,7 @@ def _injured_upper(phi, P):
     P["head.aim"] = 0.7
     P["head.wy"] = 14.0
     P["head.wz"] = -4.0
-    set_arm_ik(P, "L", (0.105, -0.06, 1.070), (-0.2, -1.0, -0.25), (0.3, 0.0, 0.2), w=1.0, pole=-30.0, chest=1.0)
+    set_arm_ik(P, "L", (0.155, -0.06, 1.070), (-0.2, -1.0, -0.25), (0.3, 0.0, 0.2), w=1.0, pole=-30.0, chest=1.0)
     P.update({"shoulder.R.rx": 3.0, "upper_arm.R.rx": 19.0, "upper_arm.R.ry": -2.0 + 5.0 * cos(TAU * (phi - 0.6)),
               "forearm.R.ry": -24.0, "hand.R.ry": -8.0})
 
@@ -711,8 +723,8 @@ def work_console_base():
     P = Pose(STAND)
     P.update({"hips.x": -0.010, "hips.ry": 4.0, "spine.ry": 6.0, "chest.ry": 4.0, "neck.ry": 12.0, "head.ry": 14.0})
     # fingers on the console top (1.0 m) at 0.40..0.50 m ahead: wrists just above, hands pitched down
-    set_arm_ik(P, "L", (0.345, 0.125, 1.102), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
-    set_arm_ik(P, "R", (0.360, 0.090, 1.102), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    set_arm_ik(P, "L", (0.345, 0.125, 1.092), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    set_arm_ik(P, "R", (0.360, 0.090, 1.092), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
     return P
 
@@ -992,6 +1004,7 @@ def lie_enter_keys():
     set_arm_ik(K2, "L", (-0.26, 0.52, 0.63), (0.2, 1.0, -0.1), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(K2, "L", (-0.3, -0.6, -0.2), 0.6)
     set_arm_ik(K2, "R", (-0.05, 0.10, 0.80), (0.8, 0.4, -0.6), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(K2, "R", (0.2, 0.0, 1.0), 1.0)              # the top elbow up and over, never behind the body
     # legs lifted in front of the bed, knees up
     K3 = Pose(K2)
     K3.update({"hips.rx": -62.0, "hips.x": -0.43, "hips.y": 0.07, "hips.z": -0.195, "spine.rx": -4.0})
@@ -1006,6 +1019,7 @@ def lie_enter_keys():
     set_arm_ik(K3, "L", (-0.18, 0.62, 0.62), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
     elbow_to(K3, "L", (0.2, -1.0, 0.0), 0.9)
     set_arm_ik(K3, "R", (-0.22, -0.28, 0.72), (0.6, -0.6, -0.4), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(K3, "R", (0.8, 0.0, 0.5), 1.0)
     K2b = Pose(K2)
     K2b.update({"hips.rx": -45.0, "hips.x": -0.38, "hips.z": -0.205})
     set_foot(K2b, "L", (0.20, 0.10, 0.36), knee_out=0.0)
@@ -1017,6 +1031,7 @@ def lie_enter_keys():
     K4 = Pose(LIE)
     K4.update({"hips.z": LIE.g("hips.z") + 0.012, "spine.ry": 6.0})
     set_arm_ik(K2b, "R", (-0.14, -0.08, 0.78), (0.7, -0.5, -0.5), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(K2b, "R", (0.5, 0.0, 0.8), 1.0)
     # halfway from sitting on the edge to leaning: lift the hips 1 cm so the far thigh clears the mattress
     K1b = Pose({k: 0.5 * (K1.g(k) + K2.g(k)) for k in set(K1) | set(K2)})
     K1b["hips.z"] = K1b.g("hips.z") + 0.022
@@ -1041,6 +1056,7 @@ def lie_exit_keys():
     set_arm_ik(K2, "L", (-0.22, 0.60, 0.63), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
     elbow_to(K2, "L", (0.1, -1.0, 0.0), 0.8)
     set_arm_ik(K2, "R", (-0.10, 0.10, 0.78), (0.8, 0.4, -0.6), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(K2, "R", (0.2, 0.0, 1.0), 1.0)
     K3 = Pose(SIT)
     K3.update({"hips.x": -0.285, "hips.z": -0.218, "hips.ry": -2.0, "spine.ry": 10.0, "hips.rx": -8.0, "hips.y": 0.02})
     for s in ("L", "R"):
@@ -1057,20 +1073,78 @@ def lie_exit_keys():
 
 
 def sleep_fn(n=180):
+    """Sleeping on the left side: slow breathing (two breaths in 6 s: the chest swells, the shoulders lift, the
+    belly moves), a slight head settle.  No bone moves more than 0.3 deg per frame."""
     def fn(f):
         u = f / n
 
         def w(g):
             return g(u) - g(0.0)
+        br = lambda u: (0.5 - 0.5 * cos(2 * TAU * u)) ** 1.3                    # noqa: E731  inhale / exhale
         P = add(LIE,
-                chest__ry=w(lambda u: -1.8 * sin(TAU * u)),
-                spine__ry=w(lambda u: 0.8 * sin(TAU * u)),
-                hips__z=w(lambda u: 0.002 * sin(TAU * u)),
-                head__ry=w(lambda u: 1.2 * sin(TAU * u - 0.6)),
+                chest__ry=w(lambda u: -2.6 * br(u)),
+                spine__ry=w(lambda u: 1.2 * br(u)),
+                hips__z=w(lambda u: 0.003 * br(u)),
+                head__ry=w(lambda u: 1.0 * br(u) + 0.8 * sin(TAU * u - 0.6)),
                 neck__ry=w(lambda u: 0.6 * sin(TAU * u - 0.4)))
-        P = addsym(P, shoulder__rx=w(lambda u: 0.8 * sin(TAU * u - 0.3)))
+        P = addsym(P, shoulder__rx=w(lambda u: 1.6 * br(u)))
         return P
     return fn, n
+
+
+STEP_LIMIT_SLOW = 4.5       # deg per frame: lie / sleep transitions (Paul 2026-10-01: no snaps over 5 deg)
+
+
+def ik_keys(keys):
+    """The same keys with every arm in IK on its own wrist target (FK arms filled): the wrists move in straight
+    lines between keys and the solver's elbow guard keeps the elbows outside the body."""
+    out = []
+    for k in keys:
+        Q = fill_arm_targets(Pose(k[1]))
+        for s in ("L", "R"):
+            Q["arm.%s.ik" % s] = 1.0
+        out.append((k[0], Q) + tuple(k[2:]))
+    return out
+
+
+def fk_keys(keys):
+    """The same keys with every arm as FK angles (from the key's IK solution): between keys the arms turn
+    smoothly instead of the IK elbow plane flipping when a pole changes."""
+    return [(k[0], ik_to_fk(Pose(k[1]))) + tuple(k[2:]) for k in keys]
+
+
+def retime_keys(keys, limit=STEP_LIMIT_SLOW, passes=3, max_scale=2.2):
+    """Stretch the key intervals of a one-shot whose bones turn more than `limit` deg in a frame, so every bone
+    stays under it (the poses do not change, only their timing)."""
+    ks = [list(k) for k in keys]
+    S_ = solver()
+    for _ in range(passes):
+        fn, n = keyed_clip([tuple(k) for k in ks])
+        prev = None
+        worst = [0.0] * len(ks)
+        for f in range(n + 1):
+            _, Q, _, _ = S_.solve(fn(f))
+            if prev is not None:
+                t = f / FPS
+                i = 0
+                for j in range(len(ks) - 1):
+                    if ks[j][0] <= t:
+                        i = j
+                m = max(2.0 * degrees(acos(min(1.0, abs(Q[b].dot(prev[b]))))) for b in Q if not b.startswith("prop."))
+                worst[i] = max(worst[i], m)
+            prev = Q
+        if max(worst) <= limit:
+            break
+        shift = 0.0
+        new = []
+        for j, k in enumerate(ks):
+            if j > 0:
+                dt = ks[j][0] - ks[j - 1][0]
+                sc = min(max_scale, max(1.0, worst[j - 1] / limit * 1.05))
+                shift += dt * (sc - 1.0)
+            new.append([k[0] + shift] + k[1:])
+        ks = new
+    return [tuple(k) for k in ks]
 
 
 def collapse_keys():
@@ -1554,11 +1628,11 @@ def all_clips():
     out.append(("sit_type", "loop", "sit", "sit", True, 120, typing(sit_type_base(), 120), {}))
     fn, n = keyed_clip(sit_exit_keys())
     out.append(("sit_exit", "exit", "sit", "stand", False, n, fn, {}))
-    fn, n = keyed_clip(lie_enter_keys())
+    fn, n = keyed_clip(retime_keys(ik_keys(lie_enter_keys())))
     out.append(("lie_enter", "enter", "stand", "lie", False, n, fn, {}))
     fn, n = sleep_fn()
     out.append(("sleep", "loop", "lie", "lie", True, n, fn, {}))
-    fn, n = keyed_clip(lie_exit_keys())
+    fn, n = keyed_clip(retime_keys(ik_keys(lie_exit_keys())))
     out.append(("lie_exit", "exit", "lie", "stand", False, n, fn, {}))
     gait("injured_walk", INJURED)
     fn, n = keyed_clip(collapse_keys())
@@ -1580,7 +1654,7 @@ def all_clips():
                 dict(frame="door", seat_offset=so, cut_frame=n, door="left of the seat (seat on the right)")))
     out.append(("board_r", "enter", "stand", "vehicle", False, n, mirrored_clip(fn),
                 dict(frame="door", seat_offset=so_r, cut_frame=n, door="right of the seat (seat on the left)")))
-    fn, n = keyed_clip(alight_keys())
+    fn, n = keyed_clip(retime_keys(alight_keys(), limit=13.5, max_scale=1.4))
     out.append(("alight", "exit", "vehicle", "stand", False, n, fn,
                 dict(frame="door", seat_offset=so, cut_frame=0, door="left of the seat (seat on the right)")))
     out.append(("alight_r", "exit", "vehicle", "stand", False, n, mirrored_clip(fn),

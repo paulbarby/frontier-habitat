@@ -41,6 +41,19 @@ const RULES := {
 	"door": {"zoom_full": 10.0, "zoom_off": 18.0, "near_full": 3.0, "near_off": 8.0, "max_at_once": 1.0, "repeat_s": 1.5},
 }
 const PER_NAME := 3
+## Indoors (Paul, 2026-10-01: no storm or wind sounds inside the habitats, above all over the shoulder).
+## Outdoor sounds play through their own buses (a copy of Ambience and of SFX, each with a low-pass
+## filter). While the listener is inside a room, a corridor or the dome (the follow view of a person who
+## is inside, or a close camera over one), those buses go down to INDOOR_DB with the filter at
+## INDOOR_LP_HZ (a faint hull rumble), and the room tone ("hum") comes up; both fade over about FADE_S.
+const OUTDOOR_LOOPS := ["wind", "night"]
+const OUTDOOR_WORLD := ["storm_loop"]
+const OUTDOOR_BUS := {"Ambience": "OutdoorAmbience", "SFX": "OutdoorSFX"}
+const INDOOR_DB := -24.0
+const INDOOR_LP_HZ := 400.0
+const ROOM_TONE_DB := 6.0     # the hum, indoors, louder by this
+const FADE_S := 0.5
+const CLOSE_M := 32.0          # a camera closer than this to its focus listens at the focus
 const WORLD_POOL := 14
 const LOOP_MAX_S := 60.0
 
@@ -59,6 +72,9 @@ var _wrec := {}        # player -> {name, pos, db, handle, t}
 var _handle := 0
 var played := {}       # world sound name -> times it started (tests, the `music` command)
 var _door_last := {}   # door key (name + position to 0.5 m) -> msec of its last sound
+var indoor_k := 0.0    # 0 outdoors .. 1 indoors, faded (tests, audio_probe)
+var indoor_now := false
+var _indoor_t := 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -181,7 +197,7 @@ func loop(name: String, on: bool) -> void:
 	if p == null:
 		p = AudioStreamPlayer.new()
 		p.stream = rec["stream"]
-		p.bus = rec["bus"]
+		p.bus = _bus_for(name, String(rec["bus"]))
 		p.volume_db = -60.0
 		add_child(p)
 		_loop_players[name] = p
@@ -286,7 +302,7 @@ func world(name: String, pos) -> int:
 		return -1
 	_handle += 1
 	free.stream = rec["stream"]
-	free.bus = String(rec.get("bus", "SFX"))
+	free.bus = _bus_for(name, String(rec.get("bus", "SFX")))
 	free.volume_db = float(rec["db"]) + gain_db(g)
 	free.pitch_scale = 1.0
 	free.play()
@@ -322,6 +338,7 @@ func _to3(pos) -> Vector3:
 	return _focus()
 
 func _process(delta: float) -> void:
+	_indoor_step(delta)
 	if _wrec.is_empty():
 		return
 	# The camera moves and zooms: levels follow it. Loops past max_s stop.
@@ -336,6 +353,80 @@ func _process(delta: float) -> void:
 			continue
 		(pl as AudioStreamPlayer).volume_db = float(r["db"]) + gain_db(gain(String(r["class"]), (r["pos"] as Vector3).distance_to(f), z))
 
+# ---------------------------------------------------------------- indoors (Paul, 2026-10-01)
+## The bus an outdoor sound plays on (its base bus for the others).
+func _bus_for(name: String, base: String) -> String:
+	if (OUTDOOR_LOOPS.has(name) or OUTDOOR_WORLD.has(name)) and OUTDOOR_BUS.has(base):
+		_ensure_outdoor_buses()
+		return String(OUTDOOR_BUS[base])
+	return base
+
+func _ensure_outdoor_buses() -> void:
+	for base in OUTDOOR_BUS:
+		var nm: String = OUTDOOR_BUS[base]
+		if AudioServer.get_bus_index(nm) != -1 or AudioServer.get_bus_index(base) == -1:
+			continue
+		AudioServer.add_bus()
+		var i: int = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(i, nm)
+		AudioServer.set_bus_send(i, base)
+		var lp := AudioEffectLowPassFilter.new()
+		lp.cutoff_hz = 20000.0
+		AudioServer.add_bus_effect(i, lp)
+
+## True while the listener is indoors: following a person who is inside, or a close camera whose focus
+## lies in a room with air, a corridor or the dome.
+func listener_indoors() -> bool:
+	if main == null or main.sim == null or main.rig == null:
+		return false
+	var s = main.sim
+	if main.has_method("in_follow") and main.in_follow():
+		var fid: int = int(main.view.get("follow_id")) if main.view.get("follow_id") != null else -1
+		var a: Dictionary = s.state["agents"].get(fid, {})
+		return not a.is_empty() and String(a.get("where", "")) == "in"
+	if float(main.rig.distance) > CLOSE_M:
+		return false
+	var f: Vector3 = main.rig.focus
+	var p := Vector2(f.x, f.z)
+	if s.get("orders") != null and s.orders.has_method("room_at") and s.orders.room_at(p) != -1:
+		return true
+	# A corridor: the segment between the two structures it joins, about 2 m either side.
+	for id in s.state["buildings"]:
+		var l: Dictionary = s.state["buildings"][id]
+		if String(l.get("kind", "")) != "link" or l["state"] != "active":
+			continue
+		var a2: Dictionary = s.state["buildings"].get(l.get("a", -1), {})
+		var b2: Dictionary = s.state["buildings"].get(l.get("b", -1), {})
+		if a2.is_empty() or b2.is_empty():
+			continue
+		var q: Vector2 = Geometry2D.get_closest_point_to_segment(p, a2["pos"], b2["pos"])
+		if q.distance_to(p) < 2.0:
+			return true
+	return false
+
+## Each frame: the indoor factor fades toward its target (about FADE_S), the outdoor buses and the room
+## tone follow it. The test runs ten times a second.
+func _indoor_step(delta: float) -> void:
+	_indoor_t += delta
+	if _indoor_t >= 0.1:
+		_indoor_t = 0.0
+		indoor_now = listener_indoors()
+	var target: float = 1.0 if indoor_now else 0.0
+	if is_equal_approx(indoor_k, target) and indoor_k in [0.0, 1.0]:
+		return
+	indoor_k = move_toward(indoor_k, target, delta / FADE_S)
+	for base in OUTDOOR_BUS:
+		var i: int = AudioServer.get_bus_index(String(OUTDOOR_BUS[base]))
+		if i == -1:
+			continue
+		AudioServer.set_bus_volume_db(i, INDOOR_DB * indoor_k)
+		var lp = AudioServer.get_bus_effect(i, 0)
+		if lp is AudioEffectLowPassFilter:
+			(lp as AudioEffectLowPassFilter).cutoff_hz = exp(lerpf(log(20000.0), log(INDOOR_LP_HZ), indoor_k))
+	var hum: AudioStreamPlayer = _loop_players.get("hum")
+	if hum != null and bool(_loop_on.get("hum", false)) and _loops.has("hum"):
+		hum.volume_db = float(_loops["hum"]["db"]) + ROOM_TONE_DB * indoor_k
+
 ## One line for the automation hook: music state and world sounds playing.
 func describe() -> String:
-	return "%s world=%d played=%s" % [music.describe() if music != null else "no music", world_count(), str(played)]
+	return "%s world=%d played=%s indoor=%.2f" % [music.describe() if music != null else "no music", world_count(), str(played), indoor_k]

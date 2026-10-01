@@ -67,8 +67,60 @@ func setting() -> String:
 func level() -> float:
 	return float(cfg()["settings"].get(setting(), 1.0))
 
+## Hazards that need an atmosphere (V5 section 15.7, Paul 2026-10-01): never on an airless planet.
+const ATMOSPHERIC := ["dust_storm", "wind_storm", "dust_devil"]
+
+## The planet's rate multiplier for a hazard kind (content planets.<id>.hazards; missing = 1).
+## An atmospheric kind is 0 on a planet whose atmosphere is "none".
+func planet_factor(kind: String) -> float:
+	if ATMOSPHERIC.has(kind) and String(sim.planet.get("atmosphere", "thin")) == "none":
+		return 0.0
+	var t = sim.planet.get("hazards", {}).get(kind, 1.0)
+	return float(t) if typeof(t) == TYPE_FLOAT or typeof(t) == TYPE_INT else 1.0
+
+## The hazard kinds that can happen on this planet (for the forecast panel and the codex).
+func kinds_here() -> Array:
+	var out: Array = []
+	for k in KINDS:
+		if planet_factor(k) > 0.0:
+			out.append(k)
+	return out
+
+## An old save on an airless planet: pending and running atmospheric events are dropped, so are their
+## plans; the wind and solar factors go back to normal. Returns the number of events dropped.
+func drop_atmospheric() -> int:
+	if String(sim.planet.get("atmosphere", "thin")) != "none" or not sim.state.has("hazards"):
+		return 0
+	var h: Dictionary = hs()
+	var n := 0
+	for key in ["queue", "active"]:
+		var keep: Array = []
+		for ev in h.get(key, []):
+			if ATMOSPHERIC.has(String(ev["kind"])):
+				n += 1
+			else:
+				keep.append(ev)
+		h[key] = keep
+	for k in ATMOSPHERIC:
+		h.get("next_at", {}).erase(k)
+	var env: Dictionary = sim.state.get("env", {})
+	env["solar_mult"] = 1.0
+	env["speed_mult"] = 1.0
+	env["wind_mult"] = 1.0
+	var st: Dictionary = sim.state.get("events", {}).get("storm", {})
+	if not st.is_empty():
+		st["scheduled"] = false
+		st["phase"] = "none"
+	for id in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][id]
+		if bool(b.get("dust", false)):
+			b["dust"] = false
+	return n
+
 func kind_on(kind: String) -> bool:
 	if level() <= 0.0:
+		return false
+	if planet_factor(kind) <= 0.0:
 		return false
 	if kind == "dust_storm":
 		return bool(sim.bal.get("storm", {}).get("enabled", true)) and bool(sim.state.get("options", {}).get("storms", true))
@@ -141,6 +193,10 @@ func _gap_ticks(kind: String) -> int:
 	if kind == "dust_storm":
 		var iv: Array = sim.bal["storm"]["interval_days"]
 		var g: int = int(Rng.range_float(rng, "hazard", float(iv[0]), float(iv[1])) * float(day_ticks()))
+		# A planet with fewer dust storms (cold: 0.5) waits longer between them.
+		var pf: float = planet_factor(kind)
+		if pf > 0.0 and pf != 1.0:
+			g = int(float(g) / pf)
 		return g - g % hz()
 	var rate: float = rate_per_day(kind)
 	if rate <= 0.0:
@@ -153,7 +209,7 @@ func _gap_ticks(kind: String) -> int:
 ## Events per day of a kind now: base x setting x ramp(day) x colony factor (local kinds).
 func rate_per_day(kind: String) -> float:
 	var k: Dictionary = kcfg(kind)
-	var base: float = float(k.get("per_day", 0.0)) * level()
+	var base: float = float(k.get("per_day", 0.0)) * level() * planet_factor(kind)
 	var first_day: float = float(first_tick()) / float(day_ticks())
 	var day: float = float(sim.state["tick"]) / float(day_ticks())
 	var ramp: float = clampf((day - first_day) / maxf(0.1, float(cfg().get("ramp_days", 10.0))), float(cfg().get("ramp_min", 0.3)), 1.0)

@@ -99,8 +99,13 @@ func tick() -> void:
 	# rooms of this tick's slice are collected first; only people in those rooms are checked.)
 	var slice: Array = []
 	var rooms := {}
+	# New talks are looked for on every second tick, for two buckets of people at once (each
+	# person still once a second; cost: the room scan below runs half as often).
+	if now % 2 == 1:
+		_day_pass(now)
+		return
 	# (now + id) % hz == 0  <=>  id % hz == -now mod hz (people.ids_mod keeps the buckets).
-	for aid in sim.people.ids_mod(hz, -now):
+	for aid in sim.people.ids_mod(hz, -now) + sim.people.ids_mod(hz, -now - 1):
 		if busy.has(int(aid)):
 			continue
 		var a0: Dictionary = agents[aid]

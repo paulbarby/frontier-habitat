@@ -26,6 +26,7 @@ var _cam_dist := 60.0
 var reserved := 0                    # real lights taken by interiors (fx_interior)
 var aurora := 0.0                    # solar flare 0..1 (fx_hazards)
 var fog_far := false
+var indoor := 0.0                    # 0..1: the follow camera is inside a room under its roof (world_view)
 var sun_fn: Callable                 # V4: returns sim.world.sun_angles(t, daylight, day_len)
 var sun_now := {}                    # the last sun from sun_fn
 var key_is_sun := true
@@ -285,6 +286,12 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 		env.fog_depth_end = _cam_dist * 1.5 + maxf(1400.0, _cam_dist * 3.0)
 		env.fog_depth_curve = 1.6
 		env.fog_density = lerpf(0.35, 0.8, st)
+	# Inside a room under its roof (follow view, Paul 2026-10-01): no outdoor haze or storm dust in the room,
+	# and a brighter neutral ambient so the interior reads with the roof on.
+	if indoor > 0.0:
+		env.fog_density *= 1.0 - 0.92 * indoor
+		env.ambient_light_color = (env.ambient_light_color as Color).lerp(Color("d9d2c8"), 0.6 * indoor)
+		env.ambient_light_energy = float(env.ambient_light_energy) + 0.45 * indoor
 	env.fog_sun_scatter = lerpf(0.28, 0.0, night)
 	env.glow_intensity = lerpf(0.4, 0.95, night)
 	env.tonemap_exposure = lerpf(1.0, 1.25, night)

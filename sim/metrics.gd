@@ -64,7 +64,7 @@ func _forecast() -> Dictionary:
 		beds += int(def.get("beds", 0))
 		water_units += sim.util.units(int(b["water"]))
 		if bool(b["enabled"]):
-			if def.has("o2_out"):
+			if def.has("o2_out") and (sim.planet_has_air() or not bool(def.get("needs_atmosphere", false))):
 				o2_make += float(def["o2_out"]) * o2_mult
 			elif def.has("o2_bonus"):
 				o2_make += float(def["o2_bonus"])

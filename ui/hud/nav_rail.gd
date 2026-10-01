@@ -75,6 +75,10 @@ func _ready() -> void:
 	(_buttons["overlay"] as Button).gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_RIGHT:
 			hud.set_overlay(""))
+	_add("roofs", "roof_off", "Roofs off
+See into every building: every roof and upper wall goes. Key Y. In the over-the-shoulder view the roofs stay on.", func(): hud.main.toggle_roofs())
+	_add("dock", "dock", "Dock
+The left dock: goals, alerts, events, traffic, requests and news. Key L opens and closes it.", func(): hud.panels.toggle_dock())
 	_seam()
 	_add("menu", "menu", "Menu\nSave, load, settings, new colony. Esc.", func(): hud.toggle_menu())
 
@@ -98,6 +102,9 @@ func _add(name: String, icon: String, tip: String, cb: Callable) -> void:
 	b.add_theme_color_override("icon_pressed_color", Color("E8FDFF"))
 	b.add_theme_color_override("icon_hover_pressed_color", Color.WHITE)
 	b.toggle_mode = true
+	# The icon texture is drawn at twice its size (sharp at any scale): cap its width, so the button can
+	# shrink with the rail (16 buttons since the roofs and dock buttons, 2026-10-01).
+	b.add_theme_constant_override("icon_max_width", 22)
 	_box.add_child(b)
 	_buttons[name] = b
 	var dot := Label.new()
@@ -118,17 +125,18 @@ func _add(name: String, icon: String, tip: String, cb: Callable) -> void:
 	b.add_child(dot)
 	_badges[name] = dot
 
-## The rail fits the view height: in a short view the buttons get smaller (46 px down to 32 px).
+## The rail fits the view height: in a short view the buttons get smaller (54 px down to 28 px).
 var _side := 46.0
 func _process(_d: float) -> void:
 	var n: int = _buttons.size()
 	var fixed: float = 18.0 + float(_seams.size()) * 10.0 + float(n + _seams.size() - 1) * 4.0   # frame margins, seams, gaps
 	var room: float = get_viewport_rect().size.y - offset_top - 8.0 - fixed
-	var want: float = clampf(floorf(room / maxf(1.0, float(n))), 32.0, 46.0)
+	var want: float = clampf(floorf(room / maxf(1.0, float(n))), 28.0, 54.0)   # 54: the size the buttons had (icon 44 px texture + margins)
 	if absf(want - _side) >= 1.0:
 		_side = want
 		for b in _buttons.values():
 			(b as Button).custom_minimum_size = Vector2(_side, _side)
+			(b as Button).add_theme_constant_override("icon_max_width", int(clampf(_side - 22.0, 14.0, 22.0)))
 		reset_size()
 
 func rebuild() -> void:
@@ -137,7 +145,7 @@ func rebuild() -> void:
 func refresh() -> void:
 	var open: String = hud.screen_name()
 	for n in _buttons:
-		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible) or (n == "rag" and hud.rag != null and hud.rag.visible))
+		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "roofs" and bool(load("res://ui/settings.gd").get_value("roofs_off"))) or (n == "dock" and hud.panels != null and hud.panels.dock_open) or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible) or (n == "rag" and hud.rag != null and hud.rag.visible))
 	var d = hud.data
 	# Research: an idle lab (no active project while research exists).
 	var r: Dictionary = d.research()
@@ -145,6 +153,11 @@ func refresh() -> void:
 	# Awards: medals earned since the gallery was last opened.
 	var new_awards: int = hud.watchers.unseen_awards() if hud.watchers.has_method("unseen_awards") else 0
 	_badge("awards", new_awards > 0, str(new_awards), P.GOLD)
+	var rb: Button = _buttons["roofs"]
+	rb.disabled = hud.main.in_follow()
+	rb.tooltip_text = ("Roofs off: %s
+See into every building: every roof and upper wall goes. Key Y." % ("on" if rb.button_pressed else "off")) if not rb.disabled else "Roofs off
+Not in the over-the-shoulder view: the roofs stay on there."
 	var ov: String = hud.main.view.overlay
 	(_buttons["overlay"] as Button).tooltip_text = "Overlay: %s\nShows the power, water, air or walking network. Key O. Right click turns it off." % ("off" if ov == "" else ov)
 

@@ -1,7 +1,7 @@
 extends PanelContainer
-## Meltdown warning (V4_DESIGN §4.2: "the player sees it coming"): a banner at the top centre while
-## any reactor is past normal: the phase, the reactor, the time to the next phase and what to do.
-## Critical pulses red. Click: the reactor window. Sits under the hazard banner when both show.
+## Meltdown warning (V4_DESIGN §4.2: "the player sees it coming"), while any reactor is past normal: the
+## phase, the reactor, the time to the next phase and what to do. Critical pulses. Click: the reactor
+## window. A card in the Events tab, and the urgent line, of the panel manager (it places it).
 ## Data: ui/v4_data.gd reactor_alarm() (SIM sim.reactors.list()). Nothing shows while every reactor is normal.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -16,13 +16,6 @@ var _t := 0.0
 var shown_phase := ""     # tests
 
 func _ready() -> void:
-	theme_type_variation = "ToastPanel"
-	add_theme_stylebox_override("panel", load("res://ui/theme/ui_theme.gd").panel_style("toast"))   # own copy: the accent colour changes
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	grow_horizontal = Control.GROW_DIRECTION_BOTH
-	offset_top = 76
-	custom_minimum_size.x = 460
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	tooltip_text = "Reactor\nClick: the reactor controls (SCRAM, Restart, Dump coolant, Evacuate)."
@@ -36,7 +29,7 @@ func _ready() -> void:
 	h.add_child(v)
 	_text = Kit.head("", P.AMBER, 14, "head_wide")
 	v.add_child(_text)
-	_sub = Kit.label("", "", 13, P.TEXT)   # one line; the banner is 460 px wide or more
+	_sub = Kit.wrap("", 13, P.TEXT)
 	v.add_child(_sub)
 	gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -54,9 +47,6 @@ func _process(delta: float) -> void:
 	var ph: String = String(r["phase"])
 	shown_phase = ph
 	var col: Color = P.RED if ph != "warning" else P.AMBER
-	var st = get_theme_stylebox("panel")
-	if st != null and "accent_left" in st:
-		st.accent_left = col
 	_icon.modulate = col
 	_text.add_theme_color_override("font_color", col)
 	var next_s: float = float(r.get("next_phase_s", -1.0))
@@ -70,10 +60,3 @@ func _process(delta: float) -> void:
 	else:
 		_sub.text = "Cooling down. Keep the coolant coming."
 	modulate.a = (0.75 + 0.25 * sin(_t * 6.0)) if ph == "critical" else 1.0
-	Kit.fit(self)   # shrink to the text (a wrapped line measured narrow first would leave it tall)
-	position.x = floorf((get_viewport_rect().size.x - size.x) * 0.5)
-	# Under the hazard banner when both show.
-	if hud.hazard_banner != null and hud.hazard_banner.visible:
-		offset_top = hud.hazard_banner.get_global_rect().end.y + 8.0
-	else:
-		offset_top = 76.0

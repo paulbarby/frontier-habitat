@@ -82,13 +82,16 @@ def wall_set(plan, extra=None):
         "bottles": lambda p, w, d, k: FU.wi_bottles(p, w=w, seed=k),
         "cable": lambda p, w, d, k: FU.wi_cable(p, w=w, seed=k),
     }
+    import interior_props as PR          # 5.0 (V5 15.3): parody / satire wall pieces
+    out.update(PR.WALL_KINDS)
     out.update(extra or {})
     return out
 
 
 DEPTHS = {"shelf": 0.36, "planter": 0.36, "desk": 0.62, "tap": 0.40, "panel": 0.08, "vent": 0.08, "poster": 0.08,
           "plant": 0.40, "lockers": 0.40, "medcab": 0.36, "toolwall": 0.30, "suitrack": 0.40, "bottles": 0.30,
-          "cable": 0.20}
+          "cable": 0.20, "aiposter": 0.08, "filmposter": 0.08, "notice": 0.08, "kettle": 0.42, "shrine": 0.40,
+          "agents": 0.08, "menu": 0.08}
 
 
 def stand_at_wall(plan, placed, kind):
@@ -180,10 +183,13 @@ def d_deskpod(plan, x, y, yaw, k):
     """Two lab desks back to back with a divider (unstaffed stations: no work anchors)."""
     n = plan.n
     c, s_ = cos(radians(yaw)), sin(radians(yaw))
+    # Paul 2026-10-01: back to back, each top from the divider out (they overlapped by 0.56 m before)
     for side in (-1, 1):
-        _FAMX.sit_desk(plan, x + side * 0.34 * c, y + side * 0.34 * s_, yaw + (0.0 if side > 0 else 180.0),
+        _FAMX.sit_desk(plan, x + side * 0.65 * c, y + side * 0.65 * s_, yaw + (0.0 if side > 0 else 180.0),
                        w=1.2, d=0.62, monitors=1, seed=k + side, work=False, chair=True)
-    return 1.05
+    with at(n, x, y, yaw + 90.0):
+        bbox(n, -0.62, 0.62, -0.025, 0.025, F + 0.74, F + 1.08, "Hull", bevel=0.01)
+    return 1.30
 
 
 def d_serving(plan, x, y, yaw, k):
@@ -212,7 +218,7 @@ def d_pantry(plan, x, y, yaw, k):
 
 def _register_v4_decor():
     for k_, f_, r_ in (("lounge", d_lounge, 1.05), ("lockers", d_lockers, 0.62), ("wbench", d_wbench, 1.0),
-                       ("deskpod", d_deskpod, 1.05), ("serving", d_serving, 1.05), ("pantry", d_pantry, 0.95)):
+                       ("deskpod", d_deskpod, 1.30), ("serving", d_serving, 1.05), ("pantry", d_pantry, 0.95)):
         _FAMX.DECOR.setdefault(k_, f_)
         _FAMX.NEED.setdefault(k_, r_)
 
@@ -485,9 +491,10 @@ def habitat(rm):
     elif s == 2:
         _FAMX.place_reading(plan, seed=17 + s)
     # wall items: a wardrobe or lockers behind the beds, cabinets with lamps, one water unit, open wall
-    pattern = ["tap", "wardrobe", "cab_lamp", "shelf", "lockers", "cab_books", "planter", "wardrobe", "desk",
-               "cab_plant", "lockers", "shelf"]
-    placed = plan.wall_items(pattern, wall_set(plan), open_every=2 if s == 0 else 3, seed=7 + s, depth_of=DEPTHS)
+    pattern = ["tap", "wardrobe", "cab_lamp", "aiposter", "shelf", "lockers", "kettle", "cab_books", "planter",
+               "wardrobe", "notice", "desk", "cab_plant", "filmposter", "lockers", "shelf"]     # 5.0 (V5 15.3)
+    placed = plan.wall_items(pattern, wall_set(plan), open_every=2 if s == 0 else 3, seed=7 + s, depth_of=DEPTHS,
+                             open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     # stands: at the water unit, then round the commons, then the walking ring
     need = fu["stands"]
     if stand_at_wall(plan, placed, "tap"):

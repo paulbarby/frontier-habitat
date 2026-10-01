@@ -140,8 +140,8 @@ func _process(_d: float) -> bool:
 			var nd: Node = hud.follow_hud.find_child("Needs", true, false)
 			check("the follow card has the inspector's needs (health, fed, water, rested)", nd != null and nd.get_child_count() == 4)
 			hud.toast("Test toast in the follow view.", "info")
-			hud.toasts._process(0.0)
-			check("toasts go to the top edge while following", absf(hud.toasts._box.offset_top - 8.0) < 0.5, str(hud.toasts._box.offset_top))
+			# 2026-10-01 (docs/UI_PANELS.md): messages stay in the left column, bright; the dock goes dim.
+			check("follow view: the message pops up at the left, bright; the dock is dim", hud.panels.popup_texts().has("Test toast in the follow view.") and hud.panels._pops.modulate.a > 0.9 and hud.panels._dock.modulate.a < 0.5, "%s %.2f" % [str(hud.panels.popup_texts()), hud.panels._dock.modulate.a])
 			hud.inspector.refresh()
 			check("the inspector stays hidden in the follow view", not hud.inspector.visible)
 			hud.follow_changed(-1)
@@ -217,7 +217,7 @@ func _process(_d: float) -> bool:
 						effs += 1
 				check("each response shows its effect (critic round 30)", effs == 7, "%d" % effs)
 				check("a riot shows the damage and injuries line and a red frame", String(u["stage"]) != "riot" or (hud.unrest_banner._damage.visible and hud.unrest_banner._style.bg_color.r > hud.unrest_banner._style.bg_color.g * 3.0))
-				check("the banner stays inside the view", _inside(hud.unrest_banner))
+				check("the banner is a card in the panel manager's dock (2026-10-01)", hud.unrest_banner.has_meta("docked"))
 			# Palette
 			hud.build_bar.toggle_tab("civic")
 			_step = 12

@@ -68,6 +68,14 @@ def sit_desk(plan, x, y, yaw, w=1.2, d=0.62, monitors=2, lamp=True, work=True, s
                 elif seat:
                     seat_anchor(plan, n, 0.0, 0.0)
         rect_at(plan, n, 0.02, 0.0, 0.64, w / 2 + 0.02, tag="desk")
+        # Paul 2026-10-01 (desks): the desk top and the screen line, for IK.check_desk_seats
+        x0, y0, _ = world(n, -d / 2, 0.0, 0.0)
+        x1, y1, _ = world(n, -d / 2 + 1.0, 0.0, 0.0)
+        body = (x0, y0, d / 2 - 0.03, w / 2 - 0.03, degrees(atan2(y1 - y0, x1 - x0)))
+        sx_, sy_, _ = world(n, -d * 0.72, 0.0, 0.0)
+        plan.rm.desk_bodies = getattr(plan.rm, "desk_bodies", []) + [body]
+        if chair and (work or seat):
+            plan.rm.desk_seats = getattr(plan.rm, "desk_seats", []) + [(plan.rm.anchors[-1][0], (sx_, sy_))]
 
 
 def console_at(plan, x, y, yaw, w=1.0, work=True, glow="Screen"):
@@ -345,8 +353,10 @@ def lounge(rm):
             FU.tall_plant(plan.n, px, py, seed=int(abs(px) * 10) % 7)
             plan.rect(px, py, 0.28, 0.28, 0.0, tag="plant")
     fill_decor(plan, ["reading", "light", "plant", "light"], seed=21 + s, max_n=None if s else 0)
-    plan.wall_items(["cab_lamp", "shelf", "planter", "bottles", "cab_books", "panel", "planter", "shelf"],
-                    wall_set(plan), open_every=3 if s else 2, seed=21 + s, depth_of=DEPTHS)
+    plan.wall_items(["cab_lamp", "filmposter", "shelf", "kettle", "planter", "aiposter", "cab_books", "notice",
+                     "planter", "shelf"],
+                    wall_set(plan), open_every=3 if s else 2, seed=21 + s, depth_of=DEPTHS,
+                    open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     plan.stands(fu["stands"])
     finish(plan)
 
@@ -364,6 +374,15 @@ def bar_counter(plan, x, y, yaw, L, h=0.78):
         for k in range(nb):
             yy = -L / 2 + 0.2 + (L - 0.4) * k / max(1, nb - 1)
             n.vcyl(-0.1, yy, F + h, F + h + 0.20, 0.04, seg=6, mat="Glass", cap0=False)
+        # 5.0 (V5 15.3): a tip jar for the GPU and a card reader that wants a subscription
+        import interior_props as PR
+        yj = L / 2 - 0.25
+        n.vcyl(0.12, yj, F + h, F + h + 0.16, 0.06, seg=8, mat="Glass", cap0=False, cap1=False)
+        n.vcyl(0.12, yj, F + h + 0.005, F + h + 0.06, 0.055, seg=8, mat="Hazard", cap0=False)
+        bbox(n, 0.17, 0.19, yj - 0.08, yj + 0.08, F + h + 0.04, F + h + 0.14, "Hull")
+        PR.text_lines(n, ("TIPS FEED", "THE GPU"), yj, F + h + 0.125, 0.016, "HullDark", x=0.192)
+        bbox(n, 0.05, 0.15, -L / 2 + 0.20, -L / 2 + 0.28, F + h, F + h + 0.12, "HullDark", bevel=0.01)
+        plate_x(n, 0.151, -L / 2 + 0.21, -L / 2 + 0.27, F + h + 0.06, F + h + 0.11, "Screen")
         rect_at(plan, n, 0.0, 0.0, 0.36, L / 2 + 0.05, tag="bar")
 
 
@@ -502,8 +521,13 @@ def cantina(rm):
                 break
     fill_decor(plan, ["gametable", "planter", "light", "plant", "gametable"], max_n=(0, 2, 3, 5)[s], seed=31 + s,
                walk=0.55)
-    plan.wall_items(["bottles", "poster", "cab_lamp", "plant", "panel", "bottles", "vent", "poster"],
-                    wall_set(plan), open_every=3, seed=31 + s, depth_of=DEPTHS)
+    import interior_props as PR          # 5.0 (V5 15.3): gig and film posters, a menu, neon slogans
+    ws = wall_set(plan, {"neon_a": PR.neon_kind("OPEN 25/8"), "neon_b": PR.neon_kind("VIBES ONLY", "Window"),
+                         "neon_c": PR.neon_kind("NO AGENTS", "LightStrip")})
+    plan.wall_items(["bottles", "filmposter", "neon_a", "cab_lamp", "menu", "bottles", "neon_b", "filmposter",
+                     "plant", "neon_c", "notice"],
+                    ws, open_every=3, seed=31 + s, depth_of=dict(DEPTHS, neon_a=0.08, neon_b=0.08, neon_c=0.08),
+                    open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     cands = highs + [(-L / 2 + 0.4 + 0.55 * j, by - 1.15, 90.0) for j in range(10)]
     plan.stands(fu["stands"], cands)
     finish(plan)
@@ -759,6 +783,20 @@ def d_labfridge(plan, x, y, yaw, k):
         for j in range(5):
             plate_x(n, 0.364, -0.28, 0.28, F + 0.25 + 0.28 * j, F + 0.27 + 0.28 * j, "LightStrip")
         plate_x(n, 0.364, -0.18, 0.18, F + 1.68, F + 1.78, "Screen")
+        # 5.0 (V5 15.3): the sides carry stickers, so the fridge is not a white block from the side
+        import interior_props as PR
+        for j, yawd in enumerate((90.0, -90.0)):
+            with n.at(RZ(yawd)):
+                plate_x(n, 0.362, -0.26, 0.26, F + 0.95, F + 1.40, ("Hazard", "CushionLight")[(j + k) % 2])
+                lines = (("DO NOT", "EAT THE", "SAMPLES"), ("AI-POWERED", "FRIDGE", "V2.6"))[(j + k) % 2]
+                hh = PR.fit_h(lines, 0.46, 0.06)
+                PR.text_lines(n, lines, 0.0, F + 1.34, hh, "HullDark", x=0.364)
+                for q in range(3):
+                    plate_x(n, 0.363, -0.22 + 0.17 * q, -0.12 + 0.17 * q, F + 0.55 + 0.07 * q, F + 0.65 + 0.07 * q,
+                            ("Glow", "Fabric", "Accent")[q])
+            with n.at(RZ(180.0)):
+                for q in range(6):
+                    plate_x(n, 0.362, -0.24, 0.24, F + 0.30 + 0.06 * q, F + 0.33 + 0.06 * q, "Frame")
     return 0.52
 
 
@@ -917,9 +955,11 @@ def kitchen(rm):
         for j, nper in enumerate(spec):
             mess_table(plan, x0 + max(2.25, plan.r_max * 0.36) * j, 0.0, 0.0, nper, seat=("Cushion", "Fabric")[j % 2])
     fill_decor(plan, ["racks", "planter", "cart"], seed=61 + s, align=0.0)
-    pattern = (["fridge", "shelf", "shelf", "fridge", "shelf", "cab_box", "tap", "shelf"] if K.V4STYLE   # pantry wall
+    pattern = (["fridge", "shelf", "kettle", "fridge", "menu", "shelf", "cab_box", "tap", "aiposter", "shelf"]
+               if K.V4STYLE   # pantry wall; 5.0 (V5 15.3): the kettle station, the menu board, an AI poster
                else ["fridge", "shelf", "fridge", "planter", "cab_box", "panel", "shelf", "tap"])
-    plan.wall_items(pattern, wall_set(plan), open_every=4 if K.V4STYLE else 3, seed=61 + s, depth_of=DEPTHS)
+    plan.wall_items(pattern, wall_set(plan), open_every=4 if K.V4STYLE else 3, seed=61 + s, depth_of=DEPTHS,
+                    open_kinds=("poster", "aiposter", "notice", "plant", "panel", "filmposter"))
     plan.stands(fu["stands"], [(gx + 1.0, L / 2 + 0.25, 180.0), (gx + 1.0, -L / 2 - 0.25, 180.0)])
     finish(plan)
 

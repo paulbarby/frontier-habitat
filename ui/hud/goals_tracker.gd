@@ -1,5 +1,5 @@
 extends PanelContainer
-## Left column, top: the mission tracker. The open chapter, its goals with progress bars
+## The mission tracker: a card in the Goals tab of the panel manager (ui/hud/panel_manager.gd places it). The open chapter, its goals with progress bars
 ## and sustain timers, and each goal's reward. Collapses to one line. Without the 2.0
 ## goals system it shows the version-1 tutorial step instead.
 
@@ -22,12 +22,6 @@ var _sig := ""
 var _rows := {}
 
 func _ready() -> void:
-	theme_type_variation = "HudPanel"
-	Glass.attach(self)
-	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	offset_left = 8
-	offset_top = 76
-	custom_minimum_size.x = 334
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var v: VBoxContainer = Kit.vbox(8)
 	add_child(v)
@@ -45,6 +39,7 @@ func _ready() -> void:
 	top.add_child(_count)
 	_chev = Kit.icon_button("chevron_up", func(): _toggle(), "Collapse or expand", "GhostButton", 14, 26)
 	top.add_child(_chev)
+	_chev.visible = false   # the card's Minimise does this now (panel manager)
 	_chapter_bar = Kit.bar(0.0, P.CYAN, 4.0)
 	v.add_child(_chapter_bar)
 	_list = Kit.vbox(9)
@@ -97,6 +92,15 @@ func refresh() -> void:
 	_chapter_bar.color = P.CYAN
 	_set_rows(mine)
 
+## Goals of the open chapter not done yet (the Goals tab badge).
+func open_count() -> int:
+	var n := 0
+	var ci: int = hud.data.chapter_index()
+	for g in _goals():
+		if int(g.get("chapter", -1)) == ci and String(g.get("state", "")) != "done":
+			n += 1
+	return n
+
 func _goals() -> Array:
 	var d = hud.data
 	if d.has_helper("goals", "list"):
@@ -140,19 +144,18 @@ func _make_row(g: Dictionary) -> Dictionary:
 	var name: Label = Kit.label(String(g["name"]), "BodyStrong", 14)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
-	name.custom_minimum_size.x = 160
+	name.custom_minimum_size.x = 120
 	top.add_child(name)
 	var val: Label = Kit.num("", 12, P.TEXT_2)
 	top.add_child(val)
 	var bar = Kit.bar(0.0, P.CYAN, 5.0)
 	var bar_row: HBoxContainer = Kit.hbox(0)
-	bar_row.custom_minimum_size.x = 300
 	bar_row.add_child(Kit.gap(23))
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar_row.add_child(bar)
 	root.add_child(bar_row)
 	var info: Label = Kit.label("", "SmallLabel", 11, P.TEXT_2)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps, never clips (text floor, critic round 21)
-	info.custom_minimum_size.x = 200
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var info_row: HBoxContainer = Kit.hbox(0)
 	info_row.add_child(Kit.gap(23))

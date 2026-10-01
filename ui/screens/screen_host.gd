@@ -1,6 +1,6 @@
 extends Control
 ## Opens and closes the full screens (ui/screens/*.gd) over the HUD, one at a time, with
-## dialogs (confirm) on top. Also shows the non-modal medal pop-ups and chapter banners.
+## dialogs (confirm) on top. Medals and chapters go to the panel manager (docs/UI_PANELS.md).
 ## A screen that `pauses` stops the simulation while it is open.
 
 const P = preload("res://ui/theme/palette.gd")
@@ -38,23 +38,10 @@ const OVER_TITLE := ["settings", "newcolony", "saveload", "awards", "help"]
 
 var hud
 var _stack: Array = []
-var _popups: Control
-var _medals: VBoxContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_popups = Control.new()
-	_popups.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_popups.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_popups)
-	_medals = VBoxContainer.new()
-	_medals.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_medals.add_theme_constant_override("separation", 8)
-	_medals.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_medals.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_medals.offset_top = 80
-	_popups.add_child(_medals)
 
 static func names() -> Array:
 	return SCREENS.keys() + ALIASES.keys()
@@ -83,7 +70,6 @@ func open(name: String, arg = null) -> bool:
 	s.set("arg", arg)
 	s.set("screen_name", name)
 	add_child(s)
-	move_child(_popups, get_child_count() - 1)
 	_stack.append(s)
 	_update_pause()
 	Sfx.play("open")
@@ -149,56 +135,21 @@ func refresh() -> void:
 func confirm(title: String, lines: Array, on_yes: Callable, yes_text: String = "Yes", danger: bool = false) -> void:
 	open("confirm", {"title": title, "lines": lines, "on_yes": on_yes, "yes": yes_text, "danger": danger})
 
-# ---------------------------------------------------------------- medal pop-ups
-## Several medals at once share one stack; each card stays about four seconds and never
-## takes the mouse. Never on the title screen.
+# ---------------------------------------------------------------- medals and chapters (panel manager)
+## A medal: a message of type "award" in the panel manager (one look; never in the centre). Never on the
+## title screen.
 func award_popup(id: String, first: bool = true) -> void:
-	if hud.main.on_title:
+	if hud.main.on_title or hud.panels == null:
 		return
-	while _medals.get_child_count() >= 3:
-		var old: Node = _medals.get_child(0)
-		_medals.remove_child(old)
-		old.queue_free()
-	var pop = load("res://ui/screens/award_popup.gd").new()
-	pop.hud = hud
-	pop.award_id = id
-	pop.first_time = first
-	_medals.add_child(pop)
+	var a: Dictionary = hud.data.awards_def().get(id, {})
+	var tier: String = String(a.get("tier", "bronze"))
+	hud.panels.post("award", "%s MEDAL: %s. %s%s" % [tier.to_upper(), String(a.get("name", id)).to_upper(), String(a.get("desc", "")), "  First on this device." if first else ""], "notice", "medal")
 
-## Screen rect of the medal pop-up on show (empty when none).
-func popup_rect() -> Rect2:
-	if _medals != null and _medals.get_child_count() > 0:
-		return _medals.get_global_rect()
-	return Rect2()
-
+## A new chapter: a message of type "goal" in the panel manager; the Goals tab flashes.
 func chapter_banner(index: int) -> void:
 	var chs: Array = hud.data.chapters()
-	if index < 0 or index >= chs.size():
+	if index < 0 or index >= chs.size() or hud.panels == null:
 		return
-	var b := VBoxContainer.new()
-	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.alignment = BoxContainer.ALIGNMENT_CENTER
-	b.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	b.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	b.offset_top = 150
-	var t: Label = Kit.head("Chapter %d of %d" % [index + 1, chs.size()], P.CYAN, 14, "head_wide")
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	b.add_child(t)
-	var n: Label = Kit.label(String(chs[index].get("name", "")).to_upper(), "DisplayLabel", 46, P.TEXT)
-	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.add_theme_constant_override("outline_size", 10)
-	n.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
-	b.add_child(n)
-	var dsc: Label = Kit.label(String(chs[index].get("desc", "")), "", 16, P.TEXT_2)
-	dsc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dsc.add_theme_constant_override("outline_size", 6)
-	dsc.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
-	b.add_child(dsc)
-	_popups.add_child(b)
-	b.modulate.a = 0.0
-	var tw := b.create_tween()
-	tw.tween_property(b, "modulate:a", 1.0, 0.5)
-	tw.tween_interval(3.5)
-	tw.tween_property(b, "modulate:a", 0.0, 0.8)
-	tw.tween_callback(b.queue_free)
+	hud.panels.post("goal", "CHAPTER %d OF %d: %s. %s" % [index + 1, chs.size(), String(chs[index].get("name", "")).to_upper(), String(chs[index].get("desc", ""))], "warning", "goals")
+	hud.panels._flash_tab("goals", "chapter %d" % index)
 	Sfx.play("chapter")
