@@ -57,3 +57,15 @@ a room or corridor volume, and never between the camera and the person when the 
 the storm shows only through windows/open cutaway sky (and maybe light flicker or a creak, subtle). In the
 normal top view, particles over a room's footprint are clipped too (roof on or off). Add a render check: camera
 indoors during a storm → 0 weather particles inside room volumes in view. Audio part: ORCH-to-UI.md.
+
+## 2026-10-01 (end of run) — REGRESSION, do first: indoor follow camera jerk 16.4 mm (was 1.79 mm)
+
+Orchestrator probe on build/web_v5preview (commit bdc6276), `render_follow_probe.mjs --cases in1,out1 --secs 15`:
+in1 straight: head 0.552 px, cam 16.4 mm (target < 0.5 px, < 2 mm; 1.79 mm before roofs-on); walk cam 12.2 mm;
+out1 straight 0.071 px, 0.17 mm (OK). CSV build/web_v5preview_probe/in1.csv: single-frame VERTICAL jumps of
++-90..102 mm (rows 105-110, cut=1, pull rising 0.80 -> 0.83, i.e. while the wall pull-in releases), then
+29-45 mm alternating with uneven dt (0.021/0.029 s). Suspects: the hard ceiling clamp
+`eye.y = minf(eye.y, minf(_sh_cy - 0.3, cy - 0.12))` and the hard wall clamp (SH_HARD) acting every frame
+after the springs (camera_rig.gd ~lines 334-358); the ceiling value steps between room and corridor.
+Fix so the final eye is continuous (springs after clamps, or clamps as soft constraints with a hard limit
+only for real penetration), keep roofs on and the wall rule, re-run in1/in4/out1/dome1.
