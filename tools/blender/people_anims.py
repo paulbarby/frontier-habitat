@@ -336,10 +336,13 @@ def laugh_keys():
     """A hearty laugh: head back, shoulders shake, a hand to the belly; 2.4 s from stand to stand."""
     S = Pose(STAND)
     K1 = add(S, spine__ry=-3.0, chest__ry=-4.0, neck__ry=-8.0, head__ry=-12.0, hips__z=-0.01)
-    set_arm_ik(K1, "L", (0.150, 0.100, 1.060), (0.2, -1.0, -0.2), (-1.0, 0.0, 0.0), w=1.0, pole=10.0)
-    set_arm_ik(K1, "R", (0.180, -0.050, 1.300), (0.3, -1.0, 0.3), (-0.9, 0.0, 0.3), w=1.0, pole=-10.0)
+    set_arm_ik(K1, "L", (0.190, 0.100, 1.060), (0.2, -1.0, -0.2), (-1.0, 0.0, 0.0), w=1.0, pole=10.0)
+    set_arm_ik(K1, "R", (0.200, -0.050, 1.300), (0.3, -1.0, 0.3), (-0.9, 0.0, 0.3), w=1.0, pole=-10.0)
+    elbow_to(K1, "L", (0.2, 1.0, -0.6), 1.0)          # elbows out at the sides (2026-10-01: arms through the body)
+    elbow_to(K1, "R", (0.3, -1.0, -0.5), 1.0)
     K2 = add(K1, spine__ry=10.0, chest__ry=6.0, neck__ry=12.0, head__ry=14.0, hips__z=-0.02)
-    set_arm_ik(K2, "L", (0.160, 0.090, 1.020), (0.2, -1.0, -0.3), (-1.0, 0.0, 0.0), w=1.0, pole=10.0)
+    set_arm_ik(K2, "L", (0.195, 0.090, 1.020), (0.2, -1.0, -0.3), (-1.0, 0.0, 0.0), w=1.0, pole=10.0)
+    elbow_to(K2, "L", (0.2, 1.0, -0.6), 1.0)
     K3 = add(K1, spine__ry=-2.0, neck__ry=-4.0, head__ry=-6.0)
     keys = [(0.0, S, {"hold": True}), (0.58, K1), (1.15, K2), (1.70, K3), (2.30, Pose(STAND), {"hold": True})]
     return [(t, ik_to_fk(k), *rest) for (t, k, *rest) in keys]
@@ -374,23 +377,30 @@ def argue_keys():
     set_arm_ik(J1, "R", (0.400, 0.070, 1.250), (1.0, 0.05, 0.05), (0.0, 0.3, -1.0), w=1.0, pole=-30.0)
     set_arm_ik(J1, "L", (0.140, 0.230, 1.020), (0.6, -0.4, -0.6), (0.0, 0.2, -1.0), w=1.0, pole=10.0)
     J1.update({"chest.rz": -9.0, "spine.rz": -4.0, "neck.ry": 13.0, "head.ry": -9.0, "hips.x": 0.045})
+    elbow_to(J1, "R", (-0.2, -1.0, -0.4), 1.0)
+    elbow_to(J1, "L", (0.0, 1.0, -0.4), 1.0)
     B1 = Pose(J1)
     set_arm_ik(B1, "R", (0.255, 0.110, 1.200), (0.9, -0.1, 0.3), (0.0, 0.4, -1.0), w=1.0, pole=-25.0)
     B1.update({"chest.rz": -4.0, "neck.ry": 10.0})
+    elbow_to(B1, "R", (-0.3, -1.0, -0.4), 1.0)
     J2 = Pose(J1)
     set_arm_ik(J2, "R", (0.430, 0.060, 1.280), (1.0, 0.0, 0.10), (0.0, 0.3, -1.0), w=1.0, pole=-30.0)
     J2.update({"chest.rz": -11.0, "spine.ry": 10.0, "neck.ry": 15.0, "head.ry": -11.0, "hips.x": 0.050})
+    elbow_to(J2, "R", (-0.1, -1.0, -0.3), 1.0)
     OPEN = add(S, hips__x=-0.01, spine__ry=-2.0, chest__ry=-5.0, neck__ry=2.0, head__ry=-4.0, head__rz=6.0)
     for sd in ("L", "R"):
         set_arm_ik(OPEN, sd, (0.230, 0.360, 1.180), (0.4, 1.0, 0.3), (0.0, -0.8, 0.6), w=1.0, pole=-20.0)
         OPEN["shoulder.%s.ry" % sd] = -6.0
+        elbow_to(OPEN, sd, (0.0, 1.0 if sd == "L" else -1.0, -0.7), 1.0)
     CHOP = Pose(S)
     set_arm_ik(CHOP, "L", (0.360, 0.120, 1.130), (0.9, -0.2, -0.5), (0.0, -1.0, 0.0), w=1.0, pole=-25.0)
     set_arm_ik(CHOP, "R", (0.180, 0.290, 1.030), (0.5, 0.3, -0.8), (0.0, -1.0, 0.0), w=1.0, pole=-10.0)
     CHOP.update({"chest.rz": 7.0, "neck.ry": 12.0, "head.ry": -8.0, "head.rz": -4.0, "hips.x": 0.045})
+    elbow_to(CHOP, "L", (-0.2, 1.0, -0.4), 1.0)
+    elbow_to(CHOP, "R", (0.0, -1.0, -0.5), 1.0)
     keys = [S, J1, B1, J2, OPEN, CHOP, S]
     keys = [ik_to_fk(k) for k in keys]
-    return [(t, k) for t, k in zip((0.0, 0.62, 0.90, 1.16, 1.95, 2.48, 3.0), keys)]
+    return [(t, k) for t, k in zip((0.0, 0.66, 0.96, 1.24, 2.05, 2.62, 3.4), keys)]
 
 
 def hug_keys():
@@ -539,7 +549,7 @@ def people_clips():
                 with_face(fn, "talk_gesture_a", n, True, lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)), {}))
     fn, n = laugh_fn()
     out.append(("laugh", "oneshot", "stand", "stand", False, n, with_face(fn, "laugh", n, False), {}))
-    fn, n = keyed_clip(argue_keys(), loop=True, length=3.0)
+    fn, n = keyed_clip(argue_keys(), loop=True, length=3.4)
     kw = talking["argue"]
     out.append(("argue", "loop", "stand", "stand", True, n,
                 with_face(fn, "argue", n, True, lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)), {}))

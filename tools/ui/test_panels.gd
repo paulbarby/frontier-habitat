@@ -103,9 +103,18 @@ func _plan() -> void:
 					var mm: Rect2 = main.hud.minimap.get_global_rect()
 					if main.hud.panels._dock.get_global_rect().grow(-0.5).intersects(mm):
 						bad.append("dock %s over the minimap %s" % [str(main.hud.panels._dock.get_global_rect()), str(mm)])
+					# Follow-up 2026-10-01: pop-ups fold into the dock before its body gets under about 200 px; the tab
+					# names show when the dock is 320 px or wider.
+					var pm = main.hud.panels
+					var want: float = minf(pm._pages[tb].get_combined_minimum_size().y, pm.BODY_KEEP - 12.0)
+					if pm._body.visible and pm._body.size.y < want - 0.5 and pm._pops.get_child_count() > 0:
+						bad.append("body %.0f px with %d pop-ups" % [pm._body.size.y, pm._pops.get_child_count()])
+					var named: bool = String((pm._tab_btn["goals"] as Button).text).begins_with("Goals")
+					if named != (pm._width >= pm.NAMES_W):
+						bad.append("tab names %s at width %.0f" % [named, pm._width])
 					if rects.size() < 2:
 						bad.append("only %d rects shown" % rects.size())
-					check("%dx%d at %d%%, tab %s: urgent line, pop-ups and dock outside the centre, inside the view, off the minimap" % [szc.x, szc.y, int(scc * 100.0), tb], bad.is_empty(), "; ".join(bad)), 1)
+					check("%dx%d at %d%%, tab %s: outside the centre, inside the view, off the minimap; body room; tab names" % [szc.x, szc.y, int(scc * 100.0), tb], bad.is_empty(), "; ".join(bad)), 1)
 	q(func():
 		root.size = Vector2i(1600, 900)
 		main._on_cmd("uiscale 1"), 10)

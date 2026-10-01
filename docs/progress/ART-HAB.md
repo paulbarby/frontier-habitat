@@ -5,6 +5,12 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-01 v5 (2) — desks, jail beds, detail pass §15.3 (PAUSED by the user)
+
+- Done: desk pods back to back (research lab, `deskpod` decor), table chairs moved so stand points are 0.12 m off the edge, check `interior_kit.check_desk_seats`; jail `Anchor_Bed_<i>` = `Cell_<i>`; distillery night/L/S/XL renders; academy floor AI timeline; prop kit `interior_props.py` (pixel-font parody posters, screens with content, desk clutter and job plates, chatbot kettle, subscription toaster, GPU shrine, agents booking screen, menu, neon); every room type rebuilt 0 flags except jail and distillery (built earlier today with the kit but before the 3.5 cm wall-piece offset). Import + check 293 scripts 0 failed; pck 160.0 MB (detail pass about +3.2 MB, estimate from GLB +10.6 MB x scn ratio 0.30). Notes to SIM and RENDER written (first part).
+- **Nav rebake (RENDER): every room model** — all room types S–XL, airlock_m/_l/_r28, junction, residence_tube (+executive), apartment_block_m, retail, park, academy, security_office, jail, distillery (all rebuilt 2026-10-01).
+- Not done: jail + distillery rebuild with the wall offset (posters partly sink into the wall panel there); renders after the final rebuild (the close views in `art/interiors/*_props*.png` predate the offset); RENDER note listing the detail-pass files; residence follow-view check.
+
 ## 2026-10-01 v5 — distillery (PAUSED by the user)
 
 - Distillery S/M/L/XL built (`rooms_distillery.py`, `interior_distillery.py`, `Copper` material, badge "distillery"): 14,430 / 18,015 / 26,058 / 36,702 tris (budget 18k / 27k / 39.6k / 54k), 0 flags, verify ok, thumbs, import params set, Godot import + check 292 scripts 0 failed; `content/door_blocked.json` rewritten (distillery 360° free; SIM not yet told).

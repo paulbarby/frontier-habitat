@@ -20,7 +20,7 @@ Code: `ui/hud/panel_manager.gd` (`hud.panels`). Test: `tools/ui/test_panels.gd`.
 |---|---|---|
 | Urgent line | top left, under the top bar | at most 1 line: the most urgent item; click opens its tab |
 | Pop-ups | top left, under the urgent line | at most 3 new messages; each fades after 5 s (8 s for a warning) |
-| Dock | left column, under the pop-ups, above the minimap | tabs with count badges; the open tab's cards |
+| Dock | left column, under the pop-ups, above the minimap | tabs (names from 320 px wide, else icon + count) with count badges; the open tab's cards. Pop-ups fold into News before the dock body gets under 200 px |
 Width: a quarter of the view less 16 px (300 to 380 px). The dock never goes into the centre zone and
 never over the minimap; its body scrolls.
 

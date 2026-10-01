@@ -33713,7 +33713,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.6,
+   "seconds": 4.4,
    "ao_rays": 1127712,
    "trays": [],
    "v3": {
@@ -34636,11 +34636,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1066612,
+   "file_size": 1066608,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
+   "seconds": 4.8,
    "ao_rays": 1243008,
    "trays": [],
    "v3": {
@@ -35751,7 +35751,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.3,
+   "seconds": 7.2,
    "ao_rays": 1672608,
    "trays": [],
    "v3": {
@@ -37101,11 +37101,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1842216,
+   "file_size": 1842220,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.8,
+   "seconds": 10.4,
    "ao_rays": 2401440,
    "trays": [],
    "v3": {
@@ -38453,7 +38453,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.6,
+   "seconds": 4.7,
    "ao_rays": 1072704,
    "trays": [],
    "v3": {
@@ -39423,11 +39423,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1042728,
+   "file_size": 1042724,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 5.4,
    "ao_rays": 1266912,
    "trays": [],
    "v3": {
@@ -40431,7 +40431,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.2,
+   "seconds": 7.4,
    "ao_rays": 1720080,
    "trays": [],
    "v3": {
@@ -41595,11 +41595,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1746444,
+   "file_size": 1746448,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.2,
+   "seconds": 11.6,
    "ao_rays": 2420880,
    "trays": [],
    "v3": {
@@ -42879,7 +42879,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.5,
+   "seconds": 4.6,
    "ao_rays": 1067712,
    "trays": [],
    "v3": {
@@ -43811,7 +43811,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.1,
+   "seconds": 5.1,
    "ao_rays": 1312224,
    "trays": [],
    "v3": {
@@ -44834,7 +44834,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.1,
+   "seconds": 6.6,
    "ao_rays": 1674912,
    "trays": [],
    "v3": {
@@ -45929,11 +45929,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1693880,
+   "file_size": 1693884,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.7,
+   "seconds": 9.2,
    "ao_rays": 2142960,
    "trays": [],
    "v3": {
@@ -47158,11 +47158,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 788516,
+   "file_size": 788520,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.7,
+   "seconds": 3.0,
    "ao_rays": 985920,
    "trays": [],
    "v3": {
@@ -47815,7 +47815,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.4,
+   "seconds": 3.2,
    "ao_rays": 1186560,
    "trays": [],
    "v3": {
@@ -48757,11 +48757,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1184976,
+   "file_size": 1185136,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 4.7,
    "ao_rays": 1572720,
    "trays": [],
    "v3": {
@@ -49892,7 +49892,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.7,
+   "seconds": 8.2,
    "ao_rays": 2362896,
    "trays": [],
    "v3": {
@@ -51132,7 +51132,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.5,
+   "seconds": 4.7,
    "ao_rays": 1594656,
    "trays": [],
    "v3": {
@@ -51783,7 +51783,7 @@
    "type": "lounge",
    "size": "m",
    "footprint": 7.5,
-   "tris": 18717,
+   "tris": 19523,
    "budget": 27000,
    "tris_by_object": {
     "Base": 1336,
@@ -51858,7 +51858,7 @@
     "Decal_31_L2": 4,
     "Decal_31_Roof": 2,
     "NameSign": 16,
-    "Wall_00..31": 8005
+    "Wall_00..31": 8811
    },
    "bbox_min": [
     -7.377,
@@ -51957,12 +51957,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1384772,
+   "file_size": 1439912,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
-   "ao_rays": 1876848,
+   "seconds": 5.2,
+   "ao_rays": 1955184,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -51974,7 +51974,7 @@
      "Accent": 1,
      "Aisle": 36
     },
-    "wall_tris": 8005,
+    "wall_tris": 8811,
     "interior_materials": [
      "Accent",
      "LightStrip",
@@ -52644,7 +52644,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 18717,
+    "tris": 19523,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -52830,7 +52830,7 @@
    "type": "lounge",
    "size": "l",
    "footprint": 9.6,
-   "tris": 26336,
+   "tris": 26928,
    "budget": 39600,
    "tris_by_object": {
     "Base": 2440,
@@ -52905,7 +52905,7 @@
     "Decal_31_L2": 4,
     "Decal_31_Roof": 4,
     "NameSign": 16,
-    "Wall_00..31": 8097
+    "Wall_00..31": 8689
    },
    "bbox_min": [
     -9.48,
@@ -53032,12 +53032,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1852528,
+   "file_size": 1894988,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.5,
-   "ao_rays": 2642976,
+   "seconds": 6.8,
+   "ao_rays": 2699136,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -53049,7 +53049,7 @@
      "Accent": 1,
      "Aisle": 48
     },
-    "wall_tris": 8097,
+    "wall_tris": 8689,
     "interior_materials": [
      "Accent",
      "LightStrip",
@@ -53971,7 +53971,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 26336,
+    "tris": 26928,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -54185,7 +54185,7 @@
    "type": "lounge",
    "size": "xl",
    "footprint": 11.7,
-   "tris": 32756,
+   "tris": 33220,
    "budget": 54000,
    "tris_by_object": {
     "Base": 2728,
@@ -54260,7 +54260,7 @@
     "Decal_31_L2": 4,
     "Decal_31_Roof": 4,
     "NameSign": 16,
-    "Wall_00..31": 8145
+    "Wall_00..31": 8609
    },
    "bbox_min": [
     -11.575,
@@ -54427,12 +54427,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2321468,
+   "file_size": 2351804,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.5,
-   "ao_rays": 3296736,
+   "seconds": 8.5,
+   "ao_rays": 3341856,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -54444,7 +54444,7 @@
      "Accent": 1,
      "Aisle": 72
     },
-    "wall_tris": 8145,
+    "wall_tris": 8609,
     "interior_materials": [
      "Accent",
      "LightStrip",
@@ -55726,7 +55726,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 32756,
+    "tris": 33220,
     "rmax": 11.600000330409914,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -56078,7 +56078,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.0,
+   "seconds": 1.9,
    "ao_rays": 888384,
    "trays": [],
    "v3": {
@@ -56792,7 +56792,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.2,
+   "seconds": 1.7,
    "ao_rays": 990240,
    "trays": [],
    "v3": {
@@ -57493,7 +57493,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 1.6,
+   "seconds": 1.2,
    "ao_rays": 773568,
    "trays": [],
    "v3": {
@@ -58847,7 +58847,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.2,
+   "seconds": 4.0,
    "ao_rays": 1009344,
    "trays": [],
    "v3": {
@@ -59819,7 +59819,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
+   "seconds": 4.9,
    "ao_rays": 1186656,
    "trays": [],
    "v3": {
@@ -60785,7 +60785,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.3,
+   "seconds": 6.5,
    "ao_rays": 1504800,
    "trays": [],
    "v3": {
@@ -61973,11 +61973,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1526388,
+   "file_size": 1526396,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.4,
+   "seconds": 7.8,
    "ao_rays": 1944768,
    "trays": [],
    "v3": {
@@ -63385,7 +63385,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.1,
+   "seconds": 4.6,
    "ao_rays": 1155264,
    "trays": [],
    "v3": {
@@ -64361,11 +64361,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1045504,
+   "file_size": 1045500,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.5,
+   "seconds": 5.7,
    "ao_rays": 1224384,
    "trays": [],
    "v3": {
@@ -65385,7 +65385,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.3,
+   "seconds": 8.4,
    "ao_rays": 1772832,
    "trays": [],
    "v3": {
@@ -66530,11 +66530,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1740968,
+   "file_size": 1740972,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.7,
+   "seconds": 10.7,
    "ao_rays": 2335248,
    "trays": [],
    "v3": {
@@ -67947,7 +67947,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 5.2,
    "ao_rays": 1094976,
    "trays": [],
    "v3": {
@@ -68898,7 +68898,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.5,
+   "seconds": 5.4,
    "ao_rays": 1243008,
    "trays": [],
    "v3": {
@@ -69958,11 +69958,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1433692,
+   "file_size": 1433596,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.5,
+   "seconds": 7.8,
    "ao_rays": 1791744,
    "trays": [],
    "v3": {
@@ -71267,7 +71267,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.5,
+   "seconds": 9.8,
    "ao_rays": 2106720,
    "trays": [],
    "v3": {
@@ -72769,7 +72769,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.2,
+   "seconds": 5.5,
    "ao_rays": 1147536,
    "trays": [
     [
@@ -73619,7 +73619,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.3,
+   "seconds": 5.9,
    "ao_rays": 1357488,
    "trays": [
     [
@@ -74606,7 +74606,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.0,
+   "seconds": 6.7,
    "ao_rays": 1696320,
    "trays": [
     [
@@ -75686,7 +75686,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.7,
+   "seconds": 7.6,
    "ao_rays": 1973136,
    "trays": [
     [
@@ -77114,7 +77114,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.7,
+   "seconds": 4.4,
    "ao_rays": 1152528,
    "trays": [],
    "v3": {
@@ -77911,7 +77911,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 5.3,
    "ao_rays": 1369008,
    "trays": [],
    "v3": {
@@ -78939,7 +78939,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.7,
+   "seconds": 8.3,
    "ao_rays": 2065008,
    "trays": [],
    "v3": {
@@ -80092,7 +80092,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.4,
+   "seconds": 12.6,
    "ao_rays": 2849904,
    "trays": [],
    "v3": {
@@ -81099,7 +81099,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 3.5,
+   "seconds": 3.4,
    "ao_rays": 911472,
    "trays": [],
    "v3": {
@@ -81767,7 +81767,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.6,
+   "seconds": 3.5,
    "ao_rays": 1092720,
    "trays": [],
    "v3": {
@@ -82495,7 +82495,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.8,
+   "seconds": 4.7,
    "ao_rays": 1382256,
    "trays": [],
    "v3": {
@@ -83498,7 +83498,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.4,
+   "seconds": 5.3,
    "ao_rays": 1623840,
    "trays": [],
    "v3": {
@@ -84849,7 +84849,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.3,
+   "seconds": 4.3,
    "ao_rays": 1035888,
    "trays": [],
    "v3": {
@@ -85779,7 +85779,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.3,
+   "seconds": 5.7,
    "ao_rays": 1450464,
    "trays": [],
    "v3": {
@@ -86869,7 +86869,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.1,
+   "seconds": 7.4,
    "ao_rays": 1834800,
    "trays": [],
    "v3": {
@@ -88076,7 +88076,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.0,
+   "seconds": 10.6,
    "ao_rays": 2482512,
    "trays": [],
    "v3": {
@@ -89579,7 +89579,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.4,
+   "seconds": 3.8,
    "ao_rays": 912960,
    "trays": [],
    "v3": {
@@ -90463,7 +90463,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
+   "seconds": 4.5,
    "ao_rays": 1150272,
    "trays": [],
    "v3": {
@@ -91537,7 +91537,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.6,
+   "seconds": 6.2,
    "ao_rays": 1611072,
    "trays": [],
    "v3": {
@@ -92972,7 +92972,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.5,
+   "seconds": 8.0,
    "ao_rays": 2233248,
    "trays": [],
    "v3": {
@@ -94498,7 +94498,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
+   "seconds": 4.9,
    "ao_rays": 1465200,
    "trays": [],
    "v3": {
@@ -95270,7 +95270,7 @@
    "type": "cantina",
    "size": "m",
    "footprint": 7.5,
-   "tris": 18373,
+   "tris": 19203,
    "budget": 27000,
    "tris_by_object": {
     "Base": 412,
@@ -95377,7 +95377,7 @@
     "Decal_31_L4": 2,
     "Decal_31_Roof": 2,
     "NameSign": 16,
-    "Wall_00..31": 9018,
+    "Wall_00..31": 9848,
     "Tall_*": 1080
    },
    "bbox_min": [
@@ -95470,12 +95470,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1388912,
+   "file_size": 1444476,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.7,
-   "ao_rays": 1813488,
+   "seconds": 6.5,
+   "ao_rays": 1893840,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -95487,7 +95487,7 @@
      "Accent": 2,
      "Aisle": 30
     },
-    "wall_tris": 9018,
+    "wall_tris": 9848,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -95505,7 +95505,6 @@
      "LightStrip",
      "Neon",
      "Palette",
-     "Screen",
      "Window"
     ],
     "file_materials": 16,
@@ -96082,7 +96081,7 @@
      "NameSign": 3,
      "Roof": 4,
      "Tall": 6,
-     "Walls": 9,
+     "Walls": 8,
      "WallShell": 4
     },
     "decals": {
@@ -96108,7 +96107,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 18373,
+    "tris": 19203,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -96321,7 +96320,7 @@
    "type": "cantina",
    "size": "l",
    "footprint": 9.6,
-   "tris": 24756,
+   "tris": 25380,
    "budget": 39600,
    "tris_by_object": {
     "Base": 660,
@@ -96428,7 +96427,7 @@
     "Decal_31_L4": 2,
     "Decal_31_Roof": 4,
     "NameSign": 16,
-    "Wall_00..31": 8950,
+    "Wall_00..31": 9574,
     "Tall_*": 1080
    },
    "bbox_min": [
@@ -96547,12 +96546,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1808816,
+   "file_size": 1854884,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.5,
-   "ao_rays": 2453184,
+   "seconds": 9.4,
+   "ao_rays": 2513760,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -96564,7 +96563,7 @@
      "Accent": 4,
      "Aisle": 39
     },
-    "wall_tris": 8950,
+    "wall_tris": 9574,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -96582,6 +96581,7 @@
      "LightStrip",
      "Neon",
      "Palette",
+     "Screen",
      "Window"
     ],
     "file_materials": 16,
@@ -97392,7 +97392,7 @@
      "NameSign": 3,
      "Roof": 4,
      "Tall": 6,
-     "Walls": 8,
+     "Walls": 9,
      "WallShell": 4
     },
     "decals": {
@@ -97418,7 +97418,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 24756,
+    "tris": 25380,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -97657,7 +97657,7 @@
    "type": "cantina",
    "size": "xl",
    "footprint": 11.7,
-   "tris": 31388,
+   "tris": 32046,
    "budget": 54000,
    "tris_by_object": {
     "Base": 676,
@@ -97764,7 +97764,7 @@
     "Decal_31_L4": 2,
     "Decal_31_Roof": 2,
     "NameSign": 16,
-    "Wall_00..31": 9250,
+    "Wall_00..31": 9908,
     "Tall_*": 1520
    },
    "bbox_min": [
@@ -97921,12 +97921,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2258076,
+   "file_size": 2301408,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 16.7,
-   "ao_rays": 3115680,
+   "seconds": 12.8,
+   "ao_rays": 3179808,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -97938,7 +97938,7 @@
      "Accent": 5,
      "Aisle": 57
     },
-    "wall_tris": 9250,
+    "wall_tris": 9908,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -99135,7 +99135,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 31388,
+    "tris": 32046,
     "rmax": 11.600000330409914,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -99632,7 +99632,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.3,
+   "seconds": 4.0,
    "ao_rays": 1016832,
    "trays": [],
    "v3": {
@@ -100478,7 +100478,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.7,
+   "seconds": 4.6,
    "ao_rays": 1275456,
    "trays": [],
    "v3": {
@@ -101535,7 +101535,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.5,
+   "seconds": 6.2,
    "ao_rays": 1714560,
    "trays": [],
    "v3": {
@@ -103025,7 +103025,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.2,
+   "seconds": 8.6,
    "ao_rays": 2292384,
    "trays": [],
    "v3": {
@@ -104623,7 +104623,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
+   "seconds": 5.3,
    "ao_rays": 1315296,
    "trays": [],
    "v3": {
@@ -105403,7 +105403,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.4,
+   "seconds": 6.3,
    "ao_rays": 1661472,
    "trays": [],
    "v3": {
@@ -106489,7 +106489,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.2,
+   "seconds": 8.3,
    "ao_rays": 2225568,
    "trays": [],
    "v3": {
@@ -107775,11 +107775,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2325236,
+   "file_size": 2325140,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 17.9,
+   "seconds": 15.6,
    "ao_rays": 3125376,
    "trays": [],
    "v3": {
@@ -109219,7 +109219,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.8,
+   "seconds": 5.2,
    "ao_rays": 1092000,
    "trays": [],
    "v3": {
@@ -110128,7 +110128,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.2,
+   "seconds": 6.3,
    "ao_rays": 1240800,
    "trays": [],
    "v3": {
@@ -111142,7 +111142,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.0,
+   "seconds": 7.4,
    "ao_rays": 1574304,
    "trays": [],
    "v3": {
@@ -112314,11 +112314,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1774820,
+   "file_size": 1774824,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.4,
+   "seconds": 11.0,
    "ao_rays": 2244240,
    "trays": [],
    "v3": {
@@ -113586,7 +113586,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.7,
+   "seconds": 5.5,
    "ao_rays": 1059024,
    "trays": [],
    "v3": {
@@ -114488,7 +114488,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.4,
+   "seconds": 6.2,
    "ao_rays": 1274304,
    "trays": [],
    "v3": {
@@ -115479,7 +115479,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.3,
+   "seconds": 7.4,
    "ao_rays": 1596384,
    "trays": [],
    "v3": {
@@ -116741,11 +116741,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1696072,
+   "file_size": 1696076,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.4,
+   "seconds": 10.4,
    "ao_rays": 2186832,
    "trays": [],
    "v3": {
@@ -118213,7 +118213,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
+   "seconds": 4.3,
    "ao_rays": 1056000,
    "trays": [],
    "v3": {
@@ -119104,11 +119104,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1118376,
+   "file_size": 1118372,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 5.6,
    "ao_rays": 1293408,
    "trays": [],
    "v3": {
@@ -120161,7 +120161,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.5,
+   "seconds": 8.2,
    "ao_rays": 1636128,
    "trays": [],
    "v3": {
@@ -121315,11 +121315,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1712332,
+   "file_size": 1712336,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.8,
+   "seconds": 11.0,
    "ao_rays": 2131200,
    "trays": [],
    "v3": {
@@ -122687,7 +122687,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.8,
+   "seconds": 4.4,
    "ao_rays": 1087104,
    "trays": [],
    "v3": {
@@ -123585,11 +123585,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1043744,
+   "file_size": 1043740,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 5.5,
    "ao_rays": 1223616,
    "trays": [],
    "v3": {
@@ -124584,7 +124584,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.1,
+   "seconds": 7.9,
    "ao_rays": 1717056,
    "trays": [],
    "v3": {
@@ -125716,11 +125716,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1646060,
+   "file_size": 1646064,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.6,
+   "seconds": 10.6,
    "ao_rays": 2130432,
    "trays": [],
    "v3": {
@@ -127305,7 +127305,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.3,
+   "seconds": 5.2,
    "ao_rays": 1051824,
    "trays": [],
    "v3": {
@@ -128205,11 +128205,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1095908,
+   "file_size": 1095904,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 5.9,
    "ao_rays": 1256352,
    "trays": [],
    "v3": {
@@ -129172,7 +129172,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.2,
+   "seconds": 7.9,
    "ao_rays": 1669920,
    "trays": [],
    "v3": {
@@ -130259,11 +130259,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1688872,
+   "file_size": 1688876,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.1,
+   "seconds": 10.3,
    "ao_rays": 2187312,
    "trays": [],
    "v3": {
@@ -131689,7 +131689,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.0,
+   "seconds": 5.1,
    "ao_rays": 1054656,
    "trays": [],
    "v3": {
@@ -132599,7 +132599,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.0,
+   "seconds": 6.7,
    "ao_rays": 1295712,
    "trays": [],
    "v3": {
@@ -133634,7 +133634,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 8.9,
    "ao_rays": 1618848,
    "trays": [],
    "v3": {
@@ -134746,11 +134746,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1678588,
+   "file_size": 1678592,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 11.2,
    "ao_rays": 2130048,
    "trays": [],
    "v3": {
@@ -136138,7 +136138,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.9,
+   "seconds": 4.8,
    "ao_rays": 1120704,
    "trays": [],
    "v3": {
@@ -137057,11 +137057,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1064336,
+   "file_size": 1064332,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
+   "seconds": 5.7,
    "ao_rays": 1255008,
    "trays": [],
    "v3": {
@@ -138070,7 +138070,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.4,
+   "seconds": 7.7,
    "ao_rays": 1712064,
    "trays": [],
    "v3": {
@@ -139218,11 +139218,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1755888,
+   "file_size": 1755892,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.6,
+   "seconds": 12.0,
    "ao_rays": 2277120,
    "trays": [],
    "v3": {
@@ -140570,7 +140570,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.7,
+   "seconds": 5.1,
    "ao_rays": 1106544,
    "trays": [],
    "v3": {
@@ -141537,7 +141537,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.9,
+   "seconds": 6.7,
    "ao_rays": 1380960,
    "trays": [],
    "v3": {
@@ -142567,7 +142567,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.7,
+   "seconds": 8.0,
    "ao_rays": 1773024,
    "trays": [],
    "v3": {
@@ -143724,11 +143724,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1712612,
+   "file_size": 1712616,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.9,
+   "seconds": 10.3,
    "ao_rays": 2272896,
    "trays": [],
    "v3": {
@@ -145064,7 +145064,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.9,
+   "seconds": 6.1,
    "ao_rays": 1140816,
    "trays": [],
    "v3": {
@@ -145976,7 +145976,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.7,
+   "seconds": 7.1,
    "ao_rays": 1316064,
    "trays": [],
    "v3": {
@@ -146919,7 +146919,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.0,
+   "seconds": 8.6,
    "ao_rays": 1791648,
    "trays": [],
    "v3": {
@@ -148006,11 +148006,11 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1600172,
+   "file_size": 1600180,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.3,
+   "seconds": 10.0,
    "ao_rays": 2176320,
    "trays": [],
    "v3": {
@@ -149209,7 +149209,7 @@
    "type": "residence_tube",
    "size": "m",
    "footprint": 9.0,
-   "tris": 25078,
+   "tris": 25750,
    "budget": 27000,
    "tris_by_object": {
     "Base": 484,
@@ -149249,7 +149249,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6270
+    "Wall_00..31": 6942
    },
    "bbox_min": [
     -8.881,
@@ -149362,12 +149362,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1865900,
+   "file_size": 1912000,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.7,
-   "ao_rays": 2513088,
+   "seconds": 10.4,
+   "ao_rays": 2577312,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -149380,7 +149380,7 @@
      "Light": 7,
      "Aisle": 47
     },
-    "wall_tris": 6270,
+    "wall_tris": 6942,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -150260,7 +150260,7 @@
     "door_free_deg": 332.0
    },
    "verify": {
-    "tris": 25078,
+    "tris": 25750,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -150427,7 +150427,7 @@
    "type": "residence_tube",
    "size": "m",
    "footprint": 9.0,
-   "tris": 24165,
+   "tris": 24837,
    "budget": 27000,
    "tris_by_object": {
     "Base": 484,
@@ -150467,7 +150467,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6270
+    "Wall_00..31": 6942
    },
    "bbox_min": [
     -8.881,
@@ -150575,12 +150575,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 1813920,
+   "file_size": 1860020,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.8,
-   "ao_rays": 2411376,
+   "seconds": 9.4,
+   "ao_rays": 2475600,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -150593,7 +150593,7 @@
      "Light": 5,
      "Aisle": 50
     },
-    "wall_tris": 6270,
+    "wall_tris": 6942,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -151392,7 +151392,7 @@
     "door_free_deg": 332.0
    },
    "verify": {
-    "tris": 24165,
+    "tris": 24837,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -151550,7 +151550,7 @@
    "type": "residence_tube",
    "size": "l",
    "footprint": 11.0,
-   "tris": 36175,
+   "tris": 37023,
    "budget": 39600,
    "tris_by_object": {
     "Base": 660,
@@ -151590,7 +151590,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6292
+    "Wall_00..31": 7140
    },
    "bbox_min": [
     -10.877,
@@ -151706,12 +151706,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2609248,
+   "file_size": 2668356,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 17.0,
-   "ao_rays": 3642000,
+   "seconds": 16.5,
+   "ao_rays": 3723792,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -151724,7 +151724,7 @@
      "Light": 11,
      "Aisle": 35
     },
-    "wall_tris": 6292,
+    "wall_tris": 7140,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -152561,7 +152561,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 36175,
+    "tris": 37023,
     "rmax": 10.900000305870508,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -152731,7 +152731,7 @@
    "type": "residence_tube",
    "size": "l",
    "footprint": 11.0,
-   "tris": 32524,
+   "tris": 33372,
    "budget": 39600,
    "tris_by_object": {
     "Base": 660,
@@ -152771,7 +152771,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6292
+    "Wall_00..31": 7140
    },
    "bbox_min": [
     -10.877,
@@ -152891,12 +152891,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2359036,
+   "file_size": 2418144,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.8,
-   "ao_rays": 3250368,
+   "seconds": 14.9,
+   "ao_rays": 3332160,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -152909,7 +152909,7 @@
      "Light": 9,
      "Aisle": 45
     },
-    "wall_tris": 6292,
+    "wall_tris": 7140,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -153746,7 +153746,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 32524,
+    "tris": 33372,
     "rmax": 10.900000305870508,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -153916,7 +153916,7 @@
    "type": "residence_tube",
    "size": "xl",
    "footprint": 13.0,
-   "tris": 42278,
+   "tris": 43056,
    "budget": 54000,
    "tris_by_object": {
     "Base": 668,
@@ -153956,7 +153956,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6418
+    "Wall_00..31": 7196
    },
    "bbox_min": [
     -12.872,
@@ -154154,12 +154154,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 3056528,
+   "file_size": 3109840,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 21.8,
-   "ao_rays": 4272096,
+   "seconds": 20.9,
+   "ao_rays": 4346784,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -154172,7 +154172,7 @@
      "Light": 13,
      "Aisle": 104
     },
-    "wall_tris": 6418,
+    "wall_tris": 7196,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -154190,7 +154190,6 @@
      "LightStrip",
      "Neon",
      "Palette",
-     "Screen",
      "Soil",
      "Window"
     ],
@@ -155715,7 +155714,7 @@
      "PorchTop": 1,
      "Roof": 4,
      "WallsUp": 3,
-     "Walls": 9,
+     "Walls": 8,
      "WallShell": 3
     },
     "decals": {
@@ -155747,7 +155746,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 42278,
+    "tris": 43056,
     "rmax": 12.900000159793313,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -155999,7 +155998,7 @@
    "type": "residence_tube",
    "size": "xl",
    "footprint": 13.0,
-   "tris": 41369,
+   "tris": 42147,
    "budget": 54000,
    "tris_by_object": {
     "Base": 668,
@@ -156039,7 +156038,7 @@
     "Upper_30": 60,
     "Upper_31": 50,
     "NameSign": 16,
-    "Wall_00..31": 6418
+    "Wall_00..31": 7196
    },
    "bbox_min": [
     -12.872,
@@ -156220,12 +156219,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2991632,
+   "file_size": 3044944,
    "color0": true,
    "also": [],
    "flags": [],
    "seconds": 21.2,
-   "ao_rays": 4150224,
+   "ao_rays": 4224912,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -156238,7 +156237,7 @@
      "Light": 14,
      "Aisle": 95
     },
-    "wall_tris": 6418,
+    "wall_tris": 7196,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -156256,7 +156255,6 @@
      "LightStrip",
      "Neon",
      "Palette",
-     "Screen",
      "Soil",
      "Window"
     ],
@@ -157592,7 +157590,7 @@
      "PorchTop": 6,
      "Roof": 5,
      "WallsUp": 3,
-     "Walls": 9,
+     "Walls": 8,
      "WallShell": 3
     },
     "decals": {
@@ -157624,7 +157622,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 41369,
+    "tris": 42147,
     "rmax": 12.900000159793313,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -157855,7 +157853,7 @@
    "type": "apartment_block",
    "size": "m",
    "footprint": 20.0,
-   "tris": 158923,
+   "tris": 159737,
    "budget": 180000,
    "tris_by_object": {
     "Base": 4272,
@@ -157905,7 +157903,7 @@
     "Upper_30": 72,
     "Upper_31": 72,
     "NameSign": 16,
-    "Wall_00..31": 6636
+    "Wall_00..31": 7450
    },
    "bbox_min": [
     -19.857,
@@ -158277,12 +158275,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 10740940,
+   "file_size": 10800428,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 63.9,
-   "ao_rays": 16017360,
+   "seconds": 54.6,
+   "ao_rays": 16097040,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -158298,7 +158296,7 @@
      "Light": 65,
      "Aisle": 138
     },
-    "wall_tris": 6636,
+    "wall_tris": 7450,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -161492,7 +161490,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 158923,
+    "tris": 159737,
     "rmax": 19.900000689745397,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -162062,7 +162060,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 4.3,
    "ao_rays": 1388640,
    "trays": [],
    "v3": {
@@ -162653,7 +162651,7 @@
    "type": "retail",
    "size": "m",
    "footprint": 7.5,
-   "tris": 19632,
+   "tris": 19686,
    "budget": 27000,
    "tris_by_object": {
     "Base": 412,
@@ -162714,7 +162712,7 @@
     "Upper_30": 36,
     "Upper_31": 20,
     "NameSign": 16,
-    "Wall_00..31": 7388,
+    "Wall_00..31": 7442,
     "Tall_*": 100
    },
    "bbox_min": [
@@ -162790,12 +162788,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1497216,
+   "file_size": 1501180,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
-   "ao_rays": 1917024,
+   "seconds": 6.2,
+   "ao_rays": 1922208,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -162806,7 +162804,7 @@
      "Light": 4,
      "Aisle": 28
     },
-    "wall_tris": 7388,
+    "wall_tris": 7442,
     "interior_materials": [
      "Accent",
      "Glow",
@@ -163272,7 +163270,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 19632,
+    "tris": 19686,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -163424,7 +163422,7 @@
    "type": "retail",
    "size": "l",
    "footprint": 9.6,
-   "tris": 27981,
+   "tris": 28035,
    "budget": 39600,
    "tris_by_object": {
     "Base": 660,
@@ -163491,7 +163489,7 @@
     "Upper_30": 20,
     "Upper_31": 46,
     "NameSign": 16,
-    "Wall_00..31": 7312,
+    "Wall_00..31": 7366,
     "Tall_*": 100
    },
    "bbox_min": [
@@ -163590,12 +163588,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2031892,
+   "file_size": 2035860,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.1,
-   "ao_rays": 2736816,
+   "seconds": 10.8,
+   "ao_rays": 2742000,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -163606,7 +163604,7 @@
      "Light": 5,
      "Aisle": 43
     },
-    "wall_tris": 7312,
+    "wall_tris": 7366,
     "interior_materials": [
      "Accent",
      "Glow",
@@ -164280,7 +164278,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 27981,
+    "tris": 28035,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -165941,7 +165939,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.4,
+   "seconds": 10.9,
    "ao_rays": 3237408,
    "trays": [],
    "v3": {
@@ -169987,7 +169985,7 @@
    "type": "academy",
    "size": "s",
    "footprint": 6.0,
-   "tris": 18006,
+   "tris": 17798,
    "budget": 18000,
    "tris_by_object": {
     "Base": 316,
@@ -170027,7 +170025,7 @@
     "Upper_30": 36,
     "Upper_31": 20,
     "NameSign": 16,
-    "Wall_00..31": 7340
+    "Wall_00..31": 7132
    },
    "bbox_min": [
     -5.872,
@@ -170096,14 +170094,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1309296,
+   "file_size": 1289052,
    "color0": true,
    "also": [],
-   "flags": [
-    "over budget 18006 > 18000"
-   ],
-   "seconds": 6.7,
-   "ao_rays": 1788192,
+   "flags": [],
+   "seconds": 5.7,
+   "ao_rays": 1769088,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -170116,7 +170112,7 @@
      "Light": 2,
      "Aisle": 18
     },
-    "wall_tris": 7340,
+    "wall_tris": 7132,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -170132,7 +170128,6 @@
      "Glow",
      "Hull",
      "LightStrip",
-     "Neon",
      "Palette",
      "Screen",
      "Window"
@@ -170269,8 +170264,8 @@
      {
       "name": "Anchor_Lamp_3",
       "pos": [
-       -5.246,
-       0.71,
+       -4.575,
+       2.663,
        1.3
       ],
       "yaw": 0.0
@@ -170278,8 +170273,8 @@
      {
       "name": "Anchor_Lamp_4",
       "pos": [
-       3.967,
-       -3.504,
+       1.352,
+       -5.118,
        1.3
       ],
       "yaw": 0.0
@@ -170487,7 +170482,7 @@
      "PorchTop": 3,
      "Roof": 5,
      "WallsUp": 3,
-     "Walls": 8,
+     "Walls": 7,
      "WallShell": 3
     },
     "decals": {
@@ -170574,7 +170569,7 @@
     "door_free_deg": 322.0
    },
    "verify": {
-    "tris": 18006,
+    "tris": 17798,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -170697,7 +170692,7 @@
    "type": "academy",
    "size": "m",
    "footprint": 7.5,
-   "tris": 23264,
+   "tris": 23354,
    "budget": 27000,
    "tris_by_object": {
     "Base": 404,
@@ -170737,7 +170732,7 @@
     "Upper_30": 36,
     "Upper_31": 20,
     "NameSign": 16,
-    "Wall_00..31": 7202
+    "Wall_00..31": 7292
    },
    "bbox_min": [
     -7.377,
@@ -170819,12 +170814,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1682068,
+   "file_size": 1688276,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.2,
-   "ao_rays": 2311680,
+   "seconds": 7.6,
+   "ao_rays": 2320320,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -170837,7 +170832,7 @@
      "Light": 4,
      "Aisle": 22
     },
-    "wall_tris": 7202,
+    "wall_tris": 7292,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -171386,7 +171381,7 @@
     "door_free_deg": 359.0
    },
    "verify": {
-    "tris": 23264,
+    "tris": 23354,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -171523,7 +171518,7 @@
    "type": "academy",
    "size": "l",
    "footprint": 9.6,
-   "tris": 32934,
+   "tris": 33024,
    "budget": 39600,
    "tris_by_object": {
     "Base": 644,
@@ -171563,7 +171558,7 @@
     "Upper_30": 34,
     "Upper_31": 34,
     "NameSign": 16,
-    "Wall_00..31": 7122
+    "Wall_00..31": 7212
    },
    "bbox_min": [
     -9.48,
@@ -171666,12 +171661,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2316792,
+   "file_size": 2323040,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.2,
-   "ao_rays": 3278112,
+   "seconds": 13.1,
+   "ao_rays": 3286752,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -171685,7 +171680,7 @@
      "Light": 5,
      "Aisle": 27
     },
-    "wall_tris": 7122,
+    "wall_tris": 7212,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -172403,7 +172398,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 32934,
+    "tris": 33024,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -172670,7 +172665,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.6,
+   "seconds": 4.8,
    "ao_rays": 1641552,
    "trays": [],
    "v3": {
@@ -173311,7 +173306,7 @@
    "type": "security_office",
    "size": "m",
    "footprint": 7.5,
-   "tris": 19267,
+   "tris": 19303,
    "budget": 27000,
    "tris_by_object": {
     "Base": 412,
@@ -173351,7 +173346,7 @@
     "Upper_30": 34,
     "Upper_31": 24,
     "NameSign": 16,
-    "Wall_00..31": 9819
+    "Wall_00..31": 9855
    },
    "bbox_min": [
     -7.377,
@@ -173435,12 +173430,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1425092,
+   "file_size": 1427616,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
-   "ao_rays": 1901232,
+   "seconds": 5.2,
+   "ao_rays": 1904688,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -173453,7 +173448,7 @@
      "Light": 4,
      "Aisle": 32
     },
-    "wall_tris": 9819,
+    "wall_tris": 9855,
     "interior_materials": [
      "Accent",
      "Glass",
@@ -173989,7 +173984,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 19267,
+    "tris": 19303,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.002428215928375721,

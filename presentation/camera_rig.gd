@@ -338,9 +338,13 @@ func _shoulder_process(delta: float) -> bool:
 	# between a room and a corridor), never closer than 0.12 m; never below the person's floor + 0.25 m.
 	if ceil_fn.is_valid():
 		var cy: float = float(ceil_fn.call(pos, eye))
-		# (the soft target also looks 0.6 m toward the person: a lower ceiling ahead is eased into early)
 		var tw: Vector3 = Vector3(pivot.x - eye.x, 0.0, pivot.z - eye.z)
-		var cy_soft: float = minf(cy, float(ceil_fn.call(pos, eye + tw.normalized() * minf(0.6, tw.length())))) if tw.length() > 0.01 else cy
+		var cy_soft: float = cy
+		if tw.length() > 0.01:
+			# (and over the person: the camera goes where the person walks; a corridor's lower ceiling is eased
+			# into before the camera reaches the doorway, 2026-10-01)
+			for k in [0.5, 1.0]:
+				cy_soft = minf(cy_soft, float(ceil_fn.call(pos, eye + tw * k)))
 		if cy < INF:
 			if _sh_cy == INF or _sh_new:
 				_sh_cy = cy_soft

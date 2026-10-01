@@ -968,7 +968,7 @@ def build_variant(m, v, outfits, stop=None):
         if n.startswith("Outfit_"):
             hairline_shade(o, hob)
     PA.FOOT_DZ = J["foot.L"].z - N.ANKLE_JOINT.z * s_          # this body's ankle height vs the v3 one
-    PA.ARM_IN = 5.0                                            # the standing arms 5 deg closer (CRITIC round 40)
+    PA.ARM_IN = 5.0 if spec["macro"]["weight"] < 0.58 else 0.0   # the standing arms closer (CRITIC r40); not on heavy bodies
     PA.LID_REST = spec.get("lid_rest", 5.0)                   # relaxed upper lids (CRITIC round 40: f1 stare)
     solver = N.Solver()
     solver.set_rest_from_rig(rig)
@@ -1070,7 +1070,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     for k, v in PA_DEFAULTS.items():
         setattr(PA, k, v)
     clips = {c[0]: c[6] for c in PA.people_clips()}
-    for _ in range(2):
+    for _ in range(4):
         # the ankle height: the lowest sole of all outfits (shoes and boots) on the floor when standing
         co = pose_eval(rig, solver, PA.retarget(clips["idle"](0), s, "idle"), feet_obs or obs)
         PA.FOOT_DZ += 0.002 - co[:, 2].min()

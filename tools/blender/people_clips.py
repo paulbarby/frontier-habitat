@@ -40,15 +40,15 @@ PAIRS = {
     "handshake": dict(clip_a="handshake", clip_b="handshake", distance_m=0.80, facing_deg=180.0, sync_s=0.0,
                       side_offset_m=0.0, hand_contact=True,
                       note="right hands meet at (0.40, 0, 1.00) from A; prop.R of A and B meet"),
-    "kiss_brief": dict(clip_a="kiss_brief", clip_b="kiss_brief", distance_m=0.48, facing_deg=180.0, sync_s=0.0,
+    "kiss_brief": dict(clip_a="kiss_brief", clip_b="kiss_brief", distance_m=0.53, facing_deg=180.0, sync_s=0.0,
                        side_offset_m=0.0, note="adults only; faces meet 0.6-1.2 s, no more"),
     "hold_hands_walk": dict(clip_a="hold_hands_walk", clip_b="hold_hands_walk_r", distance_m=0.0, facing_deg=0.0,
                             sync_s=0.0, side_offset_m=0.50, hand_contact=True, note="B walks at A's left (+Y), the same phase; A's left "
                             "hand holds B's right hand; move both along +X at the walk speed"),
-    "slap": dict(clip_a="slap", clip_b="hit_react", distance_m=0.60, facing_deg=180.0, sync_s=0.17,
-                 side_offset_m=0.0, note="contact at 0.62 s (A); B plays hit_react 0.17 s later (its hit at 0.45 s)"),
-    "punch": dict(clip_a="punch", clip_b="hit_react", distance_m=0.70, facing_deg=180.0, sync_s=0.13,
-                  side_offset_m=0.0, note="contact at 0.58 s (A); B plays hit_react 0.13 s later (its hit at 0.45 s)"),
+    "slap": dict(clip_a="slap", clip_b="hit_react", distance_m=0.60, facing_deg=180.0, sync_s=0.47,
+                 side_offset_m=0.0, note="contact at 0.92 s (A); B plays hit_react 0.47 s later (its hit at 0.45 s)"),
+    "punch": dict(clip_a="punch", clip_b="hit_react", distance_m=0.70, facing_deg=180.0, sync_s=0.27,
+                  side_offset_m=0.0, note="contact at 0.72 s (A); B plays hit_react 0.27 s later (its hit at 0.45 s)"),
     "escort": dict(clip_a="escort_walk", clip_b="handcuffed_walk", distance_m=0.0, facing_deg=0.0, sync_s=0.0,
                    side_offset_m=0.45, hand_contact=True, note="the prisoner B walks at the escort A's left (+Y), the same phase; A's "
                    "left hand holds B's right upper arm"),
@@ -60,15 +60,12 @@ CHILD_ONLY = {"child_play", "child_run"}
 
 
 def _ik(P):
-    """The pose with both arms in IK (FK arms become IK on their own wrist targets): between keys the wrists move
-    in straight lines and the solver's elbow guard keeps the elbows outside the body (2026-10-01)."""
-    Q = fill_arm_targets(Pose(P))
-    for s in ("L", "R"):
-        Q["arm.%s.ik" % s] = 1.0
-    return Q
+    """A key pose with the arms as FK angles from its IK solution (2026-10-01: FK keys turn smoothly with no IK
+    elbow flips between keys; the solver's FK elbow guard keeps the elbows outside the body)."""
+    return ik_to_fk(Pose(P))
 
 
-def _ks(keys, loop=False, length=None, fk=False):
+def _ks(keys, loop=False, length=None, fk=True):
     """keyed_clip over [(t, Pose, opts?)]: arms in IK (default, with the elbow guard) or as FK angles (fk=True)."""
     ks = [(k[0], ik_to_fk(k[1]) if fk else _ik(k[1]), *k[2:]) for k in keys]
     return keyed_clip(ks, loop=loop, length=length)
@@ -168,8 +165,8 @@ def shout_keys():
     D.update({"spine.ry": 13.0, "neck.ry": 12.0, "head.ry": -10.0, "hips.z": -0.02})
     E = Pose(L)
     set_arm_ik(E, "R", (0.220, 0.190, 1.150), (0.6, -0.1, 0.2), (0.0, -1.0, 0.0), w=1.0, pole=-10.0)
-    return _ks([(0.0, S, {"hold": True}), (0.30, L), (0.75, L), (0.90, D), (1.20, E), (1.55, add(S, spine__ry=3.0)),
-                (2.0, Pose(STAND), {"hold": True})])
+    return _ks([(0.0, S, {"hold": True}), (0.35, L), (0.75, L), (1.00, D), (1.35, E), (1.70, add(S, spine__ry=3.0)),
+                (2.15, Pose(STAND), {"hold": True})])
 
 
 def sulk_fn(n=150):
@@ -204,8 +201,8 @@ def wave_keys():
         t = f / FPS
         P = fn_k(f)
         w = _win(t, 0.55, 0.70, 1.90, 2.08)
-        P["hand.R.wx"] = P.g("hand.R.wx") + 22.0 * w * sin(TAU * 2.0 * (t - 0.65))
-        P["arm.R.y"] = P.g("arm.R.y") - 0.035 * w * sin(TAU * 2.0 * (t - 0.65) - 0.4)
+        P["hand.R.rz"] = P.g("hand.R.rz") + 22.0 * w * sin(TAU * 2.0 * (t - 0.65))
+        P["forearm.R.rz"] = P.g("forearm.R.rz") + 9.0 * w * sin(TAU * 2.0 * (t - 0.65) - 0.4)
         return P
     return fn, n
 
@@ -238,8 +235,8 @@ def kiss_brief_keys():
         set_arm_ik(K, s, (0.310, 0.200, 1.220), (0.6, -0.5, 0.2), (0.0, -1.0, 0.0), w=1.0, pole=-25.0)
     M = Pose(K)
     M.update({"hips.x": 0.010, "spine.ry": 4.0, "neck.ry": 4.0, "head.ry": 3.0})
-    return _ks([(0.0, S, {"hold": True}), (0.45, add(S, hips__x=0.015, spine__ry=2.0)), (0.80, M), (1.35, M),
-                (1.90, add(S, hips__x=0.01)), (2.30, Pose(STAND), {"hold": True})])
+    return _ks([(0.0, S, {"hold": True}), (0.60, add(S, hips__x=0.015, spine__ry=2.0)), (0.95, M), (1.50, M),
+                (2.05, add(S, hips__x=0.01)), (2.45, Pose(STAND), {"hold": True})])
 
 
 def _gait_with(upper):
@@ -279,7 +276,7 @@ def flirt_lean_fn(n=120):
             chest__rz=-6.0)
     set_foot(L, "R", (ANK.x + 0.06, -0.080, ANK.z + 0.012), yaw=-8.0, knee_out=-6.0, pitch=10.0, toe=-10.0)
     L["foot.R.y"] = -0.080
-    set_arm_ik(L, "L", (0.010, 0.215, 1.000), (0.3, -0.3, -0.9), (-0.3, -1.0, 0.0), w=1.0, pole=25.0)
+    set_arm_ik(L, "L", (0.010, 0.245, 1.000), (0.3, -0.3, -0.9), (-0.3, -1.0, 0.0), w=1.0, pole=25.0)
     elbow_to(L, "L", (-0.2, 1.0, 0.1), 0.9)
     base = _ik(L)
     fn_k, _ = keyed_clip([(0.0, _ik(STAND)), (0.7, base), (3.4, base), (4.0, _ik(STAND))], loop=True, length=4.0)
@@ -301,11 +298,17 @@ def slap_keys():
     S = Pose(STAND)
     W = add(S, chest__rz=12.0, spine__rz=5.0, head__ry=-2.0)
     set_arm_ik(W, "R", (0.080, 0.380, 1.420), (0.3, 0.3, 0.9), (1.0, 0.0, 0.0), w=1.0, pole=-30.0)
+    elbow_to(W, "R", (-0.3, -1.0, 0.1), 1.0)
     C = add(S, hips__x=0.030, chest__rz=-14.0, spine__rz=-6.0, spine__ry=4.0, head__ry=-3.0)
     set_arm_ik(C, "R", (0.420, 0.030, 1.520), (0.3, -0.4, 0.85), (0.0, -1.0, 0.1), w=1.0, pole=-20.0)
+    elbow_to(C, "R", (0.1, -1.0, -0.2), 1.0)
+    Mid = add(S, chest__rz=4.0, spine__rz=2.0)
+    set_arm_ik(Mid, "R", (0.220, 0.460, 1.450), (0.6, 0.3, 0.6), (1.0, 0.0, 0.0), w=1.0, pole=-20.0)
+    elbow_to(Mid, "R", (0.0, -1.0, 0.1), 1.0)
     R = add(S, chest__rz=-6.0, hips__x=0.01)
-    set_arm_ik(R, "R", (0.300, -0.050, 1.300), (0.5, -0.6, 0.3), (0.0, -1.0, 0.0), w=1.0, pole=-10.0)
-    return _ks([(0.0, S, {"hold": True}), (0.35, W), (0.62, C), (1.00, R), (1.60, Pose(STAND), {"hold": True})])
+    set_arm_ik(R, "R", (0.300, 0.050, 1.300), (0.5, -0.6, 0.3), (0.0, -1.0, 0.0), w=1.0, pole=-10.0)
+    elbow_to(R, "R", (0.2, -1.0, -0.6), 1.0)
+    return _ks([(0.0, S, {"hold": True}), (0.55, W), (0.75, Mid), (0.92, C), (1.30, R), (1.95, Pose(STAND), {"hold": True})])
 
 
 def punch_keys():
@@ -314,15 +317,19 @@ def punch_keys():
     S = Pose(STAND)
     G = add(S, hips__z=-0.03, chest__rz=10.0, hips__rz=4.0)
     set_foot(G, "L", (ANK.x + 0.10, 0.130, ANK.z), yaw=6.0, knee_out=4.0)
-    set_arm_ik(G, "R", (0.080, 0.200, 1.300), (0.7, -0.3, 0.3), (0.0, -1.0, 0.3), w=1.0, pole=-40.0)
-    set_arm_ik(G, "L", (0.220, 0.120, 1.380), (0.5, -0.4, 0.6), (0.0, -1.0, 0.0), w=1.0, pole=-30.0)
+    set_arm_ik(G, "R", (0.130, 0.220, 1.300), (0.7, -0.3, 0.3), (0.0, -1.0, 0.3), w=1.0, pole=-40.0)
+    set_arm_ik(G, "L", (0.240, 0.140, 1.380), (0.5, -0.4, 0.6), (0.0, -1.0, 0.0), w=1.0, pole=-30.0)
+    elbow_to(G, "R", (-0.5, -1.0, -0.5), 1.0)
+    elbow_to(G, "L", (0.1, 1.0, -0.8), 1.0)
     C = add(S, hips__x=0.050, hips__z=-0.03, chest__rz=-16.0, hips__rz=-8.0, spine__ry=6.0)
     set_foot(C, "L", (ANK.x + 0.14, 0.130, ANK.z), yaw=6.0, knee_out=4.0)
     set_arm_ik(C, "R", (0.520, 0.020, 1.300), (1.0, 0.0, 0.0), (0.0, -0.6, -0.8), w=1.0, pole=-50.0)
-    set_arm_ik(C, "L", (0.200, 0.140, 1.320), (0.5, -0.4, 0.6), (0.0, -1.0, 0.0), w=1.0, pole=-30.0)
+    set_arm_ik(C, "L", (0.230, 0.150, 1.320), (0.5, -0.4, 0.6), (0.0, -1.0, 0.0), w=1.0, pole=-30.0)
+    elbow_to(C, "R", (-0.2, -1.0, -0.6), 1.0)
+    elbow_to(C, "L", (0.1, 1.0, -0.8), 1.0)
     R = add(S, hips__x=0.02, chest__rz=-4.0)
     set_foot(R, "L", (ANK.x + 0.06, 0.125, ANK.z), yaw=6.0, knee_out=3.0)
-    return _ks([(0.0, S, {"hold": True}), (0.28, G), (0.58, C), (1.00, R), (1.60, Pose(STAND), {"hold": True})])
+    return _ks([(0.0, S, {"hold": True}), (0.42, G), (0.72, C), (1.15, R), (1.80, Pose(STAND), {"hold": True})])
 
 
 def hit_react_keys():
@@ -333,11 +340,12 @@ def hit_react_keys():
     B = add(S, hips__x=-0.090, hips__z=-0.02, head__rz=10.0, spine__ry=4.0)
     set_foot(B, "R", (ANK.x - 0.150, -0.120, ANK.z), yaw=10.0, knee_out=3.0)
     B["foot.R.y"] = -0.120
-    set_arm_ik(B, "L", (0.130, 0.090, 1.520), (0.1, -0.5, 0.9), (-1.0, -0.3, 0.0), w=1.0, pole=-20.0)
+    set_arm_ik(B, "L", (0.150, 0.100, 1.520), (0.1, -0.5, 0.9), (-1.0, -0.3, 0.0), w=1.0, pole=-20.0)
+    elbow_to(B, "L", (0.2, 1.0, -0.5), 1.0)
     Rc = add(S, hips__x=-0.030, head__rz=4.0)
     set_foot(Rc, "R", (ANK.x - 0.060, -0.118, ANK.z), yaw=8.0, knee_out=3.0)
     Rc["foot.R.y"] = -0.118
-    return _ks([(0.0, S, {"hold": True}), (0.40, S), (0.55, H), (0.85, B), (1.20, Rc), (1.50, Pose(STAND), {"hold": True})])
+    return _ks([(0.0, S, {"hold": True}), (0.40, S), (0.55, H), (0.98, B), (1.35, Rc), (1.70, Pose(STAND), {"hold": True})])
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -376,8 +384,10 @@ def fight_idle_fn(n=60):
     set_foot(G, "L", (ANK.x + 0.14, 0.140, ANK.z), yaw=10.0, knee_out=5.0)
     set_foot(G, "R", (ANK.x - 0.10, -0.140, ANK.z), yaw=25.0, knee_out=5.0)
     G["foot.R.y"] = -0.140
-    set_arm_ik(G, "L", (0.240, 0.130, 1.390), (0.35, -0.25, 0.90), (0.0, -1.0, 0.0), w=1.0, pole=-40.0)
-    set_arm_ik(G, "R", (0.200, 0.130, 1.370), (0.35, -0.25, 0.90), (0.0, -1.0, 0.0), w=1.0, pole=-40.0)
+    set_arm_ik(G, "L", (0.250, 0.140, 1.390), (0.35, -0.25, 0.90), (0.0, -1.0, 0.0), w=1.0, pole=-40.0)
+    set_arm_ik(G, "R", (0.220, 0.140, 1.370), (0.35, -0.25, 0.90), (0.0, -1.0, 0.0), w=1.0, pole=-40.0)
+    elbow_to(G, "L", (0.1, 1.0, -0.8), 1.0)
+    elbow_to(G, "R", (0.1, -1.0, -0.8), 1.0)
     g = _ik(G)
     fn_k, _ = keyed_clip([(0.0, _ik(STAND)), (0.70, g), (1.30, g), (2.0, _ik(STAND))], loop=True, length=2.0)
 
@@ -395,12 +405,13 @@ def protest_fist_fn(n=60):
     """At a protest: the right fist up; it pumps on each beat (1 Hz) and the person shouts; 2 s loop."""
     UP = add(STAND, spine__ry=-2.0, chest__ry=-3.0, head__ry=-8.0)
     sym(UP, **{})
-    UP["upper_arm.R.rx"] = 80.0
-    UP["upper_arm.R.ry"] = -18.0
+    UP["upper_arm.R.rx"] = 70.0
+    UP["upper_arm.R.ry"] = -12.0
+    UP["upper_arm.R.rz"] = -6.0
     UP["forearm.R.ry"] = -55.0
     UP["shoulder.R.rx"] = 10.0
     UP = fill_arm_targets(UP)
-    fn_k, _ = keyed_clip([(0.0, Pose(STAND)), (0.35, UP), (1.65, UP), (2.0, Pose(STAND))], loop=True, length=2.0)
+    fn_k, _ = keyed_clip([(0.0, Pose(STAND)), (0.50, UP), (1.50, UP), (2.0, Pose(STAND))], loop=True, length=2.0)
 
     def fn(f):
         u = f / n
@@ -443,7 +454,8 @@ def drink_bar_fn(n=150):
     base = PA.sit_bar_stool_base()
     B = PA.BAR_STOOL
     up = Pose(base)
-    set_arm_ik(up, "R", (0.200, 0.060, 1.400), (-0.1, -0.5, 0.85), (-0.9, -0.2, 0.3), w=1.0, pole=-30.0)
+    set_arm_ik(up, "R", (0.220, 0.080, 1.400), (-0.1, -0.5, 0.85), (-0.9, -0.2, 0.3), w=1.0, pole=-30.0)
+    elbow_to(up, "R", (0.5, -0.8, -0.4), 1.0)
     up["arm.R.stiff"] = 0.0
     up.update({"head.ry": -12.0, "neck.ry": -5.0})
     bf, uf = _ik(base), _ik(up)
@@ -529,10 +541,10 @@ def dance_c_fn(n=120):
             P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 20.0 * up
             P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) + 40.0 * up
             P["shoulder.%s.rx" % s] = sg * 8.0 * up
-            set_foot(P, s, (ANK.x, sg * 0.135, ANK.z), yaw=8.0, knee_out=5.0)
+            set_foot(P, s, (ANK.x, sg * 0.135, ANK.z + 0.008), yaw=8.0, knee_out=5.0)
             P["foot.%s.y" % s] = sg * 0.135
-        th = 180.0 * (_sm((beat - 4.0) / 1.8) if beat < 6.0 else 1.0 - _sm((beat - 6.0) / 1.9))
-        th = th if beat >= 4.0 else 0.0
+        th = 120.0 * (_sm((beat - 3.6) / 2.4) if beat < 6.0 else 1.0 - _sm((beat - 6.0) / 1.95))
+        th = th if beat >= 3.6 else 0.0
         return _turned(P, th)
     return fn, n
 
@@ -558,10 +570,10 @@ def swim_fn(n=40):
                 wr = (0.78 - 0.10 * k, 0.12 + 0.25 * _sm(k), -0.06 - 0.02 * k)
             elif u < 0.55:
                 k = (u - 0.30) / 0.25
-                wr = (0.68 - 0.38 * _sm(k), 0.37 - 0.25 * _sm(k), -0.08 - 0.06 * sin(pi * k))
+                wr = (0.68 - 0.24 * _sm(k), 0.37 - 0.25 * _sm(k), -0.08 - 0.06 * sin(pi * k))
             else:
                 k = (u - 0.55) / 0.45
-                wr = (0.30 + 0.48 * _sm(k), 0.12, -0.08 + 0.02 * _sm(k))
+                wr = (0.44 + 0.34 * _sm(k), 0.12, -0.08 + 0.02 * _sm(k))
             sw_ = sin(pi * min(1.0, u / 0.55))
             set_arm_ik(P, s, wr, (1.0, 0.25 * sw_, -0.1), (0.0, 0.4 * sw_, -1.0), w=1.0, pole=-60.0)
         # legs: extended (u < 0.35), draw up to the hips (0.35-0.65), kick out and together (0.65-1)
@@ -658,7 +670,7 @@ def shop_browse_keys():
     set_arm_ik(R, "R", (sh["ahead"] - 0.10, 0.060, sh["z"]), (1.0, 0.1, 0.0), (0.0, 1.0, 0.0), w=1.0, pole=-20.0)
     L = add(STAND, neck__ry=12.0, head__ry=14.0)
     set_arm_ik(L, "R", (0.220, 0.040, 1.200), (0.3, 0.8, 0.3), (-0.3, 0.2, 0.9), w=1.0, pole=-25.0)
-    return _ks([(0.0, S), (1.0, S), (1.5, R), (2.1, L), (3.0, L), (3.5, R), (4.2, add(STAND, head__rz=-14.0,
+    return _ks([(0.0, S), (0.9, S), (1.65, R), (2.25, L), (2.95, L), (3.55, R), (4.25, add(STAND, head__rz=-14.0,
                                                                                          neck__ry=5.0)),
                 (5.0, S)], loop=True, length=5.0)
 
@@ -682,8 +694,8 @@ def sit_class_fn(n=150):
         t = f / FPS
         P = fn_k(f)
         wr = _win(t, 0.8, 1.0, 2.4, 2.6) + _win(t, 3.7, 3.9, 4.2, 4.4)
-        P["arm.R.y"] = P.g("arm.R.y") + 0.012 * wr * sin(TAU * 3.0 * t)
-        P["arm.R.x"] = P.g("arm.R.x") + 0.006 * wr * sin(TAU * 3.0 * t + 0.7)
+        P["forearm.R.rz"] = P.g("forearm.R.rz") + 4.0 * wr * sin(TAU * 3.0 * t)
+        P["hand.R.rx"] = P.g("hand.R.rx") + 6.0 * wr * sin(TAU * 3.0 * t + 0.7)
         return P
     return fn, n
 
@@ -698,7 +710,7 @@ def teach_keys():
     Tn = add(S, hips__rz=18.0, spine__rz=16.0, chest__rz=22.0, head__rz=20.0, neck__ry=2.0)
     for s in ("L", "R"):
         set_arm_ik(Tn, s, (0.200, 0.260, 1.080), (0.6, 0.8, 0.1), (0.0, -0.5, 0.8), w=1.0, pole=-10.0)
-    return _ks([(0.0, S), (0.8, Pt), (2.2, Pt), (3.0, Tn), (4.2, Tn), (5.0, S)], loop=True, length=5.0)
+    return _ks([(0.0, S), (0.9, Pt), (2.1, Pt), (2.9, Tn), (3.9, Tn), (5.0, S)], loop=True, length=5.0)
 
 
 def sleep_cell_fn(n=180):
@@ -726,18 +738,19 @@ def sleep_turn_keys():
         SUP["foot.%s.rel" % s] = 1.0
         SUP["foot.%s.rp" % s] = 30.0
     # the hands rest on the belly, the elbows on the mattress beside the body
-    set_arm_ik(SUP, "L", (-0.470, -0.030, bz + 0.230), (0.6, -0.8, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    set_arm_ik(SUP, "L", (-0.450, -0.020, bz + 0.360), (0.6, -0.8, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(SUP, "L", (1.0, 0.2, -0.6), 1.0)
-    set_arm_ik(SUP, "R", (-0.540, 0.000, bz + 0.230), (-0.6, -0.8, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    set_arm_ik(SUP, "R", (-0.560, 0.000, bz + 0.360), (-0.6, -0.8, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     SUP["arm.R.y"] = 0.000
     elbow_to(SUP, "R", (-1.0, 0.2, -0.6), 1.0)
     H = Pose({k: 0.5 * (S0.g(k) + SUP.g(k)) for k in set(S0) | set(SUP)})
     H["hips.z"] = H.g("hips.z") + 0.02
+    set_arm_ik(H, "R", (-0.300, -0.180, bz + 0.360), (0.3, -0.9, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(H, "R", (0.0, 0.2, 1.0), 1.0)             # the top elbow goes over the top while rolling (no flip)
     elbow_to(H, "L", (1.0, 0.2, -0.3), 1.0)
     SUP2 = add(SUP, chest__ry=-1.5, head__rz=-6.0)
     keys = [(0.0, S0, {"hold": True}), (1.2, H), (2.3, SUP), (4.4, SUP2), (5.6, H), (6.8, Pose(LIE), {"hold": True})]
-    return A.retime_keys([(k[0], _ik(k[1])) + tuple(k[2:]) for k in keys])
+    return A.retime_keys(A.fk_keys(keys))
 
 
 def child_play_fn(n=120):
@@ -756,15 +769,15 @@ def child_play_fn(n=120):
     for s, sg in (("L", 1.0), ("R", -1.0)):
         set_foot(J, s, (ANK.x, sg * 0.125, ANK.z + 0.10), pitch=20.0, yaw=7.0, knee_out=3.0)
         J["foot.%s.y" % s] = sg * 0.125
-    fn_k, _ = keyed_clip([(0.0, _ik(STAND)), (0.6, Cs), (2.3, Cs), (2.7, add(Cs, hips__z=0.10)), (3.0, _ik(J)),
+    fn_k, _ = keyed_clip([(0.0, _ik(STAND)), (0.6, Cs), (2.3, Cs), (2.7, add(Cs, hips__z=0.10)), (3.1, _ik(J)),
                           (3.35, _ik(add(STAND, hips__z=-0.05))), (4.0, _ik(STAND))], loop=True, length=4.0)
 
     def fn(f):
         t = f / FPS
         P = fn_k(f)
         w = _win(t, 0.6, 0.8, 2.1, 2.3)
-        P["arm.R.x"] = P.g("arm.R.x") + 0.05 * w * sin(TAU * t * 0.8)
-        P["arm.R.y"] = P.g("arm.R.y") + 0.04 * w * cos(TAU * t * 0.8)
+        P["forearm.R.ry"] = P.g("forearm.R.ry") - 8.0 * w * sin(TAU * t * 0.8)
+        P["hand.R.rz"] = P.g("hand.R.rz") + 12.0 * w * cos(TAU * t * 0.8)
         return P
     return fn, n
 
@@ -819,9 +832,9 @@ def _v5_clips():
     fn, n = flirt_lean_fn()
     add_("flirt_lean", "loop", "stand", "stand", True, fn, n, dict(adults_only=True))
     fn, n = slap_keys()
-    add_("slap", "oneshot", "stand", "stand", False, fn, n, dict(pair="slap", contact_s=0.62))
+    add_("slap", "oneshot", "stand", "stand", False, fn, n, dict(pair="slap", contact_s=0.92))
     fn, n = punch_keys()
-    add_("punch", "oneshot", "stand", "stand", False, fn, n, dict(pair="punch", contact_s=0.58))
+    add_("punch", "oneshot", "stand", "stand", False, fn, n, dict(pair="punch", contact_s=0.72))
     fn, n = hit_react_keys()
     add_("hit_react", "oneshot", "stand", "stand", False, fn, n, dict(hit_s=0.45))
     fn, n = keyed_clip(fall_down_keys())

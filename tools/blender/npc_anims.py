@@ -245,7 +245,7 @@ def make_lie():
         P["foot.%s.rp" % s] = 24.0
     # bottom arm in front of the body on the mattress, the hand by the face (2026-10-01, Paul: the arm went through
     # the torso: the elbow now points forward, never under or behind the body); top hand in front of the chest
-    set_arm_ik(P, "L", (-0.250, 0.600, 0.632), (0.25, 1.0, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    set_arm_ik(P, "L", (-0.250, 0.600, 0.655), (0.25, 1.0, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(P, "L", (1.0, 0.15, 0.0))
     # (set_arm_ik mirrors y for the right side: these values put the right hand at y +0.30, pointing to +Y)
     set_arm_ik(P, "R", (-0.230, -0.300, 0.640), (0.6, -0.6, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
@@ -690,7 +690,8 @@ def _injured_upper(phi, P):
     P["head.aim"] = 0.7
     P["head.wy"] = 14.0
     P["head.wz"] = -4.0
-    set_arm_ik(P, "L", (0.155, -0.06, 1.070), (-0.2, -1.0, -0.25), (0.3, 0.0, 0.2), w=1.0, pole=-30.0, chest=1.0)
+    set_arm_ik(P, "L", (0.170, -0.06, 1.070), (-0.2, -1.0, -0.25), (0.3, 0.0, 0.2), w=1.0, pole=-30.0, chest=1.0)
+    elbow_to(P, "L", (0.2, 1.0, -0.6), 1.0)
     P.update({"shoulder.R.rx": 3.0, "upper_arm.R.rx": 19.0, "upper_arm.R.ry": -2.0 + 5.0 * cos(TAU * (phi - 0.6)),
               "forearm.R.ry": -24.0, "hand.R.ry": -8.0})
 
@@ -723,8 +724,8 @@ def work_console_base():
     P = Pose(STAND)
     P.update({"hips.x": -0.010, "hips.ry": 4.0, "spine.ry": 6.0, "chest.ry": 4.0, "neck.ry": 12.0, "head.ry": 14.0})
     # fingers on the console top (1.0 m) at 0.40..0.50 m ahead: wrists just above, hands pitched down
-    set_arm_ik(P, "L", (0.345, 0.125, 1.092), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
-    set_arm_ik(P, "R", (0.360, 0.090, 1.092), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    set_arm_ik(P, "L", (0.345, 0.125, 1.098), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    set_arm_ik(P, "R", (0.360, 0.090, 1.098), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
     return P
 
@@ -1628,11 +1629,11 @@ def all_clips():
     out.append(("sit_type", "loop", "sit", "sit", True, 120, typing(sit_type_base(), 120), {}))
     fn, n = keyed_clip(sit_exit_keys())
     out.append(("sit_exit", "exit", "sit", "stand", False, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(ik_keys(lie_enter_keys())))
+    fn, n = keyed_clip(retime_keys(fk_keys(lie_enter_keys())))
     out.append(("lie_enter", "enter", "stand", "lie", False, n, fn, {}))
     fn, n = sleep_fn()
     out.append(("sleep", "loop", "lie", "lie", True, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(ik_keys(lie_exit_keys())))
+    fn, n = keyed_clip(retime_keys(fk_keys(lie_exit_keys())))
     out.append(("lie_exit", "exit", "lie", "stand", False, n, fn, {}))
     gait("injured_walk", INJURED)
     fn, n = keyed_clip(collapse_keys())

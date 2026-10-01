@@ -175,13 +175,13 @@
    },
    "triangles_lod1": {
     "Addon_apron": 340,
-    "Addon_jacket": 419,
-    "Addon_labcoat": 420,
+    "Addon_jacket": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_m1": 520,
     "Head_m1": 159,
@@ -239,11 +239,11 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2916,
-    "uniform_science": 2997,
+    "uniform_science": 2996,
     "uniform_food": 2917,
-    "uniform_medical": 2997,
+    "uniform_medical": 2996,
     "uniform_security": 3256,
-    "uniform_command": 3172,
+    "uniform_command": 3173,
     "prison": 2577,
     "casual_a": 2579,
     "casual_b": 2579,
@@ -481,8 +481,8 @@
    },
    "triangles_lod1": {
     "Addon_apron": 339,
-    "Addon_jacket": 419,
-    "Addon_labcoat": 419,
+    "Addon_jacket": 420,
+    "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
@@ -545,11 +545,11 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2919,
-    "uniform_science": 2998,
+    "uniform_science": 2999,
     "uniform_food": 2918,
     "uniform_medical": 2999,
     "uniform_security": 3259,
-    "uniform_command": 3174,
+    "uniform_command": 3175,
     "prison": 2579,
     "casual_a": 2577,
     "casual_b": 2578,
@@ -774,7 +774,7 @@
     "Outfit_casual_a": 11948,
     "Outfit_casual_b": 13998,
     "Outfit_casual_c": 12614,
-    "Outfit_swimwear": 8756,
+    "Outfit_swimwear": 8744,
     "Addon_toolbelt": 416,
     "Addon_apron": 654,
     "Addon_vest": 1472,
@@ -793,7 +793,7 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 419,
+    "Addon_tunic": 420,
     "Addon_vest": 340,
     "Hair_m3": 519,
     "Head_m3": 160,
@@ -845,15 +845,15 @@
      "with_head_and_hair": 18872
     },
     "swimwear": {
-     "outfit_and_addons": 8756,
-     "with_head_and_hair": 15014
+     "outfit_and_addons": 8744,
+     "with_head_and_hair": 15002
     }
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
     "uniform_science": 2998,
     "uniform_food": 2918,
-    "uniform_medical": 2998,
+    "uniform_medical": 2999,
     "uniform_security": 3258,
     "uniform_command": 3174,
     "prison": 2579,
@@ -1396,14 +1396,14 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 339,
-    "Addon_jacket": 420,
-    "Addon_labcoat": 420,
+    "Addon_apron": 340,
+    "Addon_jacket": 419,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_f2": 520,
     "Head_f2": 160,
@@ -1411,7 +1411,7 @@
     "Outfit_casual_b": 1900,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1899,
-    "Outfit_uniform": 1899
+    "Outfit_uniform": 1898
    },
    "triangles_on_screen": {
     "uniform_engineering": {
@@ -1460,13 +1460,13 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2919,
-    "uniform_science": 2999,
+    "uniform_engineering": 2918,
+    "uniform_science": 2997,
     "uniform_food": 2918,
-    "uniform_medical": 2999,
-    "uniform_security": 3259,
-    "uniform_command": 3175,
-    "prison": 2579,
+    "uniform_medical": 2997,
+    "uniform_security": 3258,
+    "uniform_command": 3173,
+    "prison": 2578,
     "casual_a": 2579,
     "casual_b": 2580,
     "casual_c": 2580,
@@ -1708,7 +1708,7 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_f3": 520,
     "Head_f3": 160,
@@ -1768,7 +1768,7 @@
     "uniform_engineering": 2918,
     "uniform_science": 2997,
     "uniform_food": 2918,
-    "uniform_medical": 2998,
+    "uniform_medical": 2997,
     "uniform_security": 3258,
     "uniform_command": 3174,
     "prison": 2578,
@@ -2422,8 +2422,8 @@
    "loop": true
   },
   "lie_exit": {
-   "frames": 194,
-   "duration_s": 6.4667,
+   "frames": 184,
+   "duration_s": 6.1333,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",
@@ -2481,8 +2481,8 @@
    "loop": false
   },
   "argue": {
-   "frames": 90,
-   "duration_s": 3.0,
+   "frames": 102,
+   "duration_s": 3.4,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2540,8 +2540,8 @@
    "loop": true
   },
   "shout": {
-   "frames": 64,
-   "duration_s": 2.1333,
+   "frames": 69,
+   "duration_s": 2.3,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2573,8 +2573,8 @@
    "pair": "handshake"
   },
   "kiss_brief": {
-   "frames": 73,
-   "duration_s": 2.4333,
+   "frames": 78,
+   "duration_s": 2.6,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2615,28 +2615,28 @@
    "adults_only": true
   },
   "slap": {
-   "frames": 52,
-   "duration_s": 1.7333,
+   "frames": 63,
+   "duration_s": 2.1,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false,
    "pair": "slap",
-   "contact_s": 0.62
+   "contact_s": 0.92
   },
   "punch": {
-   "frames": 52,
-   "duration_s": 1.7333,
+   "frames": 58,
+   "duration_s": 1.9333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false,
    "pair": "punch",
-   "contact_s": 0.58
+   "contact_s": 0.72
   },
   "hit_react": {
-   "frames": 49,
-   "duration_s": 1.6333,
+   "frames": 55,
+   "duration_s": 1.8333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2845,8 +2845,8 @@
    "note": "the right side of a double bed: the head to -Y"
   },
   "lie_exit_r": {
-   "frames": 194,
-   "duration_s": 6.4667,
+   "frames": 184,
+   "duration_s": 6.1333,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",
@@ -2876,8 +2876,8 @@
    "children_only": true
   },
   "sleep_turn": {
-   "frames": 1017,
-   "duration_s": 33.9,
+   "frames": 275,
+   "duration_s": 9.1667,
    "kind": "oneshot",
    "pose_from": "lie",
    "pose_to": "lie",

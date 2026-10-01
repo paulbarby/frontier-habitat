@@ -527,16 +527,20 @@ func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_on
 			var q: Vector3 = eye if _vol_inside(vols, eye, margin) else _vol_project(vols, eye, margin)
 			if point_only and q.distance_to(eye) > 0.05:
 				fc_dbg.append("t%.2f indoor hard %.2f" % [_time, q.distance_to(eye)])
-			if point_only or _vol_line_inside(vols, pivot, q, margin * 0.5):
-				return q
-			return _vol_first_exit(vols, pivot, q, margin * 0.5)
+			# (no sight-line pull indoors: the camera stays inside the rooms and corridors; at a doorway a wall
+			# edge may hide the person for a moment. The pull along the sight line jumped as the line swept
+			# past the door frame and dragged the camera, 2026-10-01.)
+			return q
 	# Outdoors: out of the structure circles (the person is outside them) ...
 	var q2: Vector3 = eye
 	var a := Vector2(pivot.x, pivot.z)
+	var ap: Vector2 = Vector2((fb as Vector3).x, (fb as Vector3).z) if fb != null else a
 	for c in _follow_circles(eye, margin + 0.5):
 		var cp: Vector2 = c[1]
 		var r: float = float(c[2])
-		if a.distance_to(cp) < r - 0.05:
+		# (the PERSON inside this circle, not the shoulder point: a person walking 0.4 m off a wall has the
+		# shoulder inside the circle; the wall was skipped and the camera ran into it, 2026-10-01)
+		if ap.distance_to(cp) < r - 0.05:
 			continue
 		var e2 := Vector2(q2.x, q2.z)
 		var dd: float = e2.distance_to(cp)
@@ -580,6 +584,8 @@ func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_on
 		var qa: float = d.dot(d)
 		var qb: float = 2.0 * f.dot(d)
 		var qc: float = f.dot(f) - r * r
+		if ap.distance_to(cp) < r - 0.05:
+			continue
 		var disc: float = qb * qb - 4.0 * qa * qc
 		if disc < 0.0:
 			continue

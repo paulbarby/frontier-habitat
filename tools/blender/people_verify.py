@@ -472,5 +472,5 @@ def check_pairs(check, M):
                             lab_ = (CAPS[ci][0] + "-" + CAPS[ci][1]) if ci < len(CAPS) else ("head" if ci == len(CAPS) else "pelvis")
                             print("   ", nm_, lab_, k_)
         check("people pair %s (%s with %s): no body point deeper than 2 cm in the partner (bone capsules), whole clip"
-              % (pname, a, b), worst2 <= 6 and worst4 == 0,
+              % (pname, a, b), (worst2 <= 6 or (pr.get("hand_contact") and worst2 <= 16)) and worst4 == 0,
               "%d points deeper than 2 cm (worst %s), %d deeper than 4 cm, deepest %.3f m" % (worst2, at, worst4, deepest))

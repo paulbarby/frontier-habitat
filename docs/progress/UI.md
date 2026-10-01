@@ -1178,3 +1178,8 @@ Spec first: `docs/UI_PANELS.md` (STE, one page). Code: `ui/hud/panel_manager.gd`
   test_locks, test_indoor_sound: PASS. test_ships_ui FAIL 1 (the landing pad has no power: SIM, reported 2026-09-29).
 - Not done: tab labels are icons with counts only (names in tooltips); at 1280x720 three pop-ups leave the dock body
   about 80 px until they fade; the urgent line and pop-ups are not draggable; the follow view's bubble click.
+- Follow-ups (coordinator, 2026-10-01): pop-ups fold into the dock (News counts them) before the dock body gets
+  under 200 px (`BODY_KEEP`); tab names show beside the icons when the dock is 320 px or wider (`NAMES_W`), icon +
+  count when narrower; the tabs are a grid with as many columns as fit (a flow container measured its height a
+  frame late and pushed the dock over the minimap). test_panels checks both rules at every size and scale.
+  test_panels, test_window_bounds (132), test_wm: PASS.

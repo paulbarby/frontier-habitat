@@ -42,6 +42,8 @@ const PRIO := ["info", "notice", "warning", "critical", "needs-answer"]
 const PRIO_COL := {"info": Color("3EE0FF"), "notice": Color("9FB3C8"), "warning": Color("FFB547"), "critical": Color("FF5A5F"), "needs-answer": Color("F472B6")}
 const MAX_POPS := 3
 const FEED_MAX := 40
+const BODY_KEEP := 200.0     # the dock body keeps this much room: pop-ups fold into News first
+const NAMES_W := 320.0       # a dock this wide shows the tab names, a narrower one icon + count
 
 var hud
 var tab := "goals"
@@ -57,7 +59,7 @@ var _urgent_text: Label
 var _urgent_icon: TextureRect
 var _pops: VBoxContainer
 var _dock: PanelContainer
-var _tabbar: HFlowContainer
+var _tabbar: GridContainer   # as many columns as fit (its height is known at once, unlike a flow)
 var _tab_btn := {}          # tab -> Button
 var _mute: Button
 var _min_btn: Button
@@ -118,7 +120,8 @@ func _ready() -> void:
 	_dock.add_child(dv)
 	var head: HBoxContainer = Kit.hbox(4)
 	dv.add_child(head)
-	_tabbar = HFlowContainer.new()
+	_tabbar = GridContainer.new()
+	_tabbar.columns = 6
 	_tabbar.add_theme_constant_override("h_separation", 2)
 	_tabbar.add_theme_constant_override("v_separation", 2)
 	_tabbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -563,10 +566,11 @@ func _process(delta: float) -> void:
 		pl.custom_minimum_size.x = maxf(100.0, _width - 190.0)
 	# The body: as tall as the open tab, at most what is left above the minimap.
 	var page: Control = _pages[tab]
-	# A short view: the oldest pop-ups go (they are in News) so the dock keeps its tabs and 80 px of body.
+	# A short view: the oldest pop-ups fold into the dock (they are in News; its tab counts them) so the dock
+	# body keeps about BODY_KEEP px (coordinator, 2026-10-01: 80 px at 1280x720 was too little).
 	var head_h: float = _dock.get_combined_minimum_size().y - (_body.get_combined_minimum_size().y if _body.visible else 0.0)
 	var urg_h: float = _urgent.get_combined_minimum_size().y + 6.0 if _urgent.visible else 0.0
-	var pop_room: float = floor_y - top - urg_h - (head_h + 80.0 if dock_open else 0.0)
+	var pop_room: float = floor_y - top - urg_h - (head_h + BODY_KEEP if dock_open else 0.0)
 	while _pops.get_child_count() > 0 and _pops.get_combined_minimum_size().y + 6.0 > pop_room:
 		var old: Node = _pops.get_child(_pops.get_child_count() - 1)
 		_pops.remove_child(old)
@@ -608,10 +612,20 @@ func _process(delta: float) -> void:
 		var s: Dictionary = tab_state(id)
 		var b: Button = _tab_btn[id]
 		var n: int = int(s["count"])
-		b.text = ("%d" % n) if n > 0 else ""
+		var named: bool = _width >= NAMES_W
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.text = ("%s%s" % [t[1], (" %d" % n) if n > 0 else ""]) if named else (("%d" % n) if n > 0 else "")
 		b.add_theme_color_override("font_color", PRIO_COL.get(String(s["priority"]), P.TEXT_2) if n > 0 else P.TEXT_2)
 		b.add_theme_color_override("icon_normal_color", PRIO_COL.get(String(s["priority"]), P.TEXT_2) if n > 0 and String(s["priority"]) != "info" else P.TEXT_2)
 		b.tooltip_text = "%s%s\n%s" % [t[1], (" · %d" % n) if n > 0 else "", _tab_tip(id)]
+	# Columns: as many tab buttons as fit beside the dock controls (the widest button sets the column).
+	var bw := 0.0
+	for b2 in _tab_btn.values():
+		bw = maxf(bw, (b2 as Control).get_combined_minimum_size().x)
+	var avail: float = _width - 16.0 - (_mute.get_parent() as Control).get_combined_minimum_size().x - 4.0
+	var cols: int = clampi(int(floorf((avail + 2.0) / (bw + 2.0))), 1, TABS.size())
+	if _tabbar.columns != cols:
+		_tabbar.columns = cols
 	if tab == "news" and _body.is_visible_in_tree():
 		_fill_news()
 

@@ -618,6 +618,8 @@ class Solver:
             D_hd = D_hd_fk.slerp(D_hd_w, w * (1.0 - stiff))
             Q[hd] = D[fa].inverted() @ D_hd
             D[hd] = D_hd
+        elif ELBOW_GUARD:
+            self._fk_elbow_out(s, D, Q, pos)
         Q[pr] = Quaternion()
         D[pr] = D[hd]
         pos[pr] = pos[hd] + D[hd] @ (self.head[pr] - self.head[hd])
@@ -638,6 +640,38 @@ class Solver:
         half_w = 0.5 * (self.head["upper_arm.L"] - self.head["upper_arm.R"]).length * 0.78 + 0.045
         half_d = 0.11 * sc + 0.045
         return 1.0 - sqrt((loc.x / half_d) ** 2 + (loc.y / half_w) ** 2)
+
+    def _fk_elbow_out(self, s, D, Q, pos):
+        """The elbow guard for FK arms: an elbow inside the torso swings out about the shoulder to the torso's
+        surface (radially from the spine, chest frame); the forearm and hand keep their local turns."""
+        ua, fa, hd = "upper_arm." + s, "forearm." + s, "hand." + s
+        S_ = pos[ua]
+        e = pos[fa]
+        hp, nk = pos["hips"], pos["neck"]
+        ax = nk - hp
+        L2 = ax.length_squared
+        t = (e - hp).dot(ax) / L2 if L2 > 0 else 0.0
+        if t < -0.20 or t > 1.0:
+            return
+        c = hp + ax * max(0.0, min(1.0, t))
+        Dc = D["chest"]
+        loc = Dc.inverted() @ (e - c)
+        sc = (self.head["neck"] - self.head["hips"]).length / 0.49
+        hw = 0.5 * (self.head["upper_arm.L"] - self.head["upper_arm.R"]).length * 0.78 + 0.045
+        hd_ = 0.11 * sc + 0.045
+        rho = sqrt((loc.x / hd_) ** 2 + (loc.y / hw) ** 2)
+        if rho >= 1.0:
+            return
+        side = 1.0 if s == "L" else -1.0
+        loc2 = Vector((0.0, side * hw, loc.z)) if rho < 1e-4 else Vector((loc.x / rho, loc.y / rho, loc.z))
+        tgt = c + Dc @ loc2
+        q = (e - S_).rotation_difference(tgt - S_)
+        D[ua] = (q @ D[ua]).normalized()
+        Q[ua] = D["shoulder." + s].inverted() @ D[ua]
+        pos[fa] = pos[ua] + D[ua] @ (self.head[fa] - self.head[ua])
+        D[fa] = D[ua] @ Q[fa]
+        pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
+        D[hd] = D[fa] @ Q[hd]
 
     def _elbow_out(self, S_, dn, a, h, pv, pos, D, side=1.0):
         """ELBOW GUARD (2026-10-01, Paul: broken arms): an IK elbow inside the torso is moved out to the torso's
@@ -914,7 +948,45 @@ class Timeline:
 # --------------------------------------------------------------------------------------
 # Baking clips into Blender actions
 # --------------------------------------------------------------------------------------
-def bake_clip(rig, solver, name, pose_fn, frames, fix=None):
+SMOOTH_LOCO = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk",
+               "hold_hands_walk_r", "handcuffed_walk", "escort_walk", "collapse", "fall_down"}
+SMOOTH_SLOW = {"lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_cell", "sleep_turn",
+               "dead"}
+NO_SMOOTH_BONES = {"root", "prop.L", "prop.R", "jaw", "lids", "lids_low", "brow.L", "brow.R", "mouth.L", "mouth.R"}
+
+
+def despike_limit(name):
+    """Largest bone turn per frame a clip may keep after baking (deg; None = not smoothed: gaits and falls)."""
+    if name in SMOOTH_LOCO:
+        return None
+    return 4.5 if name in SMOOTH_SLOW else 12.0
+
+
+def despike(qs, L, max_half=14):
+    """2026-10-01 (Paul: snaps): where a bone turns more than L deg in one frame, the frames round it are replaced
+    by an even slerp between the nearest frames that keep every step under L (the first and last frames never
+    change: loop seams and pose-state ends stay exact).  Returns the number of spikes repaired."""
+    n = len(qs)
+    fixed = 0
+    for _ in range(8):
+        bad = [i for i in range(1, n) if 2.0 * math.degrees(math.acos(min(1.0, abs(qs[i - 1].dot(qs[i]))))) > L]
+        if not bad:
+            break
+        for i in bad:
+            for k in range(1, max_half + 1):
+                a, b = max(0, i - 1 - k), min(n - 1, i + k)
+                tot = 2.0 * math.degrees(math.acos(min(1.0, abs(qs[a].dot(qs[b])))))
+                if tot / (b - a) <= L or (a == 0 and b == n - 1):
+                    break
+            qa, qb = qs[a], qs[b] if qs[a].dot(qs[b]) >= 0 else -qs[b]
+            for j in range(a + 1, b):
+                q = qa.slerp(qb, (j - a) / (b - a))
+                qs[j] = q if q.dot(qs[j - 1]) >= 0 else -q
+            fixed += 1
+    return fixed
+
+
+def bake_clip(rig, solver, name, pose_fn, frames, fix=None, smooth=True):
     """pose_fn(frame) -> Pose for frame 0..frames (inclusive).  Writes every bone's rotation and the hips and
     root locations for every frame (linear), then pushes the action onto its own NLA track."""
     ad = rig.animation_data_create()
@@ -943,6 +1015,11 @@ def bake_clip(rig, solver, name, pose_fn, frames, fix=None):
             prev[b] = q
             data[b].append(q)
         hips_loc.append(loc)
+    L = despike_limit(name) if smooth else None
+    if L:
+        nfix = sum(despike(data[b], L) for b in BONE_NAMES if b not in NO_SMOOTH_BONES)
+        if nfix:
+            print("  despike %s: %d spikes over %.1f deg/frame smoothed" % (name, nfix, L))
 
     def put(path, idx, vals, group):
         fc = act.fcurve_ensure_for_datablock(rig, path, index=idx, group_name=group)
