@@ -60,3 +60,13 @@ This replaces the earlier note of the same date (tabbed left panel) and includes
 6. Tests: every item type posted at 80/100/140 % and 1920x1080 / 1280x720 → no default rect in the centre
    zone, all minimise/close/mute work, nothing lost when minimised (count badge correct).
 7. Web shots before/after with showcase_v5.
+
+## 2026-10-01 (later) — Paul: storm and atmosphere SOUNDS inside habitats
+
+Evidence: `docs/requests/shots/paul_2026-10-01_storm_indoors.webp`. Paul: atmosphere sounds should not be
+inside the habitats, especially in the over-the-shoulder view.
+Do (ui/audio.gd, ui/world_sounds.gd, music director): when the listener (camera) is inside a room, corridor or
+the dome, outdoor weather and wind sounds drop to a faint, low-passed hull rumble (for example -24 dB, low-pass
+about 400 Hz) or stop; interior room tone takes over. Outdoors full level. Fade over about 0.5 s on the
+transition. Follow view indoors uses this rule always. Test with tools/audio_probe.mjs (indoor vs outdoor
+level in a storm) and report the dB numbers.

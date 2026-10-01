@@ -45,3 +45,15 @@ Terrain colour, rock and boulder materials, skybox, sun and ambient light, fog, 
 screen background colony and the minimap palette follow the planet. A shot sheet per planet (day, dusk,
 night) in art/critic_input/render/ for the critic. Coordinate with SIM (ORCH-to-SIM.md, same date) so effects
 follow the planet's hazard table.
+
+## 2026-10-01 (later) — Paul: atmosphere effects inside habitats (over-the-shoulder view)
+
+Evidence: `docs/requests/shots/paul_2026-10-01_storm_indoors.webp` (day 28, follow view of Asha Verrin working
+at Refinery 1, indoors: wind-storm streak particles fill the whole screen in front of the camera).
+Paul: "atmosphere effects and sounds should not be inside the habitats, esp. on the over-shoulder view; it is
+very annoying and disrupting".
+Do: weather particles (wind streaks, dust, storm haze, rain-like streaks, dust devils) are never drawn inside
+a room or corridor volume, and never between the camera and the person when the camera is indoors. Indoors
+the storm shows only through windows/open cutaway sky (and maybe light flicker or a creak, subtle). In the
+normal top view, particles over a room's footprint are clipped too (roof on or off). Add a render check: camera
+indoors during a storm → 0 weather particles inside room volumes in view. Audio part: ORCH-to-UI.md.
