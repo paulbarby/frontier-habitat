@@ -513,3 +513,6 @@ Rules:
    (the camera stays inside under the ceiling). A new player toggle "all roofs off" cuts away every roof and
    upper wall in the whole colony in the normal view (Paul and a friend asked for it). RENDER draws it; UI
    adds the button, key and setting.
+6. **Window layout (Paul, 2026-10-01).** The centre of the view stays clear: banners, request cards and
+   event cards go to a tabbed panel on the left (Goals, Alerts, Events, Traffic, Requests, …) with count
+   badges, collapsible, sized to the view. A test checks that no default HUD window covers the centre.
