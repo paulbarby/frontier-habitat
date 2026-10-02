@@ -109,7 +109,21 @@ const SH_HRATE := 1.75        # rad/s (100 deg/s): the fastest the camera headin
 const SH_W_IN := 7.0          # wall correction in: fast (14 gave 7-20 mm camera jerk with the roofs-on walls)
 const SH_W_OUT := 2.5         # release: slow
 const SH_SOFT := 0.8          # m: the smoothed eye keeps this far off a wall (eased)
-const SH_HARD := 0.2          # m: the eye is never closer than this to a wall (no easing)
+const SH_HARD := 0.2          # m: the eye is never closer than this to a wall (no easing; outdoors)
+const SH_KNEE := 0.8          # m: indoors the soft wall rule's knee depth (world_view._vol_soft)
+const SH_KNEE2 := 0.2          # m: the soft rule again on the sprung eye (guard zone 0.25 m; inside the target margin)
+const SH_W_SMOOTH := 4.0      # rad/s: indoors the wall push spring (symmetric)
+const SH_W_CEIL_DOWN := 3.0   # rad/s: the eased ceiling over the eye, falling (a corridor ahead)
+const SH_W_CEIL_UP := 2.0     # rad/s: rising
+const SH_CEIL_KNEE := 0.5     # m: the soft ceiling limit's knee
+const SH_BODY_GAP := 0.6      # m (plan): the eye never comes closer to the followed body (at 1.9 m zoom)
+var dbg_free := Vector3.ZERO  # measurement: the free eye before the wall rule
+var dbg_target := Vector3.ZERO # measurement: the soft wall rule's target (before the spring)
+var slide_fn: Callable         # (shoulder, last eye, sprung eye) -> eye slid along the walls (world_view.follow_slide)
+var _sh_slide_prev := Vector3.ZERO
+var _sh_slide_ok := false
+var head_boost := 1.0          # measurement switch (render_follow_headless rig.head_boost=0): the trailing-heading boost
+var collide_smooth := false   # set by collide_fn each call: the indoor wall rule is already smooth
 
 ## One exact step of a critically damped spring (x, v) toward `target` with angular frequency w.
 static func _crit(x: float, v: float, target: float, w: float, dt: float) -> Vector2:
@@ -213,6 +227,7 @@ func _shoulder_process(delta: float) -> bool:
 	var body_yaw: float = float(s[1])
 	var eye_h: float = float(s[2]) if (s as Array).size() > 2 else 1.65
 	var dt: float = clampf(delta, 0.0, 0.1)
+	var rate_k: float = clampf(sqrt(maxf(float(s[4]), 1.0)), 1.0, 2.0) if (s as Array).size() > 4 else 1.0
 	# A jump (another person, a fade move, a load): start again from the body.
 	if not _sh_new and _sh_p.distance_to(pos) > 4.0:
 		_sh_new = true
@@ -261,7 +276,12 @@ func _shoulder_process(delta: float) -> bool:
 		# at most SH_HACC rad/s^2 and is at most SH_HRATE: the camera circles the person at ~2 m, so its
 		# acceleration is 2 m x rate^2 (at 4x a spring alone gave 7-15 mm camera jerk, 2026-10-01).
 		var rh: Vector2 = _crit(_sh_heading, _sh_hvel, _sh_heading - e, wh, dt)
-		var hv: float = clampf(clampf(rh.y, _sh_hvel - SH_HACC * dt, _sh_hvel + SH_HACC * dt), -SH_HRATE, SH_HRATE)
+		# At 2x-4x a heading that trails by a lot (the person turned a corner 4 x as fast) may turn up to
+		# sqrt(rate) x faster: trailing 80 deg behind a 4x walker put the free eye 1.2 m outside a corridor
+		# and the wall rule then swept it (100-400 mm camera jerk, 2026-10-02). Small errors keep the caps.
+		var big: float = 1.0 + (rate_k - 1.0) * smoothstep(0.35, 0.9, absf(e)) * head_boost
+		var hacc: float = SH_HACC * big
+		var hv: float = clampf(clampf(rh.y, _sh_hvel - hacc * dt, _sh_hvel + hacc * dt), -SH_HRATE * big, SH_HRATE * big)
 		_sh_heading = rh.x if hv == rh.y else _sh_heading + (_sh_hvel + hv) * 0.5 * dt
 		_sh_hvel = hv
 		var re: Vector2 = _crit(_sh_eh, _sh_ehv, eye_h, SH_W_EYE, dt)
@@ -312,9 +332,27 @@ func _shoulder_process(delta: float) -> bool:
 	# clear point; that correction eases in fast (SH_W_IN) and out slowly (SH_W_OUT, after a 4 % dead band
 	# or 0.6 s), per axis; then the final eye point is kept SH_HARD clear of every wall (no easing).
 	var push_t := Vector3.ZERO
+	collide_smooth = false
+	dbg_free = free
+	var soft_eye := free
 	if collide_fn.is_valid():
-		push_t = (collide_fn.call(shoulder_pt, free, SH_SOFT) as Vector3) - free
-	if _sh_new:
+		soft_eye = collide_fn.call(shoulder_pt, free, SH_SOFT, false, SH_KNEE) as Vector3
+		push_t = soft_eye - free
+	dbg_target = soft_eye
+	if collide_smooth:
+		# Indoors (2026-10-02): the target is the soft wall rule (world_view._vol_soft, continuous in the free
+		# eye except where two volumes meet: a flip of up to ~0.3 m). One symmetric spring takes the flips
+		# out; the soft rule again on the result (small knee) keeps the eye off the wall. No hard clamp, no
+		# dead band (16 mm camera jerk with the old spring + clamp).
+		if _sh_new:
+			_sh_push = push_t
+			_sh_pushv = Vector3.ZERO
+		elif dt > 0.0:
+			for ax in 3:
+				var rq2: Vector2 = _crit(_sh_push[ax], _sh_pushv[ax], push_t[ax], SH_W_SMOOTH * rate_k, dt)
+				_sh_push[ax] = rq2.x
+				_sh_pushv[ax] = rq2.y
+	elif _sh_new:
 		_sh_push = push_t
 		_sh_pushv = Vector3.ZERO
 	elif dt > 0.0:
@@ -332,10 +370,37 @@ func _shoulder_process(delta: float) -> bool:
 			_sh_push[ax] = rq.x
 			_sh_pushv[ax] = rq.y
 	var eye: Vector3 = free + _sh_push
+	# No body through the camera (2026-10-02): the eye keeps SH_BODY_GAP (plan) off the person's drawn body.
+	# A soft rule (identity beyond 2 x the gap, then eased to the gap): it acts only when the camera's
+	# heading trails a sharp turn and the person walks toward the lens.
+	var bo := Vector2(eye.x - pos.x, eye.z - pos.z)
+	var bl: float = bo.length()
+	var gap_k: float = SH_BODY_GAP * clampf(_sh_d / 1.9, 0.3, 1.0)
+	# (not when the camera looks down from above the head: the high orbit passes over the person)
+	if bl < 2.0 * gap_k and eye.y < pos.y + 2.5:
+		var bn: Vector2 = bo / bl if bl > 0.001 else Vector2(-fwd.x, -fwd.z)
+		var nl: float = gap_k + gap_k * exp((bl - 2.0 * gap_k) / gap_k) if bl < 2.0 * gap_k else bl
+		# (phi(L) = gap + gap e^((L - 2 gap) / gap): equal to L with slope 1 at L = 2 gap, never under the gap)
+		nl = lerpf(bl, maxf(nl, bl), clampf((pos.y + 2.5 - eye.y) / 0.4, 0.0, 1.0))
+		eye.x = pos.x + bn.x * nl
+		eye.z = pos.z + bn.y * nl
 	if collide_fn.is_valid():
-		eye = collide_fn.call(shoulder_pt, eye, SH_HARD, true)
-	_sh_f = clampf(1.0 - (eye - free).length() / maxf(shoulder_pt.distance_to(free), 0.01), 0.0, 1.0)	# Under the ceiling (Paul 2026-10-01, roofs on): eased like the walls (the ceiling changes in steps
-	# between a room and a corridor), never closer than 0.12 m; never below the person's floor + 0.25 m.
+		if collide_smooth:
+			# (indoors: slide from last frame's eye toward the sprung eye along the walls, so the eye moves
+			# continuously; the soft guard on a new view or a jump)
+			if slide_fn.is_valid() and not _sh_new and _sh_slide_ok:
+				eye = slide_fn.call(shoulder_pt, _sh_slide_prev, eye) as Vector3
+			else:
+				eye = collide_fn.call(shoulder_pt, eye, SH_HARD, false, SH_KNEE2) as Vector3
+			_sh_slide_prev = eye
+			_sh_slide_ok = true
+		else:
+			_sh_slide_ok = false
+			eye = collide_fn.call(shoulder_pt, eye, SH_HARD, true)
+	_sh_f = clampf(1.0 - (eye - free).length() / maxf(shoulder_pt.distance_to(free), 0.01), 0.0, 1.0)
+	# Under the ceiling (Paul 2026-10-01, roofs on): the ceiling is eased (it changes in steps between a room
+	# and a corridor) and applied as a soft limit (no hard clamp on a raw value, 2026-10-02); never below the
+	# person's floor + 0.25 m.
 	if ceil_fn.is_valid():
 		var cy: float = float(ceil_fn.call(pos, eye))
 		var tw: Vector3 = Vector3(pivot.x - eye.x, 0.0, pivot.z - eye.z)
@@ -350,10 +415,14 @@ func _shoulder_process(delta: float) -> bool:
 				_sh_cy = cy_soft
 				_sh_cyv = 0.0
 			else:
-				var rc: Vector2 = _crit(_sh_cy, _sh_cyv, cy_soft, SH_W_IN if cy_soft < _sh_cy else SH_W_OUT, dt)
+				var rc: Vector2 = _crit(_sh_cy, _sh_cyv, cy_soft, SH_W_CEIL_DOWN if cy_soft < _sh_cy else SH_W_CEIL_UP, dt)
 				_sh_cy = rc.x
 				_sh_cyv = rc.y
-			eye.y = minf(eye.y, minf(_sh_cy - 0.3, cy - 0.12))
+			# soft minimum: identity below (limit - knee), then eases to the limit and never passes it
+			var lim: float = _sh_cy - 0.3
+			var y0: float = lim - SH_CEIL_KNEE
+			if eye.y > y0:
+				eye.y = y0 + SH_CEIL_KNEE * (1.0 - exp(-(eye.y - y0) / SH_CEIL_KNEE))
 		else:
 			_sh_cy = INF
 	eye.y = maxf(eye.y, pos.y + 0.25)

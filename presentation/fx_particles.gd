@@ -53,6 +53,11 @@ var wind_storm := 0.0      # V3 wind storm 0..1 (fx_hazards): fast pale dust she
 const HUGE_AABB := AABB(Vector3(-900, -200, -900), Vector3(4400, 700, 4400))   # the 2,560 m v4 map too
 
 var field_on := true        # the camera dust motes (off for critic stills: `toggle dust 0`)
+## Planet (Paul 2026-10-01, V5 15.7): "airless" = no dust in the air, no devils, no storm sheets, no drift;
+## "cold" = the camera motes are ice glitter (pale blue-white). world_view sets it on load.
+var planet := "dry"
+const AIRLESS_NO := ["devil", "dust_column"]          # never on an airless planet
+const AIRLESS_LOW := ["dust", "site_dust", "dust_ring", "impact_dust"]   # ballistic only: a third, no drift
 var field_light := 1.0      # V4: motes dim in a shadowed crater (no bright streaks on a dark floor)
 ## Weather kinds clipped by the room / corridor volumes (Paul 2026-10-01: no storm inside habitats).
 const CLIP_KINDS := ["dust", "devil", "impact_dust", "dust_column"]
@@ -199,8 +204,10 @@ func _off() -> Transform3D:
 
 ## Continuous emitter. Same key again only moves it or changes its strength.
 func emitter_set(key: String, kind: String, pos: Vector3, intensity: float, yaw: float = 0.0) -> void:
-	if not KINDS.has(kind):
+	if not KINDS.has(kind) or planet == "airless" and kind in AIRLESS_NO:
 		return
+	if planet == "airless" and kind in AIRLESS_LOW:
+		intensity *= 0.35
 	if emitters.has(key):
 		var e: Dictionary = emitters[key]
 		if e["kind"] == kind:
@@ -265,8 +272,10 @@ func prewarm(pos: Vector3) -> void:
 
 ## One-shot particles (dust puff, sparks shower).
 func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float = 0.0, inten: float = 1.0) -> void:
-	if not KINDS.has(kind):
+	if not KINDS.has(kind) or planet == "airless" and kind in AIRLESS_NO and n > 1:
 		return
+	if planet == "airless" and kind in AIRLESS_LOW and n > 1:
+		n = maxi(1, n / 3)
 	var pool: Dictionary = _pool(kind)
 	var mm: MultiMesh = pool["mm"]
 	var lo: int = pool["burst_lo"]
@@ -327,6 +336,10 @@ func set_lamps(glows: Array, beacons: Array) -> void:
 func sync(delta: float, sim_dt: float, cam: Camera3D, focus: Vector3, wind: float, night: float, storm: float, sun_dir: Vector3) -> void:
 	_now += delta
 	var wv := Vector3(0.83, 0.0, 0.55) * (0.4 + wind * 0.35)
+	if planet == "airless":
+		wv = Vector3.ZERO
+		storm = 0.0
+		wind_storm = 0.0
 	var light := Color(1.0, 0.92, 0.82).lerp(Color(0.32, 0.36, 0.5), night)
 	for kind in pools:
 		var m: ShaderMaterial = pools[kind]["mat"]
@@ -340,8 +353,9 @@ func sync(delta: float, sim_dt: float, cam: Camera3D, focus: Vector3, wind: floa
 	_field_mat.set_shader_parameter("wind", wv * 1.4)
 	_field_mat.set_shader_parameter("field_center", center)
 	_field_mat.set_shader_parameter("field_size", Vector3(70, 12, 70))
-	_field_mat.set_shader_parameter("color0", Color(0.8, 0.62, 0.46, 0.28 * (1.0 - night * 0.6) * field_light))
-	_field.visible = quality >= 1 and field_on
+	var fc := Color(0.8, 0.62, 0.46) if planet != "cold" else Color(0.86, 0.92, 1.0)
+	_field_mat.set_shader_parameter("color0", Color(fc.r, fc.g, fc.b, 0.28 * (1.0 - night * 0.6) * field_light))
+	_field.visible = quality >= 1 and field_on and planet != "airless"
 	var st2: float = maxf(storm, wind_storm)
 	_storm.visible = st2 > 0.02
 	if _storm.visible:

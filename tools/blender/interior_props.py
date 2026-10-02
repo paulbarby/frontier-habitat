@@ -98,18 +98,40 @@ def text_width(s, h):
     return max(0.0, (6 * len(s) - 1) * px)
 
 
-def text(p, s, yc, zc, h, mat, x=0.0, align="c"):
+# Size rules (ART-HAB 2026-10-02, pck budget): text under GREEK_H cap height is drawn as one bar per word ("small
+# print"); at 1.9 m behind the follow camera a 2 mm font pixel is under one screen pixel, so the glyphs only cost
+# triangles.  keep=True (desk plates) keeps the glyphs.  The dark ink is Rubber: HullDark text on a Hull board had a
+# contrast ratio near 2 and did not read in the follow view.
+GREEK_H = 0.019
+INK = {"HullDark": "Rubber"}
+
+
+def text(p, s, yc, zc, h, mat, x=0.0, align="c", keep=False):
     """Pixel text on the plane x (facing +X), reading along +Y; (yc, zc) = the centre (align 'c'), the left end
     ('l') or the right end ('r') of the line; h = cap height."""
     s = s.upper()
+    mat = INK.get(mat, mat)
     px = h / 7.0
     W = text_width(s, h)
     y0 = yc - W / 2 if align == "c" else (yc if align == "l" else yc - W)
     z0 = zc + h / 2
+    nq = 0
+    if h < GREEK_H and not keep:
+        i = 0
+        for word in s.split(" "):
+            if word:
+                plate_x(p, x, y0 + 6 * px * i, y0 + 6 * px * (i + len(word)) - px, zc - px * 2.0, zc + px * 2.0, mat)
+                nq += 1
+            i += len(word) + 1
+        USED_TRIS["_text_greek"] = USED_TRIS.get("_text_greek", 0) + 2 * nq
+        return W
     for i, ch in enumerate(s):
         gy = y0 + 6 * px * i
         for (c0, c1, r0, r1) in _rects(ch):
             plate_x(p, x, gy + px * c0, gy + px * c1, z0 - px * r1, z0 - px * r0, mat)
+            nq += 1
+    key = "_text_mid" if h < 0.03 else "_text_big"
+    USED_TRIS[key] = USED_TRIS.get(key, 0) + 2 * nq
     return W
 
 
@@ -117,35 +139,33 @@ _RECTS = {}
 
 
 def _rects(ch):
-    """The glyph as rectangles (c0, c1, r0, r1): horizontal runs, merged downward while the next row has the same
-    run (about 35 % fewer quads than one quad per run)."""
+    """The glyph as the fewest rectangles (c0, c1, r0, r1) that tile its pixels without overlap (exact search; 15 %
+    fewer quads than row runs merged downward)."""
     if ch in _RECTS:
         return _RECTS[ch]
     g = _G.get(ch, _G["?"])
-    runs = []
-    for r, row in enumerate(g):
-        c = 0
-        while c < 5:
-            if row[c] == "1":
-                c1 = c
-                while c1 + 1 < 5 and row[c1 + 1] == "1":
-                    c1 += 1
-                runs.append((r, c, c1 + 1))
-                c = c1 + 1
-            else:
-                c += 1
-    used = set()
-    out = []
-    for (r, c0, c1) in runs:
-        if (r, c0, c1) in used:
-            continue
-        r1 = r + 1
-        while (r1, c0, c1) in runs and (r1, c0, c1) not in used:
-            used.add((r1, c0, c1))
-            r1 += 1
-        out.append((c0, c1, r, r1))
-    _RECTS[ch] = out
-    return out
+    cells = frozenset((r, c) for r in range(7) for c in range(5) if g[r][c] == "1")
+    best = [None]
+
+    def rec(rem, acc):
+        if best[0] is not None and len(acc) >= len(best[0]):
+            return
+        if not rem:
+            best[0] = list(acc)
+            return
+        r0, c0 = min(rem)                       # the first free pixel (top row, left) starts the next rectangle
+        for r1 in range(r0 + 1, 8):
+            if (r1 - 1, c0) not in rem:
+                break
+            for c1 in range(c0 + 1, 6):
+                if not all((r, c) in rem for r in range(r0, r1) for c in range(c0, c1)):
+                    break
+                acc.append((c0, c1, r0, r1))
+                rec(rem - {(r, c) for r in range(r0, r1) for c in range(c0, c1)}, acc)
+                acc.pop()
+    rec(cells, [])
+    _RECTS[ch] = best[0] or []
+    return _RECTS[ch]
 
 
 def text_lines(p, lines, yc, ztop, h, mat, x=0.0, gap=0.45, align="c"):
@@ -176,6 +196,7 @@ BANDS = (("THE", "HALLUCINATIONS"), ("DJ", "LATENCY"), ("NEURAL", "NOISE"), ("OV
 NOTICES = (("WIFI PW:", "PROMPT123"), ("LOST: MY", "API KEY"), ("SOURDOUGH", "CLUB TUE"), ("NO DRONES", "IN HALL"),
            ("PICKLEBALL", "8PM DECK 2"), ("KETTLE IS", "SULKING"))
 POSTER_BG = ("Accent", "Cushion", "Fabric", "CushionLight", "HullDark", "Wood", "PlantDark", "Hull")
+VIBE_KINDS = ("captcha", "travel", "wellness", "cat")      # 5.0 second poster family (kind "vibeposter")
 
 
 def _sparkle(p, x, yc, zc, r, mat):
@@ -191,10 +212,17 @@ def _sparkle(p, x, yc, zc, r, mat):
         p.f([c, ids[k], ids[(k + 1) % 8]], mat)
 
 
-WALL_OFF = 0.035      # the wall panel stands proud of the slot plane by up to 3 cm: wall pieces start in front of it
+# Wall pieces (V5 2026-10-02): the wall slot origin is ON the flat wall panel (interior_kit.wall_slot), so a flat piece
+# starts WALL_OFF in front of the panel.  The panel is cut by the skirting (z < 0.29), the pipe run (z 0.345 - 0.475,
+# 7 cm deep) and the cove light (z 1.255 - 1.335, 4 cm deep); flat pieces live between ZLO and ZHI (absolute z).
+# Before this, the slot origin sat 2 cm behind radius Ri and WALL_OFF was 3.5 cm: the panel face is up to 8 cm in
+# front of that origin on a big room (the wall facet is a chord), so posters sank into it (jail, distillery, XL).
+WALL_OFF = 0.004
+ZLO = 0.50 - F             # lowest flat piece (above the pipes), relative to the floor top F
+ZHI = 1.24 - F             # highest flat piece (under the cove light)
 
 
-def poster(p, w=0.70, kind="ai", seed=0, z0=None, hh=0.62, off=WALL_OFF):
+def poster(p, w=0.70, kind="ai", seed=0, z0=None, hh=0.66, off=WALL_OFF):
     """A framed poster on the wall: background, a picture made of shapes, a two-line headline."""
     with p.at(T(off, 0.0, 0.0)):
         _poster(p, w, kind, seed, z0, hh)
@@ -203,8 +231,8 @@ def poster(p, w=0.70, kind="ai", seed=0, z0=None, hh=0.62, off=WALL_OFF):
 def _poster(p, w, kind, seed, z0, hh):
     rng = random.Random(seed * 7 + len(kind))
     ww = min(0.56, w - 0.12)
-    z0 = F + 0.66 if z0 is None else z0
-    z1 = min(z0 + hh, F + 1.24)
+    z0 = F + ZLO + 0.04 if z0 is None else z0
+    z1 = min(z0 + hh, F + ZHI)
     bbox(p, 0.0, 0.025, -ww / 2, ww / 2, z0, z1, "Frame")
     bg = POSTER_BG[(seed + {"ai": 0, "film": 3, "band": 5, "notice": 1}.get(kind, 0)) % len(POSTER_BG)]
     if kind == "notice":
@@ -239,6 +267,54 @@ def _poster(p, w, kind, seed, z0, hh):
         h = fit_h(lines, ww - 0.08, 0.044)
         text_lines(p, lines, 0.0, z0 + H * 0.40, h, ink, x=x2 + 0.001)
         text(p, "LIVE ON PHOBOS", 0.0, z0 + 0.05, 0.016, ink, x=x2 + 0.001)
+    elif kind == "captcha":                       # a 3 x 3 'select all squares' grid
+        lines = ("SELECT ALL SQUARES", "WITH HOPE")
+        gw = ww - 0.16
+        tile = gw / 3.0
+        gz1 = z1 - 0.22 * H / 0.6
+        rng2 = random.Random(seed * 3 + 1)
+        hope = {rng2.randrange(9) for _ in range(3)}
+        for r in range(3):
+            for c in range(3):
+                y0 = -gw / 2 + c * tile
+                zz1 = gz1 - r * tile
+                plate_x(p, x2, y0 + 0.006, y0 + tile - 0.006, zz1 - tile + 0.006, zz1 - 0.006,
+                        "Hull" if (r + c) % 2 else "CushionLight")
+                if (r * 3 + c) in hope:
+                    _sparkle(p, x2 + 0.001, y0 + tile / 2, zz1 - tile / 2, tile * 0.36, "Window")
+        h = fit_h(lines, ww - 0.08, 0.034)
+        text_lines(p, lines, 0.0, z1 - 0.045, h, ink, x=x2 + 0.001)
+    elif kind == "travel":                        # a retro travel poster: a planet over a horizon
+        disc_r = H * 0.22
+        with p.at(T(x2, 0.0, z0 + H * 0.62), RY(90.0)):
+            p.cap_disc(disc_r, 0.0, "WaterBlue", seg=16)
+            p.cap_disc(disc_r * 0.55, 0.001, "Plant", seg=8)
+        plate_x(p, x2, -ww / 2 + 0.03, ww / 2 - 0.03, z0 + H * 0.34, z0 + H * 0.39, "Hazard")
+        lines = ("VISIT EARTH", "WARM*  GREEN*")
+        text_lines(p, lines, 0.0, z0 + H * 0.30, fit_h(lines, ww - 0.08, 0.044), ink, x=x2 + 0.001)
+        text(p, "*WHILE IT LASTS", 0.0, z0 + 0.05, 0.014, ink, x=x2 + 0.001)
+    elif kind == "wellness":                      # a water drop and a nagging reminder
+        with p.at(T(x2, 0.0, z0 + H * 0.60), RY(90.0)):
+            p.cap_disc(H * 0.13, 0.0, "WaterBlue", seg=12)
+        p.tri((x2, -H * 0.12, z0 + H * 0.64), (x2, H * 0.12, z0 + H * 0.64), (x2, 0.0, z0 + H * 0.88), "WaterBlue")
+        text(p, "HYDRATE", 0.0, z0 + H * 0.36, fit_h(["HYDRATE"], ww - 0.08, 0.050), ink, x=x2 + 0.001)
+        lines = ("THE BOT WILL", "REMIND YOU", "EVERY 4 MIN")
+        text_lines(p, lines, 0.0, z0 + H * 0.26, fit_h(lines, ww - 0.10, 0.028), ink, x=x2 + 0.001, gap=0.5)
+    elif kind == "cat":                           # the colony cat, bored (an original silhouette)
+        zc = z0 + H * 0.60
+        with p.at(T(x2, 0.0, zc - H * 0.06), RY(90.0)):
+            p.cap_disc(H * 0.18, 0.0, "HullDark", seg=12)
+        with p.at(T(x2, ww * 0.20, zc + H * 0.16), RY(90.0)):
+            p.cap_disc(H * 0.10, 0.0, "HullDark", seg=10)
+        for s_ in (-1, 1):
+            p.tri((x2, ww * 0.20 + s_ * H * 0.10, zc + H * 0.19), (x2, ww * 0.20 + s_ * H * 0.03, zc + H * 0.24),
+                  (x2, ww * 0.20 + s_ * H * 0.085, zc + H * 0.31), "HullDark")
+        disc_r2 = H * 0.012
+        for s_ in (-1, 1):
+            with p.at(T(x2 + 0.001, ww * 0.20 + s_ * H * 0.04, zc + H * 0.17), RY(90.0)):
+                p.cap_disc(disc_r2, 0.0, "Window", seg=5)
+        lines = ("AGENT CAT", "STATUS: BORED")
+        text_lines(p, lines, 0.0, z0 + H * 0.28, fit_h(lines, ww - 0.08, 0.036), ink, x=x2 + 0.001)
     else:                                         # notice board: pinned notes, one with text
         for j in range(4):
             yy = -ww * 0.28 + ww * 0.19 * j + rng.uniform(-0.02, 0.02)
@@ -309,7 +385,7 @@ def desk_plate(p, x, y, z, txt):
               (x - 0.03, y + L / 2, z), (x + 0.02, y + L / 2, z), (x - 0.03, y + L / 2, z + 0.05)],
              [(0, 1, 2), (3, 5, 4), (0, 3, 4, 1), (1, 4, 5, 2), (0, 2, 5, 3)], "HullDark")
     with p.at(T(x - 0.005, y, z + 0.025), RY(-45.0), T(0.0, 0.0, 0.0)):
-        text(p, txt, 0.0, 0.0, 0.016, "LightStrip", x=0.0035)
+        text(p, txt, 0.0, 0.0, 0.016, "LightStrip", x=0.0035, keep=True)
 
 
 def mug(p, x, y, z, mat="Hull", tall=False):
@@ -460,7 +536,7 @@ def gpu_card(p, x, y, z, L=0.30):
 def gpu_shrine(p, w=0.80, d=0.40, seed=0):
     """Wall piece: a small altar with a graphics card on a cushion, candles, energy-drink offerings, incense and a
     framed sign 'PRAY FOR VRAM' (x = 0 at the wall)."""
-    zt = F + 0.80
+    zt = F + 0.62
     bbox(p, 0.02, d, -w / 2 + 0.04, w / 2 - 0.04, zt - 0.04, zt, "Wood", bevel=0.01)
     for sy in (-1, 1):
         bbox(p, 0.04, d - 0.03, sy * (w / 2 - 0.08) - 0.025, sy * (w / 2 - 0.08) + 0.025, F, zt - 0.04, "Wood")
@@ -479,11 +555,11 @@ def gpu_shrine(p, w=0.80, d=0.40, seed=0):
     o = WALL_OFF
     bbox(p, o, o + 0.02, -0.20, 0.20, zt + 0.16, CUT_SIGN, "Frame")
     plate_x(p, o + 0.021, -0.18, 0.18, zt + 0.18, CUT_SIGN - 0.02, "HullDark")
-    text(p, "PRAY FOR", 0.0, zt + 0.32, 0.034, "Window", x=o + 0.023)
-    text(p, "VRAM", 0.0, zt + 0.25, 0.044, "Window", x=o + 0.023)
+    text(p, "PRAY FOR", 0.0, zt + 0.35, 0.030, "Window", x=o + 0.023)
+    text(p, "VRAM", 0.0, zt + 0.28, 0.040, "Window", x=o + 0.023)
 
 
-CUT_SIGN = F + 1.24       # wall pieces stay under the cutaway cut (1.40) with their frame
+CUT_SIGN = F + ZHI        # wall pieces stay under the cove light (1.255) and so under the cutaway cut (1.40)
 
 
 def agents_screen(p, w=0.80, seed=0):
@@ -494,7 +570,7 @@ def agents_screen(p, w=0.80, seed=0):
 
 def _agents_screen(p, w, seed):
     ww = min(0.72, w - 0.06)
-    z0, z1 = F + 0.70, F + 1.22
+    z0, z1 = F + ZHI - 0.52, F + ZHI
     bbox(p, 0.0, 0.04, -ww / 2, ww / 2, z0, z1, "Frame")
     plate_x(p, 0.041, -ww / 2 + 0.02, ww / 2 - 0.02, z0 + 0.02, z1 - 0.02, "Screen")
     x = 0.043
@@ -519,7 +595,7 @@ def menu_board(p, w=0.80, seed=0):
 
 def _menu_board(p, w, seed):
     ww = min(0.72, w - 0.06)
-    z0, z1 = F + 0.72, F + 1.22
+    z0, z1 = F + ZHI - 0.52, F + ZHI
     bbox(p, 0.0, 0.04, -ww / 2, ww / 2, z0, z1, "Frame")
     plate_x(p, 0.041, -ww / 2 + 0.02, ww / 2 - 0.02, z0 + 0.02, z1 - 0.02, "HullDark")
     menus = (("TODAY", "ALGAE 3 WAYS", "AI SOUP*", "VIBE TEA"), ("SPECIALS", "TOFU BYTES", "LATENCY LATTE",
@@ -562,8 +638,7 @@ def floor_text(p, txt, x, y, yaw, h, mat):
 def neon_kind(txt, mat="Neon"):
     def fn(p, w, d, k):
         h = min(0.09, (w - 0.10) / max(1.0, (6 * len(txt) - 1) / 7.0))
-        neon_text(p, txt, 0.0, F + 1.12, h, mat, x=WALL_OFF)
-        plate_x(p, 0.001, -w / 2 + 0.06, w / 2 - 0.06, F + 0.10, F + 0.14, "Frame")
+        neon_text(p, txt, 0.0, F + 0.86, h, mat, x=WALL_OFF)
     return fn
 
 
@@ -571,10 +646,46 @@ WALL_KINDS = {
     "aiposter": lambda p, w, d, k: poster(p, w=w, kind="ai", seed=k),
     "filmposter": lambda p, w, d, k: poster(p, w=w, kind=("film", "band")[k % 2], seed=k),
     "notice": lambda p, w, d, k: poster(p, w=w, kind="notice", seed=k),
+    "vibeposter": lambda p, w, d, k: poster(p, w=w, kind=VIBE_KINDS[k % len(VIBE_KINDS)], seed=k),
     "kettle": lambda p, w, d, k: kettle_station(p, w=w, d=min(d, 0.42), seed=k),
     "shrine": lambda p, w, d, k: gpu_shrine(p, w=w, d=min(d, 0.40), seed=k),
     "agents": lambda p, w, d, k: agents_screen(p, w=w, seed=k),
     "menu": lambda p, w, d, k: menu_board(p, w=w, seed=k),
 }
-WALL_DEPTHS = {"aiposter": 0.08, "filmposter": 0.08, "notice": 0.08, "kettle": 0.42, "shrine": 0.40,
+WALL_DEPTHS = {"aiposter": 0.08, "filmposter": 0.08, "notice": 0.08, "vibeposter": 0.08, "kettle": 0.42, "shrine": 0.40,
                "agents": 0.08, "menu": 0.08}
+
+
+# --------------------------------------------------------------------------------------
+# usage record (the build report lists the prop kinds of every room; rooms_build checks the §15.3 minimum)
+# --------------------------------------------------------------------------------------
+USED = {}
+USED_TRIS = {}          # triangles per wall kind in this room (wall_items records them; build report)
+SATIRE = {"console_label", "kettle_bot", "sub_toaster", "gpu_shrine", "agents_screen", "menu_board", "kettle_station", "desk_plate",
+          "neon_text", "r_motto"}
+
+
+def reset_used():
+    USED.clear()
+    USED_TRIS.clear()
+
+
+def _count(name, fn):
+    def wrapped(*a, **k):
+        USED[name] = USED.get(name, 0) + 1
+        return fn(*a, **k)
+    wrapped.__name__ = fn.__name__
+    wrapped.__doc__ = fn.__doc__
+    return wrapped
+
+
+def _wrap_all():
+    g = globals()
+    for nm in ("poster", "screen_content", "text_screen", "desk_clutter", "desk_plate", "kettle_bot", "sub_toaster",
+               "sourdough", "oat_carton", "gpu_shrine", "neon_text", "agents_screen", "menu_board", "kettle_station",
+               "floor_text"):
+        if nm in g:
+            g[nm] = _count(nm, g[nm])
+
+
+_wrap_all()

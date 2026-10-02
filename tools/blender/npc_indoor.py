@@ -131,7 +131,7 @@ def build_arm(p, s):
         (s_wr + 0.000, 0.031, 0.031, "Skin"),                  # wrist, running into the hand
         (s_wr + 0.040, 0.030, 0.026, "Skin"),
     ]
-    with p.w(arm_rule(s)):
+    with p.w(arm_rule(s, cap=True)):
         tube_path(p, pts, st, seg=SEG_ARM, ref=(1, 0, 0))
         if s == "L":
             # sleeve patch (role colour) on the outside of the upper arm

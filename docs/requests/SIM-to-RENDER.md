@@ -764,3 +764,9 @@ draw the polymer plant model until ART-HAB makes one.
   no sky haze. Flares are stronger there (radiation x2). `sim.hazards.kinds_here()` lists what can happen.
 - Wind turbines and atmosphere processors cannot be placed on airless (an old save's processor has block
   `no_atmosphere`: no vapour plume).
+## 2026-10-02 - no API change; showcase_v5 rebuilt
+
+- `content/saves/showcase_v5.fhsave` was written again (134 people with 8 children, 2 bases, finished dome with 15
+  tourists, 0 deaths, calm, ledger {}). The content is the same as before; positions and days of play differ, so
+  re-run your showcase probes. New log code `defect_ended` (a colonist's request to leave with a ship ended when the
+  ship took off). Nothing else changed for the view.

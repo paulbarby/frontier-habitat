@@ -22,6 +22,8 @@ uniform float haze = 0.6;
 uniform float storm = 0.0;
 uniform float time = 0.0;
 uniform float aurora = 0.0;     // solar flare (V3 4.5): green-violet curtains
+uniform float stars_day = 0.0;  // airless planet: stars in daylight too
+uniform float scatter = 1.0;    // 0 = no air: no glow, halo or horizon haze round the sun
 
 float hash13(vec3 p) {
 	p = fract(p * 0.1031);
@@ -91,16 +93,19 @@ void sky() {
 	float az = dot(dh, sh) * 0.5 + 0.5;
 	float band = exp(-max(up + 0.02, 0.0) * 7.0) * pow(az, 2.5);
 	float halo = pow(max(cs, 0.0), 6.0) * 0.35 + pow(max(cs, 0.0), 48.0) * 0.55 + pow(max(cs, 0.0), 600.0) * 1.2;
-	col += glow_col * band * glow_amount;
-	col += sun_col * halo * (0.35 + 0.65 * glow_amount) * step(-0.25, sun_dir.y);
+	col += glow_col * band * glow_amount * scatter;
+	col += sun_col * halo * (0.35 + 0.65 * glow_amount) * step(-0.25, sun_dir.y) * scatter;
+	// No air: only a faint corona hugging the disc (glare in the lens), no sky glow.
+	col += sun_col * pow(max(cs, 0.0), 2400.0) * 0.6 * (1.0 - scatter);
 
 	// Dust haze: a bright band that sits on the horizon.
 	col = mix(col, horizon_col * 1.04, exp(-abs(up) * 14.0) * haze * 0.55);
 
 	if (!AT_CUBEMAP_PASS) {
 		// Stars and galaxy band (night only).
-		if (night > 0.01 && up > -0.1) {
-			float fade = night * smoothstep(-0.05, 0.25, up) * (1.0 - storm);
+		float sn = max(night, stars_day);
+		if (sn > 0.01 && up > -0.1) {
+			float fade = sn * smoothstep(-0.05, 0.25, up) * (1.0 - storm) * mix(1.0, smoothstep(-0.02, 0.08, up), stars_day);
 			vec3 gn = normalize(vec3(0.35, 0.82, 0.45));
 			float gb = exp(-pow(dot(d, gn) * 5.5, 2.0));
 			float gnoise = fbm(d * 7.0 + vec3(3.1, 1.7, 0.4));

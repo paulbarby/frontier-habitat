@@ -443,6 +443,20 @@ def q_from_frames(u0, w0, u1, w1):
 
 
 ELBOW_GUARD = True       # 2026-10-01: IK elbows never inside the torso (Solver._elbow_out)
+SCAP_RHYTHM = not os.environ.get("NPC_NOSCAP")       # 2026-10-02: the clavicle follows the upper arm (Solver._scap)
+SCAP_RAISE_MAX = 16.0    # deg (people_audit: shrug fault over 18 deg)
+JOINT_LIMITS = not os.environ.get("NPC_NOLIMITS")    # 2026-10-02: soft elbow and wrist limits (Solver._joint_limits)
+ELBOW_KNEE, ELBOW_MAX = 135.0, 150.0
+WRIST_KNEE, WRIST_MAX = 60.0, 75.0
+
+
+def _sramp(x, w):
+    """Smooth ramp: 0 below 0, x^2 / 2w up to w, then x - w/2 (continuous slope)."""
+    if x <= 0.0:
+        return 0.0
+    if x < w:
+        return x * x / (2.0 * w)
+    return x - 0.5 * w
 FK_BONES = ["hips", "spine", "chest", "neck", "head"] + ["%s.%s" % (b, s) for s in SIDES for b in
                                                          ("shoulder", "upper_arm", "forearm", "hand")]
 
@@ -533,14 +547,95 @@ class Solver:
         for b in EXTRA_FK:
             fk(b, qeuler(P.g(b + ".rx"), P.g(b + ".ry"), P.g(b + ".rz")))
         for s in SIDES:
-            fk("shoulder." + s, qeuler(P.g("shoulder.%s.rx" % s), P.g("shoulder.%s.ry" % s), P.g("shoulder.%s.rz" % s)))
+            qs = qeuler(P.g("shoulder.%s.rx" % s), P.g("shoulder.%s.ry" % s), P.g("shoulder.%s.rz" % s))
+            fk("shoulder." + s, qs)
             self._arm(P, s, D, Q, pos, fk)
+            if SCAP_RHYTHM:
+                qx = self._scap(s, D)
+                if qx is not None:
+                    d_old = D["shoulder." + s]
+                    d_hand = D["hand." + s]
+                    first = {b: (pos[b].copy(), D[b].copy()) for b in ("upper_arm." + s, "forearm." + s, "hand." + s)}
+                    fk("shoulder." + s, qx @ qs)
+                    self._arm(P, s, D, Q, pos, fk, D["shoulder." + s].inverted() @ d_old)
+                    if P.g("arm.%s.ik" % s) <= 1e-4:
+                        self._keep_hand(s, D, Q, pos, first)
+                    if P.g("arm.%s.stiff" % s) > 0 and P.g("arm.%s.ik" % s) > 0:
+                        # a stiff IK hand keeps the turn it had without the rhythm (hands flat on desks and consoles)
+                        hd, pr = "hand." + s, "prop." + s
+                        D[hd] = d_hand
+                        Q[hd] = D["forearm." + s].inverted() @ d_hand
+                        D[pr] = d_hand
+                        pos[pr] = pos[hd] + d_hand @ (self.head[pr] - self.head[hd])
             self._leg(P, s, D, Q, pos)
         return D, Q, pos, hips_off
 
-    def _arm(self, P, s, D, Q, pos, fk):
+    def _keep_hand(self, s, D, Q, pos, first):
+        """An FK arm keeps its hand where the clip put it when the shoulder rhythm moves the shoulder joint (contacts
+        such as the grab handle, a punch, a partner's hand): the upper arm and forearm re-aim at the old wrist in the
+        old elbow plane; the hand keeps its old world turn."""
+        ua, fa, hd = "upper_arm." + s, "forearm." + s, "hand." + s
+        S_ = pos[ua]
+        S0, Dua0 = first[ua]
+        E0, Dfa0 = first[fa]
+        W0, Dhd0 = first[hd]
+        l1 = (self.head[fa] - self.head[ua]).length
+        l2 = (self.head[hd] - self.head[fa]).length
+        d = W0 - S_
+        if d.length < 1e-6:
+            return
+        dist = min(d.length, (l1 + l2) * 0.999)
+        dn = d.normalized()
+        pv = (E0 - S_) - dn * (E0 - S_).dot(dn)
+        if pv.length < 1e-6:
+            return
+        pv.normalize()
+        a = (l1 * l1 - l2 * l2 + dist * dist) / (2 * dist)
+        h = sqrt(max(0.0, l1 * l1 - a * a))
+        E = S_ + dn * a + pv * h
+        W = S_ + dn * dist
+        D[ua] = ((E0 - S0).rotation_difference(E - S_) @ Dua0).normalized()
+        D[fa] = ((W0 - E0).rotation_difference(W - E) @ Dfa0).normalized()
+        D[hd] = Dhd0
+        Q[ua] = D["shoulder." + s].inverted() @ D[ua]
+        Q[fa] = D[ua].inverted() @ D[fa]
+        Q[hd] = D[fa].inverted() @ D[hd]
+        pos[fa] = pos[ua] + D[ua] @ (self.head[fa] - self.head[ua])
+        pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
+        pr = "prop." + s
+        Q[pr] = Quaternion()
+        D[pr] = D[hd]
+        pos[pr] = pos[hd] + D[hd] @ (self.head[pr] - self.head[hd])
+
+    def _scap(self, s, D):
+        """SHOULDER RHYTHM (2026-10-02, Paul: shoulders collapse into the neck when reaching): the clavicle follows
+        the upper arm, as the shoulder girdle does: it rises when the arm lifts above about 55 deg from hanging
+        (up to 16 deg with the arm overhead) and swings forward when the arm reaches forward (up to 14 deg), back a
+        little when the arm swings back.  Smooth ramps (no corners), so no new snaps.  Returns the extra clavicle turn
+        in the chest frame, or None."""
+        ua, fa = "upper_arm." + s, "forearm." + s
+        y0 = (self.head[fa] - self.head[ua]).normalized()
+        u = D["chest"].inverted() @ (D[ua] @ y0)
+        elev = degrees(u.angle(Vector((0.0, 0.0, -1.0))))
+        raise_ = min(SCAP_RAISE_MAX, _sramp(elev - 55.0, 20.0) * 0.16)
+        prot = 14.0 * _sramp(u.x, 0.25) - 6.0 * _sramp(-u.x, 0.25)
+        # standing / sitting torsos only: on the floor and in bed the arms bear weight or rest (fades out by 45 deg)
+        upright = (D["chest"] @ Vector((0.0, 0.0, 1.0))).z
+        k = sstep(0.62, 0.85, upright)
+        raise_ *= k
+        prot *= k
+        if abs(raise_) < 1e-3 and abs(prot) < 1e-3:
+            return None
+        sg = 1.0 if s == "L" else -1.0
+        q_el = Quaternion((1.0, 0.0, 0.0), radians(raise_ * sg))
+        q_pr = Quaternion((0.0, 0.0, 1.0), radians(-prot * sg))
+        return q_pr @ q_el
+
+    def _arm(self, P, s, D, Q, pos, fk, comp=None):
         ua, fa, hd, pr = "upper_arm." + s, "forearm." + s, "hand." + s, "prop." + s
-        fk(ua, qeuler(P.g(ua + ".rx"), P.g(ua + ".ry"), P.g(ua + ".rz")))
+        q_ua = qeuler(P.g(ua + ".rx"), P.g(ua + ".ry"), P.g(ua + ".rz"))
+        # comp: the clavicle turn of the shoulder rhythm taken back out of an FK upper arm (its world turn stays)
+        fk(ua, (comp @ q_ua) if comp is not None else q_ua)
         fk(fa, qeuler(P.g(fa + ".rx"), P.g(fa + ".ry"), P.g(fa + ".rz")))
         fk(hd, qeuler(P.g(hd + ".rx"), P.g(hd + ".ry"), P.g(hd + ".rz")))
         w = max(0.0, min(1.0, P.g("arm.%s.ik" % s)))
@@ -620,9 +715,108 @@ class Solver:
             D[hd] = D_hd
         elif ELBOW_GUARD:
             self._fk_elbow_out(s, D, Q, pos)
+        if JOINT_LIMITS:
+            self._joint_limits(s, D, Q, pos)
+        if P.g("bed.z") > 0.0:
+            self._bed_guard(P, s, D, Q, pos)
         Q[pr] = Quaternion()
         D[pr] = D[hd]
         pos[pr] = pos[hd] + D[hd] @ (self.head[pr] - self.head[hd])
+
+    def _joint_limits(self, s, D, Q, pos):
+        """JOINT LIMITS (2026-10-02, the animation audit: wrists bent 105-179 deg in the lie, sleep, teach and argue
+        clips, elbows closed to 152-168 deg in lie_exit, punch and shout): soft limits, so nothing changes below the
+        knee and the bend approaches the limit smoothly above it (no corner in the motion).  Elbow 150 deg (knee
+        135), wrist 75 deg (knee 60) between the bone directions."""
+        ua, fa, hd = "upper_arm." + s, "forearm." + s, "hand." + s
+        y_u = (self.tail[ua] - self.head[ua]).normalized()
+        y_f = (self.tail[fa] - self.head[fa]).normalized()
+        y_h = (self.tail[hd] - self.head[hd]).normalized()
+        changed = False
+        for (pa, ch, ya, yb, knee, lim) in ((ua, fa, y_u, y_f, ELBOW_KNEE, ELBOW_MAX), (fa, hd, y_f, y_h, WRIST_KNEE, WRIST_MAX)):
+            da, db = D[pa] @ ya, D[ch] @ yb
+            a = degrees(da.angle(db)) if da.length > 1e-9 and db.length > 1e-9 else 0.0
+            if a <= knee:
+                continue
+            a2 = knee + (lim - knee) * math.tanh((a - knee) / (lim - knee))
+            ax = da.cross(db)
+            if ax.length < 1e-9:
+                continue
+            q = Quaternion(ax.normalized(), radians(a2 - a))
+            if ch == fa:
+                D[fa] = (q @ D[fa]).normalized()
+                D[hd] = (q @ D[hd]).normalized()
+                pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
+            else:
+                D[hd] = (q @ D[hd]).normalized()
+            changed = True
+        if changed:
+            Q[fa] = D[ua].inverted() @ D[fa]
+            Q[hd] = D[fa].inverted() @ D[hd]
+
+    def _bed_guard(self, P, s, D, Q, pos):
+        """BED GUARD (2026-10-02: hands and elbows went 4-12 cm into the mattress in lie_exit, lie_enter and
+        sleep_turn): over the mattress (bed.z top, bed.x0..bed.x1 in x), the elbow stays at least an arm radius above
+        the top (the upper arm turns up about the shoulder; forearm and hand ride along) and the hand stays on it (the
+        hand pitches up about the wrist so its finger line does not dip under the top).  Smooth: the correction
+        fades in over the last 1.5 cm."""
+        zf = P.g("bed.z")
+        x0, x1 = P.g("bed.x0"), P.g("bed.x1")
+        sc = (self.head["neck"] - self.head["hips"]).length / 0.49
+        ua, fa, hd = "upper_arm." + s, "forearm." + s, "hand." + s
+        up = Vector((0.0, 0.0, 1.0))
+
+        def over(p):
+            return x0 <= p.x <= x1 and abs(p.y) < 1.05
+
+        def lift(z, want):
+            """the z to reach: soft so the correction starts 1.5 cm before contact (no corner in the motion)"""
+            d = want - z
+            return max(0.0, d) if d > 0.015 else (0.015 + d) ** 2 / 0.06 if d > -0.015 else 0.0
+        # 1. elbow, then wrist, above the mattress: the whole arm turns up about the shoulder
+        for joint, rad in ((fa, 0.032), (hd, 0.030)):
+            sh, p_ = pos[ua], pos[joint]
+            if not over(p_):
+                continue
+            need = lift(p_.z, zf + rad * sc)
+            if need <= 0.0:
+                continue
+            v = p_ - sh
+            ax = v.cross(up)
+            if ax.length < 1e-6 or v.length < 1e-6:
+                continue
+            ax.normalize()
+            e0 = math.asin(max(-1.0, min(1.0, v.z / v.length)))
+            e1 = math.asin(max(-1.0, min(0.999, (v.z + need) / v.length)))
+            q = Quaternion(ax, -(e1 - e0))
+            if (q @ v).z < v.z:
+                q = Quaternion(ax, e1 - e0)
+            for b in (ua, fa, hd):
+                D[b] = (q @ D[b]).normalized()
+            Q[ua] = D["shoulder." + s].inverted() @ D[ua]
+            pos[fa] = pos[ua] + D[ua] @ (self.head[fa] - self.head[ua])
+            pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
+        # 2. the hand's finger line (wrist -> about 19 cm out) above the mattress, by the hand's half thickness and the
+        # curl of the relaxed fingers (MPFB hands: 3 cm under the bone line at the tips)
+        wr = pos[hd]
+        tipv = D[hd] @ ((self.tail[hd] - self.head[hd]) * 1.9)
+        tip = wr + tipv
+        if over(tip) or over(wr):
+            want = zf + 0.032 * sc
+            need = lift(tip.z, want)
+            if need > 0.0 and tipv.length > 1e-6:
+                ax = tipv.cross(up)
+                if ax.length > 1e-6:
+                    ax.normalize()
+                    r = tipv.length
+                    e0 = math.asin(max(-1.0, min(1.0, tipv.z / r)))
+                    e1 = math.asin(max(-1.0, min(0.95, (tipv.z + need) / r)))
+                    q = Quaternion(ax, -(e1 - e0))
+                    if (q @ tipv).z < tipv.z:
+                        q = Quaternion(ax, e1 - e0)
+                    D[hd] = (q @ D[hd]).normalized()
+        Q[fa] = D[ua].inverted() @ D[fa]
+        Q[hd] = D[fa].inverted() @ D[hd]
 
     def _inside_torso(self, p, pos, D):
         """How far p (an elbow centre) is inside the torso: an elliptic cylinder from the hips to the neck in the
@@ -673,33 +867,50 @@ class Solver:
         pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
         D[hd] = D[fa] @ Q[hd]
 
-    def _elbow_out(self, S_, dn, a, h, pv, pos, D, side=1.0):
-        """ELBOW GUARD (2026-10-01, Paul: broken arms): an IK elbow inside the torso is moved out to the torso's
-        surface along the line from the spine (in the chest frame), and the elbow plane turns to pass through that
-        point.  A radial projection: continuous as the target moves (no jumps between two exits)."""
-        e = S_ + dn * a + pv * h
+    def _torso_rho(self, e, pos, D):
+        """How deep a point e (an elbow centre) is in the torso model: < 1 inside the elliptic cylinder of
+        _inside_torso (chest frame), >= 1 outside; None when e is above the neck or below the hips range."""
         hp, nk = pos["hips"], pos["neck"]
         ax = nk - hp
         L2 = ax.length_squared
         t = (e - hp).dot(ax) / L2 if L2 > 0 else 0.0
         if t < -0.20 or t > 1.0:
-            return pv
+            return None
         c = hp + ax * max(0.0, min(1.0, t))
-        Dc = D["chest"]
-        loc = Dc.inverted() @ (e - c)
+        loc = D["chest"].inverted() @ (e - c)
         sc = (self.head["neck"] - self.head["hips"]).length / 0.49
         hw = 0.5 * (self.head["upper_arm.L"] - self.head["upper_arm.R"]).length * 0.78 + 0.045
         hd = 0.11 * sc + 0.045
-        rho = sqrt((loc.x / hd) ** 2 + (loc.y / hw) ** 2)
-        if rho >= 1.0:
+        return sqrt((loc.x / hd) ** 2 + (loc.y / hw) ** 2)
+
+    def _elbow_out(self, S_, dn, a, h, pv, pos, D, side=1.0):
+        """ELBOW GUARD (2026-10-01, Paul: broken arms; reworked 2026-10-02): an IK elbow inside the torso turns about
+        the shoulder-wrist line to the nearest elbow plane whose elbow is outside the torso (the turn that moves the
+        elbow outwards is preferred by 25 deg, so two equal exits never flip).  If every plane is inside, the one
+        that is deepest outside is taken."""
+        ctr = S_ + dn * a
+        e0 = ctr + pv * h
+        r0 = self._torso_rho(e0, pos, D)
+        if r0 is None or r0 >= 1.0:
             return pv
-        if rho < 1e-4:
-            loc2 = Vector((0.0, side * hw, loc.z))
-        else:
-            loc2 = Vector((loc.x / rho, loc.y / rho, loc.z))
-        v = (c + Dc @ loc2) - (S_ + dn * a)
-        v = v - dn * v.dot(dn)
-        return v.normalized() if v.length > 1e-6 else pv
+        w = dn.cross(pv).normalized()
+        out_dir = D["chest"] @ Vector((0.0, side, 0.0))             # the elbow's own side, character space
+        best, best_cost, deepest = None, 1e9, (0.0, pv)
+        for k in range(-36, 37):
+            th = radians(5.0 * k)
+            cand = pv * cos(th) + w * sin(th)
+            e = ctr + cand * h
+            r = self._torso_rho(e, pos, D)
+            if r is None:
+                r = 9.0
+            if r > deepest[0]:
+                deepest = (r, cand)
+            if r >= 1.0:
+                moves_out = (e - e0).dot(out_dir) > 0.0
+                cost = abs(5.0 * k) + (0.0 if moves_out else 25.0)
+                if cost < best_cost:
+                    best, best_cost = cand, cost
+        return (best if best is not None else deepest[1]).normalized()
 
     def _leg(self, P, s, D, Q, pos):
         th, sh, ft, to = "thigh." + s, "shin." + s, "foot." + s, "toe." + s
@@ -986,6 +1197,43 @@ def despike(qs, L, max_half=14):
     return fixed
 
 
+WORLD_LIMIT = 14.0        # deg per frame: the WORLD turn of any bone in a non-locomotion clip (npc_verify: < 15)
+
+
+def despike_world(data, solver, Lw=WORLD_LIMIT):
+    """2026-10-02: the despike on the WORLD turn.  data: {bone: [basis quaternion per frame]} (as bake_clip builds
+    it).  The chain shoulder -> upper arm -> forearm -> hand compounds the local turns (each under the local limit),
+    so a hand can still turn 20 deg a frame in the world.  Top down, a bone whose world turn exceeds Lw has those
+    frames replaced by an even slerp (the same repair as despike); its local rotation is then rederived from the
+    (fixed) parent.  The first and last frames never change.  Returns the number of repairs."""
+    n = len(data["hips"])
+    fixed = 0
+    Dw = {"root": [Quaternion() for _ in range(n)]}
+    for b in BONE_NAMES:
+        if b == "root":
+            continue
+        qr = solver.rest_q.get(b)
+        if qr is None:
+            qr = Quaternion()
+        par = Dw[PARENT[b]]
+        world = [par[f] @ (qr @ data[b][f] @ qr.inverted()) for f in range(n)]
+        if b.startswith(("shoulder.", "upper_arm.", "forearm.", "hand.")):    # the arm chains (legs are IK-planted)
+            for f in range(1, n):                     # a continuous world track (no sign flips)
+                if world[f].dot(world[f - 1]) < 0:
+                    world[f] = -world[f]
+            k = despike(world, Lw)
+            if k:
+                fixed += k
+                for f in range(n):
+                    q = qr.inverted() @ (par[f].inverted() @ world[f]) @ qr
+                    data[b][f] = q
+                for f in range(1, n):
+                    if data[b][f].dot(data[b][f - 1]) < 0:
+                        data[b][f] = -data[b][f]
+        Dw[b] = world
+    return fixed
+
+
 def bake_clip(rig, solver, name, pose_fn, frames, fix=None, smooth=True):
     """pose_fn(frame) -> Pose for frame 0..frames (inclusive).  Writes every bone's rotation and the hips and
     root locations for every frame (linear), then pushes the action onto its own NLA track."""
@@ -1018,6 +1266,8 @@ def bake_clip(rig, solver, name, pose_fn, frames, fix=None, smooth=True):
     L = despike_limit(name) if smooth else None
     if L:
         nfix = sum(despike(data[b], L) for b in BONE_NAMES if b not in NO_SMOOTH_BONES)
+        if L >= 12.0:
+            nfix += despike_world(data, solver)
         if nfix:
             print("  despike %s: %d spikes over %.1f deg/frame smoothed" % (name, nfix, L))
 
@@ -1162,12 +1412,26 @@ def torso_rule(pelvis_thigh=0.55, low=0.99, shoulder_z=(1.33, 1.43)):
                  [((0, 0, 1.055), (0, 0, 1), 0.035), ((0, 0, 1.165), (0, 0, 1), 0.03)], extra)
 
 
-def arm_rule(s):
+def arm_rule(s, cap=False):
     sh, el, wr = side_vec(SH_JOINT, s), side_vec(EL_JOINT, s), side_vec(WR_JOINT, s)
     ua, fa = side_vec(_UA, s), side_vec(_FA, s)
     elbow_axis = (ua + fa).normalized()
+    up = (Vector((0.0, 0.0, 1.0)) - ua * ua.z).normalized()          # "up" across the upper arm, at the shoulder
+
+    def cap_rule(p, out):
+        # (the indoor jumpsuit only: the suit has a hard shoulder bearing)
+        # 2026-10-02 (Paul's crate shot: the shoulder tops rose into the neck when the arms hung or reached down): the
+        # top of the deltoid (above the arm axis, near the joint) stays partly with the clavicle, so it does not
+        # swing up and in when the arm drops from the bind; the armpit side still follows the arm.
+        d = p - sh
+        t = 0.55 * sstep(0.005, 0.05, d.dot(up)) * sstep(0.13, 0.03, d.dot(ua))
+        w = out.get("upper_arm." + s, 0.0) * t
+        if w > 0:
+            out["upper_arm." + s] -= w
+            out["shoulder." + s] = out.get("shoulder." + s, 0.0) + w
     return Chain(["shoulder." + s, "upper_arm." + s, "forearm." + s, "hand." + s],
-                 [(sh + ua * 0.02, ua, (0.03, 0.05)), (el, elbow_axis, 0.05), (wr - fa * 0.01, fa, 0.022)])
+                 [(sh + ua * 0.02, ua, (0.03, 0.05)), (el, elbow_axis, 0.05), (wr - fa * 0.01, fa, 0.022)],
+                 cap_rule if cap else None)
 
 
 def leg_rule(s):

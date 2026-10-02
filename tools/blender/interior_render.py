@@ -32,7 +32,8 @@ import rooms_kit as K            # noqa: E402
 import rooms_render as RR        # noqa: E402
 import interior_kit as IK       # noqa: E402
 
-OUT_DIR = os.path.join(K.ROOT, "art", "interiors", "v4pilot") if K.V4PILOT else os.path.join(K.ROOT, "art", "interiors")
+OUT_DIR = os.environ.get("FH_ART_DIR") or (os.path.join(K.ROOT, "art", "interiors", "v4pilot") if K.V4PILOT else
+                                            os.path.join(K.ROOT, "art", "interiors"))
 SIZE = (1600, 1100)
 SEG = 11.25
 FRAME_HW = 1.10             # the jamb in the wall plane
@@ -590,7 +591,7 @@ def room_points(R, extra=(), top=1.4):
 
 def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, size=(1600, 1100), elevation=56.0,
               azimuth=-42.0, margin=1.04, open_doors=False, focus=None, samples=64, lamps=True, top_z=None,
-              hide_extra=(), marker_z=None, floor=None):
+              hide_extra=(), marker_z=None, floor=None, cam_fn=None):
     setup(size[0], size[1], night=night, samples=samples)
     if marker_z is not None:
         bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.12, minor_radius=0.025, location=(0.0, 0.0, marker_z),
@@ -645,7 +646,7 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         k_ = floor or 0
         for o in objs:
             nm_ = o.name.split(".")[0]
-            if K.floor_of(nm_) > k_ and cutaway:
+            if K.floor_of(nm_) > k_ and (cutaway or floor is not None):
                 o.hide_render = True
                 o.hide_viewport = True
         if cutaway:
@@ -694,10 +695,47 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         if not cutaway:
             pts += [o.matrix_world @ Vector(c) for o in objs if o.type == "MESH" and not o.hide_render
                     for c in o.bound_box]
-    RR.place_camera(pts, azimuth=azimuth, elevation=elevation, margin=margin, aspect=size[0] / size[1], focal=50.0)
+    if cam_fn is not None:
+        cam_fn()
+    else:
+        RR.place_camera(pts, azimuth=azimuth, elevation=elevation, margin=margin, aspect=size[0] / size[1], focal=50.0)
     RR.render_to(out)
     print("  wrote", out)
     return out
+
+
+def eye_camera(px, py, yaw_deg, dist=1.9, side=0.55, z=1.80, aim_ahead=4.0, aim_z=1.35, fov=50.0, floor_z=0.0):
+    """The game's follow camera (presentation/camera_rig.gd): 0.55 m to the right of the person, 1.9 m behind, eye 1.65 m
+    (+ 0.15 m) = about 1.8 m high, vertical fov 50 deg, aimed ahead of the person.  The person stands at (px, py)
+    facing yaw_deg.  Returns a function for shot_room(cam_fn=...)."""
+    def make():
+        sc = bpy.context.scene
+        cd = bpy.data.cameras.new("EyeCam")
+        cd.sensor_fit = "VERTICAL"
+        cd.sensor_height = 24.0
+        cd.lens = 12.0 / math.tan(radians(fov / 2.0))
+        cd.clip_start = 0.05
+        cd.clip_end = 500.0
+        cam = bpy.data.objects.new("EyeCam", cd)
+        sc.collection.objects.link(cam)
+        sc.camera = cam
+        y = radians(yaw_deg)
+        f = Vector((cos(y), sin(y), 0.0))
+        r = Vector((sin(y), -cos(y), 0.0))
+        pos = Vector((px, py, 0.0)) - f * dist + r * side
+        pos.z = z + floor_z
+        aim = Vector((px, py, 0.0)) + f * aim_ahead
+        aim.z = aim_z + floor_z
+        # the followed person: a stand-in (torso, head, nose towards the facing)
+        m_ = RR.flat_material("EyeFig", (1.0, 0.55, 0.20), rough=0.5)
+        base_ = Vector((px, py, K.FLOOR_Z + floor_z))
+        capsule_obj("EyeFig_body", base_ + Vector((0, 0, 0.30)), base_ + Vector((0, 0, 1.40)), 0.17, m_)
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=0.12, location=base_ + Vector((0, 0, 1.60)))
+        bpy.context.active_object.data.materials.append(m_)
+        cam.location = pos
+        cam.rotation_euler = (aim - pos).to_track_quat("-Z", "Y").to_euler()
+        return cam
+    return make
 
 
 def sheet(files, out, label=True):
@@ -784,6 +822,41 @@ def main():
             focus = [c + Vector((dx, dy, dz)) for dx in (-1.5, 1.5) for dy in (-1.5, 1.5) for dz in (0.0, 1.5)]
             shot_room(file, R, base + "_props%d.png" % j, size=(1400, 900), elevation=26.0, azimuth=th + 180.0 + 15.0,
                       focus=focus, margin=1.0)
+    if "wall" in only:
+        # a straight look along the wall at angle th from the room side (camera low), for the wall pieces
+        Rin = R - 0.55
+        span = float(argv[argv.index("--span") + 1]) if "--span" in argv else 3.2
+        angs = [float(a_) for a_ in argv[argv.index("--angles") + 1].split(",")] if "--angles" in argv else [30.0, 120.0]
+        for j, th in enumerate(angs):
+            c = Vector((Rin * cos(radians(th)), Rin * sin(radians(th)), 0.0))
+            t = Vector((-sin(radians(th)), cos(radians(th)), 0.0))
+            focus = [c + t * dy + Vector((0, 0, dz)) for dy in (-span / 2, span / 2) for dz in (0.30, 1.40)]
+            shot_room(file, R, base + "_wall%d.png" % j, size=(1500, 760), elevation=14.0, azimuth=th + 180.0,
+                      focus=focus, margin=1.0, cutaway=True)
+    if "spot" in only:
+        # a close look at one place with the stand-in figures on the anchors: --spot x,y,azimuth[,elevation[,half]]
+        for j, s_ in enumerate(argv[argv.index("--spot") + 1].split(";")):
+            v_ = [float(q) for q in s_.split(",")]
+            sx, sy, saz = v_[0], v_[1], v_[2]
+            sel = v_[3] if len(v_) > 3 else 30.0
+            sh = v_[4] if len(v_) > 4 else 1.6
+            focus = [Vector((sx + dx, sy + dy, dz)) for dx in (-sh, sh) for dy in (-sh, sh) for dz in (0.0, 1.8)]
+            shot_room(file, R, base + "_spot%d.png" % j, size=(1400, 900), elevation=sel, azimuth=saz, focus=focus,
+                      margin=1.0, figs=True, cutaway=True)
+    if "eye" in only:
+        # the follow camera: --eye x,y,yaw[;x,y,yaw...] (m, m, deg): a person at (x, y) facing yaw, roof on, interior lights
+        spec_s = argv[argv.index("--eye") + 1] if "--eye" in argv else "auto"
+        if spec_s == "auto":
+            # three people at 40 % of the radius, walking towards the far side a little off the centre line
+            specs = [(0.40 * R * cos(radians(a_)), 0.40 * R * sin(radians(a_)), a_ + 180.0 + 25.0)
+                     for a_ in (20.0, 140.0, 260.0)]
+        else:
+            specs = [tuple(float(v) for v in s_.split(",")) for s_ in spec_s.split(";")]
+        for j, sp_ in enumerate(specs):
+            ex, ey, eyaw = sp_[:3]
+            efl = int(sp_[3]) if len(sp_) > 3 else None          # a floor of a multi-storey building (x, y, yaw, floor)
+            shot_room(file, R, base + "_eye%d.png" % j, size=(1500, 840), cutaway=False, night=("--night" in argv),
+                      floor=efl, cam_fn=eye_camera(ex, ey, eyaw, floor_z=3.6 * (efl or 0)))
     if "cutproof" in only:
         # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
         # the cutaway may stand above the ring

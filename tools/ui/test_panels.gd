@@ -60,6 +60,45 @@ func _post_all() -> void:
 	main._on_cmd("award first_breath")
 	main._on_cmd("chapter 2")
 
+func _tab_check(szc: Vector2i, scc: float, tb: String, attempt: int) -> void:
+	var v: Vector2 = vp()
+	var centre := Rect2(v * 0.25, v * 0.5)
+	var bad: Array = []
+	var rects: Array = main.hud.panels.shown_rects()
+	for r in rects:
+		if (r as Rect2).grow(-0.5).intersects(centre):
+			bad.append("%s in the centre %s" % [str(r), str(centre)])
+		if not Rect2(Vector2.ZERO, v).grow(0.5).encloses(r):
+			bad.append("%s outside the view %s" % [str(r), str(v)])
+	var mm: Rect2 = main.hud.minimap.get_global_rect()
+	if main.hud.panels._dock.get_global_rect().grow(-0.5).intersects(mm):
+		bad.append("dock %s over the minimap %s" % [str(main.hud.panels._dock.get_global_rect()), str(mm)])
+	# Follow-up 2026-10-01: pop-ups fold into the dock before its body gets under about 200 px; the tab
+	# names show when the dock is 340 px or wider; the tabs take at most 2 rows (2026-10-02: one column of six
+	# named tabs squeezed the body at 1600x900).
+	var pm = main.hud.panels
+	var want: float = minf(pm._pages[tb].get_combined_minimum_size().y, pm.BODY_KEEP - 12.0)
+	if pm._body.visible and pm._body.size.y < want - 0.5 and pm._pops.get_child_count() > 0:
+		bad.append("body %.0f px with %d pop-ups" % [pm._body.size.y, pm._pops.get_child_count()])
+	var named: bool = String((pm._tab_btn["goals"] as Button).text).begins_with("Goals")
+	if named != pm.names_shown or named != (pm._width >= pm.NAMES_W):
+		bad.append("tab names %s at width %.0f" % [named, pm._width])
+	if pm._width >= 370.0 and not named:
+		bad.append("no tab names at width %.0f" % pm._width)
+	var rows: int = int(ceil(float(pm._tab_btn.size()) / float(maxi(1, pm._tabbar.columns))))
+	if rows > 2:
+		var ws: Array = []
+		for id2 in pm._tab_btn:
+			ws.append("%s %.0f '%s'" % [id2, (pm._tab_btn[id2] as Control).get_combined_minimum_size().x, (pm._tab_btn[id2] as Button).text])
+		bad.append("tabs in %d rows (%d columns), width %.0f named %s: %s" % [rows, pm._tabbar.columns, pm._width, str(pm.names_shown), ", ".join(ws)])
+	if rects.size() < 2:
+		bad.append("only %d rects shown" % rects.size())
+	# The layout can lag the change by a frame (a pop-up that expires): look again, up to three times.
+	if not bad.is_empty() and attempt < 3:
+		q(func(): _tab_check(szc, scc, tb, attempt + 1), 3)
+		return
+	check("%dx%d at %d%%, tab %s: outside the centre, inside the view, off the minimap; body room; tab names" % [szc.x, szc.y, int(scc * 100.0), tb], bad.is_empty(), "; ".join(bad))
+
 func _plan() -> void:
 	var S = load("res://ui/settings.gd")
 	for t in PM.TYPES:
@@ -90,31 +129,7 @@ func _plan() -> void:
 			for tab in ["goals", "alerts", "events", "traffic", "requests", "news"]:
 				var tb: String = tab
 				q(func(): main.hud.panels.open_tab(tb, true), 6)
-				q(func():
-					var v: Vector2 = vp()
-					var centre := Rect2(v * 0.25, v * 0.5)
-					var bad: Array = []
-					var rects: Array = main.hud.panels.shown_rects()
-					for r in rects:
-						if (r as Rect2).grow(-0.5).intersects(centre):
-							bad.append("%s in the centre %s" % [str(r), str(centre)])
-						if not Rect2(Vector2.ZERO, v).grow(0.5).encloses(r):
-							bad.append("%s outside the view %s" % [str(r), str(v)])
-					var mm: Rect2 = main.hud.minimap.get_global_rect()
-					if main.hud.panels._dock.get_global_rect().grow(-0.5).intersects(mm):
-						bad.append("dock %s over the minimap %s" % [str(main.hud.panels._dock.get_global_rect()), str(mm)])
-					# Follow-up 2026-10-01: pop-ups fold into the dock before its body gets under about 200 px; the tab
-					# names show when the dock is 320 px or wider.
-					var pm = main.hud.panels
-					var want: float = minf(pm._pages[tb].get_combined_minimum_size().y, pm.BODY_KEEP - 12.0)
-					if pm._body.visible and pm._body.size.y < want - 0.5 and pm._pops.get_child_count() > 0:
-						bad.append("body %.0f px with %d pop-ups" % [pm._body.size.y, pm._pops.get_child_count()])
-					var named: bool = String((pm._tab_btn["goals"] as Button).text).begins_with("Goals")
-					if named != (pm._width >= pm.NAMES_W):
-						bad.append("tab names %s at width %.0f" % [named, pm._width])
-					if rects.size() < 2:
-						bad.append("only %d rects shown" % rects.size())
-					check("%dx%d at %d%%, tab %s: outside the centre, inside the view, off the minimap; body room; tab names" % [szc.x, szc.y, int(scc * 100.0), tb], bad.is_empty(), "; ".join(bad)), 1)
+				q(func(): _tab_check(szc, scc, tb, 0), 1)
 	q(func():
 		root.size = Vector2i(1600, 900)
 		main._on_cmd("uiscale 1"), 10)
@@ -220,3 +235,48 @@ func _plan() -> void:
 				n += 1
 		check("Settings, Notifications: a choice for every type", n == PM.TYPES.size(), "%d of %d" % [n, PM.TYPES.size()])
 		main.hud.close_modal(), 4)
+	# Over the shoulder: the follow card holds the top left; the urgent line, pop-ups and dock start under it.
+	for sz in [Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var szf: Vector2i = sz
+		q(func():
+			root.size = szf
+			main.hud.panels.open_tab("alerts", true)
+			var fids: Array = []
+			for r in main.hud.v5.people():
+				if String(r["kind"]) == "colonist":
+					fids.append(int(r["id"]))
+			main.select("agent", int(fids[0]))
+			main.follow_person(int(fids[0])), 20)
+		q(func():
+			var pm = main.hud.panels
+			var fh: Control = main.hud.follow_hud
+			var bad: Array = []
+			if not fh.visible:
+				bad.append("the follow card is not shown")
+			var card: Rect2 = fh.get_global_rect()
+			for r in pm.shown_rects():
+				if (r as Rect2).grow(-0.5).intersects(card):
+					bad.append("%s over the follow card %s" % [str(r), str(card)])
+			check("%dx%d over the shoulder: nothing of the manager lies under the follow card" % [szf.x, szf.y], bad.is_empty(), "; ".join(bad))
+			main.follow_end(), 6)
+	# The floor selector lies left of the inspector, not under it.
+	for sz2 in [Vector2i(1600, 900), Vector2i(1280, 720)]:
+		var szg: Vector2i = sz2
+		q(func():
+			root.size = szg
+			var bid: int = -1
+			for id in main.sim.state["buildings"]:
+				if String(main.sim.state["buildings"][id]["def"]) == "super_dome":
+					bid = int(id)
+					break
+			main.select("building", bid), 16)
+		q(func():
+			var fs: Control = main.hud.floor_sel
+			var insp: Control = main.hud.inspector
+			var bad: Array = []
+			if not fs.visible or not insp.visible:
+				bad.append("floor selector %s inspector %s" % [str(fs.visible), str(insp.visible)])
+			elif fs.get_global_rect().grow(-0.5).intersects(insp.get_global_rect()):
+				bad.append("%s over the inspector %s" % [str(fs.get_global_rect()), str(insp.get_global_rect())])
+			check("%dx%d: the floor selector is not under the inspector" % [szg.x, szg.y], bad.is_empty(), "; ".join(bad))
+			main.select("", -1), 4)

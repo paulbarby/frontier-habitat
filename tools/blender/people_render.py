@@ -336,13 +336,16 @@ def sheet_clips(group="pilot", variants=None, outfit="casual_a", frames=6):
     tmpdir()
     M = manifest()
     rows = []
-    vs = variants or [v for v in ("m1", "f1") if v in M["variants"]] or list(M["variants"])
+    vs = variants or ([x for x in os.environ.get("NPC_VARS", "").split(",") if x] or
+                      [v for v in ("m1", "f1") if v in M["variants"]] or list(M["variants"]))
     for clip in CLIP_GROUPS[group]:
         if clip not in M["clips"]:
             continue
         n = M["clips"][clip]["frames"]
         e, _ = pair_of(clip)
         for v in (vs[:1] if e else vs):
+            if clip not in M["variants"][v].get("clips", [clip]):
+                continue                                          # this body has not got the clip (children: adults only)
             studio(300, 420)
             if clip in ("sit_bar_stool", "drink_bar"):
                 stool_props()
@@ -406,7 +409,36 @@ LOW_CLIPS = {"lie_enter", "sleep", "lie_exit", "sleep_turn", "sleep_cell", "dead
              "swim", "lounge_pool", "child_play", "repair_kneel", "kneel_enter", "kneel_exit"}
 
 
-SHEETS = dict(wardrobe=sheet_wardrobe, closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
+DEFORM_POSES = [("cheer", 60), ("work_bench", 30), ("repair_kneel", 30), ("sit_bench", 30), ("protest_fist", 40),
+                ("fight_idle", 20), ("play_arcade", 30), ("shout", 30), ("dance_c", 30), ("drink_bar", 70)]
+
+
+def sheet_deform(outfit="casual_a"):
+    """Stress poses for the skinning (shoulders, neck, spine, hips): one tile per pose, a 3/4 view, per body."""
+    tmpdir()
+    M = manifest()
+    vs = [x for x in os.environ.get("NPC_VARS", "").split(",") if x] or ["m1", "f1"]
+    rows = []
+    for v in vs:
+        row = []
+        for clip, f in DEFORM_POSES:
+            studio(300, 400)
+            if clip in FURNITURE_PROPS:
+                FURNITURE_PROPS[clip]()
+            if clip == "drink_bar":
+                stool_props()
+            rig, _ = import_person(v, outfit)
+            pose(rig, clip, f)
+            NR.clear_cameras()
+            NR.camera((0.05, 0.0, 1.12 * M["variants"][v]["scale"]), -40, 8, 3.4, lens=85)
+            row.append(("%s %s %d" % (v, clip, f), NR.render(os.path.join(TMP, "df_%s_%s.png" % (v, clip)))))
+        rows.append(row)
+    out = os.path.join(ART, "people_deform.png")
+    NR.compose(rows, out, title="people: skinning stress poses (shoulders, neck, spine, hips), %s" % outfit)
+    return out
+
+
+SHEETS = dict(deform=sheet_deform, wardrobe=sheet_wardrobe, closeup=sheet_closeup, outfits=sheet_outfits, faces=sheet_faces, clips=sheet_clips,
               uniforms=sheet_uniforms, tones=sheet_tones)
 
 

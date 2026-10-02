@@ -47,6 +47,8 @@ func _process(_d: float) -> void:
 		_n = n
 		_build()
 	visible = building >= 0 and _n > 1 and not hud.main.in_follow()
+	# Left of the inspector, not under it (2026-10-02: at 1280x720 the strip lay behind the inspector's venue list).
+	offset_right = -maxf(80.0, hud.right_inset() + 8.0)
 
 func _build() -> void:
 	Kit.clear(_box)

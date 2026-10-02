@@ -252,6 +252,32 @@ def chamber_wall(lo, hi, y0, y1, x0, x1, window=None):
             plate_y(part, ym - 0.004, xa, xb, zz0, zz1, "Glass", facing=-1)
 
 
+def chamber_notices(n, xa, xb):
+    """5.0 (V5 15.3): two notices on the chamber walls: the rules and the cycle time (parody, all sizes)."""
+    import interior_props as PR
+    import interior_roles as RO
+    PR.USED["r_chamber"] = PR.USED.get("r_chamber", 0) + 1
+    ln = xb - xa
+    z0, z1 = F + 0.62, F + 1.10
+    specs = []
+    if ln >= 2.0:
+        specs.append((xa + 1.30, -CH_HW, 1, "A"))
+    specs.append((xb - (0.52 if ln >= 2.0 else 0.45), CH_HW, -1, "B"))
+    for (x, y, face, which) in specs:
+        w = 0.50 if ln >= 2.0 else 0.40
+        with n.at(T(x, y, 0), RZ(90.0 if face > 0 else -90.0)):
+            fx = RO.board(n, w, z0, z1, "Screen", d=0.03)
+            if which == "A":
+                PR.text(n, "AIRLOCK RULES", 0.0, z1 - 0.06, PR.fit_h(["AIRLOCK RULES"], w - 0.08, 0.030), "Neon", x=fx + 0.001)
+                PR.text_lines(n, ("1 SEAL SUIT", "2 SEAL AGAIN", "3 ASK THE DOOR"), 0.0, z1 - 0.12,
+                              PR.fit_h(("3 ASK THE DOOR",), w - 0.08, 0.024), "LightStrip", x=fx + 0.001, gap=0.6)
+            else:
+                PR.text(n, "CYCLE TIME", 0.0, z1 - 0.06, PR.fit_h(["CYCLE TIME"], w - 0.08, 0.030), "Neon", x=fx + 0.001)
+                PR.text(n, "14 S", 0.0, z1 - 0.16, 0.07, "Window", x=fx + 0.001)
+                PR.text(n, "(FEELS LONGER)", 0.0, z0 + 0.05, PR.fit_h(["(FEELS LONGER)"], w - 0.08, 0.018), "LightStrip",
+                        x=fx + 0.001)
+
+
 def gauge_panel(n, x, y, face):
     """Pressure gauge panel on a chamber wall: three dials and a status bar."""
     with n.at(T(x, y, 0), RZ(90.0 if face > 0 else -90.0)):
@@ -282,7 +308,7 @@ def wall_bench(p, w=1.0, d=0.36):
     bbox(p, 0.0, d, -w / 2, w / 2, F + 0.38, F + 0.46, "Hull", bevel=0.02)
     for sy in (-w / 2 + 0.10, w / 2 - 0.10):
         bbox(p, 0.0, d - 0.04, sy - 0.04, sy + 0.04, F + 0.30, F + 0.38, "Frame")
-        bbox(p, 0.0, 0.05, sy - 0.04, sy + 0.04, F + 0.05, F + 0.38, "Frame")
+        bbox(p, 0.0, 0.08, sy - 0.04, sy + 0.04, F + 0.05, F + 0.38, "Frame")     # 8 cm: clears the pipe run
     FU.crate(p, d * 0.5, w * 0.25, s=0.22, z=F + 0.46, mat="Accent")
 
 
@@ -350,6 +376,7 @@ def airlock(rm):
             pump_housing(n, px, sy * (CH_HW + 0.10), sy)
             plan.rect(px, sy * (CH_HW + 0.21), 0.30, 0.13, 0.0, tag="pump")
     gauge_panel(n, xa + 0.30, -CH_HW, 1)
+    chamber_notices(n, xa, xb)
     # ---- the chamber light (object ChamberLight): strips at 1.2 m and a lamp on the wall
     cl = P("ChamberLight")
     for sy in (-1, 1):
@@ -392,7 +419,9 @@ def airlock(rm):
                          "bench": lambda p, w, d, k: wall_bench(p, w=min(w, 1.1), d=min(d, 0.36))})
     a_door = degrees(asin(min(0.99, L.HY / Rw))) + 6.0
     lo_rack, hi_rack = 180.0 - span / 2 - 12.0, 180.0 + span / 2 + 12.0
-    plan.wall_items(["bench", "refill", "lockers", "refill", "panel", "lockers"], ws, open_every=0, seed=171,
+    plan.wall_items(["bench", "refill", "lockers", "r_motto", "r_suitcheck", "lockers", "r_route", "refill", "r_agi"],
+                    ws, open_every=0,
+                    seed=171,
                     depth_of=dict(DEPTHS, refill=0.20, bench=0.36),
                     skip=[k for k in range(32) if IK.seg_mid(k) < a_door + 30.0 or IK.seg_mid(k) > 330.0 - a_door
                           or lo_rack < IK.seg_mid(k) < hi_rack or near_housing_end(k)])

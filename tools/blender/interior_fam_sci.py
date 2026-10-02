@@ -97,7 +97,7 @@ def wi_samples(p, w=0.80, d=0.32, seed=0):
     rng = random.Random(seed)
     for sy in (-1, 1):
         bbox(p, 0.0, d, sy * w / 2 - 0.02, sy * w / 2 + 0.02, F, F + 1.25, "Frame")
-    plate_x(p, 0.02, -w / 2, w / 2, F, F + 1.25, "HullDark")
+    plate_x(p, 0.075, -w / 2, w / 2, F, F + 1.25, "HullDark")          # in front of the pipe run (7 cm) and the cove (4 cm)
     for lv in range(3):
         z = F + 0.30 + 0.36 * lv
         bbox(p, 0.02, d, -w / 2 + 0.02, w / 2 - 0.02, z - 0.02, z, "Hull")

@@ -710,8 +710,8 @@ def academy(rm):
             plan.rect(x + 0.30, y, 0.24, 0.24, 0.0, tag="chair2")
     # the library corner at +Y: shelves in an arc, two armchairs on a rug, a floor lamp
     la = 100.0
-    for j in range(3):
-        a = la - 14.0 + 14.0 * j
+    for j in range(3 if R > 5.0 else 2):                    # S: two shelves (triangle budget)
+        a = la - 14.0 + 14.0 * j + (0.0 if R > 5.0 else 7.0)
         x, y = polar(R - 0.55, a)
         with at(plan, x, y, a + 180.0):
             FU.wi_shelf(n, w=0.9, d=0.34, h=1.30, seed=30 + j)
@@ -771,8 +771,8 @@ def academy(rm):
         with at(plan, sx_, sy_, 0.0):
             FU.stool(n)
         plan.circle(sx_, sy_, 0.2, tag="stool")
-    pattern = ["shelf", "cab_books", "aiposter", "shelf", "cab_plant", "desk", "notice", "shelf"] + \
-        (["filmposter"] if s else [])          # S: triangle budget
+    pattern = (["shelf", "cab_books", "aiposter", "shelf", "cab_plant", "desk", "notice", "shelf", "filmposter"] if s else
+               ["shelf", "cab_books", "aiposter", "cab_plant", "notice", "shelf", "panel"])     # S: triangle budget
     plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=9 + s, depth_of=IR.DEPTHS)
     fill(plan, [(lambda p_, x, y, k_: _group_table(p_, x, y, k_), 1.1),
                 (lambda p_, x, y, k_: _shelf_island(p_, x, y, k_), 0.55), (f_plant, 0.25)], target=1.6,

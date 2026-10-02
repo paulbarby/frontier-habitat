@@ -37,12 +37,12 @@ import build_assets as BA                                             # noqa: E4
 from build_assets import T, RX, RY, RZ, S, polar, dome_profile          # noqa: E402,F401
 
 ROOT = BA.ROOT
-MODEL_DIR = os.path.join(ROOT, "assets", "models")
-THUMB_DIR = os.path.join(ROOT, "assets", "thumbs")
+MODEL_DIR = os.environ.get("FH_MODEL_DIR") or os.path.join(ROOT, "assets", "models")   # FH_MODEL_DIR: scratch builds
+THUMB_DIR = os.environ.get("FH_THUMB_DIR") or os.path.join(ROOT, "assets", "thumbs")
 PREVIEW_DIR = os.path.join(HERE, "previews", "rooms")
 CONTENT_BUILDINGS = os.path.join(ROOT, "content", "buildings.json")
-REPORT_JSON = os.path.join(HERE, "build_report.json")
-REPORT_MD = os.path.join(HERE, "build_report.md")
+REPORT_JSON = os.path.join(os.environ.get("FH_REPORT_DIR") or HERE, "build_report.json")
+REPORT_MD = os.path.join(os.environ.get("FH_REPORT_DIR") or HERE, "build_report.md")
 # v4 pilot (docs/V4_DESIGN.md section 2, 3): FH_V4PILOT=1 builds rooms at R_SCALE x the content radius into
 # build/v4pilot/ (outside the game's assets, so the live game and its pck do not change until the roll-out)
 V4PILOT = bool(os.environ.get("FH_V4PILOT"))

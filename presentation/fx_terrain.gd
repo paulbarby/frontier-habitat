@@ -108,6 +108,7 @@ func build(s, instancer, q: int) -> void:
 	mat.set_shader_parameter("ground_origin", Vector2(GO))
 	mat.set_shader_parameter("ground_size", float(GG))
 	mat.set_shader_parameter("tint", _planet_tint())
+	apply_planet(String(sim.state.get("planet", "dry")))
 	var t3: int = Time.get_ticks_usec()
 	_build_rocks()
 	_build_pebbles()
@@ -118,6 +119,17 @@ func build(s, instancer, q: int) -> void:
 	var t5: int = Time.get_ticks_usec()
 	set_quality(q)
 	timings = {"mesh_ms": (t1 - t0) / 1000.0, "splat_ms": (t2 - t1) / 1000.0, "rocks_ms": (t4 - t3) / 1000.0, "paths_ms": (t5 - t4) / 1000.0, "chunks": chunks.size(), "map": GN}
+
+## Planet looks on the ground (Paul 2026-10-01, V5 15.7): airless grey regolith with no wind streaks, cold
+## frost and ice, dry as before. Rocks and boulders follow (their materials are shared by every rock).
+var planet := ""
+func apply_planet(name: String) -> void:
+	planet = name
+	if mat != null:
+		mat.set_shader_parameter("grey_k", 0.85 if name == "airless" else 0.0)
+		mat.set_shader_parameter("frost", 0.85 if name == "cold" else 0.0)
+		mat.set_shader_parameter("streak_k", 0.0 if name == "airless" else 1.0)
+	Models.tint_rocks(name)
 
 func _planet_tint() -> Color:
 	match String(sim.state.get("planet", "dry")):

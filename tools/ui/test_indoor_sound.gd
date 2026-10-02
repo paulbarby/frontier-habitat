@@ -10,6 +10,7 @@ const A = preload("res://ui/audio.gd")
 
 var main
 var fails := 0
+var _t0 := 0
 var _n := 0
 var _step := 0
 
@@ -75,10 +76,12 @@ func _process(_d: float) -> bool:
 			main.rig.distance = 18.0
 			_step = 3
 			_n = 0
+			_t0 = Time.get_ticks_msec()
 		3:
-			if _n < 22:   # about 0.37 s: the listener test runs every 0.1 s, then the fade
+			# Wall clock, not frames: a headless frame takes 10 to 40 ms (2026-10-02: 22 frames gave k 0.79 to 1.00).
+			if Time.get_ticks_msec() - _t0 < 300:   # about 0.3 s: the listener test runs every 0.1 s, then the fade
 				return false
-			check("the fade takes about 0.5 s (part way after 0.37 s)", au.indoor_k > 0.05 and au.indoor_k < 0.95, "k %.2f" % au.indoor_k)
+			check("the fade takes about 0.5 s (part way after 0.3 s)", au.indoor_k > 0.05 and au.indoor_k < 0.95, "k %.2f" % au.indoor_k)
 			# Follow a person who is inside.
 			var who := -1
 			for aid in main.sim.state["agents"]:

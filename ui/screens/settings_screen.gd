@@ -59,22 +59,11 @@ func build() -> void:
 	cam.add_child(_toggle("Camera shake", "camera_shake", "The camera shakes for quakes, impacts and landings. Off: it stays still."))
 	# Audio
 	var au: VBoxContainer = card("Sound", "volume", P.CYAN)
-	right.add_child(card_panel(au))
+	left.add_child(card_panel(au))
 	for spec in [["Master", "vol_master"], ["Music", "vol_music"], ["Effects", "vol_sfx"], ["Interface", "vol_ui"], ["Ambience", "vol_ambience"]]:
 		au.add_child(_slider(spec[0], spec[1], 0.0, 1.0, 0.05, func(v): return "%d%%" % int(roundf(v * 100.0))))
 	if hud.main.audio == null or not hud.main.audio.has_sounds():
 		au.add_child(Kit.label("No sound files are installed. The game is silent.", "SmallLabel", 11, P.TEXT_3))
-	# Keys
-	var k: VBoxContainer = card("Keys", "keyboard", P.CYAN)
-	right.add_child(card_panel(k))
-	var grid: GridContainer = Kit.grid(2, 14, 3)
-	k.add_child(grid)
-	for pair in [["W A S D, arrows", "move the camera"], ["Mouse wheel", "zoom"], ["Middle drag, Q E", "turn"], ["Space; 1 2 3", "pause; speed 1x 2x 4x"],
-			["R; Z X", "turn; size while placing"], ["Shift + click", "keep placing"], ["Esc; right click", "cancel; menu"], ["F", "follow a colonist"], ["/ or Ctrl+F", "find a structure"], ["N", "advisor"], ["K", "codex"], ["Shift+Esc", "close every window"],
-			["O", "overlay"], ["Delete", "remove the selection"], ["G T C", "goals, research, colony"], ["I P U", "inventory, people, crew"], ["J", "The Regolith Rag"],
-			["V", "person's view; else awards"], ["H", "hide the interface"], ["L", "the left dock"], ["Y", "roofs off"]]:
-		grid.add_child(Kit.num(pair[0], 12, P.CYAN))
-		grid.add_child(Kit.label(pair[1], "", 12, P.TEXT_2))
 	# Notifications (docs/UI_PANELS.md): every message type: Pop up, Badge only or Off.
 	var nt: VBoxContainer = card("Notifications", "sev_info", P.CYAN)
 	card_panel(nt).name = "Notifications"
@@ -104,6 +93,21 @@ Pop up, Badge only or Off. Kept on this device." % String(PM.TYPES[t][0])
 	right.add_child(card_panel(ab))
 	ab.add_child(Kit.label("Frontier Habitat  ·  version %s" % String(ProjectSettings.get_setting("application/config/version", "?")), "BodyStrong", 14, P.TEXT))
 	ab.add_child(Kit.label("Godot %s, web build" % Engine.get_version_info().get("string", ""), "SmallLabel", 12, P.TEXT_2))
+	# Keys: one full-width card under the columns, two keys to a row (one list with How to play: ui/keys.gd;
+	# tools/ui/test_keys.gd checks it against the input code).
+	var k: VBoxContainer = card("Keys", "keyboard", P.CYAN)
+	content.add_child(card_panel(k))
+	var grid: GridContainer = Kit.grid(4, 14, 3)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	k.add_child(grid)
+	var key_rows: Array = load("res://ui/keys.gd").ROWS
+	for ki in key_rows.size():
+		var row: Dictionary = key_rows[ki]
+		var kl: Label = Kit.num(String(row["keys"]), 12, P.CYAN)
+		kl.name = "Key_%d" % ki
+		kl.custom_minimum_size.x = 120
+		grid.add_child(kl)
+		grid.add_child(Kit.wrap(String(row["short"]), 12, P.TEXT_2, 160))
 	var btns: HBoxContainer = Kit.hbox(8, BoxContainer.ALIGNMENT_END)
 	content.add_child(btns)
 	btns.add_child(Kit.button("Back", func(): host.close(self), "Back\nCloses the settings. Changes are already kept.", "PrimaryButton", "check", 14))

@@ -489,7 +489,7 @@ def indoor_medical(p):
     s = "L"
     sh = side_vec(SH_JOINT, s)
     ua = side_vec(_UA, s)
-    with p.w(arm_rule(s)):
+    with p.w(transfer_rule("indoor", k=1)):           # (2026-10-02: the jumpsuit shoulder cap rule: copy, never re-derive)
         p.cyl(tuple(sh + ua * 0.105), tuple(sh + ua * 0.160), 0.0725, 0.0685, seg=10, mat="VisRed", cap0=False,
               cap1=False)
     with p.w(neck_chest_rule()):
@@ -544,7 +544,7 @@ def indoor_science(p):
             (s_wr - 0.118, 0.047 + d, 0.047 + d, "VisWhite"),
             (s_wr - 0.112, 0.047, 0.047, "VisWhite"),
         ]
-        with p.w(arm_rule(s)):
+        with p.w(arm_rule(s, cap=True)):
             tube_path(p, pts, st, seg=8, ref=(1, 0, 0))
 
 
@@ -690,9 +690,10 @@ def suit_radiation(p):
     """Radiation suit (hazard yellow and black): shielded shoulders, a lead apron over the waist, a dosimeter on the
     right chest, black bands on the shins."""
     tr = transfer_rule("suit")
-    for s in ("L", "R"):
+    tr1 = transfer_rule("suit", k=1)        # the shoulder shields take the weights of the one body vertex under them (2026-10-02:
+    for s in ("L", "R"):                    # a 4-vertex blend drifted 2.3 cm from the skin in lie_exit)
         sy = 1.0 if s == "L" else -1.0
-        with p.w(tr):
+        with p.w(tr1):
             p.hemi((-0.005, sy * 0.236, 1.428), 0.118, "VisDark", seg=8, rings=3, scale=(1.0, 0.9, 0.78), cap=False)
     with p.w(tr):
         z, y = 1.02, 0.0

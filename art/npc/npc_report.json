@@ -1,9 +1,9 @@
 {
- "date": "2026-10-01 14:43",
+ "date": "2026-10-02 16:49",
  "blender": "5.2.1 LTS",
  "scope": "full",
- "passed": 542,
- "failed": 24,
+ "passed": 590,
+ "failed": 14,
  "pending": 0,
  "info": 12,
  "tris": {
@@ -27,7 +27,7 @@
   {
    "check": "file astronaut_suit.glb",
    "status": "pass",
-   "detail": "1478188 bytes"
+   "detail": "1548340 bytes"
   },
   {
    "check": "suit: skinned mesh objects ['Body']",
@@ -42,7 +42,7 @@
   {
    "check": "file astronaut_indoor.glb",
    "status": "pass",
-   "detail": "1423032 bytes"
+   "detail": "1493192 bytes"
   },
   {
    "check": "indoor: skinned mesh objects ['Body', 'Head_0', 'Head_1', 'Head_2', 'Head_3']",
@@ -167,7 +167,7 @@
   {
    "check": "suit: Vis_trader stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0099 m (lie_exit frame 27)"
+   "detail": "worst 0.0099 m (lie_exit frame 15)"
   },
   {
    "check": "suit: Vis_trader never below z -0.01",
@@ -187,7 +187,7 @@
   {
    "check": "suit: Vis_medical stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0085 m (repair_kneel frame 51)"
+   "detail": "worst 0.0126 m (repair_kneel frame 27)"
   },
   {
    "check": "suit: Vis_medical never below z -0.01",
@@ -207,7 +207,7 @@
   {
    "check": "suit: Vis_inspector stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0111 m (lie_exit frame 93)"
+   "detail": "worst 0.0111 m (lie_exit frame 75)"
   },
   {
    "check": "suit: Vis_inspector never below z -0.01",
@@ -216,13 +216,13 @@
   },
   {
    "check": "suit: Vis_radiation stays on the body in every clip (<= 2 cm drift)",
-   "status": "FAIL",
-   "detail": "worst 0.0235 m (lie_exit frame 99)"
+   "status": "pass",
+   "detail": "worst 0.0188 m (lie_enter frame 144)"
   },
   {
    "check": "suit: Vis_radiation never below z -0.01",
    "status": "pass",
-   "detail": "z min 0.0242 m (collapse frame 66)"
+   "detail": "z min 0.0231 m (collapse frame 66)"
   },
   {
    "check": "suit: idle loop seam <= 1 deg",
@@ -322,12 +322,12 @@
   {
    "check": "suit: kneel_enter end on the kneel rest pose (<= 1 deg)",
    "status": "pass",
-   "detail": "worst 0.409 deg, hips 0.0000 m"
+   "detail": "worst 0.392 deg, hips 0.0000 m"
   },
   {
    "check": "suit: kneel_exit start on the kneel rest pose (<= 1 deg)",
    "status": "pass",
-   "detail": "worst 0.409 deg, hips 0.0000 m"
+   "detail": "worst 0.392 deg, hips 0.0000 m"
   },
   {
    "check": "suit: kneel_exit end on the stand rest pose (<= 1 deg)",
@@ -457,7 +457,7 @@
   {
    "check": "suit: carry_idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.75 deg (forearm.L local, frame 25)"
+   "detail": "0.48 deg (forearm.L local, frame 23)"
   },
   {
    "check": "suit: carry_idle mesh never below z -0.01",
@@ -467,7 +467,7 @@
   {
    "check": "suit: work_console bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "1.08 deg (upper_arm.L world, frame 55)"
+   "detail": "5.16 deg (hand.L local, frame 68)"
   },
   {
    "check": "suit: work_console mesh never below z -0.01",
@@ -477,7 +477,7 @@
   {
    "check": "suit: work_bench bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.26 deg (upper_arm.R world, frame 21)"
+   "detail": "5.08 deg (upper_arm.R world, frame 1)"
   },
   {
    "check": "suit: work_bench mesh never below z -0.01",
@@ -487,7 +487,7 @@
   {
    "check": "suit: talk bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.98 deg (forearm.L world, frame 43)"
+   "detail": "13.97 deg (forearm.L world, frame 43)"
   },
   {
    "check": "suit: talk mesh never below z -0.01",
@@ -497,7 +497,7 @@
   {
    "check": "suit: kneel_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.68 deg (prop.L world, frame 40)"
+   "detail": "10.71 deg (hand.L world, frame 40)"
   },
   {
    "check": "suit: kneel_enter mesh never below z -0.01",
@@ -517,7 +517,7 @@
   {
    "check": "suit: kneel_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.16 deg (forearm.L world, frame 39)"
+   "detail": "13.18 deg (forearm.L world, frame 39)"
   },
   {
    "check": "suit: kneel_exit mesh never below z -0.01",
@@ -527,7 +527,7 @@
   {
    "check": "suit: sit_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.96 deg (hand.L world, frame 37)"
+   "detail": "10.97 deg (hand.L world, frame 37)"
   },
   {
    "check": "suit: sit_enter mesh never below z -0.01",
@@ -537,7 +537,7 @@
   {
    "check": "suit: sit_idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.01 deg (forearm.R local, frame 80)"
+   "detail": "2.00 deg (forearm.R local, frame 80)"
   },
   {
    "check": "suit: sit_idle mesh never below z -0.01",
@@ -557,7 +557,7 @@
   {
    "check": "suit: sit_type bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.94 deg (forearm.L local, frame 57)"
+   "detail": "1.56 deg (hand.L world, frame 57)"
   },
   {
    "check": "suit: sit_type mesh never below z -0.01",
@@ -567,7 +567,7 @@
   {
    "check": "suit: sit_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.85 deg (hand.L world, frame 31)"
+   "detail": "13.87 deg (hand.L world, frame 31)"
   },
   {
    "check": "suit: sit_exit mesh never below z -0.01",
@@ -577,7 +577,7 @@
   {
    "check": "suit: lie_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "4.60 deg (shin.L world, frame 129)"
+   "detail": "8.33 deg (prop.L world, frame 188)"
   },
   {
    "check": "suit: lie_enter mesh never below z -0.01",
@@ -587,17 +587,17 @@
   {
    "check": "suit: sleep bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.24 deg (forearm.L world, frame 26)"
+   "detail": "0.17 deg (forearm.R local, frame 63)"
   },
   {
    "check": "suit: sleep mesh never below z -0.01",
    "status": "pass",
-   "detail": "z min 0.4085 m"
+   "detail": "z min 0.5236 m"
   },
   {
    "check": "suit: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "7.60 deg (hand.L world, frame 64)"
+   "detail": "11.75 deg (hand.L world, frame 48)"
   },
   {
    "check": "suit: lie_exit mesh never below z -0.01",
@@ -617,7 +617,7 @@
   {
    "check": "suit: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "25.67 deg (upper_arm.R world, frame 51) at 1x"
+   "detail": "21.21 deg (upper_arm.R world, frame 51) at 1x"
   },
   {
    "check": "suit: collapse mesh never below z -0.01",
@@ -637,7 +637,7 @@
   {
    "check": "suit: cheer bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.29 deg (upper_arm.L world, frame 19)"
+   "detail": "13.62 deg (upper_arm.L world, frame 16)"
   },
   {
    "check": "suit: cheer mesh never below z -0.01",
@@ -647,7 +647,7 @@
   {
    "check": "suit: suit_swap bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.24 deg (forearm.L world, frame 12)"
+   "detail": "13.99 deg (forearm.L world, frame 10)"
   },
   {
    "check": "suit: suit_swap mesh never below z -0.01",
@@ -677,7 +677,7 @@
   {
    "check": "suit: board bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.93 deg (forearm.R local, frame 32)"
+   "detail": "11.77 deg (forearm.R local, frame 5)"
   },
   {
    "check": "suit: board mesh never below z -0.01",
@@ -687,7 +687,7 @@
   {
    "check": "suit: alight bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "12.00 deg (shin.R local, frame 47)"
+   "detail": "13.69 deg (forearm.L world, frame 46)"
   },
   {
    "check": "suit: alight mesh never below z -0.01",
@@ -697,7 +697,7 @@
   {
    "check": "suit: board_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.93 deg (forearm.L local, frame 32)"
+   "detail": "11.77 deg (forearm.L local, frame 5)"
   },
   {
    "check": "suit: board_r mesh never below z -0.01",
@@ -707,7 +707,7 @@
   {
    "check": "suit: alight_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "12.00 deg (shin.L local, frame 47)"
+   "detail": "13.69 deg (forearm.R world, frame 46)"
   },
   {
    "check": "suit: alight_r mesh never below z -0.01",
@@ -717,7 +717,7 @@
   {
    "check": "suit: step_up bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.10 deg (forearm.R world, frame 10)"
+   "detail": "13.55 deg (forearm.R world, frame 9)"
   },
   {
    "check": "suit: step_up mesh never below z -0.01",
@@ -727,7 +727,7 @@
   {
    "check": "suit: step_down bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.07 deg (hand.R world, frame 8)"
+   "detail": "13.12 deg (hand.R world, frame 8)"
   },
   {
    "check": "suit: step_down mesh never below z -0.01",
@@ -737,7 +737,7 @@
   {
    "check": "suit: step_up_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.10 deg (forearm.L world, frame 10)"
+   "detail": "13.55 deg (forearm.L world, frame 9)"
   },
   {
    "check": "suit: step_up_r mesh never below z -0.01",
@@ -747,7 +747,7 @@
   {
    "check": "suit: step_down_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.07 deg (hand.L world, frame 8)"
+   "detail": "13.12 deg (hand.L world, frame 8)"
   },
   {
    "check": "suit: step_down_r mesh never below z -0.01",
@@ -882,7 +882,7 @@
   {
    "check": "suit: board end = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (forearm.L), hips 0.0000 m"
   },
   {
    "check": "suit: board start on the stand rest pose (<= 1 deg)",
@@ -897,7 +897,7 @@
   {
    "check": "suit: alight start = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (prop.R), hips 0.0000 m"
   },
   {
    "check": "suit: alight end on the stand rest pose (<= 1 deg)",
@@ -912,7 +912,7 @@
   {
    "check": "suit: board_r end = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (hand.R), hips 0.0000 m"
   },
   {
    "check": "suit: board_r start on the stand rest pose (<= 1 deg)",
@@ -927,7 +927,7 @@
   {
    "check": "suit: alight_r start = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (prop.R), hips 0.0000 m"
   },
   {
    "check": "suit: alight_r end on the stand rest pose (<= 1 deg)",
@@ -942,12 +942,12 @@
   {
    "check": "suit: board right palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.002 m"
+   "detail": "0.004 m"
   },
   {
    "check": "suit: alight left palm on the grab handle (<= 2 cm from its axis)",
-   "status": "pass",
-   "detail": "0.009 m"
+   "status": "FAIL",
+   "detail": "0.024 m"
   },
   {
    "check": "suit: step_up end = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -962,7 +962,7 @@
   {
    "check": "suit: step_up palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.001 m"
+   "detail": "0.002 m"
   },
   {
    "check": "suit: step_down start = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -992,7 +992,7 @@
   {
    "check": "suit: step_up_r palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.001 m"
+   "detail": "0.002 m"
   },
   {
    "check": "suit: step_down_r start = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1012,12 +1012,12 @@
   {
    "check": "suit: sleep on the mattress (suits do not sleep in beds; for information)",
    "status": "info",
-   "detail": "lowest 0.412 m (the thicker suit sinks 13.8 cm)"
+   "detail": "lowest 0.524 m (the thicker suit sinks 2.6 cm)"
   },
   {
    "check": "suit: lie_enter / lie_exit and the bed (suits never use beds; for information)",
    "status": "info",
-   "detail": "353 vertices inside the bed box at worst"
+   "detail": "282 vertices inside the bed box at worst"
   },
   {
    "check": "suit: dead lies on the ground (lowest point -0.01..0.05 m)",
@@ -1027,7 +1027,7 @@
   {
    "check": "suit: repair_kneel hands at the panel (0.45 m ahead, 0.40 m high)",
    "status": "pass",
-   "detail": "hands reach x 0.450 m, mean height 0.461 m"
+   "detail": "hands reach x 0.450 m, mean height 0.448 m"
   },
   {
    "check": "suit: repair_kneel visor front at least 6 cm from the panel (x <= 0.39 m)",
@@ -1047,17 +1047,17 @@
   {
    "check": "suit: work_console hands on a 1.00 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.997 m, 100% of frames within 3.5 cm, hands reach x 0.53 m"
+   "detail": "lowest hand point 1.007 m, 100% of frames within 3.5 cm, hands reach x 0.53 m"
   },
   {
    "check": "suit: work_bench hands on a 0.90 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.903 m, 100% of frames within 3.5 cm, hands reach x 0.49 m"
+   "detail": "lowest hand point 0.904 m, 100% of frames within 3.5 cm, hands reach x 0.48 m"
   },
   {
    "check": "suit: sit_type hands on a 0.74 m surface",
-   "status": "pass",
-   "detail": "lowest hand point 0.729 m, 100% of frames within 3.5 cm, hands reach x 0.43 m"
+   "status": "FAIL",
+   "detail": "lowest hand point 0.725 m, 100% of frames within 3.5 cm, hands reach x 0.43 m"
   },
   {
    "check": "suit: carry_idle crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
@@ -1067,12 +1067,12 @@
   {
    "check": "suit: carry_walk crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
    "status": "pass",
-   "detail": "torso vertices inside 0, hands inside up to 0.019 m, crate tilt up to 3.2 deg"
+   "detail": "torso vertices inside 0, hands inside up to 0.018 m, crate tilt up to 3.2 deg"
   },
   {
    "check": "indoor: Vis_trader stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0173 m (lie_exit frame 27)"
+   "detail": "worst 0.0173 m (lie_exit frame 15)"
   },
   {
    "check": "indoor: Vis_trader never below z -0.01",
@@ -1082,7 +1082,7 @@
   {
    "check": "indoor: Vis_tourist stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0192 m (lie_enter frame 108)"
+   "detail": "worst 0.0191 m (lie_enter frame 111)"
   },
   {
    "check": "indoor: Vis_tourist never below z -0.01",
@@ -1091,18 +1091,18 @@
   },
   {
    "check": "indoor: Vis_medical stays on the body in every clip (<= 2 cm drift)",
-   "status": "pass",
-   "detail": "worst 0.0007 m (cheer frame 27)"
+   "status": "FAIL",
+   "detail": "worst 0.0201 m (collapse frame 48)"
   },
   {
    "check": "indoor: Vis_medical never below z -0.01",
    "status": "pass",
-   "detail": "z min 0.0733 m (collapse frame 66)"
+   "detail": "z min 0.0532 m (collapse frame 66)"
   },
   {
    "check": "indoor: Vis_science stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0122 m (suit_swap frame 42)"
+   "detail": "worst 0.0149 m (lie_enter frame 165)"
   },
   {
    "check": "indoor: Vis_science never below z -0.01",
@@ -1112,7 +1112,7 @@
   {
    "check": "indoor: Vis_radiation stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0074 m (lie_exit frame 27)"
+   "detail": "worst 0.0074 m (lie_exit frame 15)"
   },
   {
    "check": "indoor: Vis_radiation never below z -0.01",
@@ -1122,7 +1122,7 @@
   {
    "check": "indoor: Vis_inspector_h023 stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0033 m (cheer frame 27)"
+   "detail": "worst 0.0061 m (cheer frame 42)"
   },
   {
    "check": "indoor: Vis_inspector_h023 never below z -0.01",
@@ -1132,7 +1132,7 @@
   {
    "check": "indoor: Vis_inspector_h1 stays on the body in every clip (<= 2 cm drift)",
    "status": "pass",
-   "detail": "worst 0.0033 m (cheer frame 27)"
+   "detail": "worst 0.0061 m (cheer frame 42)"
   },
   {
    "check": "indoor: Vis_inspector_h1 never below z -0.01",
@@ -1237,12 +1237,12 @@
   {
    "check": "indoor: kneel_enter end on the kneel rest pose (<= 1 deg)",
    "status": "pass",
-   "detail": "worst 0.409 deg, hips 0.0000 m"
+   "detail": "worst 0.392 deg, hips 0.0000 m"
   },
   {
    "check": "indoor: kneel_exit start on the kneel rest pose (<= 1 deg)",
    "status": "pass",
-   "detail": "worst 0.409 deg, hips 0.0000 m"
+   "detail": "worst 0.392 deg, hips 0.0000 m"
   },
   {
    "check": "indoor: kneel_exit end on the stand rest pose (<= 1 deg)",
@@ -1372,7 +1372,7 @@
   {
    "check": "indoor: carry_idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.75 deg (forearm.L local, frame 25)"
+   "detail": "0.48 deg (forearm.L local, frame 23)"
   },
   {
    "check": "indoor: carry_idle mesh never below z -0.01",
@@ -1382,7 +1382,7 @@
   {
    "check": "indoor: work_console bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "1.08 deg (upper_arm.L world, frame 55)"
+   "detail": "5.16 deg (hand.L local, frame 68)"
   },
   {
    "check": "indoor: work_console mesh never below z -0.01",
@@ -1392,7 +1392,7 @@
   {
    "check": "indoor: work_bench bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.26 deg (upper_arm.R world, frame 21)"
+   "detail": "5.08 deg (upper_arm.R world, frame 1)"
   },
   {
    "check": "indoor: work_bench mesh never below z -0.01",
@@ -1402,7 +1402,7 @@
   {
    "check": "indoor: talk bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.98 deg (forearm.L world, frame 43)"
+   "detail": "13.97 deg (forearm.L world, frame 43)"
   },
   {
    "check": "indoor: talk mesh never below z -0.01",
@@ -1412,7 +1412,7 @@
   {
    "check": "indoor: kneel_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.68 deg (prop.L world, frame 40)"
+   "detail": "10.71 deg (hand.L world, frame 40)"
   },
   {
    "check": "indoor: kneel_enter mesh never below z -0.01",
@@ -1432,7 +1432,7 @@
   {
    "check": "indoor: kneel_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.16 deg (forearm.L world, frame 39)"
+   "detail": "13.18 deg (forearm.L world, frame 39)"
   },
   {
    "check": "indoor: kneel_exit mesh never below z -0.01",
@@ -1442,7 +1442,7 @@
   {
    "check": "indoor: sit_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "10.96 deg (hand.L world, frame 37)"
+   "detail": "10.97 deg (hand.L world, frame 37)"
   },
   {
    "check": "indoor: sit_enter mesh never below z -0.01",
@@ -1452,7 +1452,7 @@
   {
    "check": "indoor: sit_idle bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.01 deg (forearm.R local, frame 80)"
+   "detail": "2.00 deg (forearm.R local, frame 80)"
   },
   {
    "check": "indoor: sit_idle mesh never below z -0.01",
@@ -1472,7 +1472,7 @@
   {
    "check": "indoor: sit_type bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "2.94 deg (forearm.L local, frame 57)"
+   "detail": "1.56 deg (hand.L world, frame 57)"
   },
   {
    "check": "indoor: sit_type mesh never below z -0.01",
@@ -1482,7 +1482,7 @@
   {
    "check": "indoor: sit_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.85 deg (hand.L world, frame 31)"
+   "detail": "13.87 deg (hand.L world, frame 31)"
   },
   {
    "check": "indoor: sit_exit mesh never below z -0.01",
@@ -1492,7 +1492,7 @@
   {
    "check": "indoor: lie_enter bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "4.60 deg (shin.L world, frame 129)"
+   "detail": "8.33 deg (prop.L world, frame 188)"
   },
   {
    "check": "indoor: lie_enter mesh never below z -0.01",
@@ -1502,17 +1502,17 @@
   {
    "check": "indoor: sleep bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "0.24 deg (forearm.L world, frame 26)"
+   "detail": "0.17 deg (forearm.R local, frame 63)"
   },
   {
    "check": "indoor: sleep mesh never below z -0.01",
    "status": "pass",
-   "detail": "z min 0.4396 m"
+   "detail": "z min 0.5450 m"
   },
   {
    "check": "indoor: lie_exit bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "7.60 deg (hand.L world, frame 64)"
+   "detail": "11.75 deg (hand.L world, frame 48)"
   },
   {
    "check": "indoor: lie_exit mesh never below z -0.01",
@@ -1532,7 +1532,7 @@
   {
    "check": "indoor: collapse largest bone step per frame (a fall: no fixed limit)",
    "status": "info",
-   "detail": "25.67 deg (upper_arm.R world, frame 51) at 1x"
+   "detail": "21.21 deg (upper_arm.R world, frame 51) at 1x"
   },
   {
    "check": "indoor: collapse mesh never below z -0.01",
@@ -1552,7 +1552,7 @@
   {
    "check": "indoor: cheer bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.29 deg (upper_arm.L world, frame 19)"
+   "detail": "13.62 deg (upper_arm.L world, frame 16)"
   },
   {
    "check": "indoor: cheer mesh never below z -0.01",
@@ -1562,7 +1562,7 @@
   {
    "check": "indoor: suit_swap bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "14.24 deg (forearm.L world, frame 12)"
+   "detail": "13.99 deg (forearm.L world, frame 10)"
   },
   {
    "check": "indoor: suit_swap mesh never below z -0.01",
@@ -1592,7 +1592,7 @@
   {
    "check": "indoor: board bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.93 deg (forearm.R local, frame 32)"
+   "detail": "11.77 deg (forearm.R local, frame 5)"
   },
   {
    "check": "indoor: board mesh never below z -0.01",
@@ -1602,7 +1602,7 @@
   {
    "check": "indoor: alight bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "12.00 deg (shin.R local, frame 47)"
+   "detail": "13.69 deg (forearm.L world, frame 46)"
   },
   {
    "check": "indoor: alight mesh never below z -0.01",
@@ -1612,7 +1612,7 @@
   {
    "check": "indoor: board_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "11.93 deg (forearm.L local, frame 32)"
+   "detail": "11.77 deg (forearm.L local, frame 5)"
   },
   {
    "check": "indoor: board_r mesh never below z -0.01",
@@ -1622,7 +1622,7 @@
   {
    "check": "indoor: alight_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "12.00 deg (shin.L local, frame 47)"
+   "detail": "13.69 deg (forearm.R world, frame 46)"
   },
   {
    "check": "indoor: alight_r mesh never below z -0.01",
@@ -1632,7 +1632,7 @@
   {
    "check": "indoor: step_up bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.10 deg (forearm.R world, frame 10)"
+   "detail": "13.55 deg (forearm.R world, frame 9)"
   },
   {
    "check": "indoor: step_up mesh never below z -0.01",
@@ -1642,7 +1642,7 @@
   {
    "check": "indoor: step_down bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.07 deg (hand.R world, frame 8)"
+   "detail": "13.12 deg (hand.R world, frame 8)"
   },
   {
    "check": "indoor: step_down mesh never below z -0.01",
@@ -1652,7 +1652,7 @@
   {
    "check": "indoor: step_up_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.10 deg (forearm.L world, frame 10)"
+   "detail": "13.55 deg (forearm.L world, frame 9)"
   },
   {
    "check": "indoor: step_up_r mesh never below z -0.01",
@@ -1662,7 +1662,7 @@
   {
    "check": "indoor: step_down_r bone step per frame < 15 deg",
    "status": "pass",
-   "detail": "13.07 deg (hand.L world, frame 8)"
+   "detail": "13.12 deg (hand.L world, frame 8)"
   },
   {
    "check": "indoor: step_down_r mesh never below z -0.01",
@@ -1797,7 +1797,7 @@
   {
    "check": "indoor: board end = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (forearm.L), hips 0.0000 m"
   },
   {
    "check": "indoor: board start on the stand rest pose (<= 1 deg)",
@@ -1812,7 +1812,7 @@
   {
    "check": "indoor: alight start = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (prop.R), hips 0.0000 m"
   },
   {
    "check": "indoor: alight end on the stand rest pose (<= 1 deg)",
@@ -1827,7 +1827,7 @@
   {
    "check": "indoor: board_r end = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (hand.R), hips 0.0000 m"
   },
   {
    "check": "indoor: board_r start on the stand rest pose (<= 1 deg)",
@@ -1842,7 +1842,7 @@
   {
    "check": "indoor: alight_r start = ride_sit frame 0 moved by seat_offset (<= 1 deg, 5 mm)",
    "status": "pass",
-   "detail": "worst 0.000 deg (None), hips 0.0000 m"
+   "detail": "worst 0.040 deg (prop.R), hips 0.0000 m"
   },
   {
    "check": "indoor: alight_r end on the stand rest pose (<= 1 deg)",
@@ -1857,12 +1857,12 @@
   {
    "check": "indoor: board right palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.002 m"
+   "detail": "0.004 m"
   },
   {
    "check": "indoor: alight left palm on the grab handle (<= 2 cm from its axis)",
-   "status": "pass",
-   "detail": "0.009 m"
+   "status": "FAIL",
+   "detail": "0.024 m"
   },
   {
    "check": "indoor: step_up end = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1877,7 +1877,7 @@
   {
    "check": "indoor: step_up palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.001 m"
+   "detail": "0.002 m"
   },
   {
    "check": "indoor: step_down start = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1907,7 +1907,7 @@
   {
    "check": "indoor: step_up_r palm on the grab handle (<= 2 cm from its axis)",
    "status": "pass",
-   "detail": "0.001 m"
+   "detail": "0.002 m"
   },
   {
    "check": "indoor: step_down_r start = stand rest moved by step_offset (<= 1 deg, 5 mm)",
@@ -1926,13 +1926,13 @@
   },
   {
    "check": "indoor: sleep rests on the mattress (top 0.55 m, -1.2/+2 cm), head to +Y",
-   "status": "FAIL",
-   "detail": "lowest 0.443 m, head 0.54 m towards +Y"
+   "status": "pass",
+   "detail": "lowest 0.545 m, head 0.54 m towards +Y"
   },
   {
    "check": "indoor: lie_enter / lie_exit do not pass through the bed (front 5 cm of the mattress soft)",
    "status": "FAIL",
-   "detail": "148 vertices inside the bed box at worst"
+   "detail": "208 vertices inside the bed box at worst"
   },
   {
    "check": "indoor: dead lies on the ground (lowest point -0.01..0.05 m)",
@@ -1942,7 +1942,7 @@
   {
    "check": "indoor: repair_kneel hands at the panel (0.45 m ahead, 0.40 m high)",
    "status": "pass",
-   "detail": "hands reach x 0.428 m, mean height 0.461 m"
+   "detail": "hands reach x 0.428 m, mean height 0.448 m"
   },
   {
    "check": "indoor: repair_kneel head at least 8 cm from the machine face (x <= 0.37 m)",
@@ -1956,18 +1956,18 @@
   },
   {
    "check": "indoor: work_console hands on a 1.00 m surface",
-   "status": "pass",
-   "detail": "lowest hand point 1.009 m, 100% of frames within 3.5 cm, hands reach x 0.51 m"
+   "status": "FAIL",
+   "detail": "lowest hand point 1.018 m, 60% of frames within 3.5 cm, hands reach x 0.51 m"
   },
   {
    "check": "indoor: work_bench hands on a 0.90 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.919 m, 100% of frames within 3.5 cm, hands reach x 0.47 m"
+   "detail": "lowest hand point 0.920 m, 95% of frames within 3.5 cm, hands reach x 0.46 m"
   },
   {
    "check": "indoor: sit_type hands on a 0.74 m surface",
    "status": "pass",
-   "detail": "lowest hand point 0.745 m, 100% of frames within 3.5 cm, hands reach x 0.41 m"
+   "detail": "lowest hand point 0.741 m, 100% of frames within 3.5 cm, hands reach x 0.42 m"
   },
   {
    "check": "indoor: carry_idle crate (0.40 m at prop.R) clear of chest and pack; hands at its sides",
@@ -1987,12 +1987,12 @@
   {
    "check": "suit_swap: the pose is still around the cut frame (frames 29..31)",
    "status": "pass",
-   "detail": "0.262 deg between frames 29 and 31"
+   "detail": "0.277 deg between frames 29 and 31"
   },
   {
    "check": "suit_swap: hands at the helmet sides at the cut (wrists above 1.5 m, 0.15-0.30 m out)",
    "status": "pass",
-   "detail": "wrists L (0.06, 0.225, 1.62) R (0.06, -0.225, 1.62)"
+   "detail": "wrists L (0.06, 0.253, 1.61) R (0.06, -0.253, 1.61)"
   },
   {
    "check": "file astronaut_visitor_suit.glb",
@@ -2126,13 +2126,13 @@
   },
   {
    "check": "suit: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.101 m (alight forearm.L in the torso f30)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "indoor: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.101 m (alight forearm.L in the torso f30)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people: npc_pairs.json lists the hug",
@@ -2181,13 +2181,13 @@
   },
   {
    "check": "people m1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.015 m (protest_fist upper_arm.R in the torso f15)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people m1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "22.87 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.88 deg (fight_idle forearm.R f12)"
   },
   {
    "check": "people m1: loop seams <= 1 deg",
@@ -2207,7 +2207,32 @@
   {
    "check": "people m1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people m1: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "91 vertices at worst (lie_exit_r f33)"
+  },
+  {
+   "check": "people m1: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.555 m (f45)"
+  },
+  {
+   "check": "people m1: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.551 m (f0), highest lowest-point 0.553 m (f45)"
+  },
+  {
+   "check": "people m1: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.542 m (f243), highest lowest-point 0.583 m (f51)"
+  },
+  {
+   "check": "people m1: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.452 m (f0), highest lowest-point 0.455 m (f45)"
   },
   {
    "check": "people m1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2266,13 +2291,13 @@
   },
   {
    "check": "people m2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.014 m (sleep_turn forearm.L in the torso f37)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people m2: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "23.08 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.93 deg (fight_idle forearm.R f45)"
   },
   {
    "check": "people m2: loop seams <= 1 deg",
@@ -2286,13 +2311,38 @@
   },
   {
    "check": "people m2: never below the floor (z >= -0.01)",
-   "status": "FAIL",
-   "detail": "-0.0182 m (get_up f0)"
+   "status": "pass",
+   "detail": "-0.0055 m (flirt_lean f48)"
   },
   {
    "check": "people m2: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people m2: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "38 vertices at worst (lie_exit f33)"
+  },
+  {
+   "check": "people m2: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.555 m (f45)"
+  },
+  {
+   "check": "people m2: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.555 m (f45)"
+  },
+  {
+   "check": "people m2: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.544 m (f246), highest lowest-point 0.582 m (f228)"
+  },
+  {
+   "check": "people m2: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.452 m (f0), highest lowest-point 0.455 m (f45)"
   },
   {
    "check": "people m2: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2327,7 +2377,7 @@
   {
    "check": "people m3: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18347, 'uniform_science': 20081, 'uniform_food': 18585, 'uniform_medical': 20081, 'uniform_security': 19819, 'uniform_command': 20257, 'prison': 17931, 'casual_a': 18206, 'casual_b': 20256, 'casual_c': 18872, 'swimwear': 15002}"
+   "detail": "{'uniform_engineering': 18347, 'uniform_science': 20081, 'uniform_food': 18585, 'uniform_medical': 20081, 'uniform_security': 19819, 'uniform_command': 20257, 'prison': 17931, 'casual_a': 18206, 'casual_b': 20256, 'casual_c': 18872, 'swimwear': 14990}"
   },
   {
    "check": "people m3: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2351,13 +2401,13 @@
   },
   {
    "check": "people m3: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.025 m (protest_fist upper_arm.R in the torso f15)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people m3: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "22.87 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.88 deg (fight_idle forearm.R f12)"
   },
   {
    "check": "people m3: loop seams <= 1 deg",
@@ -2377,7 +2427,32 @@
   {
    "check": "people m3: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people m3: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "121 vertices at worst (lie_exit_r f33)"
+  },
+  {
+   "check": "people m3: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.555 m (f45)"
+  },
+  {
+   "check": "people m3: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.555 m (f45)"
+  },
+  {
+   "check": "people m3: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "FAIL",
+   "detail": "lowest 0.547 m (f243), highest lowest-point 0.590 m (f51)"
+  },
+  {
+   "check": "people m3: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.452 m (f0), highest lowest-point 0.455 m (f45)"
   },
   {
    "check": "people m3: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2436,13 +2511,13 @@
   },
   {
    "check": "people f1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.030 m (work_bench upper_arm.R in the torso f30)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people f1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "22.87 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.88 deg (fight_idle forearm.R f12)"
   },
   {
    "check": "people f1: loop seams <= 1 deg",
@@ -2462,7 +2537,32 @@
   {
    "check": "people f1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people f1: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "12 vertices at worst (lie_exit f33)"
+  },
+  {
+   "check": "people f1: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.554 m (f45)"
+  },
+  {
+   "check": "people f1: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.550 m (f0), highest lowest-point 0.553 m (f45)"
+  },
+  {
+   "check": "people f1: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.544 m (f246), highest lowest-point 0.564 m (f213)"
+  },
+  {
+   "check": "people f1: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.455 m (f0), highest lowest-point 0.457 m (f45)"
   },
   {
    "check": "people f1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2521,13 +2621,13 @@
   },
   {
    "check": "people f2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.017 m (protest_fist upper_arm.R in the torso f15)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people f2: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "23.08 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.93 deg (fight_idle forearm.R f45)"
   },
   {
    "check": "people f2: loop seams <= 1 deg",
@@ -2547,7 +2647,32 @@
   {
    "check": "people f2: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people f2: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "4 vertices at worst (lie_exit_r f33)"
+  },
+  {
+   "check": "people f2: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.553 m (f45)"
+  },
+  {
+   "check": "people f2: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.554 m (f45)"
+  },
+  {
+   "check": "people f2: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.546 m (f249), highest lowest-point 0.564 m (f213)"
+  },
+  {
+   "check": "people f2: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.459 m (f0), highest lowest-point 0.462 m (f45)"
   },
   {
    "check": "people f2: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2582,7 +2707,7 @@
   {
    "check": "people f3: <= 24000 triangles per person on screen (LOD0)",
    "status": "pass",
-   "detail": "{'uniform_engineering': 18406, 'uniform_science': 20139, 'uniform_food': 18702, 'uniform_medical': 20139, 'uniform_security': 19906, 'uniform_command': 20315, 'prison': 17990, 'casual_a': 20312, 'casual_b': 20314, 'casual_c': 18874, 'swimwear': 13552}"
+   "detail": "{'uniform_engineering': 18407, 'uniform_science': 20140, 'uniform_food': 18703, 'uniform_medical': 20140, 'uniform_security': 19907, 'uniform_command': 20316, 'prison': 17991, 'casual_a': 20312, 'casual_b': 20314, 'casual_c': 18874, 'swimwear': 13552}"
   },
   {
    "check": "people f3: COLOR_0 (AO), <= 4 weights, normalised",
@@ -2606,13 +2731,13 @@
   },
   {
    "check": "people f3: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.026 m (protest_fist upper_arm.R in the torso f15)"
+   "status": "pass",
+   "detail": "deepest 0.000 m ()"
   },
   {
    "check": "people f3: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "22.87 deg (punch forearm.R f12)"
+   "status": "pass",
+   "detail": "13.99 deg (kneel_exit hand.L f39)"
   },
   {
    "check": "people f3: loop seams <= 1 deg",
@@ -2632,7 +2757,32 @@
   {
    "check": "people f3: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
-   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.6, 'laugh': 19.0}, lids 60.0"
+   "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'argue': 6.2, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people f3: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "pass",
+   "detail": "0 vertices at worst ()"
+  },
+  {
+   "check": "people f3: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.554 m (f45)"
+  },
+  {
+   "check": "people f3: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.553 m (f0), highest lowest-point 0.556 m (f45)"
+  },
+  {
+   "check": "people f3: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.549 m (f252), highest lowest-point 0.571 m (f51)"
+  },
+  {
+   "check": "people f3: sleep_cell rests ON the mattress (lowest point 0.435..0.485 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.453 m (f0), highest lowest-point 0.456 m (f45)"
   },
   {
    "check": "people f3: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2691,13 +2841,13 @@
   },
   {
    "check": "people c1: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.005 m (sleep_turn forearm.L in the torso f36)"
+   "status": "pass",
+   "detail": "deepest 0.000 m (play_arcade upper_arm.R in the torso f104)"
   },
   {
    "check": "people c1: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "18.51 deg (wave forearm.R f11)"
+   "status": "pass",
+   "detail": "13.86 deg (dance_c upper_arm.L f112)"
   },
   {
    "check": "people c1: loop seams <= 1 deg",
@@ -2712,12 +2862,32 @@
   {
    "check": "people c1: never below the floor (z >= -0.01)",
    "status": "pass",
-   "detail": "-0.0041 m (get_up f0)"
+   "detail": "0.0038 m (collapse f66)"
   },
   {
    "check": "people c1: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
    "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people c1: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "34 vertices at worst (lie_enter f54)"
+  },
+  {
+   "check": "people c1: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.545 m (f0), highest lowest-point 0.546 m (f45)"
+  },
+  {
+   "check": "people c1: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.545 m (f0), highest lowest-point 0.546 m (f45)"
+  },
+  {
+   "check": "people c1: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.545 m (f0), highest lowest-point 0.569 m (f207)"
   },
   {
    "check": "people c1: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2771,13 +2941,13 @@
   },
   {
    "check": "people c2: no limb inside the body in any frame of any clip (bone capsules, > 5 mm)",
-   "status": "FAIL",
-   "detail": "deepest 0.021 m (get_up thigh through thigh f20)"
+   "status": "pass",
+   "detail": "deepest 0.003 m (fall_down upper_arm.L in the head f33)"
   },
   {
    "check": "people c2: bone step per frame < 15 deg (not locomotion, not falls)",
-   "status": "FAIL",
-   "detail": "18.51 deg (wave forearm.R f11)"
+   "status": "pass",
+   "detail": "13.86 deg (dance_c upper_arm.L f112)"
   },
   {
    "check": "people c2: loop seams <= 1 deg",
@@ -2791,13 +2961,33 @@
   },
   {
    "check": "people c2: never below the floor (z >= -0.01)",
-   "status": "FAIL",
-   "detail": "-0.0238 m (get_up f0)"
+   "status": "pass",
+   "detail": "-0.0091 m (get_up f0)"
   },
   {
    "check": "people c2: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)",
    "status": "pass",
    "detail": "jaw {'talk': 5.9, 'talk_gesture_a': 4.9, 'laugh': 19.0}, lids 60.0"
+  },
+  {
+   "check": "people c2: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips (mattress 1.5 cm soft, front 17 cm soft)",
+   "status": "FAIL",
+   "detail": "62 vertices at worst (lie_enter f54)"
+  },
+  {
+   "check": "people c2: sleep rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.554 m (f45)"
+  },
+  {
+   "check": "people c2: sleep_r rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.554 m (f45)"
+  },
+  {
+   "check": "people c2: sleep_turn rests ON the mattress (lowest point 0.535..0.585 m: -1.5 cm to +3.5 cm of the top, every frame)",
+   "status": "pass",
+   "detail": "lowest 0.552 m (f0), highest lowest-point 0.576 m (f63)"
   },
   {
    "check": "people c2: sit_idle rests on the 0.46 m seat (+- 2 cm, height retarget)",
@@ -2812,7 +3002,7 @@
   {
    "check": "people pair hug (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "pass",
-   "detail": "6 points deeper than 2 cm (worst f39), 0 deeper than 4 cm, deepest 0.035 m"
+   "detail": "1 points deeper than 2 cm (worst f15), 0 deeper than 4 cm, deepest 0.022 m"
   },
   {
    "check": "people pair handshake (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
@@ -2821,8 +3011,8 @@
   },
   {
    "check": "people pair kiss_brief (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
-   "status": "FAIL",
-   "detail": "12 points deeper than 2 cm (worst f30), 0 deeper than 4 cm, deepest 0.036 m"
+   "status": "pass",
+   "detail": "2 points deeper than 2 cm (worst f48), 0 deeper than 4 cm, deepest 0.030 m"
   },
   {
    "check": "people pair hold_hands_walk (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
@@ -2832,17 +3022,17 @@
   {
    "check": "people pair slap (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "pass",
-   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.006 m"
+   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.019 m"
   },
   {
    "check": "people pair punch (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "pass",
-   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.000 m"
+   "detail": "4 points deeper than 2 cm (worst f39), 0 deeper than 4 cm, deepest 0.031 m"
   },
   {
    "check": "people pair escort (m1 with f1): no body point deeper than 2 cm in the partner (bone capsules), whole clip",
    "status": "pass",
-   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.013 m"
+   "detail": "0 points deeper than 2 cm (worst ), 0 deeper than 4 cm, deepest 0.014 m"
   },
   {
    "check": "robot: one skinned mesh Robot_dancer",
@@ -2915,5 +3105,5 @@
    "detail": "body vertices inside: 0 (); hand depth 0.009 m (robot_pole f98)"
   }
  ],
- "seconds": 59.8
+ "seconds": 107.0
 }

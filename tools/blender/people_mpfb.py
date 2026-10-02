@@ -958,6 +958,7 @@ def build_variant(m, v, outfits, stop=None):
     for a, ob in addon_objs.items():
         uniform_materials(ob, v)
         tris[ob.name] = ntris(ob)
+    align_soles([o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Outfit_")], v)
     # ---- AO, clips, export ----------------------------------------------------------------------------------
     objs_out = {o.name: o for o in bpy.data.objects if o.type == "MESH"}
     occ = {n: [n] + ([hob.name] if n.startswith("Outfit_") else []) for n in objs_out}   # the hair shades the skin
@@ -1030,6 +1031,42 @@ def build_variant(m, v, outfits, stop=None):
                              outfits={o: [g[0] for g in garments_of(v, o)] for o in garments}))
 
 
+def align_soles(outfits, v=""):
+    """Every outfit's soles at the same height in the bind pose (2026-10-02: the clips share one ankle offset per body,
+    calibrated on the lowest sole, so outfits with thinner soles stood 1.1-1.7 cm above the floor: the audit's "floats"
+    on m2, f1, f2, f3).  The shoes (the vertices on foot / toe, by their weight) of the lower-soled outfits rise to the
+    highest sole; the covered foot skin inside them is already removed."""
+    import numpy as np
+    lows = {}
+    for ob in outfits:
+        gi = {g.name: g.index for g in ob.vertex_groups}
+        fi = [gi[n] for n in ("foot.L", "foot.R", "toe.L", "toe.R") if n in gi]
+        w = np.zeros(len(ob.data.vertices))
+        for vv in ob.data.vertices:
+            for g in vv.groups:
+                if g.group in fi:
+                    w[vv.index] += g.weight
+        z = np.array([vv.co.z for vv in ob.data.vertices])
+        m = w > 0.5
+        if m.any():
+            lows[ob.name] = (float(z[m].min()), w)
+    if not lows:
+        return
+    top = max(lo for lo, _ in lows.values())
+    for ob in outfits:
+        if ob.name not in lows:
+            continue
+        lo, w = lows[ob.name]
+        dz = top - lo
+        if dz < 5e-4:
+            continue
+        for vv in ob.data.vertices:
+            if w[vv.index] > 0:
+                vv.co.z += dz * min(1.0, w[vv.index])
+        ob.data.update()
+        print("  %s %s: soles raised %.1f mm to the common sole height" % (v, ob.name, dz * 1000))
+
+
 PA_DEFAULTS = {}
 FINGER_CURL_SIGN = 1.0      # + curls the MakeHuman finger bones towards the palm (checked in the hand render)
 A_BED_Z = 0.55             # the mattress top (npc_anims FURNITURE bed_z)
@@ -1059,14 +1096,17 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     import people_anims as PA
     if not PA_DEFAULTS:
         PA_DEFAULTS.update(LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0,
-                           BED_ADJ=0.0)
+                           BED_ADJ=0.0, BED_BACK=0.0)
     # the torso vertices (strongest weight on hips / spine / chest) of the first object: the bed contact
-    o0 = obs[0]
-    names = {g.index: g.name for g in o0.vertex_groups}
-    torso_ix = np.array([v.index for v in o0.data.vertices if v.groups and
-                         names.get(max(v.groups, key=lambda g: g.weight).group) in ("hips", "spine", "chest")],
-                        dtype=np.int64)
-    n0 = len(o0.data.vertices)
+    # (2026-10-02: the thighs and the other outfits too: m2 / m3 lay 1-2.5 cm in the mattress at the bottom hip)
+    bed_obs = [o for o in (feet_obs or obs[:1]) if o.name.split(".")[0] in ("Outfit_uniform", "Outfit_school",
+                                                                             "Outfit_casual_a")] or list(obs[:1])
+    bed_ix = []
+    for ob_ in bed_obs:
+        names = {g.index: g.name for g in ob_.vertex_groups}
+        bed_ix.append(np.array([v.index for v in ob_.data.vertices if v.groups and
+                                names.get(max(v.groups, key=lambda g: g.weight).group) in
+                                ("hips", "spine", "chest", "thigh.L", "thigh.R")], dtype=np.int64))
     for k, v in PA_DEFAULTS.items():
         setattr(PA, k, v)
     clips = {c[0]: c[6] for c in PA.people_clips()}
@@ -1076,11 +1116,32 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
         PA.FOOT_DZ += 0.002 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["dead"](0), s, "dead"), obs)
         PA.LIE_LIFT += 0.004 - co[:, 2].min()
-        co = pose_eval(rig, solver, PA.retarget(clips["sleep"](0), s, "sleep"), obs)
-        tc = co[:n0][torso_ix]
-        m_ = (tc[:, 2] > 0.35) & (np.abs(tc[:, 0] + 0.55) < 0.45)
-        if m_.any():
-            PA.BED_ADJ += (A_BED_Z + 0.004) - float(tc[m_, 2].min())
+        lows = []
+        for ob_, ix in zip(bed_obs, bed_ix):
+            tc = pose_eval(rig, solver, PA.retarget(clips["sleep"](0), s, "sleep"), [ob_])[ix]
+            m_ = (tc[:, 2] > 0.35) & (np.abs(tc[:, 0] + 0.55) < 0.45)
+            if m_.any():
+                lows.append(float(tc[m_, 2].min()))
+        if lows:
+            PA.BED_ADJ += (A_BED_Z + 0.002) - min(lows)
+        # on the back (the most supine frame of sleep_turn): any body point over the mattress
+        if "sleep_turn" in clips:
+            st = clips["sleep_turn"]
+            best = (0.0, 0)
+            for f_ in range(0, 288, 6):
+                P_ = st(f_)
+                qh = N.qeuler(P_.g("hips.rx"), P_.g("hips.ry"), P_.g("hips.rz"))
+                wb = (qh @ Vector((1.0, 0.0, 0.0))).z ** 2
+                if wb > best[0]:
+                    best = (wb, f_)
+            lows = []
+            for ob_ in bed_obs:
+                tc = pose_eval(rig, solver, PA.retarget(st(best[1]), s, "sleep_turn"), [ob_])
+                m_ = (tc[:, 2] > 0.35) & (np.abs(tc[:, 0] + 0.55) < 0.45)
+                if m_.any():
+                    lows.append(float(tc[m_, 2].min()))
+            if lows:
+                PA.BED_BACK += (A_BED_Z + 0.004) - min(lows)
         co = pose_eval(rig, solver, PA.retarget(clips["repair_kneel"](0), s, "repair_kneel"), obs)
         PA.KNEEL_ADJ += 0.004 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["sit_idle"](0), s, "sit_idle"), obs)
@@ -1097,6 +1158,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                     tuple(round(x, 3) for x in rig.pose.bones["hips"].location)))
             PA.STOOL_ADJ += 0.762 - co[m, 2].min()
     N.reset_pose(rig)
+    print("  contacts: BED_BACK %.3f" % PA.BED_BACK)
     print("  contacts: LIE_LIFT %.3f  BED_ADJ %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f" % (
         PA.LIE_LIFT, PA.BED_ADJ, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
 

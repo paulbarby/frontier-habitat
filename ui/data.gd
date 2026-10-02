@@ -818,6 +818,32 @@ static func hazard_name(kind: String) -> String:
 static func hazard_icon(kind: String) -> String:
 	return String(HAZARD.get(kind, {}).get("icon", "sev_warning"))
 
+## The hazard kinds that can happen on this planet (SIM hazards.kinds_here; the airless world has no dust
+## storm, wind storm or dust devil). Breakdowns happen everywhere. Without SIM's call: every kind.
+func hazard_kinds_here() -> Array:
+	var out: Array = []
+	var hz = main.sim.get("hazards") if main != null and main.sim != null else null
+	if hz != null and hz is Object and (hz as Object).has_method("kinds_here"):
+		out = (hz.kinds_here() as Array).duplicate()
+	else:
+		for k in HAZARD:
+			if k != "breakdown":
+				out.append(k)
+	out.append("breakdown")
+	return out
+
+## One extra sentence for a hazard on this planet ("" = none), for the codex page.
+func hazard_planet_note(kind: String) -> String:
+	var sim = main.sim if main != null else null
+	if sim == null or String(sim.planet.get("atmosphere", "thin")) != "none":
+		return ""
+	match kind:
+		"meteor", "meteor_shower":
+			return " This planet has no air to slow them: they come 1.4 times as often."
+		"solar_flare":
+			return " This planet has no air to shield you: flares come 1.5 times as often and the radiation is double."
+	return ""
+
 ## Detected events, soonest first: [{id, kind, name, eta_s, pos (Vector2 or null), radius,
 ## severity 1..3, countered, advice, active: false}].
 func hazard_forecast() -> Array:

@@ -37,6 +37,7 @@ CONSOLE_Z, CONSOLE_AHEAD = 1.00, 0.45
 BENCH_Z, BENCH_AHEAD = 0.90, 0.40
 PANEL_AHEAD, PANEL_Z = 0.45, 0.40
 ITEM_DEPTH = 0.42      # the deepest wall-side item
+SAT_ONCE = ("kettle", "agents", "menu", "shrine")   # wall kinds of the 5.0 prop kit that stand once in S/M, twice in L/XL
 MAX_MATS_OBJECT = 14
 MAX_MATS_FILE = 26
 
@@ -251,21 +252,48 @@ def slot_width(rm, depth, margin_deg=0.45):
     return 2.0 * (rm.Ri - depth) * tan(radians(SEG_DEG / 2.0 - margin_deg))
 
 
-class wall_slot:
-    """Context: builds into segment k.  Local frame: origin on the inner wall face at the segment centre angle
-    (plus `da` degrees), local +X points into the room (toward the centre), local +Y along the wall, z = 0."""
+PANEL_COS = cos(radians(SEG_DEG / 2.0))
 
-    def __init__(self, rm, k, da=0.0, back=0.02):
+
+def panel_radius(rm):
+    """Distance from the room centre to the flat inner wall panel of a segment (its facet is a chord: the corners
+    stand on radius Ri, the middle at Ri * cos(5.625 deg), up to 5.8 cm nearer the centre at XL)."""
+    return rm.Ri * PANEL_COS
+
+
+# Wall features seen from the room (absolute z, depth in front of the panel): the skirting (z < 0.29, 3 cm), the
+# two-pipe run (z 0.345 - 0.475, 7 cm with the pipes), the cove light (z 1.255 - 1.335, 4 cm).  A flat wall piece
+# (poster, screen, sign) lies between PANEL_ZLO and PANEL_ZHI and is never cut by them.
+PANEL_ZLO = 0.50
+PANEL_ZHI = 1.24
+DECAL_CLEAR = 0.004        # a decal stands this far in front of the panel (z-fighting)
+CUR_SLOT = {"on": False}
+
+
+def decal_x():
+    """Depth of a flat wall piece in the current wall slot (x = 0 is the panel face)."""
+    return DECAL_CLEAR
+
+
+class wall_slot:
+    """Context: builds into segment k.  Local frame (V5 2026-10-02): origin ON the flat inner wall panel at the segment
+    centre angle (plus `da` degrees), local +X points into the room (toward the centre), local +Y along the wall,
+    z = 0.  Before this fix the origin was 2 cm behind the radius Ri, which sank every flat wall piece into the
+    panel (3 cm at M, up to 8 cm at XL, because the facet is a chord).  `back` moves the origin behind the panel."""
+
+    def __init__(self, rm, k, da=0.0, back=0.0):
         self.p = rm.walls[k]
         self.a = seg_mid(k) + da
-        self.r = rm.Ri + back
+        self.r = panel_radius(rm) + back
 
     def __enter__(self):
         self._cm = self.p.at(RZ(self.a), T(self.r, 0, 0), RZ(180.0))
         self._cm.__enter__()
+        CUR_SLOT["on"] = True
         return self.p
 
     def __exit__(self, *exc):
+        CUR_SLOT["on"] = False
         return self._cm.__exit__(*exc)
 
 
@@ -558,6 +586,15 @@ class Plan:
         rm = self.rm
         placed = {}
         j = 0
+        # 5.0 (V5 15.3): the room's role props replace filler wall kinds (interior_roles.py); every room type has them
+        import interior_roles as RO
+        enr = RO.Enricher(rm, seed)
+        builders = dict(builders)
+        for k_, v_ in RO.builders(rm).items():
+            builders.setdefault(k_, v_)
+        depth_of = dict(depth_of or {})
+        for k_, v_ in RO.depths().items():
+            depth_of.setdefault(k_, v_)
         for k in range(NSEG):
             if k in skip or not rm.walls[k].faces:
                 continue
@@ -570,6 +607,10 @@ class Plan:
                 if j > len(pattern) and kind in once:
                     kind = pattern[j % len(pattern)]
                     j += 1
+            kind = enr.pick(kind, k)
+            if kind in SAT_ONCE and sum(1 for v_ in placed.values() if v_ == kind) >= (1 if enr.size < 2 else 2):
+                # size and variety rule (2026-10-02): a satire machine or screen stands once in S/M, twice in L/XL
+                kind = enr.pick("poster", k) if "poster" in builders else None
             if kind is None:
                 continue
             d = (depth_of or {}).get(kind, ITEM_DEPTH)
@@ -582,12 +623,58 @@ class Plan:
                 if kind is None:
                     continue
                 d = 0.08
+            # the slot origin is on the panel now: the old origin sat `shift` behind it, so a builder gets the
+            # depth that keeps the item front where the plan (wall_front) put it
+            shift = rm.Ri + 0.02 - panel_radius(rm)
+            d_build = max(0.04, d - shift)
             with wall_slot(rm, k) as p:
-                n0 = len(p.verts)
-                builders[kind](p, w, d, k)
+                n0, f0 = len(p.verts), len(p.faces)
+                builders[kind](p, w, d_build, k)
+                import interior_props as _PR
+                if kind.startswith("r_"):
+                    _PR.USED[kind] = _PR.USED.get(kind, 0) + 1
+                _PR.USED_TRIS[kind] = _PR.USED_TRIS.get(kind, 0) + sum(len(f_) - 2 for f_ in p.faces[f0:])
                 fit_under_cut(p, n0)
+                self.check_piece(k, kind, p, n0, f0)
             placed[k] = kind
         return placed
+
+    def check_piece(self, k, kind, p, n0, f0):
+        """Wall-piece depth rule: a flat piece (a face looking into the room, at most 7 cm deep) is not cut by the
+        skirting, the pipe run or the cove light, and none stands behind the panel.  Flags go to rm.piece_flags."""
+        rm = self.rm
+        a = radians(seg_mid(k))
+        ux, uy = cos(a), sin(a)
+        Rp = panel_radius(rm)
+        bad = []
+        for fi in range(f0, len(p.faces)):
+            vs = [p.verts[i] for i in p.faces[fi]]
+            if len(vs) < 3:
+                continue
+            # slot depth of each vertex: x = Rp - (v . u); faces looking into the room have a normal along -u
+            xs = [Rp - (v.x * ux + v.y * uy) for v in vs]
+            if max(xs) - min(xs) > 1e-4:
+                continue                                      # not parallel to the panel
+            nrm = (vs[1] - vs[0]).cross(vs[2] - vs[0])
+            if nrm.length < 1e-12:
+                continue
+            nrm.normalize()
+            if -(nrm.x * ux + nrm.y * uy) < 0.9:
+                continue                                      # looks the other way (or sideways)
+            x = xs[0]
+            zlo, zhi = min(v.z for v in vs), max(v.z for v in vs)
+            if x < -0.0005:
+                bad.append("behind the panel x=%.3f z=%.2f" % (x, zlo))
+            elif x < 0.0015:
+                bad.append("on the panel x=%.4f z=%.2f" % (x, zlo))
+            elif x <= 0.07:
+                if zlo < 0.48 and zhi > 0.34 and x < 0.07:
+                    bad.append("in the pipe run x=%.3f z=%.2f-%.2f" % (x, zlo, zhi))
+                elif zhi > 1.255 and zlo < 1.335 and x < 0.042:
+                    bad.append("in the cove light x=%.3f z=%.2f-%.2f" % (x, zlo, zhi))
+        if bad:
+            rm.piece_flags = getattr(rm, "piece_flags", [])
+            rm.piece_flags.append("Wall_%02d %s: %d flat faces cut by the wall (%s)" % (k, kind, len(bad), bad[0]))
 
     def rect_hits(self, cx, cy, hx, hy, yaw):
         for (x, y) in self.corners(cx, cy, hx, hy, yaw) + [(cx, cy)]:

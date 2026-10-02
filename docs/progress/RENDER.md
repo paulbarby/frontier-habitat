@@ -1086,3 +1086,28 @@ Wall pull-in pops (eye distance change > 8 % in one frame): 0 in every case befo
 ## 2026-10-01 (evening) v5 - PAUSED (user): half-done
 - Done, exported to build/web_render, not logged in full: roofs ON in the follow view (interior drawn under the roof, two-sided roof shells, roof-underside ceiling grid, indoor fog/ambient + fill light), `set_roofs_off` + debug `roofs off|on` (perf on showcase_v5 not run), camera freedom (360 orbit, tilt -34..77 deg, zoom 0.5-8 m, free-look middle drag, R / 4 s auto return, `set_shot` for a later watch mode), wall rule rewritten as push-out (eye inside rooms/corridors indoors, out of structures outdoors), weather particles clipped by room/corridor volumes + `tools/render_weather_check.gd` (v1 PASS: 0 drawn inside, 4,067 / 6,655 clipped). Shots 170-177.
 - Probe c14 (20 s): out1 head 0.063 px / cam 0.21 mm, dome1 0.08 px / 0.35 mm, out4 0.74 px / 2.35 mm: targets met; in1 head 0.42 px but cam 12.7 mm (3 events of 50-82 mm per (1/60 s)^2 left, cause not traced), in4 cam 28 mm. Path / airlock / cut checks not re-run after these changes. `world_view.fc_dbg` is a debug list without a size cap (remove or cap). fx_robots wiring, egg_dance, people loader, planets, grounding, seat check: not started.
+
+## 2026-10-02 - HANDOVER (RENDER agent stopped by the coordinator; Opus takes over)
+
+Only priority 1 (indoor follow camera jerk regression) was worked. Nothing else of ORCH-to-RENDER.md or the paused list was started. `check`: 294 scripts, 0 failed (last run after the final edit). Export `build/web_render` is one edit behind (the pivot/velocity scaling by game rate was added, then reverted; re-export before measuring).
+
+**Cause (measured):** indoors, the wall rule was a hard projection of the free eye onto the union of rooms and corridors, followed by springs and then a hard clamp (SH_HARD) every frame. The spring lagged 0.14-0.34 m, the clamp took over (CSV `fc_dbg`: "indoor hard 0.34") and made a kinked eye path; the raw ceiling value (`cy - 0.12`) was a second hard clamp. The nearest point of the union also flips by 0.3-0.7 m where a corridor mouth meets a room (the free eye sits beside the jamb while the camera heading trails a turn): 44-56 flips of the target per 600 frames in `showcase_v3_late`.
+
+**Changed (files):**
+- `presentation/world_view.gd`: `_follow_collide(..., knee)`; new `_vol_soft` (soft wall rule: smoothed union depth field `_vol_field`, log-sum-exp tau 0.2, eye keeps place while depth >= knee, else depth phi(H) = knee exp(-(knee-H)/knee), 3 Newton steps), constants `FOLLOW_UNION_TAU`, `follow_depth(p)` (measurement), `fc_win` (debug). Knee > 0.5 = camera target (margins 0.4 room / 0.3 tube); knee <= 0.5 = guard on the sprung eye (margins 0.1 / 0.15). Outdoors unchanged (old push + clamp).
+- `presentation/camera_rig.gd`: indoors one symmetric spring on the wall push (`SH_W_SMOOTH` 4 rad/s x sqrt(game rate), max x2), then the guard (`SH_KNEE2` 0.1); no dead band, no `SH_HARD` clamp indoors (`collide_smooth` flag set by `collide_fn`). Ceiling: raw `cy - 0.12` clamp removed; eased ceiling springs 3.0 down / 2.0 up (`SH_W_CEIL_*`), applied as a soft minimum with knee 0.5 (`SH_CEIL_KNEE`). New debug vars `dbg_free`, `dbg_target`.
+- `presentation/fx_follow_probe.gd`: CSV gains `fx,fz,tx,tz,hd,win` (free eye, wall-rule target, eye depth inside the walls, winner).
+- New `tools/render_vols_dump.gd` (rooms and corridors near a point of a save, for offline geometry checks).
+
+**Numbers (`render_follow_probe.mjs`, web GPU, machine 40 % loaded by other agents so fps 31-59; same save, person chosen by the probe):**
+
+| case | before (base run) head px / cam mm | after head px / cam mm |
+|---|---|---|
+| in1 straight | 3.17 / 18.3 | 0.134-0.158 / 1.24-1.42 (steady windows 0.13 / 1.1-1.3) |
+| out1 straight | 0.069 / 0.155 | 0.076 / 0.365 |
+| dome1 straight | 0.078 / 0.366 | 0.077 / 0.364 |
+| in4 straight | 18.0 / 135 (n 27) | 2.8-4.5 / 8.7-9.8 (n 49-51); a later run on a loaded machine gave n 4-72 and 25-112 mm, not usable |
+
+Eye depth inside the walls in in1: min 0.02 m, 0 frames outside, 41 frames closer than 0.15 m (before the guard margin was raised to 0.1/0.15; not re-measured). Targets not met: **in4 cam < 3 mm** (straight windows hold few frames at 4x; the BODY itself ripples 7-8 mm rms there, so the camera inherits it: fix in the walker (`fx_npc.gd` speed ripple at 4x) or filter the pivot harder at high game rate; a first try of pivot w / sqrt(rate) was reverted untested because the machine was too loaded to read it). Not checked after these edits: out4, path / airlock / cut checks, ceiling behaviour in a low corridor, wall depth at 4x (8 frames of the eye on the wall plane in an earlier run, guard margin raised since).
+
+Nothing else from the order was started: grounding, planet looks, seat check, camera-body fade, roofs-off perf, fx_robots wiring, egg_dance, people loader, clip switches, long-frame trace, 130-people perf, `fc_dbg` cap (still uncapped in `world_view.gd`), clickable speech bubbles.

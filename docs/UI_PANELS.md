@@ -20,7 +20,7 @@ Code: `ui/hud/panel_manager.gd` (`hud.panels`). Test: `tools/ui/test_panels.gd`.
 |---|---|---|
 | Urgent line | top left, under the top bar | at most 1 line: the most urgent item; click opens its tab |
 | Pop-ups | top left, under the urgent line | at most 3 new messages; each fades after 5 s (8 s for a warning) |
-| Dock | left column, under the pop-ups, above the minimap | tabs (names from 320 px wide, else icon + count) with count badges; the open tab's cards. Pop-ups fold into News before the dock body gets under 200 px |
+| Dock | left column, under the pop-ups, above the minimap | tabs (names from 340 px wide, else icon + count) with count badges; the open tab's cards. Pop-ups fold into News before the dock body gets under 200 px |
 Width: a quarter of the view less 16 px (300 to 380 px). The dock never goes into the centre zone and
 never over the minimap; its body scrolls.
 
@@ -51,7 +51,7 @@ For each type the player picks: **Pop up** (pop-up, badge, flash), **Badge only*
 - `panels.toggle_dock()` (key L), `minimise_dock()`, `pin_dock()`, `select_tab(id)`, `mode(type)`.
 
 ## 6. Player controls
-- Dock header: the tabs, Minimise (only the tabs show), Pin (a window over the dock does not fold it; an
+- Dock header: a slim row with Mute, Minimise, Pin and Close, and under it the tabs in at most 2 rows. Minimise (only the tabs show), Pin (a window over the dock does not fold it; an
   urgent item does not change the tab), Close (only the urgent line and pop-ups stay; key L opens it again).
 - A card: Minimise, Pin, Close. A tab's mute button sets its types to Badge only.
 - Settings, Notifications: every type with Pop up / Badge only / Off.

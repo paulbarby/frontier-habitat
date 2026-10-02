@@ -131,12 +131,17 @@ func _ready() -> void:
 ## "What's new in 5.0" (STE): a glass card at the bottom right; More opens How to play, People.
 const NEW_5 := [
 	["colonists", "People: ranks, skills, friends, homes and moods."],
-	["follow", "Over the shoulder: select a person and press V."],
-	["newspaper", "The Regolith Rag: the colony tabloid (key J)."],
+	["follow", "Over the shoulder (key V): go round the person, look round, zoom close."],
+	["newspaper", "The Regolith Rag, the colony tabloid (key J)."],
 	["orders", "Reviews, rewards and discipline, each with its effect."],
-	["people", "Unrest: protests, strikes and riots, and 7 answers."],
-	["home", "Crew window (key U): ranks, homes and the academy."],
-	["cat_civic", "New: apartment block (XXL), super dome (XXXXL), jail, park, shop."],
+	["people", "Unrest: protests, strikes and riots. 7 answers, with lockdown."],
+	["home", "Crew window (key U): ranks, homes, the academy and security."],
+	["shelter", "Security officers stop fights. A jail holds the guilty."],
+	["cat_civic", "New: apartment block, super dome, jail, park and shop."],
+	["credits", "Tourists, venues and goods: tourism pays credits."],
+	["dock", "The left dock (key L) holds every alert and request. You choose what pops up."],
+	["roof_off", "Roofs off (key Y): see into every building."],
+	["planet", "Planets differ: the airless world has no storms."],
 ]
 func _whats_new() -> void:
 	var card := PanelContainer.new()

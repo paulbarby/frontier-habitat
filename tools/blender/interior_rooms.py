@@ -90,7 +90,8 @@ def wall_set(plan, extra=None):
 
 DEPTHS = {"shelf": 0.36, "planter": 0.36, "desk": 0.62, "tap": 0.40, "panel": 0.08, "vent": 0.08, "poster": 0.08,
           "plant": 0.40, "lockers": 0.40, "medcab": 0.36, "toolwall": 0.30, "suitrack": 0.40, "bottles": 0.30,
-          "cable": 0.20, "aiposter": 0.08, "filmposter": 0.08, "notice": 0.08, "kettle": 0.42, "shrine": 0.40,
+          "cable": 0.20, "aiposter": 0.08, "filmposter": 0.08, "notice": 0.08, "vibeposter": 0.08, "kettle": 0.42,
+          "shrine": 0.40,
           "agents": 0.08, "menu": 0.08}
 
 
@@ -138,7 +139,7 @@ def accents(plan):
 # 4.0 (V4_DESIGN section 2, critic round 17 fix 4): the 1.5 x rooms are filled BY FUNCTION: no empty floor patch
 # wider than V4_MAX_PATCH outside the walkways.  A greedy filler puts a family item in the centre of the largest
 # empty patch (keeping 0.7 m round it free and clear of every people anchor) until no patch is wider.
-V4_MAX_PATCH = 2.5
+V4_MAX_PATCH = 1.9          # 5.0 (V5 15.3): was 2.5; the role decor (small pieces) fills the patches between 1.9 and 2.5 m
 V4_MIN_HEAD = 2.0           # decor stands only where the roof is at least this high (tall racks 1.9 m)
 V4_KINDS = {"housing": ["lounge", "lockers", "plant", "reading", "light"],
             "comfort": ["lounge", "gametable", "plant", "reading", "light"],
@@ -217,6 +218,8 @@ def d_pantry(plan, x, y, yaw, k):
 
 
 def _register_v4_decor():
+    import interior_roles_decor as _RD        # 5.0 (V5 15.3): role decor (vending, server cabinet, gnome ...)
+    _RD.register_decor(_FAMX.DECOR, _FAMX.NEED, V4_KINDS)
     for k_, f_, r_ in (("lounge", d_lounge, 1.05), ("lockers", d_lockers, 0.62), ("wbench", d_wbench, 1.0),
                        ("deskpod", d_deskpod, 1.30), ("serving", d_serving, 1.05), ("pantry", d_pantry, 0.95)):
         _FAMX.DECOR.setdefault(k_, f_)
@@ -279,6 +282,7 @@ def v4_decor(plan, max_items=40):
         return 0
     people = _people(rm)
     placed, tried = 0, set()
+    used_n = {}
     k = 0
     for _ in range(max_items * 3):
         if placed >= max_items:
@@ -311,6 +315,9 @@ def v4_decor(plan, max_items=40):
             need = _FAMX.NEED[kind]
             if need > best - 0.6 or hypot(x, y) > plan.r_max - need - 0.05:
                 continue
+            import interior_roles_decor as _RD
+            if used_n.get(kind, 0) >= _RD.cap_for(kind, rm):          # role decor: a few of each, not a field of bins
+                continue
             if min(rm.headroom(x + need * cos(radians(a_)), y + need * sin(radians(a_))) for a_ in range(0, 360, 45))                     < V4_MIN_HEAD:
                 continue
             if any(hypot(x - ax, y - ay) < need + (0.9 if need > 0.6 else 0.65) for (ax, ay) in people):
@@ -320,6 +327,7 @@ def v4_decor(plan, max_items=40):
             rr = _FAMX.DECOR[kind](plan, x, y, yaw, k)
             _fit_under_roof(rm, plan.n, n0)
             plan.circle(x, y, rr, tag="decor")
+            used_n[kind] = used_n.get(kind, 0) + 1
             placed += 1
             k += 1
             done = True
@@ -333,6 +341,8 @@ def v4_decor(plan, max_items=40):
 def finish(plan, lights=None, aisle=True):
     if K.V4STYLE and K.R_SCALE > 1.0 and not os.environ.get("FH_NO_V4DECOR"):
         v4_decor(plan)
+    import interior_roles as _RO
+    _RO.floor_marks(plan)                  # 5.0 (V5 15.3): painted lane texts on the walking ring
     plan.lights(lights)
     accents(plan)
     if aisle:

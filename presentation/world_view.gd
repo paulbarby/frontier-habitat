@@ -433,6 +433,8 @@ func follow_start(id: int) -> bool:
 	r.shoulder_start(func(): return _follow_body(id))
 	Models.near_fade(0.8, 1.4)
 	r.collide_fn = _follow_collide
+	if "slide_fn" in r:
+		r.slide_fn = follow_slide
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
@@ -518,15 +520,37 @@ func _follow_circles(center: Vector3, reach: float) -> Array:
 ## see the shoulder (a wall between them), it is pulled in along that line to the first wall.
 ## Indoors (SIM where != out): the eye stays inside the union of the rooms and corridors round the person
 ## (a doorway is no wall). Outdoors: it stays out of every structure circle and ship / vehicle box.
-func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_only: bool = false) -> Vector3:
+func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_only: bool = false, knee: float = 0.0) -> Vector3:
 	var fb = agent_world_pos(follow_id) if follow_id >= 0 else null
 	var fin: bool = follow_id >= 0 and String(sim.state["agents"].get(follow_id, {}).get("where", "out")) != "out"
+	var rg = rig()
+	if rg != null and "collide_smooth" in rg:
+		rg.collide_smooth = false
 	if fb != null and fin:
-		var vols: Array = _follow_volumes(pivot, (eye - pivot).length() + 2.0)
+		var vols: Array = _follow_volumes(pivot, (eye - pivot).length() + 2.0 + knee)
 		if _vol_inside(vols, fb as Vector3, 0.0):
+			if knee > 0.0:
+				# Indoors with a knee: the soft wall rule (2026-10-02). One smooth function of the free eye, no
+				# springs, no hard clamp after it: see _vol_soft.
+				if rg != null and "collide_smooth" in rg:
+					rg.collide_smooth = true
+				# (knee 0.8: the camera's target; a small knee = the guard on the sprung eye, against the real wall)
+				# (2026-10-02: the guard's zone, margin + knee, must lie inside the target's margin, or every
+				# frame of spring lag near a wall bends the eye: 84 % of the 4x camera jerk. Target margins 0.5 / 0.45,
+				# guard 0.05 + knee 0.2: 0.2-0.25 m of room for the spring.)
+				if knee > 0.5:
+					# An eye far outside the walls (a wall right behind the person) is first drawn in along the
+					# boom toward the shoulder, by how deep outside it is (continuous): the nearest-point rule
+					# alone swept the target 2 m sideways round a corner in 0.25 s (2026-10-02).
+					var h_free: float = float(_vol_field(vols, Vector2(eye.x, eye.z), 0.5, 0.45, -FOLLOW_TARGET_TAU)[0])
+					var e2: Vector3 = eye
+					if h_free < 0.0:
+						e2 = pivot + (eye - pivot) * clampf(1.0 + h_free / FOLLOW_BOOM_IN, 0.35, 1.0)
+					return _vol_soft(vols, e2, knee, 0.5, 0.45, -FOLLOW_TARGET_TAU)
+				return _vol_soft(vols, eye, knee, 0.05, 0.05, -FOLLOW_UNION_TAU)
 			var q: Vector3 = eye if _vol_inside(vols, eye, margin) else _vol_project(vols, eye, margin)
 			if point_only and q.distance_to(eye) > 0.05:
-				fc_dbg.append("t%.2f indoor hard %.2f" % [_time, q.distance_to(eye)])
+				_fc_note("t%.2f indoor hard %.2f" % [_time, q.distance_to(eye)])
 			# (no sight-line pull indoors: the camera stays inside the rooms and corridors; at a doorway a wall
 			# edge may hide the person for a moment. The pull along the sight line jumped as the line swept
 			# past the door frame and dragged the camera, 2026-10-01.)
@@ -549,7 +573,7 @@ func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_on
 			var np: Vector2 = cp + dir * (r + margin)
 			q2 = Vector3(np.x, q2.y, np.y)
 			if point_only and r + margin - dd > 0.05:
-				fc_dbg.append("t%.2f circle %d %s r%.2f in %.2f" % [_time, int(c[0]), String(sim.state["buildings"][c[0]]["def"]), r, r + margin - dd])
+				_fc_note("t%.2f circle %d %s r%.2f in %.2f" % [_time, int(c[0]), String(sim.state["buildings"][c[0]]["def"]), r, r + margin - dd])
 	# ... and out of the ship and vehicle boxes (pushed out on the shortest side, in xz).
 	for ab in _follow_obstacles():
 		var bx: AABB = (ab as AABB).grow(margin)
@@ -565,7 +589,7 @@ func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_on
 		else:
 			q2.z += outs[k]
 		if point_only and absf(outs[k]) > 0.05:
-			fc_dbg.append("t%.2f box %.2f" % [_time, absf(outs[k])])
+			_fc_note("t%.2f box %.2f" % [_time, absf(outs[k])])
 	if point_only:
 		return q2
 	# The sight line from the shoulder to the pushed eye: a structure (its wall, no margin) across it
@@ -626,6 +650,142 @@ static func _vol_project(vols: Array, p: Vector3, margin: float) -> Vector3:
 		return p
 	return Vector3(best.x, p.y, best.y)
 
+const FOLLOW_UNION_TAU := 0.2  # m: smoothing of the union of the volumes (log-sum-exp; the guard: weighted mean)
+const FOLLOW_TARGET_TAU := 0.4 # m: the camera target's union (weighted mean): a wider fillet where a corridor meets a room
+const FOLLOW_BOOM_IN := 1.5    # m: an eye this far outside the walls is drawn in to 35 % of the boom first
+## The soft wall rule (2026-10-02; the indoor camera jerk regression: springs after a hard projection made a kinked
+## path). Depth field H(q) = log-sum-exp over the rooms and corridors of their depth inside a margin: R - m_room
+## - |q - c| for a room, r - m_tube - dist(q, axis) for a corridor; H >= 0 is "the eye may be here". The eye keeps
+## its place while H >= knee; below that its depth becomes phi(H) = knee exp(-(knee - H) / knee) (phi(knee) = knee,
+## phi' = 1 there, phi > 0 always: the eye never reaches the margin; a wall far outside gives the margin itself).
+## The eye is moved along the field's gradient to that depth (3 Newton steps on the same target). Position and
+## velocity are continuous in the eye; the acceleration is bounded by v^2 / knee. y is kept. Where two volumes
+## meet (a corridor mouth) the nearest region point still flips between them over a short distance: the camera
+## rig takes that out with a spring (camera_rig, SH_W_SMOOTH).
+func _vol_soft(vols: Array, p: Vector3, knee: float, m_room: float, m_tube: float, tau: float = FOLLOW_UNION_TAU) -> Vector3:
+	var q := Vector2(p.x, p.z)
+	var h0 := _vol_field(vols, q, m_room, m_tube, tau)
+	if h0[0] >= knee:
+		fc_win = "free"
+		return p
+	var target: float = knee * exp(-(knee - float(h0[0])) / knee)
+	var cur := q
+	var n := 0
+	for it in 3:
+		var f: Array = _vol_field(vols, cur, m_room, m_tube, tau)
+		var gr: Vector2 = f[1]
+		var dh: float = target - float(f[0])
+		if gr.length() < 0.05 or absf(dh) < 0.002:
+			break
+		cur += gr.normalized() * dh
+		n += 1
+	var fin: Array = _vol_field(vols, cur, m_room, m_tube, tau)
+	fc_win = "%d/%.2f" % [n, float(fin[0])]
+	if float(fin[0]) < -0.02:
+		# (the field is a smoothed union: in a rare notch it can over-estimate; the hard rule stands)
+		fc_win += "h"
+		return _vol_project(vols, p, maxf(m_room, 0.05))
+	return Vector3(cur.x, p.y, cur.y)
+
+## The indoor guard as a SLIDE (2026-10-02): from last frame's eye `from` (inside the rooms and corridors) toward
+## the sprung eye `to` in 4 cm steps; a step that leaves the walls (margin 0.05 m) is pushed back onto them along
+## the nearest volume's normal. The eye moves continuously by construction. The projection of the sprung eye
+## alone flipped between a room and a corridor where they meet: 0.6 m one-frame camera jumps at 4x.
+## Returns `to` unchanged outdoors; the soft guard when `from` is not inside (a new view, a jump).
+func follow_slide(shoulder: Vector3, from: Vector3, to: Vector3) -> Vector3:
+	var fb = agent_world_pos(follow_id) if follow_id >= 0 else null
+	if fb == null or String(sim.state["agents"].get(follow_id, {}).get("where", "out")) == "out":
+		return to
+	var vols: Array = _follow_volumes(shoulder, (to - shoulder).length() + 2.5)
+	if not _vol_inside(vols, fb as Vector3, 0.0):
+		return to
+	var p := Vector2(from.x, from.z)
+	var q := Vector2(to.x, to.z)
+	if float(_vol_field(vols, p, 0.05, 0.05, 0.0)[0]) < -0.01:
+		return _vol_soft(vols, to, 0.2, 0.05, 0.05, -FOLLOW_UNION_TAU)
+	var n: int = clampi(int(ceil(p.distance_to(q) / 0.04)), 1, 60)
+	for i in n:
+		var np: Vector2 = p + (q - p) / float(n - i)
+		for _k in 2:
+			var f: Array = _vol_field(vols, np, 0.05, 0.05, 0.0)
+			if float(f[0]) >= 0.0:
+				break
+			var g: Vector2 = f[1]
+			if g.length() < 0.01:
+				np = p
+				break
+			np += g.normalized() * (-float(f[0]))
+		p = np
+	fc_win = "slide"
+	return Vector3(p.x, to.y, p.y)
+
+## [H, grad H (xz, pointing to larger H)] at q: the smoothed union depth of the volumes (see _vol_soft).
+static func _vol_field(vols: Array, q: Vector2, m_room: float, m_tube: float, tau: float = FOLLOW_UNION_TAU) -> Array:
+	var hs: Array = []
+	var gs: Array = []
+	var hmax := -INF
+	for v in vols:
+		var cp: Vector2
+		var rh: float
+		if v[0] == "room":
+			cp = v[1]
+			rh = float(v[2]) - m_room
+		else:
+			cp = Geometry2D.get_closest_point_to_segment(q, v[1], v[2])
+			rh = float(v[3]) - m_tube
+		var d: float = q.distance_to(cp)
+		var hv: float = rh - d
+		hs.append(hv)
+		gs.append((cp - q) / d if d > 0.0005 else Vector2.ZERO)
+		hmax = maxf(hmax, hv)
+	if hs.is_empty():
+		return [-INF, Vector2.ZERO]
+	if tau == 0.0:
+		# the exact union (the slide): the deepest volume and its gradient
+		var im: int = hs.find(hmax)
+		return [hmax, gs[im]]
+	if tau < 0.0:
+		# The guard (tau < 0, |tau| used): the softmax-WEIGHTED MEAN of the depths, never above the true union
+		# depth (log-sum-exp over-estimates it by up to tau ln 2 = 0.14 m where two volumes meet, and the guarded
+		# eye stood 0.09 m outside the walls there; the exact max flips between the volumes, 2026-10-02).
+		# grad = mean_w(g) + cov_w(h, g) / tau.
+		var ta: float = -tau
+		var ws := 0.0
+		var hm := 0.0
+		var gm := Vector2.ZERO
+		var hg := Vector2.ZERO
+		for i in hs.size():
+			var wi: float = exp((float(hs[i]) - hmax) / ta)
+			ws += wi
+			hm += wi * float(hs[i])
+			gm += wi * (gs[i] as Vector2)
+			hg += wi * float(hs[i]) * (gs[i] as Vector2)
+		hm /= ws
+		gm /= ws
+		hg /= ws
+		return [hm, gm + (hg - hm * gm) / ta]
+	var wsum := 0.0
+	var gacc := Vector2.ZERO
+	for i in hs.size():
+		var w: float = exp((float(hs[i]) - hmax) / tau)
+		wsum += w
+		gacc += (gs[i] as Vector2) * w
+	return [hmax + tau * log(wsum), gacc / wsum]
+
+## Measurement: how deep p (xz) is inside the union of the rooms and corridors round the followed person,
+## from the wall itself (max over volumes of radius - distance); 99 outdoors or when the person is outdoors.
+func follow_depth(p: Vector3) -> float:
+	if follow_id < 0 or String(sim.state["agents"].get(follow_id, {}).get("where", "out")) == "out":
+		return 99.0
+	var best := -INF
+	var q := Vector2(p.x, p.z)
+	for v in _follow_volumes(p, 0.0):
+		if v[0] == "room":
+			best = maxf(best, float(v[2]) - q.distance_to(v[1]))
+		else:
+			best = maxf(best, float(v[3]) - Geometry2D.get_closest_point_to_segment(q, v[1], v[2]).distance_to(q))
+	return best if best > -INF else -9.0
+
 ## Does the line a-b stay inside the volumes (8 cm steps)?
 static func _vol_line_inside(vols: Array, a: Vector3, b: Vector3, margin: float) -> bool:
 	var n: int = maxi(2, int(ceil(a.distance_to(b) / 0.08)))
@@ -654,7 +814,14 @@ static func _vol_first_exit(vols: Array, a: Vector3, b: Vector3, margin: float) 
 			return a.lerp(b, maxf(lo, 0.08))
 	return b
 
+var fc_win := ""             # measurement: the soft wall rule's winner volume / candidates (m = blended, f = blend refused)
 var fc_dbg: Array = []       # measurement: the last hard pull-in causes (fprobe get)
+## Adds one pull-in cause to fc_dbg (measurement), keeping only the last FC_DBG_MAX (it had no cap).
+const FC_DBG_MAX := 400
+func _fc_note(t: String) -> void:
+	fc_dbg.append(t)
+	if fc_dbg.size() > 2 * FC_DBG_MAX:
+		fc_dbg = fc_dbg.slice(fc_dbg.size() - FC_DBG_MAX)
 const FOLLOW_TUBE_R := 1.15   # m: corridor inside radius for the camera (fx_npc_path.TUBE_R)
 ## Rooms (xz circles) and corridors (xz capsules) within `reach` of p: [["room", centre, r, id] | ["tube", p0, p1, r, id]].
 func _follow_volumes(p: Vector3, reach: float) -> Array:
@@ -714,6 +881,12 @@ func follow_ceiling(feet: Vector3, p: Vector3) -> float:
 			if c == INF:
 				c = feet.y + 2.3
 		best = minf(best, c)
+	# (a point outside every room and corridor, e.g. the eye pressed to a wall: the ceiling over the person;
+	# INF here let the eye jump 0.9 m up for a frame, 2026-10-02)
+	if best == INF and p.distance_to(feet) > 0.05:
+		var pf := Vector3(feet.x, p.y, feet.z)
+		if not _follow_volumes(pf, 0.0).is_empty():
+			return follow_ceiling(feet, pf)
 	return best
 
 ## Paul 2026-10-01 (roofs on in the follow view): the roof shell is drawn single-sided (from outside), so
@@ -1205,6 +1378,7 @@ func sync(delta: float) -> void:
 	sky.storm = lerpf(sky.storm, storm, 1.0 - exp(-delta * 0.8))
 	var wind: float = float(sim.state["env"].get("wind", 3.0))
 	var tp: int = Time.get_ticks_usec()
+	_planet_check()
 	sky.update(t, day_len, daylight, delta, focus, camera_distance, wind)
 	_v4_light(focus)
 	post.apply(sky.grade, delta)
@@ -1607,6 +1781,22 @@ func _focus() -> Vector3:
 	if r != null and r.get("focus") != null:
 		return r.focus
 	return to3(sim.world.center)
+
+## The planet's look (Paul 2026-10-01, V5 15.7: terrain, rocks, sky, light, fog and weather follow the
+## planet option). Applied when the loaded planet changes; airless has no storm, dust or wind effects.
+var _planet_seen := ""
+func _planet_check() -> void:
+	var pl: String = String(sim.state.get("planet", "dry"))
+	if pl == _planet_seen:
+		return
+	_planet_seen = pl
+	sky.planet_name = pl
+	if terrain != null and terrain.has_method("apply_planet"):
+		terrain.apply_planet(pl)
+	if fx != null and fx.get("particles") != null:
+		fx.particles.planet = pl
+	elif fx != null and "planet" in fx:
+		fx.planet = pl
 
 func _storm_level() -> float:
 	if _forced_storm >= 0.0:

@@ -1183,3 +1183,67 @@ Spec first: `docs/UI_PANELS.md` (STE, one page). Code: `ui/hud/panel_manager.gd`
   count when narrower; the tabs are a grid with as many columns as fit (a flow container measured its height a
   frame late and pushed the dock over the minimap). test_panels checks both rules at every size and scale.
   test_panels, test_window_bounds (132), test_wm: PASS.
+
+## 2026-10-02 (run 3): help, codex, keys, dock layout, follow card, floor selector
+
+Orders read: ORCH-to-UI (roofs off, one panel manager and tabbed left dock, storm sounds indoors): all three were done on
+2026-10-01 and are still in place (tests below). RENDER-to-UI (follow view, 2026-09-29 and later): done earlier; the
+bubble-click request is still open on RENDER's side (`view.bubbles` has no "speaker at a screen point" call), so step 4
+is skipped: the Switch button on the follow card still does it. SIM-to-UI (planets differ): done today.
+
+1. **Settings > Keys and How to play > Controls come from one list**, `ui/keys.gd` (29 rows, 41 keys, 5 mouse buttons), and
+   match the input code. The freer over-the-shoulder camera is listed as RENDER built it (`camera_rig.gd`): wheel 0.5 to 8 m,
+   right drag = full circle and tilt, middle drag or Alt + right drag = look round, Q/E = other shoulder, R = back behind the
+   person, 4 s auto return, Tab, Esc/V. Missing before: F1, `[` `]`, and the over-the-shoulder controls (right drag, middle drag
+   to look round, R, the zoom range, Q/E as shoulder swap in Settings).
+   New test `tools/ui/test_keys.gd` (RESULT PASS, 0 failed): (a) source scan: every KEY_ and MOUSE_BUTTON_ constant in
+   `main.gd` `_unhandled_input`/`_input` and `camera_rig.gd` is a row, and every row constant is tested by the code; no other
+   file under ui/ or presentation/ handles a key. Checked by mutation: removing KEY_Y and `]` from the list gave
+   `FAIL ... missing in ui/keys.gd: ["KEY_BRACKETRIGHT", "KEY_Y"]`. (b) both screens show every row. (c) behaviour checks (75 checks in all in the test)
+   with real input events (`Input.parse_input_event`): Space, 1 2 3, G T C I P U K F1, J, N, / and Ctrl+F, O, L, Y, H, Esc
+   (menu), Shift+Esc, R, Shift+R, Z X [ ], right click, wheel, middle drag, Q, D, F, V, E, Q, wheel, right drag, middle drag,
+   R, Tab, Esc, Delete (asks first), PgUp/PgDn.
+   Fault found and fixed in `main.gd`: a right press over the shoulder cleared the selection (`select("", -1)`) every time the
+   player started to orbit. It now returns at once in the follow view (the test "Right drag clears no selection").
+2. **Help, codex, What's new, loader tips.** `ui/v5_help.gd`: 28 topics (was 19) in 5 groups (Interface, Society, People,
+   Structures, World). New: settings and keys, sound and weather indoors, lockdown, security and fights, the jail, tourism,
+   secrets (no spoilers), the super dome (9 stages), planets differ. Rewritten: over the shoulder (the new controls), roofs,
+   dock (Notifications), venues (staff choice, who makes the goods), floors, academy, giants, requests. How to play > People
+   groups them under headings; the Codex tab "People" is now "Guide" and lists the same topics; the hazard pages list only the
+   hazards of the planet (`hud.data.hazard_kinds_here()` from SIM `kinds_here`) with a sentence for the airless world
+   (meteors x1.4, flares x1.5 and double radiation). How to play > Rules reads the suit seconds and the carry limit from the
+   balance (it said 90 s and 2 units; new games have 130 s and 4). What's new (title screen): 12 rows. Loader tips: 22 (one
+   line each, 78 characters at most); `templates/web_shell.src.html` only: the orchestrator runs `make_shell.mjs`.
+   Planet locks: block `no_atmosphere` has text in the inspector and the why-stopped page.
+   New test `tools/ui/test_help_v5.gd` (RESULT PASS): a feature checklist (28 topics); the numbers in the text equal the content
+   (unrest stages 25/40/55/70/85, slowdown 15 %, lock-down 2 hours, 1 officer per 12, jail cells 2/4/8, dome 9 stages, 16
+   venues, 30 homes, apartment block 3 floors, 10 family units, 2 penthouses, planet numbers, 11 skills); every "key X" in the
+   text, What's new and the tips is a key of the list and sits next to its job; the airless world: no dust storm, wind
+   storm or dust devil in the codex or the forecast, the wind turbine is locked ("no air") and refused (`no_atmosphere`).
+3. **Dock layout fault (found in the web shots).** At the web's logical 1600x900 the named tabs fitted in ONE column (six
+   rows, 262 px) beside the dock controls and squeezed the body (67 px at 1366x768). Now: a slim control row, then the tabs
+   under it: named tabs (no icon, 11 pt) from 340 px in 3 columns by 2 rows (66 px), narrower icon + count. Body at
+   1600x900: 191 to 415 px; at 1366x768: 67 to 250 px (`tools/ui/ui_probe_tabs.gd`). `test_panels` now asserts at most 2
+   rows of tabs and names when the dock is 370 px or wider (36 size/scale cases).
+4. **Follow card over the dock (found in the web shots).** The dock, the urgent line and pop-ups lay under the follow card
+   and showed through it. The column now starts under the card (`panel_manager.gd`). `test_panels`: 3 sizes, nothing the
+   manager shows intersects the card.
+5. **Floor selector under the inspector (found in the web shots).** The strip lay behind the inspector at 1280x720. It now
+   sits left of it (`hud.right_inset()`). `test_panels`: not under the inspector at 1600x900 and 1280x720.
+6. **Settings**: Keys is one full-width card under the columns (two keys to a row); Notifications moved up, Sound to the
+   left column.
+7. Test fixes (no game change): `test_ships_ui` failed since 2026-09-29 because the cable takes about 4 minutes to build now
+   (progress 0.2 after 200 s; `tools/ui/ui_probe_pad.gd`), not a SIM fault: the wait is 400 s. `test_indoor_sound` fade check
+   counted frames (k 0.79 to 1.00 by machine load); it uses wall clock now (k 0.49 to 0.56 in 3 runs). `test_panels` re-looks
+   up to 3 times when the layout lags one frame.
+
+Checks (one at a time, after the last code change): `check` 298 scripts, 0 failed. test_keys, test_help_v5, test_panels,
+test_window_bounds (132), test_wm, test_rag, test_v5_people, test_v5_social, test_v5_orders, test_v5_showcase,
+test_alert_steady, test_alert_gate, test_bases_ui, test_v4_live, test_v4_screens, test_tiers, test_storage, test_reach,
+test_theme_v4, test_tooltips_clip, test_helpers, test_find, test_locks, test_indoor_sound, test_ships_ui, test_music,
+test_newcolony_map, test_world_audio: PASS (28 of 28).
+Export `build/web_ui` (pck 170.6 MB, soft limit 200). Shots (`--gpu`, showcase_v5, `docs/shots/ui19_*`): title, dock,
+follow_hud, personnel_file, crew_security, venues, rag, settings, each at 1920 and 1280.
+Not done: click a speech bubble to switch the followed person (waits for RENDER). Not tested: the loader tips on screen (the
+shell is built by the orchestrator); the tab layout at an interface scale of 140 % in the web build (headless only).
+For RENDER: the personnel file portrait still shows the "RAG SNAP" placeholder (`view.photo`); nothing else found. For SIM: nothing.

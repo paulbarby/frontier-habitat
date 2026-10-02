@@ -191,16 +191,23 @@ func _seen_round(p: Vector2, r: float) -> bool:
 func _visits_second() -> void:
 	var pois: Array = sim.state.get("pois", [])
 	var vr: float = float(cfg()["visit_r"])
+	# The people who can visit (outside or in a vehicle), found once a second and not once a POI
+	# (cost: 130 people x every found POI).
+	var field = null
 	for poi in pois:
 		if bool(poi["visited"]) or not bool(poi["found"]):
 			continue
+		if field == null:
+			field = []
+			for aid in sim.state["agents"]:
+				var a0: Dictionary = sim.state["agents"][aid]
+				if a0["state"] != "alive" or a0["kind"] == "visitor" or (a0["where"] != "out" and a0["where"] != "vehicle"):
+					continue
+				field.append(a0)
 		var pp := Vector2(poi["x"], poi["y"])
 		var who: Array = []
 		var veh := {}
-		for aid in sim.state["agents"]:
-			var a: Dictionary = sim.state["agents"][aid]
-			if a["state"] != "alive" or a["kind"] == "visitor" or (a["where"] != "out" and a["where"] != "vehicle"):
-				continue
+		for a in field:
 			if (a["pos"] as Vector2).distance_to(pp) <= vr:
 				who.append(a)
 				if a["where"] == "vehicle" and veh.is_empty():

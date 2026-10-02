@@ -30,6 +30,9 @@ from mathutils import Vector    # noqa: E402
 ART = os.path.join(N.ROOT, "art", "people")
 SLOW = {"lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_cell", "sleep_turn", "dead"}
 FALLS = {"collapse", "fall_down"}
+PLANT_MIN = 4                 # frames: a foot is planted when it stays still at least this long
+CHILD_SEAT = {"sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit", "sit_class", "sit_bench", "drive_sit",
+              "sit_bar_stool", "drink_bar"}    # children on adult seats: the feet hang by design (they cannot reach)
 FACE = {"jaw", "lids", "lids_low", "brow.L", "brow.R", "mouth.L", "mouth.R"}
 LOCO = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk", "hold_hands_walk_r",
         "handcuffed_walk", "escort_walk"}
@@ -171,6 +174,8 @@ def audit_body(b, only=None):
                      spine=0.0, shrug=0.0, self_pen=0.0, self_at="")
         plant = {"L": None, "R": None}
         prev_low = {"L": None, "R": None}
+        run = {"L": [], "R": []}
+        planted_long = {"L": False, "R": False}
         for f in range(f0, f1 + 1):
             bpy.context.scene.frame_set(f)
             W = bone_world(rig)
@@ -253,12 +258,23 @@ def audit_body(b, only=None):
                     if v < 0.006 and low[2] < 0.08:
                         if plant[s] is None:
                             plant[s] = low.copy()
-                        stats["plant_h"].append(float(low[2]))
-                        sl = float(np.linalg.norm(low[:2] - plant[s][:2]))
-                        if sl > stats["slide"]:
-                            stats["slide"], stats["slide_at"] = sl, "%s f%d" % (s, f)
+                            run[s] = []
+                        # (2026-10-02) a plant lasts at least PLANT_MIN frames: the top of a kick or a dance lift is
+                        # still for a frame or two and is not a planted foot
+                        rec = (float(low[2]), float(np.linalg.norm(low[:2] - plant[s][:2])), f)
+                        recs = [rec] if planted_long[s] else None
+                        if not planted_long[s]:
+                            run[s].append(rec)
+                            if len(run[s]) >= PLANT_MIN:
+                                recs, run[s], planted_long[s] = run[s], [], True
+                        for h_, sl, ff in (recs or []):
+                            stats["plant_h"].append(h_)
+                            if sl > stats["slide"]:
+                                stats["slide"], stats["slide_at"] = sl, "%s f%d" % (s, ff)
                     else:
                         plant[s] = None
+                        run[s] = []
+                        planted_long[s] = False
                 prev_low[s] = low
         ch = stats.pop("contact_h", None)
         if clip in LOCO:
@@ -272,14 +288,14 @@ def audit_body(b, only=None):
             stats[k] = round(stats[k], 3)
         stats["knee"] = round(stats["knee"][1], 1)
         stats["elbow"] = round(stats["elbow"][1], 1)
-        stats["faults"] = faults(clip, stats)
+        stats["faults"] = faults(clip, stats, child=b in ("c1", "c2"))
         R[clip] = stats
     return R
 
 
-def faults(clip, st):
+def faults(clip, st, child=False):
     out = []
-    if st["plant_h_min"] is not None and clip not in NO_FLOOR:
+    if st["plant_h_min"] is not None and clip not in NO_FLOOR and not (child and clip in CHILD_SEAT):
         if st["plant_h_min"] < -0.010:
             out.append("sinks %.1f cm" % (-100 * st["plant_h_min"]))
         if st["plant_h_max"] > 0.010 and clip not in LOCO:

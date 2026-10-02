@@ -24,6 +24,12 @@ const Rng = preload("res://sim/rng.gd")
 const NpcPath = preload("res://presentation/fx_npc_path.gd")
 const ACCEL := 1.5               # m/s^2 (game time), V3_1 §4.1
 const DECEL := 4.0               # m/s^2 (game time): the fastest slow-down before the stopping curve
+const A_LAT := 3.0               # m/s^2 (game time): the most sideways acceleration on a bend (people slow down for corners)
+const CORNER_DEV := 0.025        # m: a small bend's rounding curve stays this close to the planned corner
+const LOOK_AHEAD := 12.0         # m of path scanned for the bend speed limit
+## The followed person (follow view) at 2x-4x: the speed changes at most this fast in VIEW time (m/s^2),
+## so the camera that follows them does not surge (4x: 1.5 m/s^2 game = 24 m/s^2 on screen, 2026-10-02).
+const FOLLOW_VIEW_ACCEL := 9.0
 const TURN := 5.236              # rad/s (300 deg/s, game time)
 const CARROT := 0.4              # m: look-ahead on the path (the corner rounding radius)
 const FADE_GAP := 25.0           # m: a larger jump fades out and in instead of walking
@@ -90,6 +96,7 @@ var _plan_us := 0
 var _sep_dt := 0.016
 var forced_goto := {}            # test staging only (__fhr "runto"): agent id -> [Vector2, speed m/s]
 var force_cpu := false            # test only (__fhr "npccpu 1"): every near body on the CPU row path
+var no_far := false               # measurement only (render_follow_headless): every body updated every frame, so the camera cannot change the walk
 var forced_use := {}             # test staging only (__fhr "use"): agent id -> use (view side)
 const DYN_ROWS := 128            # blended poses per frame (CPU slerp rows)
 const DYN0 := 1000000            # shader row index of the first dynamic row
@@ -1486,7 +1493,7 @@ func sync(delta: float) -> bool:
 				or (cam3 != null and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + Vector3(0, 1.0, 0)) and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + (cam3.global_position - (rec["pos"] as Vector3)).normalized() * 2.0))
 		# The person in the follow view is updated every frame (the frustum test uses the camera of the
 		# frame before: on a quick turn the body tested "off screen" and moved every 3rd frame).
-		if far and int(id) == _follow_id:
+		if far and (int(id) == _follow_id or no_far):
 			far = false
 		rec["far"] = far
 		var step: float = delta
@@ -2286,9 +2293,16 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 		var vc: float = float(rec["v_cap"])
 		vmax = minf(vmax, vc if vc >= 0.25 else 0.0)
 	var v: float = float(rec.get("v", 0.0))
-	var vdes: float = minf(vmax, sqrt(2.0 * ACCEL * rem_eff) + 0.05)
+	# Speed changes: ACCEL (game time); for the followed person at 2x-4x at most FOLLOW_VIEW_ACCEL on screen.
+	var acc: float = ACCEL
+	if pri and gr > 1.0:
+		acc = minf(ACCEL, FOLLOW_VIEW_ACCEL / (gr * gr))
+	var vdes: float = minf(vmax, sqrt(2.0 * acc * rem_eff) + 0.05)
+	# Bends ahead (2026-10-02): at most sqrt(A_LAT x radius) on each bend, braking at `acc` before it.
+	# A runner took a 0.4 m corner at 3.4 m/s (3 g sideways; at 4x the follow camera swung through the body).
+	vdes = minf(vdes, _bend_cap(before, wp, acc))
 	if vdes > v:
-		v = move_toward(v, vdes, ACCEL * dtg)
+		v = move_toward(v, vdes, acc * dtg)
 	else:
 		# Slow down at DECEL at most (a new slower top speed near an anchor dropped 3.4 -> 1.1 m/s in
 		# one frame), but always fast enough to stop on the path's end.
@@ -2316,6 +2330,34 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			now = now.move_toward(goal, left)
 	rec["wp"] = wp
 	return now
+
+## The highest speed (game m/s) that still lets the body take every bend of `wp` within LOOK_AHEAD at
+## sqrt(A_LAT x bend radius), braking at `acc`. The radius of a sampled curve is its segment length over
+## its turn angle.
+func _bend_cap(before: Vector3, wp: Array, acc: float) -> float:
+	var cap := INF
+	if wp.size() < 2:
+		return cap
+	var s := 0.0
+	var p0: Vector3 = before
+	for k in wp.size() - 1:
+		var p1: Vector3 = wp[k]
+		var p2: Vector3 = wp[k + 1]
+		var a := Vector2(p1.x - p0.x, p1.z - p0.z)
+		var b := Vector2(p2.x - p1.x, p2.z - p1.z)
+		var la: float = a.length()
+		var lb: float = b.length()
+		s += la
+		if s > LOOK_AHEAD:
+			break
+		if la > 0.005 and lb > 0.005:
+			var th: float = absf(a.angle_to(b))
+			if th > 0.02:
+				var r: float = minf(maxf(la, 0.12), maxf(lb, 0.12)) / th
+				var vc: float = sqrt(A_LAT * r)
+				cap = minf(cap, sqrt(vc * vc + 2.0 * acc * s))
+		p0 = p1
+	return maxf(cap, 0.6)
 
 ## A new plan for a body that is already walking starts at a grid point near it, often a little
 ## behind or beside it: the body stepped back 0.3 m and turned 30-60 deg for one frame (follow view,
@@ -2366,10 +2408,13 @@ func _round_corners(s: Vector3, pts: Array) -> Array:
 		var w: Vector3 = (b - c) / lo
 		var cosang: float = clampf(u.dot(w), -1.0, 1.0)
 		var th: float = acos(cosang)
-		if th < deg_to_rad(8.0):
+		if th < deg_to_rad(1.0):
 			out.append(c)
 			continue
-		var tt: float = minf(CARROT * tan(th * 0.5), minf(li, lo) * 0.45)
+		# (2026-10-02) Small bends are rounded too, with a longer curve that stays within CORNER_DEV of the
+		# corner: an unrounded 2-8 deg bend turned the walk direction in one frame (at 4x 20-70 mm body jerk).
+		var th2: float = tan(th * 0.5)
+		var tt: float = minf(maxf(CARROT * th2, minf(0.6, 2.0 * CORNER_DEV / maxf(th2, 0.001))), minf(li, lo) * 0.45)
 		var p0: Vector3 = c - u * tt
 		var p2: Vector3 = c + w * tt
 		var n: int = maxi(2, int(ceil((tt * 2.0) / 0.12)))

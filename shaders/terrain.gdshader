@@ -24,6 +24,10 @@ uniform vec2 map_size = vec2(256.0, 256.0);
 uniform float tile_a = 5.0;      // sand + gravel
 uniform float tile_b = 7.5;      // rock + ore
 uniform vec3 tint : source_color = vec3(1.0, 1.0, 1.0);
+// Planets (Paul 2026-10-01, V5 15.7): airless = grey regolith (desaturate), cold = frost and ice on the ground.
+uniform float grey_k = 0.0;
+uniform float frost = 0.0;
+uniform float streak_k = 1.0;   // wind-blown sand streaks (0 on the airless planet: no wind)
 uniform vec2 wind_dir = vec2(0.83, 0.55);
 uniform float overlay = 0.0;
 uniform float gravel_amount = 1.0;
@@ -166,8 +170,8 @@ void fragment() {
 	// Low ground is redder and darker, rises are paler and dustier.
 	float hv = clamp(wpos.y * 0.12, -1.0, 1.0);
 	alb *= mix(vec3(0.93, 0.9, 0.9), vec3(1.05, 1.03, 1.0), hv * 0.5 + 0.5);
-	alb *= 0.93 + 0.14 * streak * (1.0 - b.z);
-	alb *= 1.0 + clamp(sp.b - 0.5, -0.2, 0.5) * 0.5;
+	alb *= mix(0.965, 0.93 + 0.14 * streak * (1.0 - b.z), streak_k);
+	alb *= 1.0 + clamp(sp.b - 0.5, -0.2, 0.5) * 0.5 * streak_k;
 
 	// Craters: dark bowls, bright ejecta rims, and bent normals.
 	float tx = splat_texel;
@@ -237,6 +241,20 @@ void fragment() {
 	}
 	alb *= mix(1.0, 0.07, crack * (1.0 - crack_cut));
 	alb *= tint;
+	if (grey_k > 0.0) {
+		float gl = dot(alb, vec3(0.3, 0.59, 0.11));
+		alb = mix(alb, vec3(gl) * vec3(0.98, 0.99, 1.02), grey_k);
+	}
+	if (frost > 0.0) {
+		// Frost on the up-facing ground and rime in the hollows; bare rock on the steep faces.
+		float fup = smoothstep(0.62, 0.92, n.y);
+		float fn = vnoise3(wpos * 0.31) * 0.55 + vnoise3(wpos * 1.45) * 0.3 + vnoise3(wpos * 5.2) * 0.15;
+		float fk = fup * smoothstep(0.36, 0.62, fn + 0.18 * frost) * frost;
+		fk = max(fk, smoothstep(0.75, 0.98, n.y) * 0.35 * frost);
+		alb = mix(alb, vec3(0.80, 0.86, 0.93), clamp(fk, 0.0, 0.85));
+		rough = mix(rough, 0.42, fk * 0.6);
+		nxy *= 1.0 - fk * 0.55;
+	}
 
 	// Walk overlay: crisp one-metre cells.
 	if (overlay > 0.001 && inside > 0.5) {

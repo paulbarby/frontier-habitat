@@ -73,6 +73,8 @@ func tick() -> void:
 	var agents: Dictionary = sim.state["agents"]
 	var v: Dictionary = _w()
 	var talks: Dictionary = v["talks"]
+	if now % hz == 5 and not v["requests"].is_empty():
+		close_ship_requests(-1)
 	var line_ticks: int = int(sim.social.LINE_TICKS)
 	# 1. Talks end when their lines are said, or when the two part.
 	var busy := {}
@@ -425,6 +427,41 @@ func add_request(kind: String, x: Dictionary, y: Dictionary, text: String) -> in
 	reqs[rid2] = {"id": rid2, "kind": kind, "agent": int(x["id"]), "other": int(y["id"]), "ship": -1, "tick": int(sim.state["tick"]), "text": text}
 	sim.log_event("request_" + kind, text, [int(x["id"]), int(y["id"])], 1, {"request": rid2})
 	return rid2
+
+## A leave_with_ship request ends when its ship takes off (UI-to-SIM 2026-10-01): the colonist stays,
+## the visitor leaves alone. One log line (code defect_ended) and a short low mood; the request is removed.
+## ship_id -1 closes every request whose ship is no longer on the ground (old saves) or whose
+## colonist is dead or already a visitor.
+func close_ship_requests(ship_id: int = -1) -> int:
+	var reqs: Dictionary = v5r().get("requests", {})
+	if reqs.is_empty():
+		return 0
+	var closed := 0
+	for rid in reqs.keys():
+		var q: Dictionary = reqs[rid]
+		if String(q["kind"]) != "leave_with_ship":
+			continue
+		var a: Dictionary = sim.state["agents"].get(int(q["agent"]), {})
+		var sid: int = int(q.get("ship", -1))
+		var gone := false
+		if ship_id != -1:
+			gone = sid == ship_id
+		else:
+			var arr: Dictionary = sim.traffic.ship(sid)
+			gone = arr.is_empty() or String(arr["phase"]) == "takeoff"
+		var void_req: bool = a.is_empty() or a["state"] != "alive" or String(a.get("kind", "")) == "visitor"
+		if not gone and not void_req:
+			continue
+		reqs.erase(rid)
+		closed += 1
+		if void_req:
+			continue
+		var o: Dictionary = sim.state["agents"].get(int(q["other"]), {})
+		var on: String = String(o.get("name", "the visitor"))
+		sim.people.add_mod(a, {"kind": "ship_gone", "text": "Watched a loved one's ship leave", "comp": "social", "sat": -5.0, "att": -2.0, "days": 2.0})
+		sim.people.note(a, "Stayed when %s's ship left." % on)
+		sim.log_event("defect_ended", "%s stays. %s's ship has gone without an answer." % [String(a["name"]), on], [int(a["id"])] + ([int(o["id"])] if not o.is_empty() else []), 1, {"request": int(rid)})
+	return closed
 
 ## Command "answer_request" {id, answer: "allow" | "refuse"}. shared_home: "allow" tries again to
 ## house the pair (a home may exist now); "refuse" leaves them apart (both unhappy).

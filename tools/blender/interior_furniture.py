@@ -374,6 +374,14 @@ def console(p, w=1.0, glow="Screen", body="Hull", stripe="Accent"):
         plate_x(p, 0.021, -w / 2 + 0.08, w / 2 - 0.08, 0.05, 0.44, "Screen")
         plate_x(p, 0.023, -w / 2 + 0.10, -w / 2 + 0.10 + (w - 0.2) * 0.6, 0.36, 0.40, "LightStrip")
         plate_x(p, 0.023, -w / 2 + 0.10, -w / 2 + 0.10 + (w - 0.2) * 0.35, 0.10, 0.13, "LightStrip")
+    # 5.0 (V5 15.3): a label on the operator side of the body, one joke per console (the width picks it)
+    import interior_props as PR
+    labs = ("AI-ENABLED*", "PROMPT HERE", "DO NOT FEED", "VIBES: HIGH", "MADE BY A BOT")
+    lab = labs[int(round(w * 100)) % len(labs)]
+    lw = min(w * 0.6, PR.text_width(lab, 0.040) + 0.06)
+    plate_x(p, -0.044, -lw / 2, lw / 2, F + 0.36, F + 0.46, "Hazard")
+    PR.text(p, lab, 0.0, F + 0.41, min(0.040, 0.9 * (lw - 0.04) / max(1.0, (6 * len(lab) - 1) / 7.0)), "HullDark", x=-0.041)
+    PR.USED["console_label"] = PR.USED.get("console_label", 0) + 1
 
 
 def workbench(p, w=1.8, d=0.75, top="Metal", stripe="Accent", tools=True, seed=0):
@@ -539,7 +547,7 @@ def wi_shelf(p, w=0.80, d=0.36, h=1.20, seed=2, mats=("Hull", "Accent", "Cushion
     rng = random.Random(seed)
     for sy in (-1, 1):
         bbox(p, 0.0, d, sy * (w / 2) - 0.025, sy * (w / 2) + 0.025, F, F + h, "Frame")
-    plate_x(p, 0.02, -w / 2, w / 2, F, F + h, "HullDark")
+    plate_x(p, 0.075, -w / 2, w / 2, F, F + h, "HullDark")      # in front of the pipe run (7 cm) and the cove (4 cm)
     for j in range(4):
         z = F + 0.06 + (h - 0.08) * j / 3.0
         bbox(p, 0.02, d, -w / 2 + 0.025, w / 2 - 0.025, z - 0.025, z, "Hull" if j else "Frame")
@@ -550,7 +558,7 @@ def wi_shelf(p, w=0.80, d=0.36, h=1.20, seed=2, mats=("Hull", "Accent", "Cushion
             bw = rng.uniform(0.10, 0.22)
             bh = rng.uniform(0.14, 0.26)
             if rng.random() < 0.8:
-                bbox(p, 0.05, d - 0.05, y, min(w / 2 - 0.05, y + bw), z, z + bh, rng.choice(mats))
+                bbox(p, 0.09, d - 0.05, y, min(w / 2 - 0.05, y + bw), z, z + bh, rng.choice(mats))
             y += bw + 0.03
 
 
@@ -569,8 +577,8 @@ def wi_desk(p, w=0.80, d=0.44, seed=0):
     for sy in (-1, 1):
         bbox(p, 0.0, d - 0.06, sy * (w / 2 - 0.06) - 0.02, sy * (w / 2 - 0.06) + 0.02, F, zt - 0.035, "Frame",
              mats={"-z": None})
-    with p.at(T(0.03, 0, zt + 0.33)):
-        ui_screen(p, w * 0.78, 0.42, seed=seed)
+    with p.at(T(0.05, 0, zt + 0.30)):           # frame face at 5 cm: in front of the cove light (4 cm)
+        ui_screen(p, w * 0.78, 0.38, seed=seed)
     bbox(p, 0.06, 0.22, -0.10, 0.10, zt, zt + 0.015, "Frame")
     import interior_props as PR
     PR.mug(p, 0.14, -w / 2 + 0.12, zt, mat=("Hull", "Accent", "Fabric")[seed % 3], tall=seed % 2 == 0)
@@ -590,7 +598,7 @@ def wi_tap(p, w=0.62, d=0.40):
 
 def wi_panel(p, w=0.70, d=0.08, seed=0):
     """Open wall: a wall screen with a UI pattern."""
-    with p.at(T(0.03, 0, F + 0.92)):
+    with p.at(T(0.03, 0, F + 0.84)):         # 2026-10-02: top 1.195 m, under the cove light (1.255)
         ui_screen(p, min(0.66, w - 0.1), 0.38, seed=seed)
 
 
@@ -639,11 +647,11 @@ def wi_medcab(p, w=0.80, d=0.36, h=1.20):
 def wi_toolwall(p, w=0.80, d=0.30, seed=0):
     """Pegboard with tools and a low tool chest."""
     rng = random.Random(seed)
-    bbox(p, 0.0, 0.03, -w / 2, w / 2, F + 0.60, F + 1.30, "HullDark")
+    bbox(p, 0.0, 0.08, -w / 2, w / 2, F + 0.60, F + 1.30, "HullDark")      # 8 cm: clears the pipe run and the cove
     for k in range(7):
         y = -w / 2 + 0.08 + (w - 0.16) * k / 6
         hh = rng.uniform(0.12, 0.30)
-        bbox(p, 0.03, 0.06, y - 0.02, y + 0.02, F + 1.15 - hh, F + 1.15, rng.choice(("Metal", "Hazard", "Frame", "Accent")))
+        bbox(p, 0.08, 0.11, y - 0.02, y + 0.02, F + 1.15 - hh, F + 1.15, rng.choice(("Metal", "Hazard", "Frame", "Accent")))
     bbox(p, 0.0, d, -w / 2 + 0.05, w / 2 - 0.05, F, F + 0.55, "Accent", bevel=0.015)
     for j in range(3):
         plate_x(p, d + 0.004, -w / 2 + 0.08, w / 2 - 0.08, F + 0.07 + 0.16 * j, F + 0.19 + 0.16 * j, "Frame")
@@ -666,14 +674,14 @@ def wi_fridge(p, w=0.70, d=0.42, h=1.26, mat="Hull"):
 
 def wi_suitrack(p, w=0.80, d=0.40):
     """EVA suit on a wall rack (airlock)."""
-    bbox(p, 0.0, 0.06, -w / 2 + 0.05, w / 2 - 0.05, F, F + 1.30, "HullDark")
+    bbox(p, 0.0, 0.08, -w / 2 + 0.05, w / 2 - 0.05, F, F + 1.30, "HullDark")
     bbox(p, 0.10, 0.36, -0.22, 0.22, F + 0.88, F + 1.28, "Hull", bevel=0.04)
     plate_x(p, 0.361, -0.21, 0.21, F + 1.00, F + 1.07, "Accent")
     for sy in (-1, 1):
         bbox(p, 0.12, 0.30, sy * 0.30 - 0.06, sy * 0.30 + 0.06, F + 0.80, F + 1.20, "Hull", bevel=0.03)
         bbox(p, 0.13, 0.29, sy * 0.10 - 0.07, sy * 0.10 + 0.07, F + 0.25, F + 0.86, "Hull", bevel=0.03)
         bbox(p, 0.10, 0.34, sy * 0.10 - 0.08, sy * 0.10 + 0.08, F, F + 0.14, "Rubber", bevel=0.02)
-    bbox(p, 0.06, 0.12, -0.20, 0.20, F + 0.95, F + 1.28, "Pack")
+    bbox(p, 0.08, 0.12, -0.20, 0.20, F + 0.95, F + 1.28, "Pack")
 
 
 def wi_freezer(p, w=0.80, d=0.42):

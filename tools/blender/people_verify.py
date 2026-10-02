@@ -201,8 +201,65 @@ def self_check_file(check, path, label):
           "deepest %.3f m (%s)" % worst)
 
 
+BED = dict(bz=0.55, bb=0.55)           # npc_anims FURNITURE bed_z / bed_back (the bed ART-HAB builds)
+BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn", "sleep_cell")
+
+
+def _box(co, lo, hi):
+    return int(np.all((co > np.array(lo)) & (co < np.array(hi)), axis=1).sum())
+
+
+def bed_checks(check, v, d, vclips, rig, meshes, outfits):
+    """No body point inside the bed in any frame of the bed clips, and the body ON the mattress in the sleep clips
+    (Paul 2026-10-01: a limb through the bed, a body hovering above it).  The bed as ART-HAB builds it: a mattress
+    0.15 m thick (top bz) over a plinth set 0.08 m in from its edge; the front 17 cm of the mattress edge is soft (a person sits on it) and the
+    mattress may sink 1.5 cm under a resting limb.  The jail bunk (sleep_cell) is the bed lowered by 0.10 m."""
+    bz0, bb = BED["bz"], BED["bb"]
+    objs = [meshes[d["head"]], meshes[d["hair"]]] + [meshes[o] for o in outfits[:1]]
+    casual = next((o for o in outfits if "casual_a" in o), None)
+    if casual and casual != outfits[0]:
+        objs.append(meshes[casual])
+    worst = (0, "")
+    low = {}                                          # clip -> (lowest z over the bed, frame)
+    for c in BED_CLIPS:
+        if c not in vclips or set_clip(rig, c, 0) is None:
+            continue
+        act = next((a for a in bpy.data.actions if a.name.split("_Rig")[0] == c), None)
+        n = int(round(act.frame_range[1])) if act else 0
+        bz = 0.45 if c == "sleep_cell" else bz0
+        for f in range(0, n + 1, 3 if n > 60 else 2):
+            set_clip(rig, c, f)
+            co = np.concatenate([world_co(o) for o in objs])
+            inside = (_box(co, (-bb - 0.47, -1.0, bz - 0.15), (-bb + 0.30, 1.0, bz - 0.015)) +
+                      _box(co, (-bb - 0.39, -0.92, 0.0), (-bb + 0.39, 0.92, bz - 0.15)))
+            if inside > worst[0]:
+                worst = (inside, "%s f%d" % (c, f))
+            if c.startswith("sleep"):
+                m = (co[:, 0] > -bb - 0.47) & (co[:, 0] < -bb + 0.47) & (np.abs(co[:, 1]) < 1.0)
+                lz = float(co[m, 2].min()) if m.any() else 9.0
+                if c not in low or lz < low[c][0]:
+                    low[c] = (lz, f)
+                low.setdefault(c + "_hi", (0.0, 0))
+                if lz > low[c + "_hi"][0]:
+                    low[c + "_hi"] = (lz, f)
+    check("people %s: no body point inside the bed in lie_enter, sleep, lie_exit, sleep_turn and the mirrored clips "
+          "(mattress 1.5 cm soft, front 17 cm soft)" % v, worst[0] == 0, "%d vertices at worst (%s)" % worst)
+    for c in ("sleep", "sleep_r", "sleep_turn", "sleep_cell"):
+        if c in low:
+            bz = 0.45 if c == "sleep_cell" else bz0
+            lo, hi = low[c][0], low[c + "_hi"][0]
+            check("people %s: %s rests ON the mattress (lowest point %.3f..%.3f m: -1.5 cm to +3.5 cm of the top, every "
+                  "frame)" % (v, c, bz - 0.015, bz + 0.035), bz - 0.015 <= lo and hi <= bz + 0.035,
+                  "lowest %.3f m (f%d), highest lowest-point %.3f m (f%d)" % (lo, low[c][1], hi, low[c + "_hi"][1]))
+
+
+ONLY = [x for x in os.environ.get("NPC_ONLY", "").split(",") if x]       # a subset of bodies (fast runs)
+
+
 def run(check, gltf_facts):
     for lab in ("suit", "indoor"):
+        if ONLY and lab not in ONLY:
+            continue
         self_check_file(check, os.path.join(N.MODEL_DIR, "astronaut_%s.glb" % lab), lab)
     if not os.path.exists(MANIFEST):
         check("people: people_manifest.json", True, "no people files yet", info=True)
@@ -213,6 +270,8 @@ def run(check, gltf_facts):
     check("people: npc_pairs.json lists the hug", os.path.exists(PAIRS) and
           "hug" in json.load(open(PAIRS, encoding="utf-8")).get("pairs", {}), PAIRS)
     for v, d in M["variants"].items():
+        if ONLY and v not in ONLY:
+            continue
         path = people_path(v)
         if not os.path.exists(path):
             check("people %s: file" % v, False, "missing %s" % path)
@@ -306,6 +365,7 @@ def run(check, gltf_facts):
         check("people %s: the jaw moves in the talking clips (> 3 deg), blinks close the lids (> 40 deg)" % v,
               all(jaw_max[c] > 3.0 for c in talking) and lids_max > 40.0,
               "jaw %s, lids %.1f" % ({c: round(jaw_max[c], 1) for c in talking}, lids_max))
+        bed_checks(check, v, d, vclips, rig, meshes, outfits)
         # seat contact after the height retarget: the lowest body point over the seat in sit_idle
         set_clip(rig, "sit_idle", 0)
         co = np.concatenate([world_co(o) for o in vis])
@@ -344,7 +404,8 @@ def run(check, gltf_facts):
         check("people %s: head and hair never inside the clothes at the test poses (1 cm)" % v, worst[0] == 0,
               "%d vertices at worst %s" % worst)
     # paired clips (npc_pairs.json): partner B placed as RENDER places it; neither body inside the other
-    check_pairs(check, M)
+    if not ONLY or "pairs" in ONLY:
+        check_pairs(check, M)
 
 
 CAPS = (("hips", "neck", 0.085), ("neck", "head", 0.040), ("upper_arm.L", "forearm.L", 0.034),
@@ -463,12 +524,12 @@ def check_pairs(check, M):
                             dd_ = np.linalg.norm(P_ - (A_ + t_[:, None] * d_), axis=1)
                             sel_ = P_[dd_ < r_ - 0.02]
                             print("      at", tuple(np.round(sel_.mean(axis=0), 3)), "axis", tuple(np.round(A_, 3)), tuple(np.round(B_, 3)))
-                            if nm_ == "B-in-A":
-                                ids_ = np.nonzero(dd_ < r_ - 0.02)[0][:6] * 2
-                                for vi_ in ids_:
-                                    vv_ = ob_b.data.vertices[int(vi_)]
-                                    gs_ = sorted(((ob_b.vertex_groups[g.group].name, round(g.weight, 2)) for g in vv_.groups), key=lambda x: -x[1])[:3]
-                                    print("        v", int(vi_), tuple(round(x, 3) for x in vv_.co), gs_)
+                            ob_x = ob_b if nm_ == "B-in-A" else ob_a
+                            ids_ = np.nonzero(dd_ < r_ - 0.02)[0][:8] * 2
+                            for vi_ in ids_:
+                                vv_ = ob_x.data.vertices[int(vi_)]
+                                gs_ = sorted(((ob_x.vertex_groups[g.group].name, round(g.weight, 2)) for g in vv_.groups), key=lambda x: -x[1])[:3]
+                                print("        v", int(vi_), tuple(round(float(x), 3) for x in P_[int(vi_) // 2]), gs_)
                             lab_ = (CAPS[ci][0] + "-" + CAPS[ci][1]) if ci < len(CAPS) else ("head" if ci == len(CAPS) else "pelvis")
                             print("   ", nm_, lab_, k_)
         check("people pair %s (%s with %s): no body point deeper than 2 cm in the partner (bone capsules), whole clip"

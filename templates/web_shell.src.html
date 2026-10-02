@@ -189,9 +189,14 @@ const engine = new Engine(GODOT_CONFIG);
 	const bytesEl = document.getElementById('fh-bytes');
 	const errEl = document.getElementById('fh-error');
 	const tipEl = document.getElementById('fh-tip');
-	const tips = ['Tip: press / in the game to find any room.', 'Tip: N opens the Advisor, K the Codex.', 'Tip: the lander air ends on day 3. Build air first.', 'Tip: the best finds lie in dangerous places.', 'Tip: a reactor warns you before it melts down.',
-		'New in 5.0: select a person and press V to see the colony over their shoulder.', 'New in 5.0: press J for The Regolith Rag, the colony tabloid.', 'New in 5.0: press U for the Crew window. Drag a person onto a rank.',
-		'Tip: an unfair punishment makes friends angry. Unrest rises.', 'Tip: a rank expects a home. A captain wants an executive unit.', 'Tip: the academy teaches one skill one level up.'];
+	const tips = ['Tip: press / in the game to find any room.', 'Tip: N opens the Advisor, K the Codex, F1 How to play.', 'Tip: the lander air ends on day 3. Build air first.', 'Tip: the best finds lie in dangerous places.', 'Tip: a reactor warns you before it melts down.',
+		'New in 5.0: select a person and press V to see the colony over their shoulder.', 'New in 5.0: right drag circles the person; middle drag looks round.', 'New in 5.0: press J for The Regolith Rag, the colony tabloid.', 'New in 5.0: press U for the Crew window. Drag a person onto a rank.',
+		'Tip: an unfair punishment makes friends angry. Unrest rises.', 'Tip: a rank expects a home. A captain wants an executive unit.', 'Tip: the academy teaches one skill one level up.',
+		'New in 5.0: one officer for each 12 people keeps the peace.', 'New in 5.0: lock down shuts the doors for 2 game hours. Unrest rises.',
+		'New in 5.0: press L for the left dock. The centre stays free.', 'New in 5.0: press Y to take every roof off and see into every building.',
+		'New in 5.0: tourists pay credits. Give them beds, shops and a bar.', 'New in 5.0: partners can adopt a child. Open their file, Social tab.',
+		'Tip: a venue needs power, staff and goods. Select the structure, Venues tab.', 'New in 5.0: the super dome has 9 build stages. Research Arcology first.',
+		'New in 5.0: the airless world has no storms, but more meteors.', 'Tip: the airless world cannot run a wind turbine or an atmosphere processor.'];
 	let tipI = 0;
 	const tipTimer = setInterval(() => { tipI = (tipI + 1) % tips.length; tipEl.textContent = tips[tipI]; }, 5000);
 

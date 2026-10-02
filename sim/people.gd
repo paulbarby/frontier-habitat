@@ -242,7 +242,7 @@ func ids_mod(m: int, r: int) -> Array:
 ## satisfaction and attitude stored and their work flags set. About 1/100 of the people a tick.
 func tick() -> void:
 	var hz: int = int(sim.bal["tick_hz"])
-	var every: int = int(soc()["update_every_s"]) * hz
+	var every: int = int(soc().get("people_every_s", soc()["update_every_s"])) * hz
 	var now: int = int(sim.state["tick"])
 	var agents: Dictionary = sim.state["agents"]
 	# (now + id) % every == 0  <=>  id % every == -now mod every
@@ -282,7 +282,7 @@ func _update(a: Dictionary) -> void:
 	r["sat"] = float(s["value"])
 	r["low"] = lo
 	var tg: float = float(attitude_target(a, float(s["value"]), true)["value"])
-	r["att"] = snappedf(float(r["att"]) + (tg - float(r["att"])) * float(soc()["attitude"]["rate"]), 0.01)
+	r["att"] = snappedf(float(r["att"]) + (tg - float(r["att"])) * float(soc().get("people_rate", soc()["attitude"]["rate"])), 0.01)
 	_grow(a, r, now)
 	_apply_flags(a, r)
 
@@ -308,7 +308,7 @@ func _grow(a: Dictionary, r: Dictionary, now: int) -> void:
 		r["xp"] = x0
 		r["worked"] = now
 	var xp: Dictionary = r["xp"]
-	var secs: float = float(soc()["update_every_s"])
+	var secs: float = float(soc().get("people_every_s", soc()["update_every_s"]))
 	if String(a.get("plan_kind", "")) == "task" and sim.agents._step_op(a) == "work":
 		r["worked"] = now
 		var sks: Dictionary = skills(a)
@@ -902,8 +902,8 @@ func _attitude(a: Dictionary) -> Dictionary:
 	if rec.has("att"):
 		v = float(rec["att"])
 		# Points a day toward the target at the present gap.
-		var per_day: float = float(sim.bal["day_length"]) / float(soc()["update_every_s"])
-		trend = snappedf((float(tg["value"]) - v) * float(soc()["attitude"]["rate"]) * per_day, 0.1)
+		var per_day: float = float(sim.bal["day_length"]) / float(soc().get("people_every_s", soc()["update_every_s"]))
+		trend = snappedf((float(tg["value"]) - v) * float(soc().get("people_rate", soc()["attitude"]["rate"])) * per_day, 0.1)
 	return {"value": snappedf(clampf(v, -100.0, 100.0), 0.1), "trend": trend, "target": tg["value"], "reasons": tg["reasons"]}
 
 ## Where a person's attitude goes: {value, reasons [{text, delta}]} from satisfaction, traits and

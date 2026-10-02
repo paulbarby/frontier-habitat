@@ -19,33 +19,41 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 	box.add_child(Kit.scroll(body))
 	match id:
 		"keys":
-			var g: GridContainer = Kit.grid(2, 24, 6)
-			body.add_child(g)
-			for pair in [["W A S D or arrows", "Move the camera. Screen-edge pan can be switched on in Settings."], ["Mouse wheel", "Zoom."],
-					["Middle mouse drag, Q and E", "Turn the camera."], ["Left click", "Select a structure or a colonist."], ["Right click, Esc", "Cancel the tool or clear the selection. Esc opens the menu."],
-					["Space", "Pause. You can plan while paused."], ["1, 2, 3", "Speed 1x, 2x, 4x."], ["R, Shift+R", "Turn the structure you place by 15 degrees."],
-					["Z and X", "Smaller or bigger size while placing (S, M, L, XL)."], ["Shift + click", "Place more than one, or chain corridors."], ["Delete", "Remove the selected structure."],
-					["F", "Follow the selected colonist from above."], ["V", "Over the shoulder: the camera goes behind the selected person. V or Esc: back. With nobody selected: Awards."],
-					["Tab (over the shoulder)", "The next person."], ["Q and E (over the shoulder)", "The other shoulder."], ["U", "Crew: ranks, homes and the academy."], ["J", "The Regolith Rag, the colony tabloid."], ["L", "The left dock: goals, alerts, events, traffic, requests and news."], ["Y", "Roofs off: see into every building."],
-					["PgUp, PgDn", "The floor selector of a structure with more than one floor."], ["/ or Ctrl+F", "Find a structure by name or type. Click a result: the camera goes there."],
-					["N", "Advisor: the biggest problems, the next goal steps, unused potential."], ["K", "Codex: every structure, item, research project and hazard, with crafting trees."],
-					["Esc, Shift+Esc", "Esc closes the last window first. Shift+Esc closes every window."], ["Drag a title bar", "Move a window. It snaps to edges and opens there again next time."], ["O", "Step through the overlays: power, water, air, walking."], ["G", "Goals."], ["T", "Research."], ["C", "Colony dashboard."],
-					["I", "Inventory."], ["P", "Colonists."], ["H", "Hide or show the interface."]]:
-				g.add_child(Kit.num(pair[0], 13, P.CYAN))
-				g.add_child(Kit.wrap(pair[1], 14, P.TEXT))
+			# One list for How to play and Settings (ui/keys.gd); tools/ui/test_keys.gd checks it against the input code.
+			var KeyList = load("res://ui/keys.gd")
+			for grp in KeyList.GROUPS:
+				body.add_child(Kit.head(String(grp), P.TEXT, 13))
+				var g: GridContainer = Kit.grid(2, 24, 6)
+				g.name = "Keys_" + String(grp)
+				g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				body.add_child(g)
+				for row in KeyList.ROWS:
+					if String(row["g"]) != String(grp):
+						continue
+					var kl: Label = Kit.num(String(row["keys"]), 13, P.CYAN)
+					kl.custom_minimum_size.x = 190
+					g.add_child(kl)
+					g.add_child(Kit.wrap(String(row["long"]), 14, P.TEXT))
 		"people":
-			# Version 5 (STE): one card for each topic; the same text is in the Codex, People tab.
-			body.add_child(Kit.wrap("Version 5: the colonists are people. They have ranks, skills, friends, homes and moods. They talk, and the Rag prints what they do.", 14, P.TEXT))
-			for tp in load("res://ui/v5_help.gd").TOPICS:
-				var row: HBoxContainer = Kit.hbox(14)
-				row.add_child(Kit.icon(String(tp[2]), 26, P.CYAN))
-				var v: VBoxContainer = Kit.vbox(2)
-				v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				v.add_child(Kit.head(String(tp[1]), P.TEXT, 13))
-				v.add_child(Kit.wrap(String(tp[4]), 14, P.TEXT_2))
-				row.add_child(v)
-				row.set_meta("topic", String(tp[0]))
-				body.add_child(row)
+			# Version 5 (STE): one card for each topic, in groups; the same text is in the Codex, Guide tab.
+			body.add_child(Kit.wrap("Version 5: the colonists are people. They have ranks, skills, friends, homes and moods. They talk, and the Rag prints what they do. They also bring security, a jail, families, shops, tourists and a super dome. Each planet has its own hazards.", 14, P.TEXT))
+			var V5Help = load("res://ui/v5_help.gd")
+			for cat in V5Help.CATEGORIES:
+				var hd: Label = Kit.head(String(cat), P.CYAN, 13)
+				hd.name = "Group_" + String(cat)
+				body.add_child(hd)
+				for tp in V5Help.TOPICS:
+					if String(tp[3]) != String(cat):
+						continue
+					var row: HBoxContainer = Kit.hbox(14)
+					row.add_child(Kit.icon(String(tp[2]), 26, P.CYAN))
+					var v: VBoxContainer = Kit.vbox(2)
+					v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					v.add_child(Kit.head(String(tp[1]), P.TEXT, 13))
+					v.add_child(Kit.wrap(String(tp[4]), 14, P.TEXT_2))
+					row.add_child(v)
+					row.set_meta("topic", String(tp[0]))
+					body.add_child(row)
 		"mission":
 			for ch in hud.data.chapters():
 				var c: VBoxContainer = card(String(ch.get("name", "")), "chapter", P.CYAN)
@@ -59,9 +67,9 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 				body.add_child(Kit.wrap("The mission is not available yet.", 14, P.TEXT_2))
 		_:
 			var rules := [
-				["Air", "o2", "People breathe only in rooms joined by corridors to a working oxygen plant. Outside, a suit holds 90 seconds of air. It refills in an airlock that has air."],
+				["Air", "o2", "People breathe only in rooms joined by corridors to a working oxygen plant. Outside, a suit holds %d seconds of air. It refills in an airlock that has air." % int(hud.data.bal().get("suit_air_seconds", 90))],
 				["Joining", "corridor", "Corridors join rooms: people, power, water and air. Cables join outdoor structures: power and water only. A structure that is not joined gets nothing."],
-				["Carrying", "crate", "A colonist carries two units. Food and materials must be carried. Power, water and oxygen flow through the networks."],
+				["Carrying", "crate", "A colonist carries %d units. Food and materials must be carried. Power, water and oxygen flow through the networks." % int(hud.data.bal().get("carry_human", 2))],
 				["The lander", "home", "The lander air ends on day 3. Before then, build an airlock, a habitat and an oxygen plant, joined by corridors."],
 				["Food", "food", "Greenhouses grow crops. A kitchen cooks them into dishes. One dish feeds one colonist for one day. Different dishes keep the diet balanced: protein, carbs, fat and vitamins."],
 				["Research", "research", "A research lab with a scientist makes research points. Research unlocks structures, crops, sizes L and XL, and upgrade levels. Level 5 needs special research and exotic crystals."],

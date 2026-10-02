@@ -18,6 +18,7 @@ const BLOCK_TEXT := {
 	"suit_range": "Too far from an airlock with air. Nobody can work here and walk back on one suit. Build an airlock nearer.",
 	"occupied": "Waiting: people are still inside.", "no_spares": "No spare parts for the repair.", "broken": "Broken.", "not_ready": "Not finished.",
 	"no_staff": "Waiting for a worker.", "no_recipe": "No recipe chosen.", "no_menu": "No dish can be cooked: check the menu and the crops.",
+	"no_atmosphere": "Stopped: this planet has no air, and this structure needs air to work.",
 }
 
 const SHORT := {
@@ -25,7 +26,7 @@ const SHORT := {
 	"storage_full": "STORAGE FULL", "no_reservoir": "NO RESERVOIR", "deposit_empty": "DEPOSIT EMPTY",
 	"unreachable": "OUT OF REACH", "suit_range": "TOO FAR", "occupied": "WAITING", "no_spares": "NO SPARES",
 	"no_staff": "NO WORKER", "no_recipe": "NO RECIPE", "no_menu": "NO DISH",
-	"level_low": "NEEDS LEVEL 2", "deposit_locked": "LOCKED DEPOSIT",
+	"level_low": "NEEDS LEVEL 2", "deposit_locked": "LOCKED DEPOSIT", "no_atmosphere": "NO AIR ON PLANET",
 }
 
 var insp

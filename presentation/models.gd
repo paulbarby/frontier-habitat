@@ -140,6 +140,40 @@ static func prop(ids: Array, radius: float = 0.5, kind: String = "exterior", cat
 		node.free()
 	return _with_scale(_templates[fkey], 1.0)
 
+## Rock and boulder materials per planet (V5 15.7): airless = grey (desaturated), cold = snow-dusted
+## (paler, blue-white), dry = the file's own colour. The original colour is kept in the material's meta,
+## so a later load of another planet starts from it again.
+static var _rock_planet := "dry"
+static func tint_rocks(planet: String) -> void:
+	_rock_planet = planet
+	for key in _templates:
+		var k: String = String(key)
+		if not (k.contains("rock_") or k.contains("boulder_")):
+			continue
+		_tint_rock_tpl(_templates[key])
+
+static func _tint_rock_tpl(tpl: Dictionary) -> void:
+	for part in tpl.get("parts", []):
+		var m = part.get("mesh")
+		if not (m is Mesh):
+			continue
+		for si in (m as Mesh).get_surface_count():
+			var mat = (m as Mesh).surface_get_material(si)
+			if mat is BaseMaterial3D:
+				var bm: BaseMaterial3D = mat
+				if not bm.has_meta("rock_c0"):
+					bm.set_meta("rock_c0", bm.albedo_color)
+				var c0: Color = bm.get_meta("rock_c0")
+				var c: Color = c0
+				if _rock_planet == "airless":
+					var g: float = c0.r * 0.3 + c0.g * 0.59 + c0.b * 0.11
+					c = c0.lerp(Color(g, g, g * 1.02), 0.85) * 0.92
+				elif _rock_planet == "cold":
+					var g2: float = c0.r * 0.3 + c0.g * 0.59 + c0.b * 0.11
+					c = c0.lerp(Color(g2, g2, g2), 0.6).lerp(Color(0.82, 0.87, 0.94), 0.35)
+				c.a = c0.a
+				bm.albedo_color = c
+
 static func _with_scale(tpl: Dictionary, s: float) -> Dictionary:
 	if absf(s - 1.0) < 0.001:
 		return tpl

@@ -583,6 +583,9 @@ func _takeoff(arr: Dictionary, tick: int) -> void:
 			v["ship"] = -1
 			left += 1
 	arr["result"]["left_behind"] = left
+	# V5: a request to leave with this ship ends now (the colonist stays; relations.gd).
+	if sim.get("relations") != null:
+		sim.relations.close_ship_requests(int(arr["id"]))
 	# Trade ends: unsold stock leaves with the ship; units carried aboard were paid.
 	for key in ["stock_inv", "buy_inv"]:
 		var inv_id: int = int(arr[key])

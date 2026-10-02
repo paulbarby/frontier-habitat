@@ -55,7 +55,8 @@ func _process(_d: float) -> bool:
 			cmd("fast 400")
 			var pad: String = cmd("idof landing_pad")
 			cmd("cable " + pad)
-			cmd("fast 200")
+			# The cable takes about 4 minutes to build in v5 (progress 0.2 after 200 s, 2026-10-02): wait 400 s.
+			cmd("fast 400")
 			var tr: String = cmd("traffic")
 			check("pad active and powered", tr.contains(":active:powered=true"), tr)
 			check("ship <kind> refused without debug is not the case here", cmd("ship trader 30") == "submitted")

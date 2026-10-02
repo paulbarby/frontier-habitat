@@ -1,6 +1,9 @@
 {
   "_note": "V5 sections 5 and 6: attitude drift, reviews, discipline, unrest, responses. Times in game days (600 s) unless named _s. Deltas are points on the 0-100 satisfaction scale or the -100..100 attitude scale.",
   "update_every_s": 10,
+  "_note_people": "people.gd updates each person every people_every_s (was 10: halved for the tick budget; the attitude share per update was raised from 0.1 to people_rate so the drift a day is the same). unrest.gd keeps update_every_s.",
+  "people_every_s": 20,
+  "people_rate": 0.19,
   "attitude": {
     "_note": "Attitude moves toward its target: (satisfaction - 50) x from_satisfaction + trait mods + the sum of active discipline mods. rate: share of the gap closed per update.",
     "from_satisfaction": 1.2,

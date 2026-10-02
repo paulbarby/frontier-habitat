@@ -573,7 +573,8 @@ func step() -> void:
 		research.tick_second()
 		goals.tick_second()
 		awards.tick_second()
-	if phase == _phase_of(8, hz):
+	# Alerts every second tick of the clock (every 2 s): half the cost; raise and clear waits are 5 s and more.
+	if phase == _phase_of(8, hz) and (tick / hz) % 2 == 0:
 		alerts.tick_second()
 	# V5: people (a slice a tick), courses and unrest (each base on its own tick).
 	people.tick()

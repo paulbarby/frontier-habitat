@@ -52,7 +52,7 @@ LIE_CLIPS = ("collapse", "dead", "fall_down", "get_up")                 # on the
 BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "sleep_cell", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn")
 STOOL_CLIPS = ("sit_bar_stool", "drink_bar")
 # the settled hips offset of each support (s = 1), for the blend weight
-SETTLED = {"seat": A.SIT.g("hips.z"), "bed": None}
+SETTLED = {"seat": A.SIT.g("hips.z"), "bed": -0.20}    # (2026-10-02: bed -0.20: seated on the edge = settled; children sank 4 cm)
 
 POS_KEYS = ("hips.", "foot.", "arm.", "prop.")
 
@@ -63,6 +63,7 @@ STOOL_ADJ = 0.0           # the bar-stool hips (per body; the MPFB builds calibr
 FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3 one (x s); MPFB builds set it
 KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
 BED_ADJ = 0.0             # the lying hips on a bed (per body; MPFB builds calibrate it: torso on the mattress)
+BED_BACK = 0.0            # the same lying on the back (sleep_turn; per body, calibrated)
 ARM_IN = 0.0              # deg: standing FK arms closer to the body (MPFB builds: 5)
 WORLD_FEET = {"sit_bar_stool", "drink_bar"}
 LOCO_CLIPS = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk", "hold_hands_walk_r",
@@ -105,9 +106,20 @@ def people_fix(P, clip):
                     Q["arm.%s.x" % side], Q["arm.%s.y" % side], Q["arm.%s.z" % side] = r.x, r.y, r.z
     if clip in STOOL_CLIPS and STOOL_ADJ:
         Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
-    if clip in BED_CLIPS and BED_ADJ:                       # on the mattress: the torso rests ON it (per body)
-        w = max(0.0, min(1.0, abs(P.g("hips.rx")) / 90.0)) ** 2             # rolled onto the side or back
-        Q["hips.z"] = Q.g("hips.z") + BED_ADJ * w
+    if clip in BED_CLIPS and (BED_ADJ or BED_BACK):       # on the mattress: the body rests ON it (per body)
+        # (2026-10-02) on the side and on the back the lowest points differ (hip and thigh vs the back and heels): one
+        # offset each, mixed by how far the pelvis lies on its side (its lateral axis up) or on its back (forward up)
+        qh = N.qeuler(P.g("hips.rx"), P.g("hips.ry"), P.g("hips.rz"))
+        ws = (qh @ Vector((0.0, 1.0, 0.0))).z ** 2
+        wb = (qh @ Vector((1.0, 0.0, 0.0))).z ** 2
+        dz = BED_ADJ * ws + BED_BACK * wb
+        Q["hips.z"] = Q.g("hips.z") + dz
+        # the whole body moves with the hips (2026-10-02: only the hips moved, so the feet and hands hung below the
+        # mattress, 15 cm on the children)
+        for side in ("L", "R"):
+            Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz
+            if Q.g("arm.%s.ik" % side) > 0:
+                Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + dz
     if clip in LIE_CLIPS:
         w = max(0.0, min(1.0, (-hz - 0.55) / 0.25))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
@@ -120,6 +132,9 @@ def people_fix(P, clip):
 def retarget(P, s, clip, settled_z=None):
     """The pose for a variant of scale s (and this body's ankle height: FOOT_DZ)."""
     Q = _retarget(P, s, clip, settled_z)
+    if clip in BED_CLIPS:                                     # the bed guard (npc_common Solver._bed_guard)
+        Q["bed.z"] = CONTACT[clip][1]
+        Q["bed.x0"], Q["bed.x1"] = -A.FURNITURE["bed_back"] - 0.45, -A.FURNITURE["bed_back"] + 0.45
     if FOOT_DZ:
         for side in ("L", "R"):                               # full for a flat foot, fading as it pitches onto the toes
             flat = max(0.0, 1.0 - abs(Q.g("foot.%s.pitch" % side)) / 25.0)
@@ -150,12 +165,34 @@ def _retarget(P, s, clip, settled_z=None):
     if kind:
         hz = P.g("hips.z")
         ref = settled_z if settled_z is not None else (SETTLED.get(kind) or -0.33)
-        w = max(0.0, min(1.0, hz / ref)) if ref < 0 else 0.0
+        st = A.STAND.g("hips.z")
+        # (2026-10-02: measured from the standing hips, so a clip that starts standing starts exactly on idle)
+        w = max(0.0, min(1.0, (hz - st) / (ref - st))) if ref < st else 0.0
         dz = w * h * (1.0 - s)
         Q["hips.z"] = Q.g("hips.z") + dz
+        if kind == "bed":
+            # (2026-10-02, c2 sat with her seat in the bed frame: x scaled about the stand point put a child 11 cm
+            # from the mattress edge) on the bed, x scales about the mattress front edge when seated and about its
+            # centre line when lying
+            qh = N.qeuler(P.g("hips.rx"), P.g("hips.ry"), P.g("hips.rz"))
+            lie = min(1.0, (qh @ Vector((0.0, 1.0, 0.0))).z ** 2 + (qh @ Vector((1.0, 0.0, 0.0))).z ** 2)
+            bb = A.FURNITURE["bed_back"]
+            x0 = -bb + 0.45 - 0.45 * lie
+            dx = w * x0 * (1.0 - s)
+            Q["hips.x"] = Q.g("hips.x") + dx
+            for side in ("L", "R"):
+                Q["foot.%s.x" % side] = Q.g("foot.%s.x" % side) + dx * max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.20) / 0.30))
+                if side not in world and Q.g("arm.%s.ik" % side) > 0:
+                    Q["arm.%s.x" % side] = Q.g("arm.%s.x" % side) + dx
         if kind == "seat" and s < 0.85:                     # children: the feet dangle (they cannot reach the floor)
             for side in ("L", "R"):
                 Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz * 0.8
+        if kind == "bed":                                   # the feet scale about the mattress top like the hips (children)
+            for side in ("L", "R"):
+                # (2026-10-02: not the feet still on the floor, while sitting on the bed edge: m3's toes went 1.9 cm
+                # under the floor)
+                up = max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.20) / 0.30))
+                Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz * up
         for side in ("L", "R"):
             if side not in world and Q.g("arm.%s.ik" % side) > 0:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + dz
@@ -349,7 +386,7 @@ def laugh_keys():
 
 
 def laugh_fn():
-    keys = laugh_keys()
+    keys = A.retime_world(laugh_keys())[0]
     fn, n = keyed_clip(keys)
 
     def g(f):
@@ -549,7 +586,8 @@ def people_clips():
                 with_face(fn, "talk_gesture_a", n, True, lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)), {}))
     fn, n = laugh_fn()
     out.append(("laugh", "oneshot", "stand", "stand", False, n, with_face(fn, "laugh", n, False), {}))
-    fn, n = keyed_clip(argue_keys(), loop=True, length=3.4)
+    keys_, ln_ = A.retime_world(argue_keys(), loop=True, length=3.4)
+    fn, n = keyed_clip(keys_, loop=True, length=ln_)
     kw = talking["argue"]
     out.append(("argue", "loop", "stand", "stand", True, n,
                 with_face(fn, "argue", n, True, lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)), {}))

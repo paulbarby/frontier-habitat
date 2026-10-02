@@ -206,6 +206,12 @@
     "distillery_s",
     "distillery_xl"
    ]
+  },
+  {
+   "at": "2026-10-02 (ART-HAB run 3)",
+   "rooms": [
+    "storehouse_xl"
+   ]
   }
  ],
  "generator": "tools/blender/rooms_build.py",
@@ -218,12 +224,12 @@
      195.5
     ]
    ],
-   "free_deg": 359.0,
+   "free_deg": 359,
    "min_lane_m": 0.95
   },
   "academy_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "academy_m": {
@@ -233,7 +239,7 @@
      195.5
     ]
    ],
-   "free_deg": 359.0,
+   "free_deg": 359,
    "min_lane_m": 0.95
   },
   "academy_s": {
@@ -247,7 +253,7 @@
      358.5
     ]
    ],
-   "free_deg": 322.0,
+   "free_deg": 322,
    "min_lane_m": 0.68
   },
   "airlock": {
@@ -281,8 +287,8 @@
      250.5
     ]
    ],
-   "free_deg": 247.0,
-   "min_lane_m": 0.0
+   "free_deg": 247,
+   "min_lane_m": 0
   },
   "airlock_l": {
    "blocked": [
@@ -291,8 +297,8 @@
      41.5
     ]
    ],
-   "free_deg": 277.0,
-   "min_lane_m": 0.0
+   "free_deg": 277,
+   "min_lane_m": 0
   },
   "airlock_m": {
    "blocked": [
@@ -325,8 +331,8 @@
      250.5
     ]
    ],
-   "free_deg": 247.0,
-   "min_lane_m": 0.0
+   "free_deg": 247,
+   "min_lane_m": 0
   },
   "airlock_r28": {
    "blocked": [
@@ -335,407 +341,407 @@
      142.5
     ]
    ],
-   "free_deg": 75.0,
-   "min_lane_m": 0.0
+   "free_deg": 75,
+   "min_lane_m": 0
   },
   "algae_bioreactor": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "algae_bioreactor_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "algae_bioreactor_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "algae_bioreactor_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "algae_bioreactor_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "apartment_block": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "apartment_block_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "atmo_processor": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "atmo_processor_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "atmo_processor_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "atmo_processor_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "atmo_processor_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "battery_plant": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "battery_plant_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "battery_plant_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "battery_plant_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "battery_plant_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "bio_lab": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "bio_lab_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "bio_lab_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "bio_lab_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "bio_lab_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "cantina": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "cantina_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "cantina_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "cantina_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "cantina_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "carbon_works": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "carbon_works_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "carbon_works_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "carbon_works_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "carbon_works_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "ceramics_kiln": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "ceramics_kiln_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "ceramics_kiln_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "ceramics_kiln_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "ceramics_kiln_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "cold_storage": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "cold_storage_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "cold_storage_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "cold_storage_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "cold_storage_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "distillery": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "distillery_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "distillery_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "distillery_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "distillery_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "electronics_fab": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "electronics_fab_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "electronics_fab_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "electronics_fab_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "electronics_fab_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "fabricator": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "fabricator_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "fabricator_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "fabricator_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "fabricator_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "fungus_farm": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "fungus_farm_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "fungus_farm_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "fungus_farm_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "fungus_farm_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "glassworks": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "glassworks_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "glassworks_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "glassworks_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "glassworks_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "greenhouse": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "greenhouse_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "greenhouse_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "greenhouse_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "greenhouse_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "habitat": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "habitat_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "habitat_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "habitat_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "habitat_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "jail": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "jail_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "jail_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "jail_s": {
@@ -781,47 +787,47 @@
      211.5
     ]
    ],
-   "free_deg": 350.0,
+   "free_deg": 350,
    "min_lane_m": 0.78
   },
   "kitchen": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "kitchen_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "kitchen_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "kitchen_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "kitchen_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "lounge": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "lounge_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "lounge_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "lounge_s": {
@@ -831,282 +837,282 @@
      15.5
     ]
    ],
-   "free_deg": 343.0,
+   "free_deg": 343,
    "min_lane_m": 0.75
   },
   "lounge_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "magnet_works": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "magnet_works_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "magnet_works_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "magnet_works_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "magnet_works_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "medical": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "medical_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "medical_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "medical_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "medical_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "metamaterial_foundry": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "metamaterial_foundry_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "metamaterial_foundry_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "metamaterial_foundry_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "metamaterial_foundry_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "mine": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "mine_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "mine_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "mine_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "mine_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "oxygen_plant": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "oxygen_plant_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "oxygen_plant_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "oxygen_plant_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "oxygen_plant_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "park": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "park_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "park_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "park_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "parts_works": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "parts_works_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "parts_works_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "parts_works_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "parts_works_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "polymer_plant": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "polymer_plant_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "polymer_plant_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "polymer_plant_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "polymer_plant_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "refinery": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "refinery_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "refinery_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "refinery_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "refinery_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "research_assembler": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "research_assembler_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "research_assembler_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "research_assembler_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "research_assembler_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "research_lab": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "research_lab_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "research_lab_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "research_lab_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "research_lab_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "residence_tube": {
@@ -1144,12 +1150,12 @@
      323.5
     ]
    ],
-   "free_deg": 332.0,
+   "free_deg": 332,
    "min_lane_m": 0.91
   },
   "residence_tube_executive_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "residence_tube_executive_m": {
@@ -1187,17 +1193,17 @@
      323.5
     ]
    ],
-   "free_deg": 332.0,
+   "free_deg": 332,
    "min_lane_m": 0.91
   },
   "residence_tube_executive_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "residence_tube_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "residence_tube_m": {
@@ -1235,42 +1241,42 @@
      323.5
     ]
    ],
-   "free_deg": 332.0,
+   "free_deg": 332,
    "min_lane_m": 0.91
   },
   "residence_tube_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "retail": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "retail_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "retail_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "retail_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "security_office": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "security_office_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "security_office_s": {
@@ -1292,52 +1298,52 @@
      273.5
     ]
    ],
-   "free_deg": 254.0,
+   "free_deg": 254,
    "min_lane_m": 0.71
   },
   "steel_mill": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "steel_mill_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "steel_mill_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "steel_mill_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "steel_mill_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "storehouse": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "storehouse_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "storehouse_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "storehouse_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "storehouse_xl": {
@@ -1347,17 +1353,17 @@
   },
   "superconductor_lab": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "superconductor_lab_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "superconductor_lab_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "superconductor_lab_s": {
@@ -1367,87 +1373,87 @@
      106.5
     ]
    ],
-   "free_deg": 349.0,
+   "free_deg": 349,
    "min_lane_m": 0.78
   },
   "superconductor_lab_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "titanium_smelter": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "titanium_smelter_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "titanium_smelter_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "titanium_smelter_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "titanium_smelter_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "water_recycler": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "water_recycler_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "water_recycler_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "water_recycler_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "water_recycler_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "workshop": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "workshop_l": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   },
   "workshop_m": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.99
   },
   "workshop_s": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 0.82
   },
   "workshop_xl": {
    "blocked": [],
-   "free_deg": 360.0,
+   "free_deg": 360,
    "min_lane_m": 1.04
   }
  },

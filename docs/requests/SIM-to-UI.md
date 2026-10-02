@@ -813,3 +813,19 @@ dome_frame, dome_glass, fitout). Roles: `security` ("Security officer"), `child`
   `{locked: true, kind: "planet", text}` so the palette can show the lock. An old save's atmosphere processor shows
   block `no_atmosphere` and makes no oxygen.
 - Old airless saves drop pending dust storms, wind storms and dust devils at load.
+## 2026-10-02 - a leave-with-ship request ends with its ship; slower stored people updates; alerts every 2 s
+
+- **leave_with_ship rule (your 2026-10-01 ask).** The request is removed when its ship takes off (`traffic._takeoff`
+  calls `sim.relations.close_ship_requests(ship_id)`). The colonist stays, gets the mod `ship_gone` ("Watched a
+  loved one's ship leave", sat -5, att -2, 2 days) and a note; one log line, code `defect_ended`, sev 1 ("X stays.
+  Y's ship has gone without an answer."). An old save with a request for a ship that is not on the ground, or whose
+  colonist is dead or already a visitor, is cleaned within a second. `allow` after the ship has gone cannot happen
+  now; it still answers "The ship has gone." `shared_home` requests are not touched. Show "If you do not answer: they
+  stay; the visitor leaves alone" as you do; the deadline is the ship's `t_s`.
+- **Stored people values refresh every 20 s, not 10** (`content/society.json` `people_every_s` 20, `people_rate`
+  0.19 = the same drift a day). `sim.people.satisfaction/attitude` caches are unchanged; a value you read right after
+  an order can wait up to 20 s to show in `rec.att` (the order's own mod is read at once). `unrest` keeps 10 s.
+- **Alerts are rebuilt every 2 s** (was 1 s). A critical alert shows at most 1 s later; the 5 s, 20 s and 30 s waits
+  are unchanged.
+- `showcase_v5.fhsave` rebuilt (134 people, 0 deaths, calm, ledger {}).
+- Checked on this build: test_ships_ui (pad active and powered: PASS), test_v5_people, test_v5_orders, test_rag: 0 failed.

@@ -27,9 +27,9 @@ func _init() -> void:
 	pauses = true
 	icon = "codex"
 	title = "Codex"
-	subtitle = "Every structure, item, research project and hazard: where it comes from and what uses it."
+	subtitle = "Every structure, item, research project and hazard, and a guide to people, society and the planets."
 	accent = P.CYAN
-	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"], ["society", "People", "people"]]
+	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"], ["society", "Guide", "people"]]
 
 func _ready() -> void:
 	if typeof(arg) == TYPE_STRING and String(arg).contains(":"):

@@ -113,7 +113,7 @@ func record(rig, delta: float) -> void:
 		"mode": String(rec["mode"]), "v": float(rec.get("v", 0.0)), "cam": cam.global_position, "cyaw": atan2(-f.z, f.x),
 		"cpitch": asin(clampf(f.y, -1.0, 1.0)), "scr": sp, "pull": float(rig.get("_sh_pull")), "eye": float(rig.get("_sh_eyeh")),
 		"cut": cut_left > 0.0, "tick": int(view.sim.state["tick"]), "where": String(a.get("where", "")), "off": (rec.get("off", Vector3.ZERO) as Vector3).length(),
-		"id": id, "left": sim_left(a) if not a.is_empty() else 0.0, "wb": float(sm.pose()["wb"]),
+		"fx": (rig.get("dbg_free") as Vector3).x, "fz": (rig.get("dbg_free") as Vector3).z, "tx": (rig.get("dbg_target") as Vector3).x, "tz": (rig.get("dbg_target") as Vector3).z, "hd": view.follow_depth(cam.global_position), "win": String(view.fc_win), "id": id, "left": sim_left(a) if not a.is_empty() else 0.0, "wb": float(sm.pose()["wb"]),
 		"far": int(bool(rec.get("far", false))), "rspd": float(rec.get("speed", 0.0)), "smspd": float(sm.speed), "yld": int(bool(rec.get("yielding", false))), "vcap": float(rec.get("v_cap", -1.0)), "gu": float(rec.get("g_u", 0.0))})
 	# A body that jumps (a fade move over 25 m, a new person) is a camera cut: skipped too.
 	if _last_bp != null and (_last_bp as Vector3).distance_to(bp) > 2.0:
@@ -245,13 +245,13 @@ func report() -> Dictionary:
 
 ## Raw samples as CSV (analysis outside the game).
 func csv(max_rows: int = 3000) -> String:
-	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu"]
+	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu,fx,fz,tx,tz,hd,win"]
 	for i in mini(rows.size(), max_rows):
 		var r: Dictionary = rows[i]
 		var b: Vector3 = r["bp"]
 		var c: Vector3 = r["cam"]
 		var s: Vector2 = r["scr"]
-		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f" % [
+		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f,%.4f,%.4f,%.4f,%.4f,%.3f,%s" % [
 			float(r["t"]), float(r["dt"]), float(r["gr"]), b.x, b.y, b.z, float(r["yaw"]), r["key"], r["mode"], float(r["v"]),
-			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"])])
+			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"]), float(r["fx"]), float(r["fz"]), float(r["tx"]), float(r["tz"]), float(r["hd"]), r["win"]])
 	return "\n".join(lines)

@@ -35,6 +35,8 @@ func tests() -> Array:
 		["v5_planet_hazards", v5_planet_hazards],
 		["v5_flee_privilege_skills", v5_flee_privilege_skills],
 		["v5_liner_family_shared_home", v5_liner_family_shared_home],
+		["v5_leave_request_ends_with_ship", v5_leave_request_ends_with_ship],
+		["v5_best_dressed_by_clothes", v5_best_dressed_by_clothes],
 	]
 
 static func _showcase():
@@ -1535,4 +1537,57 @@ func v5_liner_family_shared_home(t) -> void:
 		t.check(bool(yes.get("ok", false)) and int(a1["bed"]) == int(tube.get("id", -2)) and int(b1["bed"]) == int(a1["bed"]), "allow after a tube is built: they move in together (%s)" % str(yes))
 	t.eq(s2.inv.audit(), {}, "ledger")
 	s2.dispose()
+	t.done()
+## A leave_with_ship request ends when its ship takes off (UI-to-SIM 2026-10-01): removed, one
+## defect_ended log line, the colonist stays with a short low mood. An old save with a request for
+## a ship that is not there is cleaned within a second.
+func v5_leave_request_ends_with_ship(t) -> void:
+	var sim = _showcase()
+	sim.run_seconds(2.0)
+	var ppl: Array = _colonists(sim)
+	var a: Dictionary = ppl[0]
+	var b: Dictionary = ppl[1]
+	var reqs: Dictionary = sim.relations._w()["requests"]
+	# TEST SET-UP: requests written as an old save has them: one for a ship that is not there, one shared-home.
+	reqs[9002] = {"id": 9002, "kind": "leave_with_ship", "agent": int(ppl[2]["id"]), "other": int(b["id"]), "ship": 7777, "tick": int(sim.state["tick"]), "text": "y"}
+	reqs[9003] = {"id": 9003, "kind": "shared_home", "agent": int(ppl[3]["id"]), "other": int(ppl[4]["id"]), "ship": -1, "tick": int(sim.state["tick"]), "text": "z"}
+	sim.run_seconds(1.5)
+	t.check(not reqs.has(9002), "a request for a ship that is not there is dropped within a second")
+	t.check(reqs.has(9003), "a shared-home request is not touched")
+	# TEST SET-UP: a landed ship (a record of the right shape for _takeoff) and its request; no step runs before the take-off.
+	var kind: String = String(sim.traffic.kinds().keys()[0])
+	var arr := {"id": 7001, "kind": kind, "phase": "landed", "visitors": [], "stock_inv": -1, "buy_inv": -1, "result": {}, "t": 0, "at": 0}
+	sim.traffic.ts()["ships"].append(arr)
+	reqs[9001] = {"id": 9001, "kind": "leave_with_ship", "agent": int(a["id"]), "other": int(b["id"]), "ship": 7001, "tick": int(sim.state["tick"]), "text": "x"}
+	t.eq(sim.relations.close_ship_requests(-1), 0, "a request for a landed ship stays")
+	sim.traffic._takeoff(arr, int(sim.state["tick"]))
+	t.check(not reqs.has(9001), "the request is removed when the ship takes off")
+	t.check(reqs.has(9003), "the shared-home request is still there")
+	var logged := 0
+	for e in sim.state["log"]:
+		if String(e["code"]) == "defect_ended":
+			logged += 1
+	t.eq(logged, 2, "one defect_ended line for each of the two requests that ended")
+	t.check(sim.people.has_mod(a, "ship_gone"), "the colonist stays with a short low mood")
+	sim.traffic.ts()["ships"].erase(arr)
+	t.eq(sim.inv.audit(), {}, "ledger")
+	sim.dispose()
+	t.done()
+
+## Best dressed is chosen by clothes: a person who bought clothes that day wins over the traits; with no purchase it
+## is still somebody in a casual outfit (or nobody), and the same day gives the same answer.
+func v5_best_dressed_by_clothes(t) -> void:
+	var sim = _showcase()
+	sim.run_seconds(5.0)
+	var dt: int = int(float(sim.bal["day_length"]) * float(sim.bal["tick_hz"]))
+	var number: int = int(sim.state["tick"]) / dt + 2
+	var ppl: Array = _colonists(sim)
+	var pick: Dictionary = ppl[ppl.size() - 1]
+	var before: int = sim.rag._best_dressed(number)
+	t.eq(sim.rag._best_dressed(number), before, "the same day gives the same answer")
+	pick["clothes_t"] = (number - 1) * dt + 5                                              # test set-up: bought clothes on that day
+	t.eq(sim.rag._best_dressed(number), int(pick["id"]), "the person who bought clothes that day is best dressed")
+	pick["clothes_t"] = (number - 3) * dt                                                  # bought two days before: no claim
+	t.check(sim.rag._best_dressed(number) != int(pick["id"]) or before == int(pick["id"]), "an old purchase does not win by itself")
+	sim.dispose()
 	t.done()

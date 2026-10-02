@@ -1241,6 +1241,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		var mb: InputEventMouseButton = event
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			if in_follow():
+				return   # over the shoulder the right button turns the camera (camera_rig.gd): it clears nothing
 			if cancel_pick():
 				pass
 			elif tool != "select":

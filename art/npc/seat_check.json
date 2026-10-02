@@ -1,0 +1,1267 @@
+{
+ "anchors": 977,
+ "models": {
+  "academy_l": {
+   "anchors": 14,
+   "overlaps": 14,
+   "worst_mm": 66.5
+  },
+  "academy_m": {
+   "anchors": 8,
+   "overlaps": 8,
+   "worst_mm": 67.6
+  },
+  "academy_s": {
+   "anchors": 4,
+   "overlaps": 4,
+   "worst_mm": 66.5
+  },
+  "apartment_block_m": {
+   "anchors": 64,
+   "overlaps": 4,
+   "worst_mm": 49.5
+  },
+  "battery_plant_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "battery_plant_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "battery_plant_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "battery_plant_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "bio_lab_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "bio_lab_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "bio_lab_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "bio_lab_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "cantina_l": {
+   "anchors": 14,
+   "overlaps": 4,
+   "worst_mm": 68.9
+  },
+  "cantina_m": {
+   "anchors": 8,
+   "overlaps": 4,
+   "worst_mm": 69.0
+  },
+  "cantina_s": {
+   "anchors": 4,
+   "overlaps": 2,
+   "worst_mm": 65.0
+  },
+  "cantina_xl": {
+   "anchors": 22,
+   "overlaps": 6,
+   "worst_mm": 66.0
+  },
+  "carbon_works_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "carbon_works_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "carbon_works_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "carbon_works_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "ceramics_kiln_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "ceramics_kiln_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "ceramics_kiln_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "ceramics_kiln_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "distillery_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "distillery_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "distillery_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "distillery_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "dome_floor1": {
+   "anchors": 40,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "dome_floor2": {
+   "anchors": 31,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "dome_floor3": {
+   "anchors": 120,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "dome_floor4": {
+   "anchors": 216,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "dome_floor5": {
+   "anchors": 114,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "electronics_fab_l": {
+   "anchors": 2,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "electronics_fab_m": {
+   "anchors": 1,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "electronics_fab_s": {
+   "anchors": 1,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "electronics_fab_xl": {
+   "anchors": 3,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fabricator_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fabricator_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fabricator_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fabricator_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fungus_farm_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fungus_farm_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fungus_farm_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "fungus_farm_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "glassworks_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "glassworks_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "glassworks_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "glassworks_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "greenhouse_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "greenhouse_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "greenhouse_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "greenhouse_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "habitat_l": {
+   "anchors": 20,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "habitat_m": {
+   "anchors": 12,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "habitat_s": {
+   "anchors": 6,
+   "overlaps": 2,
+   "worst_mm": 21.6
+  },
+  "habitat_xl": {
+   "anchors": 30,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "jail_l": {
+   "anchors": 10,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "jail_m": {
+   "anchors": 5,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "jail_s": {
+   "anchors": 3,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "kitchen_l": {
+   "anchors": 10,
+   "overlaps": 0,
+   "worst_mm": 16.9
+  },
+  "kitchen_m": {
+   "anchors": 6,
+   "overlaps": 0,
+   "worst_mm": 16.8
+  },
+  "kitchen_s": {
+   "anchors": 4,
+   "overlaps": 0,
+   "worst_mm": 16.7
+  },
+  "kitchen_xl": {
+   "anchors": 16,
+   "overlaps": 0,
+   "worst_mm": 16.8
+  },
+  "lounge_l": {
+   "anchors": 10,
+   "overlaps": 10,
+   "worst_mm": 49.5
+  },
+  "lounge_m": {
+   "anchors": 6,
+   "overlaps": 6,
+   "worst_mm": 49.4
+  },
+  "lounge_s": {
+   "anchors": 3,
+   "overlaps": 3,
+   "worst_mm": 49.3
+  },
+  "lounge_xl": {
+   "anchors": 16,
+   "overlaps": 16,
+   "worst_mm": 49.6
+  },
+  "magnet_works_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "magnet_works_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "magnet_works_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "magnet_works_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "medical_l": {
+   "anchors": 6,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "medical_m": {
+   "anchors": 3,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "medical_s": {
+   "anchors": 2,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "medical_xl": {
+   "anchors": 8,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "metamaterial_foundry_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "metamaterial_foundry_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "metamaterial_foundry_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "metamaterial_foundry_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "mine_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "mine_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "mine_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "mine_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "outpost_core": {
+   "anchors": 4,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "park_l": {
+   "anchors": 10,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "park_m": {
+   "anchors": 6,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "park_xl": {
+   "anchors": 16,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "parts_works_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "parts_works_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "parts_works_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "parts_works_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "polymer_plant_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "polymer_plant_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "polymer_plant_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "polymer_plant_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "refinery_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "refinery_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "refinery_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "refinery_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "research_lab_l": {
+   "anchors": 3,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "research_lab_m": {
+   "anchors": 2,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "research_lab_s": {
+   "anchors": 1,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "research_lab_xl": {
+   "anchors": 4,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "residence_tube_executive_l": {
+   "anchors": 10,
+   "overlaps": 4,
+   "worst_mm": 61.2
+  },
+  "residence_tube_executive_m": {
+   "anchors": 5,
+   "overlaps": 2,
+   "worst_mm": 49.4
+  },
+  "residence_tube_executive_xl": {
+   "anchors": 15,
+   "overlaps": 6,
+   "worst_mm": 49.4
+  },
+  "residence_tube_l": {
+   "anchors": 18,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "residence_tube_m": {
+   "anchors": 12,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "residence_tube_xl": {
+   "anchors": 24,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "retail_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "retail_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "retail_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "security_office_m": {
+   "anchors": 3,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "security_office_s": {
+   "anchors": 2,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "steel_mill_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "steel_mill_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "steel_mill_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "steel_mill_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "superconductor_lab_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "superconductor_lab_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "superconductor_lab_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "superconductor_lab_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "titanium_smelter_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "titanium_smelter_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "titanium_smelter_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "titanium_smelter_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "workshop_l": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "workshop_m": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "workshop_s": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  },
+  "workshop_xl": {
+   "anchors": 0,
+   "overlaps": 0,
+   "worst_mm": 0.0
+  }
+ },
+ "ms": 53813,
+ "overlaps": 95,
+ "pass": false,
+ "poses": 7664,
+ "tol_m": 0.02,
+ "worst": [
+  {
+   "anchor": "Seat_3",
+   "at": "1.00,0.67,-2.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0690274906158447,
+   "model": "cantina_m",
+   "part": "Interior/Neon",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-1.00,0.67,-2.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0690274906158447,
+   "model": "cantina_m",
+   "part": "Interior/Neon",
+   "seg": "thigh.R-shin.R",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "1.00,0.67,-3.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0689128112792969,
+   "model": "cantina_l",
+   "part": "Interior/Neon",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-1.00,0.67,-3.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0689128112792969,
+   "model": "cantina_l",
+   "part": "Interior/Neon",
+   "seg": "thigh.R-shin.R",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "2.32,0.60,1.66",
+   "clip": "sit_type@0.3",
+   "depth": 0.0676457357406616,
+   "model": "academy_m",
+   "part": "Interior/Palette",
+   "seg": "thigh.R-shin.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "-0.26,0.59,-0.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_s",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "-0.26,0.59,0.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_s",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "1.19,0.59,-0.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_s",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "1.19,0.59,0.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_s",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_7",
+   "at": "0.89,0.59,-1.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_6",
+   "at": "0.89,0.59,-0.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_5",
+   "at": "0.89,0.59,0.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_4",
+   "at": "0.89,0.59,1.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "2.34,0.59,-1.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "2.34,0.59,-0.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_10",
+   "at": "1.44,0.59,1.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_11",
+   "at": "1.44,0.59,0.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "4.34,0.59,0.83",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "4.34,0.59,1.83",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_12",
+   "at": "1.44,0.59,-0.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_13",
+   "at": "1.44,0.59,-1.67",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "4.34,0.59,-0.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "4.34,0.59,-1.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_4",
+   "at": "4.34,0.59,-2.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_5",
+   "at": "2.89,0.59,1.83",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_6",
+   "at": "2.89,0.59,0.83",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_7",
+   "at": "2.89,0.59,-0.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_8",
+   "at": "2.89,0.59,-1.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_9",
+   "at": "2.89,0.59,-2.17",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "2.34,0.59,0.33",
+   "clip": "sit_type@0.3",
+   "depth": 0.0664576363563538,
+   "model": "academy_m",
+   "part": "Interior/PaletteMetal",
+   "seg": "thigh.L-shin.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_5",
+   "at": "1.62,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.0660420727729797,
+   "model": "cantina_xl",
+   "part": "Interior/Neon",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-1.62,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.065557947549969,
+   "model": "cantina_xl",
+   "part": "Interior/Neon",
+   "seg": "thigh.R-shin.R",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-0.76,0.67,-1.92",
+   "clip": "sit_type@0.3",
+   "depth": 0.065019793510437,
+   "model": "cantina_s",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "0.38,0.67,-1.92",
+   "clip": "sit_type@0.3",
+   "depth": 0.065019793510437,
+   "model": "cantina_s",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-0.59,0.67,-2.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.064969367980957,
+   "model": "cantina_m",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "0.20,0.67,-2.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.064969367980957,
+   "model": "cantina_m",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "0.20,0.67,-3.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0649624538421631,
+   "model": "cantina_l",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-0.59,0.67,-3.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0649624538421631,
+   "model": "cantina_l",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "-0.55,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.0648430061340332,
+   "model": "cantina_xl",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "0.17,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.0648430061340332,
+   "model": "cantina_xl",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_4",
+   "at": "0.89,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.064842529296875,
+   "model": "cantina_xl",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-1.28,0.67,-4.54",
+   "clip": "sit_type@0.3",
+   "depth": 0.064842529296875,
+   "model": "cantina_xl",
+   "part": "Interior/Palette",
+   "seg": "thigh.L-shin.L",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-3.64,0.65,-2.82",
+   "clip": "sit_type@0.3",
+   "depth": 0.0612154460325837,
+   "model": "residence_tube_executive_l",
+   "part": "Interior/Palette",
+   "seg": "thigh.R-shin.R",
+   "variant": "m3"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-6.12,0.34,-0.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0495942115783691,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-6.12,0.34,0.13",
+   "clip": "sit_type@0.3",
+   "depth": 0.0495942115783691,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "-6.12,0.34,0.75",
+   "clip": "sit_type@0.3",
+   "depth": 0.0495942115783691,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_8",
+   "at": "3.72,0.34,-2.45",
+   "clip": "sit_type@0.3",
+   "depth": 0.049513294926146,
+   "model": "lounge_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "-3.51,0.34,-1.84",
+   "clip": "sit_type@0.3",
+   "depth": 0.0495081424713135,
+   "model": "residence_tube_executive_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_9",
+   "at": "5.33,0.34,3.37",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494786025490612,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_3",
+   "at": "-7.25,0.34,0.92",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494738101959229,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_4",
+   "at": "-7.87,0.34,0.92",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494736909866333,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_5",
+   "at": "-8.49,0.34,0.92",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494736909866333,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_14",
+   "at": "5.13,0.34,2.48",
+   "clip": "sit_type@0.3",
+   "depth": 0.049470678740181,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_10",
+   "at": "4.74,0.34,3.58",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494659327785485,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_14",
+   "at": "-7.54,7.54,2.22",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494637733325362,
+   "model": "apartment_block_m",
+   "part": "F2_Interior/PaletteShell",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_15",
+   "at": "-8.16,7.54,2.25",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494592245784588,
+   "model": "apartment_block_m",
+   "part": "F2_Interior/PaletteShell",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_11",
+   "at": "4.16,0.34,3.79",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494541590567678,
+   "model": "lounge_xl",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.R-foot.R",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_2",
+   "at": "-4.46,0.34,0.75",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494473457336426,
+   "model": "lounge_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_1",
+   "at": "-4.46,0.34,0.13",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494473457336426,
+   "model": "lounge_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  },
+  {
+   "anchor": "Seat_0",
+   "at": "-4.46,0.34,-0.49",
+   "clip": "sit_type@0.3",
+   "depth": 0.0494473457336426,
+   "model": "lounge_l",
+   "part": "Interior/PaletteMetal",
+   "seg": "shin.L-foot.L",
+   "variant": "f2"
+  }
+ ]
+}

@@ -217,6 +217,11 @@ static func structure(hud, b: Dictionary) -> Dictionary:
 			out.why = ["No water reaches it through its network."]
 			out.fix = ["Link it to a reservoir with a pipe or cable network, and check the water extractors."]
 			out.color = P.RED
+		"no_atmosphere":
+			out.title = "No air on this planet"
+			out.why = ["This planet has no air. A wind turbine and an atmosphere processor need air to work."]
+			out.fix = ["Remove it and use solar power or a reactor. A planet with air (dry or cold world) lets it work."]
+			out.color = P.RED
 		"no_reservoir":
 			out.title = "No reservoir"
 			out.why = ["It makes water, but no reservoir on its network can take it. The water is lost."]

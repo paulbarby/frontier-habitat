@@ -43,6 +43,32 @@ const KEYS := [
 	{"e": 90.0, "zen": Color("a27f63"), "hor": Color("eac69c"), "glow": Color("f6e6cc"), "ga": 0.1, "sun": Color("fff2df"), "se": 1.65, "amb": Color("c6b7ae"), "ae": 0.52, "haze": 0.65},
 ]
 
+## Per planet (Paul 2026-10-01, V5 15.7). The same sun elevation keys; each planet has its own palette.
+## airless: black sky with stars by day, white sun, no haze, no glow, little fill light (hard shadows).
+## cold: a pale cold sky, blue-white light, ice haze; deep blue nights.
+const KEYS_AIRLESS := [
+	{"e": -90.0, "zen": Color("010102"), "hor": Color("030305"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffdf8"), "se": 0.0, "amb": Color("5c6478"), "ae": 0.22, "haze": 0.0},
+	{"e": -12.0, "zen": Color("010102"), "hor": Color("030305"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffdf8"), "se": 0.0, "amb": Color("5c6478"), "ae": 0.22, "haze": 0.0},
+	{"e": -2.0, "zen": Color("010102"), "hor": Color("040406"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffdf8"), "se": 0.0, "amb": Color("6a6e7c"), "ae": 0.2, "haze": 0.0},
+	{"e": 0.0, "zen": Color("010102"), "hor": Color("050507"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffaf0"), "se": 1.2, "amb": Color("8a8a90"), "ae": 0.16, "haze": 0.0},
+	{"e": 6.0, "zen": Color("010102"), "hor": Color("050507"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffcf6"), "se": 1.75, "amb": Color("8e8e94"), "ae": 0.17, "haze": 0.0},
+	{"e": 20.0, "zen": Color("010102"), "hor": Color("050507"), "glow": Color("000000"), "ga": 0.0, "sun": Color("fffdf9"), "se": 1.95, "amb": Color("96969a"), "ae": 0.18, "haze": 0.0},
+	{"e": 90.0, "zen": Color("010102"), "hor": Color("050507"), "glow": Color("000000"), "ga": 0.0, "sun": Color("ffffff"), "se": 2.05, "amb": Color("9a9a9e"), "ae": 0.19, "haze": 0.0},
+]
+const KEYS_COLD := [
+	{"e": -90.0, "zen": Color("02040c"), "hor": Color("0a1226"), "glow": Color("0c1430"), "ga": 0.0, "sun": Color("c8d4ff"), "se": 0.0, "amb": Color("44547e"), "ae": 0.44, "haze": 0.3},
+	{"e": -12.0, "zen": Color("03060f"), "hor": Color("0f1a32"), "glow": Color("18223e"), "ga": 0.08, "sun": Color("c8d4ff"), "se": 0.0, "amb": Color("4a5a84"), "ae": 0.44, "haze": 0.35},
+	{"e": -5.0, "zen": Color("17254a"), "hor": Color("53648c"), "glow": Color("c08aa0"), "ga": 0.45, "sun": Color("f0b8a0"), "se": 0.0, "amb": Color("5f6f9c"), "ae": 0.4, "haze": 0.5},
+	{"e": 0.0, "zen": Color("3c5480"), "hor": Color("c9b8c8"), "glow": Color("f4c8b4"), "ga": 0.8, "sun": Color("ffd6c0"), "se": 0.3, "amb": Color("8f98b8"), "ae": 0.44, "haze": 0.6},
+	{"e": 6.0, "zen": Color("6a86b0"), "hor": Color("dcdcea"), "glow": Color("f6e0d4"), "ga": 0.5, "sun": Color("ffeee4"), "se": 0.95, "amb": Color("a8b4d0"), "ae": 0.5, "haze": 0.65},
+	{"e": 20.0, "zen": Color("7c9cc6"), "hor": Color("dfe8f2"), "glow": Color("f2f6ff"), "ga": 0.2, "sun": Color("f6f8ff"), "se": 1.35, "amb": Color("b4c2da"), "ae": 0.55, "haze": 0.6},
+	{"e": 90.0, "zen": Color("86a6cc"), "hor": Color("e4ecf4"), "glow": Color("f8fbff"), "ga": 0.1, "sun": Color("fbfcff"), "se": 1.5, "amb": Color("bccadf"), "ae": 0.58, "haze": 0.55},
+]
+
+## true on a planet without air (sim.planet_has_air() false): no haze, dust, storms or aurora.
+func airless() -> bool:
+	return planet_name == "airless"
+
 func build() -> void:
 	we = WorldEnvironment.new()
 	env = Environment.new()
@@ -169,8 +195,10 @@ func set_sites(sites: Array) -> void:
 
 ## `t` = second of the day, `day_len` and `daylight` from the planet; `focus` = the
 ## camera target; `cam_dist` its distance.
+var _focus_y := 0.0
 func update(t: float, day_len: float, daylight: float, delta: float, focus: Vector3, cam_dist: float, wind: float) -> void:
 	_time += delta
+	_focus_y = focus.y
 	_cam_dist = cam_dist
 	# --- sun path -------------------------------------------------------------
 	var az_off := deg_to_rad(-40.0)
@@ -201,6 +229,9 @@ func update(t: float, day_len: float, daylight: float, delta: float, focus: Vect
 	# --- palette --------------------------------------------------------------
 	var k: Dictionary = _palette(e_deg)
 	night = clampf(1.0 - smoothstep(-7.0, 5.0, e_deg), 0.0, 1.0)
+	if airless():
+		storm = 0.0
+		aurora = 0.0
 	var st: float = storm
 	var zen: Color = k["zen"]
 	var hor: Color = k["hor"]
@@ -234,7 +265,10 @@ func _set_sky(k: Dictionary, zen: Color, hor: Color, st: float) -> void:
 	# The planet is lit from the viewer's upper right: a pale gibbous disc at any hour.
 	var right: Vector3 = planet_dir.cross(Vector3.UP).normalized()
 	sky_mat.set_shader_parameter("planet_light", (-planet_dir * 0.55 + right * 0.7 + Vector3.UP * 0.45).normalized())
-	sky_mat.set_shader_parameter("planet_vis", lerpf(0.35, 1.0, clampf(night * 1.4, 0.0, 1.0)) * (1.0 - st))
+	sky_mat.set_shader_parameter("planet_vis", (1.0 if airless() else lerpf(0.35, 1.0, clampf(night * 1.4, 0.0, 1.0))) * (1.0 - st))
+	# airless: stars in daylight, no scattered light round the sun (a hard white disc on black)
+	sky_mat.set_shader_parameter("stars_day", 1.0 if airless() else 0.0)
+	sky_mat.set_shader_parameter("scatter", 0.0 if airless() else 1.0)
 	sky_mat.set_shader_parameter("night", night)
 	sky_mat.set_shader_parameter("haze", k["haze"])
 	sky_mat.set_shader_parameter("storm", st)
@@ -292,7 +326,19 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 		env.fog_density *= 1.0 - 0.92 * indoor
 		env.ambient_light_color = (env.ambient_light_color as Color).lerp(Color("d9d2c8"), 0.6 * indoor)
 		env.ambient_light_energy = float(env.ambient_light_energy) + 0.45 * indoor
-	env.fog_sun_scatter = lerpf(0.28, 0.0, night)
+	if airless():
+		# no air: no haze at any distance (the far map stays sharp; the sky is black)
+		env.fog_density = 0.0
+		env.fog_height_density = 0.0
+	elif planet_name == "cold":
+		# ice haze: a little thicker, pale blue, and lying in the low ground (craters, hollows)
+		env.fog_density *= 1.25
+		env.fog_light_color = (env.fog_light_color as Color).lerp(Color("cfdcf0"), 0.5 * (1.0 - night))
+		env.fog_height = _focus_y - 1.0
+		env.fog_height_density = 0.18 * (1.0 - indoor)
+	else:
+		env.fog_height_density = 0.0
+	env.fog_sun_scatter = 0.0 if airless() else lerpf(0.28, 0.0, night)
 	env.glow_intensity = lerpf(0.4, 0.95, night)
 	env.tonemap_exposure = lerpf(1.0, 1.25, night)
 	# --- grade for the post pass ------------------------------------------------
@@ -306,14 +352,25 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 		"grain": lerpf(0.012, 0.022, night),
 		"storm": st,
 	}
+	if airless():
+		# hard, neutral, a little more contrast; no warm or cool cast
+		grade["warm"] = Color(1.0, 1.0, 0.99).lerp(Color(0.97, 0.98, 1.03), night)
+		grade["cool"] = Color(0.97, 0.98, 1.02).lerp(Color(0.9, 0.94, 1.08), night)
+		grade["contrast"] = lerpf(1.13, 1.12, night)
+		grade["saturation"] = lerpf(0.86, 0.85, night)
+	elif planet_name == "cold":
+		grade["warm"] = Color(0.99, 1.0, 1.03).lerp(Color(1.04, 0.99, 0.96), dusk).lerp(Color(0.93, 0.97, 1.08), night)
+		grade["cool"] = Color(0.93, 0.98, 1.08).lerp(Color(0.88, 0.94, 1.12), night)
+		grade["saturation"] = lerpf(0.94, 0.88, night)
 
 func _palette(e_deg: float) -> Dictionary:
-	var a: Dictionary = KEYS[0]
-	var b: Dictionary = KEYS[KEYS.size() - 1]
-	for i in KEYS.size() - 1:
-		if e_deg >= float(KEYS[i]["e"]) and e_deg <= float(KEYS[i + 1]["e"]):
-			a = KEYS[i]
-			b = KEYS[i + 1]
+	var keys: Array = KEYS_AIRLESS if planet_name == "airless" else (KEYS_COLD if planet_name == "cold" else KEYS)
+	var a: Dictionary = keys[0]
+	var b: Dictionary = keys[keys.size() - 1]
+	for i in keys.size() - 1:
+		if e_deg >= float(keys[i]["e"]) and e_deg <= float(keys[i + 1]["e"]):
+			a = keys[i]
+			b = keys[i + 1]
 			break
 	var f: float = 0.0
 	if float(b["e"]) > float(a["e"]):

@@ -125,20 +125,22 @@ func entries(kind: String) -> Array:
 			for e in society_entries():
 				out.append(e)
 		"hazard":
+			# Only the hazards of this planet (SIM hazards.kinds_here): the airless world has no storms.
 			var Data = load("res://ui/data.gd")
-			for hk in Data.HAZARD:
+			for hk in hud.data.hazard_kinds_here():
+				if not Data.HAZARD.has(hk):
+					continue
 				var h: Dictionary = Data.HAZARD[hk]
-				out.append({"id": String(hk), "kind": kind, "name": String(h["name"]), "cat": "Hazard", "desc": String(h["advice"]),
+				out.append({"id": String(hk), "kind": kind, "name": String(h["name"]), "cat": "Hazard", "desc": String(h["advice"]) + hud.data.hazard_planet_note(String(hk)),
 					"icon": String(h["icon"]), "fallback_icon": "sev_warning", "color": P.AMBER})
 	out.sort_custom(func(a, b): return String(a["name"]).naturalnocasecmp_to(String(b["name"])) < 0)
 	return out
 
-## Codex-only people entries; the v5 topics (follow, the Rag, ranks, discipline, unrest, homes,
-## the academy, the new structures, floors) come from ui/v5_help.gd TOPICS (also the How to play tab).
+## Codex-only people entries; the v5 topics (the dock, follow, the Rag, security, jail, tourism, ranks, discipline,
+## unrest, homes, the academy, the new structures, the dome, floors, planets) come from ui/v5_help.gd TOPICS (also the How to play tab).
 const SOCIETY := [
 	["satisfaction", "Satisfaction", "People", "morale", "0 to 100: needs, food, housing, leisure, friends, work, fairness, safety and freedom. The personnel file shows each part and its reason. Low satisfaction makes attitudes worse."],
 	["attitude", "Attitude", "People", "trend_down", "-100 to 100: how a person treats work and rules. Bad (-30 and below): slow work, long breaks, backtalk. Very bad (-70 and below): protests and fights. It follows satisfaction, traits, the captain, friends and discipline."],
-	["security", "Security and jail", "Society", "shelter", "Security officers patrol, stop fights and take arrested people to jail. One officer for about 12 people. A jail holds 2, 4 or 8 prisoners; without one, arrested people are confined to their quarters. The Crew window (key U), Security tab, shows the officers, the fights now and the prisoners. There you can make a person a security officer (security skill 40 or more)."],
 	["relationships", "Relationships", "Society", "heart", "People become friends, rivals or enemies at work, at meals and in leisure places. Adults can fall in love, date, move in together and marry; affairs and break-ups make news in The Regolith Rag (key J). Crushes stay secret until the Rag or a speech bubble tells."],
 ]
 const EGGS := {"dance": ["Dance Floor Director", "In the over-the-shoulder view, the old code makes the person dance, and their friends join in."],

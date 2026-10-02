@@ -44,18 +44,18 @@
    "clip_b": "hit_react",
    "distance_m": 0.6,
    "facing_deg": 180.0,
-   "sync_s": 0.47,
+   "sync_s": 0.76,
    "side_offset_m": 0.0,
-   "note": "contact at 0.92 s (A); B plays hit_react 0.47 s later (its hit at 0.45 s)"
+   "note": "contact at 1.21 s (A); B plays hit_react 0.76 s later (its hit at 0.45 s)"
   },
   "punch": {
    "clip_a": "punch",
    "clip_b": "hit_react",
    "distance_m": 0.7,
    "facing_deg": 180.0,
-   "sync_s": 0.27,
+   "sync_s": 0.74,
    "side_offset_m": 0.0,
-   "note": "contact at 0.72 s (A); B plays hit_react 0.27 s later (its hit at 0.45 s)"
+   "note": "contact at 1.19 s (A); B plays hit_react 0.74 s later (its hit at 0.45 s)"
   },
   "escort": {
    "clip_a": "escort_walk",

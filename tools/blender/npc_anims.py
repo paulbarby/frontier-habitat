@@ -235,7 +235,7 @@ def make_lie():
     _side_lying(P, -0.505, 0.060, -0.232)
     P.update({"spine.ry": 10.0, "chest.ry": 8.0, "spine.rx": 9.0, "chest.rx": 9.0, "neck.ry": 8.0, "neck.rx": -6.0,
               "head.ry": 4.0, "head.rx": -6.0})
-    set_foot(P, "L", (-0.33, 0.0, 0.640), knee_out=0.0)
+    set_foot(P, "L", (-0.33, 0.0, 0.680), knee_out=0.0)             # (2026-10-02: the bottom shin sank 4 cm)
     P["foot.L.y"] = -0.600
     set_foot(P, "R", (-0.29, 0.0, 0.800), knee_out=0.0)
     P["foot.R.y"] = -0.530
@@ -245,10 +245,12 @@ def make_lie():
         P["foot.%s.rp" % s] = 24.0
     # bottom arm in front of the body on the mattress, the hand by the face (2026-10-01, Paul: the arm went through
     # the torso: the elbow now points forward, never under or behind the body); top hand in front of the chest
-    set_arm_ik(P, "L", (-0.250, 0.600, 0.655), (0.25, 1.0, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
-    elbow_to(P, "L", (1.0, 0.15, 0.0))
+    # (2026-10-02: the elbow hung 7-14 cm below the mattress; it now rests ON it, forward of the chest: the pole turns
+    # the elbow towards the hips and a little forward, the hand folds up beside the face)
+    set_arm_ik(P, "L", (-0.270, 0.620, 0.715), (0.25, 1.0, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    elbow_to(P, "L", (0.5, -0.8, -0.25))
     # (set_arm_ik mirrors y for the right side: these values put the right hand at y +0.30, pointing to +Y)
-    set_arm_ik(P, "R", (-0.230, -0.300, 0.640), (0.6, -0.6, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    set_arm_ik(P, "R", (-0.185, -0.300, 0.690), (0.6, -0.6, 0.15), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(P, "R", (0.8, 0.0, 0.4), 1.0)                # the top elbow forward and up, in front of the chest
     return P
 
@@ -428,8 +430,15 @@ def gait_foot(u, F, stride):
     v1 = (foot_stance(h, F, stride)[0] - a1) / h
     dur = 1.0 - st
     ank = Vector([N.hermite(a0[i], a1[i], v0[i] * dur, v1[i] * dur, s) for i in range(3)])
-    k = F.get("lift_skew", 1.0)                         # < 1: the lift peaks early (heel kick of a run)
-    ank.z += F["clear"] * sin(pi * (s ** k)) ** F.get("lift_pow", 0.75)
+    if F.get("lift_ab"):
+        # (2026-10-02, the run: sin(pi s^0.62)^0.9 starts with an infinite slope: a 34 deg/frame shin snap at toe-off)
+        # a beta-shaped lift s^a (1-s)^b, peak 1 at s = a / (a + b): zero slope at toe-off, early peak
+        a_, b_ = F["lift_ab"]
+        pk = a_ / (a_ + b_)
+        ank.z += F["clear"] * (s ** a_) * ((1.0 - s) ** b_) / ((pk ** a_) * ((1.0 - pk) ** b_))
+    else:
+        k = F.get("lift_skew", 1.0)                     # < 1: the lift peaks early (heel kick of a run)
+        ank.z += F["clear"] * sin(pi * (s ** k)) ** F.get("lift_pow", 0.75)
     ank.y = F["y"] + F.get("swing_out", 0.012) * sin(pi * s)
     mid = F.get("swing_pitch", -6.0)
     if s < 0.55:
@@ -618,13 +627,17 @@ def _run_upper(phi, P):
         # 2026-10-01 (Paul: the run holds the arms out): elbows in by the ribs, the hands swing to the hip and to
         # the chest line, slightly across the body
         P["shoulder.%s.rz" % s] = -4.0 * sw * sg
-        P["upper_arm.%s.rx" % s] = -25.0 * sg
-        P["upper_arm.%s.ry" % s] = -10.0 + 34.0 * sw
-        P["upper_arm.%s.rz" % s] = 3.0 * sg
-        P["forearm.%s.ry" % s] = -74.0 - 10.0 * (0.5 - 0.5 * cos(TAU * (q - 0.12)))    # elbows 74-84 deg
-        P["forearm.%s.rz" % s] = 7.0 * sg
-        P["hand.%s.ry" % s] = -12.0
-        P["hand.%s.rx" % s] = 6.0 * sg
+        # 2026-10-02 (strips at the follow camera: the hands were carried ahead of the chest like a tray): the swing
+        # is centred behind the body (34 deg back, 24 deg forward), the elbow closes as the arm comes forward
+        # (80 -> 96 deg) so the hand swings from the hip pocket to the chest line, close to the ribs
+        fwd = 0.5 - 0.5 * cos(TAU * (q - 0.54))                     # 0 arm back .. 1 arm forward (smooth)
+        P["upper_arm.%s.rx" % s] = -27.0 * sg
+        P["upper_arm.%s.ry" % s] = 5.0 + 29.0 * sw
+        P["upper_arm.%s.rz" % s] = 4.0 * sg
+        P["forearm.%s.ry" % s] = -80.0 - 16.0 * fwd
+        P["forearm.%s.rz" % s] = (-32.0 - 20.0 * fwd) * sg           # the hands swing in towards the midline
+        P["hand.%s.ry" % s] = -16.0
+        P["hand.%s.rx" % s] = 8.0 * sg
 
 
 def run_reach(u, s):
@@ -640,7 +653,7 @@ def run_hips(phi):
 RUN = dict(frames=20, stride=2.27, reach=run_reach, smooth=1, flight_h=0.006, hips_curve=run_hips,
            # 2026-10-01 (Paul: the run floats): longer ground contact (40 %), a lower swing
            feet={s: _foot(off, 0.40, 0.255, p_hs=7.0, p_to=40.0, hs_end=0.05, flat_end=0.17, clear=0.24,
-                          lift_skew=0.62, lift_pow=0.9, swing_pitch=4.0, toe_relax=0.45, swing_out=0.018, y=0.095,
+                          lift_ab=(1.25, 2.1), swing_pitch=4.0, toe_relax=0.45, swing_out=0.018, y=0.095,
                           yaw=3.0, to_pow=1.3)
                  for s, off in (("L", 0.0), ("R", 0.5))},
            upper=_run_upper)
@@ -724,15 +737,18 @@ def work_console_base():
     P = Pose(STAND)
     P.update({"hips.x": -0.010, "hips.ry": 4.0, "spine.ry": 6.0, "chest.ry": 4.0, "neck.ry": 12.0, "head.ry": 14.0})
     # fingers on the console top (1.0 m) at 0.40..0.50 m ahead: wrists just above, hands pitched down
-    set_arm_ik(P, "L", (0.345, 0.125, 1.098), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
-    set_arm_ik(P, "R", (0.360, 0.090, 1.098), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    # (2026-10-02: 1 cm lower: the smaller indoor hands hovered 1.8 cm over the console between the key taps)
+    set_arm_ik(P, "L", (0.345, 0.125, 1.088), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
+    set_arm_ik(P, "R", (0.360, 0.090, 1.088), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-55.0)
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
     return P
 
 
 def work_bench_base():
     P = Pose(STAND)
-    P.update({"hips.x": -0.020, "hips.ry": 6.0, "spine.ry": 9.0, "chest.ry": 5.0, "neck.ry": 14.0, "head.ry": 20.0})
+    # 2026-10-02 (Paul's crate shot: the head sank into the shoulders): bend from the hips with a long back; the neck
+    # and head add 22 deg, not 34 (head 41 deg from upright in all, was 54)
+    P.update({"hips.x": -0.045, "hips.ry": 11.0, "spine.ry": 6.0, "chest.ry": 2.0, "neck.ry": 6.0, "head.ry": 16.0})
     for s in ("L", "R"):
         set_foot(P, s, (ANK.x - 0.01, 0.140, ANK.z), yaw=10.0, knee_out=5.0)
     # left hand holds the work on the bench (0.9 m), right hand works it with a tool held at prop.R
@@ -839,8 +855,8 @@ def sit_type_base():
     P = Pose(SIT)
     P.update({"spine.ry": 12.0, "chest.ry": 5.0, "neck.ry": 8.0, "head.ry": 8.0})
     # desk top 0.74 m, keys 0.30..0.40 m ahead
-    set_arm_ik(P, "L", (0.270, 0.125, 0.849), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-45.0)
-    set_arm_ik(P, "R", (0.285, 0.090, 0.849), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-45.0)
+    set_arm_ik(P, "L", (0.270, 0.125, 0.853), (1.0, -0.10, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-45.0)
+    set_arm_ik(P, "R", (0.285, 0.090, 0.853), (1.0, 0.05, -0.40), (0.0, 0.40, -1.0), w=1.0, pole=-45.0)
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
     return P
 
@@ -1002,7 +1018,7 @@ def lie_enter_keys():
     K2 = Pose(K1)
     K2.update({"hips.rx": -32.0, "hips.y": 0.05, "hips.x": -0.33, "hips.z": -0.178, "spine.rx": -10.0, "spine.ry": 4.0,
                "head.rx": 8.0})
-    set_arm_ik(K2, "L", (-0.26, 0.52, 0.63), (0.2, 1.0, -0.1), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
+    set_arm_ik(K2, "L", (-0.26, 0.52, 0.70), (0.2, 1.0, -0.1), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(K2, "L", (-0.3, -0.6, -0.2), 0.6)
     set_arm_ik(K2, "R", (-0.05, 0.10, 0.80), (0.8, 0.4, -0.6), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(K2, "R", (0.2, 0.0, 1.0), 1.0)              # the top elbow up and over, never behind the body
@@ -1017,7 +1033,7 @@ def lie_enter_keys():
         K3["knee.%s.body" % s] = 0.7
         K3["foot.%s.rel" % s] = 0.8
         K3["foot.%s.rp" % s] = 20.0
-    set_arm_ik(K3, "L", (-0.18, 0.62, 0.62), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
+    set_arm_ik(K3, "L", (-0.18, 0.62, 0.69), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
     elbow_to(K3, "L", (0.2, -1.0, 0.0), 0.9)
     set_arm_ik(K3, "R", (-0.22, -0.28, 0.72), (0.6, -0.6, -0.4), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(K3, "R", (0.8, 0.0, 0.5), 1.0)
@@ -1054,7 +1070,7 @@ def lie_exit_keys():
         K2["knee.%s.body" % s] = 0.7
         K2["foot.%s.rel" % s] = 0.8
         K2["foot.%s.rp" % s] = 20.0
-    set_arm_ik(K2, "L", (-0.22, 0.60, 0.63), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
+    set_arm_ik(K2, "L", (-0.22, 0.60, 0.70), (0.3, 1.0, 0.0), (1.0, 0.0, -0.6), w=1.0, pole=0.0)
     elbow_to(K2, "L", (0.1, -1.0, 0.0), 0.8)
     set_arm_ik(K2, "R", (-0.10, 0.10, 0.78), (0.8, 0.4, -0.6), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(K2, "R", (0.2, 0.0, 1.0), 1.0)
@@ -1114,6 +1130,21 @@ def fk_keys(keys):
     return [(k[0], ik_to_fk(Pose(k[1]))) + tuple(k[2:]) for k in keys]
 
 
+def bottom_arm_ik(keys, sides=("L",)):
+    """fk_keys, but the bottom (left) arm stays IK on the keys where it was IK (2026-10-02: in FK the lying hand swung
+    down through the mattress between keys; in IK the wrist moves on a straight line and the hand turns on the shortest
+    path, and the bed guard has only small corrections left).  Keys where that arm was FK stay FK (the stand ends)."""
+    out = fk_keys(keys)
+    res = []
+    for k0, k1 in zip(keys, out):
+        Q = Pose(k1[1])
+        for s in sides:
+            if Pose(k0[1]).g("arm.%s.ik" % s) > 0:
+                Q["arm.%s.ik" % s] = 1.0
+        res.append((k1[0], Q) + tuple(k1[2:]))
+    return res
+
+
 def retime_keys(keys, limit=STEP_LIMIT_SLOW, passes=3, max_scale=2.2):
     """Stretch the key intervals of a one-shot whose bones turn more than `limit` deg in a frame, so every bone
     stays under it (the poses do not change, only their timing)."""
@@ -1148,6 +1179,82 @@ def retime_keys(keys, limit=STEP_LIMIT_SLOW, passes=3, max_scale=2.2):
     return [tuple(k) for k in ks]
 
 
+WORLD_STEP_LIMIT = 14.0      # deg per frame: the npc_verify people rule is < 15 on the WORLD turn of any bone
+
+
+def _lag_of(b):
+    for prefix, lg in LAGS.items():
+        if b.startswith(prefix):
+            return lg
+    return 0.0
+
+
+LOCAL_STEP_LIMIT = 11.0       # deg per frame: a bone's own (local) turn; the bake despike repairs anything over 12
+
+
+def world_steps(fn, n, loop=False):
+    """Per frame f = 1..n: {bone: step ratio} for the body bones (no face, no props): the larger of the WORLD turn
+    since the frame before over WORLD_STEP_LIMIT and the local turn over LOCAL_STEP_LIMIT (1.0 = at the limit)."""
+    S_ = solver()
+    prevD, prevQ = None, None
+    out = []
+    for f in range(n + 1):
+        D, Q, _, _ = S_.solve(fn(f))
+        if prevD is not None:
+            r = {}
+            for b in D:
+                if b == "root" or b.startswith("prop.") or b not in N.BONE_NAMES[:24]:
+                    continue
+                w = 2.0 * degrees(acos(min(1.0, abs(prevD[b].dot(D[b])))))
+                lo = 2.0 * degrees(acos(min(1.0, abs(prevQ[b].dot(Q[b]))))) if b in Q and b in prevQ else 0.0
+                r[b] = max(w / WORLD_STEP_LIMIT, lo / LOCAL_STEP_LIMIT)
+            out.append((f, r))
+        prevD, prevQ = D, Q
+    return out
+
+
+def retime_world(keys, limit=WORLD_STEP_LIMIT, passes=6, max_scale=2.6, loop=False, length=None, pin=()):
+    """Stretch the key intervals of a clip whose bones turn more than WORLD_STEP_LIMIT deg (WORLD turn, the
+    npc_verify people rule) or LOCAL_STEP_LIMIT deg (the bone's own turn, what the bake despike repairs) in one
+    frame, so that every bone stays under both.  The poses do not change, only their timing.
+    keys: [(t, Pose, opts?)] as for keyed_clip.  Loops: `length` is the loop time (the wrap interval stretches too).
+    pin: key indices whose intervals never stretch.  Returns (keys, length) (length None for a one-shot)."""
+    ks = [list(k) for k in keys]
+    ln = length
+    for _ in range(passes):
+        fn, n = keyed_clip([tuple(k) for k in ks], loop=loop, length=ln)
+        ends = [k[0] for k in ks[1:]] + [ln if loop else ks[-1][0] + 1.0]
+        worst = [0.0] * len(ks)
+        for f, st in world_steps(fn, n, loop):
+            t = f / FPS
+            for b, a in st.items():
+                te = t - _lag_of(b)
+                i = 0
+                for j in range(len(ks)):
+                    if ks[j][0] <= te:
+                        i = j
+                if a > worst[i]:
+                    worst[i] = a
+        if max(worst) <= 1.0:
+            break
+        shift = 0.0
+        new = []
+        for j, k in enumerate(ks):
+            if j > 0:
+                dt = ks[j][0] - ks[j - 1][0]
+                sc = 1.0 if (j - 1) in pin else min(max_scale, max(1.0, worst[j - 1] * 1.04))
+                shift += dt * (sc - 1.0)
+            new.append([k[0] + shift] + k[1:])
+        if loop:
+            dt = ln - ks[-1][0]
+            sc = 1.0 if (len(ks) - 1) in pin else min(max_scale, max(1.0, worst[-1] * 1.04))
+            ln = ln + shift + dt * (sc - 1.0)
+        ks = new
+    if loop:
+        ln = round(ln * FPS) / FPS                  # a whole number of frames: the loop seam stays exact
+    return [tuple(k) for k in ks], ln
+
+
 def collapse_keys():
     S0 = Pose(STAND)
     # stagger: head drops, knees give, one step of weight to the left
@@ -1173,7 +1280,7 @@ def collapse_keys():
         K3["knee.%s.body" % s] = 0.6
     set_foot(K3, "L", (-0.30, 0.0, 0.22), toe=-45.0, knee_out=0.0)
     K3["foot.L.y"] = -0.35
-    set_foot(K3, "R", (-0.25, 0.0, 0.32), toe=-45.0, knee_out=0.0)
+    set_foot(K3, "R", (-0.20, 0.0, 0.42), toe=-45.0, knee_out=0.0)      # the top leg well above the bottom one
     K3["foot.R.y"] = -0.30
     for s in ("L", "R"):
         K3["foot.%s.rel" % s] = 0.7
@@ -1583,6 +1690,18 @@ POSE_STATE_REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep"
                    "vehicle": ("ride_sit", 0)}
 
 
+def on_bed(fn, z=None):
+    """The bed guard (Solver._bed_guard) for a clip on the mattress: elbows and hands stay on top of it."""
+    bz = FURNITURE["bed_z"] if z is None else z
+    bb = FURNITURE["bed_back"]
+
+    def g(f):
+        P = Pose(fn(f))
+        P["bed.z"], P["bed.x0"], P["bed.x1"] = bz, -bb - 0.45, -bb + 0.45
+        return P
+    return g
+
+
 def all_clips():
     """[(name, kind, pose_from, pose_to, loop, frames, fn, extra metadata)] - every clip of section 3.3."""
     out = []
@@ -1629,12 +1748,12 @@ def all_clips():
     out.append(("sit_type", "loop", "sit", "sit", True, 120, typing(sit_type_base(), 120), {}))
     fn, n = keyed_clip(sit_exit_keys())
     out.append(("sit_exit", "exit", "sit", "stand", False, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(fk_keys(lie_enter_keys())))
-    out.append(("lie_enter", "enter", "stand", "lie", False, n, fn, {}))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_enter_keys())))
+    out.append(("lie_enter", "enter", "stand", "lie", False, n, on_bed(fn), {}))
     fn, n = sleep_fn()
-    out.append(("sleep", "loop", "lie", "lie", True, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(fk_keys(lie_exit_keys())))
-    out.append(("lie_exit", "exit", "lie", "stand", False, n, fn, {}))
+    out.append(("sleep", "loop", "lie", "lie", True, n, on_bed(fn), {}))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_exit_keys())))
+    out.append(("lie_exit", "exit", "lie", "stand", False, n, on_bed(fn), {}))
     gait("injured_walk", INJURED)
     fn, n = keyed_clip(collapse_keys())
     out.append(("collapse", "oneshot", "stand", "lie", False, n, fn, dict(ends_on="dead")))

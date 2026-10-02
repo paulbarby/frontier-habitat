@@ -265,7 +265,10 @@ def write_door_blocked(rows):
                rule="a doorway at a blocked angle has no 0.9 m lane from the door housing to the aisle ring",
                angles="model angle in degrees, 0 = model +X, counter-clockwise seen from above "
                       "(docs/requests/ART-HAB-to-RENDER.md P3)", rooms=old)
-    for out_path in (DOOR_BLOCKED_CONTENT, DOOR_BLOCKED):       # the sim's copy and the docs copy: never apart
+    outs = (DOOR_BLOCKED_CONTENT, DOOR_BLOCKED)                 # the sim's copy and the docs copy: never apart
+    if os.environ.get("FH_DOOR_OUT"):                           # parallel builds write a scratch file each; merged after
+        outs = (os.environ["FH_DOOR_OUT"],)
+    for out_path in outs:
         with open(out_path, "w", encoding="utf-8") as fh:
             json.dump(doc, fh, indent=1, sort_keys=True)
 
@@ -344,6 +347,8 @@ def build_one(job):
     rm.variant = job.get("variant")
     rm.tray_scale = tray_scale(job)
     built_v3 = False
+    import interior_props as _PR0
+    _PR0.reset_used()                      # 5.0: the prop kit records what this room used (build report, style check)
     if job["tid"] in V3_BUILDERS and "--v2" not in sys.argv:
         try:
             V3_BUILDERS[job["tid"]](rm)
@@ -368,6 +373,19 @@ def build_one(job):
         if bdef.get("floors", 1) > 1:
             budget = 60000 * int(bdef["floors"])        # 5.0 multi-storey (XXL apartment block)
     flags += getattr(rm, "floor_flags", [])
+    flags += getattr(rm, "piece_flags", [])         # 5.0 wall piece depth rule (interior_kit.Plan.check_piece)
+    prop_use = {}
+    if rm.v3 and job["tid"] != "corridor":
+        import interior_props as _PR
+        import interior_roles as _RO
+        prop_use = dict(_PR.USED)
+        # 5.0 (V5 15.3): every room type carries the styled props: at least 4 kinds, one of them satire / a joke sign
+        import interior_roles_decor as _RD
+        satire = _RO.SATIRE | _PR.SATIRE | _RD.SATIRE_DECOR
+        if len(prop_use) < (1 if job["file"] == "airlock_r28" else 4) or not (set(prop_use) & satire):
+            flags.append("V5 15.3 style: only %d prop kinds (%s), satire %s" %
+                         (len(prop_use), sorted(prop_use), sorted(set(prop_use) & satire)))
+        budget = max(budget, int(V3_BUDGET[job["size"]] * 1.8))      # 5.0: the interior budget of every room type
     if job["tid"] == "corridor":
         budget = 1200
     if tris > budget:
@@ -460,6 +478,7 @@ def build_one(job):
         if want_t != got_t:
             flags.append("trays %s != content %s" % (got_t, want_t))
     row = dict(id=job["file"], type=job["tid"], size=job["key"] or "-", footprint=job["R"], tris=tris, budget=budget,
+               props=prop_use, props_tris=(dict(_PR.USED_TRIS) if prop_use else {}),
                tris_by_object={n: s["tris"] for n, s in stats.items()}, bbox_min=[round(v, 3) for v in lo],
                bbox_max=[round(v, 3) for v in hi], max_radius=round(radius, 3), margin=round(job["R"] - radius, 3),
                anchors=[a[0] for a in rm.anchors], materials=info["materials"], file_size=os.path.getsize(path),

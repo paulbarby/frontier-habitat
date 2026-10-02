@@ -363,11 +363,18 @@ def wall_art(c, u, v, yl, w=0.9, seed=0):
     """A framed picture on a partition face: (u, v) on the wall centre line, yl = the direction it faces."""
     n = c.plan.n
     rng = random.Random(seed)
-    if seed % 2 == 0:
-        import interior_props as PR      # 5.0 (V5 15.3): original parody posters
+    if seed % 4 == 3:
+        import interior_roles as RO      # 5.0 (V5 15.3): a family wall of photographs and a child's drawing
         with c.at(u, v, yl):
             with n.at(T(0.048, 0.0, 0.0)):
-                PR.poster(n, w=min(0.68, w), kind=("ai", "film", "band")[(seed // 2) % 3], seed=seed // 2, off=0.0)
+                RO.photos(n, min(0.84, w), 0.0, seed)
+        return
+    if seed % 2 == 0:
+        import interior_props as PR      # 5.0 (V5 15.3): original parody posters
+        kinds = ("ai", "film", "band", "captcha", "travel", "wellness", "cat")
+        with c.at(u, v, yl):
+            with n.at(T(0.048, 0.0, 0.0)):
+                PR.poster(n, w=min(0.68, w), kind=kinds[(seed // 2) % len(kinds)], seed=seed // 2, off=0.0)
         return
     with c.at(u, v, yl):
         bbox(n, 0.048, 0.072, -w / 2, w / 2, F + 0.70, F + 1.22, "Frame")

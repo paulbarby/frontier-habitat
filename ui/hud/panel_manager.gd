@@ -43,7 +43,7 @@ const PRIO_COL := {"info": Color("3EE0FF"), "notice": Color("9FB3C8"), "warning"
 const MAX_POPS := 3
 const FEED_MAX := 40
 const BODY_KEEP := 200.0     # the dock body keeps this much room: pop-ups fold into News first
-const NAMES_W := 320.0       # a dock this wide shows the tab names, a narrower one icon + count
+const NAMES_W := 340.0       # a dock this wide shows the tab names (3 columns, 2 rows), a narrower one icon + count
 
 var hud
 var tab := "goals"
@@ -118,25 +118,35 @@ func _ready() -> void:
 	_col.add_child(_dock)
 	var dv: VBoxContainer = Kit.vbox(6)
 	_dock.add_child(dv)
+	# The dock controls sit on a slim row of their own, so the tab grid has the whole width (2026-10-02: beside
+	# the controls the named tabs fitted in one column, six rows, and squeezed the body to 67 px at 1366x768).
 	var head: HBoxContainer = Kit.hbox(4)
+	head.alignment = BoxContainer.ALIGNMENT_END
+	head.name = "DockControls"
 	dv.add_child(head)
 	_tabbar = GridContainer.new()
 	_tabbar.columns = 6
 	_tabbar.add_theme_constant_override("h_separation", 2)
 	_tabbar.add_theme_constant_override("v_separation", 2)
 	_tabbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(_tabbar)
+	dv.add_child(_tabbar)
 	for t in TABS:
 		var id: String = t[0]
 		var b: Button = Kit.button("", func(): open_tab(id, true), "%s\n%s" % [t[1], _tab_tip(id)], "TabButton", String(t[2]), 14)
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(0, 30)
 		b.set_meta("tab", id)
+		b.set_meta("icon", b.icon)
 		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_constant_override("h_separation", 3)
 		_tabbar.add_child(b)
 		_tab_btn[id] = b
 	var ctl: HBoxContainer = Kit.hbox(0)
 	ctl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var dock_title: Label = Kit.label("DOCK", "SmallLabel", 11, P.TEXT_3)
+	dock_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dock_title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(dock_title)
 	head.add_child(ctl)
 	_mute = _ib("volume", func(): _toggle_mute(), "", "GhostButton", 14, 26)
 	ctl.add_child(_mute)
@@ -543,16 +553,38 @@ func urgent() -> Dictionary:
 			return {"text": String(i["issue"]["text"]), "tab": "alerts", "priority": "critical", "icon": "sev_critical"}
 	return {}
 
+## The tab buttons with narrow side margins (the theme's 12 px each side made a named tab 122 px wide, so
+## only two fitted in a row).
+var names_shown := false     # the tabs show their names (read by tests)
+var _tabs_tight := false
+func _tighten_tabs() -> void:
+	_tabs_tight = true
+	for b in _tab_btn.values():
+		for state in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
+			var st: StyleBox = (b as Button).get_theme_stylebox(state)
+			if st == null:
+				continue
+			var d: StyleBox = st.duplicate()
+			d.content_margin_left = 5.0
+			d.content_margin_right = 5.0
+			(b as Button).add_theme_stylebox_override(state, d)
+
 # ---------------------------------------------------------------- each frame: the one placement
 func _process(delta: float) -> void:
 	if hud == null:
 		return
+	if not _tabs_tight and is_inside_tree():
+		_tighten_tabs()
 	var vp: Vector2 = get_viewport_rect().size
 	# Width: a quarter of the view less 16 px (300-380); never into the centre zone (docs/UI_PANELS.md §2).
 	_width = clampf(floorf(vp.x * 0.25 - 16.0), 260.0, 380.0)
 	var top: float = 76.0
 	if hud.top_bar != null and hud.top_bar.visible:
 		top = hud.top_bar.get_global_rect().end.y + 8.0
+	# The follow card holds the top left (2026-10-02: the dock and the urgent line lay under it and showed through):
+	# the column starts under the card.
+	if hud.follow_hud != null and hud.follow_hud.visible:
+		top = maxf(top, hud.follow_hud.get_global_rect().end.y + 8.0)
 	var floor_y: float = vp.y - 8.0
 	if hud.minimap != null and hud.minimap.visible:
 		floor_y = hud.minimap.get_global_rect().position.y - 8.0
@@ -607,13 +639,18 @@ func _process(delta: float) -> void:
 			st.accent_left = col
 		_flash_tab(String(urgent_now["tab"]), String(urgent_now["text"]).left(24))
 	# Tabs: label = count badge; colour = the most urgent item.
+	# Names (no icon, a little smaller) from NAMES_W: three tabs fit a row, so the tabs take two rows. Narrower:
+	# icon + count.
+	var named: bool = _width >= NAMES_W
+	names_shown = named
 	for t in TABS:
 		var id: String = t[0]
 		var s: Dictionary = tab_state(id)
 		var b: Button = _tab_btn[id]
 		var n: int = int(s["count"])
-		var named: bool = _width >= NAMES_W
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.icon = null if named else (b.get_meta("icon") as Texture2D)
+		b.add_theme_font_size_override("font_size", 11 if named else 12)
 		b.text = ("%s%s" % [t[1], (" %d" % n) if n > 0 else ""]) if named else (("%d" % n) if n > 0 else "")
 		b.add_theme_color_override("font_color", PRIO_COL.get(String(s["priority"]), P.TEXT_2) if n > 0 else P.TEXT_2)
 		b.add_theme_color_override("icon_normal_color", PRIO_COL.get(String(s["priority"]), P.TEXT_2) if n > 0 and String(s["priority"]) != "info" else P.TEXT_2)
@@ -622,8 +659,12 @@ func _process(delta: float) -> void:
 	var bw := 0.0
 	for b2 in _tab_btn.values():
 		bw = maxf(bw, (b2 as Control).get_combined_minimum_size().x)
-	var avail: float = _width - 16.0 - (_mute.get_parent() as Control).get_combined_minimum_size().x - 4.0
+	var avail: float = _width - 16.0
 	var cols: int = clampi(int(floorf((avail + 2.0) / (bw + 2.0))), 1, TABS.size())
+	if names_shown and cols > 3:
+		cols = 3   # named tabs: 3 by 2, even rows
+	elif cols > 3 and cols < TABS.size():
+		cols = 3 if TABS.size() % 3 == 0 and cols < 6 else cols
 	if _tabbar.columns != cols:
 		_tabbar.columns = cols
 	if tab == "news" and _body.is_visible_in_tree():
