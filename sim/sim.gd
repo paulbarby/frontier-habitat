@@ -65,6 +65,8 @@ const Leisure = preload("res://sim/leisure.gd")
 const Families = preload("res://sim/families.gd")
 const Rag = preload("res://sim/rag.gd")
 const Eggs = preload("res://sim/eggs.gd")
+const Party = preload("res://sim/party.gd")
+const HR = preload("res://sim/hr.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -118,6 +120,8 @@ var leisure
 var families
 var rag
 var eggs
+var party
+var hr
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -172,11 +176,13 @@ func _init() -> void:
 	families = Families.new(self)
 	rag = Rag.new(self)
 	eggs = Eggs.new(self)
+	party = Party.new(self)
+	hr = HR.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations, security, leisure, families, rag, eggs]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations, security, leisure, families, rag, eggs, party, hr]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -218,7 +224,7 @@ func new_game(seed_value: int, scenario_id: String = "tutorial", options: Dictio
 		"rev": {"walk": 0, "power": 0, "atmo": 0},
 		"lander_id": -1, "names_used": 0,
 		"options": {"planet": planet_id, "difficulty": diff, "spoilage": spoil, "storms": bool(options.get("storms", true)),
-			"hazards": _hazard_setting(options), "debug": bool(options.get("debug", false))},
+			"hazards": _hazard_setting(options), "debug": bool(options.get("debug", false)), "cheeky": bool(options.get("cheeky", true))},
 		"hazards": Hazards.fresh_state(),
 		"traffic": Traffic.fresh_state(),
 		"bases": Bases.fresh_state(),
@@ -504,6 +510,9 @@ func log_event(code: String, text: String, entities: Array, sev: int = 1, extra:
 	# V5: social events also go to the social log (the Rag's source; sim/rag.gd).
 	if rag != null:
 		rag.from_log(code, text, entities, extra)
+	# V5 section 16: some entries are a reason to celebrate (party.gd).
+	if party != null:
+		party.on_log(code, text, entities, extra)
 	var cap: int = int(bal["log_max_entries"])
 	while log.size() > cap:
 		log.pop_front()
@@ -545,6 +554,8 @@ func step() -> void:
 	if phase == _phase_of(2, hz):
 		vehicles.tick_second()
 		reactors.tick_second()
+		party.tick_second()
+		hr.tick_second()
 	if phase == _phase_of(3, hz):
 		explore.tick_second()
 		ship.tick_second()

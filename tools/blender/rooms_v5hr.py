@@ -35,17 +35,19 @@ def build_hr_office(rm):
     ro.sphere((cx, cy, D + 2.10), 0.30, "PlantDark", seg=7, rings=4)
     # the roof sign over the deck, facing the game camera (-Y), lit, two-sided
     sx, sy = 0.15 * Rw, -0.30 * Rw
-    w = 2.6 + 0.4 * s
+    w = 3.4 + 0.6 * s
     for dx in (-w / 2 + 0.2, w / 2 - 0.2):
         ro.vcyl(sx + dx, sy, D + 0.02, D + 1.1, 0.05, seg=6, mat="Frame")
     with rm.porch.at(T(sx, sy, 0.0), RZ(-90.0)):
-        rm.porch.box((0.0, 0.0, D + 1.32), (0.10, w, 0.50), "Frame", mats={"+x": "Fabric", "-x": "Fabric"})
+        rm.porch.box((0.0, 0.0, D + 1.45), (0.10, w, 0.75), "Frame", mats={"+x": "Fabric", "-x": "Fabric"})
         for rot in (0.0, 180.0):
             with rm.porch.at(RZ(rot)):
-                h = PR.fit_h(["WE ARE LISTENING*"], w - 0.3, 0.24)
-                PR.text(rm.porch, "WE ARE LISTENING*", 0.0, D + 1.36, h, "Light", x=0.052)
-                PR.text(rm.porch, "*TO MUSIC", 0.0, D + 1.13, 0.06, "Hull", x=0.052)
+                h = PR.fit_h(["WE ARE LISTENING*"], w - 0.3, 0.34)
+                PR.text(rm.porch, "WE ARE LISTENING*", 0.0, D + 1.55, h, "Light", x=0.052)
+                PR.text(rm.porch, "*TO MUSIC", 0.0, D + 1.20, 0.09, "Hull", x=0.052)
     rm.top_z = max(rm.top_z, D + 2.45)
+    for dx in (-w / 2 + 0.2, w / 2 - 0.2):                     # the sign's posts reach its lower edge
+        ro.vcyl(sx + dx, sy, D + 1.08, D + 1.10, 0.06, seg=6, mat="Frame")
     CIV._glow_ring(rm, D - 0.30, mat="Window")
     rm.no_extras = True
 

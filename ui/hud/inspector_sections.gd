@@ -217,6 +217,8 @@ func building(b: Dictionary) -> void:
 		tabs.append(["satellite", "Satellite"])
 	if _has_venues(b) and b["state"] == "active":
 		tabs.append(["venues", "Venues"])
+	if _can_party(b) and b["state"] == "active":
+		tabs.append(["party", "Party"])
 	tabs.append(["stats", "Stats"])
 	insp.add_tabs(tabs)
 	match insp.tab:
@@ -229,6 +231,7 @@ func building(b: Dictionary) -> void:
 		"vehicles": _depot(b)
 		"satellite": _pad(b)
 		"venues": _venues(b)
+		"party": _party(b)
 		"storage": _storage(b)
 		_: _overview(b, def)
 	if insp.tab != "storage" and not store_first and b["state"] == "active" and insp.tab in ["", "overview"]:
@@ -1492,6 +1495,93 @@ func _nutrition(a: Dictionary) -> void:
 func _has_venues(b: Dictionary) -> bool:
 	var l = _sim().get("leisure")
 	return l != null and (l as Object).has_method("venues") and not (_sim().bdef(String(b["def"])).get("venues", []) as Array).is_empty()
+
+# ---------------------------------------------------------------- parties (version 5, V5 section 16; sim/party.gd)
+## A cantina, a lounge, a park and the super dome can hold a party (sim.party.cfg()["venue_defs"]).
+func _can_party(b: Dictionary) -> bool:
+	var pt = _sim().get("party")
+	return pt != null and (pt as Object).has_method("venues") and (pt.cfg().get("venue_defs", []) as Array).has(String(b["def"]))
+
+## The Party tab: throw a party here (hours, the cost, the guests), the party now (phase, time left, score, the
+## last drama) and the offers that name this place. Answers go through command throw_party (SIM).
+func _party(b: Dictionary) -> void:
+	var id: int = int(b["id"])
+	var pt = _sim().get("party")
+	var sec: VBoxContainer = _section("Party", "music", Color("F472B6"))
+	sec.name = "Party"
+	sec.add_child(Kit.wrap("A party needs power and air in this place. It uses drinks, snacks or rations from the stock of the base: 1 unit for every 2 guests. Friends of the honoured person come first, then others who are off duty. They dance and talk. Satisfaction rises. Something may go wrong.", 12, P.TEXT_2))
+	var info: Label = Kit.wrap("", 12, P.TEXT)
+	info.name = "PartyInfo"
+	sec.add_child(info)
+	var h: HBoxContainer = Kit.hbox(8)
+	sec.add_child(h)
+	var hours := OptionButton.new()
+	hours.name = "PartyHours"
+	hours.focus_mode = Control.FOCUS_NONE
+	hours.add_theme_font_size_override("font_size", 12)
+	hours.tooltip_text = "How long\nOne party hour is 60 seconds. The cost is the same for 1, 2 or 3 hours."
+	for hh in [1, 2, 3]:
+		hours.add_item("%d hour%s" % [hh, "" if hh == 1 else "s"])
+		hours.set_item_metadata(hours.item_count - 1, hh)
+	hours.select(1)
+	h.add_child(hours)
+	var go: Button = Kit.button("Throw a party", func():
+		var res: Dictionary = _hud().v5.command("throw_party", {"building": id, "hours": int(hours.get_item_metadata(hours.selected))})
+		insp.last_party = res
+		_hud().toast(String(res.get("text", "")), "good" if bool(res.get("ok", false)) else "warn", "music", "party"), "Throw a party\nGuests gather here. It costs drinks, snacks or rations from the base stock.", "PrimaryButton", "music", 13)
+	go.name = "ThrowParty"
+	h.add_child(go)
+	# The rest follows the simulation: the cost, the party now, the offers that name this place.
+	var box: VBoxContainer = Kit.vbox(4)
+	box.name = "PartyBox"
+	sec.add_child(box)
+	var sig := [""]
+	var fill := func():
+		var bb: Dictionary = _sim().state["buildings"].get(id, {})
+		if bb.is_empty():
+			return
+		var base: int = int(_sim().bases.base_of(id)) if _sim().bases.count() > 1 else -1
+		var row_v: Dictionary = {}
+		for r in pt.venues(base):
+			if int(r["building"]) == id:
+				row_v = r
+		if row_v.is_empty():
+			info.text = "This place cannot hold a party now: it needs power and air."
+			info.add_theme_color_override("font_color", P.AMBER)
+		else:
+			info.text = "Up to %d guests. About %d units of drinks, snacks or rations. Quality %d." % [int(row_v["cap"]), pt.party_cost(int(row_v["cap"])), int(row_v["quality"])]
+			info.add_theme_color_override("font_color", P.TEXT)
+		go.disabled = row_v.is_empty()
+		var parts: Array = []
+		for r in pt.parties():
+			if int(r["building"]) == id:
+				parts.append(r)
+		var offers: Array = []
+		for o in pt.offers():
+			for c in o.get("place_choices", []):
+				if int(c["building"]) == id:
+					offers.append(o)
+					break
+		var sg: String = str(parts) + str(offers)
+		if sg == sig[0]:
+			return
+		sig[0] = sg
+		Kit.clear(box)
+		for r in parts:
+			var pl: VBoxContainer = Kit.vbox(2)
+			pl.name = "PartyNow"
+			box.add_child(pl)
+			pl.add_child(Kit.head("%s  ·  %s" % [String(r["phase"]).to_upper(), String(r["reason"].get("text", "")).left(48)], P.AMBER, 11))
+			var sc: Dictionary = r["score"]
+			pl.add_child(Kit.label("%d guests  ·  fun %d  ·  attendance %d  ·  drama %d" % [(r["guests"] as Array).size(), int(sc.get("fun", 0)), int(sc.get("attendance", 0)), int(sc.get("drama", 0))], "SmallLabel", 12, P.TEXT_2))
+			for d in r["drama"]:
+				pl.add_child(Kit.wrap(("DRAMA: " if bool(d.get("big", false)) else "") + String(d.get("text", "")), 12, P.RED if bool(d.get("big", false)) else P.TEXT_2))
+		for o in offers:
+			var ol: Label = Kit.wrap("An offer waits in the Requests tab: %s" % String(o.get("text", "")), 12, P.GOLD)
+			ol.name = "PartyOffer"
+			box.add_child(ol)
+	fill.call()
+	insp.bind(fill)
 
 func _dome_stage(b: Dictionary) -> Dictionary:
 	var l = _sim().get("leisure")

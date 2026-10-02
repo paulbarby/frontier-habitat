@@ -5,6 +5,7 @@ extends RefCounted
 ## Direct field writes are TEST SET-UP only and are marked as such.
 
 const H = preload("res://tests/helpers.gd")
+const Pacer = preload("res://tests/pacer.gd")
 const WorldGen = preload("res://sim/world_gen.gd")
 const Reference = preload("res://sim/reference.gd")
 const Persistence = preload("res://sim/persistence.gd")
@@ -1686,25 +1687,26 @@ func long_v4_perf(t) -> void:
 				n += 1
 		return n
 	var wins: Array = []
-	var cal: Array = []
+	var raw_w: Array = []
+	var pc = Pacer.new(true)
+	pc.start()
 	var driving := 0
 	var low := 999
 	for w in 3:
 		H.fill_utilities(sim, 1.0, 0.8, true)                                            # test set-up: air for 100
-		cal.append(H.calib_ms())
-		var t0: int = Time.get_ticks_usec()
 		for s in 10:
+			var t0: int = Time.get_ticks_usec()
 			g.run(100)
 			driving += drive.call()
+			var el: float = float(Time.get_ticks_usec() - t0) / 1000.0
 			if s == 5:
 				H.fill_utilities(sim, 1.0, 0.8, true)
-		wins.append(float(Time.get_ticks_usec() - t0) / 1000.0 / 1000.0)
+			pc.block(el, 100)
+		wins.append(pc.per_tick(w * 10, w * 10 + 10))
+		raw_w.append(pc.raw_per_tick(w * 10, w * 10 + 10))
 		low = mini(low, sim.alive_count())
-	cal.append(H.calib_ms())
-	var factor: float = H.calib_factor(cal)
-	var raw_w: Array = wins.duplicate()
-	for i in wins.size():
-		wins[i] = float(wins[i]) * factor
+	var factor: float = pc.mean_factor()
+	var cal: String = pc.reading_text()
 	var causes := {}
 	for aid in sim.state["agents"]:
 		var ag: Dictionary = sim.state["agents"][aid]
@@ -1714,6 +1716,15 @@ func long_v4_perf(t) -> void:
 	for vid in legs:
 		vst.append("%s:%s" % [sim.vehicles.get_v(vid)["kind"], sim.vehicles.get_v(vid)["block"]])
 	t.note("deaths %s, vehicles %s" % [str(causes), str(vst)])
+	var vlog: Array = []
+	for e in sim.state["log"]:
+		if ["death", "vehicle_broken", "vehicle_stopped", "vehicle_needs", "hazard_impact"].has(String(e["code"])):
+			vlog.append("%d %s: %s" % [int(e["tick"]), String(e["code"]), String(e["text"]).substr(0, 80)])
+	t.note("log: %s" % str(vlog.slice(maxi(0, vlog.size() - 8))))
+	for aid in sim.state["agents"]:
+		var dg: Dictionary = sim.state["agents"][aid]
+		if dg["state"] == "dead":
+			t.note("dead: %s %s cause %s where %s bld %s fatigue %.0f bed %s plan %s kind %s" % [dg["name"], dg["role"], dg["cause"], dg["where"], str(dg["bld"]), float(dg["fatigue"]), str(dg["bed"]), str(dg["plan_kind"]), str(dg.get("kind", ""))])
 	var un: Dictionary = sim.unrest.info(-1)
 	t.note("unrest %.1f %s (target %.1f)" % [float(un["value"]), un["stage"], float(un["target"])])
 	var sorted_w: Array = wins.duplicate()
@@ -1721,9 +1732,9 @@ func long_v4_perf(t) -> void:
 	var ms: float = float(sorted_w[1])
 	t.check(low >= 95, "95 or more colonists while it is measured (%d)" % low)
 	t.check(float(driving) / 30.0 >= 5.0, "5 or more vehicles driving on average (%.1f)" % (float(driving) / 30.0))
-	t.check(ms <= 2.5, "a tick takes at most 2.5 ms (scaled median %.3f ms of %s; raw %s, calibration %s ms, factor %.3f)" % [ms, str(wins), str(raw_w), str(cal), factor])
+	t.check(ms <= 2.5, "a tick takes at most 2.5 ms (scaled median %.3f ms of %s; raw %s, calibration %s, mean factor %.3f)" % [ms, str(wins), str(raw_w), cal, factor])
 	t.eq(sim.inv.audit(), {}, "ledger")
-	t.note("%.3f ms per tick scaled (windows %.3f / %.3f / %.3f; raw %.3f / %.3f / %.3f; calibration %.1f / %.1f / %.1f / %.1f ms, factor %.3f), %d colonists, %d structures, 6 vehicles, fog %.0f %% (%s)" % [ms, wins[0], wins[1], wins[2], raw_w[0], raw_w[1], raw_w[2], cal[0], cal[1], cal[2], cal[3], factor,
+	t.note("%.3f ms per tick scaled (windows %.3f / %.3f / %.3f; raw %.3f / %.3f / %.3f; calibration %s, mean factor %.3f), %d colonists, %d structures, 6 vehicles, fog %.0f %% (%s)" % [ms, wins[0], wins[1], wins[2], raw_w[0], raw_w[1], raw_w[2], cal, factor,
 		sim.alive_count(), sim.state["buildings"].size(), sim.explore.explored_share() * 100.0, OS.get_processor_name()])
 	g.dispose()
 	t.done()

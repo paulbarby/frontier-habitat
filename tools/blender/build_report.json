@@ -7,10 +7,9 @@
    "type": "habitat",
    "size": "s",
    "footprint": 6.0,
-   "tris": 15562,
+   "tris": 15498,
    "budget": 19900,
    "props": {
-    "table_clutter": 1,
     "r_motto": 1,
     "poster": 11,
     "r_photos": 1,
@@ -55,7 +54,7 @@
    "tris_by_object": {
     "Base": 1216,
     "Roof": 1496,
-    "Interior": 4038,
+    "Interior": 3974,
     "Upper_00_Band": 18,
     "Upper_01_Band": 10,
     "Upper_02_Band": 18,
@@ -209,12 +208,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1201872,
+   "file_size": 1197456,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.2,
-   "ao_rays": 1543296,
+   "seconds": 4.4,
+   "ao_rays": 1537248,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -738,7 +737,7 @@
       4
      ],
      "Interior": [
-      17,
+      14,
       5
      ],
      "RoofCeil": [
@@ -798,7 +797,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 15562,
+    "tris": 15498,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -972,10 +971,9 @@
    "type": "habitat",
    "size": "m",
    "footprint": 8.25,
-   "tris": 25230,
+   "tris": 25166,
    "budget": 29600,
    "props": {
-    "table_clutter": 1,
     "poster": 10,
     "r_motto": 1,
     "r_photos": 1,
@@ -1024,7 +1022,7 @@
    "tris_by_object": {
     "Base": 1876,
     "Roof": 2300,
-    "Interior": 10049,
+    "Interior": 9985,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
     "Upper_02_Band": 22,
@@ -1177,12 +1175,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1873512,
+   "file_size": 1869088,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
-   "ao_rays": 2510016,
+   "seconds": 6.4,
+   "ao_rays": 2503968,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -1682,7 +1680,7 @@
       4
      ],
      "Interior": [
-      21,
+      18,
       8
      ],
      "Tall_00": [
@@ -1787,7 +1785,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 25230,
+    "tris": 25166,
     "rmax": 8.150000159761316,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -1970,10 +1968,9 @@
    "type": "habitat",
    "size": "l",
    "footprint": 10.5,
-   "tris": 34427,
+   "tris": 34363,
    "budget": 42800,
    "props": {
-    "table_clutter": 1,
     "r_motto": 1,
     "poster": 8,
     "r_photos": 1,
@@ -2024,7 +2021,7 @@
    "tris_by_object": {
     "Base": 2208,
     "Roof": 3812,
-    "Interior": 14848,
+    "Interior": 14784,
     "L2": 60,
     "L3": 118,
     "L4": 330,
@@ -2285,12 +2282,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2496160,
+   "file_size": 2491744,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.7,
-   "ao_rays": 3411216,
+   "seconds": 13.1,
+   "ao_rays": 3405168,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -3106,7 +3103,7 @@
       6
      ],
      "Interior": [
-      20,
+      18,
       8
      ],
      "L2": [
@@ -3275,7 +3272,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 34427,
+    "tris": 34363,
     "rmax": 10.400000427085947,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -3573,10 +3570,9 @@
    "type": "habitat",
    "size": "xl",
    "footprint": 12.75,
-   "tris": 44532,
+   "tris": 44344,
    "budget": 57800,
    "props": {
-    "table_clutter": 2,
     "r_motto": 1,
     "poster": 7,
     "r_photos": 2,
@@ -3626,7 +3622,7 @@
    "tris_by_object": {
     "Base": 2720,
     "Roof": 4108,
-    "Interior": 22553,
+    "Interior": 22365,
     "L2": 220,
     "L3": 118,
     "L4": 332,
@@ -3923,12 +3919,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 3208908,
+   "file_size": 3196484,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.9,
-   "ao_rays": 4424064,
+   "seconds": 17.6,
+   "ao_rays": 4405344,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -5059,7 +5055,7 @@
       6
      ],
      "Interior": [
-      21,
+      19,
       8
      ],
      "L2": [
@@ -5252,7 +5248,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 44532,
+    "tris": 44344,
     "rmax": 12.650000324004141,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -5818,7 +5814,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.5,
+   "seconds": 5.0,
    "ao_rays": 1275936,
    "trays": [
     [
@@ -6761,7 +6757,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.3,
+   "seconds": 8.0,
    "ao_rays": 1882656,
    "trays": [
     [
@@ -7962,7 +7958,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.0,
+   "seconds": 11.3,
    "ao_rays": 2255328,
    "trays": [
     [
@@ -9611,7 +9607,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.0,
+   "seconds": 16.6,
    "ao_rays": 2757504,
    "trays": [
     [
@@ -10984,7 +10980,7 @@
    "type": "kitchen",
    "size": "s",
    "footprint": 5.4,
-   "tris": 16414,
+   "tris": 16330,
    "budget": 19900,
    "props": {
     "table_clutter": 2,
@@ -11029,7 +11025,7 @@
    "tris_by_object": {
     "Base": 288,
     "Roof": 2429,
-    "Interior": 3724,
+    "Interior": 3640,
     "L2": 60,
     "L3": 118,
     "L4": 88,
@@ -11272,12 +11268,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1373796,
+   "file_size": 1368524,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.4,
-   "ao_rays": 1624992,
+   "seconds": 7.0,
+   "ao_rays": 1616064,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -11618,7 +11614,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 16414,
+    "tris": 16330,
     "rmax": 5.300000233301922,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -11878,7 +11874,7 @@
    "type": "kitchen",
    "size": "m",
    "footprint": 6.9,
-   "tris": 22897,
+   "tris": 22801,
    "budget": 29600,
    "props": {
     "table_clutter": 3,
@@ -11927,7 +11923,7 @@
    "tris_by_object": {
     "Base": 376,
     "Roof": 3011,
-    "Interior": 6643,
+    "Interior": 6547,
     "L2": 60,
     "L3": 118,
     "L4": 228,
@@ -12202,12 +12198,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1828776,
+   "file_size": 1822648,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.6,
-   "ao_rays": 2273520,
+   "seconds": 10.1,
+   "ao_rays": 2263440,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -12683,7 +12679,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 22897,
+    "tris": 22801,
     "rmax": 6.8000001982082345,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -12975,7 +12971,7 @@
    "type": "kitchen",
    "size": "l",
    "footprint": 9.0,
-   "tris": 30069,
+   "tris": 29889,
    "budget": 42800,
    "props": {
     "table_clutter": 4,
@@ -13026,7 +13022,7 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 3972,
-    "Interior": 11335,
+    "Interior": 11155,
     "L2": 220,
     "L3": 118,
     "L4": 228,
@@ -13315,12 +13311,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2289208,
+   "file_size": 2278624,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.4,
-   "ao_rays": 2984496,
+   "seconds": 14.0,
+   "ao_rays": 2966928,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -13914,7 +13910,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 30069,
+    "tris": 29889,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -14220,7 +14216,7 @@
    "type": "kitchen",
    "size": "xl",
    "footprint": 11.1,
-   "tris": 37516,
+   "tris": 37324,
    "budget": 57800,
    "props": {
     "table_clutter": 5,
@@ -14270,7 +14266,7 @@
    "tris_by_object": {
     "Base": 676,
     "Roof": 4558,
-    "Interior": 17365,
+    "Interior": 17173,
     "L2": 220,
     "L3": 118,
     "L4": 228,
@@ -14578,12 +14574,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2797620,
+   "file_size": 2786196,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 16.4,
-   "ao_rays": 3725856,
+   "seconds": 20.3,
+   "ao_rays": 3707136,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -15340,7 +15336,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 37516,
+    "tris": 37324,
     "rmax": 11.00000044304257,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -15964,7 +15960,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.2,
+   "seconds": 7.6,
    "ao_rays": 1575456,
    "trays": [],
    "v3": {
@@ -17036,7 +17032,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.3,
+   "seconds": 10.2,
    "ao_rays": 2375712,
    "trays": [],
    "v3": {
@@ -18238,7 +18234,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 16.7,
+   "seconds": 15.3,
    "ao_rays": 3288384,
    "trays": [],
    "v3": {
@@ -19526,7 +19522,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 24.2,
+   "seconds": 21.5,
    "ao_rays": 4231392,
    "trays": [],
    "v3": {
@@ -20812,7 +20808,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.9,
+   "seconds": 4.1,
    "ao_rays": 1117776,
    "trays": [],
    "v3": {
@@ -21491,7 +21487,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
+   "seconds": 5.6,
    "ao_rays": 1489968,
    "trays": [],
    "v3": {
@@ -22378,7 +22374,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.9,
+   "seconds": 8.6,
    "ao_rays": 2075520,
    "trays": [],
    "v3": {
@@ -23351,7 +23347,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.6,
+   "seconds": 13.0,
    "ao_rays": 2757696,
    "trays": [],
    "v3": {
@@ -24495,7 +24491,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.5,
+   "seconds": 6.6,
    "ao_rays": 1900320,
    "trays": [],
    "v3": {
@@ -25469,7 +25465,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.9,
+   "seconds": 10.0,
    "ao_rays": 2711424,
    "trays": [],
    "v3": {
@@ -26685,7 +26681,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.3,
+   "seconds": 13.6,
    "ao_rays": 3685008,
    "trays": [],
    "v3": {
@@ -27884,7 +27880,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 16.5,
+   "seconds": 15.8,
    "ao_rays": 4616640,
    "trays": [],
    "v3": {
@@ -29341,7 +29337,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.6,
+   "seconds": 4.8,
    "ao_rays": 1317792,
    "trays": [],
    "v3": {
@@ -30244,7 +30240,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.5,
+   "seconds": 8.3,
    "ao_rays": 1873488,
    "trays": [],
    "v3": {
@@ -31199,7 +31195,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.2,
+   "seconds": 11.5,
    "ao_rays": 2249952,
    "trays": [],
    "v3": {
@@ -32286,7 +32282,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.5,
+   "seconds": 14.2,
    "ao_rays": 2961936,
    "trays": [],
    "v3": {
@@ -33539,7 +33535,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.7,
+   "seconds": 5.8,
    "ao_rays": 1452720,
    "trays": [],
    "v3": {
@@ -34569,7 +34565,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.4,
+   "seconds": 7.9,
    "ao_rays": 1773264,
    "trays": [],
    "v3": {
@@ -37003,7 +36999,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.9,
+   "seconds": 19.7,
    "ao_rays": 3303168,
    "trays": [],
    "v3": {
@@ -38300,7 +38296,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.2,
+   "seconds": 5.8,
    "ao_rays": 1398432,
    "trays": [],
    "v3": {
@@ -39318,7 +39314,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.4,
+   "seconds": 7.7,
    "ao_rays": 1631568,
    "trays": [],
    "v3": {
@@ -40443,7 +40439,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.8,
+   "seconds": 11.1,
    "ao_rays": 2416752,
    "trays": [],
    "v3": {
@@ -41635,7 +41631,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.2,
+   "seconds": 19.3,
    "ao_rays": 3294576,
    "trays": [],
    "v3": {
@@ -42929,7 +42925,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
+   "seconds": 6.8,
    "ao_rays": 1300224,
    "trays": [],
    "v3": {
@@ -43937,7 +43933,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.2,
+   "seconds": 8.6,
    "ao_rays": 1805184,
    "trays": [],
    "v3": {
@@ -45065,7 +45061,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.4,
+   "seconds": 10.9,
    "ao_rays": 2311248,
    "trays": [],
    "v3": {
@@ -46227,7 +46223,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 19.0,
+   "seconds": 17.2,
    "ao_rays": 3179664,
    "trays": [],
    "v3": {
@@ -47454,7 +47450,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.0,
+   "seconds": 4.7,
    "ao_rays": 1334016,
    "trays": [],
    "v3": {
@@ -48198,7 +48194,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 6.0,
    "ao_rays": 1778496,
    "trays": [],
    "v3": {
@@ -49190,7 +49186,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.7,
+   "seconds": 7.9,
    "ao_rays": 2269440,
    "trays": [],
    "v3": {
@@ -50396,7 +50392,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.1,
+   "seconds": 11.8,
    "ao_rays": 3062160,
    "trays": [],
    "v3": {
@@ -51422,7 +51418,7 @@
    "type": "lounge",
    "size": "s",
    "footprint": 6.0,
-   "tris": 17962,
+   "tris": 17920,
    "budget": 19900,
    "props": {
     "table_clutter": 1,
@@ -51469,7 +51465,7 @@
    "tris_by_object": {
     "Base": 944,
     "Roof": 1879,
-    "Interior": 5175,
+    "Interior": 5133,
     "L2": 60,
     "L3": 182,
     "L4": 272,
@@ -51637,12 +51633,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 1362944,
+   "file_size": 1360868,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.5,
-   "ao_rays": 1783296,
+   "seconds": 6.2,
+   "ao_rays": 1779072,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -52128,7 +52124,7 @@
     "door_free_deg": 343.0
    },
    "verify": {
-    "tris": 17962,
+    "tris": 17920,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -52568,7 +52564,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.4,
+   "seconds": 7.8,
    "ao_rays": 2289024,
    "trays": [],
    "v3": {
@@ -53727,7 +53723,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.2,
+   "seconds": 9.9,
    "ao_rays": 3076896,
    "trays": [],
    "v3": {
@@ -55117,7 +55113,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.3,
+   "seconds": 13.5,
    "ao_rays": 3884400,
    "trays": [],
    "v3": {
@@ -56651,7 +56647,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.5,
+   "seconds": 2.6,
    "ao_rays": 1007712,
    "trays": [],
    "v3": {
@@ -57410,7 +57406,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.9,
+   "seconds": 3.0,
    "ao_rays": 1123200,
    "trays": [],
    "v3": {
@@ -58144,7 +58140,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 1.9,
+   "seconds": 1.8,
    "ao_rays": 804480,
    "trays": [],
    "v3": {
@@ -58977,7 +58973,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 2.1,
+   "seconds": 1.8,
    "ao_rays": 629088,
    "trays": [],
    "v3": {
@@ -59690,7 +59686,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.1,
+   "seconds": 6.9,
    "ao_rays": 1297152,
    "trays": [],
    "v3": {
@@ -60737,7 +60733,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.4,
+   "seconds": 8.8,
    "ao_rays": 1618368,
    "trays": [],
    "v3": {
@@ -63036,7 +63032,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.5,
+   "seconds": 17.2,
    "ao_rays": 2923776,
    "trays": [],
    "v3": {
@@ -64369,7 +64365,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.9,
+   "seconds": 7.0,
    "ao_rays": 1499760,
    "trays": [],
    "v3": {
@@ -65368,7 +65364,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.3,
+   "seconds": 9.2,
    "ao_rays": 1653984,
    "trays": [],
    "v3": {
@@ -66491,7 +66487,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.9,
+   "seconds": 13.0,
    "ao_rays": 2449296,
    "trays": [],
    "v3": {
@@ -67714,7 +67710,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.8,
+   "seconds": 17.9,
    "ao_rays": 3469296,
    "trays": [],
    "v3": {
@@ -69056,7 +69052,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.6,
+   "seconds": 6.6,
    "ao_rays": 1479552,
    "trays": [],
    "v3": {
@@ -70065,7 +70061,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.1,
+   "seconds": 10.6,
    "ao_rays": 1868016,
    "trays": [],
    "v3": {
@@ -71160,7 +71156,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.7,
+   "seconds": 14.7,
    "ao_rays": 2647536,
    "trays": [],
    "v3": {
@@ -72449,7 +72445,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 17.6,
+   "seconds": 18.8,
    "ao_rays": 3466992,
    "trays": [],
    "v3": {
@@ -73724,7 +73720,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.0,
+   "seconds": 6.3,
    "ao_rays": 1568496,
    "trays": [
     [
@@ -74619,7 +74615,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 9.0,
    "ao_rays": 1933680,
    "trays": [
     [
@@ -75632,7 +75628,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.9,
+   "seconds": 11.8,
    "ao_rays": 2352960,
    "trays": [
     [
@@ -76793,7 +76789,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 16.4,
+   "seconds": 15.8,
    "ao_rays": 3097104,
    "trays": [
     [
@@ -78120,7 +78116,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
+   "seconds": 5.9,
    "ao_rays": 1350768,
    "trays": [],
    "v3": {
@@ -79046,7 +79042,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.8,
+   "seconds": 7.7,
    "ao_rays": 1778688,
    "trays": [],
    "v3": {
@@ -80206,7 +80202,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.7,
+   "seconds": 12.0,
    "ao_rays": 2456112,
    "trays": [],
    "v3": {
@@ -81491,7 +81487,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 19.5,
+   "seconds": 17.2,
    "ao_rays": 3502800,
    "trays": [],
    "v3": {
@@ -82617,7 +82613,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 4.7,
+   "seconds": 3.7,
    "ao_rays": 1113744,
    "trays": [],
    "v3": {
@@ -83379,7 +83375,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.9,
+   "seconds": 5.7,
    "ao_rays": 1554528,
    "trays": [],
    "v3": {
@@ -84214,7 +84210,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.0,
+   "seconds": 7.0,
    "ao_rays": 1877616,
    "trays": [],
    "v3": {
@@ -85297,7 +85293,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.6,
+   "seconds": 10.9,
    "ao_rays": 2432592,
    "trays": [],
    "v3": {
@@ -86696,7 +86692,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 6.1,
    "ao_rays": 1366416,
    "trays": [],
    "v3": {
@@ -87711,7 +87707,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.4,
+   "seconds": 9.6,
    "ao_rays": 1941888,
    "trays": [],
    "v3": {
@@ -88830,7 +88826,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.1,
+   "seconds": 11.9,
    "ao_rays": 2309040,
    "trays": [],
    "v3": {
@@ -89998,7 +89994,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.8,
+   "seconds": 18.3,
    "ao_rays": 3221088,
    "trays": [],
    "v3": {
@@ -91355,7 +91351,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.2,
+   "seconds": 6.1,
    "ao_rays": 1266720,
    "trays": [],
    "v3": {
@@ -92287,7 +92283,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.0,
+   "seconds": 8.6,
    "ao_rays": 1648704,
    "trays": [],
    "v3": {
@@ -93443,7 +93439,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.1,
+   "seconds": 11.4,
    "ao_rays": 2153040,
    "trays": [],
    "v3": {
@@ -95882,10 +95878,9 @@
    "type": "cantina",
    "size": "s",
    "footprint": 6.0,
-   "tris": 17325,
+   "tris": 17225,
    "budget": 19900,
    "props": {
-    "table_clutter": 1,
     "poster": 11,
     "r_motto": 1,
     "neon_text": 6,
@@ -95932,7 +95927,7 @@
    "tris_by_object": {
     "Base": 324,
     "Roof": 1889,
-    "Interior": 3872,
+    "Interior": 3772,
     "L2": 60,
     "L3": 182,
     "L4": 212,
@@ -96140,12 +96135,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1361572,
+   "file_size": 1355228,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.9,
-   "ao_rays": 1700880,
+   "seconds": 8.0,
+   "ao_rays": 1690512,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -96573,7 +96568,7 @@
       4
      ],
      "Interior": [
-      21,
+      20,
       8
      ],
      "L2": [
@@ -96662,7 +96657,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 17325,
+    "tris": 17225,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -96888,7 +96883,7 @@
    "type": "cantina",
    "size": "m",
    "footprint": 7.5,
-   "tris": 22409,
+   "tris": 22397,
    "budget": 29600,
    "props": {
     "table_clutter": 1,
@@ -96937,7 +96932,7 @@
    "tris_by_object": {
     "Base": 412,
     "Roof": 2539,
-    "Interior": 5206,
+    "Interior": 5194,
     "L2": 60,
     "L3": 198,
     "L4": 218,
@@ -97166,12 +97161,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 1715148,
+   "file_size": 1714308,
    "color0": true,
    "also": [],
    "flags": [],
    "seconds": 10.2,
-   "ao_rays": 2209584,
+   "ao_rays": 2208432,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -97813,7 +97808,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 22409,
+    "tris": 22397,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -98060,10 +98055,10 @@
    "type": "cantina",
    "size": "l",
    "footprint": 9.6,
-   "tris": 31349,
+   "tris": 31141,
    "budget": 42800,
    "props": {
-    "table_clutter": 3,
+    "table_clutter": 2,
     "poster": 11,
     "r_motto": 1,
     "neon_text": 6,
@@ -98113,7 +98108,7 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 3304,
-    "Interior": 12308,
+    "Interior": 12100,
     "L2": 220,
     "L3": 214,
     "L4": 228,
@@ -98364,12 +98359,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2297640,
+   "file_size": 2285476,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.8,
-   "ao_rays": 3096624,
+   "seconds": 13.7,
+   "ao_rays": 3075504,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -99201,7 +99196,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 31349,
+    "tris": 31141,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -99470,10 +99465,10 @@
    "type": "cantina",
    "size": "xl",
    "footprint": 11.7,
-   "tris": 40083,
+   "tris": 39793,
    "budget": 57800,
    "props": {
-    "table_clutter": 5,
+    "table_clutter": 3,
     "poster": 10,
     "r_motto": 1,
     "neon_text": 6,
@@ -99523,7 +99518,7 @@
    "tris_by_object": {
     "Base": 676,
     "Roof": 3729,
-    "Interior": 19214,
+    "Interior": 18924,
     "L2": 220,
     "L3": 214,
     "L4": 228,
@@ -99812,12 +99807,12 @@
     "Screen",
     "Window"
    ],
-   "file_size": 2882056,
+   "file_size": 2865084,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 21.0,
-   "ao_rays": 3961776,
+   "seconds": 17.8,
+   "ao_rays": 3932688,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -100893,7 +100888,7 @@
       4
      ],
      "Interior": [
-      22,
+      21,
       8
      ],
      "L2": [
@@ -100982,7 +100977,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 40083,
+    "tris": 39793,
     "rmax": 11.600000330409914,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -101575,7 +101570,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.9,
+   "seconds": 6.3,
    "ao_rays": 1274976,
    "trays": [],
    "v3": {
@@ -102549,7 +102544,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.6,
+   "seconds": 9.2,
    "ao_rays": 1733040,
    "trays": [],
    "v3": {
@@ -103688,7 +103683,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.2,
+   "seconds": 11.6,
    "ao_rays": 2362464,
    "trays": [],
    "v3": {
@@ -105059,7 +105054,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.5,
+   "seconds": 14.3,
    "ao_rays": 3180816,
    "trays": [],
    "v3": {
@@ -106690,7 +106685,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.4,
+   "seconds": 6.8,
    "ao_rays": 1611936,
    "trays": [],
    "v3": {
@@ -107580,7 +107575,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.1,
+   "seconds": 11.1,
    "ao_rays": 2298144,
    "trays": [],
    "v3": {
@@ -108699,7 +108694,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.5,
+   "seconds": 14.1,
    "ao_rays": 2737488,
    "trays": [],
    "v3": {
@@ -110047,7 +110042,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 24.4,
+   "seconds": 21.4,
    "ao_rays": 4060368,
    "trays": [],
    "v3": {
@@ -111434,7 +111429,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 5.5,
    "ao_rays": 1370400,
    "trays": [],
    "v3": {
@@ -112420,7 +112415,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.6,
+   "seconds": 9.3,
    "ao_rays": 1828512,
    "trays": [],
    "v3": {
@@ -113517,7 +113512,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.0,
+   "seconds": 11.8,
    "ao_rays": 2345376,
    "trays": [],
    "v3": {
@@ -114769,7 +114764,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.5,
+   "seconds": 17.0,
    "ao_rays": 3389136,
    "trays": [],
    "v3": {
@@ -116071,7 +116066,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.0,
+   "seconds": 5.5,
    "ao_rays": 1360416,
    "trays": [],
    "v3": {
@@ -117078,7 +117073,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.7,
+   "seconds": 9.2,
    "ao_rays": 1786656,
    "trays": [],
    "v3": {
@@ -118161,7 +118156,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.5,
+   "seconds": 12.1,
    "ao_rays": 2376672,
    "trays": [],
    "v3": {
@@ -119405,7 +119400,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.8,
+   "seconds": 19.8,
    "ao_rays": 3432912,
    "trays": [],
    "v3": {
@@ -121703,7 +121698,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.5,
+   "seconds": 9.2,
    "ao_rays": 1747200,
    "trays": [],
    "v3": {
@@ -122825,7 +122820,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.0,
+   "seconds": 12.6,
    "ao_rays": 2324688,
    "trays": [],
    "v3": {
@@ -124036,7 +124031,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.3,
+   "seconds": 18.9,
    "ao_rays": 3187680,
    "trays": [],
    "v3": {
@@ -125313,7 +125308,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.9,
+   "seconds": 7.8,
    "ao_rays": 1495776,
    "trays": [],
    "v3": {
@@ -126279,7 +126274,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.8,
+   "seconds": 10.1,
    "ao_rays": 1806864,
    "trays": [],
    "v3": {
@@ -127363,7 +127358,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 11.4,
+   "seconds": 13.4,
    "ao_rays": 2473344,
    "trays": [],
    "v3": {
@@ -128532,7 +128527,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 17.7,
+   "seconds": 17.4,
    "ao_rays": 3291552,
    "trays": [],
    "v3": {
@@ -129828,7 +129823,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.6,
+   "seconds": 7.8,
    "ao_rays": 1420464,
    "trays": [],
    "v3": {
@@ -130817,7 +130812,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.5,
+   "seconds": 9.0,
    "ao_rays": 1719024,
    "trays": [],
    "v3": {
@@ -131916,7 +131911,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.1,
+   "seconds": 11.1,
    "ao_rays": 2337600,
    "trays": [],
    "v3": {
@@ -133118,7 +133113,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.8,
+   "seconds": 16.0,
    "ao_rays": 3316560,
    "trays": [],
    "v3": {
@@ -134423,7 +134418,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.6,
+   "seconds": 5.8,
    "ao_rays": 1351824,
    "trays": [],
    "v3": {
@@ -135412,7 +135407,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.2,
+   "seconds": 9.8,
    "ao_rays": 1860624,
    "trays": [],
    "v3": {
@@ -136569,7 +136564,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.0,
+   "seconds": 12.9,
    "ao_rays": 2360352,
    "trays": [],
    "v3": {
@@ -137733,7 +137728,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.4,
+   "seconds": 15.8,
    "ao_rays": 3187872,
    "trays": [],
    "v3": {
@@ -139069,7 +139064,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 5.7,
+   "seconds": 5.9,
    "ao_rays": 1433952,
    "trays": [],
    "v3": {
@@ -140070,7 +140065,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.4,
+   "seconds": 8.8,
    "ao_rays": 1855968,
    "trays": [],
    "v3": {
@@ -141214,7 +141209,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.5,
+   "seconds": 13.8,
    "ao_rays": 2477472,
    "trays": [],
    "v3": {
@@ -142408,7 +142403,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.3,
+   "seconds": 19.4,
    "ao_rays": 3463920,
    "trays": [],
    "v3": {
@@ -143730,7 +143725,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.2,
+   "seconds": 6.0,
    "ao_rays": 1441488,
    "trays": [],
    "v3": {
@@ -144775,7 +144770,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.1,
+   "seconds": 8.3,
    "ao_rays": 1924800,
    "trays": [],
    "v3": {
@@ -145884,7 +145879,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.3,
+   "seconds": 12.6,
    "ao_rays": 2485008,
    "trays": [],
    "v3": {
@@ -147087,7 +147082,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 20.3,
+   "seconds": 17.3,
    "ao_rays": 3465888,
    "trays": [],
    "v3": {
@@ -148405,7 +148400,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 6.4,
    "ao_rays": 1532544,
    "trays": [],
    "v3": {
@@ -149405,7 +149400,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.0,
+   "seconds": 8.8,
    "ao_rays": 1851600,
    "trays": [],
    "v3": {
@@ -150493,7 +150488,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.8,
+   "seconds": 13.2,
    "ao_rays": 2477664,
    "trays": [],
    "v3": {
@@ -151694,7 +151689,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 19.8,
+   "seconds": 17.8,
    "ao_rays": 3268464,
    "trays": [],
    "v3": {
@@ -152716,14 +152711,14 @@
    "type": "residence_tube",
    "size": "m",
    "footprint": 9.0,
-   "tris": 28032,
+   "tris": 28276,
    "budget": 29600,
    "props": {
     "sub_toaster": 2,
     "sourdough": 2,
     "oat_carton": 2,
     "kettle_bot": 2,
-    "table_clutter": 4,
+    "table_clutter": 2,
     "poster": 9,
     "r_motto": 1,
     "r_photos": 1,
@@ -152761,8 +152756,8 @@
    "tris_by_object": {
     "Base": 484,
     "Roof": 3924,
-    "Interior": 12597,
-    "PorchTop": 80,
+    "Interior": 12325,
+    "PorchTop": 596,
     "Upper_00_Band": 18,
     "Upper_01_Band": 14,
     "Upper_02_Band": 26,
@@ -152945,12 +152940,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2114156,
+   "file_size": 2134120,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 12.2,
-   "ao_rays": 2803392,
+   "seconds": 13.0,
+   "ao_rays": 2825280,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -153743,7 +153738,7 @@
      "Base": 3,
      "Interior": 8,
      "NameSign": 3,
-     "PorchTop": 1,
+     "PorchTop": 3,
      "Roof": 6,
      "WallsUp": 5,
      "Walls": 10,
@@ -153768,6 +153763,206 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -3.386,
+      0.8,
+      0.14,
+      2.24,
+      1.634,
+      0.06,
+      0.0
+     ],
+     [
+      2.134,
+      0.8,
+      0.14,
+      2.24,
+      2.886,
+      0.06,
+      0.0
+     ],
+     [
+      -0.502,
+      3.41,
+      0.14,
+      2.24,
+      1.51,
+      0.06,
+      90.0
+     ],
+     [
+      2.598,
+      3.41,
+      0.14,
+      2.24,
+      1.51,
+      0.06,
+      90.0
+     ],
+     [
+      -0.437,
+      1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      1.533,
+      1.9,
+      0.14,
+      2.24,
+      1.065,
+      0.06,
+      0.0
+     ],
+     [
+      3.324,
+      1.9,
+      0.14,
+      2.24,
+      0.726,
+      0.06,
+      0.0
+     ],
+     [
+      4.955,
+      1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      0.0,
+      4.921,
+      0.14,
+      2.24,
+      5.02,
+      0.06,
+      0.0
+     ],
+     [
+      -5.02,
+      2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      90.0
+     ],
+     [
+      5.02,
+      2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      90.0
+     ],
+     [
+      3.386,
+      -0.8,
+      0.14,
+      2.24,
+      1.634,
+      0.06,
+      180.0
+     ],
+     [
+      -2.134,
+      -0.8,
+      0.14,
+      2.24,
+      2.886,
+      0.06,
+      180.0
+     ],
+     [
+      0.502,
+      -3.41,
+      0.14,
+      2.24,
+      1.511,
+      0.06,
+      270.0
+     ],
+     [
+      -2.598,
+      -3.41,
+      0.14,
+      2.24,
+      1.51,
+      0.06,
+      270.0
+     ],
+     [
+      0.437,
+      -1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      -1.533,
+      -1.9,
+      0.14,
+      2.24,
+      1.065,
+      0.06,
+      180.0
+     ],
+     [
+      -3.324,
+      -1.9,
+      0.14,
+      2.24,
+      0.726,
+      0.06,
+      180.0
+     ],
+     [
+      -4.955,
+      -1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      -0.0,
+      -4.921,
+      0.14,
+      2.24,
+      5.02,
+      0.06,
+      180.0
+     ],
+     [
+      5.02,
+      -2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      270.0
+     ],
+     [
+      -5.02,
+      -2.86,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -153867,7 +154062,7 @@
     "door_free_deg": 332.0
    },
    "verify": {
-    "tris": 28032,
+    "tris": 28276,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -154070,13 +154265,13 @@
    "type": "residence_tube",
    "size": "m",
    "footprint": 9.0,
-   "tris": 27028,
+   "tris": 27140,
    "budget": 29600,
    "props": {
     "poster": 9,
     "screen_content": 2,
     "desk_clutter": 1,
-    "table_clutter": 4,
+    "table_clutter": 2,
     "sub_toaster": 1,
     "sourdough": 1,
     "oat_carton": 1,
@@ -154117,8 +154312,8 @@
    "tris_by_object": {
     "Base": 484,
     "Roof": 3776,
-    "Interior": 10745,
-    "PorchTop": 1290,
+    "Interior": 10489,
+    "PorchTop": 1658,
     "Upper_00_Band": 26,
     "Upper_01_Band": 14,
     "Upper_02_Band": 26,
@@ -154296,12 +154491,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2055452,
+   "file_size": 2064576,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.9,
-   "ao_rays": 2692224,
+   "seconds": 12.6,
+   "ao_rays": 2701344,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -155001,7 +155196,7 @@
       5
      ],
      "Interior": [
-      26,
+      25,
       8
      ],
      "RoofCeil": [
@@ -155038,6 +155233,152 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -3.386,
+      0.8,
+      0.14,
+      2.24,
+      1.634,
+      0.06,
+      0.0
+     ],
+     [
+      2.134,
+      0.8,
+      0.14,
+      2.24,
+      2.886,
+      0.06,
+      0.0
+     ],
+     [
+      -0.502,
+      3.41,
+      0.14,
+      2.24,
+      1.51,
+      0.06,
+      90.0
+     ],
+     [
+      1.798,
+      3.41,
+      0.14,
+      2.24,
+      1.51,
+      0.06,
+      90.0
+     ],
+     [
+      -0.437,
+      1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      1.133,
+      1.9,
+      0.14,
+      2.24,
+      0.665,
+      0.06,
+      0.0
+     ],
+     [
+      1.863,
+      1.9,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      3.894,
+      1.9,
+      0.14,
+      2.24,
+      1.126,
+      0.06,
+      0.0
+     ],
+     [
+      0.0,
+      4.921,
+      0.14,
+      2.24,
+      5.02,
+      0.06,
+      0.0
+     ],
+     [
+      -5.02,
+      2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      90.0
+     ],
+     [
+      5.02,
+      2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      90.0
+     ],
+     [
+      3.11,
+      -0.8,
+      0.14,
+      2.24,
+      1.91,
+      0.06,
+      180.0
+     ],
+     [
+      -3.11,
+      -0.8,
+      0.14,
+      2.24,
+      1.91,
+      0.06,
+      180.0
+     ],
+     [
+      -0.0,
+      -4.921,
+      0.14,
+      2.24,
+      5.02,
+      0.06,
+      180.0
+     ],
+     [
+      5.02,
+      -2.861,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      270.0
+     ],
+     [
+      -5.02,
+      -2.86,
+      0.14,
+      2.24,
+      2.061,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -155137,7 +155478,7 @@
     "door_free_deg": 332.0
    },
    "verify": {
-    "tris": 27028,
+    "tris": 27140,
     "rmax": 8.900000278783015,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -155331,14 +155672,14 @@
    "type": "residence_tube",
    "size": "l",
    "footprint": 11.0,
-   "tris": 40042,
+   "tris": 40216,
    "budget": 42800,
    "props": {
     "kettle_bot": 3,
     "sub_toaster": 3,
     "sourdough": 3,
     "oat_carton": 3,
-    "table_clutter": 10,
+    "table_clutter": 6,
     "poster": 11,
     "r_motto": 1,
     "r_photos": 1,
@@ -155376,8 +155717,8 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 4292,
-    "Interior": 23405,
-    "PorchTop": 80,
+    "Interior": 22785,
+    "PorchTop": 874,
     "Upper_00_Band": 18,
     "Upper_01_Band": 10,
     "Upper_02_Band": 26,
@@ -155564,12 +155905,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 2919156,
+   "file_size": 2936248,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 19.2,
-   "ao_rays": 4025376,
+   "seconds": 24.5,
+   "ao_rays": 4038240,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -156377,7 +156718,7 @@
       4
      ],
      "Interior": [
-      28,
+      27,
       8
      ],
      "RoofCeil": [
@@ -156389,7 +156730,7 @@
      "Base": 3,
      "Interior": 8,
      "NameSign": 3,
-     "PorchTop": 1,
+     "PorchTop": 3,
      "Roof": 6,
      "WallsUp": 5,
      "Walls": 10,
@@ -156415,6 +156756,305 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -5.033,
+      0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      0.0
+     ],
+     [
+      -1.344,
+      0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      0.0
+     ],
+     [
+      -2.806,
+      4.601,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      90.0
+     ],
+     [
+      -6.312,
+      2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      -4.107,
+      2.951,
+      0.14,
+      2.24,
+      1.301,
+      0.06,
+      0.0
+     ],
+     [
+      -1.888,
+      2.951,
+      0.14,
+      2.24,
+      0.918,
+      0.06,
+      0.0
+     ],
+     [
+      -0.065,
+      2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      -3.189,
+      6.251,
+      0.14,
+      2.24,
+      3.189,
+      0.06,
+      0.0
+     ],
+     [
+      -6.377,
+      3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      90.0
+     ],
+     [
+      0.0,
+      3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      90.0
+     ],
+     [
+      1.344,
+      0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      0.0
+     ],
+     [
+      5.033,
+      0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      0.0
+     ],
+     [
+      3.571,
+      4.601,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      90.0
+     ],
+     [
+      0.065,
+      2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      2.271,
+      2.951,
+      0.14,
+      2.24,
+      1.301,
+      0.06,
+      0.0
+     ],
+     [
+      4.489,
+      2.951,
+      0.14,
+      2.24,
+      0.918,
+      0.06,
+      0.0
+     ],
+     [
+      6.312,
+      2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      3.189,
+      6.251,
+      0.14,
+      2.24,
+      3.189,
+      0.06,
+      0.0
+     ],
+     [
+      6.377,
+      3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      90.0
+     ],
+     [
+      5.033,
+      -0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      180.0
+     ],
+     [
+      1.344,
+      -0.8,
+      0.14,
+      2.24,
+      1.344,
+      0.06,
+      180.0
+     ],
+     [
+      2.806,
+      -4.601,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      270.0
+     ],
+     [
+      6.312,
+      -2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      4.107,
+      -2.951,
+      0.14,
+      2.24,
+      1.301,
+      0.06,
+      180.0
+     ],
+     [
+      1.888,
+      -2.951,
+      0.14,
+      2.24,
+      0.918,
+      0.06,
+      180.0
+     ],
+     [
+      0.065,
+      -2.951,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      3.189,
+      -6.251,
+      0.14,
+      2.24,
+      3.189,
+      0.06,
+      180.0
+     ],
+     [
+      6.377,
+      -3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      270.0
+     ],
+     [
+      -0.0,
+      -3.525,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      270.0
+     ],
+     [
+      -1.044,
+      -0.8,
+      0.14,
+      2.24,
+      1.044,
+      0.06,
+      180.0
+     ],
+     [
+      -5.333,
+      -0.8,
+      0.14,
+      2.24,
+      1.044,
+      0.06,
+      180.0
+     ],
+     [
+      -3.189,
+      -6.251,
+      0.14,
+      2.24,
+      3.189,
+      0.06,
+      180.0
+     ],
+     [
+      -6.377,
+      -3.525,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -156444,7 +157084,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 40042,
+    "tris": 40216,
     "rmax": 10.900000305870508,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -156651,13 +157291,13 @@
    "type": "residence_tube",
    "size": "l",
    "footprint": 11.0,
-   "tris": 36109,
+   "tris": 36353,
    "budget": 42800,
    "props": {
     "poster": 12,
     "screen_content": 4,
     "desk_clutter": 2,
-    "table_clutter": 6,
+    "table_clutter": 2,
     "kettle_bot": 2,
     "sub_toaster": 2,
     "sourdough": 2,
@@ -156698,8 +157338,8 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 4120,
-    "Interior": 18546,
-    "PorchTop": 1450,
+    "Interior": 18162,
+    "PorchTop": 2078,
     "Upper_00_Band": 26,
     "Upper_01_Band": 14,
     "Upper_02_Band": 26,
@@ -156890,12 +157530,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 2651148,
+   "file_size": 2669648,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.9,
-   "ao_rays": 3604272,
+   "seconds": 36.1,
+   "ao_rays": 3626256,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -157703,7 +158343,7 @@
       5
      ],
      "Interior": [
-      26,
+      25,
       8
      ],
      "RoofCeil": [
@@ -157741,6 +158381,242 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -3.439,
+      0.8,
+      0.14,
+      2.24,
+      2.939,
+      0.06,
+      0.0
+     ],
+     [
+      3.439,
+      0.8,
+      0.14,
+      2.24,
+      2.939,
+      0.06,
+      0.0
+     ],
+     [
+      -1.977,
+      3.351,
+      0.14,
+      2.24,
+      0.3,
+      0.06,
+      90.0
+     ],
+     [
+      -1.977,
+      5.371,
+      0.14,
+      2.24,
+      0.88,
+      0.06,
+      90.0
+     ],
+     [
+      -5.837,
+      3.051,
+      0.14,
+      2.24,
+      0.54,
+      0.06,
+      0.0
+     ],
+     [
+      -3.217,
+      3.051,
+      0.14,
+      2.24,
+      1.24,
+      0.06,
+      0.0
+     ],
+     [
+      -0.477,
+      3.051,
+      0.14,
+      2.24,
+      1.5,
+      0.06,
+      0.0
+     ],
+     [
+      1.023,
+      4.651,
+      0.14,
+      2.24,
+      1.6,
+      0.06,
+      90.0
+     ],
+     [
+      1.961,
+      3.051,
+      0.14,
+      2.24,
+      0.939,
+      0.06,
+      0.0
+     ],
+     [
+      5.439,
+      3.051,
+      0.14,
+      2.24,
+      0.939,
+      0.06,
+      0.0
+     ],
+     [
+      0.0,
+      6.251,
+      0.14,
+      2.24,
+      6.377,
+      0.06,
+      0.0
+     ],
+     [
+      -6.377,
+      3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      90.0
+     ],
+     [
+      6.377,
+      3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      90.0
+     ],
+     [
+      3.439,
+      -0.8,
+      0.14,
+      2.24,
+      2.939,
+      0.06,
+      180.0
+     ],
+     [
+      -3.439,
+      -0.8,
+      0.14,
+      2.24,
+      2.939,
+      0.06,
+      180.0
+     ],
+     [
+      1.977,
+      -3.351,
+      0.14,
+      2.24,
+      0.3,
+      0.06,
+      270.0
+     ],
+     [
+      1.977,
+      -5.371,
+      0.14,
+      2.24,
+      0.88,
+      0.06,
+      270.0
+     ],
+     [
+      5.837,
+      -3.051,
+      0.14,
+      2.24,
+      0.54,
+      0.06,
+      180.0
+     ],
+     [
+      3.217,
+      -3.051,
+      0.14,
+      2.24,
+      1.24,
+      0.06,
+      180.0
+     ],
+     [
+      0.477,
+      -3.051,
+      0.14,
+      2.24,
+      1.5,
+      0.06,
+      180.0
+     ],
+     [
+      -1.023,
+      -4.651,
+      0.14,
+      2.24,
+      1.6,
+      0.06,
+      270.0
+     ],
+     [
+      -1.961,
+      -3.051,
+      0.14,
+      2.24,
+      0.939,
+      0.06,
+      180.0
+     ],
+     [
+      -5.439,
+      -3.051,
+      0.14,
+      2.24,
+      0.939,
+      0.06,
+      180.0
+     ],
+     [
+      -0.0,
+      -6.251,
+      0.14,
+      2.24,
+      6.377,
+      0.06,
+      180.0
+     ],
+     [
+      6.377,
+      -3.526,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      270.0
+     ],
+     [
+      -6.377,
+      -3.525,
+      0.14,
+      2.24,
+      2.725,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -157770,7 +158646,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 36109,
+    "tris": 36353,
     "rmax": 10.900000305870508,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -157977,14 +158853,14 @@
    "type": "residence_tube",
    "size": "xl",
    "footprint": 13.0,
-   "tris": 46250,
+   "tris": 46442,
    "budget": 57800,
    "props": {
     "sub_toaster": 4,
     "sourdough": 4,
     "oat_carton": 4,
     "kettle_bot": 4,
-    "table_clutter": 12,
+    "table_clutter": 8,
     "poster": 13,
     "r_motto": 1,
     "r_photos": 1,
@@ -158019,8 +158895,8 @@
    "tris_by_object": {
     "Base": 668,
     "Roof": 4936,
-    "Interior": 28745,
-    "PorchTop": 80,
+    "Interior": 28013,
+    "PorchTop": 1004,
     "Upper_00_Band": 18,
     "Upper_01_Band": 10,
     "Upper_02_Band": 26,
@@ -158290,12 +159166,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 3370204,
+   "file_size": 3388624,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.0,
-   "ao_rays": 4666752,
+   "seconds": 40.2,
+   "ao_rays": 4681440,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -159841,7 +160717,7 @@
       4
      ],
      "Interior": [
-      28,
+      27,
       8
      ],
      "RoofCeil": [
@@ -159853,7 +160729,7 @@
      "Base": 3,
      "Interior": 8,
      "NameSign": 3,
-     "PorchTop": 1,
+     "PorchTop": 3,
      "Roof": 6,
      "WallsUp": 5,
      "Walls": 10,
@@ -159879,6 +160755,350 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -6.104,
+      0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      -1.701,
+      0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      -3.434,
+      6.001,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      90.0
+     ],
+     [
+      -7.741,
+      4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      -5.135,
+      4.351,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      -2.202,
+      4.351,
+      0.14,
+      2.24,
+      1.232,
+      0.06,
+      0.0
+     ],
+     [
+      -0.065,
+      4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      -3.903,
+      7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      0.0
+     ],
+     [
+      -7.806,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      0.0,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      1.701,
+      0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      6.104,
+      0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      4.371,
+      6.001,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      90.0
+     ],
+     [
+      0.065,
+      4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      2.671,
+      4.351,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      0.0
+     ],
+     [
+      5.603,
+      4.351,
+      0.14,
+      2.24,
+      1.232,
+      0.06,
+      0.0
+     ],
+     [
+      7.741,
+      4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      0.0
+     ],
+     [
+      3.903,
+      7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      0.0
+     ],
+     [
+      7.806,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      6.104,
+      -0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      1.701,
+      -0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      3.434,
+      -6.001,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      270.0
+     ],
+     [
+      7.741,
+      -4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      5.135,
+      -4.351,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      2.202,
+      -4.351,
+      0.14,
+      2.24,
+      1.232,
+      0.06,
+      180.0
+     ],
+     [
+      0.065,
+      -4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      3.903,
+      -7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      180.0
+     ],
+     [
+      7.806,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ],
+     [
+      -0.0,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ],
+     [
+      -1.701,
+      -0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      -6.104,
+      -0.8,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      -4.371,
+      -6.001,
+      0.14,
+      2.24,
+      1.65,
+      0.06,
+      270.0
+     ],
+     [
+      -0.065,
+      -4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      -2.671,
+      -4.351,
+      0.14,
+      2.24,
+      1.701,
+      0.06,
+      180.0
+     ],
+     [
+      -5.603,
+      -4.351,
+      0.14,
+      2.24,
+      1.232,
+      0.06,
+      180.0
+     ],
+     [
+      -7.741,
+      -4.351,
+      0.14,
+      2.24,
+      0.065,
+      0.06,
+      180.0
+     ],
+     [
+      -3.903,
+      -7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      180.0
+     ],
+     [
+      -7.806,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -159908,7 +161128,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 46250,
+    "tris": 46442,
     "rmax": 12.900000159793313,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -160198,13 +161418,13 @@
    "type": "residence_tube",
    "size": "xl",
    "footprint": 13.0,
-   "tris": 45001,
+   "tris": 45381,
    "budget": 57800,
    "props": {
     "poster": 18,
     "screen_content": 6,
     "desk_clutter": 3,
-    "table_clutter": 8,
+    "table_clutter": 4,
     "sub_toaster": 3,
     "sourdough": 3,
     "oat_carton": 3,
@@ -160243,8 +161463,8 @@
    "tris_by_object": {
     "Base": 668,
     "Roof": 4636,
-    "Interior": 26526,
-    "PorchTop": 1592,
+    "Interior": 26058,
+    "PorchTop": 2440,
     "Upper_00_Band": 26,
     "Upper_01_Band": 14,
     "Upper_02_Band": 26,
@@ -160497,12 +161717,12 @@
     "Window",
     "Wood"
    ],
-   "file_size": 3280940,
+   "file_size": 3310180,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.6,
-   "ao_rays": 4514160,
+   "seconds": 31.4,
+   "ao_rays": 4547472,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -161897,6 +163117,332 @@
       "Window"
      ]
     },
+    "partitions": [
+     [
+      -6.506,
+      0.8,
+      0.14,
+      2.24,
+      1.3,
+      0.06,
+      0.0
+     ],
+     [
+      -2.103,
+      0.8,
+      0.14,
+      2.24,
+      2.103,
+      0.06,
+      0.0
+     ],
+     [
+      -3.406,
+      4.751,
+      0.14,
+      2.24,
+      0.3,
+      0.06,
+      90.0
+     ],
+     [
+      -3.406,
+      6.771,
+      0.14,
+      2.24,
+      0.88,
+      0.06,
+      90.0
+     ],
+     [
+      -6.316,
+      4.451,
+      0.14,
+      2.24,
+      1.49,
+      0.06,
+      0.0
+     ],
+     [
+      -3.696,
+      4.451,
+      0.14,
+      2.24,
+      0.29,
+      0.06,
+      0.0
+     ],
+     [
+      -1.703,
+      4.451,
+      0.14,
+      2.24,
+      1.703,
+      0.06,
+      0.0
+     ],
+     [
+      -3.206,
+      3.325,
+      0.14,
+      2.24,
+      1.125,
+      0.06,
+      90.0
+     ],
+     [
+      -3.903,
+      7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      0.0
+     ],
+     [
+      -7.806,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      0.0,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      1.3,
+      0.8,
+      0.14,
+      2.24,
+      1.3,
+      0.06,
+      0.0
+     ],
+     [
+      5.703,
+      0.8,
+      0.14,
+      2.24,
+      2.103,
+      0.06,
+      0.0
+     ],
+     [
+      4.4,
+      4.751,
+      0.14,
+      2.24,
+      0.3,
+      0.06,
+      90.0
+     ],
+     [
+      4.4,
+      6.771,
+      0.14,
+      2.24,
+      0.88,
+      0.06,
+      90.0
+     ],
+     [
+      1.49,
+      4.451,
+      0.14,
+      2.24,
+      1.49,
+      0.06,
+      0.0
+     ],
+     [
+      4.11,
+      4.451,
+      0.14,
+      2.24,
+      0.29,
+      0.06,
+      0.0
+     ],
+     [
+      6.103,
+      4.451,
+      0.14,
+      2.24,
+      1.703,
+      0.06,
+      0.0
+     ],
+     [
+      4.6,
+      3.325,
+      0.14,
+      2.24,
+      1.125,
+      0.06,
+      90.0
+     ],
+     [
+      3.903,
+      7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      0.0
+     ],
+     [
+      7.806,
+      4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      90.0
+     ],
+     [
+      6.506,
+      -0.8,
+      0.14,
+      2.24,
+      1.3,
+      0.06,
+      180.0
+     ],
+     [
+      2.103,
+      -0.8,
+      0.14,
+      2.24,
+      2.103,
+      0.06,
+      180.0
+     ],
+     [
+      3.406,
+      -4.751,
+      0.14,
+      2.24,
+      0.3,
+      0.06,
+      270.0
+     ],
+     [
+      3.406,
+      -6.771,
+      0.14,
+      2.24,
+      0.88,
+      0.06,
+      270.0
+     ],
+     [
+      6.316,
+      -4.451,
+      0.14,
+      2.24,
+      1.49,
+      0.06,
+      180.0
+     ],
+     [
+      3.696,
+      -4.451,
+      0.14,
+      2.24,
+      0.29,
+      0.06,
+      180.0
+     ],
+     [
+      1.703,
+      -4.451,
+      0.14,
+      2.24,
+      1.703,
+      0.06,
+      180.0
+     ],
+     [
+      3.206,
+      -3.325,
+      0.14,
+      2.24,
+      1.125,
+      0.06,
+      270.0
+     ],
+     [
+      3.903,
+      -7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      180.0
+     ],
+     [
+      7.806,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ],
+     [
+      -0.0,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ],
+     [
+      -1.351,
+      -0.8,
+      0.14,
+      2.24,
+      1.351,
+      0.06,
+      180.0
+     ],
+     [
+      -6.454,
+      -0.8,
+      0.14,
+      2.24,
+      1.351,
+      0.06,
+      180.0
+     ],
+     [
+      -3.903,
+      -7.651,
+      0.14,
+      2.24,
+      3.903,
+      0.06,
+      180.0
+     ],
+     [
+      -7.806,
+      -4.225,
+      0.14,
+      2.24,
+      3.425,
+      0.06,
+      270.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -161926,7 +163472,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 45001,
+    "tris": 45381,
     "rmax": 12.900000159793313,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -162195,14 +163741,14 @@
    "type": "apartment_block",
    "size": "m",
    "footprint": 20.0,
-   "tris": 160416,
+   "tris": 166004,
    "budget": 180000,
    "props": {
     "kettle_bot": 12,
     "sub_toaster": 12,
     "sourdough": 12,
     "oat_carton": 12,
-    "table_clutter": 42,
+    "table_clutter": 28,
     "r_motto": 1,
     "r_photos": 1,
     "r_fryer": 1,
@@ -162235,18 +163781,20 @@
    "tris_by_object": {
     "Base": 4272,
     "Roof": 7084,
-    "Interior": 50782,
+    "Interior": 49758,
     "F1_Slab": 3968,
     "F1_Wall": 1220,
     "F1_WallTop": 2296,
     "F2_Slab": 2816,
     "F2_Wall": 1144,
     "F2_WallTop": 2564,
-    "PorchTop": 48,
-    "F1_Interior": 39047,
-    "F2_Interior": 17814,
-    "F1_Terrace": 10304,
-    "F2_Terrace": 6856,
+    "PorchTop": 4128,
+    "F1_Interior": 38471,
+    "F2_Interior": 17574,
+    "F1_PorchTop": 3000,
+    "F2_PorchTop": 912,
+    "F1_Terrace": 9900,
+    "F2_Terrace": 6696,
     "Upper_00": 72,
     "Upper_01": 72,
     "Upper_02": 72,
@@ -162652,12 +164200,12 @@
     "Soil",
     "Window"
    ],
-   "file_size": 10827040,
+   "file_size": 11235440,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 53.9,
-   "ao_rays": 16189248,
+   "seconds": 82.2,
+   "ao_rays": 16711680,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -165764,7 +167312,7 @@
       "yaw": 98.13
      }
     ],
-    "tall_parts": 11,
+    "tall_parts": 13,
     "surfaces": {
      "Base": [
       4,
@@ -165810,36 +167358,3684 @@
       26,
       8
      ],
+     "F1_PorchTop": [
+      2,
+      2
+     ],
+     "F2_PorchTop": [
+      2,
+      2
+     ],
      "F1_Terrace": [
-      18,
+      13,
       6
      ],
      "F2_Terrace": [
-      14,
+      12,
       5
      ]
     },
     "group_surfaces": {
      "Base": 3,
      "F1_Interior": 8,
+     "F1_PorchTop": 2,
      "F1_Slab": 2,
      "F1_Terrace": 6,
      "F1_Wall": 3,
      "F1_WallTop": 6,
      "F2_Interior": 8,
+     "F2_PorchTop": 2,
      "F2_Slab": 2,
      "F2_Terrace": 5,
      "F2_Wall": 4,
      "F2_WallTop": 6,
      "Interior": 8,
      "NameSign": 3,
-     "PorchTop": 1,
+     "PorchTop": 3,
      "Roof": 6,
      "WallsUp": 4,
      "Walls": 10,
      "WallShell": 4
     },
     "ceiling": null,
+    "partitions": [
+     [
+      8.67,
+      4.08,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      115.2
+     ],
+     [
+      8.108,
+      5.107,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      122.21
+     ],
+     [
+      7.424,
+      6.058,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      129.21
+     ],
+     [
+      5.839,
+      7.594,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      142.44
+     ],
+     [
+      4.794,
+      8.293,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      149.97
+     ],
+     [
+      3.667,
+      8.85,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      157.49
+     ],
+     [
+      2.477,
+      9.254,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      165.02
+     ],
+     [
+      1.244,
+      9.498,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      172.54
+     ],
+     [
+      11.521,
+      4.585,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      21.7
+     ],
+     [
+      0.8,
+      12.374,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      86.3
+     ],
+     [
+      7.571,
+      6.285,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      39.7
+     ],
+     [
+      10.048,
+      8.342,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      39.7
+     ],
+     [
+      6.099,
+      7.722,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      51.7
+     ],
+     [
+      8.094,
+      10.249,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      51.7
+     ],
+     [
+      2.649,
+      9.425,
+      0.14,
+      2.24,
+      0.19,
+      0.06,
+      74.3
+     ],
+     [
+      3.52,
+      12.525,
+      0.14,
+      2.24,
+      2.19,
+      0.06,
+      74.3
+     ],
+     [
+      8.324,
+      7.761,
+      0.14,
+      2.24,
+      0.656,
+      0.06,
+      133.0
+     ],
+     [
+      7.157,
+      8.872,
+      0.14,
+      2.24,
+      0.118,
+      0.06,
+      141.11
+     ],
+     [
+      13.842,
+      6.242,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      114.27
+     ],
+     [
+      13.226,
+      7.459,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      119.42
+     ],
+     [
+      12.503,
+      8.616,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      124.57
+     ],
+     [
+      11.68,
+      9.704,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      129.72
+     ],
+     [
+      10.762,
+      10.713,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      134.87
+     ],
+     [
+      9.757,
+      11.635,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      140.02
+     ],
+     [
+      8.673,
+      12.464,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      145.17
+     ],
+     [
+      7.52,
+      13.192,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      150.32
+     ],
+     [
+      6.305,
+      13.814,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      155.46
+     ],
+     [
+      3.969,
+      14.66,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      164.85
+     ],
+     [
+      2.786,
+      14.93,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      169.43
+     ],
+     [
+      1.585,
+      15.105,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      174.01
+     ],
+     [
+      -1.201,
+      9.506,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      187.2
+     ],
+     [
+      -2.352,
+      9.289,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      194.21
+     ],
+     [
+      -3.467,
+      8.933,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      201.21
+     ],
+     [
+      -5.418,
+      7.9,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      214.44
+     ],
+     [
+      -6.406,
+      7.122,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      221.97
+     ],
+     [
+      -7.283,
+      6.222,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      229.49
+     ],
+     [
+      -8.035,
+      5.215,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      237.02
+     ],
+     [
+      -8.649,
+      4.118,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      244.54
+     ],
+     [
+      -0.8,
+      12.374,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      93.7
+     ],
+     [
+      -11.521,
+      4.585,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      158.3
+     ],
+     [
+      -3.638,
+      9.143,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      111.7
+     ],
+     [
+      -4.829,
+      12.135,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      111.7
+     ],
+     [
+      -5.46,
+      8.187,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      123.7
+     ],
+     [
+      -7.246,
+      10.865,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      123.7
+     ],
+     [
+      -8.145,
+      5.432,
+      0.14,
+      2.24,
+      0.19,
+      0.06,
+      146.3
+     ],
+     [
+      -10.824,
+      7.218,
+      0.14,
+      2.24,
+      2.19,
+      0.06,
+      146.3
+     ],
+     [
+      -4.809,
+      10.315,
+      0.14,
+      2.24,
+      0.656,
+      0.06,
+      205.0
+     ],
+     [
+      -6.227,
+      9.549,
+      0.14,
+      2.24,
+      0.118,
+      0.06,
+      213.11
+     ],
+     [
+      -1.659,
+      15.094,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      186.27
+     ],
+     [
+      -3.007,
+      14.884,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      191.42
+     ],
+     [
+      -4.331,
+      14.554,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      196.57
+     ],
+     [
+      -5.619,
+      14.107,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      201.72
+     ],
+     [
+      -6.863,
+      13.545,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      206.87
+     ],
+     [
+      -8.051,
+      12.875,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      212.02
+     ],
+     [
+      -9.174,
+      12.1,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      217.17
+     ],
+     [
+      -10.223,
+      11.228,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      222.32
+     ],
+     [
+      -11.189,
+      10.265,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      227.46
+     ],
+     [
+      -12.716,
+      8.305,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      236.85
+     ],
+     [
+      -13.339,
+      7.263,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      241.43
+     ],
+     [
+      -13.876,
+      6.175,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      246.01
+     ],
+     [
+      -9.412,
+      1.795,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      259.2
+     ],
+     [
+      -9.561,
+      0.634,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      266.21
+     ],
+     [
+      -9.567,
+      -0.537,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      273.21
+     ],
+     [
+      -9.187,
+      -2.712,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      286.44
+     ],
+     [
+      -8.753,
+      -3.891,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      293.97
+     ],
+     [
+      -8.168,
+      -5.004,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      301.49
+     ],
+     [
+      -7.443,
+      -6.03,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      309.02
+     ],
+     [
+      -6.589,
+      -6.953,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      316.54
+     ],
+     [
+      -12.016,
+      3.063,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      165.7
+     ],
+     [
+      -7.921,
+      -9.541,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      230.3
+     ],
+     [
+      -9.819,
+      -0.635,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      183.7
+     ],
+     [
+      -13.033,
+      -0.843,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      183.7
+     ],
+     [
+      -9.473,
+      -2.663,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      195.7
+     ],
+     [
+      -12.573,
+      -3.534,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      195.7
+     ],
+     [
+      -7.683,
+      -6.068,
+      0.14,
+      2.24,
+      0.19,
+      0.06,
+      218.3
+     ],
+     [
+      -10.21,
+      -8.063,
+      0.14,
+      2.24,
+      2.19,
+      0.06,
+      218.3
+     ],
+     [
+      -11.296,
+      -1.386,
+      0.14,
+      2.24,
+      0.656,
+      0.06,
+      277.0
+     ],
+     [
+      -11.005,
+      -2.971,
+      0.14,
+      2.24,
+      0.118,
+      0.06,
+      285.11
+     ],
+     [
+      -14.868,
+      3.086,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      258.27
+     ],
+     [
+      -15.085,
+      1.739,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      263.42
+     ],
+     [
+      -15.18,
+      0.379,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      268.57
+     ],
+     [
+      -15.153,
+      -0.985,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      273.72
+     ],
+     [
+      -15.003,
+      -2.341,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      278.87
+     ],
+     [
+      -14.732,
+      -3.678,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      284.02
+     ],
+     [
+      -14.343,
+      -4.985,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      289.17
+     ],
+     [
+      -13.838,
+      -6.253,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      294.32
+     ],
+     [
+      -13.221,
+      -7.469,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      299.46
+     ],
+     [
+      -11.828,
+      -9.528,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      308.85
+     ],
+     [
+      -11.029,
+      -10.442,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      313.43
+     ],
+     [
+      -10.16,
+      -11.289,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      318.01
+     ],
+     [
+      -4.616,
+      -8.397,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      331.2
+     ],
+     [
+      -3.557,
+      -8.897,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      338.21
+     ],
+     [
+      -2.446,
+      -9.265,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      345.21
+     ],
+     [
+      -0.26,
+      -9.576,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      358.44
+     ],
+     [
+      0.996,
+      -9.527,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      5.97
+     ],
+     [
+      2.235,
+      -9.315,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      13.49
+     ],
+     [
+      3.435,
+      -8.942,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      21.02
+     ],
+     [
+      4.577,
+      -8.415,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      28.54
+     ],
+     [
+      -6.626,
+      -10.481,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      237.7
+     ],
+     [
+      6.626,
+      -10.481,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      302.3
+     ],
+     [
+      -2.431,
+      -9.535,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      255.7
+     ],
+     [
+      -3.226,
+      -12.655,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      255.7
+     ],
+     [
+      -0.395,
+      -9.832,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      267.7
+     ],
+     [
+      -0.524,
+      -13.049,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      267.7
+     ],
+     [
+      3.397,
+      -9.182,
+      0.14,
+      2.24,
+      0.19,
+      0.06,
+      290.3
+     ],
+     [
+      4.514,
+      -12.202,
+      0.14,
+      2.24,
+      2.19,
+      0.06,
+      290.3
+     ],
+     [
+      -2.172,
+      -11.172,
+      0.14,
+      2.24,
+      0.656,
+      0.06,
+      349.0
+     ],
+     [
+      -0.575,
+      -11.385,
+      0.14,
+      2.24,
+      0.118,
+      0.06,
+      357.11
+     ],
+     [
+      -7.529,
+      -13.186,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      330.27
+     ],
+     [
+      -6.316,
+      -13.809,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      335.42
+     ],
+     [
+      -5.051,
+      -14.32,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      340.57
+     ],
+     [
+      -3.745,
+      -14.715,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      345.72
+     ],
+     [
+      -2.41,
+      -14.992,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      350.87
+     ],
+     [
+      -1.054,
+      -15.148,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      356.02
+     ],
+     [
+      0.309,
+      -15.182,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      1.17
+     ],
+     [
+      1.67,
+      -15.092,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      6.32
+     ],
+     [
+      3.018,
+      -14.882,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      11.46
+     ],
+     [
+      5.406,
+      -14.193,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      20.85
+     ],
+     [
+      6.522,
+      -13.716,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      25.43
+     ],
+     [
+      7.597,
+      -13.152,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      30.01
+     ],
+     [
+      6.56,
+      -6.985,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      43.2
+     ],
+     [
+      7.362,
+      -6.133,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      50.21
+     ],
+     [
+      8.055,
+      -5.189,
+      0.14,
+      2.24,
+      0.587,
+      0.06,
+      57.21
+     ],
+     [
+      9.027,
+      -3.206,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      70.44
+     ],
+     [
+      9.369,
+      -1.997,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      77.97
+     ],
+     [
+      9.55,
+      -0.753,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      85.49
+     ],
+     [
+      9.566,
+      0.504,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      93.02
+     ],
+     [
+      9.418,
+      1.752,
+      0.14,
+      2.24,
+      0.63,
+      0.06,
+      100.54
+     ],
+     [
+      7.921,
+      -9.541,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      309.7
+     ],
+     [
+      12.016,
+      3.063,
+      0.14,
+      2.24,
+      2.8,
+      0.06,
+      14.3
+     ],
+     [
+      8.317,
+      -5.258,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      327.7
+     ],
+     [
+      11.039,
+      -6.979,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      327.7
+     ],
+     [
+      9.229,
+      -3.414,
+      0.14,
+      2.24,
+      0.24,
+      0.06,
+      339.7
+     ],
+     [
+      12.249,
+      -4.531,
+      0.14,
+      2.24,
+      2.14,
+      0.06,
+      339.7
+     ],
+     [
+      9.782,
+      0.393,
+      0.14,
+      2.24,
+      0.19,
+      0.06,
+      2.3
+     ],
+     [
+      13.0,
+      0.522,
+      0.14,
+      2.24,
+      2.19,
+      0.06,
+      2.3
+     ],
+     [
+      9.954,
+      -5.518,
+      0.14,
+      2.24,
+      0.656,
+      0.06,
+      61.0
+     ],
+     [
+      10.65,
+      -4.065,
+      0.14,
+      2.24,
+      0.118,
+      0.06,
+      69.11
+     ],
+     [
+      10.214,
+      -11.236,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      42.27
+     ],
+     [
+      11.181,
+      -10.274,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      47.42
+     ],
+     [
+      12.058,
+      -9.229,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      52.57
+     ],
+     [
+      12.838,
+      -8.109,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      57.72
+     ],
+     [
+      13.514,
+      -6.925,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      62.87
+     ],
+     [
+      14.081,
+      -5.684,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      68.02
+     ],
+     [
+      14.534,
+      -4.397,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      73.17
+     ],
+     [
+      14.87,
+      -3.075,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      78.32
+     ],
+     [
+      15.086,
+      -1.728,
+      0.14,
+      2.24,
+      0.683,
+      0.06,
+      83.46
+     ],
+     [
+      15.169,
+      0.756,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      92.85
+     ],
+     [
+      15.06,
+      1.964,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      97.43
+     ],
+     [
+      14.855,
+      3.161,
+      0.14,
+      2.24,
+      0.607,
+      0.06,
+      102.01
+     ],
+     [
+      5.6,
+      2.661,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      25.41
+     ],
+     [
+      0.8,
+      6.148,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      82.59
+     ],
+     [
+      3.764,
+      2.241,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      120.77
+     ],
+     [
+      3.282,
+      2.902,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      131.48
+     ],
+     [
+      1.746,
+      4.018,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      156.52
+     ],
+     [
+      0.968,
+      4.272,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      167.23
+     ],
+     [
+      6.948,
+      3.925,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      119.46
+     ],
+     [
+      6.326,
+      4.864,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      127.56
+     ],
+     [
+      5.578,
+      5.707,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      135.65
+     ],
+     [
+      3.704,
+      7.068,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      152.35
+     ],
+     [
+      2.671,
+      7.52,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      160.44
+     ],
+     [
+      1.586,
+      7.821,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      168.54
+     ],
+     [
+      -0.8,
+      6.148,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      97.41
+     ],
+     [
+      -5.6,
+      2.661,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      154.59
+     ],
+     [
+      -0.968,
+      4.272,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      192.77
+     ],
+     [
+      -1.746,
+      4.018,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      203.48
+     ],
+     [
+      -3.282,
+      2.902,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      228.52
+     ],
+     [
+      -3.764,
+      2.241,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      239.23
+     ],
+     [
+      -1.586,
+      7.821,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      191.46
+     ],
+     [
+      -2.671,
+      7.52,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      199.56
+     ],
+     [
+      -3.704,
+      7.068,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      207.65
+     ],
+     [
+      -5.578,
+      5.707,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      224.35
+     ],
+     [
+      -6.326,
+      4.864,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      232.44
+     ],
+     [
+      -6.948,
+      3.925,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      240.54
+     ],
+     [
+      -6.094,
+      1.139,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      169.41
+     ],
+     [
+      -4.261,
+      -4.504,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      226.59
+     ],
+     [
+      -4.363,
+      0.399,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      264.77
+     ],
+     [
+      -4.361,
+      -0.419,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      275.48
+     ],
+     [
+      -3.774,
+      -2.225,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      300.52
+     ],
+     [
+      -3.295,
+      -2.887,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      311.23
+     ],
+     [
+      -7.928,
+      0.909,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      263.46
+     ],
+     [
+      -7.977,
+      -0.217,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      271.56
+     ],
+     [
+      -7.867,
+      -1.338,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      279.65
+     ],
+     [
+      -7.151,
+      -3.541,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      296.35
+     ],
+     [
+      -6.581,
+      -4.513,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      304.44
+     ],
+     [
+      -5.88,
+      -5.395,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      312.54
+     ],
+     [
+      -2.967,
+      -5.444,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      241.41
+     ],
+     [
+      2.967,
+      -5.444,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      298.59
+     ],
+     [
+      -1.728,
+      -4.026,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      336.77
+     ],
+     [
+      -0.95,
+      -4.277,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      347.48
+     ],
+     [
+      0.95,
+      -4.277,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      12.52
+     ],
+     [
+      1.728,
+      -4.026,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      23.23
+     ],
+     [
+      -3.314,
+      -7.259,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      335.46
+     ],
+     [
+      -2.259,
+      -7.654,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      343.56
+     ],
+     [
+      -1.158,
+      -7.896,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      351.65
+     ],
+     [
+      1.158,
+      -7.896,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      8.35
+     ],
+     [
+      2.259,
+      -7.654,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      16.44
+     ],
+     [
+      3.314,
+      -7.259,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      24.54
+     ],
+     [
+      4.261,
+      -4.504,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      313.41
+     ],
+     [
+      6.094,
+      1.139,
+      0.14,
+      2.24,
+      1.8,
+      0.06,
+      10.59
+     ],
+     [
+      3.295,
+      -2.887,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      48.77
+     ],
+     [
+      3.774,
+      -2.225,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      59.48
+     ],
+     [
+      4.361,
+      -0.419,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      84.52
+     ],
+     [
+      4.363,
+      0.399,
+      0.14,
+      2.24,
+      0.411,
+      0.06,
+      95.23
+     ],
+     [
+      5.88,
+      -5.395,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      47.46
+     ],
+     [
+      6.581,
+      -4.513,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      55.56
+     ],
+     [
+      7.151,
+      -3.541,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      63.65
+     ],
+     [
+      7.867,
+      -1.338,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      80.35
+     ],
+     [
+      7.977,
+      -0.217,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      88.44
+     ],
+     [
+      7.928,
+      0.909,
+      0.14,
+      2.24,
+      0.565,
+      0.06,
+      96.54
+     ],
+     [
+      8.67,
+      4.08,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      115.2
+     ],
+     [
+      8.108,
+      5.107,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      122.21
+     ],
+     [
+      7.424,
+      6.058,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      129.21
+     ],
+     [
+      5.839,
+      7.594,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      142.44
+     ],
+     [
+      4.794,
+      8.293,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      149.97
+     ],
+     [
+      3.667,
+      8.85,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      157.49
+     ],
+     [
+      2.477,
+      9.254,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      165.02
+     ],
+     [
+      1.244,
+      9.498,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      172.54
+     ],
+     [
+      11.521,
+      4.585,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      21.7
+     ],
+     [
+      0.8,
+      12.374,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      86.3
+     ],
+     [
+      7.571,
+      6.285,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      39.7
+     ],
+     [
+      10.048,
+      8.342,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      39.7
+     ],
+     [
+      6.099,
+      7.722,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      51.7
+     ],
+     [
+      8.094,
+      10.249,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      51.7
+     ],
+     [
+      2.649,
+      9.425,
+      3.74,
+      5.84,
+      0.19,
+      0.06,
+      74.3
+     ],
+     [
+      3.52,
+      12.525,
+      3.74,
+      5.84,
+      2.19,
+      0.06,
+      74.3
+     ],
+     [
+      8.324,
+      7.761,
+      3.74,
+      5.84,
+      0.656,
+      0.06,
+      133.0
+     ],
+     [
+      7.157,
+      8.872,
+      3.74,
+      5.84,
+      0.118,
+      0.06,
+      141.11
+     ],
+     [
+      -1.201,
+      9.506,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      187.2
+     ],
+     [
+      -2.352,
+      9.289,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      194.21
+     ],
+     [
+      -3.467,
+      8.933,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      201.21
+     ],
+     [
+      -5.418,
+      7.9,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      214.44
+     ],
+     [
+      -6.406,
+      7.122,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      221.97
+     ],
+     [
+      -7.283,
+      6.222,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      229.49
+     ],
+     [
+      -8.035,
+      5.215,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      237.02
+     ],
+     [
+      -8.649,
+      4.118,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      244.54
+     ],
+     [
+      -0.8,
+      12.374,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      93.7
+     ],
+     [
+      -11.521,
+      4.585,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      158.3
+     ],
+     [
+      -3.638,
+      9.143,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      111.7
+     ],
+     [
+      -4.829,
+      12.135,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      111.7
+     ],
+     [
+      -5.46,
+      8.187,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      123.7
+     ],
+     [
+      -7.246,
+      10.865,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      123.7
+     ],
+     [
+      -8.145,
+      5.432,
+      3.74,
+      5.84,
+      0.19,
+      0.06,
+      146.3
+     ],
+     [
+      -10.824,
+      7.218,
+      3.74,
+      5.84,
+      2.19,
+      0.06,
+      146.3
+     ],
+     [
+      -4.809,
+      10.315,
+      3.74,
+      5.84,
+      0.656,
+      0.06,
+      205.0
+     ],
+     [
+      -6.227,
+      9.549,
+      3.74,
+      5.84,
+      0.118,
+      0.06,
+      213.11
+     ],
+     [
+      -9.412,
+      1.795,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      259.2
+     ],
+     [
+      -9.561,
+      0.634,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      266.21
+     ],
+     [
+      -9.567,
+      -0.537,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      273.21
+     ],
+     [
+      -9.187,
+      -2.712,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      286.44
+     ],
+     [
+      -8.753,
+      -3.891,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      293.97
+     ],
+     [
+      -8.168,
+      -5.004,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      301.49
+     ],
+     [
+      -7.443,
+      -6.03,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      309.02
+     ],
+     [
+      -6.589,
+      -6.953,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      316.54
+     ],
+     [
+      -12.016,
+      3.063,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      165.7
+     ],
+     [
+      -7.921,
+      -9.541,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      230.3
+     ],
+     [
+      -9.819,
+      -0.635,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      183.7
+     ],
+     [
+      -13.033,
+      -0.843,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      183.7
+     ],
+     [
+      -9.473,
+      -2.663,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      195.7
+     ],
+     [
+      -12.573,
+      -3.534,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      195.7
+     ],
+     [
+      -7.683,
+      -6.068,
+      3.74,
+      5.84,
+      0.19,
+      0.06,
+      218.3
+     ],
+     [
+      -10.21,
+      -8.063,
+      3.74,
+      5.84,
+      2.19,
+      0.06,
+      218.3
+     ],
+     [
+      -11.296,
+      -1.386,
+      3.74,
+      5.84,
+      0.656,
+      0.06,
+      277.0
+     ],
+     [
+      -11.005,
+      -2.971,
+      3.74,
+      5.84,
+      0.118,
+      0.06,
+      285.11
+     ],
+     [
+      -4.616,
+      -8.397,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      331.2
+     ],
+     [
+      -3.557,
+      -8.897,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      338.21
+     ],
+     [
+      -2.446,
+      -9.265,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      345.21
+     ],
+     [
+      -0.26,
+      -9.576,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      358.44
+     ],
+     [
+      0.996,
+      -9.527,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      5.97
+     ],
+     [
+      2.235,
+      -9.315,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      13.49
+     ],
+     [
+      3.435,
+      -8.942,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      21.02
+     ],
+     [
+      4.577,
+      -8.415,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      28.54
+     ],
+     [
+      -6.626,
+      -10.481,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      237.7
+     ],
+     [
+      6.626,
+      -10.481,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      302.3
+     ],
+     [
+      -2.431,
+      -9.535,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      255.7
+     ],
+     [
+      -3.226,
+      -12.655,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      255.7
+     ],
+     [
+      -0.395,
+      -9.832,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      267.7
+     ],
+     [
+      -0.524,
+      -13.049,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      267.7
+     ],
+     [
+      3.397,
+      -9.182,
+      3.74,
+      5.84,
+      0.19,
+      0.06,
+      290.3
+     ],
+     [
+      4.514,
+      -12.202,
+      3.74,
+      5.84,
+      2.19,
+      0.06,
+      290.3
+     ],
+     [
+      -2.172,
+      -11.172,
+      3.74,
+      5.84,
+      0.656,
+      0.06,
+      349.0
+     ],
+     [
+      -0.575,
+      -11.385,
+      3.74,
+      5.84,
+      0.118,
+      0.06,
+      357.11
+     ],
+     [
+      6.56,
+      -6.985,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      43.2
+     ],
+     [
+      7.362,
+      -6.133,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      50.21
+     ],
+     [
+      8.055,
+      -5.189,
+      3.74,
+      5.84,
+      0.587,
+      0.06,
+      57.21
+     ],
+     [
+      9.027,
+      -3.206,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      70.44
+     ],
+     [
+      9.369,
+      -1.997,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      77.97
+     ],
+     [
+      9.55,
+      -0.753,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      85.49
+     ],
+     [
+      9.566,
+      0.504,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      93.02
+     ],
+     [
+      9.418,
+      1.752,
+      3.74,
+      5.84,
+      0.63,
+      0.06,
+      100.54
+     ],
+     [
+      7.921,
+      -9.541,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      309.7
+     ],
+     [
+      12.016,
+      3.063,
+      3.74,
+      5.84,
+      2.8,
+      0.06,
+      14.3
+     ],
+     [
+      8.317,
+      -5.258,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      327.7
+     ],
+     [
+      11.039,
+      -6.979,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      327.7
+     ],
+     [
+      9.229,
+      -3.414,
+      3.74,
+      5.84,
+      0.24,
+      0.06,
+      339.7
+     ],
+     [
+      12.249,
+      -4.531,
+      3.74,
+      5.84,
+      2.14,
+      0.06,
+      339.7
+     ],
+     [
+      9.782,
+      0.393,
+      3.74,
+      5.84,
+      0.19,
+      0.06,
+      2.3
+     ],
+     [
+      13.0,
+      0.522,
+      3.74,
+      5.84,
+      2.19,
+      0.06,
+      2.3
+     ],
+     [
+      9.954,
+      -5.518,
+      3.74,
+      5.84,
+      0.656,
+      0.06,
+      61.0
+     ],
+     [
+      10.65,
+      -4.065,
+      3.74,
+      5.84,
+      0.118,
+      0.06,
+      69.11
+     ],
+     [
+      5.6,
+      2.661,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      25.41
+     ],
+     [
+      0.8,
+      6.148,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      82.59
+     ],
+     [
+      3.764,
+      2.241,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      120.77
+     ],
+     [
+      3.282,
+      2.902,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      131.48
+     ],
+     [
+      1.746,
+      4.018,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      156.52
+     ],
+     [
+      0.968,
+      4.272,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      167.23
+     ],
+     [
+      6.948,
+      3.925,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      119.46
+     ],
+     [
+      6.326,
+      4.864,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      127.56
+     ],
+     [
+      5.578,
+      5.707,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      135.65
+     ],
+     [
+      3.704,
+      7.068,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      152.35
+     ],
+     [
+      2.671,
+      7.52,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      160.44
+     ],
+     [
+      1.586,
+      7.821,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      168.54
+     ],
+     [
+      -0.8,
+      6.148,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      97.41
+     ],
+     [
+      -5.6,
+      2.661,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      154.59
+     ],
+     [
+      -0.968,
+      4.272,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      192.77
+     ],
+     [
+      -1.746,
+      4.018,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      203.48
+     ],
+     [
+      -3.282,
+      2.902,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      228.52
+     ],
+     [
+      -3.764,
+      2.241,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      239.23
+     ],
+     [
+      -1.586,
+      7.821,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      191.46
+     ],
+     [
+      -2.671,
+      7.52,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      199.56
+     ],
+     [
+      -3.704,
+      7.068,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      207.65
+     ],
+     [
+      -5.578,
+      5.707,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      224.35
+     ],
+     [
+      -6.326,
+      4.864,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      232.44
+     ],
+     [
+      -6.948,
+      3.925,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      240.54
+     ],
+     [
+      -6.094,
+      1.139,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      169.41
+     ],
+     [
+      -4.261,
+      -4.504,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      226.59
+     ],
+     [
+      -4.363,
+      0.399,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      264.77
+     ],
+     [
+      -4.361,
+      -0.419,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      275.48
+     ],
+     [
+      -3.774,
+      -2.225,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      300.52
+     ],
+     [
+      -3.295,
+      -2.887,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      311.23
+     ],
+     [
+      -7.928,
+      0.909,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      263.46
+     ],
+     [
+      -7.977,
+      -0.217,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      271.56
+     ],
+     [
+      -7.867,
+      -1.338,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      279.65
+     ],
+     [
+      -7.151,
+      -3.541,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      296.35
+     ],
+     [
+      -6.581,
+      -4.513,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      304.44
+     ],
+     [
+      -5.88,
+      -5.395,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      312.54
+     ],
+     [
+      -2.967,
+      -5.444,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      241.41
+     ],
+     [
+      2.967,
+      -5.444,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      298.59
+     ],
+     [
+      -1.728,
+      -4.026,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      336.77
+     ],
+     [
+      -0.95,
+      -4.277,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      347.48
+     ],
+     [
+      0.95,
+      -4.277,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      12.52
+     ],
+     [
+      1.728,
+      -4.026,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      23.23
+     ],
+     [
+      -3.314,
+      -7.259,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      335.46
+     ],
+     [
+      -2.259,
+      -7.654,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      343.56
+     ],
+     [
+      -1.158,
+      -7.896,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      351.65
+     ],
+     [
+      1.158,
+      -7.896,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      8.35
+     ],
+     [
+      2.259,
+      -7.654,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      16.44
+     ],
+     [
+      3.314,
+      -7.259,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      24.54
+     ],
+     [
+      4.261,
+      -4.504,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      313.41
+     ],
+     [
+      6.094,
+      1.139,
+      3.74,
+      5.84,
+      1.8,
+      0.06,
+      10.59
+     ],
+     [
+      3.295,
+      -2.887,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      48.77
+     ],
+     [
+      3.774,
+      -2.225,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      59.48
+     ],
+     [
+      4.361,
+      -0.419,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      84.52
+     ],
+     [
+      4.363,
+      0.399,
+      3.74,
+      5.84,
+      0.411,
+      0.06,
+      95.23
+     ],
+     [
+      5.88,
+      -5.395,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      47.46
+     ],
+     [
+      6.581,
+      -4.513,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      55.56
+     ],
+     [
+      7.151,
+      -3.541,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      63.65
+     ],
+     [
+      7.867,
+      -1.338,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      80.35
+     ],
+     [
+      7.977,
+      -0.217,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      88.44
+     ],
+     [
+      7.928,
+      0.909,
+      3.74,
+      5.84,
+      0.565,
+      0.06,
+      96.54
+     ],
+     [
+      0.627,
+      -4.309,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      8.28
+     ],
+     [
+      1.83,
+      -3.951,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      24.85
+     ],
+     [
+      2.88,
+      -3.265,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      41.42
+     ],
+     [
+      3.692,
+      -2.308,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      57.99
+     ],
+     [
+      4.197,
+      -1.16,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      74.55
+     ],
+     [
+      4.197,
+      1.16,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      105.45
+     ],
+     [
+      3.692,
+      2.308,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      122.01
+     ],
+     [
+      2.88,
+      3.265,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      138.58
+     ],
+     [
+      1.83,
+      3.951,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      155.15
+     ],
+     [
+      0.627,
+      4.309,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      171.72
+     ],
+     [
+      0.0,
+      -7.65,
+      7.34,
+      9.44,
+      3.25,
+      0.06,
+      270.0
+     ],
+     [
+      0.0,
+      7.65,
+      7.34,
+      9.44,
+      3.25,
+      0.06,
+      90.0
+     ],
+     [
+      2.049,
+      -5.629,
+      7.34,
+      9.44,
+      1.59,
+      0.06,
+      290.0
+     ],
+     [
+      3.304,
+      -9.077,
+      7.34,
+      9.44,
+      1.24,
+      0.06,
+      290.0
+     ],
+     [
+      3.808,
+      -2.379,
+      7.34,
+      9.44,
+      0.09,
+      0.06,
+      328.0
+     ],
+     [
+      6.92,
+      -4.324,
+      7.34,
+      9.44,
+      2.74,
+      0.06,
+      328.0
+     ],
+     [
+      3.538,
+      2.764,
+      7.34,
+      9.44,
+      0.09,
+      0.06,
+      38.0
+     ],
+     [
+      6.43,
+      5.024,
+      7.34,
+      9.44,
+      2.74,
+      0.06,
+      38.0
+     ],
+     [
+      4.127,
+      3.762,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      132.35
+     ],
+     [
+      2.822,
+      4.819,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      149.65
+     ],
+     [
+      2.06,
+      5.19,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      158.35
+     ],
+     [
+      0.424,
+      5.568,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      175.65
+     ],
+     [
+      3.617,
+      7.415,
+      7.34,
+      9.44,
+      2.65,
+      0.06,
+      64.0
+     ],
+     [
+      -0.627,
+      4.309,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      188.28
+     ],
+     [
+      -1.83,
+      3.951,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      204.85
+     ],
+     [
+      -2.88,
+      3.265,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      221.42
+     ],
+     [
+      -3.692,
+      2.308,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      237.99
+     ],
+     [
+      -4.197,
+      1.16,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      254.55
+     ],
+     [
+      -4.197,
+      -1.16,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      285.45
+     ],
+     [
+      -3.692,
+      -2.308,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      302.01
+     ],
+     [
+      -2.88,
+      -3.265,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      318.58
+     ],
+     [
+      -1.83,
+      -3.951,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      335.15
+     ],
+     [
+      -0.627,
+      -4.309,
+      7.34,
+      9.44,
+      0.634,
+      0.06,
+      351.72
+     ],
+     [
+      -2.049,
+      5.629,
+      7.34,
+      9.44,
+      1.59,
+      0.06,
+      110.0
+     ],
+     [
+      -3.304,
+      9.077,
+      7.34,
+      9.44,
+      1.24,
+      0.06,
+      110.0
+     ],
+     [
+      -3.808,
+      2.379,
+      7.34,
+      9.44,
+      0.09,
+      0.06,
+      148.0
+     ],
+     [
+      -6.92,
+      4.324,
+      7.34,
+      9.44,
+      2.74,
+      0.06,
+      148.0
+     ],
+     [
+      -3.538,
+      -2.764,
+      7.34,
+      9.44,
+      0.09,
+      0.06,
+      218.0
+     ],
+     [
+      -6.43,
+      -5.024,
+      7.34,
+      9.44,
+      2.74,
+      0.06,
+      218.0
+     ],
+     [
+      -4.127,
+      -3.762,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      312.35
+     ],
+     [
+      -2.822,
+      -4.819,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      329.65
+     ],
+     [
+      -2.06,
+      -5.19,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      338.35
+     ],
+     [
+      -0.424,
+      -5.568,
+      7.34,
+      9.44,
+      0.425,
+      0.06,
+      355.65
+     ],
+     [
+      -3.617,
+      -7.415,
+      7.34,
+      9.44,
+      2.65,
+      0.06,
+      244.0
+     ]
+    ],
     "decals": {
      "decal_objects": 0,
      "upper_objects": 32,
@@ -165869,7 +171065,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 160416,
+    "tris": 166004,
     "rmax": 19.900000689745397,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -165878,11 +171074,13 @@
     "meshes": [
      "Base",
      "F1_Interior",
+     "F1_PorchTop",
      "F1_Slab",
      "F1_Terrace",
      "F1_Wall",
      "F1_WallTop",
      "F2_Interior",
+     "F2_PorchTop",
      "F2_Slab",
      "F2_Terrace",
      "F2_Wall",
@@ -166501,7 +171699,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.2,
+   "seconds": 6.0,
    "ao_rays": 1598688,
    "trays": [],
    "v3": {
@@ -167152,10 +172350,9 @@
    "type": "retail",
    "size": "m",
    "footprint": 7.5,
-   "tris": 22306,
+   "tris": 22188,
    "budget": 29600,
    "props": {
-    "table_clutter": 2,
     "r_motto": 1,
     "r_shop": 1,
     "r_agi": 1,
@@ -167186,7 +172383,7 @@
    "tris_by_object": {
     "Base": 412,
     "Roof": 1684,
-    "Interior": 8502,
+    "Interior": 8384,
     "PorchTop": 642,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -167355,12 +172552,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1735752,
+   "file_size": 1728340,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.1,
-   "ao_rays": 2174112,
+   "seconds": 7.6,
+   "ao_rays": 2162592,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -167786,7 +172983,7 @@
       4
      ],
      "Interior": [
-      17,
+      15,
       6
      ],
      "Tall_00": [
@@ -167860,7 +173057,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 22306,
+    "tris": 22188,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -168048,10 +173245,9 @@
    "type": "retail",
    "size": "l",
    "footprint": 9.6,
-   "tris": 31455,
+   "tris": 31257,
    "budget": 42800,
    "props": {
-    "table_clutter": 3,
     "r_motto": 1,
     "r_shop": 1,
     "r_agi": 1,
@@ -168083,7 +173279,7 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 2061,
-    "Interior": 16184,
+    "Interior": 15986,
     "PorchTop": 718,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -168282,12 +173478,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 2318240,
+   "file_size": 2306108,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 15.2,
-   "ao_rays": 3071952,
+   "seconds": 12.5,
+   "ao_rays": 3052560,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -168920,7 +174116,7 @@
       4
      ],
      "Interior": [
-      17,
+      15,
       6
      ],
      "Tall_00": [
@@ -168995,7 +174191,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 31455,
+    "tris": 31257,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -169405,7 +174601,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
+   "seconds": 6.9,
    "ao_rays": 2291088,
    "trays": [],
    "v3": {
@@ -170768,7 +175964,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 13.0,
+   "seconds": 12.4,
    "ao_rays": 3351312,
    "trays": [],
    "v3": {
@@ -172666,7 +177862,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 23.8,
+   "seconds": 21.4,
    "ao_rays": 5168208,
    "trays": [],
    "v3": {
@@ -174889,7 +180085,7 @@
    "type": "academy",
    "size": "s",
    "footprint": 6.0,
-   "tris": 19614,
+   "tris": 19548,
    "budget": 19900,
    "props": {
     "screen_content": 1,
@@ -174901,7 +180097,6 @@
     "r_agi": 1,
     "r_peer": 1,
     "r_clock": 1,
-    "table_clutter": 1,
     "floor_detail": 1,
     "c_planets": 1,
     "c_sign": 1,
@@ -174930,7 +180125,7 @@
    "tris_by_object": {
     "Base": 316,
     "Roof": 1756,
-    "Interior": 7358,
+    "Interior": 7292,
     "PorchTop": 208,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -175070,12 +180265,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1468328,
+   "file_size": 1464572,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 7.8,
-   "ao_rays": 1947840,
+   "seconds": 7.6,
+   "ao_rays": 1941312,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -175569,7 +180764,7 @@
     "door_free_deg": 322.0
    },
    "verify": {
-    "tris": 19614,
+    "tris": 19548,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -175727,7 +180922,7 @@
    "type": "academy",
    "size": "m",
    "footprint": 7.5,
-   "tris": 26914,
+   "tris": 26848,
    "budget": 29600,
    "props": {
     "screen_content": 1,
@@ -175741,7 +180936,6 @@
     "r_whiteboard": 1,
     "r_peer": 1,
     "r_clock": 1,
-    "table_clutter": 1,
     "floor_text": 7,
     "floor_detail": 1,
     "c_planets": 1,
@@ -175773,7 +180967,7 @@
    "tris_by_object": {
     "Base": 404,
     "Roof": 1972,
-    "Interior": 12466,
+    "Interior": 12400,
     "PorchTop": 240,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -175927,12 +181121,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1977044,
+   "file_size": 1973288,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 10.9,
-   "ao_rays": 2669568,
+   "seconds": 10.6,
+   "ao_rays": 2663040,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -176518,7 +181712,7 @@
     "door_free_deg": 359.0
    },
    "verify": {
-    "tris": 26914,
+    "tris": 26848,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -176691,7 +181885,7 @@
    "type": "academy",
    "size": "l",
    "footprint": 9.6,
-   "tris": 37118,
+   "tris": 36972,
    "budget": 42800,
    "props": {
     "screen_content": 1,
@@ -176706,7 +181900,6 @@
     "r_whiteboard": 1,
     "r_peer": 1,
     "r_clock": 1,
-    "table_clutter": 2,
     "floor_text": 8,
     "floor_detail": 2,
     "c_planets": 1,
@@ -176737,7 +181930,7 @@
    "tris_by_object": {
     "Base": 644,
     "Roof": 2344,
-    "Interior": 21566,
+    "Interior": 21420,
     "PorchTop": 272,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -176913,12 +182106,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 2653380,
+   "file_size": 2644888,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 18.6,
-   "ao_rays": 3685728,
+   "seconds": 17.4,
+   "ao_rays": 3671328,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -177609,7 +182802,7 @@
       5
      ],
      "Interior": [
-      23,
+      22,
       8
      ],
      "RoofCeil": [
@@ -177673,7 +182866,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 37118,
+    "tris": 36972,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -177868,7 +183061,7 @@
    "type": "security_office",
    "size": "s",
    "footprint": 6.0,
-   "tris": 15575,
+   "tris": 15563,
    "budget": 19900,
    "props": {
     "console_label": 1,
@@ -177909,7 +183102,7 @@
    "tris_by_object": {
     "Base": 324,
     "Roof": 1764,
-    "Interior": 3980,
+    "Interior": 3968,
     "PorchTop": 212,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -178044,12 +183237,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1182124,
+   "file_size": 1181284,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.3,
-   "ao_rays": 1541712,
+   "seconds": 6.1,
+   "ao_rays": 1540560,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -178590,7 +183783,7 @@
     "door_free_deg": 254.0
    },
    "verify": {
-    "tris": 15575,
+    "tris": 15563,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -178744,7 +183937,7 @@
    "type": "security_office",
    "size": "m",
    "footprint": 7.5,
-   "tris": 19971,
+   "tris": 19959,
    "budget": 29600,
    "props": {
     "console_label": 2,
@@ -178792,7 +183985,7 @@
    "tris_by_object": {
     "Base": 412,
     "Roof": 2000,
-    "Interior": 6108,
+    "Interior": 6096,
     "PorchTop": 244,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -178947,12 +184140,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1507988,
+   "file_size": 1507148,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.9,
-   "ao_rays": 1977264,
+   "seconds": 8.4,
+   "ao_rays": 1976112,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -179522,7 +184715,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 19971,
+    "tris": 19959,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0018211620626971126,
@@ -179696,11 +184889,11 @@
    "type": "jail",
    "size": "s",
    "footprint": 6.0,
-   "tris": 13533,
+   "tris": 13361,
    "budget": 19900,
    "props": {
     "console_label": 1,
-    "table_clutter": 2,
+    "table_clutter": 1,
     "r_motto": 1,
     "r_tally": 1,
     "poster": 4,
@@ -179729,7 +184922,7 @@
    "tris_by_object": {
     "Base": 324,
     "Roof": 2101,
-    "Interior": 2942,
+    "Interior": 2770,
     "PorchTop": 224,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -179873,12 +185066,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1058168,
+   "file_size": 1048208,
    "color0": true,
    "also": [],
    "flags": [],
    "seconds": 5.1,
-   "ao_rays": 1340496,
+   "ao_rays": 1323792,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -180287,7 +185480,7 @@
       4
      ],
      "Interior": [
-      18,
+      15,
       5
      ],
      "RoofCeil": [
@@ -180417,7 +185610,7 @@
     "door_free_deg": 350.0
    },
    "verify": {
-    "tris": 13533,
+    "tris": 13361,
     "rmax": 5.8999999627750945,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -180579,11 +185772,11 @@
    "type": "jail",
    "size": "m",
    "footprint": 7.5,
-   "tris": 16644,
+   "tris": 16340,
    "budget": 29600,
    "props": {
     "console_label": 1,
-    "table_clutter": 3,
+    "table_clutter": 1,
     "r_motto": 1,
     "r_tally": 1,
     "r_wanted": 1,
@@ -180614,7 +185807,7 @@
    "tris_by_object": {
     "Base": 412,
     "Roof": 2504,
-    "Interior": 4814,
+    "Interior": 4510,
     "PorchTop": 256,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -180768,12 +185961,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1273032,
+   "file_size": 1255816,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 6.8,
-   "ao_rays": 1654176,
+   "seconds": 6.7,
+   "ao_rays": 1624512,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -181263,7 +186456,7 @@
       4
      ],
      "Interior": [
-      18,
+      15,
       5
      ],
      "RoofCeil": [
@@ -181323,7 +186516,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 16644,
+    "tris": 16340,
     "rmax": 7.400000182311928,
     "zmin": -0.20000000298023224,
     "ao_min": 0.0043914420530200005,
@@ -181495,11 +186688,11 @@
    "type": "jail",
    "size": "l",
    "footprint": 9.6,
-   "tris": 22415,
+   "tris": 22111,
    "budget": 42800,
    "props": {
     "console_label": 1,
-    "table_clutter": 3,
+    "table_clutter": 1,
     "r_motto": 1,
     "r_tally": 1,
     "r_wanted": 1,
@@ -181528,7 +186721,7 @@
    "tris_by_object": {
     "Base": 660,
     "Roof": 3127,
-    "Interior": 8740,
+    "Interior": 8436,
     "PorchTop": 288,
     "Upper_00_Band": 22,
     "Upper_01_Band": 12,
@@ -181699,12 +186892,12 @@
     "SignalRedGlow",
     "Window"
    ],
-   "file_size": 1639172,
+   "file_size": 1621928,
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 8.6,
-   "ao_rays": 2242704,
+   "seconds": 9.8,
+   "ao_rays": 2213040,
    "trays": [],
    "v3": {
     "anchor_counts": {
@@ -182338,7 +187531,7 @@
       4
      ],
      "Interior": [
-      18,
+      15,
       5
      ],
      "RoofCeil": [
@@ -182398,7 +187591,7 @@
     "door_free_deg": 360.0
    },
    "verify": {
-    "tris": 22415,
+    "tris": 22111,
     "rmax": 9.50000029528455,
     "zmin": -0.20000000298023224,
     "ao_min": 0.004776953253895044,
@@ -182882,7 +188075,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 9.8,
+   "seconds": 9.4,
    "ao_rays": 1816800,
    "trays": [],
    "v3": {
@@ -183892,7 +189085,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 14.3,
+   "seconds": 13.9,
    "ao_rays": 2638752,
    "trays": [],
    "v3": {
@@ -185003,7 +190196,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 19.0,
+   "seconds": 18.4,
    "ao_rays": 3400032,
    "trays": [],
    "v3": {
@@ -186141,7 +191334,7 @@
    "color0": true,
    "also": [],
    "flags": [],
-   "seconds": 28.1,
+   "seconds": 27.5,
    "ao_rays": 4688784,
    "trays": [],
    "v3": {
@@ -187144,6 +192337,4010 @@
      "Anchor_Stand_0",
      "Anchor_Stand_1",
      "Anchor_Stand_2",
+     "Anchor_Work_0",
+     "Anchor_Work_1",
+     "Anchor_Work_2"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "hr_office_s",
+   "type": "hr_office",
+   "size": "s",
+   "footprint": 6.0,
+   "tris": 19226,
+   "budget": 19900,
+   "props": {
+    "desk_plate": 1,
+    "floor_text": 1,
+    "r_synergy": 4,
+    "r_motto": 1,
+    "poster": 9,
+    "r_feelings": 4,
+    "r_clock": 1,
+    "r_survey": 2,
+    "r_photos": 1,
+    "floor_detail": 1,
+    "c_pendant": 2,
+    "c_eyesign x2": 1
+   },
+   "props_tris": {
+    "_text_big": 5130,
+    "_text_mid": 428,
+    "_text_greek": 52,
+    "cab_plant": 414,
+    "r_synergy": 550,
+    "r_motto": 156,
+    "aiposter": 306,
+    "cab_books": 570,
+    "r_feelings": 1312,
+    "notice": 534,
+    "r_clock": 144,
+    "planter": 276,
+    "r_survey": 860,
+    "poster": 488,
+    "r_photos": 73,
+    "panel": 20,
+    "_ceiling": 1556
+   },
+   "tris_by_object": {
+    "Base": 1216,
+    "Roof": 1426,
+    "Interior": 5461,
+    "PorchTop": 632,
+    "Upper_00_Band": 22,
+    "Upper_01_Band": 12,
+    "Upper_02_Band": 22,
+    "Upper_03_Band": 12,
+    "Upper_04_Band": 22,
+    "Upper_05_Band": 12,
+    "Upper_06_Band": 22,
+    "Upper_07_Band": 12,
+    "Upper_08_Band": 22,
+    "Upper_09_Band": 12,
+    "Upper_10_Band": 22,
+    "Upper_11_Band": 12,
+    "Upper_12_Band": 22,
+    "Upper_13_Band": 12,
+    "Upper_14_Band": 22,
+    "Upper_15_Band": 12,
+    "Upper_16_Band": 22,
+    "Upper_17_Band": 12,
+    "Upper_18_Band": 22,
+    "Upper_19_Band": 12,
+    "Upper_20_Band": 22,
+    "Upper_21_Band": 12,
+    "Upper_22_Band": 22,
+    "Upper_23_Band": 12,
+    "Upper_24_Band": 22,
+    "Upper_25_Band": 12,
+    "Upper_26_Band": 22,
+    "Upper_27_Band": 12,
+    "Upper_28_Band": 22,
+    "Upper_29_Band": 12,
+    "Upper_30_Band": 22,
+    "Upper_31_Band": 12,
+    "Upper_07_Sign": 160,
+    "Upper_24_Sign": 156,
+    "RoofCeil": 696,
+    "Decal_00_Roof": 6,
+    "Decal_01_Roof": 12,
+    "Decal_02_Roof": 8,
+    "Decal_03_Roof": 4,
+    "Decal_04_Roof": 18,
+    "Decal_05_Roof": 12,
+    "Decal_06_Roof": 6,
+    "Decal_07_Roof": 6,
+    "Decal_08_Roof": 12,
+    "Decal_09_Roof": 6,
+    "Decal_10_Roof": 12,
+    "Decal_11_Roof": 12,
+    "Decal_12_Roof": 10,
+    "Decal_13_Roof": 8,
+    "Decal_14_Roof": 12,
+    "Decal_16_Roof": 6,
+    "Decal_17_Roof": 12,
+    "Decal_18_Roof": 8,
+    "Decal_19_Roof": 4,
+    "Decal_20_Roof": 18,
+    "Decal_21_Roof": 12,
+    "Decal_22_Roof": 6,
+    "Decal_23_Roof": 6,
+    "Decal_24_Roof": 12,
+    "Decal_25_Roof": 6,
+    "Decal_26_Roof": 12,
+    "Decal_27_Roof": 12,
+    "Decal_28_Roof": 10,
+    "Decal_29_Roof": 8,
+    "Decal_30_Roof": 12,
+    "Upper_00": 20,
+    "Upper_01": 36,
+    "Upper_02": 20,
+    "Upper_03": 24,
+    "Upper_04": 44,
+    "Upper_05": 20,
+    "Upper_06": 26,
+    "Upper_07": 30,
+    "Upper_08": 30,
+    "Upper_09": 26,
+    "Upper_10": 20,
+    "Upper_11": 44,
+    "Upper_12": 24,
+    "Upper_13": 20,
+    "Upper_14": 36,
+    "Upper_15": 20,
+    "Upper_16": 20,
+    "Upper_17": 36,
+    "Upper_18": 20,
+    "Upper_19": 24,
+    "Upper_20": 44,
+    "Upper_21": 20,
+    "Upper_22": 26,
+    "Upper_23": 30,
+    "Upper_24": 30,
+    "Upper_25": 26,
+    "Upper_26": 20,
+    "Upper_27": 44,
+    "Upper_28": 24,
+    "Upper_29": 20,
+    "Upper_30": 36,
+    "Upper_31": 20,
+    "NameSign": 16,
+    "Wall_00..31": 7751
+   },
+   "bbox_min": [
+    -5.872,
+    -5.872,
+    -0.2
+   ],
+   "bbox_max": [
+    5.872,
+    5.872,
+    5.3
+   ],
+   "max_radius": 5.9,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Work_0",
+    "Anchor_Desk_0",
+    "Anchor_Stand_0",
+    "Anchor_Queue_0",
+    "Anchor_Stand_1",
+    "Anchor_Queue_1",
+    "Anchor_Stand_2",
+    "Anchor_Queue_2",
+    "Anchor_Seat_0",
+    "Anchor_Interview_0_0",
+    "Anchor_Seat_1",
+    "Anchor_Interview_0_1",
+    "Anchor_Stand_3",
+    "Anchor_Kiosk_0",
+    "Anchor_Filing_0",
+    "Anchor_Seat_2",
+    "Anchor_Chair_0",
+    "Anchor_Seat_3",
+    "Anchor_Chair_1",
+    "Anchor_Lamp_0",
+    "Anchor_Lamp_1",
+    "Anchor_Lamp_2",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Floor",
+    "FloorDark",
+    "Frame",
+    "Glow",
+    "Hull",
+    "Light",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "SignalRedGlow",
+    "Soil",
+    "Window"
+   ],
+   "file_size": 1470456,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 12.9,
+   "ao_rays": 1917216,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Work": 1,
+     "Desk": 1,
+     "Stand": 4,
+     "Queue": 3,
+     "Seat": 4,
+     "Interview_0": 2,
+     "Kiosk": 1,
+     "Filing": 1,
+     "Chair": 2,
+     "Lamp": 3,
+     "Light": 2,
+     "Aisle": 26
+    },
+    "wall_tris": 7751,
+    "interior_materials": [
+     "Accent",
+     "Glow",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "PaletteMetal",
+     "Screen"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Glow",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen",
+     "SignalRedGlow",
+     "Soil",
+     "Window"
+    ],
+    "file_materials": 16,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       0.712,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Desk_0",
+      "pos": [
+       0.712,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       2.412,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_0",
+      "pos": [
+       2.412,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       3.062,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_1",
+      "pos": [
+       3.062,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_2",
+      "pos": [
+       3.712,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_2",
+      "pos": [
+       3.712,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Seat_0",
+      "pos": [
+       -3.23,
+       -0.48,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Interview_0_0",
+      "pos": [
+       -3.23,
+       -0.48,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_1",
+      "pos": [
+       -3.23,
+       0.48,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Interview_0_1",
+      "pos": [
+       -3.23,
+       0.48,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Stand_3",
+      "pos": [
+       0.443,
+       -1.654,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Kiosk_0",
+      "pos": [
+       0.443,
+       -1.654,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Filing_0",
+      "pos": [
+       -1.428,
+       -3.063,
+       0.14
+      ],
+      "yaw": 245.0
+     },
+     {
+      "name": "Anchor_Seat_2",
+      "pos": [
+       2.212,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_0",
+      "pos": [
+       2.212,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_3",
+      "pos": [
+       2.962,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_1",
+      "pos": [
+       2.962,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Lamp_0",
+      "pos": [
+       3.49,
+       3.949,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -5.26,
+       -0.325,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_2",
+      "pos": [
+       3.949,
+       -3.49,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.55
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       2.379,
+       1.373,
+       2.55
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       4.755,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       4.284,
+       2.063,
+       0.14
+      ],
+      "yaw": 115.71
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       2.965,
+       3.718,
+       0.14
+      ],
+      "yaw": 141.43
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       1.058,
+       4.636,
+       0.14
+      ],
+      "yaw": 167.14
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       -1.058,
+       4.636,
+       0.14
+      ],
+      "yaw": 192.86
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       -2.965,
+       3.718,
+       0.14
+      ],
+      "yaw": 218.57
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -4.284,
+       2.063,
+       0.14
+      ],
+      "yaw": 244.29
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -4.755,
+       0.0,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -4.284,
+       -2.063,
+       0.14
+      ],
+      "yaw": -64.29
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -2.965,
+       -3.718,
+       0.14
+      ],
+      "yaw": -38.57
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -1.058,
+       -4.636,
+       0.14
+      ],
+      "yaw": -12.86
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       1.058,
+       -4.636,
+       0.14
+      ],
+      "yaw": 12.86
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       2.965,
+       -3.718,
+       0.14
+      ],
+      "yaw": 38.57
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       4.284,
+       -2.063,
+       0.14
+      ],
+      "yaw": 64.29
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       -2.5,
+       -2.5,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       -2.5,
+       2.5,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       -1.25,
+       3.75,
+       0.14
+      ],
+      "yaw": 198.43
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       0.0,
+       -3.75,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       1.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 26.57
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       1.25,
+       3.75,
+       0.14
+      ],
+      "yaw": 161.57
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       2.5,
+       -2.5,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       2.5,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       3.75,
+       -1.25,
+       0.14
+      ],
+      "yaw": 71.57
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       3.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       3.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 108.43
+     }
+    ],
+    "tall_parts": 36,
+    "surfaces": {
+     "Base": [
+      3,
+      3
+     ],
+     "Roof": [
+      10,
+      5
+     ],
+     "Interior": [
+      20,
+      7
+     ],
+     "RoofCeil": [
+      7,
+      4
+     ]
+    },
+    "group_surfaces": {
+     "Base": 3,
+     "DecalR": 1,
+     "Interior": 7,
+     "NameSign": 3,
+     "PorchTop": 5,
+     "Roof": 5,
+     "WallsUp": 6,
+     "Walls": 10,
+     "WallShell": 3
+    },
+    "ceiling": {
+     "cells": 48,
+     "band_segments": 32,
+     "pieces": [
+      "pendant",
+      "pendant",
+      "eyesign x2"
+     ],
+     "tris": 1556,
+     "surfaces": [
+      "Accent",
+      "LightStrip",
+      "Palette",
+      "PaletteMetal",
+      "Window"
+     ]
+    },
+    "partitions": [
+     [
+      -1.88,
+      -0.55,
+      0.14,
+      2.24,
+      0.65,
+      0.06,
+      90.0
+     ],
+     [
+      -1.88,
+      1.1,
+      0.14,
+      2.24,
+      0.1,
+      0.06,
+      90.0
+     ],
+     [
+      -3.08,
+      1.2,
+      0.14,
+      2.24,
+      1.2,
+      0.06,
+      0.0
+     ],
+     [
+      -3.08,
+      -1.2,
+      0.14,
+      2.24,
+      1.2,
+      0.06,
+      0.0
+     ]
+    ],
+    "decals": {
+     "decal_objects": 30,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.9499999999999997
+     ],
+     "upper_band": [
+      2.9,
+      2.9
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [
+     [
+      157.5,
+      170.5
+     ],
+     [
+      189.5,
+      202.5
+     ],
+     [
+      231.5,
+      258.5
+     ]
+    ],
+    "door_clear_min": 0.68,
+    "door_lane_hits": {
+     "wall": 4.45,
+     "filing": 4.38
+    },
+    "door_lane_ring": [
+     4.75,
+     5.12,
+     4.43
+    ],
+    "v4_empty_patch": 2.07,
+    "door_lane_hit_angles": {
+     "wall": [
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203
+     ],
+     "filing": [
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258
+     ]
+    },
+    "door_slots": 9,
+    "door_slot_deg": 38.4,
+    "door_free_deg": 307.0
+   },
+   "verify": {
+    "tris": 19226,
+    "rmax": 5.8999999627750945,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.004776953253895044,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_Roof",
+     "Decal_01_Roof",
+     "Decal_02_Roof",
+     "Decal_03_Roof",
+     "Decal_04_Roof",
+     "Decal_05_Roof",
+     "Decal_06_Roof",
+     "Decal_07_Roof",
+     "Decal_08_Roof",
+     "Decal_09_Roof",
+     "Decal_10_Roof",
+     "Decal_11_Roof",
+     "Decal_12_Roof",
+     "Decal_13_Roof",
+     "Decal_14_Roof",
+     "Decal_16_Roof",
+     "Decal_17_Roof",
+     "Decal_18_Roof",
+     "Decal_19_Roof",
+     "Decal_20_Roof",
+     "Decal_21_Roof",
+     "Decal_22_Roof",
+     "Decal_23_Roof",
+     "Decal_24_Roof",
+     "Decal_25_Roof",
+     "Decal_26_Roof",
+     "Decal_27_Roof",
+     "Decal_28_Roof",
+     "Decal_29_Roof",
+     "Decal_30_Roof",
+     "Interior",
+     "NameSign",
+     "PorchTop",
+     "Roof",
+     "RoofCeil",
+     "Upper_00",
+     "Upper_00_Band",
+     "Upper_01",
+     "Upper_01_Band",
+     "Upper_02",
+     "Upper_02_Band",
+     "Upper_03",
+     "Upper_03_Band",
+     "Upper_04",
+     "Upper_04_Band",
+     "Upper_05",
+     "Upper_05_Band",
+     "Upper_06",
+     "Upper_06_Band",
+     "Upper_07",
+     "Upper_07_Band",
+     "Upper_07_Sign",
+     "Upper_08",
+     "Upper_08_Band",
+     "Upper_09",
+     "Upper_09_Band",
+     "Upper_10",
+     "Upper_10_Band",
+     "Upper_11",
+     "Upper_11_Band",
+     "Upper_12",
+     "Upper_12_Band",
+     "Upper_13",
+     "Upper_13_Band",
+     "Upper_14",
+     "Upper_14_Band",
+     "Upper_15",
+     "Upper_15_Band",
+     "Upper_16",
+     "Upper_16_Band",
+     "Upper_17",
+     "Upper_17_Band",
+     "Upper_18",
+     "Upper_18_Band",
+     "Upper_19",
+     "Upper_19_Band",
+     "Upper_20",
+     "Upper_20_Band",
+     "Upper_21",
+     "Upper_21_Band",
+     "Upper_22",
+     "Upper_22_Band",
+     "Upper_23",
+     "Upper_23_Band",
+     "Upper_24",
+     "Upper_24_Band",
+     "Upper_24_Sign",
+     "Upper_25",
+     "Upper_25_Band",
+     "Upper_26",
+     "Upper_26_Band",
+     "Upper_27",
+     "Upper_27_Band",
+     "Upper_28",
+     "Upper_28_Band",
+     "Upper_29",
+     "Upper_29_Band",
+     "Upper_30",
+     "Upper_30_Band",
+     "Upper_31",
+     "Upper_31_Band",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Chair_0",
+     "Anchor_Chair_1",
+     "Anchor_Desk_0",
+     "Anchor_Filing_0",
+     "Anchor_Interview_0_0",
+     "Anchor_Interview_0_1",
+     "Anchor_Kiosk_0",
+     "Anchor_Lamp_0",
+     "Anchor_Lamp_1",
+     "Anchor_Lamp_2",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Queue_0",
+     "Anchor_Queue_1",
+     "Anchor_Queue_2",
+     "Anchor_Seat_0",
+     "Anchor_Seat_1",
+     "Anchor_Seat_2",
+     "Anchor_Seat_3",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Stand_2",
+     "Anchor_Stand_3",
+     "Anchor_Work_0"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "hr_office_m",
+   "type": "hr_office",
+   "size": "m",
+   "footprint": 7.5,
+   "tris": 23593,
+   "budget": 29600,
+   "props": {
+    "desk_plate": 1,
+    "floor_text": 1,
+    "r_synergy": 4,
+    "r_motto": 1,
+    "poster": 4,
+    "r_feelings": 4,
+    "r_whiteboard": 1,
+    "r_survey": 3,
+    "r_clock": 1,
+    "r_photos": 1,
+    "r_agi": 1,
+    "floor_detail": 2,
+    "c_pendant": 2,
+    "c_eyesign x3": 1
+   },
+   "props_tris": {
+    "_text_big": 5440,
+    "_text_mid": 844,
+    "_text_greek": 54,
+    "cab_plant": 414,
+    "r_synergy": 550,
+    "r_motto": 156,
+    "aiposter": 306,
+    "cab_books": 570,
+    "r_feelings": 1312,
+    "r_whiteboard": 548,
+    "plant": 236,
+    "planter": 276,
+    "r_survey": 1290,
+    "r_clock": 144,
+    "r_photos": 73,
+    "vent": 232,
+    "r_agi": 232,
+    "notice": 178,
+    "_ceiling": 1994
+   },
+   "tris_by_object": {
+    "Base": 1336,
+    "Roof": 1725,
+    "Interior": 7773,
+    "PorchTop": 664,
+    "Upper_00_Band": 22,
+    "Upper_01_Band": 12,
+    "Upper_02_Band": 22,
+    "Upper_03_Band": 12,
+    "Upper_04_Band": 22,
+    "Upper_05_Band": 12,
+    "Upper_06_Band": 22,
+    "Upper_07_Band": 12,
+    "Upper_08_Band": 22,
+    "Upper_09_Band": 12,
+    "Upper_10_Band": 22,
+    "Upper_11_Band": 12,
+    "Upper_12_Band": 22,
+    "Upper_13_Band": 12,
+    "Upper_14_Band": 22,
+    "Upper_15_Band": 12,
+    "Upper_16_Band": 22,
+    "Upper_17_Band": 12,
+    "Upper_18_Band": 22,
+    "Upper_19_Band": 12,
+    "Upper_20_Band": 22,
+    "Upper_21_Band": 12,
+    "Upper_22_Band": 22,
+    "Upper_23_Band": 12,
+    "Upper_24_Band": 22,
+    "Upper_25_Band": 12,
+    "Upper_26_Band": 22,
+    "Upper_27_Band": 12,
+    "Upper_28_Band": 22,
+    "Upper_29_Band": 12,
+    "Upper_30_Band": 22,
+    "Upper_31_Band": 12,
+    "Upper_11_Sign": 160,
+    "Upper_22_Sign": 156,
+    "Upper_31_Sign": 122,
+    "RoofCeil": 1012,
+    "Decal_00_Roof": 12,
+    "Decal_01_Roof": 12,
+    "Decal_02_Roof": 6,
+    "Decal_03_Roof": 12,
+    "Decal_04_Roof": 18,
+    "Decal_05_Roof": 6,
+    "Decal_06_Roof": 12,
+    "Decal_07_Roof": 6,
+    "Decal_08_Roof": 12,
+    "Decal_09_Roof": 12,
+    "Decal_10_Roof": 6,
+    "Decal_11_Roof": 12,
+    "Decal_12_Roof": 18,
+    "Decal_13_Roof": 6,
+    "Decal_14_Roof": 12,
+    "Decal_15_Roof": 6,
+    "Decal_16_Roof": 12,
+    "Decal_17_Roof": 12,
+    "Decal_18_Roof": 6,
+    "Decal_19_Roof": 12,
+    "Decal_20_Roof": 18,
+    "Decal_21_Roof": 6,
+    "Decal_22_Roof": 12,
+    "Decal_23_Roof": 6,
+    "Decal_24_Roof": 12,
+    "Decal_25_Roof": 12,
+    "Decal_26_Roof": 6,
+    "Decal_27_Roof": 12,
+    "Decal_28_Roof": 18,
+    "Decal_29_Roof": 6,
+    "Decal_30_Roof": 12,
+    "Decal_31_Roof": 6,
+    "Upper_00": 24,
+    "Upper_01": 34,
+    "Upper_02": 24,
+    "Upper_03": 34,
+    "Upper_04": 34,
+    "Upper_05": 24,
+    "Upper_06": 34,
+    "Upper_07": 24,
+    "Upper_08": 24,
+    "Upper_09": 34,
+    "Upper_10": 24,
+    "Upper_11": 34,
+    "Upper_12": 34,
+    "Upper_13": 24,
+    "Upper_14": 34,
+    "Upper_15": 24,
+    "Upper_16": 24,
+    "Upper_17": 34,
+    "Upper_18": 24,
+    "Upper_19": 34,
+    "Upper_20": 34,
+    "Upper_21": 24,
+    "Upper_22": 34,
+    "Upper_23": 24,
+    "Upper_24": 24,
+    "Upper_25": 34,
+    "Upper_26": 24,
+    "Upper_27": 34,
+    "Upper_28": 34,
+    "Upper_29": 24,
+    "Upper_30": 34,
+    "Upper_31": 24,
+    "NameSign": 16,
+    "Wall_00..31": 8821
+   },
+   "bbox_min": [
+    -7.377,
+    -7.377,
+    -0.2
+   ],
+   "bbox_max": [
+    7.377,
+    7.377,
+    5.3
+   ],
+   "max_radius": 7.4,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Work_0",
+    "Anchor_Desk_0",
+    "Anchor_Stand_0",
+    "Anchor_Queue_0",
+    "Anchor_Stand_1",
+    "Anchor_Queue_1",
+    "Anchor_Stand_2",
+    "Anchor_Queue_2",
+    "Anchor_Stand_3",
+    "Anchor_Queue_3",
+    "Anchor_Seat_0",
+    "Anchor_Interview_0_0",
+    "Anchor_Seat_1",
+    "Anchor_Interview_0_1",
+    "Anchor_Stand_4",
+    "Anchor_Kiosk_0",
+    "Anchor_Filing_0",
+    "Anchor_Filing_1",
+    "Anchor_Work_1",
+    "Anchor_Desk_1",
+    "Anchor_Seat_2",
+    "Anchor_Chair_0",
+    "Anchor_Seat_3",
+    "Anchor_Chair_1",
+    "Anchor_Seat_4",
+    "Anchor_Chair_2",
+    "Anchor_Lamp_0",
+    "Anchor_Lamp_1",
+    "Anchor_Lamp_2",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Light_2",
+    "Anchor_Light_3",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28",
+    "Anchor_Aisle_29",
+    "Anchor_Aisle_30",
+    "Anchor_Aisle_31",
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35",
+    "Anchor_Aisle_36",
+    "Anchor_Aisle_37"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Floor",
+    "FloorDark",
+    "Frame",
+    "Glow",
+    "Hull",
+    "Light",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "SignalRedGlow",
+    "Soil",
+    "Window"
+   ],
+   "file_size": 1784780,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 11.5,
+   "ao_rays": 2360016,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Work": 2,
+     "Desk": 2,
+     "Stand": 5,
+     "Queue": 4,
+     "Seat": 5,
+     "Interview_0": 2,
+     "Kiosk": 1,
+     "Filing": 2,
+     "Chair": 3,
+     "Lamp": 3,
+     "Light": 4,
+     "Aisle": 38
+    },
+    "wall_tris": 8821,
+    "interior_materials": [
+     "Accent",
+     "Glow",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "PaletteMetal",
+     "Screen"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Glow",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen",
+     "SignalRedGlow",
+     "Soil",
+     "Window"
+    ],
+    "file_materials": 16,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       1.091,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Desk_0",
+      "pos": [
+       1.091,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       2.791,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_0",
+      "pos": [
+       2.791,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       3.441,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_1",
+      "pos": [
+       3.441,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_2",
+      "pos": [
+       4.091,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_2",
+      "pos": [
+       4.091,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_3",
+      "pos": [
+       4.741,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_3",
+      "pos": [
+       4.741,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Seat_0",
+      "pos": [
+       -4.38,
+       -0.48,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Interview_0_0",
+      "pos": [
+       -4.38,
+       -0.48,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_1",
+      "pos": [
+       -4.38,
+       0.48,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Interview_0_1",
+      "pos": [
+       -4.38,
+       0.48,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Stand_4",
+      "pos": [
+       0.558,
+       -2.252,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Kiosk_0",
+      "pos": [
+       0.558,
+       -2.252,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Filing_0",
+      "pos": [
+       -1.914,
+       -4.106,
+       0.14
+      ],
+      "yaw": 245.0
+     },
+     {
+      "name": "Anchor_Filing_1",
+      "pos": [
+       2.265,
+       -3.923,
+       0.14
+      ],
+      "yaw": 300.0
+     },
+     {
+      "name": "Anchor_Work_1",
+      "pos": [
+       -0.67,
+       3.519,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Desk_1",
+      "pos": [
+       -0.67,
+       3.519,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Seat_2",
+      "pos": [
+       2.591,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_0",
+      "pos": [
+       2.591,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_3",
+      "pos": [
+       3.341,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_1",
+      "pos": [
+       3.341,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_4",
+      "pos": [
+       4.091,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_2",
+      "pos": [
+       4.091,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Lamp_0",
+      "pos": [
+       4.439,
+       5.106,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -6.749,
+       -0.472,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_2",
+      "pos": [
+       5.106,
+       -4.439,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       2.996,
+       1.73,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_2",
+      "pos": [
+       -2.996,
+       1.73,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_3",
+      "pos": [
+       -0.0,
+       -3.46,
+       2.65
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       6.08,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       5.669,
+       2.196,
+       0.14
+      ],
+      "yaw": 111.18
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       4.493,
+       4.096,
+       0.14
+      ],
+      "yaw": 132.35
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       2.71,
+       5.443,
+       0.14
+      ],
+      "yaw": 153.53
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       0.561,
+       6.054,
+       0.14
+      ],
+      "yaw": 174.71
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       -1.664,
+       5.848,
+       0.14
+      ],
+      "yaw": 195.88
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -3.664,
+       4.852,
+       0.14
+      ],
+      "yaw": 217.06
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -5.169,
+       3.201,
+       0.14
+      ],
+      "yaw": 238.24
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -5.976,
+       1.117,
+       0.14
+      ],
+      "yaw": 259.41
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -5.976,
+       -1.117,
+       0.14
+      ],
+      "yaw": -79.41
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -5.169,
+       -3.201,
+       0.14
+      ],
+      "yaw": -58.24
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       -3.664,
+       -4.852,
+       0.14
+      ],
+      "yaw": -37.06
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       -1.664,
+       -5.848,
+       0.14
+      ],
+      "yaw": -15.88
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       0.561,
+       -6.054,
+       0.14
+      ],
+      "yaw": 5.29
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       2.71,
+       -5.443,
+       0.14
+      ],
+      "yaw": 26.47
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       4.493,
+       -4.096,
+       0.14
+      ],
+      "yaw": 47.65
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       5.669,
+       -2.196,
+       0.14
+      ],
+      "yaw": 68.82
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -2.5,
+       -3.75,
+       0.14
+      ],
+      "yaw": -33.69
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       -2.5,
+       -2.5,
+       0.14
+      ],
+      "yaw": -45.0
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       -2.5,
+       -1.25,
+       0.14
+      ],
+      "yaw": -63.43
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       -2.5,
+       0.0,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       -2.5,
+       1.25,
+       0.14
+      ],
+      "yaw": 243.43
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       -1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": -18.43
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       -1.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       -1.25,
+       3.75,
+       0.14
+      ],
+      "yaw": 198.43
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       -1.25,
+       5.0,
+       0.14
+      ],
+      "yaw": 194.04
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       0.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       0.0,
+       1.25,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       1.25,
+       -5.0,
+       0.14
+      ],
+      "yaw": 14.04
+     },
+     {
+      "name": "Anchor_Aisle_29",
+      "pos": [
+       1.25,
+       -3.75,
+       0.14
+      ],
+      "yaw": 18.43
+     },
+     {
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       1.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 26.57
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       1.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       2.5,
+       -3.75,
+       0.14
+      ],
+      "yaw": 33.69
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       2.5,
+       1.25,
+       0.14
+      ],
+      "yaw": 116.57
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       3.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       5.0,
+       -1.25,
+       0.14
+      ],
+      "yaw": 75.96
+     },
+     {
+      "name": "Anchor_Aisle_36",
+      "pos": [
+       5.0,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_37",
+      "pos": [
+       5.0,
+       1.25,
+       0.14
+      ],
+      "yaw": 104.04
+     }
+    ],
+    "tall_parts": 37,
+    "surfaces": {
+     "Base": [
+      3,
+      3
+     ],
+     "Roof": [
+      10,
+      5
+     ],
+     "Interior": [
+      20,
+      7
+     ],
+     "RoofCeil": [
+      7,
+      4
+     ]
+    },
+    "group_surfaces": {
+     "Base": 3,
+     "DecalR": 1,
+     "Interior": 7,
+     "NameSign": 3,
+     "PorchTop": 5,
+     "Roof": 5,
+     "WallsUp": 6,
+     "Walls": 10,
+     "WallShell": 3
+    },
+    "ceiling": {
+     "cells": 96,
+     "band_segments": 32,
+     "pieces": [
+      "pendant",
+      "pendant",
+      "eyesign x3"
+     ],
+     "tris": 1994,
+     "surfaces": [
+      "Accent",
+      "LightStrip",
+      "Palette",
+      "PaletteMetal",
+      "Window"
+     ]
+    },
+    "partitions": [
+     [
+      -3.03,
+      -0.55,
+      0.14,
+      2.24,
+      0.65,
+      0.06,
+      90.0
+     ],
+     [
+      -3.03,
+      1.1,
+      0.14,
+      2.24,
+      0.1,
+      0.06,
+      90.0
+     ],
+     [
+      -4.23,
+      1.2,
+      0.14,
+      2.24,
+      1.2,
+      0.06,
+      0.0
+     ],
+     [
+      -4.23,
+      -1.2,
+      0.14,
+      2.24,
+      1.2,
+      0.06,
+      0.0
+     ]
+    ],
+    "decals": {
+     "decal_objects": 32,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.9499999999999997
+     ],
+     "upper_band": [
+      2.9,
+      2.9
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 0.99,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     6.08,
+     6.62,
+     5.58
+    ],
+    "v4_empty_patch": 2.04,
+    "door_lane_hit_angles": {},
+    "door_slots": 11,
+    "door_slot_deg": 30.2,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 23593,
+    "rmax": 7.400000182311928,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.004776953253895044,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_Roof",
+     "Decal_01_Roof",
+     "Decal_02_Roof",
+     "Decal_03_Roof",
+     "Decal_04_Roof",
+     "Decal_05_Roof",
+     "Decal_06_Roof",
+     "Decal_07_Roof",
+     "Decal_08_Roof",
+     "Decal_09_Roof",
+     "Decal_10_Roof",
+     "Decal_11_Roof",
+     "Decal_12_Roof",
+     "Decal_13_Roof",
+     "Decal_14_Roof",
+     "Decal_15_Roof",
+     "Decal_16_Roof",
+     "Decal_17_Roof",
+     "Decal_18_Roof",
+     "Decal_19_Roof",
+     "Decal_20_Roof",
+     "Decal_21_Roof",
+     "Decal_22_Roof",
+     "Decal_23_Roof",
+     "Decal_24_Roof",
+     "Decal_25_Roof",
+     "Decal_26_Roof",
+     "Decal_27_Roof",
+     "Decal_28_Roof",
+     "Decal_29_Roof",
+     "Decal_30_Roof",
+     "Decal_31_Roof",
+     "Interior",
+     "NameSign",
+     "PorchTop",
+     "Roof",
+     "RoofCeil",
+     "Upper_00",
+     "Upper_00_Band",
+     "Upper_01",
+     "Upper_01_Band",
+     "Upper_02",
+     "Upper_02_Band",
+     "Upper_03",
+     "Upper_03_Band",
+     "Upper_04",
+     "Upper_04_Band",
+     "Upper_05",
+     "Upper_05_Band",
+     "Upper_06",
+     "Upper_06_Band",
+     "Upper_07",
+     "Upper_07_Band",
+     "Upper_08",
+     "Upper_08_Band",
+     "Upper_09",
+     "Upper_09_Band",
+     "Upper_10",
+     "Upper_10_Band",
+     "Upper_11",
+     "Upper_11_Band",
+     "Upper_11_Sign",
+     "Upper_12",
+     "Upper_12_Band",
+     "Upper_13",
+     "Upper_13_Band",
+     "Upper_14",
+     "Upper_14_Band",
+     "Upper_15",
+     "Upper_15_Band",
+     "Upper_16",
+     "Upper_16_Band",
+     "Upper_17",
+     "Upper_17_Band",
+     "Upper_18",
+     "Upper_18_Band",
+     "Upper_19",
+     "Upper_19_Band",
+     "Upper_20",
+     "Upper_20_Band",
+     "Upper_21",
+     "Upper_21_Band",
+     "Upper_22",
+     "Upper_22_Band",
+     "Upper_22_Sign",
+     "Upper_23",
+     "Upper_23_Band",
+     "Upper_24",
+     "Upper_24_Band",
+     "Upper_25",
+     "Upper_25_Band",
+     "Upper_26",
+     "Upper_26_Band",
+     "Upper_27",
+     "Upper_27_Band",
+     "Upper_28",
+     "Upper_28_Band",
+     "Upper_29",
+     "Upper_29_Band",
+     "Upper_30",
+     "Upper_30_Band",
+     "Upper_31",
+     "Upper_31_Band",
+     "Upper_31_Sign",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_29",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_30",
+     "Anchor_Aisle_31",
+     "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_36",
+     "Anchor_Aisle_37",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Chair_0",
+     "Anchor_Chair_1",
+     "Anchor_Chair_2",
+     "Anchor_Desk_0",
+     "Anchor_Desk_1",
+     "Anchor_Filing_0",
+     "Anchor_Filing_1",
+     "Anchor_Interview_0_0",
+     "Anchor_Interview_0_1",
+     "Anchor_Kiosk_0",
+     "Anchor_Lamp_0",
+     "Anchor_Lamp_1",
+     "Anchor_Lamp_2",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Light_2",
+     "Anchor_Light_3",
+     "Anchor_Queue_0",
+     "Anchor_Queue_1",
+     "Anchor_Queue_2",
+     "Anchor_Queue_3",
+     "Anchor_Seat_0",
+     "Anchor_Seat_1",
+     "Anchor_Seat_2",
+     "Anchor_Seat_3",
+     "Anchor_Seat_4",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Stand_2",
+     "Anchor_Stand_3",
+     "Anchor_Stand_4",
+     "Anchor_Work_0",
+     "Anchor_Work_1"
+    ]
+   },
+   "verify_problems": []
+  },
+  {
+   "id": "hr_office_l",
+   "type": "hr_office",
+   "size": "l",
+   "footprint": 9.6,
+   "tris": 30900,
+   "budget": 42800,
+   "props": {
+    "desk_plate": 1,
+    "floor_text": 1,
+    "r_synergy": 4,
+    "r_motto": 1,
+    "poster": 6,
+    "r_feelings": 4,
+    "r_whiteboard": 1,
+    "r_clock": 1,
+    "r_survey": 3,
+    "r_photos": 1,
+    "r_agi": 1,
+    "floor_detail": 3,
+    "c_pendant": 3,
+    "c_eyesign x4": 1
+   },
+   "props_tris": {
+    "_text_big": 6672,
+    "_text_mid": 1100,
+    "_text_greek": 54,
+    "cab_plant": 414,
+    "r_synergy": 550,
+    "r_motto": 156,
+    "aiposter": 306,
+    "cab_books": 570,
+    "r_feelings": 1312,
+    "r_whiteboard": 548,
+    "r_clock": 144,
+    "planter": 276,
+    "r_survey": 1290,
+    "r_photos": 73,
+    "r_agi": 232,
+    "poster": 234,
+    "notice": 178,
+    "_ceiling": 2404
+   },
+   "tris_by_object": {
+    "Base": 2208,
+    "Roof": 2484,
+    "Interior": 12941,
+    "PorchTop": 788,
+    "Upper_00_Band": 22,
+    "Upper_01_Band": 12,
+    "Upper_02_Band": 22,
+    "Upper_03_Band": 12,
+    "Upper_04_Band": 22,
+    "Upper_05_Band": 12,
+    "Upper_06_Band": 22,
+    "Upper_07_Band": 12,
+    "Upper_08_Band": 22,
+    "Upper_09_Band": 12,
+    "Upper_10_Band": 22,
+    "Upper_11_Band": 12,
+    "Upper_12_Band": 22,
+    "Upper_13_Band": 12,
+    "Upper_14_Band": 22,
+    "Upper_15_Band": 12,
+    "Upper_16_Band": 22,
+    "Upper_17_Band": 12,
+    "Upper_18_Band": 22,
+    "Upper_19_Band": 12,
+    "Upper_20_Band": 22,
+    "Upper_21_Band": 12,
+    "Upper_22_Band": 22,
+    "Upper_23_Band": 12,
+    "Upper_24_Band": 22,
+    "Upper_25_Band": 12,
+    "Upper_26_Band": 22,
+    "Upper_27_Band": 12,
+    "Upper_28_Band": 22,
+    "Upper_29_Band": 12,
+    "Upper_30_Band": 22,
+    "Upper_31_Band": 12,
+    "Upper_24_Sign": 156,
+    "Upper_01_Sign": 122,
+    "Upper_08_Sign": 178,
+    "Upper_17_Sign": 160,
+    "RoofCeil": 1244,
+    "Decal_00_Roof": 14,
+    "Decal_01_Roof": 14,
+    "Decal_02_Roof": 12,
+    "Decal_03_Roof": 8,
+    "Decal_04_Roof": 14,
+    "Decal_05_Roof": 12,
+    "Decal_06_Roof": 14,
+    "Decal_07_Roof": 8,
+    "Decal_08_Roof": 14,
+    "Decal_09_Roof": 14,
+    "Decal_10_Roof": 12,
+    "Decal_11_Roof": 8,
+    "Decal_12_Roof": 14,
+    "Decal_13_Roof": 12,
+    "Decal_14_Roof": 14,
+    "Decal_15_Roof": 8,
+    "Decal_16_Roof": 14,
+    "Decal_17_Roof": 14,
+    "Decal_18_Roof": 12,
+    "Decal_19_Roof": 8,
+    "Decal_20_Roof": 14,
+    "Decal_21_Roof": 12,
+    "Decal_22_Roof": 14,
+    "Decal_23_Roof": 8,
+    "Decal_24_Roof": 14,
+    "Decal_25_Roof": 14,
+    "Decal_26_Roof": 12,
+    "Decal_27_Roof": 8,
+    "Decal_28_Roof": 14,
+    "Decal_29_Roof": 12,
+    "Decal_30_Roof": 14,
+    "Decal_31_Roof": 8,
+    "Upper_00": 36,
+    "Upper_01": 30,
+    "Upper_02": 36,
+    "Upper_03": 34,
+    "Upper_04": 34,
+    "Upper_05": 36,
+    "Upper_06": 30,
+    "Upper_07": 36,
+    "Upper_08": 36,
+    "Upper_09": 30,
+    "Upper_10": 36,
+    "Upper_11": 34,
+    "Upper_12": 34,
+    "Upper_13": 36,
+    "Upper_14": 30,
+    "Upper_15": 36,
+    "Upper_16": 36,
+    "Upper_17": 30,
+    "Upper_18": 36,
+    "Upper_19": 34,
+    "Upper_20": 34,
+    "Upper_21": 36,
+    "Upper_22": 30,
+    "Upper_23": 36,
+    "Upper_24": 36,
+    "Upper_25": 30,
+    "Upper_26": 36,
+    "Upper_27": 34,
+    "Upper_28": 34,
+    "Upper_29": 36,
+    "Upper_30": 30,
+    "Upper_31": 36,
+    "NameSign": 16,
+    "Wall_00..31": 8587
+   },
+   "bbox_min": [
+    -9.48,
+    -9.48,
+    -0.2
+   ],
+   "bbox_max": [
+    9.48,
+    9.48,
+    5.3
+   ],
+   "max_radius": 9.5,
+   "margin": 0.1,
+   "anchors": [
+    "Anchor_Work_0",
+    "Anchor_Desk_0",
+    "Anchor_Stand_0",
+    "Anchor_Queue_0",
+    "Anchor_Stand_1",
+    "Anchor_Queue_1",
+    "Anchor_Stand_2",
+    "Anchor_Queue_2",
+    "Anchor_Stand_3",
+    "Anchor_Queue_3",
+    "Anchor_Stand_4",
+    "Anchor_Queue_4",
+    "Anchor_Stand_5",
+    "Anchor_Queue_5",
+    "Anchor_Seat_0",
+    "Anchor_Interview_0_0",
+    "Anchor_Seat_1",
+    "Anchor_Interview_0_1",
+    "Anchor_Seat_2",
+    "Anchor_Interview_1_0",
+    "Anchor_Seat_3",
+    "Anchor_Interview_1_1",
+    "Anchor_Stand_6",
+    "Anchor_Kiosk_0",
+    "Anchor_Stand_7",
+    "Anchor_Kiosk_1",
+    "Anchor_Filing_0",
+    "Anchor_Filing_1",
+    "Anchor_Work_1",
+    "Anchor_Desk_1",
+    "Anchor_Work_2",
+    "Anchor_Desk_2",
+    "Anchor_Seat_4",
+    "Anchor_Chair_0",
+    "Anchor_Seat_5",
+    "Anchor_Chair_1",
+    "Anchor_Seat_6",
+    "Anchor_Chair_2",
+    "Anchor_Seat_7",
+    "Anchor_Chair_3",
+    "Anchor_Lamp_0",
+    "Anchor_Lamp_1",
+    "Anchor_Lamp_2",
+    "Anchor_Light_0",
+    "Anchor_Light_1",
+    "Anchor_Light_2",
+    "Anchor_Light_3",
+    "Anchor_Light_4",
+    "Anchor_Aisle_0",
+    "Anchor_Aisle_1",
+    "Anchor_Aisle_2",
+    "Anchor_Aisle_3",
+    "Anchor_Aisle_4",
+    "Anchor_Aisle_5",
+    "Anchor_Aisle_6",
+    "Anchor_Aisle_7",
+    "Anchor_Aisle_8",
+    "Anchor_Aisle_9",
+    "Anchor_Aisle_10",
+    "Anchor_Aisle_11",
+    "Anchor_Aisle_12",
+    "Anchor_Aisle_13",
+    "Anchor_Aisle_14",
+    "Anchor_Aisle_15",
+    "Anchor_Aisle_16",
+    "Anchor_Aisle_17",
+    "Anchor_Aisle_18",
+    "Anchor_Aisle_19",
+    "Anchor_Aisle_20",
+    "Anchor_Aisle_21",
+    "Anchor_Aisle_22",
+    "Anchor_Aisle_23",
+    "Anchor_Aisle_24",
+    "Anchor_Aisle_25",
+    "Anchor_Aisle_26",
+    "Anchor_Aisle_27",
+    "Anchor_Aisle_28",
+    "Anchor_Aisle_29",
+    "Anchor_Aisle_30",
+    "Anchor_Aisle_31",
+    "Anchor_Aisle_32",
+    "Anchor_Aisle_33",
+    "Anchor_Aisle_34",
+    "Anchor_Aisle_35",
+    "Anchor_Aisle_36",
+    "Anchor_Aisle_37",
+    "Anchor_Aisle_38",
+    "Anchor_Aisle_39",
+    "Anchor_Aisle_40",
+    "Anchor_Aisle_41",
+    "Anchor_Aisle_42",
+    "Anchor_Aisle_43",
+    "Anchor_Aisle_44",
+    "Anchor_Aisle_45",
+    "Anchor_Aisle_46",
+    "Anchor_Aisle_47",
+    "Anchor_Aisle_48",
+    "Anchor_Aisle_49"
+   ],
+   "materials": [
+    "Accent",
+    "Fabric",
+    "Floor",
+    "FloorDark",
+    "Frame",
+    "Glass",
+    "Glow",
+    "Hull",
+    "Light",
+    "LightStrip",
+    "Neon",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "SignalRedGlow",
+    "Soil",
+    "Window"
+   ],
+   "file_size": 2286148,
+   "color0": true,
+   "also": [],
+   "flags": [],
+   "seconds": 19.0,
+   "ao_rays": 3110400,
+   "trays": [],
+   "v3": {
+    "anchor_counts": {
+     "Work": 3,
+     "Desk": 3,
+     "Stand": 8,
+     "Queue": 6,
+     "Seat": 8,
+     "Interview_0": 2,
+     "Interview_1": 2,
+     "Kiosk": 2,
+     "Filing": 2,
+     "Chair": 4,
+     "Lamp": 3,
+     "Light": 5,
+     "Aisle": 50
+    },
+    "wall_tris": 8587,
+    "interior_materials": [
+     "Accent",
+     "Glass",
+     "Glow",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "PaletteMetal",
+     "Screen"
+    ],
+    "wall_materials": [
+     "Accent",
+     "Glow",
+     "Hull",
+     "LightStrip",
+     "Neon",
+     "Palette",
+     "Screen",
+     "SignalRedGlow",
+     "Soil",
+     "Window"
+    ],
+    "file_materials": 17,
+    "info": {},
+    "anchors": [
+     {
+      "name": "Anchor_Work_0",
+      "pos": [
+       1.751,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Desk_0",
+      "pos": [
+       1.751,
+       0.0,
+       0.14
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Stand_0",
+      "pos": [
+       3.451,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_0",
+      "pos": [
+       3.451,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_1",
+      "pos": [
+       4.101,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_1",
+      "pos": [
+       4.101,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_2",
+      "pos": [
+       4.751,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_2",
+      "pos": [
+       4.751,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_3",
+      "pos": [
+       5.401,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_3",
+      "pos": [
+       5.401,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_4",
+      "pos": [
+       6.051,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_4",
+      "pos": [
+       6.051,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Stand_5",
+      "pos": [
+       6.701,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Queue_5",
+      "pos": [
+       6.701,
+       0.0,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Seat_0",
+      "pos": [
+       -5.73,
+       -2.08,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Interview_0_0",
+      "pos": [
+       -5.73,
+       -2.08,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_1",
+      "pos": [
+       -5.73,
+       -1.12,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Interview_0_1",
+      "pos": [
+       -5.73,
+       -1.12,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Seat_2",
+      "pos": [
+       -5.73,
+       1.12,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Interview_1_0",
+      "pos": [
+       -5.73,
+       1.12,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_3",
+      "pos": [
+       -5.73,
+       2.08,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Interview_1_1",
+      "pos": [
+       -5.73,
+       2.08,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Stand_6",
+      "pos": [
+       0.758,
+       -3.292,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Kiosk_0",
+      "pos": [
+       0.758,
+       -3.292,
+       0.14
+      ],
+      "yaw": 270.0
+     },
+     {
+      "name": "Anchor_Stand_7",
+      "pos": [
+       0.91,
+       3.898,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Kiosk_1",
+      "pos": [
+       0.91,
+       3.898,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Filing_0",
+      "pos": [
+       -1.69,
+       -6.307,
+       0.14
+      ],
+      "yaw": 255.0
+     },
+     {
+      "name": "Anchor_Filing_1",
+      "pos": [
+       3.265,
+       -5.655,
+       0.14
+      ],
+      "yaw": 300.0
+     },
+     {
+      "name": "Anchor_Work_1",
+      "pos": [
+       -0.91,
+       4.619,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Desk_1",
+      "pos": [
+       -0.91,
+       4.619,
+       0.14
+      ],
+      "yaw": -90.0
+     },
+     {
+      "name": "Anchor_Work_2",
+      "pos": [
+       -1.516,
+       -5.15,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Desk_2",
+      "pos": [
+       -1.516,
+       -5.15,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_4",
+      "pos": [
+       3.251,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_0",
+      "pos": [
+       3.251,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_5",
+      "pos": [
+       4.001,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_1",
+      "pos": [
+       4.001,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_6",
+      "pos": [
+       4.751,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_2",
+      "pos": [
+       4.751,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Seat_7",
+      "pos": [
+       5.501,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Chair_3",
+      "pos": [
+       5.501,
+       -0.75,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Lamp_0",
+      "pos": [
+       5.768,
+       6.726,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_1",
+      "pos": [
+       -8.834,
+       -0.677,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Lamp_2",
+      "pos": [
+       6.726,
+       -5.768,
+       1.3
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_0",
+      "pos": [
+       0.0,
+       0.0,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_1",
+      "pos": [
+       4.07,
+       2.35,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_2",
+      "pos": [
+       -2.35,
+       4.07,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_3",
+      "pos": [
+       -4.07,
+       -2.35,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Light_4",
+      "pos": [
+       2.35,
+       -4.07,
+       2.75
+      ],
+      "yaw": 0.0
+     },
+     {
+      "name": "Anchor_Aisle_0",
+      "pos": [
+       8.13,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_1",
+      "pos": [
+       7.829,
+       2.193,
+       0.14
+      ],
+      "yaw": 105.65
+     },
+     {
+      "name": "Anchor_Aisle_2",
+      "pos": [
+       6.946,
+       4.224,
+       0.14
+      ],
+      "yaw": 121.3
+     },
+     {
+      "name": "Anchor_Aisle_3",
+      "pos": [
+       5.549,
+       5.942,
+       0.14
+      ],
+      "yaw": 136.96
+     },
+     {
+      "name": "Anchor_Aisle_4",
+      "pos": [
+       3.74,
+       7.219,
+       0.14
+      ],
+      "yaw": 152.61
+     },
+     {
+      "name": "Anchor_Aisle_5",
+      "pos": [
+       1.654,
+       7.96,
+       0.14
+      ],
+      "yaw": 168.26
+     },
+     {
+      "name": "Anchor_Aisle_6",
+      "pos": [
+       -0.555,
+       8.111,
+       0.14
+      ],
+      "yaw": 183.91
+     },
+     {
+      "name": "Anchor_Aisle_7",
+      "pos": [
+       -2.723,
+       7.661,
+       0.14
+      ],
+      "yaw": 199.57
+     },
+     {
+      "name": "Anchor_Aisle_8",
+      "pos": [
+       -4.688,
+       6.642,
+       0.14
+      ],
+      "yaw": 215.22
+     },
+     {
+      "name": "Anchor_Aisle_9",
+      "pos": [
+       -6.307,
+       5.131,
+       0.14
+      ],
+      "yaw": 230.87
+     },
+     {
+      "name": "Anchor_Aisle_10",
+      "pos": [
+       -7.457,
+       3.239,
+       0.14
+      ],
+      "yaw": 246.52
+     },
+     {
+      "name": "Anchor_Aisle_11",
+      "pos": [
+       -8.054,
+       1.107,
+       0.14
+      ],
+      "yaw": 262.17
+     },
+     {
+      "name": "Anchor_Aisle_12",
+      "pos": [
+       -8.054,
+       -1.107,
+       0.14
+      ],
+      "yaw": -82.17
+     },
+     {
+      "name": "Anchor_Aisle_13",
+      "pos": [
+       -7.457,
+       -3.239,
+       0.14
+      ],
+      "yaw": -66.52
+     },
+     {
+      "name": "Anchor_Aisle_14",
+      "pos": [
+       -6.307,
+       -5.131,
+       0.14
+      ],
+      "yaw": -50.87
+     },
+     {
+      "name": "Anchor_Aisle_15",
+      "pos": [
+       -4.688,
+       -6.642,
+       0.14
+      ],
+      "yaw": -35.22
+     },
+     {
+      "name": "Anchor_Aisle_16",
+      "pos": [
+       -2.723,
+       -7.661,
+       0.14
+      ],
+      "yaw": -19.57
+     },
+     {
+      "name": "Anchor_Aisle_17",
+      "pos": [
+       -0.555,
+       -8.111,
+       0.14
+      ],
+      "yaw": -3.91
+     },
+     {
+      "name": "Anchor_Aisle_18",
+      "pos": [
+       1.654,
+       -7.96,
+       0.14
+      ],
+      "yaw": 11.74
+     },
+     {
+      "name": "Anchor_Aisle_19",
+      "pos": [
+       3.74,
+       -7.219,
+       0.14
+      ],
+      "yaw": 27.39
+     },
+     {
+      "name": "Anchor_Aisle_20",
+      "pos": [
+       5.549,
+       -5.942,
+       0.14
+      ],
+      "yaw": 43.04
+     },
+     {
+      "name": "Anchor_Aisle_21",
+      "pos": [
+       6.946,
+       -4.224,
+       0.14
+      ],
+      "yaw": 58.7
+     },
+     {
+      "name": "Anchor_Aisle_22",
+      "pos": [
+       7.829,
+       -2.193,
+       0.14
+      ],
+      "yaw": 74.35
+     },
+     {
+      "name": "Anchor_Aisle_23",
+      "pos": [
+       -5.0,
+       2.5,
+       0.14
+      ],
+      "yaw": 243.43
+     },
+     {
+      "name": "Anchor_Aisle_24",
+      "pos": [
+       -5.0,
+       3.75,
+       0.14
+      ],
+      "yaw": 233.13
+     },
+     {
+      "name": "Anchor_Aisle_25",
+      "pos": [
+       -5.0,
+       5.0,
+       0.14
+      ],
+      "yaw": 225.0
+     },
+     {
+      "name": "Anchor_Aisle_26",
+      "pos": [
+       -2.5,
+       6.25,
+       0.14
+      ],
+      "yaw": 201.8
+     },
+     {
+      "name": "Anchor_Aisle_27",
+      "pos": [
+       -1.25,
+       2.5,
+       0.14
+      ],
+      "yaw": 206.57
+     },
+     {
+      "name": "Anchor_Aisle_28",
+      "pos": [
+       0.0,
+       1.25,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_29",
+      "pos": [
+       0.0,
+       2.5,
+       0.14
+      ],
+      "yaw": 180.0
+     },
+     {
+      "name": "Anchor_Aisle_30",
+      "pos": [
+       1.25,
+       -1.25,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_31",
+      "pos": [
+       1.25,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_32",
+      "pos": [
+       1.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_33",
+      "pos": [
+       2.5,
+       -6.25,
+       0.14
+      ],
+      "yaw": 21.8
+     },
+     {
+      "name": "Anchor_Aisle_34",
+      "pos": [
+       2.5,
+       -3.75,
+       0.14
+      ],
+      "yaw": 33.69
+     },
+     {
+      "name": "Anchor_Aisle_35",
+      "pos": [
+       2.5,
+       1.25,
+       0.14
+      ],
+      "yaw": 116.57
+     },
+     {
+      "name": "Anchor_Aisle_36",
+      "pos": [
+       2.5,
+       2.5,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_37",
+      "pos": [
+       3.75,
+       -5.0,
+       0.14
+      ],
+      "yaw": 36.87
+     },
+     {
+      "name": "Anchor_Aisle_38",
+      "pos": [
+       3.75,
+       -3.75,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_39",
+      "pos": [
+       3.75,
+       -2.5,
+       0.14
+      ],
+      "yaw": 56.31
+     },
+     {
+      "name": "Anchor_Aisle_40",
+      "pos": [
+       3.75,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_41",
+      "pos": [
+       3.75,
+       1.25,
+       0.14
+      ],
+      "yaw": 108.43
+     },
+     {
+      "name": "Anchor_Aisle_42",
+      "pos": [
+       3.75,
+       2.5,
+       0.14
+      ],
+      "yaw": 123.69
+     },
+     {
+      "name": "Anchor_Aisle_43",
+      "pos": [
+       5.0,
+       -5.0,
+       0.14
+      ],
+      "yaw": 45.0
+     },
+     {
+      "name": "Anchor_Aisle_44",
+      "pos": [
+       5.0,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_45",
+      "pos": [
+       5.0,
+       5.0,
+       0.14
+      ],
+      "yaw": 135.0
+     },
+     {
+      "name": "Anchor_Aisle_46",
+      "pos": [
+       6.25,
+       -2.5,
+       0.14
+      ],
+      "yaw": 68.2
+     },
+     {
+      "name": "Anchor_Aisle_47",
+      "pos": [
+       6.25,
+       -1.25,
+       0.14
+      ],
+      "yaw": 78.69
+     },
+     {
+      "name": "Anchor_Aisle_48",
+      "pos": [
+       6.25,
+       0.0,
+       0.14
+      ],
+      "yaw": 90.0
+     },
+     {
+      "name": "Anchor_Aisle_49",
+      "pos": [
+       6.25,
+       1.25,
+       0.14
+      ],
+      "yaw": 101.31
+     }
+    ],
+    "tall_parts": 38,
+    "surfaces": {
+     "Base": [
+      4,
+      3
+     ],
+     "Roof": [
+      10,
+      5
+     ],
+     "Interior": [
+      21,
+      8
+     ],
+     "RoofCeil": [
+      7,
+      4
+     ]
+    },
+    "group_surfaces": {
+     "Base": 3,
+     "DecalR": 1,
+     "Interior": 8,
+     "NameSign": 3,
+     "PorchTop": 5,
+     "Roof": 5,
+     "WallsUp": 6,
+     "Walls": 10,
+     "WallShell": 3
+    },
+    "ceiling": {
+     "cells": 120,
+     "band_segments": 32,
+     "pieces": [
+      "pendant",
+      "pendant",
+      "pendant",
+      "eyesign x4"
+     ],
+     "tris": 2404,
+     "surfaces": [
+      "Accent",
+      "LightStrip",
+      "Palette",
+      "PaletteMetal",
+      "Window"
+     ]
+    },
+    "partitions": [
+     [
+      -4.18,
+      -2.25,
+      0.14,
+      2.24,
+      0.75,
+      0.06,
+      90.0
+     ],
+     [
+      -4.18,
+      -0.4,
+      0.14,
+      2.24,
+      0.2,
+      0.06,
+      90.0
+     ],
+     [
+      -5.58,
+      -0.2,
+      0.14,
+      2.24,
+      1.4,
+      0.06,
+      0.0
+     ],
+     [
+      -5.58,
+      -3.0,
+      0.14,
+      2.24,
+      1.4,
+      0.06,
+      0.0
+     ],
+     [
+      -4.18,
+      0.95,
+      0.14,
+      2.24,
+      0.75,
+      0.06,
+      90.0
+     ],
+     [
+      -4.18,
+      2.8,
+      0.14,
+      2.24,
+      0.2,
+      0.06,
+      90.0
+     ],
+     [
+      -5.58,
+      3.0,
+      0.14,
+      2.24,
+      1.4,
+      0.06,
+      0.0
+     ],
+     [
+      -5.58,
+      0.2,
+      0.14,
+      2.24,
+      1.4,
+      0.06,
+      0.0
+     ]
+    ],
+    "decals": {
+     "decal_objects": 32,
+     "upper_objects": 32,
+     "upper_z": [
+      1.4,
+      2.9499999999999997
+     ],
+     "upper_band": [
+      2.9,
+      2.9
+     ],
+     "shell": "podium",
+     "name_sign_deg": 22.5
+    },
+    "door_blocked": [],
+    "door_clear_min": 1.04,
+    "door_lane_hits": {},
+    "door_lane_ring": [
+     8.13,
+     8.72,
+     7.58
+    ],
+    "v4_empty_patch": 2.3,
+    "door_lane_hit_angles": {},
+    "door_slots": 15,
+    "door_slot_deg": 23.3,
+    "door_free_deg": 360.0
+   },
+   "verify": {
+    "tris": 30900,
+    "rmax": 9.50000029528455,
+    "zmin": -0.20000000298023224,
+    "ao_min": 0.004776953253895044,
+    "ao_max": 1.0,
+    "tray_err": null,
+    "meshes": [
+     "Base",
+     "Decal_00_Roof",
+     "Decal_01_Roof",
+     "Decal_02_Roof",
+     "Decal_03_Roof",
+     "Decal_04_Roof",
+     "Decal_05_Roof",
+     "Decal_06_Roof",
+     "Decal_07_Roof",
+     "Decal_08_Roof",
+     "Decal_09_Roof",
+     "Decal_10_Roof",
+     "Decal_11_Roof",
+     "Decal_12_Roof",
+     "Decal_13_Roof",
+     "Decal_14_Roof",
+     "Decal_15_Roof",
+     "Decal_16_Roof",
+     "Decal_17_Roof",
+     "Decal_18_Roof",
+     "Decal_19_Roof",
+     "Decal_20_Roof",
+     "Decal_21_Roof",
+     "Decal_22_Roof",
+     "Decal_23_Roof",
+     "Decal_24_Roof",
+     "Decal_25_Roof",
+     "Decal_26_Roof",
+     "Decal_27_Roof",
+     "Decal_28_Roof",
+     "Decal_29_Roof",
+     "Decal_30_Roof",
+     "Decal_31_Roof",
+     "Interior",
+     "NameSign",
+     "PorchTop",
+     "Roof",
+     "RoofCeil",
+     "Upper_00",
+     "Upper_00_Band",
+     "Upper_01",
+     "Upper_01_Band",
+     "Upper_01_Sign",
+     "Upper_02",
+     "Upper_02_Band",
+     "Upper_03",
+     "Upper_03_Band",
+     "Upper_04",
+     "Upper_04_Band",
+     "Upper_05",
+     "Upper_05_Band",
+     "Upper_06",
+     "Upper_06_Band",
+     "Upper_07",
+     "Upper_07_Band",
+     "Upper_08",
+     "Upper_08_Band",
+     "Upper_08_Sign",
+     "Upper_09",
+     "Upper_09_Band",
+     "Upper_10",
+     "Upper_10_Band",
+     "Upper_11",
+     "Upper_11_Band",
+     "Upper_12",
+     "Upper_12_Band",
+     "Upper_13",
+     "Upper_13_Band",
+     "Upper_14",
+     "Upper_14_Band",
+     "Upper_15",
+     "Upper_15_Band",
+     "Upper_16",
+     "Upper_16_Band",
+     "Upper_17",
+     "Upper_17_Band",
+     "Upper_17_Sign",
+     "Upper_18",
+     "Upper_18_Band",
+     "Upper_19",
+     "Upper_19_Band",
+     "Upper_20",
+     "Upper_20_Band",
+     "Upper_21",
+     "Upper_21_Band",
+     "Upper_22",
+     "Upper_22_Band",
+     "Upper_23",
+     "Upper_23_Band",
+     "Upper_24",
+     "Upper_24_Band",
+     "Upper_24_Sign",
+     "Upper_25",
+     "Upper_25_Band",
+     "Upper_26",
+     "Upper_26_Band",
+     "Upper_27",
+     "Upper_27_Band",
+     "Upper_28",
+     "Upper_28_Band",
+     "Upper_29",
+     "Upper_29_Band",
+     "Upper_30",
+     "Upper_30_Band",
+     "Upper_31",
+     "Upper_31_Band",
+     "Wall_00",
+     "Wall_01",
+     "Wall_02",
+     "Wall_03",
+     "Wall_04",
+     "Wall_05",
+     "Wall_06",
+     "Wall_07",
+     "Wall_08",
+     "Wall_09",
+     "Wall_10",
+     "Wall_11",
+     "Wall_12",
+     "Wall_13",
+     "Wall_14",
+     "Wall_15",
+     "Wall_16",
+     "Wall_17",
+     "Wall_18",
+     "Wall_19",
+     "Wall_20",
+     "Wall_21",
+     "Wall_22",
+     "Wall_23",
+     "Wall_24",
+     "Wall_25",
+     "Wall_26",
+     "Wall_27",
+     "Wall_28",
+     "Wall_29",
+     "Wall_30",
+     "Wall_31"
+    ],
+    "empties": [
+     "Anchor_Aisle_0",
+     "Anchor_Aisle_1",
+     "Anchor_Aisle_10",
+     "Anchor_Aisle_11",
+     "Anchor_Aisle_12",
+     "Anchor_Aisle_13",
+     "Anchor_Aisle_14",
+     "Anchor_Aisle_15",
+     "Anchor_Aisle_16",
+     "Anchor_Aisle_17",
+     "Anchor_Aisle_18",
+     "Anchor_Aisle_19",
+     "Anchor_Aisle_2",
+     "Anchor_Aisle_20",
+     "Anchor_Aisle_21",
+     "Anchor_Aisle_22",
+     "Anchor_Aisle_23",
+     "Anchor_Aisle_24",
+     "Anchor_Aisle_25",
+     "Anchor_Aisle_26",
+     "Anchor_Aisle_27",
+     "Anchor_Aisle_28",
+     "Anchor_Aisle_29",
+     "Anchor_Aisle_3",
+     "Anchor_Aisle_30",
+     "Anchor_Aisle_31",
+     "Anchor_Aisle_32",
+     "Anchor_Aisle_33",
+     "Anchor_Aisle_34",
+     "Anchor_Aisle_35",
+     "Anchor_Aisle_36",
+     "Anchor_Aisle_37",
+     "Anchor_Aisle_38",
+     "Anchor_Aisle_39",
+     "Anchor_Aisle_4",
+     "Anchor_Aisle_40",
+     "Anchor_Aisle_41",
+     "Anchor_Aisle_42",
+     "Anchor_Aisle_43",
+     "Anchor_Aisle_44",
+     "Anchor_Aisle_45",
+     "Anchor_Aisle_46",
+     "Anchor_Aisle_47",
+     "Anchor_Aisle_48",
+     "Anchor_Aisle_49",
+     "Anchor_Aisle_5",
+     "Anchor_Aisle_6",
+     "Anchor_Aisle_7",
+     "Anchor_Aisle_8",
+     "Anchor_Aisle_9",
+     "Anchor_Chair_0",
+     "Anchor_Chair_1",
+     "Anchor_Chair_2",
+     "Anchor_Chair_3",
+     "Anchor_Desk_0",
+     "Anchor_Desk_1",
+     "Anchor_Desk_2",
+     "Anchor_Filing_0",
+     "Anchor_Filing_1",
+     "Anchor_Interview_0_0",
+     "Anchor_Interview_0_1",
+     "Anchor_Interview_1_0",
+     "Anchor_Interview_1_1",
+     "Anchor_Kiosk_0",
+     "Anchor_Kiosk_1",
+     "Anchor_Lamp_0",
+     "Anchor_Lamp_1",
+     "Anchor_Lamp_2",
+     "Anchor_Light_0",
+     "Anchor_Light_1",
+     "Anchor_Light_2",
+     "Anchor_Light_3",
+     "Anchor_Light_4",
+     "Anchor_Queue_0",
+     "Anchor_Queue_1",
+     "Anchor_Queue_2",
+     "Anchor_Queue_3",
+     "Anchor_Queue_4",
+     "Anchor_Queue_5",
+     "Anchor_Seat_0",
+     "Anchor_Seat_1",
+     "Anchor_Seat_2",
+     "Anchor_Seat_3",
+     "Anchor_Seat_4",
+     "Anchor_Seat_5",
+     "Anchor_Seat_6",
+     "Anchor_Seat_7",
+     "Anchor_Stand_0",
+     "Anchor_Stand_1",
+     "Anchor_Stand_2",
+     "Anchor_Stand_3",
+     "Anchor_Stand_4",
+     "Anchor_Stand_5",
+     "Anchor_Stand_6",
+     "Anchor_Stand_7",
      "Anchor_Work_0",
      "Anchor_Work_1",
      "Anchor_Work_2"

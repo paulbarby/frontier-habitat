@@ -6,14 +6,14 @@ func _init() -> void:
 	var sim = Sim.new()
 	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes("res://content/saves/showcase_v5.fhsave"))["state"])
 	sim.run_seconds(20.0)
-	var n := 12000
+	var n := 30000
 	var big := {}
 	for i in n:
 		sim.jobs.prof_g = {}
 		var t0: int = Time.get_ticks_usec()
 		sim.step()
 		var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0
-		if ms > 7.0 and not sim.jobs.prof_g.is_empty():
+		if ms > 12.0:
 			var parts: Array = []
 			for k in sim.jobs.prof_g:
 				if float(sim.jobs.prof_g[k]) > 0.5:

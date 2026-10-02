@@ -466,7 +466,7 @@ class raw_solve:
         return False
 
 
-SURFACE_GUARD = True     # Solver._bed_guard (beds and, for the lying clips, the floor)
+SURFACE_GUARD = not os.environ.get("NPC_NOGUARD")     # Solver._bed_guard (beds and, for the lying clips, the floor)
 GUARD_CLEAR = 0.004
 GUARD_PALM, GUARD_BACK = 0.085, 0.015   # m (x scale): measured, the curled MPFB fingers reach 9 cm to the palm side: the hand's palm-side and back-side reach from the bone line
                                         # (MPFB hands; npc_build sets the thicker suit gloves)
@@ -804,9 +804,10 @@ class Solver:
             return x0 <= p.x <= x1 and abs(p.y) < y1
 
         def lift(z, want):
-            """the z to reach: soft so the correction starts 1.5 cm before contact (no corner in the motion)"""
+            """the z to reach: soft so the correction starts 4 cm before contact (no corner in the motion, and slow
+            enough for the 5 deg/frame rule of the bed clips)"""
             d = want - z
-            return max(0.0, d) if d > 0.015 else (0.015 + d) ** 2 / 0.06 if d > -0.015 else 0.0
+            return max(0.0, d) if d > 0.04 else (0.04 + d) ** 2 / 0.16 if d > -0.04 else 0.0
         # 1. elbow, then wrist, above the mattress: the whole arm turns up about the shoulder
         for joint, rad in ((fa, 0.032), (hd, 0.030)):
             sh, p_ = pos[ua], pos[joint]
@@ -854,17 +855,25 @@ class Solver:
             need, v = worst
             if v is None or need <= 0.0:
                 break
-            ax = v.cross(up)
-            if ax.length < 1e-6:
+            # (2026-10-02: pitching the hand about the wrist flipped it 60-100 deg between frames when it pointed down;
+            # the whole arm turns up about the shoulder instead: a well-conditioned axis, a continuous correction)
+            sh = pos[ua]
+            vs = (wr + v) - sh
+            ax = vs.cross(up)
+            if ax.length < 1e-6 or vs.length < 1e-6:
                 break
             ax.normalize()
-            r = v.length
-            e0 = math.asin(max(-1.0, min(1.0, v.z / r)))
-            e1 = math.asin(max(-1.0, min(0.95, (v.z + need) / r)))
-            q = Quaternion(ax, -(e1 - e0))
-            if (q @ v).z < v.z:
-                q = Quaternion(ax, e1 - e0)
-            D[hd] = (q @ D[hd]).normalized()
+            e0 = math.asin(max(-1.0, min(1.0, vs.z / vs.length)))
+            e1 = math.asin(max(-1.0, min(0.999, (vs.z + need) / vs.length)))
+            q = Quaternion(ax, e1 - e0)
+            if (q @ vs).z < vs.z:
+                q = Quaternion(ax, -(e1 - e0))
+            for b_ in (ua, fa, hd):
+                D[b_] = (q @ D[b_]).normalized()
+            Q[ua] = D["shoulder." + s].inverted() @ D[ua]
+            pos[fa] = pos[ua] + D[ua] @ (self.head[fa] - self.head[ua])
+            pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
+            wr = pos[hd]
             tipv = q @ tipv
             pn = q @ pn
         Q[fa] = D[ua].inverted() @ D[fa]
@@ -1317,7 +1326,10 @@ def bake_clip(rig, solver, name, pose_fn, frames, fix=None, smooth=True):
         hips_loc.append(loc)
     L = despike_limit(name) if smooth else None
     if L:
-        nfix = sum(despike(data[b], L) for b in BONE_NAMES if b not in NO_SMOOTH_BONES)
+        # (2026-10-02) the hands of the bed clips keep the surface guard's turn (smoothing it pressed them back into
+        # the mattress)
+        keep = set()          # (the hands are smoothed again: unsmoothed guard turns broke 5 deg/frame)
+        nfix = sum(despike(data[b], L) for b in BONE_NAMES if b not in NO_SMOOTH_BONES and b not in keep)
         if L >= 12.0:
             nfix += despike_world(data, solver)
         if nfix:

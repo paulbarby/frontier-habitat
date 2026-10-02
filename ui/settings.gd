@@ -9,7 +9,9 @@ const DEFAULTS := {
 	# Panel manager (docs/UI_PANELS.md): the dock open or closed; each message type: popup | badge | off.
 	"dock_open": true, "notify_alert": "popup", "notify_hazard": "popup", "notify_reactor": "popup", "notify_unrest": "popup",
 	"notify_request": "popup", "notify_traffic": "popup", "notify_people": "popup", "notify_goal": "popup", "notify_award": "popup",
-	"notify_research": "popup", "notify_build": "popup", "notify_system": "popup",
+	"notify_research": "popup", "notify_build": "popup", "notify_system": "popup", "notify_party": "popup", "notify_hr": "popup",
+	# V5 section 16: "Cheeky dialogue" (innuendo lines; off = mild flirt lines). SIM: set_option cheeky.
+	"cheeky": true,
 	# All roofs off (Paul, 2026-10-01): key Y, the nav rail button; RENDER view.set_roofs_off.
 	"roofs_off": false,
 }

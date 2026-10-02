@@ -1,0 +1,1223 @@
+{
+ "_note": "V5_DESIGN section 16. innuendo and flirt lines carry a heat level (1 flirt, 2 cheeky, 3 very cheeky); never explicit, never with or about a child. Other topics are plain strings. Slots: {other} {name} {a} {b} {place} {reason}. Built by tools/content_src/build_content.js; edit the sources there.",
+ "innuendo": [
+  {
+   "text": "{other}, my suit has a quick-release. Just so you know. For emergencies.",
+   "heat": 2
+  },
+  {
+   "text": "Pressure is rising in here, {other}, and I am not talking about the cabin.",
+   "heat": 2
+  },
+  {
+   "text": "I am told I have excellent torque. The rover mechanic put it in writing.",
+   "heat": 2
+  },
+  {
+   "text": "One airlock cycle, you and me. Eight minutes. I counted. I am not nervous.",
+   "heat": 2
+  },
+  {
+   "text": "Your hydroponics are looking very healthy, {other}. Lots of growth. Lots of green.",
+   "heat": 2
+  },
+  {
+   "text": "I checked all the seals today. Yours too, {other}? I mean your schedule. Your schedule.",
+   "heat": 2
+  },
+  {
+   "text": "Careful. I tend to run hot when I am near a good power source.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I would love to see your pipework. For the ship. Obviously the ship.",
+   "heat": 2
+  },
+  {
+   "text": "They say a tight fit is a good fit. I was talking about the hatch. Mostly.",
+   "heat": 2
+  },
+  {
+   "text": "I read the manual twice, {other}. There is a section on cuddling in a confined space. Page nine.",
+   "heat": 2
+  },
+  {
+   "text": "If we run low on oxygen, I volunteer to share. Breath by breath. Slowly.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, is it warm in here, or did somebody turn up the sun lamps on me?",
+   "heat": 2
+  },
+  {
+   "text": "My rover has a very comfortable back seat. I am only mentioning it as a fact.",
+   "heat": 2
+  },
+  {
+   "text": "I am great with small spaces, {other}. Ask anyone. Ask the cupboard.",
+   "heat": 2
+  },
+  {
+   "text": "You make my heart rate go up. The doctor says that is cardio. I say it is you.",
+   "heat": 2
+  },
+  {
+   "text": "I would love to inspect your equipment, {other}. For compliance. Weekly compliance.",
+   "heat": 2
+  },
+  {
+   "text": "Tonight the habitat lights are low. Nice mood lighting for a walk.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I have been told I am very good with my hands. The kitchen staff can confirm.",
+   "heat": 2
+  },
+  {
+   "text": "I keep a spare O-ring in my pocket. Ask me why. Or do not. Better to ask.",
+   "heat": 2
+  },
+  {
+   "text": "The guide says to sleep in shifts. I am free after yours, {other}.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, our shift patterns match so nicely. Almost like fate. Or a rota.",
+   "heat": 2
+  },
+  {
+   "text": "I have a very firm handshake. Also a very soft side. You can pick which one to test.",
+   "heat": 2
+  },
+  {
+   "text": "My flight record is clean, {other}. Safe landings only. Smooth ones.",
+   "heat": 2
+  },
+  {
+   "text": "The AI says we are a ninety-four percent match. It said that about my toaster too. Still, I am hopeful.",
+   "heat": 2
+  },
+  {
+   "text": "Would you like to see my airlock? It is very clean. Nobody has used it in months.",
+   "heat": 2
+  },
+  {
+   "text": "You are in my personal space, {other}. Please stay. I find I like it here.",
+   "heat": 2
+  },
+  {
+   "text": "I stretched this morning. Every muscle. In case somebody needs a very flexible partner.",
+   "heat": 2
+  },
+  {
+   "text": "Is that a wrench in your pocket, or are you just happy to fix my pipes?",
+   "heat": 2
+  },
+  {
+   "text": "{other}, you do not need a suit around me. I have enough heat for two.",
+   "heat": 2
+  },
+  {
+   "text": "I defrosted a very nice dinner for two, {other}. It is lasagne. It is also a metaphor.",
+   "heat": 2
+  },
+  {
+   "text": "Between you and me, {other}, the oxygen tastes better when you are in the room.",
+   "heat": 2
+  },
+  {
+   "text": "I have been practising my spacewalk. I need a partner for the tether. A close one.",
+   "heat": 2
+  },
+  {
+   "text": "My bunk is rated for one. I would be happy to test its limits with you.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, you hum when you work. I have started finding excuses to be in earshot.",
+   "heat": 2
+  },
+  {
+   "text": "Funny. The colony has a hundred rooms and I keep ending up where you are.",
+   "heat": 2
+  },
+  {
+   "text": "I am told the dome has excellent acoustics. I would like to find out with you.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I could fix your schedule. Or at least clear your evenings.",
+   "heat": 2
+  },
+  {
+   "text": "My grandmother said, find someone who can fix a pump. I think that is you.",
+   "heat": 2
+  },
+  {
+   "text": "You are the only person here who makes a rationed meal feel like a banquet.",
+   "heat": 2
+  },
+  {
+   "text": "If the lights go out, {other}, I know the way. To your quarters. I mean the exit. The exit.",
+   "heat": 2
+  },
+  {
+   "text": "I like how you handle a tool, {other}. Calm. Sure. Very, very precise.",
+   "heat": 2
+  },
+  {
+   "text": "Is it me, or is the gravity getting stronger? I keep falling for you.",
+   "heat": 2
+  },
+  {
+   "text": "There is a rumour that I am shy. I would like to correct that. Privately.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, do you cook? Because things are getting steamy in this kitchen.",
+   "heat": 2
+  },
+  {
+   "text": "I have never had a problem with intimacy. Just with the airlock schedule.",
+   "heat": 2
+  },
+  {
+   "text": "You look good in that uniform, {other}. I like the way it fits. The uniform. The standard issue.",
+   "heat": 2
+  },
+  {
+   "text": "I am a very slow charger. Worth the wait, though. Many have said so.",
+   "heat": 2
+  },
+  {
+   "text": "Come over later. I will bring the snacks. You bring the questionable decisions.",
+   "heat": 2
+  },
+  {
+   "text": "I would never ask you to take off your helmet. Unless we are inside. And alone.",
+   "heat": 2
+  },
+  {
+   "text": "The doctor told me to get more exercise. I immediately thought of you.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I do my best work when someone is watching. Please stay and watch.",
+   "heat": 2
+  },
+  {
+   "text": "I am not saying you are hot. I am saying the thermostat has stopped working near you.",
+   "heat": 2
+  },
+  {
+   "text": "Nobody talks about how cosy a rover cabin is after dark.",
+   "heat": 2
+  },
+  {
+   "text": "I would love to give you a tour of my quarters. It is short. I will make it last.",
+   "heat": 2
+  },
+  {
+   "text": "Rumour says you are good under pressure, {other}. I have a pressure chamber booked.",
+   "heat": 2
+  },
+  {
+   "text": "You have lovely thrusters. I mean on your boots. The boots are great.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I have been practising a very careful docking manoeuvre. I need a volunteer.",
+   "heat": 2
+  },
+  {
+   "text": "Our oxygen budgets look compatible. Maybe we should merge accounts.",
+   "heat": 2
+  },
+  {
+   "text": "Not to brag, but I can make a ration bar last for hours. Very patient. Very thorough.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, nothing makes me feel more alive than a nearly failed seal. Except maybe you.",
+   "heat": 2
+  },
+  {
+   "text": "I read that people in confined spaces bond fast. Let us confine ourselves, for science.",
+   "heat": 2
+  },
+  {
+   "text": "You said you needed a hand in the greenhouse. I have two. Both free tonight.",
+   "heat": 2
+  },
+  {
+   "text": "It gets cold at night. I hear body heat is the most efficient resource we have.",
+   "heat": 2
+  },
+  {
+   "text": "I am the kind of person who reads the whole warranty, {other}. I am committed.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, you have a nice rhythm when you walk. It is very, hmm, regulated.",
+   "heat": 2
+  },
+  {
+   "text": "The AI recommends we spend more time in close contact. It said so in the wellness newsletter.",
+   "heat": 2
+  },
+  {
+   "text": "I could take a look at your drive coupling. It sounds a little loose. Or lonely.",
+   "heat": 2
+  },
+  {
+   "text": "If you need a partner for the zero-g class, I am very flexible. Also very sincere.",
+   "heat": 2
+  },
+  {
+   "text": "Come on, {other}. The coolant can wait. Let us generate some heat of our own.",
+   "heat": 2
+  },
+  {
+   "text": "I put your name on my emergency contact list. Under both things I would call about.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, when you laugh the lights flicker. That is a lot of power.",
+   "heat": 2
+  },
+  {
+   "text": "I spent my credits on a very small, very nice bottle of wine. The label says patience. I say tonight.",
+   "heat": 2
+  },
+  {
+   "text": "My quarters have a window. A small one. It is perfect for two people looking at one star.",
+   "heat": 2
+  },
+  {
+   "text": "You keep looking at my hands, {other}. They are free after dinner.",
+   "heat": 2
+  },
+  {
+   "text": "I have a very good bedside manner. I am a doctor of nothing, but I commit.",
+   "heat": 2
+  },
+  {
+   "text": "Warning, {other}: prolonged eye contact may lead to a full-blown mess hall scandal.",
+   "heat": 2
+  },
+  {
+   "text": "They gave me a safety briefing on you. Highly flammable. Handle with joy.",
+   "heat": 2
+  },
+  {
+   "text": "I have an excellent sense of timing. Ask my metronome. Ask the pump cycle.",
+   "heat": 2
+  },
+  {
+   "text": "You stir the stew like you stir my thoughts. Slowly. In circles. Until nothing is left.",
+   "heat": 2
+  },
+  {
+   "text": "My capacity is much larger than the spec sheet says. Please test it.",
+   "heat": 2
+  },
+  {
+   "text": "I would love to get lost with you, {other}. In the corridors. The long ones. With the dim lights.",
+   "heat": 2
+  },
+  {
+   "text": "Do not worry about the camera in the corridor. I filed it under maintenance.",
+   "heat": 2
+  },
+  {
+   "text": "I propose a mutual exchange of resources. Starting with warmth.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I am a simple person. I like good coffee, good company, and a good lock on the door.",
+   "heat": 2
+  },
+  {
+   "text": "Your dedication to the job is inspiring. I would like to see more of your dedication to leisure.",
+   "heat": 2
+  },
+  {
+   "text": "The pressure valve in my quarters needs checking. Needs a lot of checking. All evening.",
+   "heat": 2
+  },
+  {
+   "text": "I am very reliable when it comes to maintenance. Regular. Thorough. Gentle on the moving parts.",
+   "heat": 2
+  },
+  {
+   "text": "Say the word, {other}, and I will reschedule my whole week around your lunch break.",
+   "heat": 2
+  },
+  {
+   "text": "I told the AI my ideal evening. It recommended you. I did not even type your name.",
+   "heat": 2
+  },
+  {
+   "text": "You are the best thing in this colony that does not require a permit.",
+   "heat": 2
+  },
+  {
+   "text": "Looking for a partner for the night shift. Duties include warming a chair and not talking about work.",
+   "heat": 2
+  },
+  {
+   "text": "It is almost the end of the cycle, {other}. We should wrap up. In blankets. Together.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I filed an expense claim for flowers. They only had lettuce. I hope it says enough.",
+   "heat": 2
+  },
+  {
+   "text": "I can be very quiet when I need to. The vents can attest. The vents have heard things.",
+   "heat": 2
+  },
+  {
+   "text": "Do you want to see how my backup generator works? It is a very short demonstration.",
+   "heat": 2
+  },
+  {
+   "text": "If this is a dream, {other}, please do not file a wake-up report.",
+   "heat": 2
+  },
+  {
+   "text": "I could live on this ration bar if I knew I could share the rest of the evening with you.",
+   "heat": 2
+  },
+  {
+   "text": "Nothing says romance like two people, one tether and a very slow airlock.",
+   "heat": 2
+  },
+  {
+   "text": "My bunk and I have a lot of room. We have been discussing it. We both think of you.",
+   "heat": 2
+  },
+  {
+   "text": "Your voice is the only thing on the intercom I do not mute.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, I will bring the music, you bring the mood. We will not need a third party.",
+   "heat": 2
+  },
+  {
+   "text": "I prepared a toast: to the engineers, to the doctors, and to the very lucky person at my door.",
+   "heat": 2
+  },
+  {
+   "text": "Would you like to practise a very long, very slow handover? Of shift duties. Obviously shift duties.",
+   "heat": 2
+  },
+  {
+   "text": "I will be in the maintenance tunnel after dinner. It is very narrow. It is perfect for two.",
+   "heat": 2
+  },
+  {
+   "text": "Your turn to buy the next round, {other}. I will pay you back. In kind. Slowly.",
+   "heat": 2
+  },
+  {
+   "text": "Every time you adjust that harness, I forget how to adjust mine. Please stay nearby.",
+   "heat": 2
+  },
+  {
+   "text": "We could share a blanket. For efficiency. Colonial efficiency. Very serious.",
+   "heat": 2
+  },
+  {
+   "text": "You look like someone who knows how to keep a secret. I have one. It is about you.",
+   "heat": 2
+  },
+  {
+   "text": "{other}, my quarters have a lock, a lamp and a very quiet ventilation system. Just listing features.",
+   "heat": 3
+  },
+  {
+   "text": "I have been told I am a very hands-on leader. Come to my office. Bring a clipboard. Leave it at the door.",
+   "heat": 3
+  },
+  {
+   "text": "The maintenance closet has excellent privacy and almost no windows. I was just inspecting it, naturally.",
+   "heat": 3
+  },
+  {
+   "text": "Last night I dreamt we were stuck in the airlock. The cycle took six hours. Nobody complained.",
+   "heat": 3
+  },
+  {
+   "text": "{other}, I booked the sauna module. For two. The booking system is very discreet.",
+   "heat": 3
+  },
+  {
+   "text": "My doctor says I should reduce stress. She suggested a nightly routine. I suggested you.",
+   "heat": 3
+  },
+  {
+   "text": "I do not need the AI to tell me when I am attracted to you. My pulse is a reliable instrument.",
+   "heat": 3
+  },
+  {
+   "text": "I have a very large tool shed. Rarely used. Always clean. Open to visitors.",
+   "heat": 3
+  },
+  {
+   "text": "If you are cold, {other}, I know a way to warm up that does not use the heater and takes all night.",
+   "heat": 3
+  },
+  {
+   "text": "I would love to see your reactor core, {other}. Just the diagrams. For now.",
+   "heat": 3
+  },
+  {
+   "text": "A little bird told me you like it rough. The rover trail, I mean. The bumpy one. Late at night.",
+   "heat": 3
+  },
+  {
+   "text": "I will be in the shower after shift. The water allowance is exactly two minutes. Joining me saves water.",
+   "heat": 3
+  },
+  {
+   "text": "Let us skip the training video and learn on the job, {other}. Hands-on. All night.",
+   "heat": 3
+  },
+  {
+   "text": "Stop looking at me like that. People will think we have something to hide. We do. It is a very nice hide.",
+   "heat": 3
+  },
+  {
+   "text": "I have a bunk with a very squeaky frame. I am telling you so you can plan accordingly.",
+   "heat": 3
+  },
+  {
+   "text": "My idea of a quiet evening is you, me and a very long ration of nothing to do.",
+   "heat": 3
+  },
+  {
+   "text": "You said you wanted something hot and satisfying. I have soup. And options.",
+   "heat": 3
+  },
+  {
+   "text": "I have very strong opinions about shared showers. Mostly in favour.",
+   "heat": 3
+  },
+  {
+   "text": "{other}, if I fall off the schedule, please come looking for me. Start in my quarters.",
+   "heat": 3
+  },
+  {
+   "text": "I cleared the whole night shift. Do not ask how. Just clear yours as well.",
+   "heat": 3
+  },
+  {
+   "text": "Do not tell the commander, {other}, but I have a thing for people who read the safety manual aloud.",
+   "heat": 3
+  },
+  {
+   "text": "I want to introduce you to my favourite spot on the observation deck. It is dark and it has a blanket.",
+   "heat": 3
+  },
+  {
+   "text": "The greenhouse is nice and humid at night, {other}. Bring a towel. And no excuses.",
+   "heat": 3
+  },
+  {
+   "text": "We could test the emergency bunk together. The manual says it holds two. Closely.",
+   "heat": 3
+  },
+  {
+   "text": "Some people count sheep. I count how many times you smiled at me today. Insomnia has never been so good.",
+   "heat": 3
+  },
+  {
+   "text": "{other}, you should know that I take my coffee black and my evenings slow.",
+   "heat": 3
+  },
+  {
+   "text": "I like a person who handles pressure well. I like it even better when they handle me.",
+   "heat": 3
+  },
+  {
+   "text": "I booked the supply closet for the afternoon. Do not look so shocked. The mop is lovely.",
+   "heat": 3
+  },
+  {
+   "text": "Tell me your name, rank and what you are doing at nine o'clock, because I would like to be there.",
+   "heat": 3
+  },
+  {
+   "text": "{other}, if this relationship had a status page, it would say: critical, pending hugs.",
+   "heat": 3
+  },
+  {
+   "text": "You are the only sensor that sets off my alarms. Come over and silence them.",
+   "heat": 3
+  },
+  {
+   "text": "I like to think that, under all this standard-issue grey, we are both a little bit scandalous.",
+   "heat": 3
+  }
+ ],
+ "flirt": [
+  {
+   "text": "{other}, you look good today. Not that I was looking. Okay, I was looking.",
+   "heat": 1
+  },
+  {
+   "text": "I saved you the good seat in the canteen. It has only one wobble.",
+   "heat": 1
+  },
+  {
+   "text": "Your smile is the brightest thing on this base, and we have a fusion reactor.",
+   "heat": 1
+  },
+  {
+   "text": "You know what this base needs? More of whatever you are doing.",
+   "heat": 1
+  },
+  {
+   "text": "I made you a coffee. It is terrible. The thought is excellent.",
+   "heat": 1
+  },
+  {
+   "text": "Walk with me to the observation deck? I will tell you about the stars. I will pretend I know them.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, you make a regulation jumpsuit look like a fashion choice.",
+   "heat": 1
+  },
+  {
+   "text": "I like how you laugh at my jokes, even the ones about plumbing.",
+   "heat": 1
+  },
+  {
+   "text": "Do you have a minute? Or an hour? Or a rest of the shift?",
+   "heat": 1
+  },
+  {
+   "text": "They say the soil here is poor. But look what grows around you.",
+   "heat": 1
+  },
+  {
+   "text": "I thought about you when the sun came up. It was a lamp, but still.",
+   "heat": 1
+  },
+  {
+   "text": "You are the first person I look for in the mess hall. Do not tell the others.",
+   "heat": 1
+  },
+  {
+   "text": "I traded my dessert ration for a good seat next to you. Worth it.",
+   "heat": 1
+  },
+  {
+   "text": "Every time you speak, the day improves by about ten percent. I measured.",
+   "heat": 1
+  },
+  {
+   "text": "Do you ever get tired of being this charming? Because I am tired of noticing.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, I wrote you a poem. It rhymes oxygen with, well, nothing. Still working on it.",
+   "heat": 1
+  },
+  {
+   "text": "I was going to ask for a repair. Then I saw you and forgot what was broken.",
+   "heat": 1
+  },
+  {
+   "text": "If you need a listening ear, I have two. They are free after dinner.",
+   "heat": 1
+  },
+  {
+   "text": "You are the best reason to leave my quarters.",
+   "heat": 1
+  },
+  {
+   "text": "Is it wrong to wish the shift would run long, if you are on it?",
+   "heat": 1
+  },
+  {
+   "text": "I like the way you think, {other}. And the way you talk. And the way you walk. Mostly the whole thing.",
+   "heat": 1
+  },
+  {
+   "text": "I do not say this to everyone: you are my favourite colleague.",
+   "heat": 1
+  },
+  {
+   "text": "I put a small plant on your desk. It is basil. It means I like you. Or I like pasta. Both.",
+   "heat": 1
+  },
+  {
+   "text": "Your sense of humour keeps me going. That and the cheese substitute.",
+   "heat": 1
+  },
+  {
+   "text": "I would give you my last bar of chocolate. That is how serious this is.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, I borrowed your pen. I am never giving it back. It reminds me of you.",
+   "heat": 1
+  },
+  {
+   "text": "You know that thing where time slows down? It happens when you are in the room.",
+   "heat": 1
+  },
+  {
+   "text": "I would walk the whole habitat ring with you. Twice. Without a map.",
+   "heat": 1
+  },
+  {
+   "text": "You have a calming voice. I would listen to you read a spare-parts catalogue.",
+   "heat": 1
+  },
+  {
+   "text": "I am so glad the supply ship brought you here. I would have sent a thank-you note.",
+   "heat": 1
+  },
+  {
+   "text": "Want to share a table? I promise to chew with my mouth closed.",
+   "heat": 1
+  },
+  {
+   "text": "I like your style, {other}. Practical, clean, a little bit dangerous. Like a good tool.",
+   "heat": 1
+  },
+  {
+   "text": "Somebody told me the secret to a good colony is good company. Hello, good company.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, I am planning a picnic in the dome. I have two sandwiches and a very big hope.",
+   "heat": 1
+  },
+  {
+   "text": "You are the reason my shift flies by. And my lunch break lasts too short.",
+   "heat": 1
+  },
+  {
+   "text": "Just so you know, my eyes are up here. Oh. No, keep looking. It is fine.",
+   "heat": 1
+  },
+  {
+   "text": "Can I tell you something? I like your sleeves. I like what is in them. The arms. The arms are great.",
+   "heat": 1
+  },
+  {
+   "text": "I never believed in destiny until the rota put us on the same shift.",
+   "heat": 1
+  },
+  {
+   "text": "I am not good at flirting, {other}. I am great at remembering what you said last Tuesday.",
+   "heat": 1
+  },
+  {
+   "text": "If I were a repair ticket, I would want you to pick me up first.",
+   "heat": 1
+  },
+  {
+   "text": "Your timing is perfect. Like a good airlock cycle. No lag. Just you.",
+   "heat": 1
+  },
+  {
+   "text": "Remember me when you are famous, {other}. I will be the one behind you with a nice sign.",
+   "heat": 1
+  },
+  {
+   "text": "You laugh and the whole mess hall looks up. I would like a share of that.",
+   "heat": 1
+  },
+  {
+   "text": "I told the AI I want to improve my mood. It showed me your picture. Fine, that is not true. It showed me ads. But I thought of you.",
+   "heat": 1
+  },
+  {
+   "text": "Is it okay if I sit here? The other seats are fine. I just like this one.",
+   "heat": 1
+  },
+  {
+   "text": "I like your voice on the radio. It is like a warm blanket on a cold night.",
+   "heat": 1
+  },
+  {
+   "text": "Do you think we would be good at running a colony together? Or a greenhouse?",
+   "heat": 1
+  },
+  {
+   "text": "I saw the sunrise lamps come on this morning. I thought, I should tell {other}. So here I am.",
+   "heat": 1
+  },
+  {
+   "text": "You smell like fresh soap and good ideas. In that order.",
+   "heat": 1
+  },
+  {
+   "text": "I brought you something from the garden. It is a tomato. I picked the best one. It has a face.",
+   "heat": 1
+  },
+  {
+   "text": "When you smile, my morale goes up. The AI wants to measure it. I told it to mind its own business.",
+   "heat": 1
+  },
+  {
+   "text": "Hey {other}. I tried to think of a pickup line. I failed. Hello.",
+   "heat": 1
+  },
+  {
+   "text": "Your eyes are the best view on the base. And we have a crater.",
+   "heat": 1
+  },
+  {
+   "text": "You make the long nights shorter, {other}. I am not sure how. I am not complaining.",
+   "heat": 1
+  },
+  {
+   "text": "Would you like to be my plus one? For any event. All events. The next party. The meal. Life.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, I think you are great. I thought you should know before the next supply run.",
+   "heat": 1
+  },
+  {
+   "text": "I am organising a very small, very quiet dinner for two. Interested?",
+   "heat": 1
+  },
+  {
+   "text": "You are the only person I want to be stuck in an elevator with. Or a lift core. Or a hallway.",
+   "heat": 1
+  },
+  {
+   "text": "I like how you hum when you are happy. I would like to be in the group of reasons.",
+   "heat": 1
+  },
+  {
+   "text": "Look, {other}, I have a spare ticket for the film night. It is free. I am free.",
+   "heat": 1
+  },
+  {
+   "text": "You have a talent for making this place feel like home. I would like to share the home bit.",
+   "heat": 1
+  },
+  {
+   "text": "I am no poet, but you make me want to reach for a pen. And then a dictionary.",
+   "heat": 1
+  },
+  {
+   "text": "You are like a perfect day on a good planet. Rare. Warm. Easy on the eyes.",
+   "heat": 1
+  },
+  {
+   "text": "I think you are cool. Cooler than the cryo-store. And that is a high bar.",
+   "heat": 1
+  },
+  {
+   "text": "{other}, you wear confidence well. It suits you. It could suit me too, if you share.",
+   "heat": 1
+  },
+  {
+   "text": "I am glad we are friends. I would be glad if we were a little more. Just saying.",
+   "heat": 1
+  },
+  {
+   "text": "I put a star on your name on the roster. It means you are special. Please do not check.",
+   "heat": 1
+  },
+  {
+   "text": "I like your company, and the way the corridor seems brighter when you pass.",
+   "heat": 1
+  },
+  {
+   "text": "It is a long way to the nearest neighbour planet. I am glad I have you down the hall.",
+   "heat": 1
+  },
+  {
+   "text": "Are you busy tonight? If yes, it is fine. If no, there is a very good rerun on.",
+   "heat": 1
+  },
+  {
+   "text": "I saved a bit of the cake for you. It is your size. It is the biggest size.",
+   "heat": 1
+  },
+  {
+   "text": "You would make a lovely co-pilot. I do not even have a ship.",
+   "heat": 1
+  },
+  {
+   "text": "People talk about the stars. I think the best things in this galaxy are between you and me and a good cup of tea.",
+   "heat": 1
+  },
+  {
+   "text": "I like how you do not take yourself too seriously, except your coffee.",
+   "heat": 1
+  },
+  {
+   "text": "You are very good at your job, {other}. And I would not mind being your project.",
+   "heat": 1
+  },
+  {
+   "text": "If you ever need someone to carry the groceries, I have strong arms. And a cart.",
+   "heat": 1
+  },
+  {
+   "text": "Your stories are the only entertainment I look forward to. The film library has nothing on you.",
+   "heat": 1
+  },
+  {
+   "text": "Hey, {other}. I got you a gift. It is a key ring. It has a tiny rocket. Now you will think of me every time you leave.",
+   "heat": 1
+  },
+  {
+   "text": "I think we make a great team. I would like to be on your team full time.",
+   "heat": 1
+  },
+  {
+   "text": "You could read me the supply manifest and I would still blush.",
+   "heat": 1
+  },
+  {
+   "text": "I like how you say my name. I am saving it in my memory banks.",
+   "heat": 1
+  },
+  {
+   "text": "They gave us a heart rate monitor for the wellness programme. Mine goes crazy near you. I hope that is normal.",
+   "heat": 1
+  },
+  {
+   "text": "I took the long way round to your office. I took it three times.",
+   "heat": 1
+  },
+  {
+   "text": "You are my favourite person to bump into. Literally. In the corridor. Again.",
+   "heat": 1
+  },
+  {
+   "text": "I like seeing you smile at the end of a shift. It is like a small sunrise.",
+   "heat": 1
+  },
+  {
+   "text": "You are what I will miss most when the contract ends. So I am going to extend it.",
+   "heat": 1
+  },
+  {
+   "text": "Honestly, {other}? If this base is a story, you are my favourite chapter.",
+   "heat": 1
+  }
+ ],
+ "topics": {
+  "joke": [
+   "I asked the AI for a joke. It sent me a subscription offer.",
+   "Why did the technician cross the airlock? To get to the other side. It took forty minutes.",
+   "My suit and I have an agreement. It does not leak, I do not complain.",
+   "I told the rover to go slow. It said, that is my only speed.",
+   "They called it a smart habitat. It still cannot find my left sock.",
+   "Our greenhouse produced a tomato the size of my head. I named it Gerald.",
+   "The ration bar tastes like cardboard with ambitions.",
+   "I would tell you a joke about vacuum, but it is empty.",
+   "My blood type is coffee positive.",
+   "Somebody left a spreadsheet in the airlock. It was cycled out. Best outcome in months.",
+   "The AI says it learns from us. That explains the mood swings.",
+   "I dreamt in pie charts last night. Quarterly pie charts. I woke up screaming.",
+   "My boss said we are a family. Then he scheduled me for a double shift. Classic family.",
+   "I like our dust storms. They keep the visitors out.",
+   "The recycler made me a lovely tea. I choose not to ask what it was yesterday.",
+   "I put the kettle on and the whole base lost power. I stand by the kettle.",
+   "A hydroponics joke: it never gets old. It just grows on you.",
+   "Did you hear the commander tried to fix the vending machine? The vending machine won.",
+   "I asked for a window office. They gave me a window. In the corridor. Facing a wall.",
+   "I have been on this colony for months and I still cannot pronounce the water recycler.",
+   "They said there would be gravity on this planet. They did not say how much.",
+   "My shift ended at six. My to-do list did not get the message.",
+   "The best thing about the airlock is the two minutes of peace between doors.",
+   "The AI-powered toaster has opinions. I do not like them.",
+   "Someone ate my labelled yoghurt. It was labelled in Latin. Still no excuse."
+  ],
+  "rivalry": [
+   "Oh, you are working today, {other}? What an unusual change of pace.",
+   "I saw your report, {other}. Bold choice, formatting it like a ransom note.",
+   "Some of us have actual deadlines, {other}.",
+   "Funny, I do not remember anyone asking your opinion. I have checked the minutes.",
+   "Nice of you to join us, {other}. We started the shift four hours ago.",
+   "I am not saying I am better than you, {other}. The ledger is.",
+   "I would help you with that, {other}, but I would hate to steal your learning moment.",
+   "Interesting theory, {other}. Shall we try it? On you?",
+   "Your mug says World's Best Colleague. I checked. It is a lie.",
+   "Congratulations on the promotion, {other}. Truly. I am only a little bit sick.",
+   "{other}, I am going to need you to stop breathing so loudly in my airlock.",
+   "I saw what you did with the budget, {other}. Pure art. I mean, a horror painting.",
+   "Of course you got the extra ration. You always know the right person to flatter.",
+   "I will let your mistake slide, {other}. This time. And the three times before.",
+   "{other}, I am just curious. Is it hard being wrong so confidently?",
+   "Do not worry, {other}, nobody expects much from you. It is a very low bar. You still tripped on it.",
+   "You are dripping on my clean floor, {other}. I would say it is a metaphor. But it is just water.",
+   "Race you to the next promotion, {other}. I will wait for you at the top. With a sandwich."
+  ],
+  "awkward": [
+   "Oh. Um. That is very kind. I have a thing. Somewhere else. Right now.",
+   "I am flattered, {other}. I am also, um, going to look at that wall for a bit.",
+   "That is sweet, {other}, but I think we should keep it professional. Very professional.",
+   "I... did not realise. Sorry. I need to check my pocket for something. Anything.",
+   "Right. Okay. I will just pretend I did not hear that. Deal?",
+   "{other}, you are great. Really. Please stop saying things now.",
+   "I think the air is thin in here. I need to leave. For air.",
+   "Thanks. I am, um, seeing someone. Their name is Paperwork.",
+   "Oh dear. I am the wrong person for that, {other}. I would love to stay friends. If you still want.",
+   "I do not know what to say. So I will say: nice weather. In the dome. Under the lamps.",
+   "That landed badly. I can feel the room cooling. We should both leave.",
+   "I appreciate the effort, {other}. I will treasure it. Quietly. Alone. Far away.",
+   "Is there a pause button for this conversation? Asking for me.",
+   "Um. {other}. I think you meant someone else. Someone with different plans.",
+   "Okay, that was a lot. I am going to go and not think about that. Starting now.",
+   "{other}, I am committed. To my work. To my houseplant. Not to that.",
+   "I am going to pretend my radio just rang. Beep beep. Sorry, must go.",
+   "You are brave, {other}. I am a coward. I am leaving.",
+   "Ha ha. Good one. That was a joke, right? Please say joke.",
+   "{other}, I think we both need a very long cup of tea. Separately."
+  ],
+  "decline": [
+   "That is very sweet, {other}. I will take it as a compliment and nothing else.",
+   "Thank you, {other}. I do not think it would work. But you are a good friend.",
+   "I am flattered. I am also taken. Or not interested. Both, really.",
+   "Nice try, {other}. A for effort.",
+   "I am going to leave before this gets worse for either of us.",
+   "Kind of you, {other}. No. But kind."
+  ],
+  "flirt_reply": [
+   "You are too much, {other}. Please keep going.",
+   "Ha! You are trouble. I like trouble.",
+   "Careful, {other}. I might say yes.",
+   "Stop it. No, do not stop it.",
+   "I am blushing. I hope the lamp hides it.",
+   "You say the nicest things. Say more.",
+   "I was hoping you would say that.",
+   "Is that right? Tell me again, slower.",
+   "You are the best part of my day, {other}.",
+   "I should be working. I would rather be here."
+  ],
+  "innuendo_reply": [
+   "{other}! You cannot say that in the corridor. Say it again in my quarters.",
+   "Is that what they teach in orientation now? I should have paid more attention.",
+   "You are outrageous, {other}. Do not ever change.",
+   "I will pretend I did not hear that. I heard it. I am pretending badly.",
+   "That was either a fantastic line or a medical symptom. I am happy either way.",
+   "Keep talking like that and the AI will flag us for wellbeing.",
+   "I like the way you think. The way it goes sideways.",
+   "I accept. Whatever it was. I accept.",
+   "If I blush, blame the humidity.",
+   "You are a menace. Please stay a menace.",
+   "Bold. I like bold. Say it again when nobody is listening.",
+   "My ears are burning. My cheeks too. This is a very good feeling."
+  ],
+  "party_talk": [
+   "Great music! Who picked it? Whoever it was, a raise for them.",
+   "I have not danced in months. My knees have opinions.",
+   "Did you try the dip? It is the green thing. It is the only thing.",
+   "{other}, you have a lovely dress. I did not know the colony had dresses.",
+   "I am only here for the snacks. And the company. Mostly the snacks.",
+   "This is the first time I have not talked about work all day. Do not remind me.",
+   "Who is DJ? Is it the AI? It has played the same song four times.",
+   "Cheers, {other}. To getting out of that suit for one night.",
+   "A party! In this economy! Brilliant.",
+   "I love how the lights go. I could dance all night. I will dance until the lights flicker.",
+   "I like seeing everybody out of uniform. We look like humans.",
+   "Hold my drink. I have a move.",
+   "Have you met the guest of honour? They are lovely. They are also hiding.",
+   "I am here to make memories. Or at least blurry photos.",
+   "I will have one more drink and then I will leave. Famous last words.",
+   "Is the floor supposed to be sticky? It adds character.",
+   "The best parties happen when the shift ends. This one just started.",
+   "I came for the cake. Where is the cake?",
+   "Thank you for inviting me. I almost stayed in to do laundry.",
+   "I think the dome is great for parties. You can see the stars while you embarrass yourself.",
+   "Somebody should start a dance-off. I will not. But somebody should.",
+   "I will go and talk to that person by the wall. Wish me luck.",
+   "The punch is a mystery. I recommend it.",
+   "I have a theory the AI is hosting this party. It keeps asking for feedback.",
+   "Free snacks are the best snacks.",
+   "We should do this every week. Not every week. Every month. Every week is too many hangovers.",
+   "Everyone I like is in the same room. This is the dream.",
+   "I am going to dance badly and not care. Join me.",
+   "It is nice to see the commander smile. It looks painful, but nice.",
+   "Is it true the dome club has a robot DJ? I want one for my birthday."
+  ],
+  "toast": [
+   "To {name}! May the oxygen never run out and the coffee never run dry.",
+   "A toast to {name}: the best thing about this base, after the airlocks.",
+   "To {name}! Another year, another airlock cycle survived.",
+   "Raise your glasses for {name}. They make the colony brighter.",
+   "To {name}, who keeps us sane. Mostly.",
+   "To {name}! We would be lost without you. Probably literally.",
+   "Cheers to {name}. May your luck be like a fresh seal: tight and reliable.",
+   "To {name}, the heart of this place. A heart with excellent pressure.",
+   "Let us drink to {name}. Because we can. Because we deserve it.",
+   "To {name}! Long may you reign over the canteen schedule.",
+   "To friends, to family, and to {name}, who is a bit of both.",
+   "To {name}: proof that good things survive in bad environments.",
+   "Here is to {name}. May your days be long and your shifts be short.",
+   "To {name}! You made it. We are all very proud. And a little tipsy.",
+   "To {name}, our favourite person. Do not tell the others.",
+   "A toast to the occasion: {reason}. Nobody deserves it more than {name}.",
+   "Friends, colleagues, strangers who got free snacks: to {name}!",
+   "To {name}. I have a speech. It is one word. Cheers!",
+   "Glasses up. To {name}. May they never have to attend another budget meeting.",
+   "To {name}! And to the AI which, for once, did not ruin the evening."
+  ],
+  "sing": [
+   "Oh, the air is thin and the pay is low, but my heart is full, so off we go!",
+   "I will always love you, little greenhouse, even if you give me blight!",
+   "Take me home, rover road, to the place where the oxygen is mine!",
+   "Row, row, row your rover, gently down the crater!",
+   "Twinkle, twinkle, little base, how I wonder what is for lunch!"
+  ]
+ },
+ "offers": {
+  "birthday": [
+   "It is {name}'s birthday. Throw a party?",
+   "{name} has a birthday today. A party would mean a lot."
+  ],
+  "promotion": [
+   "{name} has been promoted. Throw a party?",
+   "A promotion for {name}! The crew would like to celebrate."
+  ],
+  "goal": [
+   "The colony reached a goal: {reason}. Throw a party?",
+   "A goal is done: {reason}. People want to celebrate."
+  ],
+  "medal": [
+   "{name} earned a medal. Throw a party?",
+   "A medal for {name}. A party would suit."
+  ],
+  "structure": [
+   "The {reason} is finished. Throw a party to open it?",
+   "The {reason} is open. Celebrate?"
+  ],
+  "wedding": [
+   "{name} and the new spouse just got married. Throw a wedding party?",
+   "A wedding! Throw a party?"
+  ],
+  "adoption": [
+   "{name} adopted a child. Throw a welcome party?",
+   "A new family member. Throw a welcome party?"
+  ],
+  "record": [
+   "{name} set a record on the arcade. Throw a party?",
+   "A record from {name}! Celebrate?"
+  ]
+ },
+ "auto_small": [
+  "Nobody threw a party, so people gathered by themselves for {reason}.",
+  "A few friends of {name} met in the {place} anyway."
+ ],
+ "drama_small": [
+  {
+   "id": "spill",
+   "text": "{a} spilled a drink on {b}. Everybody laughed. {b} laughed a little less."
+  },
+  {
+   "id": "spill2",
+   "text": "{a} knocked over the snack table. The dip is a total loss."
+  },
+  {
+   "id": "awkward_flirt",
+   "text": "{a} flirted with {b} in front of everyone. {b} looked for the exit."
+  },
+  {
+   "id": "bad_joke",
+   "text": "{a} told a bad joke. The silence was impressive."
+  },
+  {
+   "id": "dance_off",
+   "text": "{a} and {b} started a dance-off. The crowd voted for chaos."
+  },
+  {
+   "id": "tipsy_song",
+   "text": "{a} got tipsy and sang. Several people clapped. Several people left."
+  },
+  {
+   "id": "ex_arrives",
+   "text": "{a}'s ex arrived. The room went quiet. Then the music went on."
+  },
+  {
+   "id": "speech",
+   "text": "{a} gave a toast that lasted twelve minutes. People checked the clock."
+  },
+  {
+   "id": "wrong_name",
+   "text": "{a} called {b} by the wrong name. Twice."
+  },
+  {
+   "id": "ate_cake",
+   "text": "{a} ate the whole cake before the toast. The honoured person did not mind. Mostly."
+  },
+  {
+   "id": "karaoke",
+   "text": "{a} took the microphone and would not give it back."
+  },
+  {
+   "id": "lost_shoe",
+   "text": "{a} lost a shoe in the dome. Nobody could explain it."
+  },
+  {
+   "id": "photo",
+   "text": "{a} took a photo with the whole room. {b} blinked in all of them."
+  },
+  {
+   "id": "trip",
+   "text": "{a} tripped on the dance floor and called it a new dance."
+  },
+  {
+   "id": "gossip",
+   "text": "{a} told {b} a secret. The whole room now knows."
+  },
+  {
+   "id": "bad_cook",
+   "text": "{a} brought a homemade dish. Nobody asked what was in it."
+  },
+  {
+   "id": "slow_dance",
+   "text": "{a} asked {b} for a slow dance. The answer was yes. The room went aww."
+  },
+  {
+   "id": "ai_speech",
+   "text": "The base AI offered a congratulations speech. It said the wrong name."
+  },
+  {
+   "id": "hiccup",
+   "text": "{a} got the hiccups during the toast. They lasted all night."
+  },
+  {
+   "id": "stuck",
+   "text": "{a} got stuck in a very small chair. It took three people."
+  }
+ ],
+ "drama_big": {
+  "breakup": [
+   "{a} ended things with {b} in front of everyone. The music stopped. Then it started again, softer.",
+   "{a} and {b} broke up at the party. Loudly. With an audience."
+  ],
+  "jealous": [
+   "{a} saw {b} dancing with someone else and made a scene. Three people tried to calm {a} down.",
+   "A jealous scene: {a} threw a drink at the wall near {b}. Near. The wall was fine."
+  ],
+  "affair": [
+   "A secret came out at the party: {a} had been seeing someone else. {b} heard everything.",
+   "{a} and an unexpected guest were seen together. {b} was not amused."
+  ],
+  "proposal": [
+   "{a} proposed to {b} in front of the whole party. {b} said yes. The room exploded.",
+   "{a} got down on one knee. {b} cried. Everyone clapped. The AI played a wedding march. Wrong one."
+  ],
+  "fight": [
+   "{a} and {b} started a fight at the party. Security was called.",
+   "A fight broke out between {a} and {b}. The punch bowl did not survive."
+  ]
+ }
+}

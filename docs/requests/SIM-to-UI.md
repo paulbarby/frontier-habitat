@@ -874,3 +874,36 @@ back); `offices(base = -1) -> Array` of structure ids. Role id `hr` ("HR officer
 `hr_complaint`, `hr_resolved`, `hr_survey`, `hr_transfer_request`, `hr_transfer_approved`, `hr_transfer_refused`.
 Without an active staffed office none of these exist: `complaints()` and `transfers()` are empty and no request
 kinds `hr_*` are raised.
+
+## 2026-10-02 (evening) - sections 16 and 17 are LIVE (tests v5_party_* and v5_hr_* pass)
+
+Everything in the stub note above works with real data. Details the UI needs:
+- **Requests:** `sim.relations.requests()` now also returns `party_offer`, `hr_complaint` and `hr_transfer` rows (fields as in the
+  stub note). Answers: party offer `answer_request {id, answer: "throw", place: <building id from place_choices>, hours: 1..3}` or
+  `{id, answer: "skip"}`; complaint `answer_request {id, answer: <option id>}` (`mediate`, `move_home`, `change_job`,
+  `leisure_day`, `leave_to_hr`, `dismiss`; each row lists only its category's options); transfer `{answer: "approve" | "refuse"}`.
+  A refused answer (`ok: false`, e.g. `no_stock`, `full`, `refused`) leaves the request open and has a sentence in `text`.
+  A party offer lapses after 300 s (`expires`, a tick); an unanswered one becomes a small gathering of friends, no cost.
+  A complaint nobody answers for 3 days is dismissed. A transfer nobody answers for 2 days lapses (a small attitude cost).
+- **Time:** a party hour is 60 s of game time (a game hour is only 25 s): the party gathers for 40 s, then runs 1 to 3 minutes.
+  Phases of `parties()` rows: `gathering`, `on` (`over` rows are not listed; `sim.party.party(id)` still returns them for 10 minutes).
+- **Cost:** `party_cost(guests)` = guests / 2 units of drinks, snacks or rations (the unrest "party" rule). `throw_party {building,
+  hours}` refuses with `no_stock`, `no_guests`, `busy` or `no_air`.
+- **Places:** cantina, lounge, park, super dome (`sim.party.venues(base)` -> [{building, name, cap, quality}], best first).
+- **Setting:** the toggle "Cheeky dialogue" = `set_option {key: "cheeky", value: bool}`; read `sim.party.cheeky()`. New games take
+  `options.cheeky` (default true). Saved in `state.options.cheeky` (a save without it counts as on).
+- **Talks:** rows gain `heat` (0..3) and `idle`. New topic ids: `joke`, `rivalry`, `flirt`, `innuendo`, `awkward`, `party_talk`, `toast`,
+  `hr_praise`, `hr_gossip`. The follow HUD's `recent_lines` also holds toasts and the tipsy singer's line.
+- **HR:** build `hr_office` (Civic, research Civic Planning, 10 metal 6 polymer 6 electronics), then `set_role {agent, role: "hr"}`
+  for an adult colonist (one officer per post: S 1, M 2, L 3). `sim.hr.active(base)`, `offices(base)`, `officers(base)`, `slots(base)`,
+  `complaints()`, `transfers()`, `survey(base)`, `reputation(id)`. Complaints are filed when a person is under satisfaction 45 or has a
+  grievance (a punishment in force, a feud) - checked once a game day, at most one in two days a person. About 2 in 3 complaints
+  are for HR to try by itself (state `hr_working`, resolved after a day by a skill check); the others come to the player (state `open`).
+  Transfers: satisfaction under 25. Approve: the person becomes a passenger (`kind "visitor"`, `vkind "leaver"`, `transfer: true`)
+  of the next landed ship that carries visitors, boards and is gone. Surveys every 3 days: `survey(base)` = {tick, day, base, depts [{dept,
+  n, sat, trend}], top3 [{category, count}], mean, morale_trend}. Department "general" = people with no department.
+- **Agent fields** (RENDER/UI): `party` (party id while invited), `hr_visit` ("queue" | "interview" | "kiosk"), `hr_office` (building id),
+  `chat_t`. Plan kinds: `party`, `hr`, `hr_visit`, `chat`.
+- **Role text:** `set_role` now says "is now an HR officer" (a/an by the first letter).
+- **Bug fixed on the way:** `answer_request allow` for a `leave_with_ship` request made the colonist a visitor without a visit record;
+  the next think of that person would have failed. Both defections and transfers now use `sim.traffic.make_passenger(a, ship)`.

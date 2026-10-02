@@ -786,3 +786,18 @@ draw the polymer plant model until ART-HAB makes one.
 - **HR:** the HR officer works at `Anchor_Desk_<i>` (stand at the desk); an interview is two people seated facing at
   `Anchor_Interview_<i>_0/1`; the complaint queue stands at `Anchor_Queue_<i>`; the kiosk user stands at
   `Anchor_Kiosk_<i>`. Agent field `hr_visit` ("queue"|"interview"|"kiosk"|"") says what a visitor is doing.
+
+## 2026-10-02 (evening) - sections 16 and 17 are LIVE: what RENDER reads
+
+- `sim.people.action(a)` returns `dance_a`, `dance_c`, `drink_bar`, `toast` or `sing` for a guest while the party is `on` and the guest is
+  in the party's building; "" otherwise (use the ordinary clip). `sim.party.parties()` rows: `pos`, `building`, `phase`, `guests`, `honoured`,
+  `toast {speaker, text}` (one toast a party, about a third of the way in: `phase "on"`; the speaker raises a glass for 10 s).
+- Talk rows (`talks_near`): `heat` 0..3 and `idle`. When `idle` is true both people stand where they are (SIM positions of a room are the
+  room's slots; the talk starts when two idle people are within 8 m of each other in one room): turn them to face each other.
+- HR: an officer's plan kind is `hr` with goal "At the HR desk" (stand at `Anchor_Desk_<i>`, `i` = the officer's index among the base's
+  officers); a complainant has `hr_visit` = "queue" (walking in, stand in line at `Anchor_Queue_<i>`), then "interview" (seated at
+  `Anchor_Interview_<i>_0` with the officer at `_1`) or "kiosk" (stand at `Anchor_Kiosk_<i>`). The HR officer's outfit is `casual_b`.
+- New log codes with `ents` (agents first) and `place`: `party_start`, `party_end`, `party_drama` (small: a spill, a bad joke, a dance-off,
+  an ex arriving), `party_drama_big` (a break-up, a jealous scene, an affair revealed, a proposal, a fight), `birthday`, `celebration`,
+  `awkward`, `hr_complaint`, `hr_resolved`, `hr_survey`, `hr_transfer_request`, `hr_transfer_approved`, `hr_transfer_refused`.
+- A transfer passenger walks to the pad and boards like any visitor (`vkind "leaver"`).

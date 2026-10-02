@@ -20,7 +20,7 @@ var _wait := 0
 
 const FEATURES := ["dock", "roofs", "floors", "settings", "sound_in", "follow", "bubbles", "rag", "unrest", "responses", "lockdown", "security",
 	"jail", "love", "requests", "tourism", "secrets", "file", "discipline", "families", "ranks", "skills", "academy", "housing", "giants",
-	"venues", "dome", "planets"]
+	"venues", "dome", "planets", "chat", "parties", "hr", "complaints", "hr_officer"]
 
 func _init() -> void:
 	main = load("res://main.tscn").instantiate()
@@ -149,6 +149,17 @@ func _plan() -> void:
 		if not pt.contains(need):
 			pmiss.append(need)
 	check("Planets: the numbers equal content/scenarios.json", pmiss.is_empty() and float(pl["airless"]["radiation_mult"]) == 2.0, str(pmiss))
+	# Parties and HR (sections 16 and 17).
+	var cel: Dictionary = soc["celebrations"]
+	var hrc: Dictionary = soc["hr"]
+	var pty: String = _text_of("parties")
+	check("Parties: hours %d to %d, one party hour %d s, offer lapses after %d min, 1 unit for %d guests" % [int(cel["hours_min"]), int(cel["hours_max"]), int(cel["hour_s"]), int(cel["offer_valid_s"]) / 60, int(soc["party"]["per_people"])],
+		pty.contains("(%d to %d; one party hour is %d seconds)" % [int(cel["hours_min"]), int(cel["hours_max"]), int(cel["hour_s"])]) and pty.contains("in %d minutes" % (int(cel["offer_valid_s"]) / 60)) and pty.contains("for every %d guests" % int(soc["party"]["per_people"])))
+	var ht: String = _text_of("hr")
+	check("HR: complaint under %d, survey every %d days, posts %s" % [int(hrc["complaint_sat"]), int(hrc["survey_days"]), str(hrc["slots"])],
+		ht.contains("under %d" % int(hrc["complaint_sat"])) and ht.contains("Every %d days" % int(hrc["survey_days"])) and ht.contains("Size S has %d post, M %d and L %d" % [int(hrc["slots"][0]), int(hrc["slots"][1]), int(hrc["slots"][2])]))
+	check("Transfers: under %d, lapse after %d days" % [int(hrc["transfer_sat"]), int(hrc["transfer_offer_days"])], _text_of("complaints").contains("under %d" % int(hrc["transfer_sat"])) and _text_of("complaints").contains("for %d days lapses" % int(hrc["transfer_offer_days"])))
+	check("The chat topic names the setting that the Settings screen has", _text_of("chat").contains("Cheeky dialogue") and _text_of("settings").contains("cheeky dialogue"))
 	var sk: int = main.sim.people.skills(main.sim.state["agents"][main.sim.state["agents"].keys()[0]]).size()
 	check("Skills: %d" % sk, _text_of("skills").begins_with("%d skills" % sk), str(sk))
 
@@ -181,9 +192,9 @@ func _plan() -> void:
 	check("each named key sits next to the job the list gives it", wrong.is_empty(), "\n".join(wrong))
 
 	# ---- 5. What's new and the loader tips name every feature
-	var nw_miss: Array = _has_all(new5_text, ["People", "shoulder", "Rag", "Reviews", "Unrest", "Crew", "Security", "dome", "Tourists", "dock", "Roofs", "Planets"])
+	var nw_miss: Array = _has_all(new5_text, ["People", "shoulder", "Rag", "Reviews", "Unrest", "Crew", "Security", "dome", "Tourists", "dock", "Roofs", "Planets", "parties", "HR office"])
 	check("What's new names every feature", nw_miss.is_empty(), str(nw_miss))
-	var shell_miss: Array = _has_all(shell, ["shoulder", "right drag", "Rag", "Crew", "officer", "lock down", "left dock", "roof", "tourists", "dome", "adopt", "airless", "venue"])
+	var shell_miss: Array = _has_all(shell, ["shoulder", "right drag", "Rag", "Crew", "officer", "lock down", "left dock", "roof", "tourists", "dome", "adopt", "airless", "venue", "party", "HR office", "flirt"])
 	check("loader tips name every feature", shell_miss.is_empty(), str(shell_miss))
 	check("loader tips: 15 or more", shell.count("', '") + 1 >= 15, str(shell.count("', '") + 1))
 

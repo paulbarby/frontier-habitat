@@ -779,9 +779,10 @@ def sleep_turn_keys():
     for K in (SUP, H):                                  # (2026-10-02: wrists 160 deg on the back: stiff hands)
         K["arm.L.stiff"] = K["arm.R.stiff"] = 1.0
         K["hand.L.ry"] = K["hand.R.ry"] = -18.0
+        A.settle_hands(K)
     SUP2 = add(SUP, chest__ry=-1.5, head__rz=-6.0)
     keys = [(0.0, S0, {"hold": True}), (1.2, H), (2.3, SUP), (4.4, SUP2), (5.6, H), (6.8, Pose(LIE), {"hold": True})]
-    return A.retime_keys(A.fk_keys(A.bed_keys(keys)))
+    return A.retime_keys(A.fk_keys(keys))
 
 
 def child_play_fn(n=120):

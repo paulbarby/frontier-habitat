@@ -48,7 +48,11 @@ func _visible_in(b: Dictionary, meta: Dictionary, ay: float) -> bool:
 			fl = i + 1
 	return fl <= k
 
+var force_open := false          # evidence only (__fhr "robots open"): dance whatever the Club's hours
+
 func _club_open(b: Dictionary) -> bool:
+	if force_open:
+		return true
 	var le = view.sim.get("leisure")
 	if le == null or not le.has_method("venues"):
 		return true

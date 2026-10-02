@@ -1111,3 +1111,76 @@ Only priority 1 (indoor follow camera jerk regression) was worked. Nothing else 
 Eye depth inside the walls in in1: min 0.02 m, 0 frames outside, 41 frames closer than 0.15 m (before the guard margin was raised to 0.1/0.15; not re-measured). Targets not met: **in4 cam < 3 mm** (straight windows hold few frames at 4x; the BODY itself ripples 7-8 mm rms there, so the camera inherits it: fix in the walker (`fx_npc.gd` speed ripple at 4x) or filter the pivot harder at high game rate; a first try of pivot w / sqrt(rate) was reverted untested because the machine was too loaded to read it). Not checked after these edits: out4, path / airlock / cut checks, ceiling behaviour in a low corridor, wall depth at 4x (8 frames of the eye on the wall plane in an earlier run, guard margin raised since).
 
 Nothing else from the order was started: grounding, planet looks, seat check, camera-body fade, roofs-off perf, fx_robots wiring, egg_dance, people loader, clip switches, long-frame trace, 130-people perf, `fc_dbg` cap (still uncapped in `world_view.gd`), clickable speech bubbles.
+
+## 2026-10-02 (Opus) v5 - follow camera at 4x, occluders, people loader, planets, grounding, seats, robots
+
+**Walker (fx_npc.gd):** bends are taken at most at sqrt(A_LAT x radius) (A_LAT 4.5 m/s^2 game), braking before them
+(`_bend_cap`, 12 m look-ahead); small bends (1-8 deg) are rounded too (curve within 2.5 cm of the corner; an unrounded
+bend turned the walk direction in one frame: 20-70 mm body jerk at 4x); the followed person at 2x-4x changes speed at
+most 9 m/s^2 on screen (`FOLLOW_VIEW_ACCEL`; 1.5 m/s^2 game was 24 m/s^2 on screen at 4x). Run latch back to walk only
+under walk + 15 % (a runner slowed for a corner flipped to the walk). Body second difference in 4x accel phases:
+7-8 mm -> 2.5 mm.
+**Camera (camera_rig.gd, world_view.gd):** indoor wall target = soft rule on a softmax-weighted union (never deeper
+than the real walls; log-sum-exp over-estimated by up to 0.14 m where a corridor meets a room), target margins
+0.5 / 0.45 m, an eye far outside first drawn in along the boom; the guard is a SLIDE from last frame's eye along the
+walls (`world_view.follow_slide`); then one eased offset from the pivot for every case (SH_W_FINAL 14 rad/s: no jump
+when the rule changes at a door). Person counted inside up to 0.5 m outside the volumes (a doorway gap turned the
+indoor rule off: 0.6 m camera jumps). No body through the camera: the eye keeps 0.6 m (plan) off the drawn body (soft
+rule). Heading rate cap grows with sqrt(game rate) only for large heading errors. Ceiling: a point outside every room
+takes the person's ceiling (INF let the eye jump 0.9 m up).
+**Occluders (orchestrator item, dome pillar):** new `presentation/fx_occ.gd`: per model a grid (0.2 m) of steep solid
+surfaces in 0.3 m height bands (glass, roofs, flat surfaces left out), baked by `tools/render_nav_bake.gd` into
+`presentation/navgrid/occ_<model>.res` (162 grids incl. the merged dome, 529k cells). `world_view.follow_occluder(eye)`
+walks the chest and head lines; the rig swings round a block that lasts 0.35 s (smallest of +-15..60 deg) and pulls in
+to stand in front of it (4 rad/s); the near fade is now a narrow 0.5-0.7 m ring (buildings) and 0.45-0.6 m (people),
+status badges hidden in the follow view. Probe: `occluded_frames`. Headless dome1: occluded frames 2,408 -> 43-187
+of 3,600; in1 551 -> 441-950 (doorway jambs while the camera follows through a door: transient, not avoided).
+**Measurement:** `tools/render_follow_headless.gd` (fixed 1/60 s frames, A/B switches `rig.<var>=x`), `no_far` flag;
+not deterministic between runs (trajectory classes), so 60-90 s runs on two saves. `fc_dbg` capped (400-800).
+**People loader:** all 8 MPFB variants incl. children (c1, c2 from their own files), LOD1 beyond 12 m (shares LOD0
+clips), 16 outfit slots (medical, science, security were drawn as command), 62 adult / 48 child clips baked
+(manifest minus lie_*_r, sleep_turn, drive_sit), `sim.people.action` drives fights, fall_down/get_up, escort/cuffed
+walks, protest, teach, sit_class, sit_bench, child_play, dances, venue acts. Not drawn: stool / bunk / lounger / water
+clips (no enter/exit clips; asked ART-NPC). `view.egg_dance(id)` (12 s dance_c within 6 m). Bed slots mapped to
+the unit layout (adults were in the children's bunks); dome slots mapped to the anchors of their floor.
+**Grounding:** `tools/render_ground_check.gd` (planted foot per 0.8 s window vs the real floor). Found and fixed: the
+super dome's floors are at 0.30 / 5.30 / 9.50 / 13.70 / 17.90 m (model) but people stood at SIM's 6 m steps (6.2 m
+over floor 4) and walked at 0.14 on a 0.30 plaza; scaled rooms (old saves' 0.667 x models) had people 4.7 cm up.
+Floor tops now from the model (`level_y`, `_floor_tops` from anchor heights). Remaining: the walk clip's planted foot
+dips 1.0-1.7 cm in 5 % of windows (bones; asked ART-NPC).
+**Planets:** sky palettes per planet (airless black sky, stars by day, white sun, no glow / haze / fog / aurora /
+storm; cold pale sky, ice haze in the low ground, blue nights), terrain grey (airless) and frost + rime (cold), no
+wind streaks on airless, rocks tinted, particles (no dust field, devils or storm sheets on airless; ice glitter on
+cold). Debug `planet dry|cold|airless|auto`. Sheet `art/critic_input/render/180-189`. Minimap / title: UI (asked).
+**Seat check:** `tools/render_seat_check.gd` (new gate): no torso overlap; legs into table undersides and coffee
+tables (academy, cantina, lounge, executive tube, kitchen, block F2): asked ART-HAB. Shots 195-198.
+**Robots:** fx_robots wired (3 dancers at the Club, dance when open; debug `robots open`). Shot 199.
+**Bubbles:** click a bubble -> follow that speaker; `bubbles.speaker_clicked`, `view.bubble_speaker_at` (told UI).
+**Perf (headless CPU, machine at 100 % CPU from other agents, showcase_v5 134 people):** view 13.5-19.5 ms median
+(overview 14.7, all roofs off 17.2, follow in 16.6, follow dome 19.5); fx_npc 9.7-13.6 ms. Bodies over 25 m from
+the camera now update every 2nd frame (57.8 -> 48 bodies per frame). GPU and web fps not measured reliably (load).
+**Follow probe, web (`render_follow_probe.mjs`, 20 s, machine at 100 % CPU from other agents; head px / camera mm,
+straight walk):**
+
+| case | before (fprobe_o0) | after (fprobe_o_final2) | headless 60 s after (fixed frames) |
+|---|---|---|---|
+| in1 | 0.338 / 3.09 (walk 4.92), clip sw 10.4/min | 0.597 / 2.08 (walk 2.28), clip sw 14.4/min, occluded 219 of 927 | 1.23 / 1.44 (walk 2.01), clip sw 7.9 |
+| in4 | 18.9 / 7.89 (n 60, walk 29.6) | 8.43 / 8.31 (n 45, walk 11.9), clip sw 40 | 2.28 / 4.04 (walk 6.5) |
+| out1 | 0.073 / 0.325 | 0.065 / 0.205 | 0.123 / 0.315 |
+| out4 | 0.635 / 1.80 | 0.722 / 4.15 | 0.90 / 3.07 |
+| dome1 | 0.078 / 0.346 | 0.092 / 0.416, occluded 40 | 0.57 / 0.55, occluded 43 |
+
+Targets met: out1, dome1; in1 camera met (< 2 mm headless; web 2.08), in1 head not met in the web (0.60 px > 0.5).
+Not met: in4 (cam 4-8 mm against < 3 mm: room-corridor corners at 4x, the slide still turns a corner within a few
+frames), out4 (3-4 mm), clip switches at 4x (40/min: corner slowdowns and stops), occluded frames (transient door
+jambs; the dome pillar case is solved).
+**Checks:** `check` 306 scripts, 0 failed. Path v3: run 1 FAIL (1 slide, showcase_v3_late; wall 0, furniture
+0.069 %), run 2 PASS (slide 0, furniture 0.077 %): not deterministic. Path v4 PASS (wall 0, furniture 0.105 %, slide 0).
+Airlock: all 0 (showcase_v31 29 cycles, v3_late 40). Cut: 37 types, 0 above the cut; doors 99 rooms 0 bad. Weather:
+PASS (0 drawn inside, 10,324 clipped). Seat: FAIL 5 overlaps (2 thighs, 3 hands; was 120 before ART-HAB's files of
+today). Ground: FAIL by the 1 cm rule (walk planted foot p5 -8.5 mm, p1 -16.8 mm; run p1 -76.6 mm at 4x: floor
+changes in the dome), median 0. npc_check FAIL 2 (astronaut work_console -> talk pop 15.4 deg vs 15.0, ART-NPC
+clips). Export build/web_render pck 180.9 MB.
+**Not done:** long-frame trace; web fps / GPU perf with 130 people and all roofs off (machine fully loaded; CPU
+numbers above); stool / bunk / lounger / water clips; frost on structures at night (cold); minimap and title palette
+(UI); in4 < 3 mm.

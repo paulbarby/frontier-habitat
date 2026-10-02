@@ -166,3 +166,37 @@ unsized copies (7.5 MB before today's additions) can go. Please also check mesh 
 - People on upper floors are drawn at SIM's floor height (`sim.floors.agent_floor`).
 - Not checked yet: jail cell entry through the bars, the security dais, a person walking between floors (SIM's floor
   model is a stub), the penthouse and unit follow shots you named (next).
+## 2026-10-02 - seat check: seated legs into table undersides and coffee tables (RENDER)
+
+New gate `tools/render_seat_check.gd` (`art/npc/seat_check.json`): every Seat / Work (sit) / Bed anchor of every room
+model, the tallest (m3) and shortest (f2) adult and c1 at the bunks, posed exactly as the game places them (sit_idle,
+sit_type, sit_eat at 4 times; sleep), limbs as capsules (thigh 0.07 m, shin 0.05 m, torso 0.12 m) against the
+furniture triangles, the used chair / bed excluded. Sensitivity: a body moved 25 cm forward gives 69 mm into the desk.
+Your desk fix holds: **no torso, arm or head overlap anywhere** (research lab, electronics fab, medical, security,
+jail: 0). What is left (134 models, 994 anchors, **120 overlaps over 20 mm**, all legs):
+
+| family | overlaps / anchors | what | height |
+|---|---|---|---|
+| academy (s, m, l) | 26 / 26 | thighs into the desk underside (`PaletteMetal`, `Palette`), 66 mm | 0.59 m |
+| cantina (s-xl) | 31 / 48 | thighs into the table underside / under-edge `Neon` strip, 65-69 mm | 0.67 m |
+| lounge (s-xl) | 35 / 35 | shins and feet into the coffee table (`PaletteMetal`), 50 mm; thighs into a table at 0.54 m | 0.32 / 0.54 m |
+| residence_tube_executive (m-xl) | 12 / 30 | shins into the coffee table 49 mm; thighs into the dining table 61 mm | 0.32 / 0.65 m |
+| kitchen (s-xl) | 10 / 36 | thighs into the table underside, 33 mm | |
+| apartment_block_m | 4 / 64 | shins into F2 coffee tables, 49 mm | 7.52 m (floor 2) |
+| habitat (s) | 2 / 6 | thigh, 35 mm | |
+
+A seated thigh's top is at about 0.62 m (seat 0.46 m), so any underside, apron or under-edge strip below about
+0.66 m cuts the legs; a coffee table closer than about 0.45 m to a sofa seat's front catches the shins in sit_idle.
+Requests: (1) desk and table undersides (incl. aprons and the cantina Neon strip) at 0.68 m or higher where a seat
+faces them; (2) coffee tables at least 0.45 m in front of the sofa seat anchors (lounge, executive tube, apartment F2).
+Re-run: `node tools/godot.mjs script res://tools/render_seat_check.gd [model filter]`.
+
+Nav grids rebaked 2026-10-02 for every model (157 grids) + new follow-view occluder grids (`presentation/navgrid/
+occ_<model>.res`, steep solid surfaces in 0.3 m height bands): `tools/render_nav_bake.gd` does both.
+
+Also: SIM numbers adult beds and bunks separately; RENDER now maps them to your per-unit numbering (parents' beds
+then the bunks: Bed 4u..4u+3 in the family tube and the block; penthouses 4 adult beds). Tell me if a file differs.
+- **Update, same day (final run on the files on disk at 22:00):** 134 models, 994 anchors, **5 overlaps** left:
+  academy_m Seat_0 (f2 thigh 66 mm, underside 0.59 m), residence_tube_executive_l Seat_1 (m3 thigh 61 mm, 0.65 m),
+  cantina_xl Seat_1 (m3 left hand 32 mm into the table, sit_eat), habitat_s Seat_0 / Seat_1 (m3 right hand 21-22 mm
+  into the desk at 1.00 m, sit_type). The rest of the table above is cleared.

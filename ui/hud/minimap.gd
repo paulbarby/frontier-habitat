@@ -224,6 +224,12 @@ func _process(_delta: float) -> void:
 	if visible:
 		_map.queue_redraw()
 
+const PLANET_PALETTE := {
+	"dry": {"low": Color("8a5230"), "high": Color("e0a46a"), "dark": 0.12, "deposit": Color("3a2a26")},
+	"cold": {"low": Color("8a96a8"), "high": Color("c9d3de"), "dark": 0.0, "frost": 0.7, "deposit": Color("3a4252")},
+	"airless": {"low": Color("4a4a4e"), "high": Color("8c8c90"), "dark": 0.0, "deposit": Color("202024")},
+}
+
 ## Terrain: height tint, deposits darker. Sampled so the image stays IMG_MAX pixels or less.
 func _terrain_image() -> Image:
 	var w = hud.main.sim.world
@@ -231,12 +237,19 @@ func _terrain_image() -> Image:
 	var stride: int = maxi(1, int(ceil(float(n) / 256.0)))
 	var m: int = int(ceil(float(n) / float(stride)))
 	var small := Image.create(m, m, false, Image.FORMAT_RGBA8)
-	var low := Color("8a5230")
-	var high := Color("e0a46a")
+	# The palette follows the planet (RENDER-to-UI 2026-10-02): dry = rust, cold = blue-white with frost
+	# patches, airless = greys (crater floors dark).
+	var pal: Dictionary = PLANET_PALETTE.get(String(hud.main.sim.state.get("planet", "dry")), PLANET_PALETTE["dry"])
+	var low: Color = pal["low"]
+	var high: Color = pal["high"]
+	var frost: float = float(pal.get("frost", 0.0))
 	for j in m:
 		for i in m:
 			var y: float = w.heights[mini(n - 1, j * stride) * n + mini(n - 1, i * stride)]
-			small.set_pixel(i, j, low.lerp(high, clampf((y + 4.0) / 9.0, 0.0, 1.0)).darkened(0.12))
+			var c0: Color = low.lerp(high, clampf((y + 4.0) / 9.0, 0.0, 1.0)).darkened(float(pal["dark"]))
+			if frost > 0.0 and sin(float(i) * 0.37 + sin(float(j) * 0.21) * 2.0) * cos(float(j) * 0.29 + float(i) * 0.05) > 0.5:
+				c0 = c0.lerp(Color("e4ebf3"), frost)
+			small.set_pixel(i, j, c0)
 	var px: int = int(roundf(float(w.size) * _k))
 	small.resize(px, px, Image.INTERPOLATE_BILINEAR)
 	# Deposits: darker discs.
@@ -248,7 +261,7 @@ func _terrain_image() -> Image:
 				if xx < 0 or yy < 0 or xx >= px or yy >= px:
 					continue
 				if Vector2(xx, yy).distance_to(c) < r:
-					small.set_pixel(xx, yy, small.get_pixel(xx, yy).lerp(Color("3a2a26"), 0.55))
+					small.set_pixel(xx, yy, small.get_pixel(xx, yy).lerp(pal["deposit"], 0.55))
 	return small
 
 ## Hazard zones (meteor red, wind cyan, quake violet, as the 3D overlay) blended on the terrain; made once.

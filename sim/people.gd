@@ -385,6 +385,10 @@ func action(a: Dictionary) -> String:
 			return "handcuffed_walk"
 		"escort":
 			return "escort_walk"
+	if a.has("party"):
+		var pc: String = sim.party.action_of(a)
+		if pc != "":
+			return pc
 	if has_mod(a, "dance"):
 		return "dance_c"
 	var kind: String = String(a.get("plan_kind", ""))
@@ -420,8 +424,13 @@ func duty_think(a: Dictionary) -> bool:
 		return false
 	if sim.unrest.protest_think(a):
 		return true
+	# V5 section 17: a complainant walks to the HR office; the HR officer works at the desk.
+	if a.has("hr_visit") and sim.hr.visit_think(a):
+		return true
 	if String(a.get("role", "")) == "security":
 		return sim.security.patrol_think(a)
+	if String(a.get("role", "")) == "hr" and sim.hr.desk_think(a):
+		return true
 	if a.has("job") and sim.leisure.staff_think(a):
 		return true
 	return false

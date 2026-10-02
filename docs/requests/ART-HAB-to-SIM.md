@@ -1,5 +1,31 @@
 # ART-HAB → SIM
 
+## 2026-10-02 19:10 — hr_office built (S/M/L) with your counts and anchor names; door angles
+
+`assets/models/hr_office_{s,m,l}.glb` (+ thumbs). Built from your table of 2026-10-02; until `content/buildings.json`
+has the def, my builder uses the same numbers (tools/blender/rooms_build_defs.py `HR_OFFICE`: radius 6 / 7.5 / 9.6,
+seats 4/5/8, work 1/2/3, stands 4/5/8, work_pose stand). The build check (anchor counts = furniture) passes.
+
+| item | S / M / L | anchor | kind (counted as) |
+|---|---|---|---|
+| officers | 1 / 2 / 3 | `Anchor_Desk_<i>` | `Work_<i>` (standing): Desk_0 behind the reception counter, facing the queue; Desk_1, Desk_2 at standing desks |
+| interview rooms | 1 / 1 / 2 | `Anchor_Interview_<i>_0` (the officer's chair), `Anchor_Interview_<i>_1` (the visitor) | `Seat` |
+| feedback kiosks | 1 / 1 / 2 | `Anchor_Kiosk_<i>` | `Stand` |
+| queue spots | 3 / 4 / 6 | `Anchor_Queue_<i>` (Queue_0 nearest the counter, all facing it) | `Stand` |
+| waiting chairs | 2 / 3 / 4 | `Anchor_Chair_<i>` | `Seat` |
+| filing banks | 1 / 2 / 2 | `Anchor_Filing_<i>` (a point 1 m in front of the cabinets, facing them) | not a Stand (your stands = kiosks + queue) |
+
+So `seats` = interview chairs + waiting chairs and `stands` = kiosks + queue, as in your furniture block. The names
+are exactly yours, with the one addition `Anchor_Filing_<i>` being an alias only. Décor without anchors: the
+"SYNERGY" poster, the padlocked suggestion box, the ficus by the counter, "YOUR FEELINGS ARE VALID (PENDING REVIEW)"
+in each interview room, a "TAKE A NUMBER (ANY NUMBER)" post, a water cooler "HYDRATE (MANDATORY)" (L).
+
+Door angles in `content/door_blocked.json`: hr_office_m and _l are free all round; **hr_office_s blocks 157.5-170.5,
+189.5-202.5 and 231.5-258.5 deg** (the interview room and the filing cabinets stand by the wall there; 307 deg free).
+
+Also today (round 2, all room types rebuilt): no anchor names changed; work mats lie under every `Work` anchor on the
+floor (flat, 7 mm); `door_blocked` unchanged for the other rooms.
+
 ## 2026-10-02 17:25 — run 3: all room files rebuilt; door file: one lane width
 
 - `content/door_blocked.json`: one change, `storehouse_xl` `min_lane_m` 0.81 → 1.04 (no blocked angle; 360 deg free

@@ -136,12 +136,39 @@ def fill_arm_targets(P, sides=("L", "R")):
     return P
 
 
+WRIST_KEY_MAX = 70.0       # deg: an IK key's hand target bends the wrist at most this far (2026-10-02)
+
+
+def relax_wrists(P, sides=("L", "R"), lim=WRIST_KEY_MAX):
+    """IK keys whose hand target bends the wrist past `lim` (argue 157 deg, teach 107, kiss 104 in the audit): the
+    hand target turns towards the forearm until the bend is `lim` (the source pose fixed, so the solver's soft limit
+    does not have to squash it, which made fast hand turns and stretched argue to 205 frames)."""
+    todo = [s for s in sides if P.g("arm.%s.ik" % s) > 0.5]
+    if not todo:
+        return P
+    S_ = solver()
+    with N.raw_solve():
+        D, _, _, _ = S_.solve(P)
+    for s in todo:
+        fa, hd = "forearm." + s, "hand." + s
+        yf = D[fa] @ (S_.tail[fa] - S_.head[fa]).normalized()
+        yh = D[hd] @ (S_.tail[hd] - S_.head[hd]).normalized()
+        a = degrees(yf.angle(yh))
+        ax = yf.cross(yh)
+        if a <= lim or ax.length < 1e-6:
+            continue
+        q = Quaternion(ax.normalized(), radians(lim - a))
+        e = (q @ D[hd]).to_euler("XYZ")
+        P["hand.%s.wx" % s], P["hand.%s.wy" % s], P["hand.%s.wz" % s] = degrees(e.x), degrees(e.y), degrees(e.z)
+    return P
+
+
 def ik_to_fk(P, sides=("L", "R")):
     """The same pose with the arms as FK angles (ik = 0): a key after which the clip can move in FK with no
     FK/IK mismatch (the IK solution's local rotations become the FK parameters)."""
-    Q = Pose(P)
+    Q = relax_wrists(Pose(P), sides)
     with N.raw_solve():
-        _, L, _, _ = solver().solve(P)
+        _, L, _, _ = solver().solve(Q)
     for s in sides:
         for b in ("upper_arm", "forearm", "hand"):
             e = L["%s.%s" % (b, s)].to_euler("XYZ")
@@ -163,6 +190,18 @@ def feet(P, x=None, y=0.115, yaw=7.0, knee_out=3.0, sides=("L", "R")):
 # --------------------------------------------------------------------------------------
 # rest poses of the pose states
 # --------------------------------------------------------------------------------------
+def settle_hands(P, sides=("L", "R")):
+    """A stiff hand's world turn written back as its IK hand target (hand.S.w*), so blends with other keys never slerp
+    between two hand turns 180 deg apart (2026-10-02: a 72 deg hand jump in lie_enter)."""
+    with N.raw_solve():
+        D, _, _, _ = solver().solve(P)
+    for s in sides:
+        e = D["hand." + s].to_euler("XYZ")
+        P["hand.%s.wx" % s], P["hand.%s.wy" % s], P["hand.%s.wz" % s] = degrees(e.x), degrees(e.y), degrees(e.z)
+        P["arm.%s.stiff" % s] = 0.0             # the turn is now the target: no stiffness blends with other keys
+    return P
+
+
 def make_stand():
     """Arms 9 deg from the body (bind is 30 deg), elbows bent 14 deg, palms to the thighs (critic r1 #5)."""
     P = Pose()
@@ -258,7 +297,7 @@ def make_lie():
     # near straight and the forearms turn the palms
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
     P["hand.L.ry"] = P["hand.R.ry"] = -18.0               # relaxed: a slight curl towards the palm
-    return P
+    return settle_hands(P)
 
 
 LIE = make_lie()
@@ -285,7 +324,7 @@ def make_dead():
     elbow_to(P, "R", (0.6, 0.0, 0.8), 1.0)                # the top arm fallen in front, the elbow up (not through the body)
     P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0             # (2026-10-02: limp wrists, not bent back)
     P["hand.L.ry"] = P["hand.R.ry"] = -18.0
-    return P
+    return settle_hands(P)
 
 
 DEAD = make_dead()
@@ -1159,6 +1198,12 @@ def bottom_arm_ik(keys, sides=("L",)):
                     if k.startswith(("arm.%s." % s, "hand.%s.w" % s)):
                         Q[k] = v
                 Q["arm.%s.ik" % s] = 1.0
+                # the key's actual hand turn as the hand target: a stiffness blend then mixes two near turns (it
+                # slerped a stiff and a free hand 180 deg apart: 167 deg hand flips, 2026-10-02)
+                with N.raw_solve():
+                    D0, _, _, _ = solver().solve(K0)
+                e = D0["hand." + s].to_euler("XYZ")
+                Q["hand.%s.wx" % s], Q["hand.%s.wy" % s], Q["hand.%s.wz" % s] = degrees(e.x), degrees(e.y), degrees(e.z)
         res.append((k1[0], Q) + tuple(k1[2:]))
     return res
 
@@ -1367,7 +1412,7 @@ def cheer_keys():
     # both fists up (V), chest open, head up; feet stay on the ground
     UP = add(S0, hips__z=0.0, hips__ry=-2.0, spine__ry=-5.0, chest__ry=-6.0, neck__ry=-8.0, head__ry=-12.0)
     UP = Pose(UP)
-    sym(UP, **{"shoulder.rx": 14.0, "upper_arm.rx": 92.0, "upper_arm.ry": -22.0, "upper_arm.rz": 0.0,
+    sym(UP, **{"shoulder.rx": 2.0, "upper_arm.rx": 92.0,           # (2026-10-02: the shoulder rhythm lifts the clavicles) "upper_arm.ry": -22.0, "upper_arm.rz": 0.0,
                "forearm.ry": -30.0, "forearm.rz": 10.0, "hand.ry": -10.0})
     UP = fill_arm_targets(UP)
     PUMP = Pose(UP)
@@ -1709,8 +1754,8 @@ POSE_STATE_REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep"
 
 
 def bed_keys(keys, z=None):
-    """The bed guard values on every key BEFORE the retime (2026-10-02): the retime then also slows the guard's own
-    corrections, and the bake despike (4.5 deg/frame) no longer smooths them away (hands 2-3 cm in the mattress)."""
+    """The bed guard values on every key (not used before a retime: the guard's corrections on the v3 body stretched
+    lie_enter from 10 s to 19 s, 2026-10-02)."""
     bz = FURNITURE["bed_z"] if z is None else z
     bb = FURNITURE["bed_back"]
     out = []
@@ -1788,11 +1833,11 @@ def all_clips():
     out.append(("sit_type", "loop", "sit", "sit", True, 120, typing(sit_type_base(), 120), {}))
     fn, n = keyed_clip(sit_exit_keys())
     out.append(("sit_exit", "exit", "sit", "stand", False, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(bottom_arm_ik(bed_keys(lie_enter_keys()))))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_enter_keys())))
     out.append(("lie_enter", "enter", "stand", "lie", False, n, on_bed(fn), {}))
     fn, n = sleep_fn()
     out.append(("sleep", "loop", "lie", "lie", True, n, on_bed(fn), {}))
-    fn, n = keyed_clip(retime_keys(bottom_arm_ik(bed_keys(lie_exit_keys()))))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_exit_keys())))
     out.append(("lie_exit", "exit", "lie", "stand", False, n, on_bed(fn), {}))
     gait("injured_walk", INJURED)
     fn, n = keyed_clip(collapse_keys())

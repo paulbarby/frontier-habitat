@@ -196,6 +196,11 @@ func _blurb(id: String) -> String:
 
 func _pick_planet(id: String) -> void:
 	_planet = id
+	# On the title the colony behind the menu takes the look of the planet you pick (RENDER view.planet_look);
+	# in play the game's own planet stays.
+	var vw = hud.main.view if hud != null and hud.main != null else null
+	if vw != null and "planet_look" in vw and bool(hud.main.on_title):
+		vw.planet_look = id
 	for k in _cards:
 		(_cards[k] as Button).set_pressed_no_signal(k == id)
 	_update_summary()
@@ -245,3 +250,9 @@ class _Globe extends Control:
 		draw_circle(c + Vector2(-7, -7), 19.0, pair[1].lerp(pair[0], 0.4))
 		draw_arc(c, 27.0, 0.0, TAU, 40, Color(1, 1, 1, 0.5), 1.5, true)
 		draw_arc(c, 34.0, -0.5, 1.9, 24, Color("3EE0FF"), 1.5, true)
+
+## The title background goes back to the colony's own planet.
+func on_close() -> void:
+	var vw = hud.main.view if hud != null and hud.main != null else null
+	if vw != null and "planet_look" in vw:
+		vw.planet_look = ""

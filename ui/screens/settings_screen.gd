@@ -51,6 +51,8 @@ func build() -> void:
 	left.add_child(card_panel(ui))
 	ui.add_child(_slider("Interface scale", "ui_scale", 0.8, 1.4, 0.05, func(v): return "%d%%" % int(roundf(v * 100.0))))
 	ui.add_child(_toggle("Tips for new players", "tutorial_tips", "Shows a tip under each open goal in the mission tracker."))
+	ui.add_child(_toggle("Cheeky dialogue", "cheeky", "Cheeky dialogue
+On: two adults who fancy each other tease with adult innuendo. Off: mild flirting only. Never explicit, never with children."))
 	# Camera
 	var cam: VBoxContainer = card("Camera", "camera", P.CYAN)
 	left.add_child(card_panel(cam))

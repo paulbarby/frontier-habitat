@@ -96,11 +96,12 @@ func talks() -> Array:
 		var lk: Array = [key, int(s["start"]), li]
 		var line = _said.get(lk)
 		if line == null:
-			line = line_for(speaker, listener, String(s["topic"]), (int(key % 2147483647) * 31 + int(s["w"]) * 7 + li) % 2147483647, int(s["bld"]), li % 2 == 1)
+			line = line_for(speaker, listener, String(s["topic"]), (int(key % 2147483647) * 31 + int(s["w"]) * 7 + li) % 2147483647, int(s["bld"]), li % 2 == 1, int(s.get("heat", 0)))
 			_said[lk] = line
 			_remember(int(speaker["id"]), int(s["start"]) + li * LINE_TICKS, line, String(s["topic"]), int(listener["id"]))
 		_talks.append({"id": [key, int(s["start"])].hash(), "a": int(s["a"]), "b": int(s["b"]), "speaker": int(speaker["id"]), "listener": int(listener["id"]),
 			"topic": s["topic"], "line": line["text"], "emote": line["emote"], "anim": line["anim"], "started": int(s["start"]), "line_index": li, "lines": int(s["lines"]),
+			"heat": int(s.get("heat", 0)), "idle": bool(s.get("idle", false)),
 			"building": int(s["bld"]), "pos": ((x["pos"] as Vector2) + (y["pos"] as Vector2)) * 0.5})
 	if _said.size() > 2000:
 		_said = {}
@@ -291,7 +292,11 @@ func topic_for(a: Dictionary, other: Dictionary, salt: int) -> String:
 	return "small_talk"
 
 ## {text, emote, anim} for a line on a topic, with the speaker's trait variant when there is one.
-func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: int, reply: bool = false) -> Dictionary:
+func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: int, reply: bool = false, heat: int = 0) -> Dictionary:
+	# V5 section 16: flirt, innuendo, awkward, joke, rivalry, party talk, toasts and HR talk have their own content.
+	var spec: Dictionary = _special_line(a, other, topic, salt, reply, heat)
+	if not spec.is_empty():
+		return spec
 	# The listener's turn: often a short reply instead of a line on the topic.
 	if reply and dlg()["topics"].has("reply") and _h(salt, 77) < 0.5:
 		topic = "reply"
@@ -328,6 +333,59 @@ func line_for(a: Dictionary, other: Dictionary, topic: String, salt: int, bld: i
 		"leisure", "ship":
 			anim = "laugh" if sim.people.has_trait(a, "funny") else anim
 	return {"text": text, "emote": emote, "anim": anim}
+
+const SPECIAL_REPLY := {"flirt": "flirt_reply", "innuendo": "innuendo_reply", "awkward": "decline"}
+const SPECIAL_EMOTE := {"flirt": "heart", "innuendo": "heart", "awkward": "sweat", "joke": "music", "rivalry": "anger", "party_talk": "music", "toast": "happy", "hr_praise": "happy", "hr_gossip": "question"}
+
+## Lines of the V5 section 16 and 17 topics: {text, emote, anim}, or {} for any other topic. Heat picks the
+## flirt or innuendo pool (innuendo is always heat 2 or 3; with the setting off the talk is a flirt).
+func _special_line(a: Dictionary, other: Dictionary, topic: String, salt: int, reply: bool, heat: int) -> Dictionary:
+	var cel: Dictionary = sim.content.get("celebrations", {})
+	var hrc: Dictionary = sim.content.get("hr", {})
+	var pool: Array = []
+	var anim := "talk_gesture_a" if int(salt) % 2 == 0 else "talk_gesture_b"
+	if topic == "hr_praise" or topic == "hr_gossip":
+		pool = (hrc.get("praise", []) if topic == "hr_praise" else hrc.get("gossip", [])) as Array
+		if pool.is_empty():
+			return {}
+	elif reply and SPECIAL_REPLY.has(topic):
+		pool = (cel.get("topics", {}).get(SPECIAL_REPLY[topic], []) as Array)
+		anim = "sulk" if topic == "awkward" else "flirt_lean"
+	elif topic == "flirt" or (topic == "innuendo" and not sim.party.cheeky()):
+		pool = _heat_pool(cel.get("flirt", []) as Array, 1)
+		anim = "flirt_lean"
+		topic = "flirt"
+	elif topic == "innuendo":
+		pool = _heat_pool(cel.get("innuendo", []) as Array, heat)
+		anim = "flirt_lean" if int(salt) % 3 != 0 else "laugh"
+	elif topic == "awkward":
+		pool = _heat_pool(cel.get("flirt", []) as Array, 1)
+		anim = "flirt_lean"
+	elif cel.get("topics", {}).has(topic) and ["joke", "rivalry", "party_talk", "toast"].has(topic):
+		pool = cel["topics"][topic] as Array
+		anim = "laugh" if topic == "joke" else ("argue" if topic == "rivalry" else anim)
+	if pool.is_empty():
+		return {}
+	var text: String = String(pool[int(_h(salt, int(a["id"])) * pool.size()) % pool.size()])
+	var here: Dictionary = sim.state["buildings"].get(int(a.get("bld", -1)), {})
+	text = text.replace("{other}", _first(other)).replace("{place}", String(here.get("name", "lounge")).to_lower()).replace("{officer}", _first(other))
+	text = text.replace("{name}", _first(other)).replace("{dept}", sim.people.department(a))
+	return {"text": text, "emote": String(SPECIAL_EMOTE.get(topic, "")), "anim": anim}
+
+## The lines of a list of {text, heat} for one heat: the lines of exactly that heat when there are some (heat 3
+## also takes heat 2), else the lines up to it.
+func _heat_pool(list: Array, heat: int) -> Array:
+	var exact: Array = []
+	var upto: Array = []
+	for l in list:
+		var h: int = int(l["heat"])
+		if h == heat:
+			exact.append(String(l["text"]))
+		if h <= heat:
+			upto.append(String(l["text"]))
+	if heat >= 3:
+		return upto if not upto.is_empty() else exact
+	return exact if not exact.is_empty() else upto
 
 func _commander_name(a: Dictionary) -> String:
 	var base: int = int(sim.people.rank(a)["base"])

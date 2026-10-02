@@ -225,6 +225,7 @@
     "medic": "Medic",
     "scientist": "Scientist",
     "security": "Security officer",
+    "hr": "HR officer",
     "child": "Child",
     "visitor": "Visitor"
   },

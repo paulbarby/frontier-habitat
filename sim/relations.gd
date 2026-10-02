@@ -148,9 +148,10 @@ func tick() -> void:
 			done[key] = w
 			busy[int(x["id"])] = true
 			busy[int(y["id"])] = true
-			var topic: String = sim.social.topic_for(x, y, (key + w) % 2147483647)
+			var plan: Dictionary = sim.party.talk_plan(x, y, (key + w) % 2147483647)
+			var topic: String = String(plan["topic"])
 			talks[key] = {"a": int(x["id"]), "b": int(y["id"]), "start": now, "lines": 2 + int(_h(key % 2147483647, w + 7) * 5.0) % 5,
-				"topic": topic, "bld": int(x["bld"]), "w": w}
+				"topic": topic, "bld": int(x["bld"]), "w": w, "heat": int(plan["heat"])}
 			_talked(x, y, topic, now)
 			break
 	# The window marks of old windows are dropped (once a window).
@@ -161,6 +162,51 @@ func tick() -> void:
 				keep[k] = done[k]
 		v["done"] = keep
 	_day_pass(now)
+
+## The next request id (shared by the requests of relations, parties and HR).
+func next_request_id() -> int:
+	var v: Dictionary = _w()
+	var rid: int = int(v.get("req_seq", 0)) + 1
+	v["req_seq"] = rid
+	return rid
+
+## Is this person in a talk now?
+func in_talk(id: int) -> bool:
+	var talks: Dictionary = _w()["talks"]
+	for key in talks:
+		var t: Dictionary = talks[key]
+		if int(t["a"]) == id or int(t["b"]) == id:
+			return true
+	return false
+
+## Starts a talk between x and y at once (idle talk, V5 section 16): x starts it; the pair gets the topic and
+## heat of party.talk_plan; both stand and talk for its length. Returns false when a talk of the pair
+## exists, or the pair already talked in this window.
+func start_talk_now(x: Dictionary, y: Dictionary, idle: bool) -> bool:
+	var now: int = int(sim.state["tick"])
+	var hz: int = int(sim.bal["tick_hz"])
+	var v: Dictionary = _w()
+	var talks: Dictionary = v["talks"]
+	var key: int = key_of(int(x["id"]), int(y["id"]))
+	var window: int = int(cfg()["talk_window_s"]) * hz
+	var w: int = now / window
+	if talks.has(key) or not can_talk(x) or not can_talk(y):
+		return false
+	var done: Dictionary = v["done"]
+	if int(done.get(key, -1)) == w:
+		return false
+	done[key] = w
+	var ic: Dictionary = sim.content["society"]["celebrations"]["idle"]
+	var plan: Dictionary = sim.party.talk_plan(x, y, (key + w) % 2147483647)
+	var topic: String = String(plan["topic"])
+	var lines: int = int(ic["lines_min"]) + int(_h(key % 2147483647, w + 7) * float(int(ic["lines_max"]) - int(ic["lines_min"]) + 1)) % (int(ic["lines_max"]) - int(ic["lines_min"]) + 1)
+	talks[key] = {"a": int(x["id"]), "b": int(y["id"]), "start": now, "lines": lines, "topic": topic, "bld": int(x["bld"]), "w": w, "heat": int(plan["heat"]), "idle": idle}
+	_talked(x, y, topic, now)
+	if idle:
+		var secs: float = float(lines * int(sim.social.LINE_TICKS)) / float(hz)
+		sim.agents._start_plan(x, "chat", [{"op": "wait", "t": secs}], "Chatting")
+		sim.agents._start_plan(y, "chat", [{"op": "wait", "t": secs}], "Chatting")
+	return true
 
 # ---------------------------------------------------------------- relationships
 ## The stored pair (read only; {} for strangers who never talked).
@@ -225,11 +271,19 @@ func _talked(x: Dictionary, y: Dictionary, topic: String, now: int) -> void:
 		d = float(tc["argue_affinity"])
 	if topic == "gossip":
 		d += float(tc["gossip_affinity"])
+	if topic == "awkward":
+		var ac: Dictionary = sim.content["society"]["celebrations"]["awkward"]
+		d = -float(ac["aff_loss"])
+		for p in [x, y]:
+			sim.people.add_mod(p, {"kind": "awkward", "text": "An awkward moment", "comp": "social", "sat": float(ac["sat"]), "att": -1.0, "days": float(ac["days"])})
+		sim.log_event("awkward", "%s made a move on %s. It did not land." % [String(x["name"]), String(y["name"])], [int(x["id"]), int(y["id"])], 0, {"place": int(x["bld"])})
+	elif topic == "rivalry":
+		d = -2.0
 	r["aff"] = clampf(float(r["aff"]) + d, -100.0, 100.0)
 	if sim.social.compatible(x, y):
 		var da: float = float(tc["attraction_drift"]) * (1.0 + (float(tc["charming"]) if ty.has("charming") or tx.has("charming") else 0.0))
-		if topic == "romance":
-			da += float(tc["romance_attraction"])
+		if topic == "romance" or topic == "flirt" or topic == "innuendo":
+			da += float(tc["romance_attraction"]) * (1.0 if topic != "innuendo" else 1.3)
 		# Attraction grows toward a ceiling set by the pair (not everybody falls for everybody).
 		var ceiling: float = 40.0 + 60.0 * _h(int(r["a"]) * 7 + 3, int(r["b"]))
 		r["att"] = clampf(minf(float(r["att"]) + da, maxf(float(r["att"]), ceiling)), 0.0, 100.0)
@@ -260,7 +314,7 @@ func _update_status(r: Dictionary, x: Dictionary, y: Dictionary, topic: String) 
 	var att: float = float(r["att"])
 	if ROMANTIC.has(st):
 		pass
-	elif topic == "romance" and att >= float(sc["dating_att"]) and aff >= float(sc["dating_aff"]):
+	elif (topic == "romance" or topic == "flirt" or topic == "innuendo") and att >= float(sc["dating_att"]) and aff >= float(sc["dating_aff"]):
 		var px: int = partner_of(int(x["id"]))
 		var py: int = partner_of(int(y["id"]))
 		var visitor: bool = String(x.get("kind", "")) == "visitor" or String(y.get("kind", "")) == "visitor"
@@ -383,6 +437,11 @@ func _affair_day(key: int, r: Dictionary, x: Dictionary, y: Dictionary, now: int
 	var chance: float = float(c["discover_chance"]) + float(c["discover_per_gossip"]) * gossips
 	if _h(int(key % 2147483647) + 11, now / _day_ticks()) >= chance:
 		return
+	reveal_affair(r, x, y)
+
+## An affair is found out: the cheated partner breaks up with the cheat; the scandal is in the log (and the
+## Rag). Used by the daily chance and by party drama.
+func reveal_affair(r: Dictionary, x: Dictionary, y: Dictionary) -> void:
 	var cheat: Dictionary = x if partner_of(int(x["id"])) != -1 else y
 	var other: Dictionary = y if cheat == x else x
 	var pid: int = partner_of(int(cheat["id"]))
@@ -468,6 +527,10 @@ func close_ship_requests(ship_id: int = -1) -> int:
 func cmd_answer_request(p: Dictionary) -> Dictionary:
 	var reqs: Dictionary = _w()["requests"]
 	var rid: int = int(p.get("id", -1))
+	if sim.party.has_offer(rid):
+		return sim.party.answer(p)
+	if sim.hr.has_request(rid):
+		return sim.hr.answer(p)
 	if not reqs.has(rid):
 		return {"ok": false, "code": "invalid", "text": "No such request."}
 	var q: Dictionary = reqs[rid]
@@ -495,9 +558,7 @@ func cmd_answer_request(p: Dictionary) -> Dictionary:
 		if arr.is_empty():
 			return {"ok": false, "code": "refused", "text": "The ship has gone."}
 		# The colonist becomes a passenger of that ship and leaves with it.
-		a["kind"] = "visitor"
-		a["ship"] = ship
-		a.erase("order")
+		sim.traffic.make_passenger(a, ship)
 		sim.people.note(a, "Left the colony with a visitor.")
 		sim.log_event("defected", "%s left the colony for love." % String(a["name"]), [int(a["id"])], 2)
 		sim.people.invalidate(int(a["id"]))
@@ -515,6 +576,10 @@ func requests() -> Array:
 	ids.sort()
 	for rid in ids:
 		out.append(reqs[rid].duplicate())
+	if sim.get("party") != null:
+		out.append_array(sim.party.request_rows())
+	if sim.get("hr") != null:
+		out.append_array(sim.hr.request_rows())
 	return out
 
 # ---------------------------------------------------------------- queries

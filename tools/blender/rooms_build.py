@@ -518,6 +518,10 @@ def build_one(job):
         row["v3"]["surfaces"] = {k: list(v) for k, v in getattr(rm, "surfaces", {}).items()}
         row["v3"]["group_surfaces"] = getattr(rm, "group_surfaces", {})
         row["v3"]["ceiling"] = getattr(rm, "ceiling_info", None)
+        # unit partitions 2.1 m (PorchTop objects): [cx, cy, z0, z1, half length, half thickness, yaw deg] in model
+        # space (Blender axes: x, y, z up), for RENDER's follow-camera wall rule
+        if getattr(rm, "partitions", None):
+            row["v3"]["partitions"] = rm.partitions
         di = getattr(rm, "decal_info", None) or {}
         row["v3"]["decals"] = dict(decal_objects=len(di.get("decals", [])), upper_objects=len(di.get("upper", [])),
                                    upper_z=di.get("upper_z"), upper_band=di.get("upper_band"),

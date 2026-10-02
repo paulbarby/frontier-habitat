@@ -623,12 +623,13 @@ def _shelf_island(plan, x, y, k):
 
 
 def school_desk(p, seed=0):
-    """A student desk (the pupil sits at +X... faces -X): body behind x = 0 like FU.desk, top 0.70."""
-    zt = F + 0.70
+    """A student desk (the pupil sits at +X... faces -X): body behind x = 0 like FU.desk, top 0.76 (RENDER seat check
+    2026-10-02: hands resting on the lap met the 0.70 top's underside)."""
+    zt = F + 0.76
     bbox(p, -0.50, 0.0, -0.40, 0.40, zt - 0.03, zt, "Wood", bevel=0.01)
     for sy in (-1, 1):
         bbox(p, -0.46, -0.04, sy * 0.36 - 0.02, sy * 0.36 + 0.02, F, zt - 0.03, "Frame", mats={"-z": None})
-    bbox(p, -0.45, -0.05, -0.30, 0.30, F + 0.45, F + 0.48, "Frame")
+    bbox(p, -0.46, -0.34, -0.30, 0.30, F + 0.45, F + 0.48, "Frame")    # the book shelf at the back (RENDER seat check)
     rng = random.Random(seed)
     bbox(p, -0.35, -0.12, -0.18, 0.18, zt, zt + 0.012, "Screen" if seed % 2 else "Hull")
     bbox(p, -0.30, -0.18, 0.22, 0.30, zt, zt + 0.08, rng.choice(("Accent", "Fabric", "CushionLight")))

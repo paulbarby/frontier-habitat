@@ -8,6 +8,9 @@ extends "res://ui/screens/screen.gd"
 ##   Academy    the academies (seats, teachers) and an enrolment form: a person, a skill, a step.
 ##   Security   officers against the target (1 per 12 people), the fights now (Show), the prisoners by
 ##              jail with the time left, and a form to change a person's job (security officer).
+##   HR         (V5 section 17) the HR office and its officers (loved in public, gossiped about in private), the
+##              complaints (each open one with its options and their effects), the transfer requests (Approve,
+##              Refuse) and the last feedback round. The same requests are in the Requests tab of the dock.
 ## One base at a time (the base picker in the header; the top bar filter picks the first one).
 ## Orders go to SIM through ui/v5_data.gd command(): appoint, set_home, enrol.
 ## Data: sim.people.list() / rank / home / skills, sim.floors.units(b), content/people.json.
@@ -61,7 +64,13 @@ func _init() -> void:
 	title = "Crew"
 	subtitle = "Ranks, homes and training. Drag a person onto a slot."
 	accent = P.CYAN
-	tabs = [["org", "Org chart", "people"], ["housing", "Housing", "home"], ["academy", "Academy", "research"], ["security", "Security", "lock"]]
+	tabs = [["org", "Org chart", "people"], ["housing", "Housing", "home"], ["academy", "Academy", "research"], ["security", "Security", "lock"], ["hr", "HR", "colonists"]]
+
+func _ready() -> void:
+	# open crew <tab>: org, housing, academy, security or hr.
+	if typeof(arg) == TYPE_STRING and ["org", "housing", "academy", "security", "hr"].has(String(arg)):
+		tab = String(arg)
+	super._ready()
 
 func header_extra(row: HBoxContainer) -> void:
 	var s = hud.main.sim
@@ -89,6 +98,7 @@ func build_tab(id: String, box: VBoxContainer) -> void:
 		"housing": _housing(box)
 		"academy": _academy(box)
 		"security": _security(box)
+		"hr": _hr(box)
 		_: _org(box)
 
 func _rows() -> Array:
@@ -624,7 +634,12 @@ func _security(box: VBoxContainer) -> void:
 			pr.add_child(Kit.button(hud.v5.agent_name(id2), func(): hud.open_person(id2, "file"), "Personnel file\nWhy they are here and their history.", "ListButton", "colonists", 13))
 			pr.add_child(Kit.label(left, "SmallLabel", 12, P.TEXT_2))
 			h3.add_child(pr)
+	_job_form(box, "security")
+
+## A form to change a person's job (SIM command set_role): a person, a job, a confirm.
+func _job_form(box: VBoxContainer, default_role: String) -> void:
 	# Change a job (SIM command set_role; a security officer needs the security skill)
+	var s = hud.main.sim
 	box.add_child(Kit.sep())
 	box.add_child(Kit.head("Change a job", P.CYAN, 12))
 	var fr: HBoxContainer = Kit.hbox(8)
@@ -638,14 +653,15 @@ func _security(box: VBoxContainer) -> void:
 	who.tooltip_text = "Person\nWho changes job."
 	fr.add_child(who)
 	var roles: Array = (s.bal.get("roles", []) as Array).duplicate()
-	if not roles.has("security"):
-		roles.append("security")
+	for extra in ["security", "hr"]:
+		if not roles.has(extra):
+			roles.append(extra)
 	var ro := OptionButton.new()
 	ro.name = "JobRole"
 	for rr in roles:
-		ro.add_item(String(s.bal.get("role_names", {}).get(rr, "Security officer" if rr == "security" else String(rr).capitalize())))
-	ro.select(roles.find("security"))
-	ro.tooltip_text = "Job\nThe new job. A security officer needs security %d or more." % int(s.content.get("society", {}).get("security", {}).get("role_skill", 40))
+		ro.add_item(String(s.bal.get("role_names", {}).get(rr, {"security": "Security officer", "hr": "HR officer"}.get(rr, String(rr).capitalize()))))
+	ro.select(roles.find(default_role))
+	ro.tooltip_text = "Job\nThe new job. A security officer needs security %d or more. An HR officer needs a free post in an HR office (small 1, medium 2, large 3)." % int(s.content.get("society", {}).get("security", {}).get("role_skill", 40))
 	fr.add_child(ro)
 	fr.add_child(Kit.button("Change job", func():
 		if ids.is_empty():
@@ -657,3 +673,139 @@ func _security(box: VBoxContainer) -> void:
 			last_result = hud.v5.command("set_role", {"agent": aid, "role": role})
 			hud.toast("Change job: " + String(last_result["text"]), "info" if bool(last_result["ok"]) else "warn", "people")
 			_build_tab_content(), "Change job"), "Change job\nGives the person a new job (asks to confirm).", "PrimaryButton", "check", 14))
+
+# ---------------------------------------------------------------- HR (V5 section 17; SIM sim/hr.gd)
+var _hr_sig := ""
+const HR_CAT := {"home": "Home", "punishment": "Punishment", "feud": "Feud", "overwork": "Overwork", "condition": "Conditions", "pay": "Pay"}
+
+## The HR office and its officers, the complaints, the transfer requests and the last feedback round.
+func _hr(box: VBoxContainer) -> void:
+	var s = hud.main.sim
+	var hr = s.get("hr")
+	if hr == null or not (hr as Object).has_method("active"):
+		box.add_child(Kit.wrap("HR is not available in this game.", 15, P.TEXT_2))
+		return
+	var b: int = base_id if s.bases.count() > 1 else -1
+	_hr_sig = _hr_signature()
+	box.add_child(Kit.wrap("The HR office takes complaints and asks the staff what they think. A person who is not satisfied can complain, or ask to go off world. Without an HR office that has power and a staffed desk, none of this happens: unhappy people only grumble.", 13, P.TEXT_2, 1100.0))
+	var offices: Array = hr.offices(b)
+	var officers: Array = hr.officers(b)
+	var sum: HFlowContainer = HFlowContainer.new()
+	sum.name = "HrSummary"
+	sum.add_theme_constant_override("h_separation", 22)
+	box.add_child(sum)
+	var act: bool = hr.active(b)
+	for c in [["HR office", "%d" % offices.size() if not offices.is_empty() else "none", P.GREEN if not offices.is_empty() else P.AMBER],
+			["Officers", "%d of %d posts" % [officers.size(), int(hr.slots(b))], P.GREEN if not officers.is_empty() else P.AMBER],
+			["State", "active" if act else "not active", P.GREEN if act else P.AMBER]]:
+		var v: VBoxContainer = Kit.vbox(0)
+		v.add_child(Kit.head(String(c[0]), P.TEXT_2, 11))
+		v.add_child(Kit.num(String(c[1]), 15, c[2], true))
+		sum.add_child(v)
+	if offices.is_empty():
+		box.add_child(Kit.wrap("No HR office yet. Build one (Civic tab of the build bar; research Civic Planning), then make a person an HR officer with Change a job, below.", 13, P.AMBER, 1100.0))
+	elif not act:
+		box.add_child(Kit.wrap("The HR office does not work now. It needs power, and an HR officer at the desk.", 13, P.AMBER, 1100.0))
+	# Officers: loved in public, gossiped about in private.
+	if not officers.is_empty():
+		box.add_child(Kit.sep())
+		box.add_child(Kit.head("HR officers", P.CYAN, 12))
+		for oid in officers:
+			var rep: Dictionary = hr.reputation(int(oid))
+			var h: HBoxContainer = Kit.hbox(10)
+			h.name = "Officer_%d" % int(oid)
+			box.add_child(h)
+			var id2: int = int(oid)
+			h.add_child(Kit.button(hud.v5.agent_name(id2), func(): hud.open_person(id2, "social"), "Personnel file\nSocial tab: what people think of this person.", "ListButton", "colonists", 13))
+			h.add_child(Kit.label("In public %d of 100" % int(rep.get("public", 0)), "SmallLabel", 12, P.GREEN))
+			var pv: int = int(rep.get("private", 0))
+			h.add_child(Kit.label("Behind their back %d (from -100 to 100)" % pv, "SmallLabel", 12, P.GREEN if pv >= 0 else P.AMBER))
+	# Requests that need the player (the same rows as the Requests tab).
+	var open_rows: Array = hud.v5.requests().filter(func(q): return String(q.get("kind", "")) in ["hr_complaint", "hr_transfer"])
+	box.add_child(Kit.sep())
+	box.add_child(Kit.head("Complaints and transfer requests that wait for you", P.CYAN, 12))
+	if open_rows.is_empty():
+		box.add_child(Kit.label("Nothing waits for you.", "SmallLabel", 12, P.TEXT_3))
+	for q in open_rows:
+		box.add_child(_hr_row(q))
+	# What HR handles by itself, and what ended.
+	var working: Array = []
+	var done: Array = []
+	for c in hr.complaints():
+		if String(c["state"]) == "hr_working":
+			working.append(c)
+		elif String(c["state"]) == "resolved":
+			done.append(c)
+	if not working.is_empty():
+		box.add_child(Kit.head("HR is working on it", P.TEXT_2, 11))
+		for c in working:
+			box.add_child(Kit.wrap("%s: %s" % [hud.v5.agent_name(int(c["agent"])), String(c["text"])], 12, P.TEXT_2, 1000.0))
+	if not done.is_empty():
+		box.add_child(Kit.head("Resolved lately", P.TEXT_2, 11))
+		for c in done.slice(maxi(0, done.size() - 5)):
+			box.add_child(Kit.wrap("%s: %s" % [hud.v5.agent_name(int(c["agent"])), String(c.get("outcome", c["text"]))], 12, P.TEXT_3, 1000.0))
+	# The last feedback round.
+	box.add_child(Kit.sep())
+	box.add_child(Kit.head("Staff survey", P.CYAN, 12))
+	var sv: Dictionary = hr.survey(b)
+	if sv.is_empty():
+		box.add_child(Kit.wrap("No feedback round yet. A round runs every 3 days while an HR office works.", 13, P.TEXT_3, 1000.0))
+	else:
+		var mt: float = float(sv.get("morale_trend", 0.0))
+		box.add_child(Kit.wrap("Day %d. Mean satisfaction %d. Morale %s." % [int(sv.get("day", 0)), int(sv.get("mean", 0)), "rises" if mt > 0.5 else ("falls" if mt < -0.5 else "holds")], 13, P.TEXT, 1000.0))
+		var g: GridContainer = Kit.grid(4, 18, 3)
+		g.name = "SurveyDepts"
+		box.add_child(g)
+		for hd in ["Department", "People", "Satisfaction", "Trend"]:
+			g.add_child(Kit.head(hd, P.TEXT_2, 11))
+		for d in sv.get("depts", []):
+			g.add_child(Kit.label(String(d["dept"]).capitalize(), "", 13, P.TEXT))
+			g.add_child(Kit.num(str(int(d["n"])), 13, P.TEXT))
+			var sat: float = float(d["sat"])
+			g.add_child(Kit.num(str(int(sat)), 13, P.level(sat, 50.0, 30.0)))
+			var tr: float = float(d.get("trend", 0.0))
+			g.add_child(Kit.label("up" if tr > 0.5 else ("down" if tr < -0.5 else "level"), "", 13, P.GREEN if tr > 0.5 else (P.AMBER if tr < -0.5 else P.TEXT_2)))
+		var top: Array = []
+		for t in sv.get("top3", []):
+			top.append("%s (%d)" % [String(HR_CAT.get(String(t["category"]), String(t["category"]))), int(t["count"])])
+		box.add_child(Kit.wrap("Top complaints: %s." % (", ".join(top) if not top.is_empty() else "none"), 13, P.TEXT, 1000.0))
+	_job_form(box, "hr")
+
+## One request with its options (the buttons of the Requests tab: one answer path).
+func _hr_row(q: Dictionary) -> Control:
+	var v: VBoxContainer = Kit.vbox(3)
+	v.name = "HrRequest_%d" % int(q.get("id", -1))
+	var kind: String = String(q.get("kind", ""))
+	var head: String = ("TRANSFER REQUEST" if kind == "hr_transfer" else "COMPLAINT: %s" % String(HR_CAT.get(String(q.get("reason", "")), "")).to_upper())
+	v.add_child(Kit.head("%s  ·  %s" % [head, hud.v5.agent_name(int(q.get("agent", -1))).to_upper()], P.AMBER if kind == "hr_complaint" else Color("4FC3F7"), 11))
+	v.add_child(Kit.wrap(String(q.get("text", "")), 13, P.TEXT, 1000.0))
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	v.add_child(row)
+	var lines: Array = []
+	for o in q.get("options", []):
+		var oid: String = String(o["id"])
+		var b: Button = Kit.button(String(o["text"]), func(): hud.request_card._ask_option(q, oid), "%s\n%s" % [o["text"], o.get("effect", "")], "DangerButton" if oid in hud.request_card.CONFIRM_OPTIONS else "", "check", 13)
+		b.name = "Opt_" + oid
+		row.add_child(b)
+		lines.append("%s: %s" % [o["text"], o.get("effect", "")])
+	v.add_child(Kit.wrap("\n".join(lines), 12, P.TEXT_2, 1000.0))
+	return v
+
+func _hr_signature() -> String:
+	var hr = hud.main.sim.get("hr")
+	if hr == null:
+		return ""
+	var sg := ""
+	for q in hud.v5.requests():
+		if String(q.get("kind", "")).begins_with("hr_"):
+			sg += "r%d," % int(q.get("id", -1))
+	for c in hr.complaints():
+		sg += "c%d%s," % [int(c["id"]), String(c["state"])]
+	sg += "s%d,o%d" % [int(hr.survey(-1).get("tick", 0)), hr.officers(-1).size()]
+	return sg
+
+## The HR tab follows the simulation: a new complaint, an answer or a survey rebuilds it.
+func refresh() -> void:
+	if tab == "hr" and _hr_signature() != _hr_sig:
+		_build_tab_content()

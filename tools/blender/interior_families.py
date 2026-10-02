@@ -365,24 +365,27 @@ def bar_counter(plan, x, y, yaw, L, h=0.78):
     """Straight counter (wood top, dark body, neon lines, foot rail); the staff side is local -X."""
     n = plan.n
     with at(n, x, y, yaw):
-        bbox(n, -0.30, 0.30, -L / 2, L / 2, F, F + h - 0.04, "HullDark", bevel=0.02)
+        # RENDER seat check 2026-10-02: the front is recessed to x = 0.06 under a 0.30 m top overhang (knee room for
+        # the stools at 0.62)
+        bbox(n, -0.30, 0.06, -L / 2, L / 2, F, F + h - 0.04, "HullDark", bevel=0.02)
         bbox(n, -0.34, 0.36, -L / 2 - 0.03, L / 2 + 0.03, F + h - 0.04, F + h, "Wood", bevel=0.01)
-        plate_x(n, 0.302, -L / 2 + 0.04, L / 2 - 0.04, F + 0.12, F + 0.15, "Neon")
-        plate_x(n, 0.302, -L / 2 + 0.04, L / 2 - 0.04, F + h - 0.14, F + h - 0.11, "Neon")
-        n.cyl((0.36, -L / 2 + 0.1, F + 0.20), (0.36, L / 2 - 0.1, F + 0.20), 0.025, seg=6, mat="Metal")
+        plate_x(n, 0.062, -L / 2 + 0.04, L / 2 - 0.04, F + 0.12, F + 0.15, "Neon")
+        plate_x(n, 0.062, -L / 2 + 0.04, L / 2 - 0.04, F + h - 0.14, F + h - 0.11, "Neon")
+        n.cyl((0.12, -L / 2 + 0.1, F + 0.20), (0.12, L / 2 - 0.1, F + 0.20), 0.025, seg=6, mat="Metal")
         nb = int(L / 0.9) + 1
         for k in range(nb):
             yy = -L / 2 + 0.2 + (L - 0.4) * k / max(1, nb - 1)
-            n.vcyl(-0.1, yy, F + h, F + h + 0.20, 0.04, seg=6, mat="Glass", cap0=False)
+            n.vcyl(-0.22, yy, F + h, F + h + 0.20, 0.04, seg=6, mat="Glass", cap0=False)     # staff side (seat check)
         # 5.0 (V5 15.3): a tip jar for the GPU and a card reader that wants a subscription
         import interior_props as PR
         yj = L / 2 - 0.25
-        n.vcyl(0.12, yj, F + h, F + h + 0.16, 0.06, seg=8, mat="Glass", cap0=False, cap1=False)
-        n.vcyl(0.12, yj, F + h + 0.005, F + h + 0.06, 0.055, seg=8, mat="Hazard", cap0=False)
-        bbox(n, 0.17, 0.19, yj - 0.08, yj + 0.08, F + h + 0.04, F + h + 0.14, "Hull")
-        PR.text_lines(n, ("TIPS FEED", "THE GPU"), yj, F + h + 0.125, 0.016, "HullDark", x=0.192)
-        bbox(n, 0.05, 0.15, -L / 2 + 0.20, -L / 2 + 0.28, F + h, F + h + 0.12, "HullDark", bevel=0.01)
-        plate_x(n, 0.151, -L / 2 + 0.21, -L / 2 + 0.27, F + h + 0.06, F + h + 0.11, "Screen")
+        xj = -0.16                                  # the staff half of the top (RENDER seat check: hands at the bar)
+        n.vcyl(xj, yj, F + h, F + h + 0.16, 0.06, seg=8, mat="Glass", cap0=False, cap1=False)
+        n.vcyl(xj, yj, F + h + 0.005, F + h + 0.06, 0.055, seg=8, mat="Hazard", cap0=False)
+        bbox(n, xj + 0.05, xj + 0.07, yj - 0.08, yj + 0.08, F + h + 0.04, F + h + 0.14, "Hull")
+        PR.text_lines(n, ("TIPS FEED", "THE GPU"), yj, F + h + 0.125, 0.016, "HullDark", x=xj + 0.072)
+        bbox(n, xj - 0.05, xj + 0.05, -L / 2 + 0.20, -L / 2 + 0.28, F + h, F + h + 0.12, "HullDark", bevel=0.01)
+        plate_x(n, xj + 0.051, -L / 2 + 0.21, -L / 2 + 0.27, F + h + 0.06, F + h + 0.11, "Screen")
         rect_at(plan, n, 0.0, 0.0, 0.36, L / 2 + 0.05, tag="bar")
 
 
@@ -466,7 +469,7 @@ def cantina(rm):
         nf = int(L / 0.45)
         for k in range(nf + 1):
             yy = -L / 2 + 0.06 + (L - 0.12) * k / max(1, nf)
-            plate_x(n, 0.304, yy - 0.012, yy + 0.012, F + 0.15, F + 0.64, "Neon")
+            plate_x(n, 0.064, yy - 0.012, yy + 0.012, F + 0.15, F + 0.64, "Neon")
     for k in range(bar_n):
         sx = -L / 2 + 0.35 + (L - 0.7) * k / max(1, bar_n - 1)
         with at(n, sx, by - 0.62, 90.0):

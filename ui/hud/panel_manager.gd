@@ -27,6 +27,8 @@ const TYPES := {
 	"request": ["Requests from people", "requests", "heart"],
 	"traffic": ["Ships and traffic", "traffic", "ship"],
 	"people": ["People's lives", "news", "heart"],
+	"party": ["Parties and celebrations", "events", "music"],
+	"hr": ["HR and complaints", "requests", "colonists"],
 	"goal": ["Goals and chapters", "goals", "goals"],
 	"award": ["Medals", "news", "medal"],
 	"research": ["Research", "news", "research"],
@@ -282,7 +284,7 @@ func _soften(n: Node) -> void:
 ## A card's priority colour: what its module shows now.
 func _card_prio(m: Control) -> String:
 	if m == hud.get("request_card"):
-		return "needs-answer"
+		return "needs-answer" if hud.v5.urgent_requests().size() > 0 else "notice"
 	if m == hud.get("reactor_banner"):
 		return "critical"
 	if m == hud.get("hazard_banner"):
@@ -317,7 +319,7 @@ func _layout_card(rec: Dictionary) -> void:
 
 # ---------------------------------------------------------------- messages
 ## A message (docs/UI_PANELS.md §5). It goes to News; it pops up when its type is set to Pop up.
-func post(type: String, text: String, priority: String = "info", icon: String = "") -> void:
+func post(type: String, text: String, priority: String = "info", icon: String = "", popup: bool = true) -> void:
 	if text == "":
 		return
 	if not TYPES.has(type):
@@ -331,7 +333,7 @@ func post(type: String, text: String, priority: String = "info", icon: String = 
 	if feed.size() > FEED_MAX:
 		feed.resize(FEED_MAX)
 	var md: String = mode(type)
-	if md == "popup":   # on the title the whole HUD is hidden; nothing else to check
+	if md == "popup" and popup:   # on the title the whole HUD is hidden; nothing else to check
 		_popup(type, text, priority, ic)
 	if md != "off" and priority in ["warning", "critical", "needs-answer"]:
 		_flash_tab(String(TYPES[type][1]), text)
@@ -495,13 +497,17 @@ func tab_state(id: String) -> Dictionary:
 			if hud.get("unrest_banner") != null and hud.unrest_banner.visible:
 				n += 1
 				pr = _max_prio(pr, "critical" if String(hud.unrest_banner.shown_stage) == "riot" else "warning")
+			if hud.get("party_card") != null and hud.party_card.visible:
+				n += int(hud.party_card.count)
+				pr = _max_prio(pr, "notice")
 		"traffic":
 			var tr = hud.get("traffic")
 			n = (tr.rows_now as Array).size() if tr != null and "rows_now" in tr else 0
 		"requests":
 			n = hud.v5.requests().size() if hud.v5 != null else 0
 			if n > 0:
-				pr = "needs-answer"
+				# A party offer is a chance, not a question that waits: it is a notice, never needs-answer.
+				pr = "needs-answer" if hud.v5.urgent_requests().size() > 0 else "notice"
 		"news":
 			for e in feed:
 				if not bool(e["seen"]) and mode(String(e["type"])) != "off":
@@ -534,7 +540,7 @@ func urgent() -> Dictionary:
 		return {}
 	var reqs: Array = []
 	var rc = hud.get("request_card")
-	for q in (hud.v5.requests() if hud.v5 != null else []):
+	for q in (hud.v5.urgent_requests() if hud.v5 != null else []):
 		if rc == null or not rc.later.has(int(q.get("id", -1))):
 			reqs.append(q)
 	if not reqs.is_empty() and mode("request") != "off":

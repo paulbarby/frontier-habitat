@@ -44,6 +44,14 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 			return sim.social.cmd_egg(p)
 		"answer_request":
 			return sim.relations.cmd_answer_request(p)
+		"throw_party":
+			return sim.party.cmd_throw(p)
+		"set_option":
+			return _set_option(p)
+		"celebrate":
+			if not bool(sim.state.get("options", {}).get("debug", false)):
+				return {"ok": false, "code": "debug", "text": "Debug only."}
+			return sim.party.cmd_celebrate(p)
 		"staff":
 			return sim.leisure.cmd_staff(p)
 		"adopt":
@@ -243,6 +251,16 @@ func immigrants(max_count: int) -> int:
 		return 0
 	_land(n, roles)
 	return n
+
+## Command "set_option" {key, value}: the setting "cheeky" (Cheeky dialogue, V5 section 16).
+func _set_option(p: Dictionary) -> Dictionary:
+	var key: String = String(p.get("key", ""))
+	if key != "cheeky":
+		return {"ok": false, "code": "invalid", "text": "Unknown option."}
+	if not sim.state.has("options"):
+		sim.state["options"] = {}
+	sim.state["options"]["cheeky"] = bool(p.get("value", true))
+	return {"ok": true, "code": "ok", "text": "Cheeky dialogue is %s." % ("on" if bool(p.get("value", true)) else "off")}
 
 ## Command "set_immigration": {roles: [..], cap: int, open: bool}. Missing keys stay.
 func _set_immigration(p: Dictionary) -> Dictionary:

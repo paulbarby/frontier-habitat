@@ -60,6 +60,12 @@ func _next_save() -> bool:
 		print("missing save ", path)
 		return _next_save()
 	main._import_bytes(FileAccess.get_file_as_bytes(path))
+	# Determinism (2026-10-02): the HUD and audio run on the real frame time and ask the simulation things
+	# (talks, people) at their own pace; not under test here, so they do not run.
+	for nm in ["hud", "audio"]:
+		var nd = main.get(nm)
+		if nd != null and nd is Node:
+			(nd as Node).process_mode = Node.PROCESS_MODE_DISABLED
 	main.set_speed(4)
 	main.step_cap_us = 1 << 30
 	# SIM 2026-09-27: a stable save for the gate (no structure starts, finishes or is removed).
@@ -105,9 +111,17 @@ func _process(_delta: float) -> bool:
 		# Let the view build the new colony before sampling.
 		for k in 5:
 			main._process(DT)
+			if main.rig != null:
+				main.rig.set_process(false)
+				main.rig._process(DT)
 		return false
 	main.set_process(false)
 	main._process(DT)
+	# (the camera rig too, at the same fixed frame time: it ran on the real frame time, so the camera of a
+	# frame, and with it the far / off-screen update rate of the bodies, changed from run to run, 2026-10-02)
+	if main.rig != null:
+		main.rig.set_process(false)
+		main.rig._process(DT)
 	frames += 1
 	if frames > 30:
 		_sample()
@@ -176,6 +190,20 @@ func _dump_grid(rid: int) -> void:
 	img.save_png("res://build/web_render/grid_%s_%d.png" % [main.sim.state["buildings"][rid]["def"], rid])
 
 func _finish_save() -> void:
+	# Determinism (2026-10-02): a hash of the simulation and of the drawn bodies at the end of the run;
+	# two runs of the same save must print the same numbers.
+	var hs := 0.0
+	var hv := 0.0
+	for aid in main.sim.state["agents"]:
+		var ag: Dictionary = main.sim.state["agents"][aid]
+		hs += (ag["pos"] as Vector2).x * 1.31 + (ag["pos"] as Vector2).y * 0.77 + float(int(aid) % 97)
+	for aid2 in main.view.npc.agents:
+		var pv: Vector3 = main.view.npc.agents[aid2]["pos"]
+		hv += pv.x * 1.31 + pv.z * 0.77
+	cur["hash_sim"] = snappedf(hs, 0.0001)
+	cur["hash_view"] = snappedf(hv, 0.0001)
+	cur["tick_end"] = int(main.sim.state["tick"])
+	print("HASH %s sim %.4f view %.4f tick %d" % [cur["save"], hs, hv, int(main.sim.state["tick"])])
 	for rid in [193, 51, 647, 195, 2101, 1534, 49, 645]:
 		if main.sim.state["buildings"].has(rid):
 			_dump_grid(rid)

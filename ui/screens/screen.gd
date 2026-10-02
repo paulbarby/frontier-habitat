@@ -58,6 +58,8 @@ const TAB_TIPS := {
 	"crew:housing": "Housing\nEvery home and who lives there, against what each rank expects. Drag a person onto a unit.",
 	"crew:academy": "Academy\nCourses, students and the enrolment form; the skill levels of the crew.",
 	"crew:security": "Security\nOfficers against the target, the fights now, the prisoners, and a job change.",
+	"crew:hr": "HR
+The HR office and its officers, complaints, transfer requests and the last staff survey.",
 	"colonists:visitors": "Visitors\nTourists and other guests: their ship, when they leave, what they paid.",
 	"awards:colony": "This colony\nMedals earned by this colony.", "awards:device": "This device\nMedals earned by any colony on this device.",
 	"help:rules": "Rules\nHow the colony lives: air, water, power, food, work.", "help:keys": "Controls\nEvery key and mouse action.",

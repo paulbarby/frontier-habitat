@@ -4,6 +4,7 @@ extends RefCounted
 ## Direct field writes are TEST SET-UP only and are marked as such.
 
 const H = preload("res://tests/helpers.gd")
+const Pacer = preload("res://tests/pacer.gd")
 const Persistence = preload("res://sim/persistence.gd")
 
 func tests() -> Array:
@@ -1213,23 +1214,28 @@ func long_v5_perf_showcase(t) -> void:
 	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
 	sim.run_seconds(30.0)
 	var times: Array = []
-	var cal: Array = []
-	for i in 1500:
-		if i % 500 == 0:
-			cal.append(H.calib_ms())                                                    # outside the timed step
-		var t0: int = Time.get_ticks_usec()
-		sim.step()
-		times.append(float(Time.get_ticks_usec() - t0) / 1000.0)
-	cal.append(H.calib_ms())
-	var factor: float = H.calib_factor(cal)
-	var raw_med := 0.0
-	var raw_worst := 0.0
-	var raw_sorted: Array = times.duplicate()
+	var raw_times: Array = []
+	var pc = Pacer.new(false)
+	pc.start()
+	for blk in 15:
+		var bsum := 0.0
+		var first: int = raw_times.size()
+		for i in 100:
+			var t0: int = Time.get_ticks_usec()
+			sim.step()
+			var ms0: float = float(Time.get_ticks_usec() - t0) / 1000.0
+			raw_times.append(ms0)
+			bsum += ms0
+		pc.block(bsum, 100)                                                              # the next reading is outside the timed steps
+		var f: float = pc.factor_of(blk)
+		for i in range(first, raw_times.size()):
+			times.append(float(raw_times[i]) * f)
+	var factor: float = pc.mean_factor()
+	var cal: String = pc.reading_text()
+	var raw_sorted: Array = raw_times.duplicate()
 	raw_sorted.sort()
-	raw_med = float(raw_sorted[raw_sorted.size() / 2])
-	raw_worst = float(raw_sorted[raw_sorted.size() - 1])
-	for i in times.size():
-		times[i] = float(times[i]) * factor
+	var raw_med: float = float(raw_sorted[raw_sorted.size() / 2])
+	var raw_worst: float = float(raw_sorted[raw_sorted.size() - 1])
 	var sorted_t: Array = times.duplicate()
 	sorted_t.sort()
 	var med: float = float(sorted_t[sorted_t.size() / 2])
@@ -1239,7 +1245,7 @@ func long_v5_perf_showcase(t) -> void:
 	for x in times:
 		mean += float(x)
 	mean /= float(times.size())
-	t.note("%d people, scaled: median %.3f ms, mean %.3f ms, p99 %.2f ms, worst %.2f ms (raw median %.3f, raw worst %.2f; calibration %s ms, factor %.3f)" % [sim.state["agents"].size(), med, mean, p99, worst, raw_med, raw_worst, str(cal), factor])
+	t.note("%d people, scaled: median %.3f ms, mean %.3f ms, p99 %.2f ms, worst %.2f ms (raw median %.3f, raw worst %.2f; calibration %s, mean factor %.3f)" % [sim.state["agents"].size(), med, mean, p99, worst, raw_med, raw_worst, cal, factor])
 	t.check(med <= 3.0, "scaled median tick %.3f ms (budget 3.0; raw %.3f, factor %.3f)" % [med, raw_med, factor])
 	t.check(worst <= 30.0, "scaled worst tick %.2f ms (budget 12; fails over 30)" % worst)
 	sim.dispose()

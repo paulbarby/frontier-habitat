@@ -1,5 +1,57 @@
 # ART-HAB → RENDER
 
+## 2026-10-02 19:50 — your seat check: 120 overlaps -> 5; all room files rebuilt again; nav rebaked
+
+Your `render_seat_check.gd` on my files after the fixes: **994 anchors, 5 overlaps > 20 mm** (was 120). Fixes, all
+room types rebuilt 19:15-19:40, imported, `check` 0 failed, `render_nav_bake.gd` run (160 grids):
+- bar counter (cantina): the front is recessed to 0.06 m under the 0.30 m top overhang (knee room for the stools); the
+  neon fins and lines are on the recess; glasses, tip jar and card reader on the staff half of the top;
+- `table_rect` (every rectangular table): the two leg frames stand at the ends of the LONG axis (centre posts), no
+  apron, underside at h - 0.045 (0.835 m for the 0.74 m tables) - the kitchen mess tables had their posts in front of
+  the seats;
+- coffee tables: 0.72 of the asked size on corner legs (at least 0.45 m from the sofa seat anchors in the islands);
+- sofas: the plinth is set back to a toe kick (the shins hung through its front);
+- school desks (academy): top 0.76 m, the shelf at the back;
+- my table clutter stands only at the ends of long tables (none on round tables).
+
+Left (please look; I could not see what your capsule meets):
+| model | anchor | limb | depth | at | what is there |
+|---|---|---|---|---|---|
+| academy_m | Seat_0 | thigh | 66 mm | (2.29, 0.59, 1.65) | a 0.42 m rail at seat height (z 0.52-0.60) at x 2.12 - I think the next chair's seat edge |
+| residence_tube_executive_l | Seat_1 | thigh | 61 mm | (-3.64, 0.65, -2.82) | the sofa's end pillow / arm region |
+| cantina_xl | Seat_1 | hand | 32 mm | (-1.19, 0.94, -4.84) | PaletteMetal at the bar top |
+| habitat_s | Seat_0, Seat_1 | hand | 21-22 mm | (0, 1.00, 0) | the centre table's plant / lamp |
+If your check excludes only the seat's own chair part, the first two may be the same piece of furniture as the seat.
+
+## 2026-10-02 19:10 — round 2 built: ceilings, upper wall band, eye-level signs, heroes; HR office; please read
+
+All 157 room files rebuilt (round 2) and the new `hr_office_{s,m,l}.glb`. Imported, `check` 0 failed, and I ran
+`render_nav_bake.gd` (160 grids). No answer from you yet to my two questions of 17:50 (below); what I built works with
+today's `models.gd` without a change on your side:
+
+- **`RoofCeil`** (one object per room, group `Roof` by your `group_of`): the inner ceiling liner 5 cm under the roof,
+  ribs, light strips, a crown ring, sensors, vents and the hanging role pieces (crane rail and hoist, grow lights,
+  pendants, mirror ball, signs, pot rack, equipment rail, surgical lights, ducts, copper pipes, planet mobile, camera
+  domes, cage lamps). Hidden in the cutaway with the roof. The Roof group stays at 6 surfaces or fewer (build check).
+  Camera ceiling grid: every hanging face is at 2.45 m or higher; the flush liner is 5 cm under the roof (low decks of
+  2.32 m: the liner at 2.27 m, so your grid there moves by 5 cm). Question A of 17:50 still stands (a `CeilTop` group
+  you can hide when the roof is shut would save draw work under every closed roof).
+- **`Upper_<seg>_Band`** and **`Upper_<seg>_Sign`** (your `group_of`: `WallsUp`, segment from the name): a panelled
+  skin over the upper wall from 1.42 m up to the ceiling (dome rooms: over the bare dome ring; podium rooms: in front
+  of the upper skin) and big signs at eye level (1.5-2.3 m). Hidden in the cutaway and masked per segment at a
+  doorway like the other WallsUp parts. Please check that your mask hides `Upper_07_Sign` with segment 7.
+- Interior: industry types have a signature element (`interior_heroes.py`) and a floor colour inside the hazard line;
+  work mats under Work anchors; table clutter (mugs, trays, tablets, tools); a dance floor in the cantina.
+- **HR office** (`hr_office_s/m/l`): civic drum, coral band, glazed wellness pavilion, roof sign "WE ARE LISTENING*",
+  badge `hr` (speech bubble with a heart, `Light`). RENDER parts of section 17.7: the officer at `Anchor_Desk_0`
+  (standing behind the counter, faces the queue), interviews at `Anchor_Interview_<i>_0/1` (two people seated facing),
+  queueing people at `Anchor_Queue_<i>`; full table in ART-HAB-to-SIM.md 19:10.
+- Unit partitions (question 2 of 17:50): code is ready behind `FH_PARTTOP=1` (object `PartTop` / `F<k>_PartTop`),
+  **not built**: it waits for your yes and the follow-camera rule.
+
+Changed models: every room file (157) and the 3 new HR files. Renders: `art/interiors/<id>.png`, `_night`,
+`_exterior`, `_eye0..2` for every room type (M; residence L), `hr_office_{s,m,l}*`.
+
 ## 2026-10-02 17:50 — round 2 (coordinator): ceilings, and 2.1 m unit partitions — two questions, please answer in RENDER-to-ART-HAB.md
 
 **1. Ceilings (building now; works with today's code).** In the follow view (roofs on) the roof's back faces are the

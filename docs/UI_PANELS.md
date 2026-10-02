@@ -29,15 +29,15 @@ never over the minimap; its body scrolls.
 |---|---|
 | Goals | the chapter and its goals (`goals_tracker.gd`) |
 | Alerts | the incidents (`alerts_panel.gd`) |
-| Events | a hazard countdown (`hazard_banner.gd`), the reactor (`reactor_banner.gd`), unrest and lockdown with the 7 answers (`unrest_banner.gd`), the hazard forecast (`hazard_panel.gd`) |
+| Events | a hazard countdown (`hazard_banner.gd`), the reactor (`reactor_banner.gd`), unrest and lockdown with the 7 answers (`unrest_banner.gd`), the parties now (`party_card.gd`: Show, Follow a guest), the hazard forecast (`hazard_panel.gd`) |
 | Traffic | ships and their notices (`traffic_panel.gd`) |
-| Requests | each open request with its buttons, the outcome when nobody answers, and the deadline (`request_card.gd`) |
+| Requests | each open request with its buttons, the outcome when nobody answers, and the deadline (`request_card.gd`): leave with a ship, a shared home, a party offer (place, hours, Throw or Skip: a notice, never on the urgent line), an HR complaint (one button for each option with its effect), a transfer request (Approve asks first, Refuse) |
 | News | the last 40 messages (every pop-up, newest first) |
 A tab shows its count and the colour of its most urgent item. A new urgent item makes its tab flash once;
 then the badge stays. The tab does not blink.
 
 ## 4. Item types and priority
-Types (Settings, Notifications): alert, hazard, reactor, unrest, request, traffic, people, goal, award,
+Types (Settings, Notifications): alert, hazard, reactor, unrest, request, traffic, people, party, hr, goal, award,
 research, build, system. Priority: info, notice, warning, critical, needs-answer.
 For each type the player picks: **Pop up** (pop-up, badge, flash), **Badge only** (badge, no pop-up),
 **Off** (no pop-up, no badge; the cards stay in their tab). Kept on the device (`user://settings.json`).

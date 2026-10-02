@@ -142,6 +142,8 @@ const NEW_5 := [
 	["dock", "The left dock (key L) holds every alert and request. You choose what pops up."],
 	["roof_off", "Roofs off (key Y): see into every building."],
 	["planet", "Planets differ: the airless world has no storms."],
+	["music", "Idle talk, parties and drama. Cheeky dialogue is a setting."],
+	["colonists", "HR office: complaints, transfers and staff surveys."],
 ]
 func _whats_new() -> void:
 	var card := PanelContainer.new()

@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import npc_common as N                                           # noqa: E402
 import npc_anims as A                                            # noqa: E402
-from npc_anims import (Pose, add, setp, addsym, set_arm_ik, elbow_to, fill_arm_targets, ik_to_fk, keyed_clip,  # noqa
+from npc_anims import (relax_wrists, Pose, add, setp, addsym, set_arm_ik, elbow_to, fill_arm_targets, ik_to_fk, keyed_clip,  # noqa
                        periodic, bump, STAND, SIT, TAU, FPS, ANK)
 from npc_common import sym, set_foot                             # noqa: E402
 
@@ -27,7 +27,7 @@ from npc_common import sym, set_foot                             # noqa: E402
 BAR_STOOL = dict(seat_z=0.76, footrest_z=0.30, footrest_r=0.20, counter_x=0.33, counter_z=1.07)
 HUG = dict(distance=0.48, facing_deg=180.0, sync_s=0.0)      # (2026-10-02: 0.44 -> 0.48: the arms were 2-3 cm deep in the partner)
 # hug wrists at the hold (partner at +d): x behind the partner's centre, y outward, z (1.80 m frame)
-HUG_ARMS = dict(R=(0.20, 0.290, 1.300), L=(0.19, 0.285, 1.080))   # (2026-10-02: 3 cm less round the partner: B's hand reached A's spine)
+HUG_ARMS = dict(R=(0.20, 0.290, 1.370), L=(0.19, 0.285, 1.060))   # (2026-10-02: 3 cm less round the partner: B's hand reached A's spine)
 if os.environ.get("NPC_HUG"):                                          # tuning: "d rx ry rz lx ly lz"
     _h = [float(x) for x in os.environ["NPC_HUG"].split()]
     HUG["distance"], HUG_ARMS["R"], HUG_ARMS["L"] = _h[0], tuple(_h[1:4]), tuple(_h[4:7])
@@ -61,6 +61,8 @@ SEAT_DROP = -0.040        # the people pelvis sits 4 cm lower on a chair than th
 LIE_LIFT = 0.014          # and lies 1.4 cm higher on the ground
 STOOL_ADJ = 0.0           # the bar-stool hips (per body; the MPFB builds calibrate it, 0 for the procedural pilot)
 FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3 one (x s); MPFB builds set it
+COLLAPSE_ADJ = 0.0        # the kneeling part of collapse (per body, calibrated)
+SOLE_DZ = 0.0             # the outfits' common sole thickness (calibrated: the lowest sole on the floor in idle)
 KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
 BED_ADJ = 0.0             # the lying hips on a bed (per body; MPFB builds calibrate it: torso on the mattress)
 BED_BACK = 0.0            # the same lying on the back (sleep_turn; per body, calibrated)
@@ -121,10 +123,14 @@ def people_fix(P, clip):
             Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz
             if Q.g("arm.%s.ik" % side) > 0:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + dz
+    if clip == "collapse" and COLLAPSE_ADJ:
+        # the kneeling middle of the fall, per body (m3's knee went 1.2 cm into the floor); none at the ends
+        w = max(0.0, min(1.0, (-hz - 0.25) / 0.25)) * max(0.0, min(1.0, (0.75 + hz) / 0.15))
+        Q["hips.z"] = Q.g("hips.z") + COLLAPSE_ADJ * w
     if clip in LIE_CLIPS:
         # (2026-10-02) from the kneel down (m3's knee went 1.3 cm into the floor in collapse); the hands are kept on the
         # floor by the solver's surface guard now (the old +2.2 cm on IK hands only made get_up start 1.3 cm off dead)
-        w = max(0.0, min(1.0, (-hz - 0.30) / 0.40))
+        w = max(0.0, min(1.0, (-hz - 0.25) / 0.45))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
     return Q
 
@@ -137,10 +143,18 @@ def retarget(P, s, clip, settled_z=None):
     if clip in BED_CLIPS:                                     # the bed guard (npc_common Solver._bed_guard)
         Q["bed.z"] = CONTACT[clip][1]
         Q["bed.x0"], Q["bed.x1"] = -A.FURNITURE["bed_back"] - 0.45, -A.FURNITURE["bed_back"] + 0.45
-    if FOOT_DZ:
-        for side in ("L", "R"):                               # full for a flat foot, fading as it pitches onto the toes
-            flat = max(0.0, 1.0 - abs(Q.g("foot.%s.pitch" % side)) / 25.0)
-            Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + FOOT_DZ * flat
+    if FOOT_DZ or SOLE_DZ:
+        for side in ("L", "R"):
+            if Q.g("foot.%s.rel" % side) > 0.5:               # feet off the ground (lying): as before
+                flat = max(0.0, 1.0 - abs(Q.g("foot.%s.pitch" % side)) / 25.0)
+                Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + FOOT_DZ * flat + SOLE_DZ
+                continue
+            # (2026-10-02) the ankle-height difference moves the ankle along the FOOT's up axis (a rigid offset in the
+            # foot): the old fade with pitch left a foot on its toes 2.5 cm up in the kneel clips and slid planted toes
+            up = N.qeuler(Q.g("foot.%s.roll" % side), Q.g("foot.%s.pitch" % side), Q.g("foot.%s.yaw" % side)) @                 Vector((0.0, 0.0, 1.0))
+            Q["foot.%s.x" % side] = Q.g("foot.%s.x" % side) + FOOT_DZ * up.x
+            Q["foot.%s.y" % side] = Q.g("foot.%s.y" % side) + FOOT_DZ * up.y
+            Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + FOOT_DZ * up.z + SOLE_DZ
     return Q
 
 
@@ -462,20 +476,23 @@ def hug_keys():
     # hips back, chests in, lean to the own left: the heads pass side by side
     hr, hl = HUG_ARMS["R"], HUG_ARMS["L"]
     set_arm_ik(K2, "R", (d + hr[0], hr[1], hr[2]), (0.3, -1.0, -0.15), (-1.0, 0.0, 0.0), w=1.0, pole=-60.0)
-    elbow_to(K2, "R", (0.05, -1.0, 0.05), 0.95)
+    elbow_to(K2, "R", (0.05, -1.0, 0.30), 0.95)             # (2026-10-02: the high elbow up, the low elbow down: the
+                                                              # partners' upper arms crossed 2.9 cm deep)
     set_arm_ik(K2, "L", (d + hl[0], hl[1], hl[2]), (0.3, -1.0, 0.0), (-1.0, 0.0, 0.0), w=1.0, pole=-50.0)
-    elbow_to(K2, "L", (0.05, 1.0, -0.15), 0.95)
+    elbow_to(K2, "L", (0.05, 1.0, -0.50), 0.95)
     K3 = add(K2, hips__y=0.01, chest__rz=4.0, head__rz=4.0)
     # the hands go round the partner's sides on the way in and out (not through them)
     KM = add(S, spine__ry=2.5, chest__ry=2.5, neck__ry=3.0, spine__rx=-5.0, neck__rz=12.0, head__rz=26.0)
-    set_arm_ik(KM, "R", (d + 0.04, 0.46, 1.30), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
+    set_arm_ik(KM, "R", (d + 0.04, 0.46, 1.38), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
     elbow_to(KM, "R", (0.0, -1.0, 0.45), 0.8)          # (2026-10-02: the high elbow over the partner's low elbow)
     # (2026-10-02: the low arm passes under the partner's high arm: its elbow went through the partner's forearm)
     set_arm_ik(KM, "L", (d + 0.03, 0.40, 1.02), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
     elbow_to(KM, "L", (0.0, 1.0, -0.6), 0.8)
     keys = [(0.0, S, {"hold": True}), (0.75, KM), (1.20, K2), (1.65, K3), (2.05, K2), (2.50, KM),
             (3.30, Pose(STAND), {"hold": True})]
-    return [(t, ik_to_fk(k), *rest) for (t, k, *rest) in keys]
+    # (2026-10-02) IK between the arm keys: the wrists go round the partner on straight paths and the elbow poles hold
+    # the high arm over the partner's low arm (in FK the partners' upper arms crossed 3 cm deep on the way in)
+    return [(t, relax_wrists(fill_arm_targets(Pose(k))), *rest) for (t, k, *rest) in keys]
 
 
 def sit_bar_stool_base():

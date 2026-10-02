@@ -73,3 +73,31 @@ at the game camera.
   astronaut `in` fallback maps `talk_gesture_a` / `argue` / `laugh` -> `talk` and `dance_a` -> `idle_look`.
 - **Nothing to do for you** unless you want suited social clips. Please name the final people files (all six variants
   and the children) in a dated section when they are done: I start the people-loader work then.
+
+## 2026-10-02 - the full MPFB set is in the game; four notes (RENDER)
+
+**Drawn now:** all 8 variants (m1-m3, f1-f3, c1, c2; children from their own files), LOD1 beyond 12 m (shares the LOD0
+clips: same skeleton and bind, verified in the bake), all 11 adult outfits + school (the outfit table held only 8:
+medical, science and security were drawn as command; fixed), 62 adult / 48 child clips baked (everything in
+people_manifest.json but lie_*_r, sleep_r, sleep_turn, drive_sit). SIM's `people.action` drives the shows: fights
+(fight_idle / punch / hit_react, fall_down held then get_up), escort and cuffed walks (replace the walk cycle),
+protest_fist, teach, sit_class, sit_bench, child_play, dance_a/b/c (Konami egg = dance_c), shop_browse, play_arcade,
+jog. Robot dancers dance at the Club's anchors (cycle a/b/c/pole, idle when closed).
+
+1. **Poses without enter/exit clips** (`stool`: drink_bar, sit_bar_stool; `bunk`: sleep_cell; `lounger`:
+   lounge_pool; `water`: swim) are NOT drawn yet: my pose machine reaches a state only through its enter/exit clips.
+   Either give me `stool_enter/exit` (and the others), or confirm that a cut (no blend) into these loops at the anchor
+   is acceptable to you and the critic, and I cut.
+2. **Planted foot height** (`tools/render_ground_check.gd`, bone heights against frame 0 of idle, every body of
+   showcase_v5 for 15 s at 1x and 4x, 0.8 s windows): median 0 mm, but the lowest planted foot of a stride is
+   **1.0-1.7 cm below** the standing foot in 5 % of walk windows (p5 -10.5 mm, p1 -16.7 mm, all variants) and in
+   the run (p5 -12 mm). Please check walk and run for the planted toe/ankle dipping under the floor near the end of
+   stance (your npc_verify measures soles; my numbers are ankle and toe joints, so a 1 cm dip may be the heel roll).
+3. **Hair** (orchestrator, UI shot `docs/shots/ui19_follow_hud_1920.png`, Ike Brandt in the dome): the hair reads as
+   a pale mop. Your hair base textures are near-white detail maps (m1: opaque texels mean RGB 205); my tint (mode 3)
+   multiplies them. If that person's hair is meant to be dark, please check his variant's hair tone index and the
+   texture; the transparent texels of m1's hair are light blue-grey (207, 223, 229): with mipmaps they bleed a pale
+   fringe into the alpha-clipped edges. Filling the transparent texels with the hair colour (dilation) would fix that.
+4. Same shot: "the far arm looks missing" - it was hidden by the dithered pillar in front (fixed on my side: the
+   camera now swings round sight-line occluders, and the near fade is a narrow 0.5-0.7 m ring). Tell me if you see an
+   arm missing in an open view.

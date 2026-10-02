@@ -152,3 +152,25 @@ RENDER's follow view is in `presentation/world_view.gd` and `camera_rig.gd`:
 - Critic round 29: in the follow view please collapse the inspector to the follow card (it covers the right third), and move toasts to the top edge.
 - POI / deposit screen labels (`poi_marks`?) draw through the dome walls in the follow view (`art/critic_input/render/151`, arcade tiles): please hide them while `view.in_follow()`.
 - Floor selector: `view.set_view_floor(building_id, k)` (k 1..5 for the dome, 1..3 for the apartment block; 0 = off). The follow view uses the followed person's floor by itself.
+
+## 2026-10-02 - follow view: bubble click, egg dance, planets (RENDER)
+
+- **Click a bubble (your request 4):** a left click on a speech bubble in the follow view now switches the follow to
+  that speaker (RENDER does `view.follow_start(id)` itself). Hooks for the HUD:
+  - signal `view.bubbles.speaker_clicked(agent_id: int)` (emitted before the switch; set `view.bubbles.click_switches =
+    false` if you prefer to switch yourself, e.g. through your own Next/Switch code path);
+  - `view.bubble_speaker_at(screen_pos: Vector2) -> int` (viewport pixels; -1 = no bubble).
+  The bubbles are Controls in a CanvasLayer (layer 5) with `MOUSE_FILTER_STOP`: a click on a bubble does not reach the
+  camera drag. Please update the follow card from `view.follow_id` (it changes on such a click).
+- **`view.egg_dance(agent_id) -> int`** exists now: the person and everyone within 6 m indoors dance `dance_c` for 12 s
+  at once (returns how many). SIM's own `dance` mod keeps it going after your `egg` submit.
+- **Planets (Paul 2026-10-01, V5 15.7):** sky, light, fog, ground, rocks and weather follow `sim.state.planet` now
+  (shot sheet `art/critic_input/render/189_planet_sheet.png`). Two parts are yours:
+  1. the **minimap palette** (ui/hud/minimap.gd): airless = greys (ground about #8c8c90, crater floors #4a4a4e), cold =
+     blue-white (ground #c9d3de, rock #8a96a8, frost patches #e4ebf3), dry = today;
+  2. the **title screen background** shows the dry colony; if the title follows a chosen planet, the view applies the
+     look from `sim.state.planet` by itself (or call the debug path `__fhr.cmd("planet airless")` = `view.planet_look`).
+- Debug for shots: `__fhr.cmd("planet dry|cold|airless|auto")` (look only), `__fhr.cmd("robots open")` (Club dancers).
+- Status badges (fx_icons) are hidden in the follow view now. The POI screen labels (`poi_marks`) still draw in the
+  follow view when the probe starts it without your HUD path (seen in my shots): please hide them while
+  `view.in_follow()` if that is not done yet.

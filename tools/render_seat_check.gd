@@ -26,22 +26,32 @@ const SEGS := [
 	["thigh.R", "shin.R", 0.07], ["shin.R", "foot.R", 0.05], ["foot.R", "toe.R", 0.045],
 ]
 var tol := 0.02
+var fix_mode := false   # "fix": compute the seat placement fixes and write presentation/navgrid/seat_fix.res
+var fixes := {}         # model -> {anchor: metres back}
+const SEAT_FIX_MAX := 0.08
+const FIX_FILE := "res://presentation/navgrid/seat_fix.res"
 var sit_clips: Array = SIT_CLIPS
 var shift := 0.0   # sensitivity test only: every body moved this far forward (m)
 var defs := {}
-var report := {"models": {}, "anchors": 0, "poses": 0, "overlaps": 0, "worst": []}
+var report := {"models": {}, "anchors": 0, "poses": 0, "overlaps": 0, "worst": [], "by_seg": {}}
 
 func _init() -> void:
 	var filt := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("tol_cm="):
 			tol = float(a.substr(7)) / 100.0
+		elif a == "fix":
+			fix_mode = true
 		elif a.begins_with("clips="):
 			sit_clips = Array(a.substr(6).split(","))
 		elif a.begins_with("shift_cm="):
 			shift = float(a.substr(9)) / 100.0
 		else:
 			filt = a
+	if not fix_mode and ResourceLoader.exists(FIX_FILE):
+		var fr = load(FIX_FILE)
+		if fr != null and (fr as Resource).has_meta("fix"):
+			fixes = (fr as Resource).get_meta("fix")
 	var bj = JSON.parse_string(FileAccess.get_file_as_string("res://content/buildings.json"))
 	defs = bj if bj is Dictionary else {}
 	var libs := {}
@@ -78,8 +88,15 @@ func _init() -> void:
 	(report["worst"] as Array).sort_custom(func(x, y): return float(x["depth"]) > float(y["depth"]))
 	report["worst"] = (report["worst"] as Array).slice(0, 60)
 	report["pass"] = int(report["overlaps"]) == 0
+	if fix_mode:
+		var r := Resource.new()
+		r.set_meta("fix", fixes)
+		ResourceSaver.save(r, FIX_FILE, ResourceSaver.FLAG_COMPRESS)
+		print("SEAT FIX: %s" % JSON.stringify(fixes))
+	report["fixes"] = fixes
 	var fo := FileAccess.open("res://art/npc/seat_check.json", FileAccess.WRITE)
 	fo.store_string(JSON.stringify(report, " "))
+	print("  overlaps by limb (deepest per anchor): ", JSON.stringify(report["by_seg"]))
 	print("SEAT CHECK: %d models, %d anchors, %d poses, %d overlaps (> %.0f mm) | %s | %d ms" % [(report["models"] as Dictionary).size(), report["anchors"], report["poses"], report["overlaps"], tol * 1000.0, "PASS" if report["pass"] else "FAIL", report["ms"]])
 	for w in (report["worst"] as Array).slice(0, 25):
 		print("  %s %s %s %s: %s %.0f mm into %s at %s" % [w["model"], w["anchor"], w["variant"], w["clip"], w["seg"], float(w["depth"]) * 1000.0, w["part"], w["at"]])
@@ -175,25 +192,32 @@ func _check_model(name: String, tpl: Dictionary, use: Array, libs: Dictionary) -
 		var vlist: Array = ["p_c1"] if child_beds.has(an) else ["p_m3", "p_f2"]
 		report["anchors"] = int(report["anchors"]) + 1
 		mrep["anchors"] = int(mrep["anchors"]) + 1
-		var worst: Dictionary = {}
-		for v in vlist:
-			if not libs.has(v):
-				continue
-			var lib: Dictionary = libs[v]
-			for clip in clips:
-				if not (lib["clips"] as Dictionary).has(clip):
-					continue
-				var len_s: float = float(lib["clips"][clip]["len"])
-				for k in 4:
-					var t: float = len_s * (0.08 + 0.28 * k)
-					report["poses"] = int(report["poses"]) + 1
-					var r: Dictionary = _pose_depth(lib, clip, t, p, yaw, kind, tg)
-					if not r.is_empty() and (worst.is_empty() or float(r["depth"]) > float(worst["depth"])):
-						r["variant"] = v.substr(2)
-						r["clip"] = "%s@%.1f" % [clip, t]
-						worst = r
+		var back := Vector3(-cos(yaw), 0.0, sin(yaw))
+		var side := Vector3(sin(yaw), 0.0, cos(yaw))
+		# The game's seat placement fix (fx_npc: presentation/navgrid/seat_fix.res: [back, side] m), as drawn.
+		var hf = (fixes.get(name, {}) as Dictionary).get(an, [0.0, 0.0]) if not fix_mode else [0.0, 0.0]
+		if not (hf is Array):
+			hf = [float(hf), 0.0]
+		var worst: Dictionary = _worst(libs, vlist, clips, p + back * float(hf[0]) + side * float(hf[1]), yaw, kind, tg)
+		# fix mode: the smallest move (back 0-8 cm, sideways 0-6 cm, 2 cm steps) that clears a seated body
+		if fix_mode and kind == "sit" and not worst.is_empty() and float(worst["depth"]) > tol:
+			var cands: Array = []
+			for bi in 5:
+				for si in [0, 1, -1, 2, -2, 3, -3]:
+					if bi == 0 and si == 0:
+						continue
+					cands.append([bi * 0.02, si * 0.02])
+			cands.sort_custom(func(x, y): return Vector2(x[0], x[1]).length() < Vector2(y[0], y[1]).length())
+			for c in cands:
+				var w2: Dictionary = _worst(libs, vlist, clips, p + back * float(c[0]) + side * float(c[1]), yaw, kind, tg)
+				if w2.is_empty() or float(w2["depth"]) <= tol:
+					(fixes.get_or_add(name, {}) as Dictionary)[an] = [snappedf(float(c[0]), 0.01), snappedf(float(c[1]), 0.01)]
+					worst = w2
+					break
 		if not worst.is_empty() and float(worst["depth"]) > tol:
 			report["overlaps"] = int(report["overlaps"]) + 1
+			var sgk: String = String(worst["seg"]).get_slice(".", 0)
+			report["by_seg"][sgk] = int(report["by_seg"].get(sgk, 0)) + 1
 			mrep["overlaps"] = int(mrep["overlaps"]) + 1
 			worst["model"] = name
 			worst["anchor"] = an
@@ -201,6 +225,26 @@ func _check_model(name: String, tpl: Dictionary, use: Array, libs: Dictionary) -
 		if not worst.is_empty():
 			mrep["worst_mm"] = maxf(float(mrep["worst_mm"]), snappedf(float(worst["depth"]) * 1000.0, 0.1))
 	report["models"][name] = mrep
+
+func _worst(libs: Dictionary, vlist: Array, clips: Array, p: Vector3, yaw: float, kind: String, tg: Dictionary) -> Dictionary:
+	var worst: Dictionary = {}
+	for v in vlist:
+		if not libs.has(v):
+			continue
+		var lib: Dictionary = libs[v]
+		for clip in clips:
+			if not (lib["clips"] as Dictionary).has(clip):
+				continue
+			var len_s: float = float(lib["clips"][clip]["len"])
+			for k in 4:
+				var t: float = len_s * (0.08 + 0.28 * k)
+				report["poses"] = int(report["poses"]) + 1
+				var r: Dictionary = _pose_depth(lib, clip, t, p, yaw, kind, tg)
+				if not r.is_empty() and (worst.is_empty() or float(r["depth"]) > float(worst["depth"])):
+					r["variant"] = v.substr(2)
+					r["clip"] = "%s@%.1f" % [clip, t]
+					worst = r
+	return worst
 
 ## The deepest limb penetration of the posed body into furniture it does not use: {depth, seg, part, at} or {}.
 func _pose_depth(lib: Dictionary, clip: String, t: float, p: Vector3, yaw: float, kind: String, tg: Dictionary) -> Dictionary:
@@ -250,7 +294,8 @@ func _pose_depth(lib: Dictionary, clip: String, t: float, p: Vector3, yaw: float
 							best = {"depth": depth, "seg": "%s-%s" % [sg[0], sg[1]], "part": tri[3], "at": "%.2f,%.2f,%.2f" % [cp.x, cp.y, cp.z]}
 	return best
 
-## Is a furniture point part of what the body uses? sit: the chair (within 0.32 m of the hips in plan, below
+## Is a furniture point part of what the body uses? sit: the chair (within 0.3 m of the hips sideways, its seat front
+## edge up to 0.32 m ahead and its back 0.42 m behind, below
 ## the hips + 0.65 m: seat, legs, backrest). lie: the bed (from 0.3 m past the feet to 0.3 m past the head,
 ## 0.5 m to each side, up to the hips + 0.35 m: mattress, pillow, blanket).
 static func _own(cp: Vector3, kind: String, hips: Vector3, fwd: Vector3, feet: Vector3, head: Vector3) -> bool:
@@ -259,6 +304,10 @@ static func _own(cp: Vector3, kind: String, hips: Vector3, fwd: Vector3, feet: V
 		# (behind the hips: the backrest; in front of the hips only the seat front edge, 0.18 m)
 		var along: float = d.dot(Vector2(fwd.x, fwd.z))
 		var side: float = absf(d.dot(Vector2(-fwd.z, fwd.x)))
+		# (and the seat's front edge, 0.2-0.32 m ahead of the hips, low: no higher than the hips + 0.08 m;
+		# a desk or table top is at least 0.4 m ahead and 0.25 m higher)
+		if side < 0.3 and along >= 0.2 and along < 0.32 and cp.y < hips.y + 0.08:
+			return true
 		return cp.y < hips.y + 0.65 and side < 0.3 and along < 0.2 and along > -0.42
 	var ax := Vector2(head.x - feet.x, head.z - feet.z)
 	var l: float = ax.length()

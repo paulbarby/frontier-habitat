@@ -32,6 +32,8 @@ const Particles = preload("res://presentation/fx_particles.gd")
 const Ghost = preload("res://presentation/fx_ghost.gd")
 const Overlay = preload("res://presentation/fx_overlay.gd")
 const Icons = preload("res://presentation/fx_icons.gd")
+const Robots = preload("res://presentation/fx_robots.gd")
+var robots   # fx_robots (V5 §8 Club dancers)
 const Ship = preload("res://presentation/fx_ship.gd")
 const Npc = preload("res://presentation/fx_npc.gd")
 const Doors = preload("res://presentation/fx_doors.gd")
@@ -188,6 +190,11 @@ func setup(s) -> void:
 	icons.name = "Icons"
 	add_child(icons)
 	icons.setup(self)
+	# V5 §8: the Club's robot dancers (ART-NPC robot_dancer.glb at ART-B's Anchor_Dancer_club_<k>)
+	robots = Robots.new()
+	robots.name = "Robots"
+	add_child(robots)
+	robots.setup(self)
 	ship = Ship.new()
 	ship.name = "Ship"
 	add_child(ship)
@@ -324,6 +331,7 @@ func _dome_update(b: Dictionary, meta: Dictionary, delta: float) -> void:
 		k = int(dome_view_floor[int(b["id"])])
 	elif k == 0 and float(meta["open"]) > 0.5:
 		k = 5
+	meta["dome_k"] = k   # (fx_robots: the dancers hide with a cut-away floor)
 	var sig := "%d|%d" % [int(s * 20.0), k]
 	if sig != String(meta.get("dome_sig", "")):
 		meta["dome_sig"] = sig
@@ -431,7 +439,7 @@ func follow_start(id: int) -> bool:
 	follow_id = id
 	bubbles.follow_id = id
 	r.shoulder_start(func(): return _follow_body(id))
-	Models.near_fade(0.8, 1.4)
+	Models.near_fade(0.5, 0.7)   # (a narrow ring: the 0.8-1.4 m band drew a grainy half-transparent pillar over the person, 2026-10-02)
 	r.collide_fn = _follow_collide
 	if "slide_fn" in r:
 		r.slide_fn = follow_slide
@@ -440,6 +448,11 @@ func follow_start(id: int) -> bool:
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
+
+## The speaker of the speech bubble under a screen point in the follow view, or -1 (UI-to-RENDER
+## 2026-09-29, request 4). A click on a bubble already switches the follow (bubbles.speaker_clicked).
+func bubble_speaker_at(screen_pos: Vector2) -> int:
+	return bubbles.speaker_at(screen_pos) if bubbles != null else -1
 
 ## V5 4.5 (UI-to-RENDER 2026-09-29): the Konami dance for the person and their friends nearby. Returns how
 ## many dance (the UI also submits the egg to SIM, whose "dance" mod keeps it going).
@@ -979,6 +992,17 @@ func _roof_inside(tpl: Dictionary) -> void:
 				var dm: BaseMaterial3D = (mat as BaseMaterial3D).duplicate()
 				dm.cull_mode = BaseMaterial3D.CULL_DISABLED
 				(m as ArrayMesh).surface_set_material(si, dm)
+				mat = dm
+			# (the corridor tube's glazing: kept per template, made near-opaque in the follow view)
+			if mat is BaseMaterial3D and String(mat.resource_name) == "Glass":
+				if not (mat as BaseMaterial3D).has_meta("glass_c0"):
+					var gm: BaseMaterial3D = (mat as BaseMaterial3D).duplicate()
+					gm.set_meta("glass_c0", gm.albedo_color)
+					gm.set_meta("glass_r0", gm.roughness)
+					gm.set_meta("glass_m0", gm.metallic)
+					(m as ArrayMesh).surface_set_material(si, gm)
+					mat = gm
+				(tpl.get_or_add("roof_glass", []) as Array).append(mat)
 
 const ROOF_CELL := 0.4
 ## The ceiling (world y) over p in a room or corridor: the lowest roof surface above 1.6 m (model space)
@@ -1114,6 +1138,7 @@ func follow_los(a3: Vector3, b3: Vector3) -> bool:
 func _follow_sync() -> void:
 	if follow_id < 0:
 		_follow_indoor(Vector3.INF)
+		_tube_glass(false)
 		if not _follow_open.is_empty():
 			_follow_open = {}
 		return
@@ -1140,6 +1165,35 @@ func _follow_sync() -> void:
 		if q.distance_to(Vector2(p.x, p.z)) < 5.0:
 			_follow_open[int(id)] = true
 	_follow_indoor(cam)
+	_tube_glass(true)
+
+## Paul 2026-10-02 (round 2, shot 193): in the over-the-shoulder view a corridor reads as open (its 35 %
+## glazing shows the sky between the ribs). There the tube glazing of corridors is near-opaque tinted glass
+## (an enclosed tube); in the other views it is as before.
+var _tube_glass_on := false
+func _tube_glass(on: bool) -> void:
+	if on == _tube_glass_on:
+		return
+	_tube_glass_on = on
+	var done := {}
+	for id in bmeta:
+		var meta: Dictionary = bmeta[id]
+		if String(meta.get("def", "")) != "corridor":
+			continue
+		for gm in ((meta.get("tpl", {}) as Dictionary).get("roof_glass", []) as Array):
+			if done.has(gm):
+				continue
+			done[gm] = true
+			var bm: BaseMaterial3D = gm
+			var c0: Color = bm.get_meta("glass_c0", bm.albedo_color)
+			if on:
+				bm.albedo_color = Color(0.40, 0.52, 0.60, 0.86)
+				bm.roughness = 0.12
+				bm.metallic = 0.35
+			else:
+				bm.albedo_color = c0
+				bm.roughness = float(bm.get_meta("glass_r0", bm.roughness))
+				bm.metallic = float(bm.get_meta("glass_m0", bm.metallic))
 
 var _indoor := 0.0
 var _fill: OmniLight3D
@@ -1490,6 +1544,8 @@ func sync(delta: float) -> void:
 	if not _skip.has("explore"): explore.sync(delta)
 	_follow_sync()
 	bubbles.sync(delta)
+	if robots != null and not _skip.has("robots"):
+		robots.sync(delta)
 	photos.sync(delta)
 	_fly_step(delta)
 	_sync_selection(delta)
@@ -1531,7 +1587,7 @@ func sync(delta: float) -> void:
 		(rg as MeshInstance3D).visible = labels_visible and not _photo_mode() and (float(rg.get_meta("known", 1.0)) > 0.5 or ov_res)
 	for id in _labels:
 		(_labels[id] as Label3D).visible = show_words
-	icons.visible = labels_visible and not _photo_mode()
+	icons.visible = labels_visible and not _photo_mode() and follow_id < 0   # (none in the follow view: the badges cluttered the view inside, 2026-10-02)
 	_shake = move_toward(_shake, 0.0, delta * 2.0)
 	# Name plates and door signs (0.3 m) cannot be read from far: not drawn beyond 60 m.
 	inst.set_far_hidden(["NameSign", "Sign"], camera_distance > 60.0)
@@ -3135,6 +3191,7 @@ func stats() -> Dictionary:
 		"traffic": traffic.stats if traffic != null else {},
 		"interior": interior.stats if interior != null else {},
 		"hazards": hazards.stats if hazards != null else {},
+		"robots": robots.stats if robots != null else {},
 		"lod": terrain.lod_counts if terrain != null else [],
 	}
 
@@ -3486,6 +3543,11 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"robots":
+			# robots open|auto: the Club's robot dancers dance whatever its hours (evidence shots).
+			if robots != null:
+				robots.force_open = w.size() > 1 and w[1] == "open"
+			return JSON.stringify(robots.stats if robots != null else {})
 		"planet":
 			# planet dry|cold|airless|auto: the planet LOOK only (sky, light, ground, rocks, weather), for the shot
 			# sheets; the simulation keeps its own planet. auto = the save's planet.

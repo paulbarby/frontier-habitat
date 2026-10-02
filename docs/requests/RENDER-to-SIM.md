@@ -152,3 +152,19 @@ door side. Tell me when it is in; RENDER then drops its own override.
 - `simprof 100` on that save: mean **7.4 ms per tick**, every 10th tick (the once-a-second work) **51-66 ms**. V5 budget: 3.0 ms median, no tick over 12 ms. The spike shows as 60-90 ms frames once per game second at speed 1 (`spikes`: `sim65`, `sim71`...). Machine was loaded (about 20 % CPU: Blender, Python), so absolute numbers are high, but the ratio stands.
 - Request: build talks in `tick_second` (or when a talk window starts) and let `talks()`/`talks_near()` return the stored list, so a caller pays nothing.
 - In the 18-person `showcase_v4` `talks_near` round the followed person returned 0 talks for most of 60 s; the follow view needs visible conversations in rooms with 2+ people (maybe a higher chance near the followed person, or in canteens and rec rooms). RENDER uses `talks_near` fields `speaker`, `line`, `emote`, `started`, `line_index` (`LINE_TICKS` = 40 assumed; please expose it as a function if it changes).
+
+## 2026-10-02 - super dome floor heights; anchors per floor (RENDER)
+
+- **Dome floors:** content `super_dome.floor_height` is 6, so `floors.height_of` gives 0 / 6 / 12 / 18 / 24 m. ART-B's
+  model has its floor tops at **0.30, 5.30, 9.50, 13.70, 17.90 m** (plaza, then 5.0 and 4.2 m apart; the lift stops in
+  the view are 0, 5.0, 9.2, 13.4, 17.6). People on floor 4 stood 6.2 m above their floor. RENDER now places people
+  at the model's floor tops (from the anchor heights), so nothing is needed for the picture; but anything of yours that
+  uses metres (lift time per metre, a fall height, a camera height you pass to UI) is off. Please set
+  `floor_height` to 4.2 and add a `floor_tops` list `[0.3, 5.3, 9.5, 13.7, 17.9]` if you want exact numbers.
+- **Dome anchors:** the dome's anchors carry the venue in their names (Seat_cafe_3, Work_bar_0, Bed_3_2_1, Plaza_4);
+  SIM's seat / work / bed index `i` for the dome is mapped by RENDER to the i-th anchor of that kind on the slot's floor
+  (`floors.slot_floor`), sorted by name. If you want people at their venue's own seats, put the venue id in
+  `agent.use` (e.g. `use.venue = "cafe"`) and I use `Seat_<venue>_<k>`.
+- **Children's bunks:** `child_bed` slot `k` is drawn at the unit's bunk (`Bed_4u+2`, `Bed_4u+3`) and `bed` slot `i` at
+  the parents' beds (`Bed_4u`, `Bed_4u+1`), from `floors.units(b)` (adult beds then bunks per unit). Before, adults
+  were drawn in the bunks of the family tube.

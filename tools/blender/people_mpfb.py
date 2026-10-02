@@ -83,7 +83,8 @@ VARIANTS = {
                eye_mat="eyes/materials/green.mhmat", lid_rest=10.0),
     "f2": dict(sex="f", height=1.62, macro=dict(gender=0.0, age=0.60, muscle=0.55, weight=0.60, proportions=0.50,
                                                 race=(0.75, 0.05, 0.20)),
-               skin="skins/middleage_african_female", hair="hair/afro01", brows="eyebrows/eyebrow001",
+               skin="skins/middleage_african_female", hair="hair/elvs_french_braid_variation", brows="eyebrows/eyebrow001",
+               # (2026-10-02: afro01's cards rendered as a grey shattered helmet at 1.5 m; a French braid instead)
                eye_mat="eyes/materials/brown.mhmat"),
     "f3": dict(sex="f", height=1.74, macro=dict(gender=0.0, age=0.70, muscle=0.40, weight=0.50, proportions=0.55,
                                                 race=(0.05, 0.75, 0.20)),
@@ -143,7 +144,8 @@ VARIANT_OUTFITS = {
                          ("clothes/shoes04", "own")]},
     "m3": {"casual_b": [("clothes/male_casualsuit05", "own"), ("clothes/shoes02", "own")]},
     "f2": {"casual_b": [("clothes/toigo_halter_dress_knee_length", "tint:ClothTint"), ("clothes/toigo_ballet_flats", "own")]},
-    "f3": {"casual_a": [("clothes/toigo_turtleneck_halter_top", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
+    # (2026-10-02: the halter top is cropped: skin at the waist, CRITIC r40 #2; f3 wears the knit and wool trousers)
+    "f3": {"casual_a": [("clothes/toigo_fisherman_sweater", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
                          ("clothes/shoes05", "own")]},
 }
 ADULT_OUTFITS = ["uniform", "casual_a", "casual_b", "casual_c", "swimwear"]
@@ -902,6 +904,13 @@ def build_variant(m, v, outfits, stop=None):
             nk += remove_covered(body, [ob for ob, _, m_, _ in gs if m_ != "shell"])
         else:
             nk = remove_covered(body, [ob for ob, _, _, _ in gs])
+        # (2026-10-02, CRITIC r40 #2 and Paul's sleep shot: the tees ended above the waistband, skin showed at the
+        # waist): a top over trousers is lengthened 5 cm at its hem, outside the body and the trousers
+        lowers = [o2 for o2, f2, m2, _ in gs if m2 != "shell" and garment_layer(f2) == 2]
+        if lowers:
+            for ob, f, m_, _ in gs:
+                if m_ != "shell" and garment_layer(f) == 3 and "dress" not in f.lower():
+                    extend_hem(ob, [body] + lowers, band=0.09, drop=0.05, gap=0.005)
         # between garments: an inner layer loses what an outer layer covers (tops over trousers over shoes)
         for ob, f, _, _ in gs:
             outer = [o2 for o2, f2, _, _ in gs if garment_layer(f2) > garment_layer(f)]
@@ -1095,7 +1104,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     import numpy as np
     import people_anims as PA
     if not PA_DEFAULTS:
-        PA_DEFAULTS.update(LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0,
+        PA_DEFAULTS.update(SOLE_DZ=0.0, COLLAPSE_ADJ=0.0, LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0,
                            BED_ADJ=0.0, BED_BACK=0.0, BED_ROLL=0.0)
     # the torso vertices (strongest weight on hips / spine / chest) of the first object: the bed contact
     # (2026-10-02: the thighs and the other outfits too: m2 / m3 lay 1-2.5 cm in the mattress at the bottom hip)
@@ -1113,7 +1122,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     for _ in range(4):
         # the ankle height: the lowest sole of all outfits (shoes and boots) on the floor when standing
         co = pose_eval(rig, solver, PA.retarget(clips["idle"](0), s, "idle"), feet_obs or obs)
-        PA.FOOT_DZ += 0.002 - co[:, 2].min()
+        PA.SOLE_DZ += 0.002 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["dead"](0), s, "dead"), obs)
         PA.LIE_LIFT += 0.004 - co[:, 2].min()
         lows = []
@@ -1163,6 +1172,14 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                 if lo_ < 9.0:
                     # the band is -1.5..+3.5 cm: centre the roll's lowest points in it
                     PA.BED_ROLL += (A_BED_Z + 0.010) - 0.5 * (lo_ + hi_)
+        low_c = 9.0
+        for f_ in range(24, 69, 3):
+            co = pose_eval(rig, solver, PA.retarget(clips["collapse"](f_), s, "collapse"), obs)
+            P_ = clips["collapse"](f_)
+            if -0.75 < P_.g("hips.z") < -0.30:
+                low_c = min(low_c, float(co[:, 2].min()))
+        if low_c < 0.004:
+            PA.COLLAPSE_ADJ += 0.004 - low_c
         co = pose_eval(rig, solver, PA.retarget(clips["repair_kneel"](0), s, "repair_kneel"), obs)
         PA.KNEEL_ADJ += 0.004 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["sit_idle"](0), s, "sit_idle"), obs)
@@ -1179,9 +1196,9 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                     tuple(round(x, 3) for x in rig.pose.bones["hips"].location)))
             PA.STOOL_ADJ += 0.762 - co[m, 2].min()
     N.reset_pose(rig)
-    print("  contacts: BED_BACK %.3f  BED_ROLL %.3f" % (PA.BED_BACK, PA.BED_ROLL))
-    print("  contacts: LIE_LIFT %.3f  BED_ADJ %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f" % (
-        PA.LIE_LIFT, PA.BED_ADJ, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
+    print("  contacts: BED_BACK %.3f  BED_ROLL %.3f  COLLAPSE_ADJ %.3f" % (PA.BED_BACK, PA.BED_ROLL, PA.COLLAPSE_ADJ))
+    print("  contacts: LIE_LIFT %.3f  BED_ADJ %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f  SOLE_DZ %.3f" % (
+        PA.LIE_LIFT, PA.BED_ADJ, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ, PA.SOLE_DZ))
 
 
 def soften_hair(ob, J, skin=None):

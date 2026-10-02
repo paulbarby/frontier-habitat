@@ -530,10 +530,13 @@ func _think(a: Dictionary) -> void:
 	# (not while confined, jailed, in class or on strike; never for children; officers patrol).
 	if sim.people.duty_think(a):
 		return
-	if not a.has("v5_nowork") and a["kind"] != "child" and a["role"] != "security" and _try_work(a):
+	if not a.has("v5_nowork") and a["kind"] != "child" and a["role"] != "security" and a["role"] != "hr" and _try_work(a):
 		return
 	# 6. Recreation (V5: not while confined or jailed), then idle somewhere safe.
 	if not a.has("v5_norec") and _wants_rec(a) and _try_rec(a):
+		return
+	# V5 section 16: nothing to do: talk to another idle person in the room.
+	if sim.party.idle_seek(a):
 		return
 	_idle(a)
 

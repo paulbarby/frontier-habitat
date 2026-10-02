@@ -122,6 +122,9 @@ var dbg_target := Vector3.ZERO # measurement: the soft wall rule's target (befor
 var slide_fn: Callable         # (shoulder, last eye, sprung eye) -> eye slid along the walls (world_view.follow_slide)
 var _sh_slide_prev := Vector3.ZERO
 var _sh_slide_ok := false
+var _sh_fin := Vector3.ZERO     # eased eye offset from the pivot after the indoor slide
+var _sh_finv := Vector3.ZERO
+const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
 var occ_fn: Callable           # (eye) -> how far from the chest the eye may stand (world_view.follow_occluder)
 var _sh_occ := 1.0             # eased occluder pull (fraction of the eye's distance from the pivot)
@@ -476,6 +479,19 @@ func _shoulder_process(delta: float) -> bool:
 		else:
 			_sh_slide_ok = false
 			eye = collide_fn.call(shoulder_pt, eye, SH_HARD, true)
+	# The slide turns a corner of the walls in one frame (a 0.2 m kink at a room-corridor corner), and the
+	# rule changes between indoors and outdoors at a door: the eye's offset from the pivot is eased once more
+	# (fast, SH_W_FINAL; one spring for every case, so a change of rule is no jump; a steady walk keeps no lag).
+	var rel_t: Vector3 = eye - pivot
+	if _sh_new or dt <= 0.0:
+		_sh_fin = rel_t
+		_sh_finv = Vector3.ZERO
+	else:
+		for ax in 3:
+			var rf: Vector2 = _crit(_sh_fin[ax], _sh_finv[ax], rel_t[ax], SH_W_FINAL, dt)
+			_sh_fin[ax] = rf.x
+			_sh_finv[ax] = rf.y
+	eye = pivot + _sh_fin
 	_sh_f = clampf(1.0 - (eye - free).length() / maxf(shoulder_pt.distance_to(free), 0.01), 0.0, 1.0)
 	# Under the ceiling (Paul 2026-10-01, roofs on): the ceiling is eased (it changes in steps between a room
 	# and a corridor) and applied as a soft limit (no hard clamp on a raw value, 2026-10-02); never below the

@@ -51,9 +51,14 @@ func rag_issues() -> Array:
 ## window draws (ui/mock_rag.gd header). Parts SIM does not give yet are made from what it gives: the
 ## kicker from the story kind, the caption from the actors, the ad title from its first capital words.
 const KICKER := {"couple": "LOVE", "date": "LOVE", "breakup": "HEARTBREAK", "affair": "SCANDAL", "fight": "PUNCH-UP", "arrest": "NICKED",
-	"promotion": "TOP DOG", "protest": "UPROAR", "wedding": "WEDDING", "new_building": "BUILT!", "death": "TRAGEDY", "ship": "ARRIVALS", "quiet": "EXCLUSIVE"}
+	"promotion": "TOP DOG", "protest": "UPROAR", "wedding": "WEDDING", "new_building": "BUILT!", "death": "TRAGEDY", "ship": "ARRIVALS", "quiet": "EXCLUSIVE",
+	# Parties and HR (V5 sections 16, 17): the log codes SIM prints as story kinds.
+	"party": "PARTY!", "party_start": "PARTY!", "party_drama": "OVERHEARD", "party_drama_big": "SCENE AT THE PARTY", "birthday": "BIRTHDAY", "awkward": "AWKWARD",
+	"hr_complaint": "COMPLAINT", "hr_survey": "STAFF SURVEY", "hr_transfer_approved": "GOING HOME"}
 const TAG := {"couple": "LOVE", "date": "LOVE", "breakup": "LOVE", "affair": "SCANDAL", "fight": "FEUD", "arrest": "CRIME", "promotion": "WORK",
-	"protest": "UNREST", "wedding": "LOVE", "new_building": "BUILDING", "death": "NEWS", "ship": "ARRIVALS", "quiet": "NEWS"}
+	"protest": "UNREST", "wedding": "LOVE", "new_building": "BUILDING", "death": "NEWS", "ship": "ARRIVALS", "quiet": "NEWS",
+	"party": "PARTY", "party_start": "PARTY", "party_drama": "PARTY", "party_drama_big": "DRAMA", "birthday": "PARTY", "awkward": "LOVE",
+	"hr_complaint": "HR", "hr_survey": "HR", "hr_transfer_approved": "HR"}
 
 func norm_rag(iss: Dictionary) -> Dictionary:
 	if iss.has("no"):
@@ -183,6 +188,10 @@ func requests() -> Array:
 	var s = _sim()
 	var r = s.get("relations")
 	return r.requests() if r != null and r is Object and (r as Object).has_method("requests") else []
+
+## The requests that wait for an answer and show on the urgent line: all but a party offer (an offer lapses by itself).
+func urgent_requests() -> Array:
+	return requests().filter(func(q): return String(q.get("kind", "")) != "party_offer")
 
 ## A person's stored record: {att, sat, low, mods [{kind, text, comp, sat, att, until}], hist [{tick, text}],
 ## review, skill_bonus, demoted_until, unit} (SIM sim.people.rec_of; {} before the first update).

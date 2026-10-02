@@ -554,12 +554,20 @@ def table_clutter(p, hx, hy, zt, round_r=None):
     ROLE["n"] += 1
     k = ROLE["n"]
     rng = random.Random(k * 7 + len(role))
+    # RENDER seat check 2026-10-02: hands at sit_eat / sit_type reach the table in front of each seat, so things stand
+    # only at the ends of the long axis (round tables: none; low coffee tables: off the centre)
     if round_r:
-        spots = [(0.45 * round_r * cos(radians(a)), 0.45 * round_r * sin(radians(a))) for a in (40.0, 220.0, 130.0)]
-        small = round_r < 0.33
-    else:
+        return
+    low = zt < F + 0.5
+    L, along_x = (hx, True) if hx >= hy else (hy, False)
+    if low:
         spots = [(0.50 * hx, 0.40 * hy), (-0.50 * hx, -0.40 * hy), (-0.50 * hx, 0.40 * hy)]
-        small = min(hx, hy) < 0.25
+    else:
+        if L < 0.50:
+            return
+        e = L - 0.16
+        spots = [(e, 0.0), (-e, 0.0)] if along_x else [(0.0, e), (0.0, -e)]
+    small = min(hx, hy) < 0.25 or not low
     if role in FOOD_ROLES:
         kinds = [_tray, _bottle, (_toy if role == "housing" else mug)]
     elif role in DESK_ROLES:
@@ -567,7 +575,7 @@ def table_clutter(p, hx, hy, zt, round_r=None):
     else:
         kinds = [_toolbox, _wrench, mug]
     rng.shuffle(kinds)
-    n = 1 if small else (2 if rng.random() < 0.6 else 3)
+    n = min(len(spots), 1 if (small and low) else (2 if (rng.random() < 0.6 or not low) else 3))
     for j in range(n):
         x, y = spots[j]
         fn = kinds[j]

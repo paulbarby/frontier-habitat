@@ -179,7 +179,8 @@ const POSE := {"couple": "hug", "move_in": "hug", "date": "kiss_brief", "breakup
 	"strike": "protest_fist", "riot": "punch", "wedding": "hug", "death": "sulk", "ship": "wave", "new_building": "cheer", "quiet": "talk_idle",
 	"feud": "argue", "defection": "wave", "family": "hug", "birthday": "cheer", "arcade": "play_arcade", "barby": "wave", "party": "dance_a",
 	"graduate": "cheer", "dance": "dance_c", "best_dressed": "wave", "commander_scandal": "sulk", "crush": "flirt_lean", "poll": "talk_idle",
-	"friends": "laugh", "research": "cheer", "award": "cheer", "hazard": "sulk", "goal": "cheer"}
+	"friends": "laugh", "research": "cheer", "award": "cheer", "hazard": "sulk", "goal": "cheer",
+	"party_birthday": "cheer", "party_drama": "laugh", "party_scene": "argue", "awkward": "sulk", "hr": "talk_idle", "hr_transfer": "wave"}
 
 func _names(actors: Array) -> Array:
 	var out: Array = []
@@ -266,6 +267,10 @@ func _gossip(number: int) -> Array:
 					out.append("A %s and a %s were seen leaving the same room. Separately. Very separately." % [ra, rb])
 				"fling":
 					out.append("A %s has a new favourite visitor. The ship leaves soon." % ra)
+	# V5 section 17: the HR officer is loved in public and gossiped about in the gossip column.
+	if sim.get("hr") != null and sim.hr.active() and _h(number, 17) < 0.7:
+		var hg: Array = sim.content["hr"]["gossip"]
+		out.append(String(hg[int(_h(number, 18) * hg.size()) % hg.size()]).replace("{officer}", sim.hr.officer_name(sim.state["agents"][int(sim.hr.officers(-1)[0])])).replace("{dept}", "department").replace("{other}", "someone"))
 	var cols: Array = tab()["columns"]["gossip"]
 	var want: int = 3 + int(_h(number, 5) * 3.0) % 3
 	var k := 0

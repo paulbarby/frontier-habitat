@@ -5,6 +5,80 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-02 v5 run 3 round 2 (coordinator) — ceilings, surfaces, density, industry heroes; the HR office
+
+**Ceilings (every room type; `tools/blender/interior_ceiling.py`, hooked in `rooms_build.build_one`):**
+- Object `RoofCeil` (RENDER's `group_of` -> `Roof`: hidden in the cutaway, drawn with the roof on): a panelled liner
+  5 cm under any roof shape (polar grid, ray casts against the built Roof part; no liner under glass or lit faces),
+  radial ribs (four with light strips), a ring rib, a cove light strip at the liner edge, a crown ring light, smoke
+  sensors and vents. Low decks (2.32 m) get a flush liner with painted seams and a flush light ring.
+- Role pieces: crane rail + hazard bridge + trolley + hook ("MAX LOAD: 1 INTERN") over industry / logistics (sized to
+  the head room, placed where the machine leaves room), violet grow-light bars (farm), mirror ball + pendants +
+  "LAST ORDERS: NEVER" (cantina), pot rack + pendants (kitchen), equipment ring rail with hanging chart monitors (labs),
+  surgical lights (medical), round ducts (life support), copper pipes (distillery), banners (retail), a planet mobile
+  "THE CLOUD" (academy), camera domes (security), cage lamps (jail), pendants with shades (housing, lounge, HR), and a
+  hanging double-sided role sign.
+- Rule for RENDER's camera ceiling grid: every hanging face at 2.45 m or higher; the liner is 5 cm under the roof.
+- `Upper_<seg>_Band` / `Upper_<seg>_Sign` (`WallsUp`, masked per segment at a doorway): a panelled skin over the
+  upper wall from 1.42 m to the ceiling (dome rooms showed the bare dome ring and the shell's outside paint band; podium
+  rooms the back of the upper skin) with an accent stripe, and 2-5 big role signs at eye level (1.5-2.3 m), e.g.
+  "SHOES OFF / ROBOTS TOO", "ASK A DOCTOR / NOT A CHATBOT", "WORK SMARTER / NOT HUMANER".
+- `interior_render.py` hides `RoofCeil*` with the roof in the cutaway renders (as the game does).
+
+**Surfaces and density:** work mats under every Work anchor (hazard edge in industry, accent elsewhere), a lit dance
+floor in the cantina when the centre is free, "WAIT HERE" spots in medical rooms (`interior_surfaces.py`); table
+clutter on every table by role (food trays, bottles, mugs; tablets, notebooks; toolboxes, wrenches; toys at home;
+`interior_props.table_clutter`, 60-90 triangles a table).
+
+**Industry identity:** one signature element per industry type on its machine (`interior_heroes.py`): mine sheave
+wheel, refinery flue stack, polymer extruder spool, workshop giant wrench "EMPLOYEE OF THE MONTH", glassworks chimney
+and glass sculpture, electronics clean-room hood, fabricator giant rubber duck half printed, steel exhaust hood, titanium
+cooling tower, ceramics brick chimney, carbon fibre oven, battery "BIG CELL ENERGY" mascot, parts robot arm, magnet
+giant horseshoe, superconductor maglev pod, metamaterial violet tesseract; and a floor colour per type inside the
+machine's hazard line (`interior_fam_ind.ZONE`).
+
+**Unit partitions 2.1 m:** code ready behind `FH_PARTTOP=1` (objects `PartTop` / `F<k>_PartTop`), NOT built: it needs
+RENDER's yes (a group hidden in the cutaway and when shut) and a follow-camera rule that keeps the eye in the person's
+unit. Asked in ART-HAB-to-RENDER.md 17:50; RENDER's 19:05 entry (the seat check) does not answer it.
+
+**HR office (V5 section 17.1), `hr_office_{s,m,l}.glb`:** `rooms_v5hr.py` (civic drum, coral band, glazed wellness
+pavilion with a ficus, lit roof sign "WE ARE LISTENING* / *TO MUSIC", badge `hr` = speech bubble with a heart) and
+`interior_v5hr.py` (reception counter with "CHIEF PEOPLE OFFICER" plate and stress balls, a queue line "PLEASE QUEUE
+(EMOTIONALLY)" with a "TAKE A NUMBER (ANY NUMBER)" post, interview rooms with tissues and "YOUR FEELINGS ARE VALID
+(PENDING REVIEW)", the WELLBEING.AI kiosk ("HOW ARE YOU? 1 GREAT 2 GREAT 3 OTHER*"), filing banks, standing desks
+"STANDING ONLY", the padlocked suggestion box "(LOCKED FOR YOUR SAFETY)", a water cooler "HYDRATE (MANDATORY)",
+"SYNERGY" / staff-survey wall pieces). SIM's counts and anchor names (SIM-to-ART-HAB.md 2026-10-02) are used exactly;
+until content has the def the builder uses `rooms_build_defs.HR_OFFICE` with the same numbers. Anchor table in
+ART-HAB-to-SIM.md 19:10. Door angles: M, L free; S blocks three spans (307 deg free).
+
+**Numbers (round 2 + HR):**
+
+| | round 1 | round 2 |
+|---|---|---|
+| room GLB total | 264.6 MB (157 files) | 297.5 MB (160 files with HR) |
+| triangles | 3,562,874 | 3,946,263 |
+| room models in the pck (.scn) | 63.18 MB | 70.68 MB (+7.50 MB: round 2 about +6.2, HR +1.3) |
+| pck `build/web_art_hab` (all agents) | 171.5 MB | 181.5 MB at 18:50; 155.0 MB at 19:45 (other agents' files fell by about 26 MB; my room files -0.17 MB between) |
+| over budget / flags | 0 / 0 | 0 / 0 (budget + ceiling allowance S/M/L/XL 1900/2600/3200/3800) |
+
+**Seat check (RENDER request 2026-10-02, `tools/render_seat_check.gd`):** 120 overlaps > 20 mm -> **5**. Fixes: bar
+counter front recessed under a 0.30 m top (knee room; neon fins on the recess), glasses / tip jar / card reader on
+the staff half; table_rect leg frames at the ends of the LONG axis (centre posts) and no apron; coffee tables 0.72 of
+the asked size on corner legs; sofa plinth set back to a toe kick; the school desk top 0.76 m and its shelf at the
+back; table clutter only at the ends of long tables (none on round tables, off-centre on coffee tables). Left (sent to
+RENDER): academy_m Seat_0 thigh 66 mm, residence_tube_executive_l Seat_1 thigh 61 mm (both into a rail at seat height
+beside the chair), cantina_xl Seat_1 hand 32 mm, habitat_s Seat_0/1 hands 21-22 mm.
+
+**Checks:** RESULT rooms_build 157 + 3 built, 0 flags. RESULT godot.mjs check 310 scripts, 0 failed. RESULT
+render_nav_bake 160 grids, 160 room metas. RESULT interior_desk_selftest PASS. RESULT render_seat_check 994 anchors,
+5 overlaps > 20 mm (FAIL; was 120).
+
+**Renders** (`art/interiors/`, looked at): every room type day / night / exterior / follow views `_eye0..2`, the HR
+office S/M/L. Notes: ART-HAB-to-RENDER.md 19:10, ART-HAB-to-SIM.md 19:10.
+
+**Not done / not tested:** the 2.1 m partitions (waiting for RENDER); in the game (the ceiling under RENDER's roof
+two-sided rule, the WallsUp mask on `Upper_<seg>_Band/_Sign`, the camera ceiling with the liner); HR in SIM content.
+
 ## 2026-10-02 v5 run 3 (Opus ART-HAB) — detail pass reviewed, size cut, all rooms rebuilt, renders
 
 **Art review of the prop kit** (showcase room with all 32 wall kinds, eye views of every room type):

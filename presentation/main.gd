@@ -799,6 +799,8 @@ func _new_world(seed_value: int, options: Dictionary) -> void:
 
 func _after_world_change() -> void:
 	view.setup(sim)
+	_wire_bubbles()
+	_sync_cheeky()
 	var c: Vector2 = sim.world.center
 	rig.bounds = Rect2(0, 0, sim.world.size, sim.world.size)
 	rig.height_fn = Callable(sim.world, "height_at")
@@ -915,6 +917,16 @@ func apply_settings() -> void:
 			o.set("shake_enabled", _shake_on)
 	if audio != null:
 		audio.apply_volumes()
+	_sync_cheeky()
+
+## "Cheeky dialogue" (V5 section 16): the device setting rules the colony in play. SIM keeps the value in
+## state.options.cheeky (command set_option); a new game or a load takes the device setting.
+func _sync_cheeky() -> void:
+	if sim == null or sim.get("party") == null or not sim.party.has_method("cheeky"):
+		return
+	var want: bool = bool(Settings.get_value("cheeky"))
+	if bool(sim.party.cheeky()) != want:
+		submit("set_option", {"key": "cheeky", "value": want})
 
 ## The view changed size: the interface-scale limit is checked again (apply_settings).
 var _resizing := false
@@ -1435,6 +1447,19 @@ func follow_end() -> void:
 		view.follow_stop()
 	hud.follow_changed(-1)
 	_apply_roofs()
+
+## A click on a speech bubble in the follow view (RENDER 2026-10-02: signal speaker_clicked): the UI switches
+## to that speaker itself, so the follow card, the selection and the roofs follow (click_switches is off).
+func _wire_bubbles() -> void:
+	var b = view.get("bubbles") if view != null else null
+	if b != null and b.has_signal("speaker_clicked"):
+		b.click_switches = false
+		if not b.speaker_clicked.is_connected(_on_bubble_clicked):
+			b.speaker_clicked.connect(_on_bubble_clicked)
+
+func _on_bubble_clicked(agent_id: int) -> void:
+	if in_follow() and agent_id >= 0 and agent_id != int(view.follow_id):
+		follow_person(agent_id)
 
 func in_follow() -> bool:
 	return view != null and view.has_method("in_follow") and view.in_follow()

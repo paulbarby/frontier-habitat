@@ -157,7 +157,8 @@ def sofa(p, n=3, seat_w=0.62, fabric="Cushion", frame="Frame", arm="Hull", pillo
     Returns the seat centre list [(x, y)]."""
     zs = F + SEAT_Z
     W = n * seat_w
-    bbox(p, -0.44, 0.38, -W / 2 - 0.12, W / 2 + 0.12, F + 0.04, F + 0.22, frame, bevel=0.02)       # plinth
+    # the plinth is set back under the seat (a toe kick): RENDER seat check 2026-10-02, the shins hang there
+    bbox(p, -0.44, 0.14, -W / 2 - 0.12, W / 2 + 0.12, F + 0.04, F + 0.22, frame, bevel=0.02)
     for sy in (-1, 1):
         p.vcyl(0.30, sy * (W / 2 + 0.02), F, F + 0.05, 0.03, seg=6, mat="Metal", cap0=False)
         p.vcyl(-0.36, sy * (W / 2 + 0.02), F, F + 0.05, 0.03, seg=6, mat="Metal", cap0=False)
@@ -177,15 +178,18 @@ def sofa(p, n=3, seat_w=0.62, fabric="Cushion", frame="Frame", arm="Hull", pillo
 
 
 def coffee_table(p, hx=0.55, hy=0.35, top="Wood", clutter=True):
+    """A low table (top 0.40).  RENDER seat check 2026-10-02: shins of people on the sofas round it reached it, so the
+    table is 0.72 of the asked size (0.45 m and more from the seat anchors in the islands) on four corner legs."""
+    hx, hy = 0.72 * hx, 0.72 * hy
     bbox(p, -hx, hx, -hy, hy, F + 0.36, F + 0.40, top, bevel=0.012)
-    if clutter:
-        import interior_props as PR
-        PR.table_clutter(p, hx, hy, F + 0.40)
     bbox(p, -hx + 0.05, hx - 0.05, -hy + 0.05, hy - 0.05, F + 0.08, F + 0.11, "Frame")
     for sx in (-1, 1):
         for sy in (-1, 1):
             bbox(p, sx * (hx - 0.06) - 0.02, sx * (hx - 0.06) + 0.02, sy * (hy - 0.06) - 0.02, sy * (hy - 0.06) + 0.02,
                  F, F + 0.36, "Frame", mats={"-z": None, "+z": None})
+    if clutter:
+        import interior_props as PR
+        PR.table_clutter(p, hx, hy, F + 0.40)
 
 
 def table_round(p, r=0.62, h=0.74, top="Wood", seg=18, edge="Accent", clutter=True):
@@ -200,19 +204,25 @@ def table_round(p, r=0.62, h=0.74, top="Wood", seg=18, edge="Accent", clutter=Tr
 
 
 def table_rect(p, hx, hy, h=0.74, top="Hull", edge="Frame", legs="Frame", clutter=True):
-    """Rectangular table centred at the origin (half sizes hx, hy)."""
+    """Rectangular table centred at the origin (half sizes hx, hy).  RENDER seat check 2026-10-02: the two leg frames
+    stand at the ends of the LONG axis (centre posts on the short axis), so people seated along the long sides have
+    free knee room; the underside is at h - 0.045 with no apron."""
     if clutter:
         import interior_props as PR
         PR.table_clutter(p, hx, hy, F + h)
     bbox(p, -hx, hx, -hy, hy, F + h - 0.045, F + h, top, bevel=0.012)
     plate_x(p, hx + 0.001, -hy + 0.01, hy - 0.01, F + h - 0.04, F + h - 0.008, edge)
     plate_x(p, -hx - 0.001, -hy + 0.01, hy - 0.01, F + h - 0.04, F + h - 0.008, edge, facing=-1)
-    for sx in (-1, 1):
-        bbox(p, sx * (hx - 0.10) - 0.03, sx * (hx - 0.10) + 0.03, -hy + 0.08, hy - 0.08, F, F + 0.04, legs,
-             mats={"-z": None})
-        bbox(p, sx * (hx - 0.10) - 0.025, sx * (hx - 0.10) + 0.025, -0.03, 0.03, F + 0.04, F + h - 0.045, legs,
-             mats={"-z": None, "+z": None})
-    bbox(p, -hx + 0.10, hx - 0.10, -0.025, 0.025, F + h - 0.20, F + h - 0.15, legs)
+    long_x = hx >= hy
+    for sd in (-1, 1):
+        if long_x:
+            ex = sd * (hx - 0.10)
+            bbox(p, ex - 0.03, ex + 0.03, -hy + 0.08, hy - 0.08, F, F + 0.04, legs, mats={"-z": None})
+            bbox(p, ex - 0.025, ex + 0.025, -0.03, 0.03, F + 0.04, F + h - 0.045, legs, mats={"-z": None, "+z": None})
+        else:
+            ey = sd * (hy - 0.10)
+            bbox(p, -hx + 0.08, hx - 0.08, ey - 0.03, ey + 0.03, F, F + 0.04, legs, mats={"-z": None})
+            bbox(p, -0.03, 0.03, ey - 0.025, ey + 0.025, F + 0.04, F + h - 0.045, legs, mats={"-z": None, "+z": None})
 
 
 # --------------------------------------------------------------------------------------

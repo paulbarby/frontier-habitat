@@ -29,9 +29,27 @@ var _talk_cache: Array = []
 var _last_mine := {}
 var _talk_clock := 0.0
 var force_stub := false     # evidence only (__fhr "bubbles stub"): RENDER's stub lines instead of SIM's
+## A click on a speaker's bubble (follow view). The view switches the follow to that person when
+## click_switches is true (default); the UI may connect to update its follow card or to switch itself.
+signal speaker_clicked(agent_id: int)
+var click_switches := true
+
+func _clicked(id: int) -> void:
+	speaker_clicked.emit(id)
+	if click_switches and id != follow_id and view != null:
+		view.follow_start(id)
+
+## The speaker of the visible bubble under a screen point (viewport pixels), or -1.
+func speaker_at(screen_pos: Vector2) -> int:
+	for b in _pool:
+		var bb: Control = b
+		if bb.visible and Rect2(bb.position, bb.size if bb.size != Vector2.ZERO else (bb as Bubble).box).has_point(screen_pos):
+			return int((bb as Bubble).speaker)
+	return -1
 
 class Bubble extends Control:
 	var owner_fx
+	var speaker := -1
 	var text := ""
 	var who := ""
 	var emote := ""
@@ -44,7 +62,14 @@ class Bubble extends Control:
 
 	func setup(fx) -> void:
 		owner_fx = fx
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# V5 §3: a click on a bubble switches the follow view to that speaker (UI-to-RENDER 2026-09-29, 4).
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and speaker >= 0:
+			accept_event()
+			owner_fx._clicked(speaker)
 
 	## Lays the text out (1-2 lines, max 240 px) and returns the box size.
 	func layout() -> Vector2:
@@ -316,6 +341,7 @@ func sync(_delta: float) -> void:
 			bb.visible = false
 			continue
 		var c: Dictionary = cand[i]
+		bb.speaker = int(c["id"])
 		bb.text = c["text"]
 		bb.who = c["who"]
 		bb.emote = c["emote"]

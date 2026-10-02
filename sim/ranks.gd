@@ -31,6 +31,7 @@ func cmd_set_role(p: Dictionary) -> Dictionary:
 		return {"ok": false, "code": "invalid", "text": "Only a colonist can change jobs."}
 	var roles: Array = (sim.bal["roles"] as Array).duplicate()
 	roles.append("security")
+	roles.append("hr")
 	if not roles.has(role):
 		return {"ok": false, "code": "invalid", "text": "Unknown role."}
 	if role == String(a["role"]):
@@ -55,8 +56,11 @@ func cmd_set_role(p: Dictionary) -> Dictionary:
 	sim.people.ranks_dirty()
 	var names: Dictionary = sim.bal["role_names"]
 	sim.people.note(a, "Changed job: %s to %s." % [String(names.get(old, old)).to_lower(), String(names.get(role, role)).to_lower()])
-	sim.log_event("new_role", "%s is now a %s." % [String(a["name"]), String(names.get(role, role)).to_lower()], [id], 1)
-	return {"ok": true, "code": "ok", "text": "%s is now a %s." % [String(a["name"]), String(names.get(role, role)).to_lower()]}
+	var rn: String = String(names.get(role, role))
+	rn = rn if rn.begins_with("HR") else rn.to_lower()
+	var art: String = "an" if rn.begins_with("HR") or "aeiou".contains(rn.substr(0, 1)) else "a"
+	sim.log_event("new_role", "%s is now %s %s." % [String(a["name"]), art, rn], [id], 1)
+	return {"ok": true, "code": "ok", "text": "%s is now %s %s." % [String(a["name"]), art, rn]}
 
 ## Command "appoint" {agent, rank (commander | captain | first_hand), department, base}.
 func cmd_appoint(p: Dictionary) -> Dictionary:

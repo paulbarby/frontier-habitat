@@ -345,7 +345,7 @@ func _loop_step(dt: float) -> void:
 			want_run = false
 		elif speed > vw + (vr - vw) * 0.55:
 			want_run = true
-		elif speed < vw + (vr - vw) * 0.3:
+		elif speed < vw + (vr - vw) * 0.15:   # (0.3: a runner slowed for a corner flipped to the walk, 2026-10-02)
 			want_run = false
 		_latch_t = _latch_t + dt if want_run != run_latch else 0.0
 		if want_run != run_latch and (_latch_t >= STOP_HOLD or injured or not clips.has("run")):

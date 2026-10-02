@@ -34,7 +34,7 @@ var links: Array = []      # [{id, name}] of every name link on the page (tests)
 var layout := "standard"   # "standard", "special" (bad news: a special edition) or "quiet" (tests)
 var force_layout := ""     # debug `raglayout` (screenshots of the other layouts)
 var compact := false       # a short view (1280x720): smaller masthead and headline, the photo above the fold
-const SPECIAL_KINDS := ["riot", "protest", "strike", "fight", "death", "arrest", "breach", "affair"]
+const SPECIAL_KINDS := ["riot", "protest", "strike", "fight", "death", "arrest", "breach", "affair", "party_drama_big"]
 ## House ads (Rag voice) when SIM and the arrivals give fewer than four.
 const HOUSE_ADS := [["RAG TIPS LINE", "Seen something juicy? Tell a Rag reporter at the lounge. We never name sources."],
 	["ADVERTISE HERE", "Reach every colonist on the planet. All of them. Rates on request."],

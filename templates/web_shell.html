@@ -196,7 +196,9 @@ const engine = new Engine(GODOT_CONFIG);
 		'New in 5.0: press L for the left dock. The centre stays free.', 'New in 5.0: press Y to take every roof off and see into every building.',
 		'New in 5.0: tourists pay credits. Give them beds, shops and a bar.', 'New in 5.0: partners can adopt a child. Open their file, Social tab.',
 		'Tip: a venue needs power, staff and goods. Select the structure, Venues tab.', 'New in 5.0: the super dome has 9 build stages. Research Arcology first.',
-		'New in 5.0: the airless world has no storms, but more meteors.', 'Tip: the airless world cannot run a wind turbine or an atmosphere processor.'];
+		'New in 5.0: the airless world has no storms, but more meteors.', 'Tip: the airless world cannot run a wind turbine or an atmosphere processor.',
+		'New in 5.0: a birthday is a reason for a party. Answer in the Requests tab.', 'New in 5.0: idle people chat. Two who fancy each other flirt.',
+		'New in 5.0: an HR office lets unhappy people complain or ask to leave.', 'Tip: parties bring drama. Big drama makes the front page of the Rag.'];
 	let tipI = 0;
 	const tipTimer = setInterval(() => { tipI = (tipI + 1) % tips.length; tipEl.textContent = tips[tipI]; }, 5000);
 

@@ -39,6 +39,17 @@ const HAZARD_LOG := {"hazard_detected": ["info", "hazard"], "hazard_start": ["wa
 	"fight": ["warn", "sev_warning"], "arrest": ["warn", "people"], "released": ["info", "people"], "dome_stage": ["good", "build"],
 	"arcade_record": ["info", "trophy"], "barby": ["good", "ship"], "dance": ["good", "people"]}
 
+## Parties and HR (V5 sections 16 and 17; sim/party.gd, sim/hr.gd): log code -> [priority, icon, panel manager type,
+## pops up]. Small drama only goes to the News tab (a badge); big drama pops up once; a party offer and the HR
+## requests have their rows in the Requests tab and a notice here.
+const PARTY_LOG := {
+	"party_offer": ["notice", "music", "request", true], "party_start": ["info", "music", "party", true], "party_end": ["info", "music", "party", false],
+	"party_drama": ["info", "sparkle", "party", false], "party_drama_big": ["warning", "heart", "party", true],
+	"birthday": ["info", "sparkle", "party", false], "celebration": ["info", "sparkle", "party", false],
+	"hr_complaint": ["info", "colonists", "hr", false], "hr_resolved": ["notice", "sev_ok", "hr", false], "hr_survey": ["info", "list", "hr", true],
+	"hr_transfer_request": ["warning", "ship", "hr", true], "hr_transfer_approved": ["info", "ship", "hr", false], "hr_transfer_refused": ["info", "ship", "hr", false],
+}
+
 var hud
 var gate = AlertGate.new()   # alert toasts and the steady alert list (V3_DESIGN §2)
 var world                    # world sounds from simulation state (V3_1_DESIGN §2.2)
@@ -206,7 +217,10 @@ func check() -> void:
 				"death":
 					hud.toast(String(e["text"]), "bad", "sev_critical", "people")
 				var code:
-					if HAZARD_LOG.has(String(code)):
+					if PARTY_LOG.has(String(code)):
+						var ps: Array = PARTY_LOG[String(code)]
+						hud.panels.post(String(ps[2]), String(e["text"]), String(ps[0]), String(ps[1]), bool(ps[3]))
+					elif HAZARD_LOG.has(String(code)):
 						var spec: Array = HAZARD_LOG[String(code)]
 						var ty: String = "request" if String(code).begins_with("request_") or String(code) == "defect_request" else ({"unrest": "unrest", "dome_stage": "build", "graduated": "people"}.get(String(code), ""))
 						hud.toast(String(e["text"]), spec[0], spec[1], ty)

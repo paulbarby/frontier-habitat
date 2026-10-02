@@ -107,32 +107,58 @@ def wall(c, u0, v0, u1, v1, gaps=(), h=WALL_H, stripe="Accent", posts=True):
         tm = 0.5 * (t0 + t1)
         plan.rect(A[0] + ca * tm, A[1] + sa * tm, 0.5 * (t1 - t0), 0.07, ang, tag="wall")
     if PARTTOP and h <= WALL_H + 1e-6:
-        # round 2 (coordinator 2026-10-02, waits for RENDER): the partition from 1.30 to 2.10 m in its own object,
-        # PartTop (F<k>_PartTop on the block's floors): hidden in the cutaway, shown with the roof on
-        q = part_top(plan)
-        with q.at(T(A[0], A[1], 0.0), RZ(ang)):
-            for t0, t1 in pieces:
-                bbox(q, t0, t1, -0.045, 0.045, F + h, F + PART_H - 0.03, "Hull", mats={"-z": None, "+z": None})
-                bbox(q, t0 - 0.005, t1 + 0.005, -0.06, 0.06, F + PART_H - 0.03, F + PART_H, "Frame", mats={"-z": None})
-            for c0, c1 in cuts:
-                for tt in (c0, c1):
-                    if 0.05 < tt < L - 0.05:
-                        bbox(q, tt - 0.035, tt + 0.035, -0.075, 0.075, F + h + 0.05, F + PART_H, "Frame",
-                             mats={"-z": None})
+        part_top_pieces(plan, A, ang, L, pieces, cuts, h)
 
 
-PARTTOP = bool(__import__("os").environ.get("FH_PARTTOP"))
+# Unit partitions 2.1 m (orchestrator decision 2026-10-02): the wall from 1.30 to 2.10 m goes in the PorchTop object of
+# its floor (PorchTop / F<k>_PorchTop: RENDER's group_of puts it in PorchTop, which the cutaway hides by its
+# ends_with("Top") rule and which is not in the camera's roof ceiling grid).  Door gaps stay open to 2.10 m.  Every
+# partition piece (full height, floor to 2.10 m) is listed in rm.partitions (build report v3.partitions) for RENDER's
+# follow-camera wall / occluder rule.  FH_PARTTOP=0 turns it off.
+PARTTOP = __import__("os").environ.get("FH_PARTTOP", "1") != "0"
 PART_H = 2.10
 
 
 def part_top(plan):
     q = getattr(plan, "part_top", None)
     if q is None:
+        rm = plan.rm
         nm = plan.n.name
-        q = K.P("PartTop" if nm == "Interior" else nm.replace("Interior", "PartTop"))
+        target = "PorchTop" if nm == "Interior" else nm.replace("Interior", "PorchTop")
+        fp = getattr(rm, "fpart", None)
+        if fp is not None:
+            q = fp(target)
+        else:
+            q = next((x for x in list(getattr(rm, "extra_parts", [])) if x.name == target), None)
+            if q is None and getattr(rm, "porch", None) is not None and rm.porch.name == target:
+                q = rm.porch
+            if q is None:
+                q = K.P(target)
+                rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [q]
         plan.part_top = q
-        plan.rm.extra_parts = list(getattr(plan.rm, "extra_parts", [])) + [q]
     return q
+
+
+def part_top_pieces(plan, A, ang, L, pieces, cuts, h, thick=0.045):
+    """The 1.30 -> 2.10 m top of a partition from A along ang (deg): pieces [(t0, t1)], cuts [(c0, c1)] (door gaps)."""
+    q = part_top(plan)
+    z0 = getattr(plan, "z0", 0.0)
+    with q.at(T(A[0], A[1], z0), RZ(ang)):
+        for t0, t1 in pieces:
+            bbox(q, t0, t1, -thick, thick, F + h, F + PART_H - 0.03, "Hull", mats={"-z": None, "+z": None})
+            bbox(q, t0 - 0.005, t1 + 0.005, -0.06, 0.06, F + PART_H - 0.03, F + PART_H, "Frame", mats={"-z": None})
+        for c0, c1 in cuts:
+            for tt in (c0, c1):
+                if 0.05 < tt < L - 0.05:
+                    bbox(q, tt - 0.035, tt + 0.035, -0.075, 0.075, F + h + 0.05, F + PART_H, "Frame", mats={"-z": None})
+    ca, sa = cos(radians(ang)), sin(radians(ang))
+    rm = plan.rm
+    if not hasattr(rm, "partitions"):
+        rm.partitions = []
+    for t0, t1 in pieces:
+        tm = 0.5 * (t0 + t1)
+        rm.partitions.append([round(A[0] + ca * tm, 3), round(A[1] + sa * tm, 3), round(z0 + F, 3),
+                              round(z0 + F + PART_H, 3), round(0.5 * (t1 - t0), 3), 0.06, round(ang % 360.0, 2)])
 
 
 def door_plate(c, u, number):

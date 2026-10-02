@@ -24,7 +24,7 @@ const Rng = preload("res://sim/rng.gd")
 const NpcPath = preload("res://presentation/fx_npc_path.gd")
 const ACCEL := 1.5               # m/s^2 (game time), V3_1 §4.1
 const DECEL := 4.0               # m/s^2 (game time): the fastest slow-down before the stopping curve
-const A_LAT := 3.0               # m/s^2 (game time): the most sideways acceleration on a bend (people slow down for corners)
+const A_LAT := 4.5               # m/s^2 (game time): the most sideways acceleration on a bend (people slow down for corners; 3.0 dropped runners to a walk at every corner)
 const CORNER_DEV := 0.025        # m: a small bend's rounding curve stays this close to the planned corner
 const LOOK_AHEAD := 12.0         # m of path scanned for the bend speed limit
 ## The followed person (follow view) at 2x-4x: the speed changes at most this fast in VIEW time (m/s^2),
@@ -1259,6 +1259,14 @@ func _anchor(use: Dictionary) -> Dictionary:
 		if local_y < 0.05:
 			p.y = floor_y
 		var fx: Vector3 = xf.basis.x
+		# A seat whose model puts a table edge over the seated legs: the body sits this far further back
+		# (tools/render_seat_check.gd fix -> presentation/navgrid/seat_fix.res, 2026-10-02).
+		if kind == "seat" or kind == "work":
+			var sfix: Vector2 = _seat_fix(view.bmeta[bid], nm)
+			if sfix != Vector2.ZERO:
+				var fh := Vector3(fx.x, 0.0, fx.z).normalized()
+				var sh := Vector3(-fh.z, 0.0, fh.x)
+				p += (-fh * sfix.x + sh * sfix.y) * float((view.bmeta[bid].get("tpl", {}) as Dictionary).get("scale", 1.0))
 		# Several people at one Anchor_Service: side by side along the anchor's local Z.
 		if kind == "service" and i > 0:
 			var side: Vector3 = xf.basis.z.normalized()
@@ -1284,6 +1292,22 @@ func _anchor(use: Dictionary) -> Dictionary:
 	var q: Vector2 = c + Vector2(cos(ang), sin(ang)) * r
 	var face: Vector2 = (c - q).normalized()
 	return {"pos": Vector3(q.x, floor_y, q.y), "yaw": -atan2(face.y, face.x), "aisles": [], "found": false}
+
+static var _seat_fixes = null
+static func _seat_fix(meta: Dictionary, anchor: String) -> Vector2:
+	if _seat_fixes == null:
+		_seat_fixes = {}
+		if ResourceLoader.exists("res://presentation/navgrid/seat_fix.res"):
+			var r = load("res://presentation/navgrid/seat_fix.res")
+			if r != null and (r as Resource).has_meta("fix"):
+				_seat_fixes = (r as Resource).get_meta("fix")
+	if (_seat_fixes as Dictionary).is_empty():
+		return Vector2.ZERO
+	var model: String = String((meta.get("tpl", {}) as Dictionary).get("key", "")).get_slice("@", 0).get_file().get_basename()
+	var f = ((_seat_fixes as Dictionary).get(model, {}) as Dictionary).get(anchor, null)
+	if f is Array and (f as Array).size() >= 2:
+		return Vector2(float(f[0]), float(f[1]))   # [back, side] m
+	return Vector2(float(f), 0.0) if f != null else Vector2.ZERO
 
 ## A structure whose anchors carry a venue or floor in their names (the super dome: Seat_<venue>_<k>,
 ## Bed_<floor>_<unit>_<k>, Work_<venue>_<k>, Plaza_<k>): SIM's slot i of a kind -> the i-th of those
@@ -1649,7 +1673,9 @@ func sync(delta: float) -> bool:
 		# V5 (the 8-10 ms fx_npc cost at 66 people, 2026-09-29): from 70 m camera distance every body
 		# is updated every 2nd frame (a 0.14 m step at run speed, not visible from there); far and
 		# off-screen bodies every 3rd as before.
-		var mid: bool = not far and cam_d > 70.0
+		# (and, 2026-10-02 at 134 people, every body over 25 m from the camera: the follow view and close
+		# overviews updated the whole colony every frame)
+		var mid: bool = not far and (cam_d > 70.0 or (_cam_pos != Vector3.INF and (rec["pos"] as Vector3).distance_squared_to(_cam_pos) > 625.0)) and int(id) != _follow_id
 		if far or mid:
 			var k: int = 3 if far else 2
 			if (int(id) + _frame) % k != 0:
@@ -3354,7 +3380,7 @@ func _write_mm(variant: String, list: Array) -> void:
 			var qa: Vector3 = Geometry3D.get_closest_point_to_segment(_cam_pos, p + Vector3(0, 0.1, 0), p + Vector3(0, 1.75, 0))
 			var cd: float = qa.distance_to(_cam_pos)
 			if cd < 0.75:
-				fades[n] = minf(fades[n], smoothstep(0.3, 0.75, cd))
+				fades[n] = minf(fades[n], smoothstep(0.45, 0.6, cd))   # (a narrow ring: a wide dither drew grainy ghosts, 2026-10-02)
 				stats_slots["cam_faded"] = int(stats_slots.get("cam_faded", 0)) + 1
 		var look_v: float = float(rec["look"])
 		if people:

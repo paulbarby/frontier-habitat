@@ -16,23 +16,28 @@ const HZ := 10
 const DAY_TICKS := 6000
 
 ## Perf calibration (orchestrator decision 2026-10-02): this machine is shared (Blender and other Godot runs), so a
-## perf test measures a fixed GDScript workload before, between and after its windows and scales its times by
-## CALIB_QUIET_MS / the median reading. The workload is built like the load of the sim itself: dictionaries with
-## nested values read in a scattered order (a few MB, so cache and memory pressure from neighbours count), cut in 200
-## slices of about 2 ms; the reading is the MEDIAN slice, in ms for 1,000 accesses, the same statistic as the median
-## tick of a perf test. (A first version, the minimum of 7 small loops, read 40 ms under any load while the sim cost
-## rose 30-50 %: it found the quiet slices and the sim did not.) The factor never goes above 1.
-const CALIB_QUIET_MS := 0.75
+## perf test measures a fixed GDScript workload before, between and after its windows and scales its times by the
+## ratio of the quiet reading to the measured one. The workload is built like the load of the sim itself:
+## dictionaries with nested values read in a scattered order (a few MB, so cache and memory pressure from
+## neighbours count), cut in 200 slices of about 2 ms. Two readings: the MEDIAN slice (for a test that checks the
+## median tick: v5) and the MEAN slice (for a test that checks the mean of 1,000-tick windows: v3, v4; preemptions
+## count in a window mean and in the slice mean). Measured on this machine, the calibration slows 10-25 % MORE than
+## the sim under load, so the ratio is damped: factor = min(1, (quiet / reading) ^ CALIB_POWER). A first version, the
+## minimum of 7 small loops, read 40 ms under any load while the sim cost rose 30-50 %. A reading below the quiet one
+## never scales a test up.
+const CALIB_QUIET_MEDIAN_MS := 0.78
+const CALIB_QUIET_MEAN_MS := 0.80
+const CALIB_POWER := 0.85
 
 ## [median, mean] slice time of the fixed workload (about 0.5 s of CPU), in ms for 1,000 accesses.
-static func calib_stats() -> Array:
+static func calib_stats(slice_count: int = 200) -> Array:
 	var big := {}
 	for i in 6000:
 		big[i] = {"a": float(i), "b": Vector2(i, i * 2), "c": [i, i + 1, i + 2], "s": "x%d" % (i % 13), "t": {"u": i}}
 	var times: Array = []
 	var k := 12345
 	var acc := 0.0
-	for slice in 200:
+	for slice in slice_count:
 		var t0: int = Time.get_ticks_usec()
 		for r in 1000:
 			k = (k * 1103515245 + 12345) & 0x7fffffff
@@ -47,16 +52,16 @@ static func calib_stats() -> Array:
 	times.sort()
 	return [float(times[times.size() / 2]), sum / float(times.size())]
 
-## The reading used for the scale: the MEAN slice (wall time, preemptions included, like a window of ticks).
-static func calib_ms() -> float:
-	return float(calib_stats()[1])
+## One reading in ms: the mean slice when mean_of_slices, else the median slice.
+static func calib_ms(mean_of_slices: bool = false, slice_count: int = 200) -> float:
+	return float(calib_stats(slice_count)[1 if mean_of_slices else 0])
 
-## The scale factor from calibration readings: CALIB_QUIET_MS / median, at most 1.
-static func calib_factor(readings: Array) -> float:
+## The scale factor from readings (ms): min(1, (quiet / median reading) ^ CALIB_POWER).
+static func calib_factor(readings: Array, mean_of_slices: bool = false) -> float:
 	var s: Array = readings.duplicate()
 	s.sort()
-	return minf(1.0, CALIB_QUIET_MS / float(s[s.size() / 2]))
-
+	var quiet: float = CALIB_QUIET_MEAN_MS if mean_of_slices else CALIB_QUIET_MEDIAN_MS
+	return minf(1.0, pow(quiet / float(s[s.size() / 2]), CALIB_POWER))
 
 ## Offsets (metres from the lander) of the reference layout. Custom layouts reuse these
 ## places because the reference layout proves they are legal on every tutorial seed.

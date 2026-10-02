@@ -37,6 +37,7 @@
     "medic": ["medicine", "science"],
     "scientist": ["science", "medicine"],
     "security": ["security", "social"],
+    "hr": ["social", "leadership"],
     "visitor": ["social", "piloting"]
   },
   "start_skill": {"_note": "A new colonist: role skills from..to, other skills 0..to_other. Role skills then grow with the work done: xp_per_s x (1 - skill/100) a second of work (the second role skill half of it), up to cap; they fall by xp_decay_per_day after xp_decay_after_days without work. per_day: the old rule (a day here), used to start the work points of a person from a save before this rule.", "role_from": 25, "role_to": 55, "other_to": 25, "per_day": 1.2, "cap": 90, "xp_per_s": 0.006, "xp_decay_after_days": 3, "xp_decay_per_day": 0.3},
@@ -47,7 +48,7 @@
     "maintenance": {"name": "Maintenance", "roles": ["technician"], "skill": "engineering", "uniform": "uniform_engineering", "stripe": "amber"},
     "security": {"name": "Security", "roles": ["security"], "skill": "security", "uniform": "uniform_security", "stripe": "red"}
   },
-  "role_uniform": {"technician": "uniform_engineering", "operator": "uniform_engineering", "scientist": "uniform_science", "grower": "uniform_food", "medic": "uniform_medical", "security": "uniform_security"},
+  "role_uniform": {"technician": "uniform_engineering", "operator": "uniform_engineering", "scientist": "uniform_science", "grower": "uniform_food", "medic": "uniform_medical", "security": "uniform_security", "hr": "casual_b"},
   "ranks": {
     "_note": "V5 section 5.1. bonus: work speed bonus to the department (commander: the whole base), from the leader's leadership skill (x skill/100).",
     "commander": {"name": "Base Commander", "per_base": 1, "bonus": 0.10, "entitlement": "executive"},

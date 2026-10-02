@@ -519,6 +519,16 @@ func _spawn_visitor(arr: Dictionary, pos: Vector2, i: int) -> Dictionary:
 	sim.alive_changed()
 	return a
 
+## A colonist who leaves with a ship (a defection, a transfer): a passenger of that ship, with the record a
+## visitor has (agents._visitor_think reads it). It boards at the pad when the ship is about to leave.
+func make_passenger(a: Dictionary, ship_id: int) -> void:
+	a["kind"] = "visitor"
+	a["vkind"] = "leaver"
+	a["ship"] = ship_id
+	a["visit"] = {"ate": 0, "rec": 0, "slept": 0, "paid": 0, "treated": false, "study": 0.0, "tour": [], "toured": 0}
+	a.erase("order")
+	sim.alive_changed()
+
 ## Visitors of this kind that an earlier ship left behind join this one.
 func _adopt_stranded(arr: Dictionary) -> Array:
 	var out: Array = []
