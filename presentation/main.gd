@@ -669,7 +669,9 @@ func _on_cmd(text: String) -> String:
 				if String(r["kind"]) == "colonist" and float(r.get("age", 30)) >= 18.0:
 					pd_id = int(r["id"])
 					break
-			submit("celebrate", {"kind": "birthday", "agent": pd_id})
+			var have_offer: bool = hud.v5.requests().any(func(q): return String(q.get("kind", "")) == "party_offer")
+			if not (w.size() > 1 and w[1] == "throw" and have_offer):   # "throw" answers an offer that is open already
+				submit("celebrate", {"kind": "birthday", "agent": pd_id})
 			if w.size() > 1 and w[1] == "throw":
 				for q in hud.v5.requests():
 					if String(q.get("kind", "")) == "party_offer":

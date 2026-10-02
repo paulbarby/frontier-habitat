@@ -254,6 +254,37 @@ func _init() -> void:
 			worst = a
 	if not worst.is_empty():
 		_cmd("discipline", {"agent": int(worst["id"]), "action": "jail", "days": 3.0})
+	# ---- sections 16 and 17 (SET-UP at the end, so the places of the rest do not move): an HR office with an
+	# officer, one open complaint and one party offer.
+	var hro: Dictionary = H.attach(sim, "hr_office", lp, 1, 60, base)
+	print("  hr_office %s" % (str(hro["id"]) if not hro.is_empty() else "NOT PLACED"))
+	sim.run_seconds(2.0)
+	if not hro.is_empty():
+		var officer: Dictionary = {}
+		for a in _colonists():
+			if String(a["role"]) in ["grower", "operator"] and not a.has("jailed") and not ["commander", "captain"].has(String(sim.people.rank(a)["rank"])):
+				if bool(_cmd("set_role", {"agent": int(a["id"]), "role": "hr"}).get("ok", false)):
+					officer = a
+					break
+		for a in _colonists():
+			if officer.is_empty() or String(a["role"]) in ["hr", "security"] or a.has("jailed") or a["where"] != "in" or sim.bases.home_of(a) != base:
+				continue
+			sim.hr._new_complaint(a, "overwork", sim.people.rec_of(int(a["id"])), base, int(hro["id"]))
+			for cid in sim.hr._r()["complaints"]:
+				var cp: Dictionary = sim.hr._r()["complaints"][cid]
+				if int(cp["agent"]) == int(a["id"]):
+					cp["needs_player"] = true
+					sim.hr._file(cp, a, int(sim.state["tick"]))
+			a.erase("hr_visit")
+			a.erase("hr_office")
+			break
+		print("  HR officer %s, complaints %d, active %s" % [str(officer.get("name", "none")), sim.hr.complaints().size(), str(sim.hr.active(base))])
+	var star: Dictionary = {}
+	for a in _colonists():
+		if star.is_empty() or sim.party._popular(a) > sim.party._popular(star):
+			star = a
+	_cmd("celebrate", {"kind": "birthday", "agent": int(star["id"])})
+	print("  party offers %d" % sim.party.request_rows().size())
 	# Unrest stays calm (the orchestrator's brief for this save: "calm unrest").
 	var causes := {}
 	for a in sim.state["agents"].values():

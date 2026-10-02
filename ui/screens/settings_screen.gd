@@ -53,6 +53,7 @@ func build() -> void:
 	ui.add_child(_toggle("Tips for new players", "tutorial_tips", "Shows a tip under each open goal in the mission tracker."))
 	ui.add_child(_toggle("Cheeky dialogue", "cheeky", "Cheeky dialogue
 On: two adults who fancy each other tease with adult innuendo. Off: mild flirting only. Never explicit, never with children."))
+	ui.add_child(Kit.wrap("Cheeky dialogue: adults who fancy each other tease with innuendo. Off: mild flirting only.", 11, P.TEXT_3))
 	# Camera
 	var cam: VBoxContainer = card("Camera", "camera", P.CYAN)
 	left.add_child(card_panel(cam))

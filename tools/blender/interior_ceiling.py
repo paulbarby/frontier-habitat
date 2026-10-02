@@ -222,8 +222,9 @@ def pendant(p, ctx, x, y, shade="Accent", drop=0.55):
 def liner(ctx):
     p, c, M, rm = ctx.p, ctx.c, ctx.M, ctx.rm
     rmax = ctx.rmax
-    NR = max(3, min(7, int(round(rmax / 1.45))))
-    NS = 16 if rmax < 6.0 else (24 if rmax < 9.5 else 32)
+    # perf (2026-10-03, the indoor fps drop): a coarser liner - about half the faces of round 2
+    NR = max(3, min(6, int(round(rmax / 1.9))))
+    NS = 16 if rmax < 7.6 else 24
     ctx.NR, ctx.NS = NR, NS
     cell = rmax / NR
     Z = {}
@@ -296,7 +297,7 @@ def ribs(ctx):
             p.quad(b0, b0 + dn, a0 + dn, a0, M("Frame"))
             p.quad(a1, a1 + dn, b1 + dn, b1, M("Frame"))
     lit = max(1, NS // 4)
-    for j in range(0, NS, 2):
+    for j in range(0, NS, 4):
         for k in range(1, NR):
             if (k, j) in cellset or (k, j - 1) in cellset:
                 A, B = V(k, j), V(k + 1, j)
@@ -371,7 +372,7 @@ def sensors(ctx, n=6):
                 p.cap_disc(0.06, z, M("Hull"), seg=8, up=False)          # flush under a low roof
             else:
                 p.vcyl(0.0, 0.0, z - 0.03, z, 0.06, seg=8, mat=M("Hull"), cap1=False)
-    for (k, j) in cells[n:n + 3]:
+    for (k, j) in cells[n:n + 2]:
         q = [Vector(V(k, j)), Vector(V(k + 1, j)), Vector(V(k + 1, j + 1)), Vector(V(k, j + 1))]
         cen = sum(q, Vector()) / 4
         inset = [cen + (v - cen) * 0.45 - Vector((0, 0, 0.012)) for v in q]
@@ -905,6 +906,15 @@ EYE_SIGNS = {
 EYE_INK = ("Neon", "LightStrip")
 
 
+def band_part(ctx, k):
+    """The one WallsUp object of segment k (band and sign together: fewer draw objects)."""
+    d = ctx.__dict__.setdefault("bandparts", {})
+    if k not in d:
+        d[k] = P("Upper_%02d_Band" % k)
+        ctx.rm.extra_parts = list(getattr(ctx.rm, "extra_parts", [])) + [d[k]]
+    return d[k]
+
+
 def _ray_r(c, a, z):
     """The roof's inner radius at angle a (deg) and height z (a horizontal ray from the axis), or None."""
     if c.bvh is None:
@@ -919,7 +929,7 @@ def band(ctx):
     if not ctx.NS or rm.tid.startswith("airlock"):
         return 0                 # (the airlock's own cutaway rule keeps its upper wall: interior_airlock.CUT_VISIBLE)
     SEG = 360.0 / 32
-    zs = (1.42, 1.75, 2.10, 2.45, 2.80, 3.15)
+    zs = (1.42, 2.00, 2.60, 3.20)              # perf 2026-10-03: four rows (round 2: six)
     put = 0
     for k in range(32):
         cols = []
@@ -944,7 +954,7 @@ def band(ctx):
         n = min(len(cols[0]), len(cols[1]))
         if n < 2:
             continue
-        p = P("Upper_%02d_Band" % k)
+        p = band_part(ctx, k)
         a0, a1 = radians(k * SEG), radians((k + 1) * SEG)
         V0 = [Vector((r * cos(a0), r * sin(a0), z)) for r, z in cols[0][:n]]
         V1 = [Vector((r * cos(a1), r * sin(a1), z)) for r, z in cols[1][:n]]
@@ -952,7 +962,7 @@ def band(ctx):
             p.quad(V0[i], V0[i + 1], V1[i + 1], V1[i], ctx.band[0])     # faces the room
         inn = Vector((-cos(a0), -sin(a0), 0.0)) * 0.012
         t_ = Vector((-sin(a0), cos(a0), 0.0)) * 0.012
-        for i in range(n - 1 if k % 2 == 0 else 0):                      # a seam on every other segment edge
+        for i in range(n - 1 if k % 4 == 0 else 0):                      # a seam on every fourth segment edge
             a_, b_ = V0[i], V0[i + 1]
             p.quad(a_ + inn - t_, b_ + inn - t_, b_ + inn + t_, a_ + inn + t_, "Frame")
         for i in range(n - 1):                                           # an accent stripe at 1.95 m
@@ -963,8 +973,6 @@ def band(ctx):
                 in1 = Vector((-cos(a1), -sin(a1), 0.0)) * 0.01
                 up = Vector((0, 0, 0.025))
                 p.quad(q0 + in0 - up, q0 + in0 + up, q1 + in1 + up, q1 + in1 - up, ctx.band[1])
-        rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [p]
-        ctx.band_tris += sum(len(f) - 2 for f in p.faces)
         put += 1
     return put
 
@@ -996,7 +1004,7 @@ def eye_signs(ctx, role):
         z1 = z0 + ht
         if z1 > 2.33:
             continue
-        p = P("Upper_%02d_Sign" % k)
+        p = band_part(ctx, k)                      # perf: the sign shares its segment's object
         ink = EYE_INK[(i + start) % 2]
         with p.at(RZ(a), T(r, 0.0, 0.0), RZ(180.0)):
             # local +X faces the room centre, text along local +Y
@@ -1006,8 +1014,6 @@ def eye_signs(ctx, role):
             for ln in lines:
                 PR.text(p, ln, 0.0, zz - h / 2, h, ink, x=0.003)
                 zz -= h * 1.55
-        rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [p]
-        ctx.band_tris += sum(len(f) - 2 for f in p.faces)
         put += 1
     return put
 
@@ -1076,7 +1082,7 @@ def build(rm):
         role = RO.role_for(rm)
         cove(ctx, wide=role in ("housing", "comfort", "bar"))
         crown(ctx)
-        sensors(ctx, n=4 + 2 * ctx.size)
+        sensors(ctx, n=2 + ctx.size)
     put = role_piece(ctx, RO.role_for(rm))
     ctx.band_tris = 0
     nb = band(ctx) if n else 0
@@ -1086,6 +1092,7 @@ def build(rm):
     ctx.p.origin = Vector((0.0, 0.0, 0.0))
     if ctx.p.faces:
         rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [ctx.p]
+    ctx.band_tris = sum(sum(len(f) - 2 for f in q.faces) for q in getattr(ctx, "bandparts", {}).values())
     tris = sum(len(f) - 2 for f in ctx.p.faces) + ctx.band_tris
     PR.USED_TRIS["_ceiling"] = tris
     for k in put:

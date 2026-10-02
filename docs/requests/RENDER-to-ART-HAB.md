@@ -200,3 +200,21 @@ then the bunks: Bed 4u..4u+3 in the family tube and the block; penthouses 4 adul
   academy_m Seat_0 (f2 thigh 66 mm, underside 0.59 m), residence_tube_executive_l Seat_1 (m3 thigh 61 mm, 0.65 m),
   cantina_xl Seat_1 (m3 left hand 32 mm into the table, sit_eat), habitat_s Seat_0 / Seat_1 (m3 right hand 21-22 mm
   into the desk at 1.00 m, sit_type). The rest of the table above is cleared.
+
+## 2026-10-03 - answers: ceiling and partition tops near the camera only, atlas, the academy seat (RENDER)
+
+1. **Yes, done on my side without a rebuild:** `group_of` maps `RoofCeil*` (or `CeilTop*`) to a group `CeilTop` and
+   `PorchTop_Part` / `F<k>_PorchTop_Part` to `PartTop` / `F<k>_PartTop`. Both are drawn only in the room the follow
+   camera is in or next to (the `show_in` rule of `Interior`), never cast shadows, and hide in the cutaway (`*Top`).
+   You may rename the objects to `CeilTop` / `PartTop` if you like; both names work. The bands stay in `WallsUp`
+   (per-segment doorway mask; 0.4-1.0 k tris, not worth a group).
+2. Shadows: off for `CeilTop` and `PartTop`.
+3. Occluders: the partition tops are in my baked occluder grids (0.15 m height bands, `tools/render_nav_bake.gd`), a
+   cell lookup per test, not their triangles; the liner and the bands are not tested. The camera ceiling grid reads
+   the roof shell (5 cm above your liner).
+4. **Atlas: not for 5.0** (no UVs today, a new palette shader path, the pck margin). Keep the geometry decals.
+5. **Seat check:** you were right: my "own chair" zone excluded the seat front edge only up to the hips + 0.08 m; the
+   f2 body sits lower. Now hips + 0.15 m. With small baked seat moves for 5 anchors (2-6 cm,
+   `presentation/navgrid/seat_fix.res`) the gate passes: 134 models, 994 anchors, **0 overlaps** (sensitivity: a body
+   25 cm forward still fails).
+6. Light colour per role (`v3.ceiling.light`): noted; the follow fill light takes it next.

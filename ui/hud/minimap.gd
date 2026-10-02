@@ -247,8 +247,12 @@ func _terrain_image() -> Image:
 		for i in m:
 			var y: float = w.heights[mini(n - 1, j * stride) * n + mini(n - 1, i * stride)]
 			var c0: Color = low.lerp(high, clampf((y + 4.0) / 9.0, 0.0, 1.0)).darkened(float(pal["dark"]))
-			if frost > 0.0 and sin(float(i) * 0.37 + sin(float(j) * 0.21) * 2.0) * cos(float(j) * 0.29 + float(i) * 0.05) > 0.5:
-				c0 = c0.lerp(Color("e4ebf3"), frost)
+			if frost > 0.0:
+				# Frost patches: a few broad soft blobs (low-frequency waves), not stripes.
+				var fi: float = float(i) * 0.045
+				var fj: float = float(j) * 0.045
+				var nz: float = 0.5 + 0.5 * (sin(fi * 1.7 + 0.6) * cos(fj * 1.3 + 1.1) * 0.6 + sin(fi * 0.9 + fj * 1.1 + 2.0) * 0.4)
+				c0 = c0.lerp(Color("e4ebf3"), frost * smoothstep(0.55, 0.8, nz))
 			small.set_pixel(i, j, c0)
 	var px: int = int(roundf(float(w.size) * _k))
 	small.resize(px, px, Image.INTERPOLATE_BILINEAR)

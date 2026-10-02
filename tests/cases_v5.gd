@@ -1159,8 +1159,10 @@ func v5_showcase(t) -> void:
 	for b in sim.state["buildings"].values():
 		if b["state"] == "active":
 			defs[String(b["def"])] = int(defs.get(String(b["def"]), 0)) + 1
-	for d in ["residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail", "super_dome"]:
+	for d in ["residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail", "super_dome", "hr_office"]:
 		t.check(defs.has(d), "has a %s" % d)
+	t.check(sim.hr.active(int(sim.bases.ids()[0])), "an HR office with an officer is active (section 17)")
+	t.check(not sim.hr.complaints().is_empty() and not sim.party.request_rows().is_empty(), "an open complaint and a party offer wait for the player")
 	t.check(sim.bases.count() >= 2, "2 bases")
 	t.check(not sim.traffic._pads(true).is_empty(), "a powered landing pad (ships and tourists)")
 	var prisoners := 0

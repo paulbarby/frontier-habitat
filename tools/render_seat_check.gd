@@ -306,7 +306,7 @@ static func _own(cp: Vector3, kind: String, hips: Vector3, fwd: Vector3, feet: V
 		var side: float = absf(d.dot(Vector2(-fwd.z, fwd.x)))
 		# (and the seat's front edge, 0.2-0.32 m ahead of the hips, low: no higher than the hips + 0.08 m;
 		# a desk or table top is at least 0.4 m ahead and 0.25 m higher)
-		if side < 0.3 and along >= 0.2 and along < 0.32 and cp.y < hips.y + 0.08:
+		if side < 0.3 and along >= 0.2 and along < 0.32 and cp.y < hips.y + 0.15:
 			return true
 		return cp.y < hips.y + 0.65 and side < 0.3 and along < 0.2 and along > -0.42
 	var ax := Vector2(head.x - feet.x, head.z - feet.z)

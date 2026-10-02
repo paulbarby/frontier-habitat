@@ -174,14 +174,14 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 340,
-    "Addon_jacket": 420,
+    "Addon_apron": 339,
+    "Addon_jacket": 419,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_m1": 520,
     "Head_m1": 159,
@@ -240,10 +240,10 @@
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2916,
     "uniform_science": 2997,
-    "uniform_food": 2917,
-    "uniform_medical": 2997,
+    "uniform_food": 2916,
+    "uniform_medical": 2996,
     "uniform_security": 3256,
-    "uniform_command": 3173,
+    "uniform_command": 3172,
     "prison": 2577,
     "casual_a": 2579,
     "casual_b": 2577,
@@ -793,15 +793,15 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 419,
+    "Addon_tunic": 420,
     "Addon_vest": 340,
     "Hair_m3": 519,
     "Head_m3": 160,
     "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1900,
     "Outfit_casual_c": 1899,
-    "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1899
+    "Outfit_swimwear": 1899,
+    "Outfit_uniform": 1900
    },
    "triangles_on_screen": {
     "uniform_engineering": {
@@ -850,17 +850,17 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2917,
-    "uniform_science": 2998,
-    "uniform_food": 2917,
-    "uniform_medical": 2997,
-    "uniform_security": 3257,
-    "uniform_command": 3173,
-    "prison": 2578,
+    "uniform_engineering": 2918,
+    "uniform_science": 2999,
+    "uniform_food": 2918,
+    "uniform_medical": 2999,
+    "uniform_security": 3258,
+    "uniform_command": 3174,
+    "prison": 2579,
     "casual_a": 2578,
     "casual_b": 2579,
     "casual_c": 2578,
-    "swimwear": 2579
+    "swimwear": 2578
    },
    "clips": [
     "argue",
@@ -1075,7 +1075,7 @@
    "triangles": {
     "Head_f1": 2922,
     "Hair_f1": 2852,
-    "Outfit_uniform": 11673,
+    "Outfit_uniform": 11674,
     "Outfit_casual_a": 11704,
     "Outfit_casual_b": 13998,
     "Outfit_casual_c": 12422,
@@ -1092,7 +1092,7 @@
    },
    "triangles_lod1": {
     "Addon_apron": 339,
-    "Addon_jacket": 420,
+    "Addon_jacket": 419,
     "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
@@ -1110,32 +1110,32 @@
    },
    "triangles_on_screen": {
     "uniform_engineering": {
-     "outfit_and_addons": 12089,
-     "with_head_and_hair": 17863
+     "outfit_and_addons": 12090,
+     "with_head_and_hair": 17864
     },
     "uniform_science": {
-     "outfit_and_addons": 13823,
-     "with_head_and_hair": 19597
+     "outfit_and_addons": 13824,
+     "with_head_and_hair": 19598
     },
     "uniform_food": {
-     "outfit_and_addons": 12378,
-     "with_head_and_hair": 18152
+     "outfit_and_addons": 12379,
+     "with_head_and_hair": 18153
     },
     "uniform_medical": {
-     "outfit_and_addons": 13823,
-     "with_head_and_hair": 19597
+     "outfit_and_addons": 13824,
+     "with_head_and_hair": 19598
     },
     "uniform_security": {
-     "outfit_and_addons": 13589,
-     "with_head_and_hair": 19363
+     "outfit_and_addons": 13590,
+     "with_head_and_hair": 19364
     },
     "uniform_command": {
-     "outfit_and_addons": 13999,
-     "with_head_and_hair": 19773
+     "outfit_and_addons": 14000,
+     "with_head_and_hair": 19774
     },
     "prison": {
-     "outfit_and_addons": 11673,
-     "with_head_and_hair": 17447
+     "outfit_and_addons": 11674,
+     "with_head_and_hair": 17448
     },
     "casual_a": {
      "outfit_and_addons": 11704,
@@ -1160,7 +1160,7 @@
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3259,
-    "uniform_command": 3175,
+    "uniform_command": 3174,
     "prison": 2579,
     "casual_a": 2579,
     "casual_b": 2580,
@@ -1397,8 +1397,8 @@
    },
    "triangles_lod1": {
     "Addon_apron": 340,
-    "Addon_jacket": 420,
-    "Addon_labcoat": 419,
+    "Addon_jacket": 419,
+    "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
@@ -1461,11 +1461,11 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
-    "uniform_science": 2997,
+    "uniform_science": 2998,
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3258,
-    "uniform_command": 3174,
+    "uniform_command": 3173,
     "prison": 2578,
     "casual_a": 2579,
     "casual_b": 2579,
@@ -1708,7 +1708,7 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 419,
+    "Addon_tunic": 420,
     "Addon_vest": 340,
     "Hair_f3": 520,
     "Head_f3": 160,
@@ -1716,7 +1716,7 @@
     "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1899,
     "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1899
+    "Outfit_uniform": 1900
    },
    "triangles_on_screen": {
     "uniform_engineering": {
@@ -1765,13 +1765,13 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2919,
-    "uniform_science": 2998,
-    "uniform_food": 2919,
-    "uniform_medical": 2998,
-    "uniform_security": 3259,
-    "uniform_command": 3175,
-    "prison": 2579,
+    "uniform_engineering": 2920,
+    "uniform_science": 2999,
+    "uniform_food": 2920,
+    "uniform_medical": 3000,
+    "uniform_security": 3260,
+    "uniform_command": 3176,
+    "prison": 2580,
     "casual_a": 2579,
     "casual_b": 2579,
     "casual_c": 2579,
@@ -2278,24 +2278,26 @@
    "loop": true
   },
   "walk": {
-   "frames": 32,
-   "duration_s": 1.0667,
+   "frames": 34,
+   "duration_s": 1.1333,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": true,
-   "speed_mps": 1.05,
-   "stride_m": 1.12
+   "speed_mps": 1.156,
+   "stride_m": 1.31,
+   "source": "motion capture: CMU 143_32 (mocap.cs.cmu.edu), retargeted"
   },
   "run": {
-   "frames": 20,
-   "duration_s": 0.6667,
+   "frames": 21,
+   "duration_s": 0.7,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": true,
-   "speed_mps": 3.405,
-   "stride_m": 2.27
+   "speed_mps": 3.296,
+   "stride_m": 2.307,
+   "source": "motion capture: CMU 143_01 (mocap.cs.cmu.edu), retargeted"
   },
   "carry_walk": {
    "frames": 32,
@@ -2941,7 +2943,7 @@
  "textures": {
   "note": "external PNGs in assets/models/people_tex_shared/ (one file per texture, shared by every variant that uses it); sources in assets/models/people_tex/ (.gdignore)"
  },
- "credits": "MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01)",
+ "credits": "MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01).  Motion capture (walk, run): The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.  Details: art/people/people_credits.md",
  "addons": {
   "Addon_toolbelt": "belt, buckle and three pouches (engineering, security)",
   "Addon_apron": "white bib apron with neck straps and ties (food)",

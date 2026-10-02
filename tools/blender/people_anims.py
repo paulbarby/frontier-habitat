@@ -132,6 +132,10 @@ def people_fix(P, clip):
         # floor by the solver's surface guard now (the old +2.2 cm on IK hands only made get_up start 1.3 cm off dead)
         w = max(0.0, min(1.0, (-hz - 0.25) / 0.45))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
+        # (2026-10-03) the lying legs rise with the body: their ankle targets are absolute, so the lowest shin (m3,
+        # 1.2 cm under the floor in dead) stayed down while the hips rose
+        for side in ("L", "R"):
+            Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + LIE_LIFT * w * max(0.0, min(1.0, Q.g("foot.%s.rel" % side)))
     return Q
 
 
@@ -645,7 +649,7 @@ def people_clips():
 # motion capture (npc_mocap.py writes tools/blender/mocap/<clip>.json; CMU data, credit in art/people/people_credits.md)
 # ------------------------------------------------------------------------------------------------------------------
 MOCAP_DIR = os.path.join(HERE, "mocap")
-MOCAP_USE = [x for x in os.environ.get("NPC_MOCAP_USE", "").split(",") if x]   # off until checked (2026-10-02 pause)
+MOCAP_USE = [x for x in os.environ.get("NPC_MOCAP_USE", "walk,run").split(",") if x]   # 2026-10-03: walk and run pass (audit + eye); jog, idle, talk_idle, sit_idle, dance_a do not yet
 
 
 def mocap_clip(name):
@@ -684,8 +688,9 @@ def mocap_override(clips, jaws):
 def pairs_json():
     import people_clips as PC
     pairs = {"hug": dict(clip_a="hug", clip_b="hug", distance_m=HUG["distance"], facing_deg=HUG["facing_deg"],
-                         sync_s=HUG["sync_s"], side_offset_m=0.0, hand_contact=True,
-                         note="arms round the partner's back, heads side by side; the hands rest on the partner's back")}
+                         sync_s=HUG["sync_s"], side_offset_m=0.0, hand_contact=True, arm_contact=True,
+                         note="arms round the partner's back, heads side by side; the hands rest on the partner's back and the high "
+                         "forearm on the partner's shoulder (arm_contact)")}
     pairs.update({k: dict(v) for k, v in PC.PAIRS.items()})
     return {
         "note": ("Paired clips.  Partner A plays clip_a at time 0, partner B plays clip_b from sync_s.  B stands at "

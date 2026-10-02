@@ -126,14 +126,15 @@ var _sh_fin := Vector3.ZERO     # eased eye offset from the pivot after the indo
 var _sh_finv := Vector3.ZERO
 const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
+var solid_fn: Callable         # (p) -> true inside a solid cell at eye height (world_view.follow_solid)
 var frame_fn: Callable         # (eye, look dir) -> true when no surface is within 0.8 m across the frame centre
 var occ_fn: Callable           # (eye) -> how far from the chest the eye may stand (world_view.follow_occluder)
 var _sh_occ := 1.0             # eased occluder pull (fraction of the eye's distance from the pivot)
 var _sh_occv := 0.0
 var _sh_occ_hold := 0.0
-const SH_W_OCC_IN := 4.0       # rad/s: in front of an occluder (9 gave 20-30 mm camera jerk)
+const SH_W_OCC_IN := 3.0       # rad/s: in front of an occluder (9 gave 20-30 mm camera jerk)
 const SH_W_OCC_OUT := 2.0      # rad/s: back out slowly
-const SH_OCC_HOLD := 0.5       # s clear before easing back out
+const SH_OCC_HOLD := 1.0       # s clear before easing back out
 const SH_OCC_MIN := 0.8        # m from the chest: a closer occluder is not avoided by pulling in
 var _sh_oo := 0.0              # occluder orbit offset (rad), eased
 var _sh_oov := 0.0
@@ -144,15 +145,32 @@ var _sh_od_t := 1.0
 var _sh_oo_clear := 0.0        # s the plain view has been clear
 var _sh_oo_blk := 0.0          # s the plain view has been blocked
 const SH_OCC_WAIT := 0.25      # s
-const SH_W_OCC_ORBIT := 3.0    # rad/s
+const SH_W_OCC_BOOM := 3.0     # rad/s: the framing boom length
+const SH_W_OCC_ORBIT := 2.0    # rad/s (3.0: a 45 deg swing gave 4 mm camera jerk)
 var head_boost := 1.0          # measurement switch (render_follow_headless rig.head_boost=0): the trailing-heading boost
 var collide_smooth := false   # set by collide_fn each call: the indoor wall rule is already smooth
 
 ## Is the view from heading h good: no occluder between the eye and the person, and (frame_fn) no surface
 ## within 0.8 m across the centre of the frame? The eye is the wall rule's target for that heading.
 var _sh_chk_clock := 0.0
-var dbg_search := [0, 0]      # measurement: framing searches [failed, found]
+var _sh_search_i := 0
+const SH_SEARCH_STEP := 6
+const SEARCH_CANDS := [[0.0, 1.0], [0.0, 0.75], [15.0, 1.0], [-15.0, 1.0], [30.0, 1.0], [-30.0, 1.0], [15.0, 0.75], [-15.0, 0.75],
+	[45.0, 1.0], [-45.0, 1.0], [0.0, 0.55], [30.0, 0.75], [-30.0, 0.75], [60.0, 1.0], [-60.0, 1.0], [45.0, 0.75], [-45.0, 0.75],
+	[90.0, 1.0], [-90.0, 1.0], [15.0, 0.55], [-15.0, 0.55], [60.0, 0.75], [-60.0, 0.75], [90.0, 0.75], [-90.0, 0.75], [0.0, 0.4]]
+var dbg_search := [0, 0]
+var dbg_cur_ok := true
+var _sh_fr_cool := 0.0
+var _sh_fr_sign := 1.0
+var _sh_bar := {}   # views barred for a while ("angle:boom%" -> s left)      # measurement: framing searches [failed, found]
 func _view_ok(pivot: Vector3, h: float, side: float, lift: float, df: float = 1.0) -> bool:
+	var _tv: int = Time.get_ticks_usec()
+	var r: bool = _view_ok2(pivot, h, side, lift, df)
+	prof_us["viewok"] = int(prof_us.get("viewok", 0)) + Time.get_ticks_usec() - _tv
+	prof_us["viewok_n"] = int(prof_us.get("viewok_n", 0)) + 1
+	return r
+
+func _view_ok2(pivot: Vector3, h: float, side: float, lift: float, df: float = 1.0) -> bool:
 	var e: Vector3 = _free_eye(pivot, h, side, lift, df)
 	if collide_fn.is_valid():
 		var rt := Vector3(sin(h), 0.0, cos(h))
@@ -165,12 +183,17 @@ func _view_ok(pivot: Vector3, h: float, side: float, lift: float, df: float = 1.
 		if cy < INF:
 			e.y = minf(e.y, cy - 0.3 - SH_CEIL_KNEE * 0.4)
 	e.y = maxf(e.y, _sh_p.y + 0.25)
+	if solid_fn.is_valid() and bool(solid_fn.call(e)):
+		return false
 	if float(occ_fn.call(e)) != INF:
 		return false
 	if frame_fn.is_valid():
+		# (the aim as the follow frame makes it: toward the pivot, turned by the shoulder offset, 10 deg down)
 		var to_p: Vector3 = pivot - e
-		var off: float = atan2(side, maxf(_sh_d * cos(_sh_pt), 0.05))
-		var look: Vector3 = to_p.normalized().rotated(Vector3.UP, -off)
+		var off: float = atan2(side, maxf(_sh_d * df * cos(_sh_pt), 0.05))
+		var ay: float = atan2(-to_p.z, to_p.x) - off
+		var ap: float = atan2(to_p.y, Vector2(to_p.x, to_p.z).length()) - deg_to_rad(10.0) - lift * 0.25
+		var look := Vector3(cos(ay) * cos(ap), sin(ap), -sin(ay) * cos(ap))
 		return bool(frame_fn.call(e, look))
 	return true
 
@@ -274,7 +297,15 @@ func set_shot(dist: float, orbit: float, pitch: float, look_yaw: float = 0.0, lo
 	_sh_returning = false
 
 ## One frame of the follow view. Returns false when the person is gone.
+var prof_us := {}              # measurement: microseconds per part of the follow frame (sums; read and reset by tools)
 func _shoulder_process(delta: float) -> bool:
+	var _t0: int = Time.get_ticks_usec()
+	var r: bool = _shoulder_process2(delta)
+	prof_us["total"] = int(prof_us.get("total", 0)) + Time.get_ticks_usec() - _t0
+	prof_us["frames"] = int(prof_us.get("frames", 0)) + 1
+	return r
+
+func _shoulder_process2(delta: float) -> bool:
 	var s = shoulder_fn.call()
 	if s == null:
 		shoulder_stop()
@@ -383,41 +414,83 @@ func _shoulder_process(delta: float) -> bool:
 		# surface closer than 0.8 m across the centre of the frame. The camera swings round the person by the
 		# smallest of +-15..90 deg that gives both, eased; back behind the shoulder once the plain view has
 		# been good for SH_OCC_HOLD s. A short block (a doorway jamb passing) waits SH_OCC_WAIT s first.
+		var _tf: int = Time.get_ticks_usec()
 		var h0: float = _sh_heading + _sh_o
 		_sh_chk_clock -= dt
 		if _sh_chk_clock <= 0.0:
-			_sh_chk_clock = 0.05
-			var cur_ok: bool = _view_ok(pivot, h0 + _sh_oo_t, side, lift, _sh_od_t)
-			var zero_ok: bool = cur_ok if absf(_sh_oo_t) < 0.001 and _sh_od_t > 0.999 else _view_ok(pivot, h0, side, lift, 1.0)
-			if zero_ok:
-				_sh_oo_clear += 0.05
+			# The view is judged from the camera as drawn (2026-10-03). Bad for SH_OCC_WAIT s: a search over
+			# swings and boom lengths whose predicted eye (the wall rule's target, under the ceiling, not in a
+			# solid cell) sees the person with a clear frame centre; the view just left is barred for 3 s, so a
+			# wrong prediction does not bring it back. Good for SH_OCC_HOLD s: one step back toward the plain
+			# view, if predicted good.
+			_sh_chk_clock = 0.1
+			var cur_ok: bool = float(occ_fn.call(camera.global_position)) == INF and (not frame_fn.is_valid() or bool(frame_fn.call(camera.global_position, -camera.global_transform.basis.z)))
+			# (and the person on screen: head and chest inside the frame)
+			if cur_ok:
+				var vps: Vector2 = camera.get_viewport().get_visible_rect().size
+				for hh in [1.25, 1.6]:
+					var pt: Vector3 = _sh_p + Vector3(0.0, hh * (_sh_eh / 1.65), 0.0)
+					if camera.is_position_behind(pt):
+						cur_ok = false
+					else:
+						var sp: Vector2 = camera.unproject_position(pt)
+						if sp.x < 0.0 or sp.y < 0.0 or sp.x > vps.x or sp.y > vps.y:
+							cur_ok = false
+			dbg_cur_ok = cur_ok
+			_sh_fr_cool -= 0.1
+			for k in _sh_bar.keys():
+				_sh_bar[k] = float(_sh_bar[k]) - 0.1
+				if float(_sh_bar[k]) <= 0.0:
+					_sh_bar.erase(k)
+			var cur_key: String = "%d:%d" % [int(round(rad_to_deg(_sh_oo_t) * _sh_side_s)), int(round(_sh_od_t * 100.0))]
+			if cur_ok:
+				_sh_oo_clear += 0.1
 				_sh_oo_blk = 0.0
-				if _sh_oo_clear > SH_OCC_HOLD:
-					_sh_oo_t = 0.0
-					_sh_od_t = 1.0
+				if _sh_oo_clear > SH_OCC_HOLD and _sh_fr_cool <= 0.0 and (_sh_od_t < 0.999 or absf(_sh_oo_t) > 0.001):
+					var nd: float = minf(1.0, _sh_od_t + 0.2)
+					var no: float = move_toward(_sh_oo_t, 0.0, deg_to_rad(15.0)) if nd >= 0.999 else _sh_oo_t
+					var nk: String = "%d:%d" % [int(round(rad_to_deg(no) * _sh_side_s)), int(round(nd * 100.0))]
+					if not _sh_bar.has(nk) and _view_ok(pivot, h0 + no, side, lift, nd):
+						_sh_od_t = nd
+						_sh_oo_t = no
+						_sh_fr_cool = 0.6
+					_sh_oo_clear = SH_OCC_HOLD * 0.5
 			else:
 				_sh_oo_clear = 0.0
-				_sh_oo_blk += 0.05
-				if not cur_ok and _sh_oo_blk > SH_OCC_WAIT:
-					# (a cramped room: when no swing of the full boom clears the view, a shorter boom)
+				_sh_oo_blk += 0.1
+				if _sh_oo_blk > SH_OCC_WAIT and _sh_fr_cool <= 0.0:
 					var found := false
-					for df in [1.0, 0.75, 0.55, 0.4]:
-						for a_deg in [0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0, 75.0, -75.0, 90.0, -90.0]:
-							var a_off: float = deg_to_rad(a_deg) * _sh_side_s
-							if _view_ok(pivot, h0 + a_off, side, lift, df):
-								_sh_oo_t = a_off
-								_sh_od_t = df
-								found = true
-								break
-						if found:
+					var tried := 0
+					while tried < SH_SEARCH_STEP and _sh_search_i < SEARCH_CANDS.size():
+						var cnd: Array = SEARCH_CANDS[_sh_search_i]
+						_sh_search_i += 1
+						var ck: String = "%d:%d" % [int(cnd[0]), int(round(float(cnd[1]) * 100.0))]
+						if ck == cur_key or _sh_bar.has(ck):
+							continue
+						tried += 1
+						var a_off: float = deg_to_rad(float(cnd[0])) * _sh_side_s
+						if _view_ok(pivot, h0 + a_off, side, lift, float(cnd[1])):
+							_sh_bar[cur_key] = 3.0
+							_sh_oo_t = a_off
+							_sh_od_t = float(cnd[1])
+							found = true
 							break
-					dbg_search[1 if found else 0] += 1
+					if found or _sh_search_i >= SEARCH_CANDS.size():
+						if not found:
+							# (nothing predicted good: the shortest boom behind the shoulder)
+							_sh_bar[cur_key] = 3.0
+							_sh_oo_t = 0.0
+							_sh_od_t = 0.32
+						_sh_search_i = 0
+						dbg_search[1 if found else 0] += 1
+						_sh_fr_cool = 0.5
 		var roo: Vector2 = _crit(_sh_oo, _sh_oov, _sh_oo_t, SH_W_OCC_ORBIT, dt)
 		_sh_oo = roo.x
 		_sh_oov = roo.y
-		var rod: Vector2 = _crit(_sh_od, _sh_odv, _sh_od_t, SH_W_OCC_ORBIT, dt)
+		var rod: Vector2 = _crit(_sh_od, _sh_odv, _sh_od_t, SH_W_OCC_BOOM, dt)
 		_sh_od = rod.x
 		_sh_odv = rod.y
+		prof_us["framing"] = int(prof_us.get("framing", 0)) + Time.get_ticks_usec() - _tf
 	elif _sh_new:
 		_sh_oo = 0.0
 		_sh_oov = 0.0
@@ -595,7 +668,9 @@ func _shoulder_process(delta: float) -> bool:
 	camera.global_position = eye
 	camera.look_at(eye + aim, Vector3.UP)
 	if probe_fn.is_valid():
+		var _tp: int = Time.get_ticks_usec()
 		probe_fn.call(self, delta)
+		prof_us["probe"] = int(prof_us.get("probe", 0)) + Time.get_ticks_usec() - _tp
 	return true
 
 func _ready() -> void:

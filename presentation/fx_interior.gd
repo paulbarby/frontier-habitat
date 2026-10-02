@@ -126,8 +126,7 @@ func _rebuild_pools() -> void:
 		var b: Dictionary = blds[id]
 		if b["kind"] != "room":
 			continue
-		var s: float = float(meta["tpl"].get("scale", 1.0))
-		var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * s + 0.03
+		var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * Models.scale3(meta["tpl"]).y + 0.03
 		var lamps: Array = _room_lamps(meta)
 		if lamps.is_empty():
 			# A room model without lamp anchors: one soft pool in the middle.

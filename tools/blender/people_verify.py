@@ -469,7 +469,7 @@ def check_pairs(check, M):
     name_b = out_mesh(next((e for o, e in M["variants"][b]["outfits"].items() if o.startswith("casual")),
                            list(M["variants"][b]["outfits"].values())[0]))
     ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
-    def hand_mask(ob, rig):
+    def hand_mask(ob, rig, arms=False):
         """The hands, and the wrists (forearm vertices within 7 cm of the wrist joint, bind pose): what touches the
         partner by design in the hand_contact pairs."""
         names = {g.index: g.name for g in ob.vertex_groups}
@@ -479,10 +479,11 @@ def check_pairs(check, M):
             g = names.get(max(v.groups, key=lambda g: g.weight).group, "") if v.groups else ""
             m = g.startswith(("hand.", "prop."))
             if g.startswith("forearm."):
-                m = (v.co - wr[g[-1]]).length < 0.07
+                m = arms or (v.co - wr[g[-1]]).length < 0.07
             out.append(m)
         return np.array(out, dtype=bool)
     hand_a, hand_b = hand_mask(ob_a, rig_a), hand_mask(ob_b, rig_b)
+    arm_a, arm_b = hand_mask(ob_a, rig_a, True), hand_mask(ob_b, rig_b, True)
     for pname, pr in pairs.items():
         if pr["clip_a"] not in M["clips"] or pr["clip_b"] not in M["clips"]:
             continue
@@ -511,12 +512,17 @@ def check_pairs(check, M):
             pb = world_co(ob_b)
             ia, ib = np.arange(len(pa)), np.arange(len(pb))
             if pr.get("hand_contact"):                  # the gripping hands touch by design
-                pa, pb, ia, ib = pa[~hand_a], pb[~hand_b], ia[~hand_a], ib[~hand_b]
+                ma, mb = (arm_a, arm_b) if pr.get("arm_contact") else (hand_a, hand_b)    # (hug: forearms too)
+                pa, pb, ia, ib = pa[~ma], pb[~mb], ia[~ma], ib[~mb]
             pa, pb, ia, ib = pa[::2], pb[::2], ia[::2], ib[::2]
             cb, ca = capsules(rig_b, sb), capsules(rig_a, sa)
             if pr.get("hand_contact"):
-                # hands and wrists touch the partner's hands and wrists by design: not the forearm-hand capsules
-                keep = [i for i, c in enumerate(CAPS) if not (c[0].startswith("forearm.") and c[1].startswith("hand."))]
+                # hands and wrists touch the partner's hands and wrists by design: not the forearm-hand capsules; in a
+                # hug (arm_contact) the arms rest on the partner: no arm capsules at all (the bodies and heads stay
+                # strict)
+                arm_caps = ("upper_arm.", "forearm.") if pr.get("arm_contact") else ("forearm.",)
+                keep = [i for i, c in enumerate(CAPS) if not (c[0].startswith(arm_caps) and
+                                                              c[1].startswith(("hand.", "forearm.")))]
                 keep += list(range(len(CAPS), len(cb)))
                 cb, ca = [cb[i] for i in keep], [ca[i] for i in keep]
             n2a, da = deep_points(pa, cb, 0.02)

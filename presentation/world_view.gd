@@ -447,6 +447,8 @@ func follow_start(id: int) -> bool:
 		r.occ_fn = follow_occluder
 	if "frame_fn" in r:
 		r.frame_fn = follow_frame_clear
+	if "solid_fn" in r:
+		r.solid_fn = follow_solid
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
@@ -717,6 +719,7 @@ func _vol_soft(vols: Array, p: Vector3, knee: float, m_room: float, m_tube: floa
 ## Returns how far from the chest the eye may stand (the first occluder minus FOLLOW_OCC_GAP), INF when the
 ## view is clear. The camera rig pulls the eye in to that distance (camera_rig, SH_W_OCC_*).
 const FOLLOW_OCC_GAP := 0.25
+const SLIDE_M := 0.25          # m: the slide keeps the eye this far inside the room circle / tube
 const FOLLOW_OCC_NEAR := 0.5   # m: the person's own space (a kiosk canopy over them, a shelf beside them) is not tested
 const Occ = preload("res://presentation/fx_occ.gd")
 var follow_occ_n := 0        # measurement: occluded lines in the last call
@@ -729,26 +732,13 @@ func follow_occluder(eye: Vector3) -> float:
 	if fb == null:
 		return INF
 	var body: Vector3 = fb
-	var blds: Array = []
-	var b2 := Vector2(body.x, body.z)
-	for bid in bmeta:
-		var b: Dictionary = sim.state["buildings"].get(bid, {})
-		if b.is_empty() or not (b["kind"] in ["room", "exterior", "special"]):
-			continue
-		if (b["pos"] as Vector2).distance_to(b2) > float(b["radius"]) + 4.0:
-			continue
-		var meta: Dictionary = bmeta[bid]
-		var tpl: Dictionary = meta.get("tpl", {})
-		if tpl.is_empty():
-			continue
-		var g: Dictionary = Occ.grid_of(tpl)
-		if g.is_empty():
-			continue
-		var sc: float = float(tpl.get("scale", 1.0))
-		blds.append([g, ((meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Vector3(sc, sc, sc)), Vector3.ZERO)).affine_inverse()])
-	if blds.is_empty():
-		return INF
+	var blds: Array = _occ_grids_near(body)
 	var best := INF
+	# (the room wall between a corridor camera and a person in the room)
+	if follow_wall_cross(body + Vector3(0.0, 1.25, 0.0), eye):
+		follow_occ_n += 1
+		follow_occ_at = eye
+		return 0.0
 	for hgt in [1.25, 1.6]:
 		var a: Vector3 = body + Vector3(0.0, hgt, 0.0)
 		var d: Vector3 = eye - a
@@ -794,16 +784,24 @@ func follow_frame_hit(eye: Vector3, look: Vector3) -> float:
 	var rt: Vector3 = f.cross(Vector3.UP).normalized()
 	var up: Vector3 = rt.cross(f).normalized()
 	var best := INF
+	# (only the space between the lens and the person counts: what the person stands at, a console or a desk
+	# just in front of them, is not a wall in the camera's face; a close-up camera met it within 0.8 m)
+	var reach: float = minf(FRAME_CLEAR, eye.distance_to((fb as Vector3) + Vector3(0.0, 1.3, 0.0)) - 0.35)
+	if reach < 0.1:
+		return INF
 	for ay in [-0.21, 0.0, 0.21]:
 		for ap in [-0.12, 0.0, 0.12]:
 			var d: Vector3 = (f + rt * tan(ay) + up * tan(ap)).normalized()
 			var t := 0.1
-			while t <= FRAME_CLEAR:
+			while t <= reach:
 				var q: Vector3 = eye + d * t
 				var hit := false
 				if indoor and not vols.is_empty() and not _vol_inside(vols, q, 0.0):
 					hit = true
 					frame_why = "wall"
+				if not hit and indoor and follow_wall_cross(eye, q):
+					hit = true
+					frame_why = "ring"
 				if not hit:
 					for e in blds:
 						if Occ.blocked(e[0], (e[1] as Transform3D) * q):
@@ -817,8 +815,85 @@ func follow_frame_hit(eye: Vector3, look: Vector3) -> float:
 				t += 0.1
 	return best
 
+## Does the segment a-b cross a room's wall ring away from its doorways (2026-10-03)? The union of the rooms
+## and corridors has no wall where a corridor meets a room, so a camera in the corridor saw the person in
+## the room through the room's wall (the outside of the wall filled the frame). A crossing within 0.75 m
+## of a doorway (fx_doors) is not a wall.
+func follow_wall_cross(a: Vector3, b: Vector3) -> bool:
+	var a2 := Vector2(a.x, a.z)
+	var b2 := Vector2(b.x, b.z)
+	var d: Vector2 = b2 - a2
+	var dl: float = d.length()
+	if dl < 0.01:
+		return false
+	for v in _follow_volumes(a.lerp(b, 0.5), dl * 0.5 + 0.5):
+		if v[0] != "room":
+			continue
+		var c: Vector2 = v[1]
+		var r: float = float(v[2])
+		var ia: bool = a2.distance_to(c) < r
+		var ib: bool = b2.distance_to(c) < r
+		if ia == ib:
+			continue
+		# the crossing point on the circle
+		var f: Vector2 = a2 - c
+		var qa: float = d.dot(d)
+		var qb: float = 2.0 * f.dot(d)
+		var qc: float = f.dot(f) - r * r
+		var disc: float = qb * qb - 4.0 * qa * qc
+		if disc < 0.0:
+			continue
+		var sq: float = sqrt(disc)
+		var t: float = (-qb - sq) / (2.0 * qa)
+		if t < 0.0 or t > 1.0:
+			t = (-qb + sq) / (2.0 * qa)
+		var xp: Vector2 = a2 + d * clampf(t, 0.0, 1.0)
+		var at_door := false
+		for dd in _doors_of_room(int(v[3])):
+			if Vector2((dd as Vector3).x, (dd as Vector3).z).distance_to(xp) < 0.75:
+				at_door = true
+				break
+		if not at_door:
+			return true
+	return false
+
+var _door_cache := {}
+var _door_cache_n := -1
+func _doors_of_room(rid: int) -> Array:
+	if doors == null:
+		return []
+	if _door_cache_n != (doors.doors as Array).size():
+		_door_cache_n = (doors.doors as Array).size()
+		_door_cache = {}
+		for d in doors.doors:
+			(_door_cache.get_or_add(int(d["room"]), []) as Array).append(d["pos"])
+	return _door_cache.get(rid, [])
+
+## Is p in a solid cell (fx_occ) at its height or 0.3 m below (the lens inside a shelf or a partition)?
+func follow_solid(p: Vector3) -> bool:
+	if follow_id < 0:
+		return false
+	var fb = agent_world_pos(follow_id)
+	if fb == null:
+		return false
+	for e in _occ_grids_near(fb as Vector3):
+		if Occ.blocked(e[0], (e[1] as Transform3D) * p) or Occ.blocked(e[0], (e[1] as Transform3D) * (p + Vector3(0.0, -0.3, 0.0))):
+			return true
+	return false
+
 ## The occluder grids of the structures within 4 m of p, with their world -> model transform.
 func _occ_grids_near(body: Vector3) -> Array:
+	# (cached: the structures near the person change slowly; refreshed after 2 m or 0.5 s)
+	if _og_pos.distance_to(body) < 2.0 and _time - _og_t < 0.5:
+		return _og_list
+	_og_pos = body
+	_og_t = _time
+	_og_list = _occ_grids_near2(body)
+	return _og_list
+var _og_pos := Vector3.INF
+var _og_t := -99.0
+var _og_list: Array = []
+func _occ_grids_near2(body: Vector3) -> Array:
 	var out: Array = []
 	var b2 := Vector2(body.x, body.z)
 	for bid in bmeta:
@@ -834,8 +909,7 @@ func _occ_grids_near(body: Vector3) -> Array:
 		var g: Dictionary = Occ.grid_of(tpl)
 		if g.is_empty():
 			continue
-		var sc: float = float(tpl.get("scale", 1.0))
-		out.append([g, ((meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Vector3(sc, sc, sc)), Vector3.ZERO)).affine_inverse(), String(b["def"])])
+		out.append([g, ((meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Models.scale3(tpl)), Vector3.ZERO)).affine_inverse(), String(b["def"])])
 	return out
 
 ## The indoor guard as a SLIDE (2026-10-02): from last frame's eye `from` (inside the rooms and corridors) toward
@@ -852,13 +926,17 @@ func follow_slide(shoulder: Vector3, from: Vector3, to: Vector3) -> Vector3:
 		return to
 	var p := Vector2(from.x, from.z)
 	var q := Vector2(to.x, to.z)
-	if float(_vol_field(vols, p, 0.05, 0.05, 0.0)[0]) < -0.01:
-		return _vol_soft(vols, to, 0.2, 0.05, 0.05, -FOLLOW_UNION_TAU)
+	# (margin 0.25 m: the wall panels stand up to 0.2 m inside the room circle; at 0.05 m the lens was in the
+	# wall and faced its back, critic 41)
+	if float(_vol_field(vols, p, SLIDE_M, SLIDE_M, 0.0)[0]) < -0.01:
+		return _vol_soft(vols, to, 0.2, SLIDE_M, SLIDE_M, -FOLLOW_UNION_TAU)
+	# (furniture: a step into a solid cell at eye height (fx_occ: shelves, machines, partitions) is not taken)
+	var og: Array = _occ_grids_near(fb as Vector3)
 	var n: int = clampi(int(ceil(p.distance_to(q) / 0.04)), 1, 60)
 	for i in n:
 		var np: Vector2 = p + (q - p) / float(n - i)
 		for _k in 2:
-			var f: Array = _vol_field(vols, np, 0.05, 0.05, 0.0)
+			var f: Array = _vol_field(vols, np, SLIDE_M, SLIDE_M, 0.0)
 			if float(f[0]) >= 0.0:
 				break
 			var g: Vector2 = f[1]
@@ -866,6 +944,14 @@ func follow_slide(shoulder: Vector3, from: Vector3, to: Vector3) -> Vector3:
 				np = p
 				break
 			np += g.normalized() * (-float(f[0]))
+		var solid := false
+		for e in og:
+			var w3 := Vector3(np.x, to.y, np.y)
+			if Occ.blocked(e[0], (e[1] as Transform3D) * w3) or Occ.blocked(e[0], (e[1] as Transform3D) * (w3 + Vector3(0.0, -0.3, 0.0))):
+				solid = true
+				break
+		if solid:
+			continue
 		p = np
 	fc_win = "slide"
 	return Vector3(p.x, to.y, p.y)
@@ -978,19 +1064,37 @@ const FOLLOW_TUBE_R := 1.15   # m: corridor inside radius for the camera (fx_npc
 func _follow_volumes(p: Vector3, reach: float) -> Array:
 	var out: Array = []
 	var q := Vector2(p.x, p.z)
-	for id in bmeta:
-		var b: Dictionary = sim.state["buildings"].get(id, {})
-		if b.is_empty():
-			continue
+	# (2026-10-03, the indoor follow frame cost: every call walked all ~100 structures; the candidates within
+	# 40 m of the point are kept and refreshed when it moves 10 m or after 0.5 s)
+	if _vc_pos.distance_to(q) > 10.0 or _time - _vc_t > 0.5 or reach > 25.0 or _vc_n != bmeta.size():
+		_vc_pos = q
+		_vc_t = _time
+		_vc_n = bmeta.size()
+		_vc_list = []
+		for id in bmeta:
+			var b0: Dictionary = sim.state["buildings"].get(id, {})
+			if b0.is_empty():
+				continue
+			if b0["kind"] == "room":
+				if (b0["pos"] as Vector2).distance_to(q) < float(b0["radius"]) + 40.0:
+					_vc_list.append(b0)
+			elif b0["def"] == "corridor":
+				if Geometry2D.get_closest_point_to_segment(q, b0["p0"], b0["p1"]).distance_to(q) < 40.0:
+					_vc_list.append(b0)
+	for b in _vc_list:
 		if b["kind"] == "room":
 			var r: float = float(b["radius"])
 			if (b["pos"] as Vector2).distance_to(q) < r + reach:
-				out.append(["room", b["pos"], r, int(id)])
-		elif b["def"] == "corridor":
+				out.append(["room", b["pos"], r, int(b["id"])])
+		else:
 			var c: Vector2 = Geometry2D.get_closest_point_to_segment(q, b["p0"], b["p1"])
 			if c.distance_to(q) < FOLLOW_TUBE_R + reach:
-				out.append(["tube", b["p0"], b["p1"], FOLLOW_TUBE_R, int(id)])
+				out.append(["tube", b["p0"], b["p1"], FOLLOW_TUBE_R, int(b["id"])])
 	return out
+var _vc_pos := Vector2(INF, INF)
+var _vc_t := -99.0
+var _vc_n := -1
+var _vc_list: Array = []
 
 ## Is p (xz) inside one of the volumes, `margin` m off its wall? (a corridor keeps at most 0.35 m)
 static func _vol_inside(vols: Array, p: Vector3, margin: float) -> bool:
@@ -1083,8 +1187,7 @@ func _roof_ceiling(b: Dictionary, meta: Dictionary, p: Vector3) -> float:
 	if g.is_empty():
 		return INF
 	var xf: Transform3D = meta["xf"]
-	var s: float = float(tpl.get("scale", 1.0))
-	var full: Transform3D = xf * Transform3D(Basis.from_scale(Vector3(s, s, s)), Vector3.ZERO)
+	var full: Transform3D = xf * Transform3D(Basis.from_scale(Models.scale3(tpl)), Vector3.ZERO)
 	var lp: Vector3 = full.affine_inverse() * p
 	# Bilinear over the 4 nearest cell centres (a nearest-cell lookup stepped by up to 0.9 m between two
 	# cells and dropped the camera in one frame, 2026-10-01); a missing neighbour takes the lowest found.
@@ -1264,6 +1367,8 @@ func _tube_glass(on: bool) -> void:
 				bm.metallic = float(bm.get_meta("glass_m0", bm.metallic))
 
 var _indoor := 0.0
+var fv_no_fill := false        # measurement only (fvtest fill 0)
+var fv_no_interior := false    # measurement only (fvtest interior 0)
 var _fill: OmniLight3D
 ## The follow camera inside a room under its roof (Paul 2026-10-01): the sky drops the outdoor haze and
 ## lifts the ambient (fx_sky.indoor), and a soft fill light rides above the camera (no shadow, 7 m) so the
@@ -1289,7 +1394,7 @@ func _follow_indoor(cam: Vector3) -> void:
 		_fill.light_color = Color("ffe9d2")
 		add_child(_fill)
 	_fill.visible = true
-	_fill.light_energy = 0.9 * _indoor
+	_fill.light_energy = 0.0 if fv_no_fill else 0.9 * _indoor
 	if cam != Vector3.INF:
 		_fill.global_position = cam + Vector3(0.0, 0.25, 0.0)
 
@@ -2067,6 +2172,8 @@ func _template(b: Dictionary) -> Dictionary:
 	var tb: Dictionary = Models.building(model_id, size, float(b["radius"]), m_r, b["kind"], def.get("category", "logistics"), s_r)
 	if mr.has(-1) and size < 0 and absf(float(b["radius"]) - m_r) > 0.05:
 		tb = Models._with_scale(tb, float(b["radius"]) / m_r)
+	if String(b["kind"]) == "room" and not (String(b["def"]) in ["airlock", "junction", "super_dome"]):
+		tb = Models.with_full_height(tb)
 	# Airlock lights take their colour from the cycle (fx_airlock).
 	return Models.status_tinted(tb) if String(b["def"]) == "airlock" else tb
 
@@ -2153,7 +2260,7 @@ func _make_building(b: Dictionary, mode: String) -> void:
 	meta["xf"] = xf
 	var s: float = float(tpl.get("scale", 1.0))
 	var aabb: AABB = tpl["aabb"]
-	meta["top"] = maxf(1.0, aabb.end.y * s)
+	meta["top"] = maxf(1.0, aabb.end.y * Models.scale3(tpl).y)
 	for p in tpl["parts"]:
 		if p["group"] == "Roof":
 			var mesh: Mesh = p["mesh"]
@@ -2163,7 +2270,7 @@ func _make_building(b: Dictionary, mode: String) -> void:
 					meta["glass_roof"] = true
 	var anchors := {}
 	for a in tpl["anchors"]:
-		anchors[a] = xf * Transform3D(Basis.from_scale(Vector3(s, s, s)), Vector3.ZERO) * (tpl["anchors"][a] as Transform3D)
+		anchors[a] = xf * Transform3D(Basis.from_scale(Models.scale3(tpl)), Vector3.ZERO) * (tpl["anchors"][a] as Transform3D)
 	meta["anchors"] = anchors
 	if mode == "inst":
 		meta["h"] = inst.add(tpl, xf)
@@ -2292,6 +2399,11 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 		inst.set_hidden(hnd, "Interior", shut)
 		inst.set_hidden(hnd, "Tall", shut)
 		inst.set_hidden(hnd, "WallsIn", shut)
+	# the inner ceiling and the partition tops: only inside the room the follow camera is in or next to
+	# (shut roof elsewhere; the cutaway hides them by the *Top rule above)
+	var inner: bool = bool(meta.get("show_in", false)) and o <= 0.0
+	inst.set_hidden(hnd, "CeilTop", not inner)
+	inst.set_hidden(hnd, "PartTop", not inner and o <= 0.0)
 	# Coordinator 2026-09-26: a record drawn larger than its model (old-save radius, uniform
 	# scale s > 1) would carry the cut up to 1.40 * s. In the cutaway the wall groups get Y scale
 	# 1/s, so the cut stays at 1.40 m in world space. Floors, doors and walk grids keep scale s.
@@ -2325,7 +2437,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			# The "all roofs off" toggle does not apply there.
 			if follow_id >= 0:
 				want = 0.0
-			var show_in: bool = follow_id >= 0 and _follow_open.has(id)
+			var show_in: bool = follow_id >= 0 and _follow_open.has(id) and not fv_no_interior
 			if show_in != bool(meta.get("show_in", false)):
 				meta["show_in"] = show_in
 				_apply_roof(b, meta)
@@ -3057,8 +3169,7 @@ func _make_outline(id: int) -> Node3D:
 		mi.material_override = m
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
-	var s: float = float(tpl.get("scale", 1.0))
-	root.transform = (meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Vector3(s, s, s)), Vector3.ZERO)
+	root.transform = (meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Models.scale3(tpl)), Vector3.ZERO)
 	add_child(root)
 	return root
 
@@ -3612,6 +3723,22 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"fvtest":
+			# fvtest nearfade|fill|occ|framing|interior 0|1: follow-view cost bisect (measurement only).
+			var on: bool = w.size() < 3 or w[2] != "0"
+			match w[1]:
+				"nearfade":
+					Models.near_fade(0.45, 0.47) if on else Models.near_fade(0.0, 0.001)
+				"fill":
+					fv_no_fill = not on
+				"occ":
+					if rig() != null:
+						rig().occ_on = 1.0 if on else 0.0
+				"interior":
+					fv_no_interior = not on
+					for id in bmeta:
+						bmeta[id]["show_in"] = not on
+			return "%s %s" % [w[1], str(on)]
 		"framecheck":
 			# framecheck: the follow camera's framing test now (nearest surface across the frame centre, what).
 			var rr = rig()
@@ -3625,7 +3752,11 @@ func debug_cmd(text: String) -> String:
 			for e in gl:
 				cells += (e[0]["cells"] as Dictionary).size()
 			var vl: Array = _follow_volumes(rr.camera.global_position, 1.3)
-			return "%s %s | grids %d cells %d vols %d eye_in %s where %s" % ["clear" if hh == INF else "hit %.1f" % hh, frame_why, gl.size(), cells, vl.size(), str(_vol_inside(vl, rr.camera.global_position, 0.0)), String(sim.state["agents"].get(follow_id, {}).get("where", "?"))]
+			var cp: Vector3 = rr.camera.global_position
+			var oc: float = follow_occluder(cp)
+			var bp: Vector3 = fbp if fbp != null else Vector3.ZERO
+			return "%s %s | grids %d cells %d vols %d eye_in %s where %s | occ %s cam (%.2f,%.2f,%.2f) body (%.2f,%.2f,%.2f) d %.2f od %.2f oo %.2f cur_ok %s" % ["clear" if hh == INF else "hit %.1f" % hh, frame_why, gl.size(), cells, vl.size(), str(_vol_inside(vl, cp, 0.0)), String(sim.state["agents"].get(follow_id, {}).get("where", "?")),
+				"clear" if oc == INF else "%.2f" % oc, cp.x, cp.y, cp.z, bp.x, bp.y, bp.z, Vector2(cp.x - bp.x, cp.z - bp.z).length(), float(rr._sh_od), float(rr._sh_oo), str(rr.dbg_cur_ok)]
 		"robots":
 			# robots open|auto: the Club's robot dancers dance whatever its hours (evidence shots).
 			if robots != null:
@@ -3792,7 +3923,7 @@ func debug_cmd(text: String) -> String:
 					continue
 				var he: Dictionary = inst.handles[e[1]]
 				var bt: Dictionary = inst.batches[he["key"]]
-				var sc: float = float(he.get("scale", 1.0))
+				var sc: float = (he.get("scale", Vector3.ONE) as Vector3).y
 				for pp in bt["parts"]:
 					var part: Dictionary = pp["part"]
 					if bool(part.get("shadow_only", false)) or (he["hidden"] as Dictionary).has(part["group"]):

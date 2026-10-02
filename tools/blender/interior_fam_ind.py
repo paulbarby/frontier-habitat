@@ -454,13 +454,31 @@ def industry(rm):
     plan.rect(cxm, cym, (x1 - x0) / 2, (y1 - y0) / 2, 0.0, tag="machine")
     cx = mx + x1 + line_d - 0.45
     ys = [(j - (nw - 1) / 2) * span for j in range(nw)]
-    for j, y in enumerate(ys):
+    # critic 41 (industry variety): the control line per type - straight (0), an arc round the machine centre (1),
+    # staggered in two rows (2); the arc and the stagger fall back to straight when they do not fit
+    places = [(cx, y, 0.0) for y in ys]
+    var = sum(ord(ch) for ch in tid) % 3
+    if var == 1 and nw > 1:
+        rc = cx - cxm
+        step = degrees(span / max(1.0, rc))
+        arc = [(cxm + rc * cos(radians((j - (nw - 1) / 2) * step)), cym + rc * sin(radians((j - (nw - 1) / 2) * step)),
+                (j - (nw - 1) / 2) * step) for j in range(nw)]
+        if all(hypot(x_ + 0.6 * cos(radians(a_)), y_ + 0.6 * sin(radians(a_))) <= rmax for x_, y_, a_ in arc):
+            places = arc
+    elif var == 2 and nw > 1:
+        stag = [(cx + (0.55 if j % 2 else 0.0), y, 0.0) for j, y in enumerate(ys)]
+        if all(hypot(x_ + 0.6, y_) <= rmax for x_, y_, _ in stag):
+            places = stag
+    elif var == 1 and nw == 1:
+        places = [(cx, 0.45 * span, -12.0)]            # a single console set off the axis, turned to the machine
+    rm.v3_info["control_layout"] = ("straight", "arc", "staggered")[var]
+    for j, (x_, y, yaw_) in enumerate(places):
         if tid == "workshop":
-            bench_at(plan, cx + 0.05, y, 0.0, w=1.2, seed=j)
+            bench_at(plan, x_ + 0.05, y, yaw_, w=1.2, seed=j)
         elif tid == "electronics_fab":
-            sit_desk(plan, cx, y, 0.0, w=1.15, monitors=1 + (j % 2), seed=j)
+            sit_desk(plan, x_, y, yaw_, w=1.15, monitors=1 + (j % 2), seed=j)
         else:
-            console_at(plan, cx, y, 0.0, w=1.0)
+            console_at(plan, x_, y, yaw_, w=1.0)
     yl = max(line_hw, (y1 - y0) / 2) + 0.35
     for sgn in (-1, 1):
         yy = cym + sgn * yl

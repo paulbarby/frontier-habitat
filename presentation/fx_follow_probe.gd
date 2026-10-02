@@ -111,26 +111,32 @@ func record(rig, delta: float) -> void:
 		key = "run" if sm.run_latch else "walk"
 	var a: Dictionary = view.sim.state["agents"].get(id, {})
 	# occluders between the camera and the person's chest / head (fx_occ), from the drawn camera
+	# (the occlusion and framing tests run on every 4th frame only and count for 4: measuring them on
+	# every frame cost 1.5 ms a frame natively, more in the web build, 2026-10-03)
 	var occ := 0
-	if view.has_method("follow_occluder"):
+	var meas: bool = rows.size() % 4 == 0
+	if meas and view.has_method("follow_occluder"):
 		view.follow_occluder(cam.global_position)
 		occ = int(view.follow_occ_n)
 	# critic round 41: a surface within 0.8 m across the frame centre; the head or chest off screen
 	var fbad := 0
-	if view.has_method("follow_frame_hit"):
+	if meas and view.has_method("follow_frame_hit"):
 		fbad = int(view.follow_frame_hit(cam.global_position, -cam.global_transform.basis.z) != INF)
 		if fbad > 0:
 			why_n[view.frame_why] = int(why_n.get(view.frame_why, 0)) + 1
 	var vp: Vector2 = view.get_viewport().get_visible_rect().size
 	var chest: Vector3 = bp + Vector3(0.0, 1.25, 0.0)
 	var offs := 0
-	for pt in [head, chest]:
+	for pt in ([head, chest] if meas else []):
 		if cam.is_position_behind(pt):
 			offs = 1
 		else:
 			var sp2: Vector2 = cam.unproject_position(pt)
 			if sp2.x < 0.0 or sp2.y < 0.0 or sp2.x > vp.x or sp2.y > vp.y:
 				offs = 1
+	if meas:
+		var k2: String = "%s_%s" % ["ok" if bool(rig.get("dbg_cur_ok")) else "bad", "hit" if fbad > 0 else "clear"]
+		why_n[k2] = int(why_n.get(k2, 0)) + 1
 	rows.append({"fbad": fbad, "offs": offs, "occ": occ, "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
 		"mode": String(rec["mode"]), "v": float(rec.get("v", 0.0)), "cam": cam.global_position, "cyaw": atan2(-f.z, f.x),
 		"cpitch": asin(clampf(f.y, -1.0, 1.0)), "scr": sp, "pull": float(rig.get("_sh_pull")), "eye": float(rig.get("_sh_eyeh")),
@@ -206,14 +212,14 @@ func report() -> Dictionary:
 	var occf := 0
 	for r in rows:
 		if not bool(r["cut"]) and int(r.get("occ", 0)) > 0:
-			occf += 1
+			occf += 4
 	out["occluded_frames"] = occf
 	var fb2 := 0
 	var of2 := 0
 	for r in rows:
 		if not bool(r["cut"]):
-			fb2 += int(r.get("fbad", 0))
-			of2 += int(r.get("offs", 0))
+			fb2 += 4 * int(r.get("fbad", 0))
+			of2 += 4 * int(r.get("offs", 0))
 	out["wall_centre_frames"] = fb2
 	out["wall_centre_why"] = why_n
 	out["off_screen_frames"] = of2

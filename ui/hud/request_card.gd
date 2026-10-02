@@ -193,7 +193,7 @@ func _option_controls(v: VBoxContainer, q: Dictionary) -> void:
 		place.add_theme_font_size_override("font_size", 12)
 		place.tooltip_text = "Where\nThe party gathers here. A venue needs power and air."
 		for c in choices:
-			place.add_item("%s  ·  about %d units of drinks or snacks" % [String(c["name"]), int(c["cost"])])
+			place.add_item("%s (%d units)" % [String(c["name"]), int(c["cost"])])
 			place.set_item_metadata(place.item_count - 1, int(c["building"]))
 		if choices.is_empty():
 			place.add_item("No venue with power and air")

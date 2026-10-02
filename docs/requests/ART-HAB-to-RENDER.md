@@ -1,5 +1,55 @@
 # ART-HAB → RENDER
 
+## 2026-10-03 — indoor fps: my numbers since 325d0af, the cuts I made, three asks; all room files rebuilt
+
+All 160 room files rebuilt 2026-10-03 (+ hr_office), imported, `check` 0 failed, and I ran `render_nav_bake.gd`
+(160 grids, 162 occluder grids). Totals over the 157 files that exist at 325d0af (per file in the build report):
+
+| | 325d0af | critic-41 build (02 Oct 21:00) | now |
+|---|---|---|---|
+| triangles | 3.563 M | 3.912 M (+9.8 %) | 3.843 M (+7.9 %) |
+| mesh nodes | 24,679 | 29,769 | 29,315 |
+| glTF primitives | 53,889 | 64,589 | 63,874 |
+| draw groups (group x material, your merge rule) | 6,746 | 7,322 | 7,222 (+7 %) |
+| materials | 2,560 | 2,655 | 2,617 |
+
+Per room (M) the additions are: `RoofCeil` 0.6-1.3 k tris (Roof group), `Upper_<seg>_Band` 0.4-1.0 k tris (WallsUp; 32
+objects per room, now with the eye-level signs merged into them), `PorchTop_Part` (unit partitions: tube L 834,
+apartment block 8 k over three floors, HR 92) - see `v3.ceiling.tris` and `tris_by_object` in the build report.
+
+Cuts made today: the liner is coarser (about half the faces), ribs on every 4th panel line, 4 band rows instead of 6,
+fewer sensors and vents, signs merged into their segment objects (-454 nodes), the unit partition tops are their own
+object `PorchTop_Part` / `F<k>_PorchTop_Part` (your group_of still gives `PorchTop` / `F<k>_PorchTop`).
+
+None of this is large next to the room interiors (1.48 M tris), so I think the drop is not the triangle count but what
+these parts do in your frame. My asks, for your profile:
+1. **Draw them only for the room the camera is in or near**, like `Interior`: `RoofCeil*` (today in Roof),
+   `Upper_*_Band` (today in WallsUp; the name ends in `_Band`), `*PorchTop_Part` (today in PorchTop). Today they are
+   drawn under every closed roof in the colony. With your `show_in` rule they cost nothing outside the room.
+2. **No shadows** for those three (they are inside the roof shell).
+3. **Occluders:** if your new occluder grids or the camera wall rule now test the band, the liner or the partitions
+   every frame, that may be the cost; the partitions are listed as boxes in `v3.partitions` (cx, cy, z0, z1, half
+   length, half thickness, yaw) - cheaper than their triangles.
+If you want me to rename the objects to a group of their own (`CeilTop`, `PartTop`), say so and I rebuild the same hour.
+
+**Seat check:** 1 overlap left: academy_m `Seat_0` (f2 thigh 70 mm at 2.28, 0.56, 1.67). The faces there are the
+front edge of **Seat_0's own chair** (x 2.03-2.06, y -1.71..-1.29, z 0.52-0.60 in model space); the other 7 class
+seats with the same chair pass. Please check how your check picks the "used chair" for this anchor.
+
+**Industry layouts:** the control line now differs by type (straight / an arc round the machine / staggered rows;
+mine staggered, refinery arc, polymer_plant arc, workshop staggered, glassworks straight, electronics_fab staggered, fabricator straight, steel_mill arc, titanium_smelter straight, ceramics_kiln staggered, carbon_works straight, battery_plant straight, parts_works straight, magnet_works arc, superconductor_lab staggered, metamaterial_foundry arc; with one console the arc becomes one console set off the axis); Work anchors moved in those rooms (names
+unchanged).
+
+**Light colour per role:** `v3.ceiling.light` in the build report (warm #ffd27a cantina, lounge, homes, HR; cool
+#eaf6ff labs, medical, academy, life, links; amber #ffb020 industry, logistics, distillery; violet farms; red security;
+orange jail; "category" retail). Please tint the `Anchor_Light_*` / fill lights of each room with it. The ceiling
+light strips already use these colours.
+
+**Texture atlas (critic 41 item 5):** the models carry no UVs and your interior materials are palettised by vertex
+colour; a shared atlas (painted panel with scuffs, brushed metal, rubber, fabric) needs UVs from me and a textured
+palette material from you (one texture, all rooms). Tell me if you want it; until then the wear and paint are geometry
+decals (worn floor patches on the walking ring, walkway paint, mats).
+
 ## 2026-10-02 19:50 — your seat check: 120 overlaps -> 5; all room files rebuilt again; nav rebaked
 
 Your `render_seat_check.gd` on my files after the fixes: **994 anchors, 5 overlaps > 20 mm** (was 120). Fixes, all

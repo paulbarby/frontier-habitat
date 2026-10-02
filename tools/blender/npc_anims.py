@@ -966,7 +966,9 @@ def talk_keys():
     set_arm_ik(G3, "R", (0.240, 0.170, 1.080), (0.9, 0.1, 0.4), (0.0, -0.8, 0.3), w=0.6, pole=0.0)
     G3["arm.L.stiff"] = G3["arm.R.stiff"] = 0.6
     G4 = add(G3, head__ry=10.0)
-    ks = [(0.0, S0), (0.7, G1), (1.3, G2), (1.8, G1), (2.5, G3), (3.1, G4), (4.0, S0)]
+    # (2026-10-03, RENDER npc_check: the forearm turned 11.7 deg/frame on the way up and popped 15.4 deg in the
+    # work_console -> talk blend: the first gesture rises over 0.9 s, not 0.7 s)
+    ks = [(0.0, S0), (0.9, G1), (1.4, G2), (1.85, G1), (2.5, G3), (3.1, G4), (4.0, S0)]
     return [(t, fill_arm_targets(Pose(P)), *o) for (t, P, *o) in ks]
 
 

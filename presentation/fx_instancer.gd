@@ -30,8 +30,8 @@ func add(tpl: Dictionary, xf: Transform3D, custom: Color = Color(1, 1, 1, 1)) ->
 			(p["mm"] as MultiMesh).visible_instance_count = int(bt["used"])
 	var h := _next
 	_next += 1
-	var s: float = float(tpl.get("scale", 1.0))
-	handles[h] = {"key": key, "slot": slot, "xf": Transform3D(xf.basis * Basis.from_scale(Vector3(s, s, s)), xf.origin) if absf(s - 1.0) > 0.001 else xf,
+	var s: Vector3 = Models.scale3(tpl)
+	handles[h] = {"key": key, "slot": slot, "xf": Transform3D(xf.basis * Basis.from_scale(s), xf.origin) if not s.is_equal_approx(Vector3.ONE) else xf,
 		"hidden": {}, "extra": {}, "custom": custom, "scale": s, "gcustom": {}}
 	(bt.get("slots") as Dictionary)[slot] = h
 	for g in bt["vis"]:
@@ -61,8 +61,8 @@ func set_xf(h: int, xf: Transform3D) -> void:
 	if not handles.has(h):
 		return
 	var e: Dictionary = handles[h]
-	var s: float = e["scale"]
-	e["xf"] = Transform3D(xf.basis * Basis.from_scale(Vector3(s, s, s)), xf.origin) if absf(s - 1.0) > 0.001 else xf
+	var s: Vector3 = e["scale"]
+	e["xf"] = Transform3D(xf.basis * Basis.from_scale(s), xf.origin) if not s.is_equal_approx(Vector3.ONE) else xf
 	_write_xf(h)
 
 ## One write for everything that changes every frame (colonists).
@@ -70,8 +70,8 @@ func set_all(h: int, xf: Transform3D, extra: Dictionary, hidden: Dictionary) -> 
 	if not handles.has(h):
 		return
 	var e: Dictionary = handles[h]
-	var s: float = e["scale"]
-	e["xf"] = Transform3D(xf.basis * Basis.from_scale(Vector3(s, s, s)), xf.origin) if absf(s - 1.0) > 0.001 else xf
+	var s: Vector3 = e["scale"]
+	e["xf"] = Transform3D(xf.basis * Basis.from_scale(s), xf.origin) if not s.is_equal_approx(Vector3.ONE) else xf
 	e["extra"] = extra
 	if hidden != e["hidden"]:
 		var bt: Dictionary = batches[e["key"]]

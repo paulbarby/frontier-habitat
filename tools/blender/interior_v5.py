@@ -124,7 +124,9 @@ def part_top(plan):
     if q is None:
         rm = plan.rm
         nm = plan.n.name
-        target = "PorchTop" if nm == "Interior" else nm.replace("Interior", "PorchTop")
+        # its own object (perf 2026-10-03: RENDER can hide it with the room interior when the roof is shut); the name
+        # starts with PorchTop, so today's group_of already puts it in PorchTop (hidden in the cutaway)
+        target = "PorchTop_Part" if nm == "Interior" else nm.replace("Interior", "PorchTop_Part")
         fp = getattr(rm, "fpart", None)
         if fp is not None:
             q = fp(target)

@@ -650,6 +650,27 @@ def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_b
             a = px[:, 3].reshape(h_, w_)
             a = np.maximum.reduce([a, np.roll(a, 1, 0), np.roll(a, -1, 0), np.roll(a, 1, 1), np.roll(a, -1, 1)])
             px[:, 3] = np.clip(a.ravel() * alpha_dense, 0.0, 1.0)
+        if (px[:, 3] < 0.99).any():
+            # (2026-10-02, RENDER: the transparent texels were light blue-grey and mipmaps bled a pale fringe into the
+            # clipped hair edges) every texel under the clip takes the colour of the visible ones: their mean, then a
+            # 3-pass dilation of the edge colours
+            w_, h_ = img.size
+            vis = px[:, 3] >= 0.5
+            if vis.any():
+                rgb = px[:, :3].reshape(h_, w_, 3).copy()
+                m = vis.reshape(h_, w_).copy()
+                rgb[~m] = px[vis, :3].mean(axis=0)
+                for _ in range(3):
+                    acc = np.zeros_like(rgb)
+                    cnt = np.zeros((h_, w_, 1), dtype=np.float32)
+                    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        mm = np.roll(np.roll(m, dy, 0), dx, 1)
+                        acc += np.roll(np.roll(rgb, dy, 0), dx, 1) * mm[..., None]
+                        cnt += mm[..., None]
+                    grow = (~m) & (cnt[..., 0] > 0)
+                    rgb[grow] = acc[grow] / cnt[grow]
+                    m = m | grow
+                px[:, :3] = rgb.reshape(-1, 3)
         img.pixels = px.ravel().tolist()
     os.makedirs(OUT_TEX, exist_ok=True)
     out = os.path.join(OUT_TEX, name + ".png")
@@ -1077,6 +1098,11 @@ def align_soles(outfits, v=""):
         print("  %s %s: soles raised %.1f mm to the common sole height" % (v, ob.name, dz * 1000))
 
 
+def A_STAND():
+    import npc_anims as A
+    return A.STAND
+
+
 PA_DEFAULTS = {}
 FINGER_CURL_SIGN = 1.0      # + curls the MakeHuman finger bones towards the palm (checked in the hand render)
 A_BED_Z = 0.55             # the mattress top (npc_anims FURNITURE bed_z)
@@ -1122,7 +1148,8 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     clips = {c[0]: c[6] for c in PA.people_clips()}
     for _ in range(4):
         # the ankle height: the lowest sole of all outfits (shoes and boots) on the floor when standing
-        co = pose_eval(rig, solver, PA.retarget(clips["idle"](0), s, "idle"), feet_obs or obs)
+        # (the hand-keyed stand rest, flat feet: a captured idle may start on a heel or a rolled foot)
+        co = pose_eval(rig, solver, PA.retarget(N.Pose(A_STAND()), s, "idle"), feet_obs or obs)
         PA.SOLE_DZ += 0.002 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["dead"](0), s, "dead"), obs)
         PA.LIE_LIFT += 0.004 - co[:, 2].min()
@@ -1765,7 +1792,9 @@ def write_manifest(results):
     doc["textures"] = dict(note=("external PNGs in assets/models/people_tex_shared/ (one file per texture, shared by "
                                  "every variant that uses it); sources in assets/models/people_tex/ (.gdignore)"))
     doc["credits"] = ("MakeHuman / MPFB assets: CC0 packs (makehuman_system_assets, skins01, skins02, hair01, shirts01, "
-                      "pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01)")
+                      "pants01, suits01, suits02, shoes01, dress01, eyebrows01, eyelashes01).  Motion capture (walk, run): "
+                      "The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with "
+                      "funding from NSF EIA-0196217.  Details: art/people/people_credits.md")
     with open(MAN + ".tmp", "w", encoding="utf-8") as fh:
         json.dump(doc, fh, indent=1)
     os.replace(MAN + ".tmp", MAN)

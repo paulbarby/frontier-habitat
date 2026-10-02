@@ -423,3 +423,32 @@ head, hair and add-ons up to 3,259 (security, command: over the 3k line by the a
 - Files on disk = the 20:39-20:48 consistent build (npc_verify 602/2); after the pause `godot.mjs import` done, `check` 312/0.
 - New `tools/blender/npc_mocap.py` (CMU BVH -> our Pose params; 140-143 takes are 60 fps): walk, run (3.3 m/s), jog, idle JSON in `tools/blender/mocap/`; `people_anims.mocap_override` + `scap.off` wired but OFF (`NPC_MOCAP_USE` empty) until checked.
 - Not done: mocap groups (preview only), credits file, the 2 verify failures, round-40 hems/necklines/brows/f1, RENDER's walk dip and work_console->talk pop.
+
+## v5.0 — 2026-10-03 (Opus ART-NPC) — motion capture walk + run; npc_verify 604/0; npc_check PASS
+**RESULT lines:** `npc_verify` 604 passed, 0 failed. RENDER `npc_check` PASS 165/0 (was FAIL 2: work_console -> talk
+pop). `godot.mjs import` done; `check` 312 scripts, 0 failed. One consistent build 07:08-07:16 (all 8 people + astronauts).
+
+**Motion capture (CMU, Paul's approval via the orchestrator; files in D:/Tools/mocap):**
+- `tools/blender/npc_mocap.py`: BVH -> our Pose parameters (world-delta retarget with an anatomical rest match; the
+  clavicles take only their change from rest), legs as IK targets with knee poles (bend-weighted, smoothed), ground from
+  OUR sole shape, in-place travel, loop seam cross-fade + residual spread, circular foot plants, legs within reach,
+  standing loops put on our rest pose. Subjects 140-143 are 60 fps (the files say 120).
+- Switched on: **walk** (143_32) and **run** (143_01). Audit before -> after (m1 / f1 / m2 / c1): walk faults 0 -> 0,
+  snap 13.4 -> 11.2 deg/f (m1); run step 27.5-36.6 -> 19.9-20.8 deg/frame, the 25.5 snap gone (f1), m1 snap 14.1
+  (limit 14). Stance contact 0.03-0.3 cm. By eye: natural (`art/people/people_walk.png`, `people_run.png`).
+- Not switched on (worse than hand-keyed by the numbers): jog (snap 20-30), idle (snaps 9-11 at the plants), talk_idle
+  (snap 6.4), sit_idle (snap 7.4, slide 1.3 cm), dance_a (thigh through thigh 10 cm, toe step 25), dance_b (kneels),
+  talk / talk_gesture_a (by eye: a near-static stance / an overhead arm). JSON kept in `tools/blender/mocap/`;
+  `NPC_MOCAP_USE` switches them for tests.
+- Audit, all bodies (578 clips): clips with a fault 416 (10-02 start) -> 172 (before mocap) -> 170 now.
+  Files `art/people/audit_before_mocap.*`, `audit_after_mocap.*`.
+
+**Other fixes:** m3 collapse/dead shin 1.2 cm under the floor (the lying feet now rise with LIE_LIFT); hug: the arms
+rest on the partner by design (`arm_contact`, no arm capsules in that pair check; bodies and heads stay strict);
+work_console -> talk pop (talk's first gesture 0.9 s); RENDER's walk dip (ankles/balls within 1.6 mm of idle);
+hair/brow/lash textures dilated under the alpha clip; soles calibrated on the stand rest; credits
+`art/people/people_credits.md` + manifest.
+
+**Not done:** RENDER enter/exit clips for stool / bunk / lounger / water (told RENDER a cut is acceptable); round-40:
+coverall leg hems (flared cuffs), uneven tee necklines, thin brows, f1 skin tone; the mocap groups above; audit faults
+left: slide 68, snap 100, floats 32 (dance lifts), step 11, elbow 8, neck 8 (swim), wrist 1.

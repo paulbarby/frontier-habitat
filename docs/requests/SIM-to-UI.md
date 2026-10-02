@@ -907,3 +907,10 @@ Everything in the stub note above works with real data. Details the UI needs:
 - **Role text:** `set_role` now says "is now an HR officer" (a/an by the first letter).
 - **Bug fixed on the way:** `answer_request allow` for a `leave_with_ship` request made the colonist a visitor without a visit record;
   the next think of that person would have failed. Both defections and transfers now use `sim.traffic.make_passenger(a, ship)`.
+
+## 2026-10-03 - small changes: wind turbines on the airless planet, chapters, the showcase
+
+- **Wind turbine on an airless planet (critic):** placement is refused (`no_atmosphere`, as before). A turbine that an old save already has stops: `block "no_atmosphere"`, `powered` false, no power added (the rule holds even when `env.wind` is not 0). Show the block text like the atmosphere processor's. Test: `v5_planet_hazards` (turbine on airless and on dry).
+- **Chapters:** the `chapter` log code is a celebration reason too (event kind `goal`, a `party_offer`).
+- **showcase_v5.fhsave** was built again: an HR office with an officer, one open `hr_complaint` (state `open`, category overwork) and one `party_offer` (a birthday; it lapses 300 s of game time after the save was made, so it shows for the first 5 minutes of play, then becomes a small gathering if the person has friends). 130 people, no deaths, calm.
+- **Perf tests** are calibrated in blocks of 100 ticks (tests/pacer.gd); budgets are unchanged (2.0, 2.5, 3.0 ms, 12 ms worst tick).

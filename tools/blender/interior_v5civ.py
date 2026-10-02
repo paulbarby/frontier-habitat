@@ -677,7 +677,7 @@ def academy(rm):
             with at(plan, x, y, 180.0):
                 school_desk(n, seed=k)
             plan.rect(x + 0.25, y, 0.25, 0.40, 0.0, tag="desk")
-            cx_ = x - 0.30
+            cx_ = x - 0.38                  # RENDER seat check: 8 cm more knee room under the desk
             with at(plan, cx_, y, 0.0):
                 FU.chair(n, seat=("Cushion", "Fabric", "CushionLight")[k % 3])
             plan.rect(cx_, y, 0.24, 0.24, 0.0, tag="seat")

@@ -100,6 +100,10 @@ func _finish(c: String) -> void:
 	report[c] = rep
 	print("PERF %s: frame %.1f ms (p95 %.1f) | view %.1f (p95 %.1f) | sim %.1f (p95 %.1f) | npc %.1f | bodies %d" % [c, rep["total_med"], rep["total_p95"], rep["view_med"], rep["view_p95"], rep["sim_med"], rep["sim_p95"], rep["npc_med"], int(rep["bodies"])])
 	print("   prof ", JSON.stringify(rep["prof"]))
+	var pu: Dictionary = main.rig.prof_us
+	var fr: float = maxf(1.0, float(pu.get("frames", 1)))
+	print("   rig ms/frame: total %.2f framing %.2f viewok %.2f (%d calls) probe %.2f" % [float(pu.get("total", 0)) / fr / 1000.0, float(pu.get("framing", 0)) / fr / 1000.0, float(pu.get("viewok", 0)) / fr / 1000.0, int(pu.get("viewok_n", 0)), float(pu.get("probe", 0)) / fr / 1000.0])
+	main.rig.prof_us = {}
 	var ns: Dictionary = st.get("npc", {})
 	print("   npc ", JSON.stringify(rep["npc"]), " body %s write %s lamps %s walk %s bodies/frame %s dyn %s why %s" % [ns.get("body_ms"), ns.get("write_ms"), ns.get("lamps_ms"), ns.get("walk_ms"), ns.get("bodies_per_frame"), ns.get("dyn_rows"), JSON.stringify(ns.get("blend_why_per_frame"))])
 

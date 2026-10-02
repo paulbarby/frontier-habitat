@@ -675,7 +675,7 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         # 3.1: every "...Top" object (door housings and leaves above the wall top) lifts with the roof
         for o in objs:
             nm_ = o.name.split(".")[0]
-            if nm_.endswith(("Top", "Status")) or nm_.startswith(("PressureLight_", "Beacon")):
+            if nm_.endswith(("Top", "Status", "Top_Part")) or nm_.startswith(("PressureLight_", "Beacon")):
                 o.hide_render = True
                 o.hide_viewport = True
     if open_doors:

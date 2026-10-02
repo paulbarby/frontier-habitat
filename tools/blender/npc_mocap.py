@@ -50,11 +50,13 @@ CLIPS = {
     "walk": dict(take="143_32", kind="gait", span=(84, 245), period=(26, 40)),
     "run": dict(take="143_01", kind="gait", span=(8, 100), period=(16, 26)),      # 3.4 m/s: the colony pace
     "jog": dict(take="143_42", kind="gait", span=(165, 250), period=(16, 28)),    # 2.6 m/s
-    "idle": dict(take="140_06", kind="loop", span=(0, 99999), length=4.0),
-    "talk": dict(take="18_08", kind="loop", span=(0, 99999), length=4.0),
-    "talk_gesture_a": dict(take="19_08", kind="loop", span=(0, 99999), length=4.0),
-    "dance_a": dict(take="141_12", kind="loop", span=(0, 99999), length=4.0),
-    "dance_b": dict(take="113_04", kind="loop", span=(0, 99999), length=4.0),
+    "idle": dict(take="140_06", kind="loop", span=(20, 296), length=4.0, rest="stand"),       # (the standing part: later it crouches)
+    "talk": dict(take="18_08", kind="loop", span=(0, 99999), length=4.0, calm=3.0),
+    "talk_gesture_a": dict(take="19_08", kind="loop", span=(0, 99999), length=4.0, calm=1.0),
+    "talk_idle": dict(take="18_08", kind="loop", span=(0, 99999), length=4.0, calm=3.0, rest="stand"),
+    "sit_idle": dict(take="114_05", kind="loop", span=(0, 99999), length=5.0, rest="sit"),
+    "dance_a": dict(take="141_12", kind="loop", span=(0, 99999), length=4.0, rest="stand"),
+    "dance_b": dict(take="113_04", kind="loop", span=(0, 99999), length=4.0, rest="stand"),
 }
 
 # our bone -> (mocap joint whose world turn drives it, rest direction (from, to), anatomical reference)
@@ -134,6 +136,10 @@ def rest_frames(arm):
         um_o = (um_o - ym_o * um_o.dot(ym_o)).normalized()
         u0 = (u0 - y0 * u0.dot(y0)).normalized()
         C[b] = N.q_from_frames(u0, y0, um_o, ym_o)
+        if b.startswith("shoulder."):
+            # the clavicle's rest direction is a joint layout, not a pose: the CMU T-pose clavicle points 34 deg up and
+            # matching it raised our shoulders into a shrug.  The clavicles take only the capture's change from rest.
+            C[b] = Quaternion()
     return C
 
 
@@ -219,10 +225,146 @@ def to_pose(r, C, G, k, trend, ground, prev_e):
             out = ang - P["foot.%s.yaw" % s]
             out = (out + 180.0) % 360.0 - 180.0
             P["knee.%s.out" % s] = max(-40.0, min(40.0, out))
+            P["knee.%s.w" % s] = pv.length / max(1e-6, (kn - hip).length)     # how bent: the pole's reliability
     for s in ("L", "R"):
         P["arm.%s.ik" % s] = 0.0
     P["scap.off"] = 1.0                 # the capture has its own shoulder motion: no solver shoulder rhythm
     return P
+
+
+SOLE = [N.HEEL_PIVOT - N.ANKLE_JOINT + Vector((0.0, dy, 0.0)) for dy in (-0.035, 0.0, 0.035)] +        [Vector((N.BALL_JOINT.x, N.BALL_JOINT.y + dy, 0.0)) - N.ANKLE_JOINT for dy in (-0.045, 0.0, 0.045)]
+
+
+def sole_ankle_z(P, s):
+    """The ankle height at which OUR foot's lowest sole point (heel or ball) touches the floor, for this foot turn."""
+    q = N.qeuler(P["foot.%s.roll" % s], P["foot.%s.pitch" % s], P["foot.%s.yaw" % s])
+    return -min((q @ v).z for v in SOLE)
+
+
+def knee_poles(frames):
+    """The knee pole is unreliable on a straight leg (it flipped 33 deg between two frames of the walk): weight each
+    frame by the knee bend and smooth over 7 frames (loop)."""
+    n = len(frames) - 1
+    for s in ("L", "R"):
+        o = [P.get("knee.%s.out" % s, 0.0) for P in frames[:n]]
+        w = [min(1.0, P.get("knee.%s.w" % s, 0.0) / 0.25) ** 2 for P in frames[:n]]
+        for i, P in enumerate(frames[:n]):
+            num = den = 0.0
+            for d in range(-3, 4):
+                j = (i + d) % n
+                ww = w[j] * (1.0 - abs(d) / 4.0)
+                num += o[j] * ww
+                den += ww
+            P["knee.%s.out" % s] = num / den if den > 1e-6 else 0.0
+        for P in frames:
+            P.pop("knee.%s.w" % s, None)
+        frames[-1] = dict(frames[0])
+    return frames
+
+
+def leg_reach(frames, lim=0.993):
+    """Our legs are shorter / straighter than the capture's in places: a planted leg past 99.3 % of its length snaps
+    the knee (the IK clamps).  The hips drop just enough, smoothed over 5 frames (loop)."""
+    import npc_anims as A
+    n = len(frames) - 1
+    drop = []
+    for P in frames[:n]:
+        Q = N.Pose(P)
+        z0 = Q.g("hips.z")
+        need = [s for s in ("L", "R") if A.leg_reach(Q, s) > lim]
+        if need:
+            z1 = A.hips_for(Q, need, {s: lim for s in need})
+            drop.append(min(0.0, z1 - z0))
+        else:
+            drop.append(0.0)
+    sm = []
+    for i in range(n):
+        sm.append(min(drop[(i + d) % n] for d in range(-2, 3)))
+    sm2 = [sum(sm[(i + d) % n] for d in range(-2, 3)) / 5.0 for i in range(n)]
+    for i, P in enumerate(frames[:n]):
+        P["hips.z"] = P.get("hips.z", 0.0) + min(sm2[i], drop[i])
+    frames[-1] = dict(frames[0])
+    return frames
+
+
+def ground_feet(frames):
+    """Feet on OUR foot shape: a foot near the floor (its sole within 2.5 cm) is put on it; no foot goes through it;
+    the toes of a foot on the ball bend up to the floor (no toe tip under it)."""
+    for P in frames:
+        for s in ("L", "R"):
+            if P["foot.%s.pitch" % s] > 0.0:
+                P["toe.%s.ry" % s] = min(P.get("toe.%s.ry" % s, 0.0), -P["foot.%s.pitch" % s] + 2.0)
+            z = P["foot.%s.z" % s]
+            # a foot near the floor stands on its sole, not on its edge (the roll fades out over the last 4 cm)
+            g0 = sole_ankle_z(P, s)
+            P["foot.%s.roll" % s] *= max(0.0, min(1.0, (z - g0 - 0.01) / 0.04))
+            g = sole_ankle_z(P, s)
+            if z - g < 0.025:
+                # within 2.5 cm: blend onto the floor (fully at 1 cm and below)
+                t = max(0.0, min(1.0, (z - g - 0.010) / 0.015))
+                P["foot.%s.z" % s] = g + (z - g) * t * t
+            P["foot.%s.z" % s] = max(P["foot.%s.z" % s], g)
+    return frames
+
+
+XFADE = 6           # frames: the loop seam is a cross-fade of the capture past the cut into its start
+
+
+def crossfade(frames, T, K, keys):
+    """frames has T + 1 + K samples: the first K frames blend from the samples past the cut (T .. T+K) into their own
+    (smoothstep), so position AND speed run on through the seam (a plain cut left 15-24 deg/frame^2 snaps)."""
+    if K <= 0:
+        return frames[:T + 1]
+    out = [dict(P) for P in frames[:T + 1]]
+    for i in range(K):
+        w = (i + 1) / (K + 1)
+        w = w * w * (3 - 2 * w)
+        A_, B_ = frames[T + i], frames[i]
+        for k_ in keys:
+            a, b = A_.get(k_, 0.0), B_.get(k_, 0.0)
+            if k_.endswith((".rx", ".ry", ".rz", ".roll", ".pitch", ".yaw", ".out")):
+                a = b + ((a - b + 180.0) % 360.0 - 180.0)
+            out[i][k_] = a + (b - a) * w
+    out[T] = dict(frames[T])
+    return out
+
+
+def apart(frames, gap=0.075):
+    """The feet keep a little apart across the line of travel (the jog take crosses the legs: thigh through thigh)."""
+    for P in frames:
+        for s, sg in (("L", 1.0), ("R", -1.0)):
+            y = P["foot.%s.y" % s] * sg
+            if y < gap:
+                P["foot.%s.y" % s] = sg * (gap - (gap - y) * 0.25) if y > gap - 0.1 else sg * (gap - 0.025)
+    return frames
+
+
+def onto_rest(frames, rest="stand"):
+    """A standing (or seated) loop starts and ends on OUR rest pose (idle frame 0 is the 'stand' state every transition
+    starts from): every FK bone turns by the capture's change from its first frame, applied to our rest turn
+    (rotations, not Euler sums: an Euler offset swung an arm out); positions and foot angles shift by the offset."""
+    import npc_anims as A
+    S = N.Pose(A.STAND if rest == "stand" else A.ik_to_fk(A.SIT))
+    F0 = dict(frames[0])
+    fk = [b for b in FK_ORDER]
+    q_rest = {b: N.qeuler(S.g(b + ".rx"), S.g(b + ".ry"), S.g(b + ".rz")) for b in fk}
+    q_0 = {b: N.qeuler(F0.get(b + ".rx", 0.0), F0.get(b + ".ry", 0.0), F0.get(b + ".rz", 0.0)) for b in fk}
+    prev = {}
+    for P in frames:
+        for b in fk:
+            q = N.qeuler(P.get(b + ".rx", 0.0), P.get(b + ".ry", 0.0), P.get(b + ".rz", 0.0))
+            qn = (q_rest[b] @ q_0[b].inverted() @ q).normalized()
+            e = qn.to_euler("XYZ", prev[b]) if b in prev else qn.to_euler("XYZ")
+            prev[b] = e
+            P[b + ".rx"], P[b + ".ry"], P[b + ".rz"] = degrees(e.x), degrees(e.y), degrees(e.z)
+        for k_ in list(S.keys()) + [k for k in F0 if k.startswith(("hips.", "foot.", "toe.", "knee."))]:
+            if k_.startswith(("arm.", "hand.", "prop.", "scap.")) or k_.split(".")[0] in [x.split(".")[0] for x in fk]                     and k_.endswith((".rx", ".ry", ".rz")) and not k_.startswith(("foot", "toe")):
+                continue
+            d = S.g(k_) - F0.get(k_, 0.0)
+            if k_.endswith((".roll", ".pitch", ".yaw", ".out", ".ry")):
+                d = (d + 180.0) % 360.0 - 180.0
+            P[k_] = P.get(k_, 0.0) + d
+    return frames
 
 
 def unwrap_seam(frames, keys):
@@ -251,34 +393,60 @@ def contacts(frames, s, v):
     return out
 
 
-def lock_feet(frames, v):
-    """Planted feet: flat ones on the floor (ankle height), no slide beyond the in-place travel; 2-frame blends."""
+def lock_feet(frames, v, still=False):
+    """Planted feet: flat ones on the floor (ankle height), no slide beyond the in-place travel; 3-frame blends.
+    The loop is circular: a plant that runs through the seam is one plant (2026-10-03: split plants put ramps at the
+    seam, 9-10 deg/frame^2 knee snaps in idle)."""
     n = len(frames) - 1
     for s in ("L", "R"):
-        c = contacts(frames, s, v)
-        runs, i = [], 0
-        while i < n:
-            if c[i]:
-                j = i
-                while j + 1 < n and c[j + 1]:
-                    j += 1
-                runs.append((i, j))
-                i = j + 1
-            else:
-                i += 1
+        c = contacts(frames, s, v)[:n]
+        if all(c):
+            runs = [(0, n - 1)]
+        else:
+            off = c.index(False)                       # start the scan on a free frame: runs never wrap mid-scan
+            runs, i = [], 0
+            while i < n:
+                t = (off + i) % n
+                if c[t]:
+                    j = i
+                    while j + 1 < n and c[(off + j + 1) % n]:
+                        j += 1
+                    runs.append((off + i, off + j))    # unwrapped indices; frames taken modulo n
+                    i = j + 1
+                else:
+                    i += 1
         for a, b in runs:
             if b - a < 2:
                 continue
-            x0 = sum(frames[t]["foot.%s.x" % s] + v * (t - a) for t in range(a, b + 1)) / (b - a + 1)
-            y0 = sum(frames[t]["foot.%s.y" % s] for t in range(a, b + 1)) / (b - a + 1)
-            for t in range(a, b + 1):
+            idx = [t % n for t in range(a, b + 1)]
+            x0 = sum(frames[t]["foot.%s.x" % s] + v * (u - a) for u, t in zip(range(a, b + 1), idx)) / len(idx)
+            y0 = sum(frames[t]["foot.%s.y" % s] for t in idx) / len(idx)
+            whole = (b - a + 1) >= n
+            for u, t in zip(range(a, b + 1), idx):
                 P = frames[t]
-                w = min(1.0, (t - a + 1) / 2.0, (b - t + 1) / 2.0)
-                flat = max(0.0, 1.0 - abs(P["foot.%s.pitch" % s]) / 10.0)
-                P["foot.%s.x" % s] += w * (x0 - v * (t - a) - P["foot.%s.x" % s])
+                w = 1.0 if whole else min(1.0, (u - a + 1) / 3.0, (b - u + 1) / 3.0)
+                w = w * w * (3 - 2 * w)
+                # (a standing loop: a still foot is flat on the floor whatever small pitch the capture gives it)
+                flat = 1.0 if still else max(0.0, 1.0 - abs(P["foot.%s.pitch" % s]) / 10.0)
+                if still:
+                    P["foot.%s.pitch" % s] *= 1.0 - w
+                    P["toe.%s.ry" % s] = P.get("toe.%s.ry" % s, 0.0) * (1.0 - w)
+                P["foot.%s.x" % s] += w * (x0 - v * (u - a) - P["foot.%s.x" % s])
                 P["foot.%s.y" % s] += w * (y0 - P["foot.%s.y" % s])
                 P["foot.%s.z" % s] += w * flat * (N.ANKLE_JOINT.z - P["foot.%s.z" % s])
                 P["foot.%s.roll" % s] *= 1.0 - w * flat
+    frames[-1] = dict(frames[0])
+    return frames
+
+
+def smooth_toes(frames, r=2):
+    """Toe bends (noisy in the capture) smoothed over 5 frames, circular."""
+    n = len(frames) - 1
+    for s in ("L", "R"):
+        k_ = "toe.%s.ry" % s
+        v_ = [P.get(k_, 0.0) for P in frames[:n]]
+        for i, P in enumerate(frames[:n]):
+            P[k_] = sum(v_[(i + d) % n] for d in range(-r, r + 1)) / (2 * r + 1)
     frames[-1] = dict(frames[0])
     return frames
 
@@ -308,8 +476,9 @@ def build_clip(name, spec):
         T = best[1]
         mid = n0 // 2 - T // 2
         i0 = min(range(mid, mid + T), key=lambda i: z[i])
-        seg = raw[i0:i0 + T + 1]
-        hp0, hp1 = seg[0]["P"]["Hips"], seg[-1]["P"]["Hips"]
+        K = min(XFADE, len(raw) - (i0 + T + 1))
+        seg = raw[i0:i0 + T + 1 + K]
+        hp0, hp1 = seg[0]["P"]["Hips"], seg[T]["P"]["Hips"]
         travel = (G @ (hp1 - hp0))
         travel.z = 0.0
         speed = travel.length * k / (T / FPS)
@@ -324,26 +493,48 @@ def build_clip(name, spec):
         # the stance foot moves back at the travel speed: the in-place convention of our gaits
         # (to_pose measured the ankles against the moving trend, which already gives exactly that)
         keys = sorted(set().union(*[set(P) for P in frames]))
+        frames = crossfade(frames, T, K, keys)
         frames = unwrap_seam(frames, keys)
         frames = lock_feet(frames, v_frame)
+        frames = ground_feet(apart(leg_reach(knee_poles(frames))))
         meta.update(speed_mps=round(speed, 3), stride_m=round(travel.length * k, 3))
     else:
         T = int(round(spec["length"] * FPS))
         # the most loopable window: the start whose pose after T frames is nearest to it (feet and hips)
+        calm = spec.get("calm", 0.0)
+        legs = leg_len(arm)
+
         def dist(i):
             A, B = raw[i]["P"], raw[i + T]["P"]
-            return sum((A[n] - B[n]).length for n in ("Hips", "LeftFoot", "RightFoot", "LeftHand", "RightHand", "Head"))
+            d = sum((A[n] - B[n]).length for n in ("Hips", "LeftFoot", "RightFoot", "LeftHand", "RightHand", "Head"))
+            if calm:
+                # (2026-10-03) a calmer window: hands above the chest or far out to the side cost
+                big = 0.0
+                for r in raw[i:i + T + 1:3]:
+                    ch, hp = r["P"]["Spine1"], r["P"]["Hips"]
+                    for h in ("LeftHand", "RightHand"):
+                        q = r["P"][h]
+                        big += max(0.0, q.z - ch.z) + max(0.0, Vector((q.x - hp.x, q.y - hp.y)).length - 0.45 * legs)
+                d += calm * big
+            return d
         cand = range(0, max(1, len(raw) - T - 1))
         i0 = min(cand, key=dist)
-        seg = raw[i0:i0 + T + 1]
+        K = min(XFADE, len(raw) - (i0 + T + 1))
+        seg = raw[i0:i0 + T + 1 + K]
         hpm = sum((r["P"]["Hips"] for r in seg), Vector()) / len(seg)
         trend = Vector((hpm.x, hpm.y, 0.0))
         frames, prev = [], {}
         for r in seg:
             frames.append(dict(to_pose(r, C, G, k, trend, ground, prev)))
         keys = sorted(set().union(*[set(P) for P in frames]))
+        frames = crossfade(frames, T, K, keys)
         frames = unwrap_seam(frames, keys)
-        frames = lock_feet(frames, 0.0)
+        if spec.get("rest"):
+            frames = onto_rest(frames, spec["rest"])
+        frames = lock_feet(frames, 0.0, still=True)
+        frames = ground_feet(leg_reach(knee_poles(smooth_toes(frames))))
+        if spec.get("rest"):
+            frames = onto_rest(frames, spec["rest"])        # frame 0 exactly on the rest pose again (pose state)
         meta.update(window_s=[round((s0 + i0 * step) / fps, 3), round((s0 + (i0 + T) * step) / fps, 3)])
     meta["frames"] = len(frames) - 1
     os.makedirs(OUT, exist_ok=True)

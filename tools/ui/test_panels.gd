@@ -140,8 +140,9 @@ func _plan() -> void:
 		check("the Requests tab badge counts the request (needs an answer)", pm.tab_state("requests")["count"] >= 1 and pm.tab_state("requests")["priority"] == "needs-answer", str(pm.tab_state("requests")))
 		check("the Events tab counts the protest", pm.tab_state("events")["count"] >= 1, str(pm.tab_state("events")))
 		# Later: off the urgent line, still in the tab.
-		var rq: Dictionary = main.hud.request_card.request
-		main.hud.request_card.later[int(rq["id"])] = true, 24)
+		# (The showcase has requests of its own: all of them go to Later.)
+		for rq in main.hud.v5.requests():
+			main.hud.request_card.later[int(rq["id"])] = true, 24)
 	q(func():
 		var pm = main.hud.panels
 		check("Later: the request leaves the urgent line, stays in the Requests tab", String(pm.urgent_now.get("tab", "")) != "requests" and pm.tab_state("requests")["count"] >= 1, str(pm.urgent_now))

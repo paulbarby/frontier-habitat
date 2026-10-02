@@ -58,11 +58,13 @@ func colonists() -> Array:
 			ids.append(int(r["id"]))
 	return ids
 
+## The newest request of a kind (the showcase has requests of its own since 2026-10-03).
 func request_of(kind: String) -> Dictionary:
+	var out := {}
 	for r in main.hud.v5.requests():
 		if String(r["kind"]) == kind:
-			return r
-	return {}
+			out = r
+	return out
 
 func feed_has(text_part: String) -> bool:
 	for e in main.hud.panels.feed:
@@ -167,9 +169,10 @@ func _plan() -> void:
 	q(func():
 		var o: Dictionary = request_of("party_offer")
 		check("a promotion makes a party offer", not o.is_empty())
+		_v["skip_id"] = int(o.get("id", -1))
 		hud.request_card._ask_option(o, "skip"), 8)
 	q(func():
-		check("Skip answers and the offer goes", bool(hud.request_card.last_result.get("ok", false)) and request_of("party_offer").is_empty(), str(hud.request_card.last_result))
+		check("Skip answers and the offer goes", bool(hud.request_card.last_result.get("ok", false)) and not hud.v5.requests().any(func(q): return int(q.get("id", -2)) == int(_v["skip_id"])), str(hud.request_card.last_result))
 		# The venue inspector: Party tab on a venue.
 		var bid := -1
 		for r in sim.party.venues(-1):

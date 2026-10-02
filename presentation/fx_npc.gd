@@ -1178,7 +1178,7 @@ func _floor_y(b: Dictionary) -> float:
 		base = (meta["xf"] as Transform3D).origin.y
 		# (a room drawn at a scale, e.g. an old save's 0.667 x model: its floor top is FLOOR_Z x scale up;
 		# the unscaled 0.14 m left people 4.7 cm in the air there, 2026-10-02)
-		var sc: float = float((meta.get("tpl", {}) as Dictionary).get("scale", 1.0))
+		var sc: float = Models.scale3(meta.get("tpl", {})).y
 		# (a multi-storey building: its ground floor's top from the model; the dome's plaza is 0.30 m up)
 		var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
 		if nf > 1:
@@ -1198,7 +1198,7 @@ func level_y(b: Dictionary, f: int, sim_h: float) -> float:
 	var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
 	var tops: Array = _floor_tops(meta, nf)
 	if f >= 0 and f < tops.size():
-		return (meta["xf"] as Transform3D).origin.y + float(tops[f]) * float((meta.get("tpl", {}) as Dictionary).get("scale", 1.0))
+		return (meta["xf"] as Transform3D).origin.y + float(tops[f]) * Models.scale3(meta.get("tpl", {})).y
 	return _floor_y(b) + sim_h
 
 static func _floor_tops(meta: Dictionary, nf: int) -> Array:
@@ -2661,7 +2661,7 @@ func _aisles_of(meta: Dictionary) -> Array:
 	if meta.has("aisles_w"):
 		return meta["aisles_w"]
 	var out: Array = []
-	var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * float(meta["tpl"].get("scale", 1.0))
+	var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * Models.scale3(meta["tpl"]).y
 	for an in meta["anchors"]:
 		if String(an).begins_with("Aisle_"):
 			var p: Vector3 = (meta["anchors"][an] as Transform3D).origin
@@ -3085,7 +3085,7 @@ func _slots_of(meta) -> Array:
 			var d: float = a.distance_to(b)
 			if d <= 1.75 and d >= SLOT_GAP * 2.0:
 				raw.append(a.lerp(b, 0.5))
-	var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * float(meta["tpl"].get("scale", 1.0))
+	var fy: float = (meta["xf"] as Transform3D).origin.y + FLOOR_Z * Models.scale3(meta["tpl"]).y
 	for an in meta["anchors"]:
 		if String(an).begins_with("Stand_"):
 			var sp: Vector3 = (meta["anchors"][an] as Transform3D).origin

@@ -50,7 +50,7 @@ const STATUS_MATS := ["StatusGreen", "BeaconAmber"]
 const STATUS_GROUPS := ["Status", "Lights", "InnerStatus", "InnerLights", "OuterStatus", "OuterLights", "ChamberLight",
 	"PressureLight_0", "PressureLight_1", "PressureLight_2", "Beacon"]
 ## Groups that never cast a shadow (inside a closed room, or light sources).
-const NO_SHADOW := ["Interior", "Tall", "WallsIn", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3",
+const NO_SHADOW := ["Interior", "Tall", "WallsIn", "CeilTop", "PartTop", "Lights", "EngineGlow", "Plasma", "Stage1", "Stage2", "Stage3",
 	"DecalB", "DecalR", "DecalL2", "DecalL3", "DecalL4", "DecalL5", "NameSign", "Status", "InnerStatus", "InnerLights",
 	"OuterStatus", "OuterLights", "ChamberLight", "PressureLight_0", "PressureLight_1", "PressureLight_2", "Beacon", "PressurePlateTop"]
 ## Materials used only inside rooms (V3 §7.3): they get the interior fill light anywhere.
@@ -173,6 +173,24 @@ static func _tint_rock_tpl(tpl: Dictionary) -> void:
 					c = c0.lerp(Color(g2, g2, g2), 0.6).lerp(Color(0.82, 0.87, 0.94), 0.35)
 				c.a = c0.a
 				bm.albedo_color = c
+
+## The template's drawing scale per axis: x and z by `scale`, y by `scale_y` (2026-10-03: an old save's room
+## drawn smaller than its model keeps its full height, see with_full_height).
+static func scale3(tpl: Dictionary) -> Vector3:
+	var s: float = float(tpl.get("scale", 1.0))
+	return Vector3(s, float(tpl.get("scale_y", s)), s)
+
+## A room drawn at a smaller radius than its model (old saves: about 0.667 x) keeps its height: ceilings at
+## 2.0 m, door lintels at 1.4 m and hanging lamps at 1.6 m put the people's heads in the ceiling and the
+## follow camera at chest height (critic round 41, 2026-10-03). The plan shrinks, the height does not.
+static func with_full_height(tpl: Dictionary) -> Dictionary:
+	var s: float = float(tpl.get("scale", 1.0))
+	if s >= 0.999 or tpl.has("scale_y"):
+		return tpl
+	var out: Dictionary = tpl.duplicate()
+	out["scale_y"] = 1.0
+	out["key"] = "%s+h" % [tpl["key"]]
+	return out
 
 static func _with_scale(tpl: Dictionary, s: float) -> Dictionary:
 	if absf(s - 1.0) < 0.001:
@@ -349,6 +367,13 @@ static func group_of(n: String) -> String:
 	# Tall furniture (ART-HAB P5): hidden when a doorway is close; cut away with the Interior.
 	if n.begins_with("Tall_") and n.substr(5).is_valid_int():
 		return "Tall"
+	# ART-HAB 2026-10-02/03: the inner ceiling (RoofCeil*) and the unit partition tops (PorchTop_Part) are
+	# their own groups, drawn only in the room the follow camera is in or next to (like Interior), never
+	# casting shadows; both hide in the cutaway (*Top).
+	if n.begins_with("RoofCeil") or n.begins_with("CeilTop"):
+		return "CeilTop"
+	if n.begins_with("PorchTop_Part") or n.begins_with("PartTop"):
+		return "PartTop"
 	for g in GROUPS:
 		if n.begins_with(g):
 			if (g == "L2" or g == "L3" or g == "L4" or g == "L5") and n.length() > 2 and n[2].is_valid_int():
@@ -1139,9 +1164,9 @@ static func node_from(tpl: Dictionary, proxies: bool = false) -> Node3D:
 		else:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if bool(p["shadow"]) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		(groups[g] as Node3D).add_child(mi)
-	var s: float = float(tpl.get("scale", 1.0))
-	if absf(s - 1.0) > 0.001:
-		root.scale = Vector3(s, s, s)
+	var s3: Vector3 = scale3(tpl)
+	if not s3.is_equal_approx(Vector3.ONE):
+		root.scale = s3
 	return root
 
 ## v1 entry point (main.gd uses it for its own placement ghost): a node tree for a def.

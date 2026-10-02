@@ -223,7 +223,7 @@ func _name_of(id: int) -> String:
 ## Called by sim.log_event for every entry: the log codes that are a reason to celebrate.
 func on_log(code: String, text: String, ents: Array, extra: Dictionary) -> void:
 	match code:
-		"promotion", "wedding", "adoption", "arcade_record", "goal", "award", "commissioned", "dome_stage":
+		"promotion", "wedding", "adoption", "arcade_record", "goal", "chapter", "award", "commissioned", "dome_stage":
 			pass
 		_:
 			return
@@ -242,6 +242,8 @@ func on_log(code: String, text: String, ents: Array, extra: Dictionary) -> void:
 			_celebrate("record", who.slice(0, 1), text, "an arcade record")
 		"goal":
 			_celebrate("goal", [], text, text.trim_prefix("Goal: ").trim_suffix(".").to_lower())
+		"chapter":
+			_celebrate("goal", [], text, text.get_slice(".", 0).to_lower())
 		"award":
 			_celebrate("medal", [], text, text.get_slice("(", 0).trim_prefix("Award: ").strip_edges().to_lower())
 		"commissioned", "dome_stage":

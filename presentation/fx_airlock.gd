@@ -46,7 +46,7 @@ func _geo(bid: int, meta: Dictionary) -> Dictionary:
 	var tpl: Dictionary = meta["tpl"]
 	var s: float = float(tpl.get("scale", 1.0))
 	var xf: Transform3D = meta["xf"]
-	var xs := Transform3D(xf.basis * Basis.from_scale(Vector3(s, s, s)), xf.origin)
+	var xs := Transform3D(xf.basis * Basis.from_scale(Models.scale3(tpl)), xf.origin)
 	var g := {"key": key, "xf": xf, "kit": false, "xs": xs, "s": s}
 	var inner_x := INF
 	var outer_x := INF

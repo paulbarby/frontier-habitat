@@ -303,7 +303,7 @@ def cut_top_check(rm, objs, eps=0.006):
         if fl:
             # 5.0: floor k is cut at k * floor_height + WALL_TOP when the player views it; its *Top objects and its
             # furniture (Interior) may stand higher
-            if not nm.endswith(("Top", "_Interior")):
+            if not nm.endswith(("Top", "Top_Part", "_Interior")):
                 cut = fl * float(rm.bdef.get("floor_height", 3.6)) + K.WALL_TOP
                 if max(v.z for v in vs) > cut + eps:
                     high.append("%s %.2f" % (nm, max(v.z for v in vs)))

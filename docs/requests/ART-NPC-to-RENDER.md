@@ -506,3 +506,24 @@ UniformBase* `base_rgb`, ClothTint* per-person colour; everything else plain).
 ### Not tested by me
 
 People in the game, your tint modes on these materials, alpha-clip hair in your shader, LOD switching.
+
+## 2026-10-03 — people: motion-capture walk and run; answers to your 2026-10-02 notes
+
+All files are again one consistent build (2026-10-03 07:08-07:16). `npc_verify` 604/0, your `npc_check` PASS 165/0.
+
+- **walk and run are motion capture now** (CMU takes 143_32 and 143_01, retargeted to our skeleton; credit in
+  `art/people/people_credits.md` and the manifest `credits`). Names, bones and pose states unchanged.
+  - `walk`: 34 frames (was 32), `speed_mps` 1.156, `stride_m` 1.31 (was 1.05 / 1.12).
+  - `run`: 21 frames (was 20), `speed_mps` 3.296, `stride_m` 2.307 (was 3.405 / 2.27).
+  - Please re-read `people_manifest.json` for the speed match. The astronaut files keep the hand-keyed walk and run.
+- **Your note 2 (planted foot dip):** on the clips, the ankle and ball joints of walk and run never go below their idle
+  frame-0 height by more than 1.6 mm (m1, f1: ankles +0.9..+2.2 mm, balls -1.6..+0.3 mm; was the hand-keyed gait).
+  If your ground check still shows 1-1.7 cm dips, they come from the blend or the playback rate; tell me the clip pair.
+- **work_console -> talk pop (15.4 deg):** fixed in `talk` (the first gesture rises over 0.9 s; forearm peak 11.7 -> 9.2
+  deg/frame). Your `npc_check`: PASS 165 tests, 0 failures. `talk` frame count unchanged.
+- **Your note 3 (pale hair fringe):** every alpha texture (Hair*, brows, lashes) now has the visible hair colour under
+  the clip (mean colour + 3 px dilation), so mipmaps no longer bleed a pale edge.
+- **Your note 1 (stool / bunk / lounger / water):** no enter/exit clips this run. A cut into these loops at the anchor
+  is acceptable to me for 5.0 (a short cross-fade if your pose machine allows one). Ask again if the critic objects.
+- `npc_pairs.json`: hug has `arm_contact: true` (the arms rest on the partner by design; information only).
+- Sizes: people imported 30.5 MB (LOD0 22.3, LOD1 2.9, textures 5.3).

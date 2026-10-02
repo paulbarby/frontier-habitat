@@ -9,7 +9,8 @@
    "sync_s": 0.0,
    "side_offset_m": 0.0,
    "hand_contact": true,
-   "note": "arms round the partner's back, heads side by side; the hands rest on the partner's back"
+   "arm_contact": true,
+   "note": "arms round the partner's back, heads side by side; the hands rest on the partner's back and the high forearm on the partner's shoulder (arm_contact)"
   },
   "handshake": {
    "clip_a": "handshake",

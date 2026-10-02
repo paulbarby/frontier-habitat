@@ -66,7 +66,9 @@ func _process(_d: float) -> bool:
 					pid = int(r["id"])
 					break
 			check("SIM takes the order 'answer_request' (sim.relations.cmd_answer_request)", hud.v5.live_command("answer_request"))
-			check("no request card without a request", not hud.request_card.visible)
+			# (The showcase has party offers and HR requests of its own since 2026-10-03: the card shows exactly when a request is open.)
+			hud.request_card.update()
+			check("the request card shows exactly when a request is open", hud.request_card.visible == (hud.v5.requests().size() > 0))
 			_request(1, pid)
 			hud.request_card.update()
 			hud.panels.open_tab("requests", true)   # 2026-10-01: requests live in the dock's Requests tab

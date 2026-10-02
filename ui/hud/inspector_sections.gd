@@ -1571,7 +1571,7 @@ func _party(b: Dictionary) -> void:
 			var pl: VBoxContainer = Kit.vbox(2)
 			pl.name = "PartyNow"
 			box.add_child(pl)
-			pl.add_child(Kit.head("%s  ·  %s" % [String(r["phase"]).to_upper(), String(r["reason"].get("text", "")).left(48)], P.AMBER, 11))
+			pl.add_child(Kit.head("%s  ·  %s" % [String(r["phase"]).to_upper(), load("res://ui/hud/party_card.gd").title_of(r["reason"]).to_upper()], P.AMBER, 11))
 			var sc: Dictionary = r["score"]
 			pl.add_child(Kit.label("%d guests  ·  fun %d  ·  attendance %d  ·  drama %d" % [(r["guests"] as Array).size(), int(sc.get("fun", 0)), int(sc.get("attendance", 0)), int(sc.get("drama", 0))], "SmallLabel", 12, P.TEXT_2))
 			for d in r["drama"]:

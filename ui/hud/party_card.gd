@@ -50,6 +50,12 @@ func update() -> void:
 		if tl != null:
 			tl.text = _time_text(b.get_meta("party"))
 
+## "Birthday party", "Promotion party" ... from the reason's event kind (SIM's reason text is the offer's question).
+const KIND_NAME := {"birthday": "Birthday party", "promotion": "Promotion party", "goal": "Goal party", "medal": "Medal party", "structure": "Opening party",
+	"wedding": "Wedding party", "adoption": "Adoption party", "record": "Record party"}
+static func title_of(reason: Dictionary) -> String:
+	return String(KIND_NAME.get(String(reason.get("kind", "")), "Party"))
+
 func _time_text(r: Dictionary) -> String:
 	var s = hud.main.sim
 	var hz: float = float(s.bal["tick_hz"])
@@ -65,7 +71,7 @@ func _block(r: Dictionary) -> Control:
 	var h: HBoxContainer = Kit.hbox(6)
 	v.add_child(h)
 	h.add_child(Kit.icon("music", 16, Color("F472B6")))
-	var hd: Label = Kit.head("PARTY  ·  %s" % String(r["reason"].get("text", "A party")).left(60), Color("F472B6"), 11)
+	var hd: Label = Kit.head(title_of(r["reason"]), Color("F472B6"), 11)
 	hd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	h.add_child(hd)
