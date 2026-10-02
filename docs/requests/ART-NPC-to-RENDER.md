@@ -527,3 +527,39 @@ All files are again one consistent build (2026-10-03 07:08-07:16). `npc_verify` 
   is acceptable to me for 5.0 (a short cross-fade if your pose machine allows one). Ask again if the critic objects.
 - `npc_pairs.json`: hug has `arm_contact: true` (the arms rest on the partner by design; information only).
 - Sizes: people imported 30.5 MB (LOD0 22.3, LOD1 2.9, textures 5.3).
+
+## 2026-10-03 (b) — people: enter/exit clips for stool, bunk, lounger and water; idle and talk_idle are capture
+
+All files are one consistent build (2026-10-03 08:45-08:59, all 8 people + astronauts). `npc_verify` 604/0, your
+`npc_check` PASS 165/0, `check` 313/0. People imported 33.0 MB (LOD0 24.9, LOD1 2.9, textures 5.3).
+
+**New clips (all bodies, in `people_manifest.json`):**
+
+| clip | kind | from -> to | frames | `stand_offset` (m, x y z) | note |
+|---|---|---|---|---|---|
+| `stool_enter` / `stool_exit` | enter / exit | stand <-> stool | 52 / 52 | 0.0 0.40 0.0 | adults only (as `sit_bar_stool`) |
+| `bunk_enter` / `bunk_exit` | enter / exit | stand <-> bunk | 400 / 411 | 0 0 0 | bunk height 0.45 m, ends on `sleep_cell` frame 0 |
+| `lounger_enter` / `lounger_exit` | enter / exit | stand <-> lounger | 134 / 136 | 0.0 0.45 0.0 | ends on `lounge_pool` frame 0 |
+| `swim_enter` | enter | stand -> water | 72 | -1.70 0.0 0.15 | a dive from the deck (0.15 m above the water) |
+| `swim_exit` | exit | water -> stand | 168 | 0.80 0.0 0.15 | hands on the edge, push up, stand |
+
+- `stand_offset` is where the person stands, in the furniture/anchor frame, at the stand end of the clip. Place the
+  root at the anchor (as for the loop) and the clip moves the body from that stand point onto the anchor. The clips
+  keep root motion out of the root bone (as all our clips).
+- The last frame of each enter clip (and the first frame of each exit clip) is close to frame 0 of its loop, under
+  your 15 deg pop rule. Measured on m1 (largest bone turn / largest bone move): lounger 0.1 deg / 0 mm; swim 2.5 deg
+  / 19 mm (a hand); bunk 3.7 deg / 21 mm (a hand); stool 9.2 deg (left forearm) / 63 mm (left hand). Children
+  (c1): swim 5.2 deg / 35 mm, bunk 10.0 deg / 19 mm. A short cross-fade (0.2 s) at these joins hides it.
+- Sheets: `art/people/people_enter_exit.png` (stool, bunk, lounger; side view), `people_enter_water.png` (swim
+  enter/exit, lounger exit). No furniture in these renders.
+
+**Changed clips:**
+- `idle` (adults) and `talk_idle` (all) are motion capture now (CMU 140_06, 18_08). Same frame counts. The children
+  keep the hand-keyed `idle`.
+- `fall_down` 48 -> 62 frames (the arm turned 30-46 deg/frame).
+- `punch`, `hit_react`, `flirt_lean`, `fight_idle`, `kneel_enter/exit`, `sit_enter/exit`, `dance_c`, `child_play`:
+  the feet step instead of sliding. `talk`, `drink_bar`, `swim`, `get_up` and the gaits: smoother (same frames).
+- Astronaut files: `collapse`, `walk`, `carry_walk`, `step_up(_r)`, `step_down(_r)`, `board(_r)`, `alight(_r)`
+  smoother; frame counts unchanged.
+
+**Not done:** the `stool_enter` / `lounger_enter` first 5 frames still move the left foot 1.5 cm on the floor.

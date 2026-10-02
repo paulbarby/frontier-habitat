@@ -49,8 +49,8 @@ TAKE_FPS = {"140": 60.0, "141": 60.0, "142": 60.0, "143": 60.0}
 CLIPS = {
     "walk": dict(take="143_32", kind="gait", span=(84, 245), period=(26, 40)),
     "run": dict(take="143_01", kind="gait", span=(8, 100), period=(16, 26)),      # 3.4 m/s: the colony pace
-    "jog": dict(take="143_42", kind="gait", span=(165, 250), period=(16, 28)),    # 2.6 m/s
-    "idle": dict(take="140_06", kind="loop", span=(20, 296), length=4.0, rest="stand"),       # (the standing part: later it crouches)
+    "jog": dict(take="143_42", kind="gait", span=(165, 250), period=(16, 28), smooth=1),    # 2.6 m/s
+    "idle": dict(take="140_06", kind="loop", span=(20, 296), length=4.0, rest="stand", smooth=4),       # (the standing part: later it crouches)
     "talk": dict(take="18_08", kind="loop", span=(0, 99999), length=4.0, calm=3.0),
     "talk_gesture_a": dict(take="19_08", kind="loop", span=(0, 99999), length=4.0, calm=1.0),
     "talk_idle": dict(take="18_08", kind="loop", span=(0, 99999), length=4.0, calm=3.0, rest="stand"),
@@ -439,6 +439,23 @@ def lock_feet(frames, v, still=False):
     return frames
 
 
+def low_pass(frames, passes=2, skip=("arm.", "scap.")):
+    """A circular [1 2 1] / 4 filter on every parameter (2 passes): the capture's frame-to-frame jitter becomes the
+    snaps of the audit (change of speed per frame); this takes the jitter out and keeps the motion."""
+    n = len(frames) - 1
+    keys = sorted(set().union(*[set(P) for P in frames[:n]]))
+    for k_ in keys:
+        if k_.startswith(skip):
+            continue
+        v_ = [P.get(k_, 0.0) for P in frames[:n]]
+        for _ in range(passes):
+            v_ = [(v_[(i - 1) % n] + 2.0 * v_[i] + v_[(i + 1) % n]) / 4.0 for i in range(n)]
+        for i, P in enumerate(frames[:n]):
+            P[k_] = v_[i]
+    frames[-1] = dict(frames[0])
+    return frames
+
+
 def smooth_toes(frames, r=2):
     """Toe bends (noisy in the capture) smoothed over 5 frames, circular."""
     n = len(frames) - 1
@@ -495,6 +512,8 @@ def build_clip(name, spec):
         keys = sorted(set().union(*[set(P) for P in frames]))
         frames = crossfade(frames, T, K, keys)
         frames = unwrap_seam(frames, keys)
+        if spec.get("smooth"):
+            frames = low_pass(frames, spec["smooth"])
         frames = lock_feet(frames, v_frame)
         frames = ground_feet(apart(leg_reach(knee_poles(frames))))
         meta.update(speed_mps=round(speed, 3), stride_m=round(travel.length * k, 3))
@@ -529,12 +548,13 @@ def build_clip(name, spec):
         keys = sorted(set().union(*[set(P) for P in frames]))
         frames = crossfade(frames, T, K, keys)
         frames = unwrap_seam(frames, keys)
+        frames = low_pass(frames, spec.get("smooth", 2))
         if spec.get("rest"):
             frames = onto_rest(frames, spec["rest"])
         frames = lock_feet(frames, 0.0, still=True)
-        frames = ground_feet(leg_reach(knee_poles(smooth_toes(frames))))
-        if spec.get("rest"):
-            frames = onto_rest(frames, spec["rest"])        # frame 0 exactly on the rest pose again (pose state)
+        # standing legs keep a little knee bend (near straight the knee angle jumps with every mm of hip travel:
+        # a 9 deg/frame shin snap in f1's idle)
+        frames = ground_feet(leg_reach(knee_poles(smooth_toes(frames)), lim=spec.get("reach", 0.985)))
         meta.update(window_s=[round((s0 + i0 * step) / fps, 3), round((s0 + (i0 + T) * step) / fps, 3)])
     meta["frames"] = len(frames) - 1
     os.makedirs(OUT, exist_ok=True)

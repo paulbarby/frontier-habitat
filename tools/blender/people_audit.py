@@ -28,7 +28,8 @@ import numpy as np              # noqa: E402
 from mathutils import Vector    # noqa: E402
 
 ART = os.path.join(N.ROOT, "art", "people")
-SLOW = {"lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_cell", "sleep_turn", "dead"}
+SLOW = {"lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_cell", "sleep_turn", "dead",
+        "bunk_enter", "bunk_exit"}
 FALLS = {"collapse", "fall_down"}
 PLANT_MIN = 4                 # frames: a foot is planted when it stays still at least this long
 CHILD_SEAT = {"sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit", "sit_class", "sit_bench", "drive_sit",
@@ -36,7 +37,7 @@ CHILD_SEAT = {"sit_enter", "sit_idle", "sit_eat", "sit_type", "sit_exit", "sit_c
 FACE = {"jaw", "lids", "lids_low", "brow.L", "brow.R", "mouth.L", "mouth.R"}
 LOCO = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk", "hold_hands_walk_r",
         "handcuffed_walk", "escort_walk"}
-NO_FLOOR = {"swim", "lounge_pool", "sleep", "sleep_r", "sleep_cell", "lie_enter", "lie_exit", "lie_enter_r",
+NO_FLOOR = {"swim", "swim_enter", "swim_exit", "bunk_enter", "bunk_exit", "lounge_pool", "sleep", "sleep_r", "sleep_cell", "lie_enter", "lie_exit", "lie_enter_r",
             "lie_exit_r", "dead", "collapse", "fall_down", "get_up", "sit_bar_stool", "drink_bar", "drive_sit",
             "ride_sit", "board", "board_r", "alight", "alight_r", "step_up", "step_up_r", "step_down", "step_down_r",
             "suit_swap"}

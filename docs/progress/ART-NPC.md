@@ -452,3 +452,37 @@ hair/brow/lash textures dilated under the alpha clip; soles calibrated on the st
 **Not done:** RENDER enter/exit clips for stool / bunk / lounger / water (told RENDER a cut is acceptable); round-40:
 coverall leg hems (flared cuffs), uneven tee necklines, thin brows, f1 skin tone; the mocap groups above; audit faults
 left: slide 68, snap 100, floats 32 (dance lifts), step 11, elbow 8, neck 8 (swim), wrist 1.
+
+## v5.0 — 2026-10-03 (b) (Opus ART-NPC) — enter/exit clips; slide and snap faults; round 40
+**RESULT lines:** `npc_verify` 604 passed, 0 failed. RENDER `npc_check` PASS 165/0. `godot.mjs import` done; `check`
+313 scripts, 0 failed. One consistent build 08:45-08:59 (all 8 people + astronauts). People imported 33.0 MB.
+
+**1. Enter/exit clips (new, `people_clips.py`):** stool_enter/exit (adults), bunk_enter/exit, lounger_enter/exit,
+swim_enter/exit, with `stand_offset` metadata. Lounger: the right knee flipped over the left thigh (10 cm; the knee
+pole lay along the hip-ankle line while sitting up) -> the body leans back 30 deg before the legs go up; the end key
+keeps lounge_pool's IK arms (FK put c2's hand 9 mm into the head). Clip check: no step > 15, no overlap > 5 mm. Join to the loop
+(largest bone turn, m1): lounger 0.1, swim 2.5, bunk 3.7, stool 9.2 deg (c1 bunk 10.0). RENDER note 2026-10-03 (b).
+
+**2. Capture groups:** low-pass cleanup on the captures. talk_idle ON (snap 1.5), idle ON for adults (children: knee
+snap 9 -> hand-keyed). The children keep the captured walk (one frame count per clip in the manifest) with a low-pass:
+c2 snap 28.4 -> 14.6 deg/f2. jog, sit_idle, dance_a/b, talk, talk_gesture_a stay hand-keyed. No new CMU takes asked.
+
+**3. Round 40:** coverall legs taper 14 % knee -> hem and gather at the boot; tee necklines: the ragged edge was the
+skin showing through a tight neckline -> the 4 vertex rings at each opening stay 5 mm outside the body (all 8 bodies
+clean in `people_closeup.png`); brows denser (alpha x1.6, 2 px dilation); f1 skin hue 0.40.
+
+**4. Audit faults (all bodies; `art/people/audit_final41.*` against `audit_after_mocap.*`):**
+| fault | before | after | worst before -> after |
+|---|---|---|---|
+| slide | 68 | 55 | punch f2 12.6 cm -> dance_c c2 3.2 cm |
+| snap | 100 | 63 | fall_down f3 34.2 -> injured_walk f2 16.9 deg/f2 |
+| step | 11 | 2 | fall_down f3 45.7 -> suit run 30.2 deg |
+| floats | 32 | 38 | child_play c1 4.3 cm (both) |
+Clips with a fault: 170 of 578 -> 144 of 638 (60 new clip instances).
+Tools: `step_lift` (a slow foot glide becomes a quick lifted step), `pivot_hold` (a turning foot keeps its ball or heel
+on the floor), `smooth_params` (low-pass on pose parameters; one-shots keep their end frames) in people_anims /
+npc_anims; `SUIT_SMOOTH` in npc_build (suit_swap excluded: its cut frame must stay still).
+
+**Not done:** snaps left on talk (8.7-9.1 deg/f2, all bodies), swim / swim_enter / swim_exit (7-12), drink_bar,
+stool_enter/exit on f1/f2 (10); slides 1.1-1.6 cm at the start of stool_enter / lounger_enter; floats 38 (kneel
+1.2-1.6 cm, dance lifts); elbow 8, neck 8 (swim), wrist 1; trouser hems show a small notch on the inner side (m2).

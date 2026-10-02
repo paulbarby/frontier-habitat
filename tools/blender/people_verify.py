@@ -22,7 +22,7 @@ FACE_BONES = ["jaw", "lids"]
 LOCOMOTION = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk",
               "hold_hands_walk_r", "handcuffed_walk", "escort_walk"}
 FALLS = {"collapse", "fall_down"}
-NO_FLOOR = {"swim"}                 # the origin is the water surface
+NO_FLOOR = {"swim", "swim_enter", "swim_exit"}   # the origin is the water surface (the deck is 0.15 m up)
 STEP_LIMIT = 15.0
 BUDGET = 24000
 
@@ -202,7 +202,7 @@ def self_check_file(check, path, label):
 
 
 BED = dict(bz=0.55, bb=0.55)           # npc_anims FURNITURE bed_z / bed_back (the bed ART-HAB builds)
-BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn", "sleep_cell")
+BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn", "sleep_cell", "bunk_enter", "bunk_exit")
 
 
 def _box(co, lo, hi):
@@ -226,7 +226,7 @@ def bed_checks(check, v, d, vclips, rig, meshes, outfits):
             continue
         act = next((a for a in bpy.data.actions if a.name.split("_Rig")[0] == c), None)
         n = int(round(act.frame_range[1])) if act else 0
-        bz = 0.45 if c == "sleep_cell" else bz0
+        bz = 0.45 if c in ("sleep_cell", "bunk_enter", "bunk_exit") else bz0
         for f in range(0, n + 1, 3 if n > 60 else 2):
             set_clip(rig, c, f)
             co = np.concatenate([world_co(o) for o in objs])
@@ -246,7 +246,7 @@ def bed_checks(check, v, d, vclips, rig, meshes, outfits):
           "(mattress 1.5 cm soft, front 17 cm soft)" % v, worst[0] == 0, "%d vertices at worst (%s)" % worst)
     for c in ("sleep", "sleep_r", "sleep_turn", "sleep_cell"):
         if c in low:
-            bz = 0.45 if c == "sleep_cell" else bz0
+            bz = 0.45 if c in ("sleep_cell", "bunk_enter", "bunk_exit") else bz0
             lo, hi = low[c][0], low[c + "_hi"][0]
             check("people %s: %s rests ON the mattress (lowest point %.3f..%.3f m: -1.5 cm to +3.5 cm of the top, every "
                   "frame)" % (v, c, bz - 0.015, bz + 0.035), bz - 0.015 <= lo and hi <= bz + 0.035,

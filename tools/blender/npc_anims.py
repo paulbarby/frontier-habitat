@@ -1789,6 +1789,37 @@ def on_floor(fn):
     return g
 
 
+# (2026-10-03) a low-pass over a clip's pose parameters (the people and the astronaut builds use it on the
+# clips with snap faults: people_anims.SMOOTH_CLIPS, npc_build.SUIT_SMOOTH)
+FACE_KEYS = ("lids", "jaw", "brow", "mouth")
+
+
+def smooth_params(fn, n, loop, passes=2):
+    if n < 4 or passes < 1:
+        return fn
+    m = n if loop else n + 1                      # a loop's frame n is its frame 0
+    poses = [Pose(fn(f)) for f in range(m)]
+    keys = [k for k in poses[0] if not k.startswith(FACE_KEYS) and all(k in P for P in poses)
+            and all(isinstance(P[k], (int, float)) for P in poses)]
+    for k in keys:
+        v = [P[k] for P in poses]
+        for _ in range(passes):
+            if loop:
+                v = [(v[f - 1] + 2.0 * v[f] + v[(f + 1) % m]) / 4.0 for f in range(m)]
+            else:
+                v = [v[0]] + [(v[f - 1] + 2.0 * v[f] + v[f + 1]) / 4.0 for f in range(1, m - 1)] + [v[-1]]
+        for f in range(m):
+            poses[f][k] = v[f]
+
+    def out(f):
+        fi = int(f) % m if loop else max(0, min(n, int(f)))
+        P = Pose(fn(f))                           # the face of this frame, the body from the filtered pose
+        for k in keys:
+            P[k] = poses[fi][k]
+        return P
+    return out
+
+
 def all_clips():
     """[(name, kind, pose_from, pose_to, loop, frames, fn, extra metadata)] - every clip of section 3.3."""
     out = []

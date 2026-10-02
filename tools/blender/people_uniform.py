@@ -351,7 +351,9 @@ def shape_cloth(bm, J, body_tree):
         v.co = p
     # straight legs / loose sleeves: below the knee (elbow) the section becomes round, its radius the knee's (elbow's)
     for s in ("L", "R"):
-        for part, a_j, b_j, grow in (("leg", "shin." + s, "foot." + s, 0.03), ("arm", "forearm." + s, "hand." + s, 0.02)):
+        # (2026-10-03, CRITIC r40: the legs flared into bell cuffs over the boots) the trouser leg narrows 14 % from the
+        # knee to the hem and gathers a little at the boot; never inside the body (the max below)
+        for part, a_j, b_j, grow in (("leg", "shin." + s, "foot." + s, -0.14), ("arm", "forearm." + s, "hand." + s, 0.02)):
             a, b = J[a_j], J[b_j]
             ax = (b - a).normalized()
             ring = [v for v in bm.verts if info[v][0] == part and info[v][3] == s and abs(_seg_t(v.co, a, b)[0]) < 0.04]
@@ -376,6 +378,8 @@ def shape_cloth(bm, J, body_tree):
                 R = R0 * (1.0 + grow * u)
                 if part == "arm" and u > 0.85:
                     R *= 1.0 - 0.10 * (u - 0.85) / 0.15          # the cuff gathers
+                if part == "leg" and u > 0.80:
+                    R *= 1.0 - 0.06 * (u - 0.80) / 0.20          # the hem settles on the boot
                 if r.length < 1e-6:
                     continue
                 target = r.normalized() * max(R, r.length * 0.97)

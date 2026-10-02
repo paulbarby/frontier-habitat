@@ -47,9 +47,16 @@ CONTACT = {
     "sleep_cell": ("bed", 0.45, ()), "lie_enter_r": ("bed", 0.55, ()), "sleep_r": ("bed", 0.55, ()),
     "lie_exit_r": ("bed", 0.55, ()), "sleep_turn": ("bed", 0.55, ()), "drive_sit": ("seat", 0.46, ("L", "R")),
     "play_arcade": (None, 0.0, ("L", "R")), "shop_browse": (None, 0.0, ("R",)),
+    # enter / exit clips of the stool, bunk and lounger states (2026-10-03)
+    "stool_enter": ("seat", BAR_STOOL["seat_z"], (), (BAR_STOOL["seat_z"] + 0.187) - 0.98),
+    "stool_exit": ("seat", BAR_STOOL["seat_z"], (), (BAR_STOOL["seat_z"] + 0.187) - 0.98),
+    "bunk_enter": ("bed", 0.45, ()), "bunk_exit": ("bed", 0.45, ()),
+    "lounger_enter": ("seat", 0.35, (), (0.35 + 0.115) - 0.98), "lounger_exit": ("seat", 0.35, (), (0.35 + 0.115) - 0.98),
 }
+STOOL_TRANS = ("stool_enter", "stool_exit")    # stand <-> stool: the stool offsets fade in with the seated weight
 LIE_CLIPS = ("collapse", "dead", "fall_down", "get_up")                 # on the ground: LIE_LIFT
-BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "sleep_cell", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn")
+BED_CLIPS = ("lie_enter", "sleep", "lie_exit", "sleep_cell", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn",
+             "bunk_enter", "bunk_exit")
 STOOL_CLIPS = ("sit_bar_stool", "drink_bar")
 # the settled hips offset of each support (s = 1), for the blend weight
 SETTLED = {"seat": A.SIT.g("hips.z"), "bed": -0.20}    # (2026-10-02: bed -0.20: seated on the edge = settled; children sank 4 cm)
@@ -109,6 +116,10 @@ def people_fix(P, clip):
                     Q["arm.%s.x" % side], Q["arm.%s.y" % side], Q["arm.%s.z" % side] = r.x, r.y, r.z
     if clip in STOOL_CLIPS and STOOL_ADJ:
         Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
+    if clip in STOOL_TRANS and STOOL_ADJ:
+        st = A.STAND.g("hips.x")
+        w = max(0.0, min(1.0, (st - P.g("hips.x")) / 0.04))          # 0 standing (x 0) .. 1 on the stool (x -0.04)
+        Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ * w
     if clip in BED_CLIPS and (BED_ADJ or BED_BACK or BED_ROLL):       # on the mattress: the body rests ON it (per body)
         # (2026-10-02) on the side and on the back the lowest points differ (hip and thigh vs the back and heels): one
         # offset each, mixed by how far the pelvis lies on its side (its lateral axis up) or on its back (forward up)
@@ -181,6 +192,12 @@ def _retarget(P, s, clip, settled_z=None):
             continue                                          # hands on the world stay where the world is
         if k.startswith("foot.") and clip in WORLD_FEET:
             continue                                          # feet on furniture (the stool footrest) stay there
+        if k.startswith("foot.") and clip in STOOL_TRANS:
+            # (2026-10-03) a foot on the stool's ring / footrest stays there; a foot on the floor scales like the stand
+            sd = parts[1]
+            u = max(0.0, min(1.0, (P.g("foot.%s.z" % sd) - 0.15) / 0.15))
+            Q[k] = v * (s + (1.0 - s) * u)
+            continue
         Q[k] = v * s
     if kind:
         hz = P.g("hips.z")
@@ -642,14 +659,227 @@ def people_clips():
         name, kind, pf, pt, loop, n, fn, meta = c
         out.append((name, kind, pf, pt, loop, n, with_face(fn, name, n, loop, jaws.get(name)), meta))
     jaws.update({k: (lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)) for k, kw in talking.items()})
+    out = [(c[0], c[1], c[2], c[3], c[4], c[5], step_lift(c[6], c[5], c[4]), c[7]) if c[0] in STEP_CLIPS else c
+           for c in out]
+    out = [(c[0], c[1], c[2], c[3], c[4], c[5], pivot_hold(c[6], c[5], c[4]), c[7]) if c[0] in PIVOT_CLIPS else c
+           for c in out]
+    out = [(c[0], c[1], c[2], c[3], c[4], c[5], smooth_params(c[6], c[5], c[4], SMOOTH_CLIPS[c[0]]), c[7])
+           if c[0] in SMOOTH_CLIPS else c for c in out]
     return mocap_override(out, jaws)
+
+
+# (2026-10-03) audit: 68 foot-slide faults.  In these keyed clips a foot target moves across the floor between two
+# keys (a step, a weight shift) and the foot slid flat on the floor (punch 12.6 cm, hit_react 8.7 cm, flirt_lean
+# 7.3 cm, ...).  step_lift lifts the moving foot on a half-sine over each move: the slide becomes a step.
+STEP_CLIPS = {"punch", "hit_react", "flirt_lean", "dance_c", "kneel_enter", "kneel_exit", "child_play", "fight_idle",
+              "sit_enter", "sit_exit", "slap", "stool_enter", "stool_exit"}
+STEP_MOVE = 0.0004           # m/frame: slower than this, the foot target is still
+STEP_MIN = 0.010             # m: a shorter move is not lifted (under the 1 cm slide rule)
+STEP_H = 0.035               # m: the largest lift
+STEP_RATE = 0.012            # m/frame: the step's mean speed
+STEP_WMIN = 6                # frames: the shortest step (0.2 s)
+STEP_BAND = 0.04             # m: only a foot within this of the standing foot height (on the floor) is lifted
+
+
+# (2026-10-03) audit: 100 snap faults (a bone's turn rate changes too fast between frames, deg/frame^2).  In keyed
+# clips the snap sits on a key where the Hermite spline turns sharply (fall_down 34 at the forearm, the gaits' shin
+# 15-17 at heel strike).  smooth_params runs a [1 2 1]/4 low-pass over the pose parameters (the joint angles, the IK
+# targets) `passes` times; a one-shot keeps its first and last frames exact (the pose transitions stay the same).
+# The face (lids, jaw, brows, mouth) is not filtered: the talking jaw keeps its rate.
+# (2026-10-03 b: sit_eat out (the filter on its IK hand turns made 4 snaps 10); 2 passes did not reach the
+# slow clips' 6 deg/f2, so talk / drink_bar / swim etc. take 4-6)
+SMOOTH_CLIPS = {"fall_down": 4, "collapse": 2, "get_up": 4, "talk": 6, "drink_bar": 6, "dance_c": 2,
+                "kneel_exit": 4, "kneel_enter": 1, "sit_enter": 2, "sit_exit": 1, "play_arcade": 4, "swim": 4,
+                "swim_enter": 3, "swim_exit": 3, "stool_enter": 3, "stool_exit": 3,
+                "injured_walk": 2, "carry_walk": 2, "hold_hands_walk": 2, "hold_hands_walk_r": 2, "escort_walk": 2,
+                "handcuffed_walk": 2, "child_run": 2, "jog": 2}
+smooth_params = A.smooth_params
+
+
+# (2026-10-03 b) the slides left after step_lift are a foot that turns about its ankle while its target stays still
+# (kneel: the heel comes up, the toes scrape 3-4 cm; flirt_lean / fight_idle: the toes lift).  pivot_hold keeps the
+# contact point (the ball when the heel is up, the heel when the toes are up) where it was at the start of the still
+# span and moves the ankle instead; the correction is gone again when the foot turns back, and it fades out over the
+# next move when it is not.
+PIVOT_CLIPS = {"kneel_enter", "kneel_exit", "repair_kneel", "flirt_lean", "fight_idle", "sit_enter", "sit_exit",
+               "dance_c", "child_play"}
+PIVOT_FADE = 3               # frames
+PIVOT_LOW = 0.02             # m: the contact point (ball or heel) within this of its standing height is on the floor
+PIVOT_DRIFT = 0.004          # m/frame: a contact point slower than this is held (the audit counts < 6 mm as planted)
+
+
+def pivot_hold(fn, n, loop):
+    if n < 4:
+        return fn
+    m = n if loop else n + 1
+    poses = [fn(f) for f in range(m)]
+    off = {s: [None] * m for s in ("L", "R")}
+    db, dh = Vector(A.BALL) - Vector(A.ANK), Vector(A.HEEL) - Vector(A.ANK)
+    rest_b, rest_h = A.BALL.z, A.HEEL.z
+    for s in ("L", "R"):
+        kx, ky, kz = ("foot.%s.%s" % (s, c) for c in "xyz")
+        if not all(kx in P for P in poses):
+            continue
+        pt, kind, ok = [], [], []
+        for P in poses:
+            q = N.qeuler(P.g("foot.%s.roll" % s), P.g("foot.%s.pitch" % s), P.g("foot.%s.yaw" % s))
+            a = Vector((P[kx], P[ky], P[kz]))
+            cb, ch = a + q @ db, a + q @ dh
+            if cb.z - rest_b < ch.z - rest_h:
+                pt.append(cb), kind.append("b"), ok.append(cb.z - rest_b < PIVOT_LOW and P.g("foot.%s.rel" % s) < 0.01)
+            else:
+                pt.append(ch), kind.append("h"), ok.append(ch.z - rest_h < PIVOT_LOW and P.g("foot.%s.rel" % s) < 0.01)
+        nxt = lambda f: (f + 1) % m if loop else min(m - 1, f + 1)
+        contact = [ok[f] and kind[nxt(f)] == kind[f] and
+                   ((pt[nxt(f)].x - pt[f].x) ** 2 + (pt[nxt(f)].y - pt[f].y) ** 2) ** 0.5 < PIVOT_DRIFT
+                   for f in range(m)]
+        order = list(range(m))
+        if loop:                                     # start at a frame out of contact: no span wraps the seam
+            free = [f for f in range(m) if not contact[f]]
+            if not free:
+                continue
+            order = [(free[0] + k) % m for k in range(m)]
+        spans, cur = [], []
+        for f in order:
+            if contact[f] or (cur and ok[f] and kind[f] == kind[cur[-1]]):
+                if cur and kind[f] != kind[cur[-1]]:
+                    spans.append(cur)
+                    cur = []
+                cur.append(f)
+                if not contact[f]:                   # the last frame of the span (the foot leaves next)
+                    spans.append(cur)
+                    cur = []
+            elif cur:
+                spans.append(cur)
+                cur = []
+        if cur:
+            spans.append(cur)
+        for sp in spans:
+            a, b = pt[sp[0]], pt[sp[-1]]
+            if not loop and sp[-1] == m - 1 and sp[0] != 0:
+                a = b                                # a one-shot ends exactly on its last key (pose transitions)
+            for k, f in enumerate(sp):
+                u = k / float(len(sp) - 1) if (not loop and sp[0] == 0 and sp[-1] == m - 1 and len(sp) > 1) else 0.0
+                h = a.lerp(b, u)
+                off[s][f] = Vector((h.x - pt[f].x, h.y - pt[f].y, 0.0))
+        held = [o is not None for o in off[s]]       # fade a left-over correction out over the next frames
+        last, age = None, 0
+        for f in (order + order[:PIVOT_FADE + 1]) if loop else order:
+            if held[f]:
+                last, age = off[s][f], 0
+            elif last is not None:
+                age += 1
+                w = max(0.0, 1.0 - age / float(PIVOT_FADE + 1))
+                o = last * w                         # a quick small step back onto the key path (a slow fade
+                o.z = 0.6 * last.length * sin(pi * w)    # would read as a slide)
+                off[s][f] = o
+                if w == 0.0:
+                    last = None
+    if not any(o is not None and o.length > 1e-5 for s in off for o in off[s]):
+        return fn
+
+    def out(f):
+        P = fn(f)
+        fi = int(f) % m if loop else max(0, min(n, int(f)))
+        for s in ("L", "R"):
+            o = off[s][fi]
+            if o is not None and o.length > 1e-5:
+                P = Pose(P)
+                P["foot.%s.x" % s] = P.g("foot.%s.x" % s) + o.x
+                P["foot.%s.y" % s] = P.g("foot.%s.y" % s) + o.y
+                P["foot.%s.z" % s] = P.g("foot.%s.z" % s) + o.z
+        return P
+    return out
+
+
+def step_lift(fn, n, loop):
+    if n < 2:
+        return fn
+    base = {s: STAND.g("foot.%s.z" % s) for s in ("L", "R")}
+    lift = {s: [0.0] * (n + 1) for s in ("L", "R")}
+    newxy = {s: {} for s in ("L", "R")}
+    poses = [fn(f) for f in range(n + 1)]
+    for s in ("L", "R"):
+        kx, ky, kz = ("foot.%s.%s" % (s, c) for c in "xyz")
+        if not all(kx in P and ky in P and kz in P for P in poses):
+            continue
+        xy = [(P[kx], P[ky]) for P in poses]
+        z = [P[kz] for P in poses]
+        sp = [((xy[(f + 1) % (n + 1)][0] - xy[f][0]) ** 2 + (xy[(f + 1) % (n + 1)][1] - xy[f][1]) ** 2) ** 0.5
+              for f in range(n + 1)]
+        order = list(range(n + 1))
+        if loop:                                    # start the scan at a still frame so no move wraps the seam
+            still = [f for f in range(n) if sp[f] < STEP_MOVE]
+            if not still:
+                continue
+            order = [(still[0] + i) % n for i in range(n)]
+        seg = []
+
+        def close(seg):
+            if len(seg) < 2:
+                return
+            d = [0.0]
+            for f in seg[:-1]:
+                d.append(d[-1] + sp[f])
+            D = d[-1]
+            if D < STEP_MIN or max(z[f] for f in seg) > base[s] + STEP_BAND:
+                return
+            h = min(STEP_H, 0.5 * D)
+            # (2026-10-03 b) a quick step, not a slow lifted glide: the audit counts a foot that moves slower than
+            # 6 mm/frame as planted (and then sliding or floating).  The foot covers the same path in a window of
+            # w frames (about 1.2 cm/frame), centred where the slow move was half done; before the window it waits
+            # at the start, after it at the end.
+            k = len(seg) - 1
+            w = max(STEP_WMIN, min(k, int(round(D / STEP_RATE))))
+            mid = next(i for i, dd in enumerate(d) if dd >= 0.5 * D)
+            i0 = max(0, min(k - w, mid - w // 2))
+            for i, f in enumerate(seg):
+                u = max(0.0, min(1.0, (i - i0) / float(w)))
+                u = u * u * (3.0 - 2.0 * u)
+                want = u * D                                  # distance along the original path
+                j = max(0, min(k - 1, next((j for j in range(k) if d[j + 1] >= want), k - 1)))
+                a = (want - d[j]) / max(1e-9, d[j + 1] - d[j])
+                a = max(0.0, min(1.0, a))
+                p0, p1 = xy[seg[j]], xy[seg[j + 1]]
+                newxy[s][f] = (p0[0] + (p1[0] - p0[0]) * a, p0[1] + (p1[1] - p0[1]) * a)
+                lift[s][f] = max(lift[s][f], h * sin(pi * u))
+        for f in order:
+            if sp[f] >= STEP_MOVE:
+                seg.append(f)
+            else:
+                if seg:
+                    seg.append(f)
+                    close(seg)
+                seg = []
+        if seg:
+            close(seg)
+        if loop:
+            lift[s][n] = lift[s][0]
+            if 0 in newxy[s]:
+                newxy[s][n] = newxy[s][0]
+    if not any(any(v) for v in lift.values()):
+        return fn
+
+    def out(f):
+        P = fn(f)
+        fi = int(f) % (n + 1) if loop else max(0, min(n, int(f)))
+        for s in ("L", "R"):
+            if lift[s][fi] or fi in newxy[s]:
+                P = Pose(P)
+                P["foot.%s.z" % s] = P.g("foot.%s.z" % s) + lift[s][fi]
+                if fi in newxy[s]:
+                    P["foot.%s.x" % s], P["foot.%s.y" % s] = newxy[s][fi]
+        return P
+    return out
 
 
 # ------------------------------------------------------------------------------------------------------------------
 # motion capture (npc_mocap.py writes tools/blender/mocap/<clip>.json; CMU data, credit in art/people/people_credits.md)
 # ------------------------------------------------------------------------------------------------------------------
 MOCAP_DIR = os.path.join(HERE, "mocap")
-MOCAP_USE = [x for x in os.environ.get("NPC_MOCAP_USE", "walk,run").split(",") if x]   # 2026-10-03: walk and run pass (audit + eye); jog, idle, talk_idle, sit_idle, dance_a do not yet
+MOCAP_USE = [x for x in os.environ.get("NPC_MOCAP_USE", "walk,run,idle,talk_idle").split(",") if x]
+# (2026-10-03: walk, run, idle (adults), talk_idle pass the audit with no fault and read natural; jog, sit_idle,
+# dance_a/b, talk, talk_gesture_a do not yet)
 
 
 def mocap_clip(name):
@@ -667,15 +897,24 @@ def mocap_clip(name):
     return fn, n, d["meta"]
 
 
+IS_CHILD = False             # set per body by the build (people_mpfb)
+MOCAP_ADULTS = {"idle"}      # captures that stay hand-keyed on the children (c2's idle: a 9 deg/frame^2 knee snap)
+# (2026-10-03) the children keep the captured walk (the manifest has one frame count per clip: hand-keyed 32 vs 34)
+# with a low-pass: c2's shin snapped 28 deg/f2 at toe-off
+MOCAP_CHILD_SMOOTH = {"walk": 3}
+
+
 def mocap_override(clips, jaws):
     out = []
     for c in clips:
         name, kind, pf, pt, loop, n, fn, meta = c
-        m = mocap_clip(name) if name in MOCAP_USE else None
+        m = mocap_clip(name) if name in MOCAP_USE and not (IS_CHILD and name in MOCAP_ADULTS) else None
         if m is None:
             out.append(c)
             continue
         mfn, mn, mmeta = m
+        if IS_CHILD and name in MOCAP_CHILD_SMOOTH:
+            mfn = A.smooth_params(mfn, mn, loop, MOCAP_CHILD_SMOOTH[name])
         meta = dict(meta)
         for k in ("speed_mps", "stride_m"):
             if k in mmeta:

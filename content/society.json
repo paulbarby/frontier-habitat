@@ -137,7 +137,7 @@
     "dome_guests_cap": 40,
     "structure_defs": ["super_dome", "academy", "jail", "hr_office"],
     "venue_defs": ["cantina", "lounge", "park", "super_dome"],
-    "idle": {"chance": 0.35, "gap_s": 40, "crit_severity": 3, "lines_min": 2, "lines_max": 4},
+    "idle": {"chance": 0.25, "gap_s": 40, "crit_severity": 3, "lines_min": 2, "lines_max": 3},
     "flirt": {"att": 20, "aff": 5, "innuendo_att": 45, "innuendo_aff": 20, "hot_att": 70, "hot_aff": 40, "w_flirt": 3.0, "w_innuendo": 4.0, "party_boost": 2.0},
     "awkward": {"chance": 0.05, "aff_loss": 3.0, "sat": -3.0, "days": 0.5},
     "topics": {"w_joke": 1.2, "w_rivalry": 4.0, "rival_aff": -15},

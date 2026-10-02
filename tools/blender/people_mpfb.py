@@ -623,7 +623,7 @@ def blur_alpha(px, w, h, r):
     return px
 
 
-def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_blur=0, alpha_dense=0.0):
+def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_blur=0, alpha_dense=0.0, hue=0.28):
     """Load, shrink to <= size, optionally make a tint detail map (the image divided by its mean colour), save PNG."""
     img = bpy.data.images.load(path, check_existing=False)
     w, h = img.size
@@ -636,7 +636,7 @@ def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_b
         solid = (px[:, 3] > 0.5) & (lum > 0.12)             # the mean of the visible pixels (no black padding)
         mean = (px[solid, :3] if solid.any() else px[:, :3]).mean(axis=0) + 1e-4
         lm = float(mean @ np.array([0.30, 0.59, 0.11]))
-        norm = mean ** 0.72 * lm ** 0.28                    # 28 % of the texture's own hue stays (warmth)
+        norm = mean ** (1.0 - hue) * lm ** hue              # `hue` of the texture's own hue stays (warmth)
         px[:, :3] = np.clip(px[:, :3] / norm * 0.82, 0.0, 1.0)
         if bake_rgb is not None:                            # a plain (untinted) material: its colour goes in here
             px[:, :3] = np.clip(px[:, :3] * np.array(bake_rgb, dtype=np.float32), 0.0, 1.0)
@@ -648,7 +648,8 @@ def texture(path, name, size=BUDGET["tex"], detail=False, bake_rgb=None, alpha_b
             # not dotted lines)
             w_, h_ = img.size
             a = px[:, 3].reshape(h_, w_)
-            a = np.maximum.reduce([a, np.roll(a, 1, 0), np.roll(a, -1, 0), np.roll(a, 1, 1), np.roll(a, -1, 1)])
+            for _ in range(2):                              # (2026-10-03: 2 px, fuller brows)
+                a = np.maximum.reduce([a, np.roll(a, 1, 0), np.roll(a, -1, 0), np.roll(a, 1, 1), np.roll(a, -1, 1)])
             px[:, 3] = np.clip(a.ravel() * alpha_dense, 0.0, 1.0)
         if (px[:, 3] < 0.99).any():
             # (2026-10-02, RENDER: the transparent texels were light blue-grey and mipmaps bled a pale fringe into the
@@ -734,7 +735,8 @@ def material_from_mhmat(mhmat, name, v, detail=False, alpha=False, bake_rgb=None
         p = f if os.path.isabs(f) else os.path.join(root, f)
         return texture(p, "%s_%s_%s" % (v, name.lower(), suffix), **kw) if os.path.exists(p) else None
     base = tex("diffuseTexture", "base", detail=detail, bake_rgb=bake_rgb, size=TEX_SIZE.get(name, TEX_DEFAULT),
-               alpha_blur=0, alpha_dense=1.35 if name == "Hair_brows" else 0.0)
+               alpha_blur=0, alpha_dense=1.6 if name == "Hair_brows" else 0.0,
+               hue=0.40 if name == "Skin" else 0.28)     # (2026-10-03, CRITIC r40: warmer skin: 40 % of its hue)
     nrm = tex("normalmapTexture", "normal", size=TEX_NORMAL) if NORMAL_MAPS else None
     return plain_material(name, base=base, alpha="base" if alpha else None, normal=nrm,
                           cutoff=0.3 if name == "Hair_brows" else 0.5,
@@ -927,6 +929,9 @@ def build_variant(m, v, outfits, stop=None):
             for ob, f, m_, _ in gs:
                 if m_ != "shell" and garment_layer(f) == 3 and "dress" not in f.lower():
                     extend_hem(ob, [body] + lowers, band=0.09, drop=0.05, gap=0.013)
+        for ob, f, m_, _ in gs:
+            if m_ != "shell" and garment_layer(f) == 3:
+                smooth_openings(ob, J["neck"].z - 0.30, body=body)
 
         if is_shell:
             nk = remove_inside_coverall(body, J)
@@ -999,6 +1004,7 @@ def build_variant(m, v, outfits, stop=None):
     for n, o in objs_out.items():
         if n.startswith("Outfit_"):
             hairline_shade(o, hob)
+    PA.IS_CHILD = bool(spec.get("child"))
     PA.FOOT_DZ = J["foot.L"].z - N.ANKLE_JOINT.z * s_          # this body's ankle height vs the v3 one
     PA.ARM_IN = 5.0 if spec["macro"]["weight"] < 0.58 else 0.0   # the standing arms closer (CRITIC r40); not on heavy bodies
     PA.LID_REST = spec.get("lid_rest", 5.0)                   # relaxed upper lids (CRITIC round 40: f1 stare)
@@ -1430,6 +1436,54 @@ def export_lod1(v, rig):
     externalize_images(path)
     print("  %s LOD1: %s" % (v, out))
     return out
+
+
+def smooth_openings(ob, zmin, iters=6, body=None, gap=0.005, rings=4):
+    """(2026-10-03, CRITIC r40: uneven tee necklines) the open edges above zmin (the neckline and the upper sleeve
+    openings) are smoothed along themselves: each boundary vertex moves towards the mean of its two boundary
+    neighbours (6 passes), so a ragged cut becomes a clean curve."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bnd = [v for v in bm.verts if v.co.z > zmin and any(e.is_boundary for e in v.link_edges)]
+    nb = {v: [e.other_vert(v) for e in v.link_edges if e.is_boundary] for v in bnd}
+    for _ in range(iters):
+        new = {}
+        for v in bnd:
+            n2 = nb[v]
+            if len(n2) == 2:
+                new[v] = v.co * 0.5 + (n2[0].co + n2[1].co) * 0.25
+        for v, p in new.items():
+            v.co = p
+    if body is not None:
+        # (2026-10-03 b) the ragged look was the SKIN showing through a tight neckline (the edge itself was
+        # clean): the last `rings` vertex rings at the opening keep `gap` outside the body surface
+        from mathutils.bvhtree import BVHTree
+        bb = bmesh.new()
+        bb.from_mesh(body.data)
+        bb.transform(body.matrix_world)
+        tree = BVHTree.FromBMesh(bb)
+        near, front = set(bnd), set(bnd)
+        for _ in range(rings):
+            front = {e.other_vert(v) for v in front for e in v.link_edges} - near
+            near |= front
+        mw = ob.matrix_world
+        mi = mw.inverted()
+        for v in near:
+            if v.co.z < zmin:
+                continue
+            pw = mw @ v.co
+            hit = tree.find_nearest(pw, 0.05)
+            if hit[0] is None:
+                continue
+            loc, nrm = hit[0], hit[1]
+            d = (pw - loc).dot(nrm)
+            if d < gap:
+                v.co = mi @ (pw + nrm * (gap - d))
+        bb.free()
+    bm.to_mesh(ob.data)
+    bm.free()
+    ob.data.update()
 
 
 def extend_hem(top, others, band=0.08, drop=0.055, gap=0.006):

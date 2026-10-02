@@ -1223,6 +1223,7 @@ class Timeline:
 SMOOTH_LOCO = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk",
                "hold_hands_walk_r", "handcuffed_walk", "escort_walk", "collapse", "fall_down"}
 SMOOTH_SLOW = {"lie_enter", "sleep", "lie_exit", "lie_enter_r", "sleep_r", "lie_exit_r", "sleep_cell", "sleep_turn",
+               "bunk_enter", "bunk_exit",
                "dead"}
 NO_SMOOTH_BONES = {"root", "prop.L", "prop.R", "jaw", "lids", "lids_low", "brow.L", "brow.R", "mouth.L", "mouth.R"}
 

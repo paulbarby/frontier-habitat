@@ -27,6 +27,13 @@ ANIMS_JSON = os.path.join(N.MODEL_DIR, "astronaut_anims.json")
 BUDGET = {"suit": 7000, "indoor": 6000}
 
 
+# (2026-10-03) audit snap faults on the astronaut clips (deg/frame^2 at a key): a low-pass over the pose
+# parameters, first and last frames kept (A.smooth_params)
+SUIT_SMOOTH = {"collapse": 2, "walk": 1, "carry_walk": 1, "step_up": 2, "step_up_r": 2, "board": 2, "board_r": 2,
+               "step_down": 2, "step_down_r": 2, "alight": 2, "alight_r": 2}
+# (suit_swap is not filtered: its cut frame must stay still, npc_verify)
+
+
 def build_variant(variant):
     t0 = time.time()
     C.reset_scene()
@@ -66,7 +73,8 @@ def build_variant(variant):
     solver = N.Solver()
     solver.set_rest_from_rig(rig)
     meta = {}
-    clips = A.all_clips()
+    clips = [(c[0], c[1], c[2], c[3], c[4], c[5], A.smooth_params(c[6], c[5], c[4], SUIT_SMOOTH[c[0]]), c[7])
+             if c[0] in SUIT_SMOOTH else c for c in A.all_clips()]
     carry_offset(solver, dict((c[0], c[6]) for c in clips)["carry_idle"])
     for (name, kind, pf, pt, loop, frames, fn, extra) in clips:
         N.bake_clip(rig, solver, name, fn, frames)

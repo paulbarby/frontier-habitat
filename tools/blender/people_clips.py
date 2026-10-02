@@ -55,9 +55,10 @@ PAIRS = {
                    "left hand holds B's right upper arm"),
 }
 
-ADULT_ONLY = {"kiss_brief", "flirt_lean", "slap", "punch", "hit_react", "fight_idle", "handcuffed_walk", "escort_walk",
+ADULT_ONLY = {"stool_enter", "stool_exit", "kiss_brief", "flirt_lean", "slap", "punch", "hit_react", "fight_idle", "handcuffed_walk", "escort_walk",
               "drink_bar", "sit_bar_stool", "shout", "protest_fist", "sleep_cell", "teach", "argue", "hug"}
 CHILD_ONLY = {"child_play", "child_run"}
+LOUNGER_CLIPS = os.environ.get("NPC_LOUNGER", "1") != "0"   # lounger enter/exit (2026-10-03: thighs apart, on)
 
 
 def _ik(P):
@@ -631,8 +632,8 @@ def lounge_pool_fn(n=150):
         B["foot.%s.rel" % s] = 1.0
         B["foot.%s.rp" % s] = 10.0
         B["knee.%s.body" % s] = 0.5
-    set_foot(B, "R", (0.46, -0.16, fr["seat_z"] + 0.16), knee_out=0.0)
-    B["foot.R.y"] = -0.16
+    set_foot(B, "R", (0.46, 0.22, fr["seat_z"] + 0.16), knee_out=8.0)      # (2026-10-03: 6 cm further out, the
+    B["foot.R.y"] = -0.22                                                     # raised knee no longer over the other thigh)
     set_arm_ik(B, "R", (-0.330, 0.140, 1.080), (-0.2, 0.9, 0.2), (1.0, 0.0, 0.2), w=1.0, pole=60.0)
     set_arm_ik(B, "L", (0.020, 0.080, 0.600), (0.4, -0.9, 0.0), (0.2, 0.0, -1.0), w=1.0, pole=10.0)
 
@@ -815,6 +816,151 @@ def child_play_fn(n=120):
 
 
 # ------------------------------------------------------------------------------------------------------------------
+# enter / exit clips for the states stool, bunk, lounger, water (2026-10-03, RENDER: no cuts into these loops).
+# Each starts (enter) or ends (exit) on the stand rest moved by `stand_offset` from the state's anchor (character
+# axes): RENDER puts the standing person there.  The other end is the state's rest frame exactly.
+# ------------------------------------------------------------------------------------------------------------------
+STOOL_STAND = (0.0, 0.40, 0.0)          # beside the bar stool (its left), facing the counter
+LOUNGER_STAND = (0.0, 0.45, 0.0)        # beside the lounger at the hips
+POOL_DECK = 0.15                         # the deck above the water surface
+SWIM_IN_STAND = (-1.70, 0.0, POOL_DECK)  # the dive: from the deck edge, 1.7 m behind the swim anchor
+SWIM_OUT_STAND = (0.80, 0.0, POOL_DECK)  # the climb: onto the deck 0.8 m ahead of the swim anchor
+
+
+def _feet(P, lx, ly, lz, rx, ry, rz, rel=0.0, rp=15.0, pitch=0.0):
+    for sd, (x, y, z) in (("L", (lx, ly, lz)), ("R", (rx, ry, rz))):
+        set_foot(P, sd, (x, abs(y), z), pitch=pitch, yaw=6.0, knee_out=4.0)
+        P["foot.%s.y" % sd] = y
+        if rel:
+            P["foot.%s.rel" % sd] = rel
+            P["foot.%s.rp" % sd] = rp
+            P["knee.%s.body" % sd] = rel
+    return P
+
+
+def stool_enter_keys():
+    from people_anims import sit_bar_stool_base, BAR_STOOL
+    B = sit_bar_stool_base()
+    S0 = A.shift_pose(Pose(STAND), STOOL_STAND)
+    K1 = Pose(S0)                                     # a side step towards the stool, the left hand to the counter
+    K1.update({"hips.y": 0.22, "hips.z": -0.025, "spine.ry": 4.0, "chest.rz": -4.0, "head.rz": -6.0})
+    _feet(K1, ANK.x, 0.40, ANK.z, ANK.x + 0.03, 0.12, ANK.z)
+    set_arm_ik(K1, "L", (0.30, 0.20, BAR_STOOL["counter_z"] + 0.05), (0.8, -0.3, -0.1), (0.0, 0.2, -1.0), w=1.0,
+               pole=-30.0)
+    K1 = fill_arm_targets(K1, sides=("R",))
+    K2 = Pose(B)                                      # up onto the seat: the right foot still down, the left lifting
+    K2.update({"hips.z": B.g("hips.z") + 0.025, "hips.y": 0.05, "spine.ry": 6.0})
+    _feet(K2, ANK.x + 0.06, 0.20, ANK.z + 0.10, ANK.x + 0.05, -0.12, ANK.z)
+    return [(0.0, S0, {"hold": True}), (0.55, K1), (1.05, K2), (1.55, B, {"hold": True})]
+
+
+def bunk_keys(keys):
+    """The bed keys on the jail bunk (0.10 m lower): everything on the bed moves down with it (the stand key and the
+    feet on the floor stay)."""
+    dz = FURNITURE["bunk"]["top_z"] - A.FURNITURE["bed_z"]
+    out = []
+    for k in keys:
+        P = Pose(k[1])
+        on = max(0.0, min(1.0, (-P.g("hips.z") - 0.02) / 0.16))       # 0 standing .. 1 seated / lying
+        P["hips.z"] = P.g("hips.z") + dz * on
+        for sd in ("L", "R"):
+            if P.g("arm.%s.ik" % sd) > 0:
+                P["arm.%s.z" % sd] = P.g("arm.%s.z" % sd) + dz * on
+            up = max(0.0, min(1.0, (P.g("foot.%s.z" % sd) - 0.15) / 0.15))
+            P["foot.%s.z" % sd] = P.g("foot.%s.z" % sd) + dz * on * up
+        out.append((k[0], P) + tuple(k[2:]))
+    return out
+
+
+def lounger_enter_keys():
+    fr = FURNITURE["lounger"]
+    fn, _ = lounge_pool_fn()
+    B = Pose(fn(0))
+    S0 = A.shift_pose(Pose(STAND), LOUNGER_STAND)
+    seat_hz = (fr["seat_z"] + 0.115) - 0.98
+    K1 = Pose(S0)                                     # turn and sit on the lounger's edge, feet on the floor beside it
+    K1.update({"hips.x": fr["hips_x"], "hips.y": 0.18, "hips.z": seat_hz + 0.02, "hips.ry": -6.0, "hips.rz": 25.0,
+               "spine.ry": 14.0, "chest.ry": 6.0, "neck.ry": 4.0})
+    _feet(K1, 0.22, 0.48, ANK.z, 0.26, 0.30, ANK.z)
+    set_arm_ik(K1, "L", (-0.15, 0.40, fr["seat_z"] + 0.12), (0.3, 0.9, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=10.0)
+    set_arm_ik(K1, "R", (0.10, 0.05, fr["seat_z"] + 0.14), (0.8, -0.2, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=10.0)
+    K2 = Pose(B)                                      # legs up onto the lounger, still sitting up
+    K2.update({"hips.ry": -12.0, "spine.ry": 12.0, "chest.ry": 6.0, "neck.ry": 6.0, "head.ry": 4.0, "hips.y": 0.05})
+    set_arm_ik(K2, "L", (-0.18, 0.28, fr["seat_z"] + 0.14), (0.3, 0.9, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=10.0)
+    set_arm_ik(K2, "R", (-0.18, 0.28, fr["seat_z"] + 0.14), (0.3, 0.9, -0.3), (0.0, 0.0, -1.0), w=1.0, pole=10.0)
+    for K in (K2,):                                   # (the legs a little apart while the body turns: thigh through thigh)
+        K["foot.L.y"], K["foot.R.y"] = 0.20, -0.24
+    # (2026-10-03) the right knee flipped over the left thigh (10 cm): sitting up (hips.ry -12) the knee pole was
+    # almost along the hip-ankle line.  K2 leans back 30 deg (the body pole points up) and both legs lie flat; the
+    # right knee comes up after, with the recline
+    K2["hips.ry"], K2["spine.ry"], K2["chest.ry"] = -30.0, 8.0, 4.0
+    K2["neck.ry"], K2["head.ry"] = 14.0, 10.0
+    set_foot(K2, "R", (0.62, 0.20, fr["seat_z"] + 0.075), knee_out=2.0)
+    K2["foot.R.y"] = -0.20
+    K3 = Pose(B)                                      # recline; the right hand goes out round to behind the head
+
+    set_arm_ik(K3, "R", (-0.28, 0.48, 1.00), (-0.3, 0.6, 0.6), (0.6, 0.0, 0.4), w=1.0, pole=40.0)
+    K4 = Pose(B)                                      # (2026-10-03) over and behind the ear: the forearm clears the head
+    set_arm_ik(K4, "R", (-0.40, 0.27, 1.13), (-0.2, 0.9, 0.2), (1.0, 0.0, 0.2), w=1.0, pole=55.0)
+    return [(0.0, S0, {"hold": True}), (0.8, K1), (1.7, K2), (2.35, K3), (2.75, K4), (3.2, B, {"hold": True})]
+
+
+def swim_enter_keys():
+    fn, _ = swim_fn()
+    B = Pose(fn(0))
+    S0 = A.shift_pose(Pose(STAND), SWIM_IN_STAND)
+    K1 = Pose(S0)                                     # crouch at the edge, arms forward
+    K1.update({"hips.z": S0.g("hips.z") - 0.16, "hips.x": S0.g("hips.x") - 0.06, "hips.ry": 38.0, "spine.ry": 12.0,
+               "chest.ry": 6.0, "neck.ry": -12.0, "head.ry": -10.0})
+    for sd, sg in (("L", 1.0), ("R", -1.0)):
+        set_arm_ik(K1, sd, (SWIM_IN_STAND[0] + 0.30, 0.20, POOL_DECK + 0.62), (0.6, 0.0, -0.8), (0.0, 0.0, -1.0),
+                   w=1.0, pole=-40.0)
+    K2 = Pose()                                       # in the air, stretched, head between the arms
+    K2.update({"hips.x": -1.05, "hips.z": POOL_DECK - 0.12, "hips.ry": 72.0, "spine.ry": -4.0, "chest.ry": -4.0,
+               "neck.ry": -16.0, "head.ry": -8.0})
+    _feet(K2, -1.75, 0.07, POOL_DECK + 0.40, -1.75, -0.07, POOL_DECK + 0.40, rel=1.0, rp=40.0)
+    for sd, sg in (("L", 1.0), ("R", -1.0)):
+        set_arm_ik(K2, sd, (-0.35, 0.10, POOL_DECK - 0.10), (1.0, 0.0, -0.2), (0.0, 0.0, -1.0), w=1.0, pole=-60.0)
+    K3 = Pose(B)                                      # through the surface into the glide
+    K3.update({"hips.x": -0.55, "hips.z": B.g("hips.z") - 0.10, "hips.ry": 88.0})
+    return [(0.0, S0, {"hold": True}), (0.55, K1), (0.95, K2), (1.35, K3), (1.85, B, {"hold": True})]
+
+
+def swim_exit_keys():
+    fn, _ = swim_fn()
+    B = Pose(fn(0))
+    E = A.shift_pose(Pose(STAND), SWIM_OUT_STAND)
+    edge = SWIM_OUT_STAND[0] - 0.30                  # the deck edge, 0.30 m in front of where the person stands up
+    K1 = Pose()                                       # upright in the water, hands on the edge
+    K1.update({"hips.x": edge - 0.40, "hips.z": -1.18, "hips.ry": 12.0, "spine.ry": 8.0, "chest.ry": 4.0,
+               "neck.ry": -6.0})
+    _feet(K1, edge - 0.45, 0.12, -1.05, edge - 0.40, -0.12, -1.0, rel=1.0, rp=30.0)
+    for sd, sg in (("L", 1.0), ("R", -1.0)):
+        set_arm_ik(K1, sd, (edge + 0.08, 0.24, POOL_DECK + 0.05), (1.0, 0.0, 0.0), (0.0, 0.0, -1.0), w=1.0,
+                   pole=-50.0)
+    K2 = Pose(K1)                                     # push up: arms straight, the hips at the edge
+    K2.update({"hips.x": edge - 0.12, "hips.z": POOL_DECK - 0.42, "hips.ry": 28.0, "spine.ry": 18.0, "chest.ry": 8.0})
+    _feet(K2, edge - 0.35, 0.12, POOL_DECK - 0.45, edge - 0.30, -0.12, POOL_DECK - 0.40, rel=1.0, rp=30.0)
+    K3 = Pose()                                       # a knee and a foot up on the deck, crouched
+    K3.update({"hips.x": edge + 0.22, "hips.z": POOL_DECK - 0.36, "hips.ry": 30.0, "spine.ry": 14.0, "chest.ry": 6.0,
+               "neck.ry": -8.0})
+    _feet(K3, edge + 0.30, 0.13, POOL_DECK + ANK.z, edge + 0.05, -0.12, POOL_DECK + 0.08)
+    for sd, sg in (("L", 1.0), ("R", -1.0)):
+        set_arm_ik(K3, sd, (edge + 0.45, 0.20, POOL_DECK + 0.10), (1.0, 0.0, -0.3), (0.0, 0.0, -1.0), w=0.6,
+                   pole=-40.0)
+    K3 = fill_arm_targets(K3)
+    return [(0.0, B, {"hold": True}), (0.7, K1), (1.5, K2), (2.3, K3), (3.0, E, {"hold": True})]
+
+
+# (set_arm_ik takes LEFT-side values and mirrors y for the right side)
+
+
+def reversed_keys(keys):
+    T = keys[-1][0]
+    return [(T - k[0],) + tuple(k[1:]) for k in reversed(keys)]
+
+
+# ------------------------------------------------------------------------------------------------------------------
 _CACHE = []
 
 
@@ -874,7 +1020,8 @@ def _v5_clips():
         pr["sync_s"] = round(TIMES[key] - TIMES["hit_s"], 2)
         pr["note"] = ("contact at %.2f s (A); B plays hit_react %.2f s later (its hit at %.2f s)" %
                       (TIMES[key], pr["sync_s"], TIMES["hit_s"]))
-    fn, n = keyed_clip(fall_down_keys())
+    # (2026-10-03: upper arm 30 deg/frame: retimed, at most 1.5x per interval: a full retime made the fall 3.8 s)
+    fn, n = keyed_clip(A.retime_world(fall_down_keys(), max_scale=1.5, passes=1)[0])
     add_("fall_down", "oneshot", "stand", "lie", False, fn, n, dict(ends_on="dead", fall=True))
     fn, n = _ks(get_up_keys())
     add_("get_up", "exit", "lie", "stand", False, fn, n, dict(starts_on="dead"))
@@ -907,6 +1054,35 @@ def _v5_clips():
     add_("teach", "loop", "stand", "stand", True, fn, n, dict(furniture="board"))
     fn, n = sleep_cell_fn()
     add_("sleep_cell", "loop", "bunk", "bunk", True, fn, n, dict(furniture="bunk"))
+    # enter / exit for stool, bunk, lounger and water (2026-10-03)
+    ks = stool_enter_keys()
+    fn, n = _ks(ks)
+    add_("stool_enter", "enter", "stand", "stool", False, fn, n,
+         dict(furniture="bar_stool", stand_offset=list(STOOL_STAND), adults_only=True))
+    fn, n = _ks(reversed_keys(ks))
+    add_("stool_exit", "exit", "stool", "stand", False, fn, n,
+         dict(furniture="bar_stool", stand_offset=list(STOOL_STAND), adults_only=True))
+    fn, n = keyed_clip(A.retime_keys(A.bottom_arm_ik(bunk_keys(A.lie_enter_keys()))))
+    add_("bunk_enter", "enter", "stand", "bunk", False, fn, n, dict(furniture="bunk", stand_offset=[0.0, 0.0, 0.0]))
+    fn, n = keyed_clip(A.retime_keys(A.bottom_arm_ik(bunk_keys(A.lie_exit_keys()))))
+    add_("bunk_exit", "exit", "bunk", "stand", False, fn, n, dict(furniture="bunk", stand_offset=[0.0, 0.0, 0.0]))
+    if LOUNGER_CLIPS:
+        # FK arm keys, but the lounger end key keeps lounge_pool's IK arms: an FK end key put c2's hand 9 mm into
+        # the head (FK angles do not scale with the body); all-IK keys flip the right elbow between K2 and K3
+        ks = lounger_enter_keys()
+        conv = lambda kk, raw: [(k[0], Pose(k[1]) if i == raw else ik_to_fk(k[1]), *k[2:]) for i, k in enumerate(kk)]
+        fn, n = keyed_clip(A.retime_world(conv(ks, len(ks) - 1))[0])
+        add_("lounger_enter", "enter", "stand", "lounger", False, fn, n,
+             dict(furniture="lounger", stand_offset=list(LOUNGER_STAND)))
+        fn, n = keyed_clip(A.retime_world(conv(reversed_keys(ks), 0))[0])
+        add_("lounger_exit", "exit", "lounger", "stand", False, fn, n,
+             dict(furniture="lounger", stand_offset=list(LOUNGER_STAND)))
+    fn, n = _ks(swim_enter_keys())
+    add_("swim_enter", "enter", "stand", "water", False, fn, n,
+         dict(furniture="water", stand_offset=list(SWIM_IN_STAND), note="a dive from the deck (0.15 m above the water)"))
+    fn, n = _ks(swim_exit_keys(), fk=False)
+    add_("swim_exit", "exit", "water", "stand", False, fn, n,
+         dict(furniture="water", stand_offset=list(SWIM_OUT_STAND), note="hands on the edge, push up, a foot on the deck"))
     fn, n = keyed_clip(sleep_turn_keys())
     add_("sleep_turn", "oneshot", "lie", "lie", False, fn, n, dict(furniture="bed", note="turns onto the back and "
                                                                 "back; play it now and then inside sleep"))

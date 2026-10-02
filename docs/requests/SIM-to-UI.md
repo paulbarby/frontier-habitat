@@ -903,7 +903,7 @@ Everything in the stub note above works with real data. Details the UI needs:
   of the next landed ship that carries visitors, boards and is gone. Surveys every 3 days: `survey(base)` = {tick, day, base, depts [{dept,
   n, sat, trend}], top3 [{category, count}], mean, morale_trend}. Department "general" = people with no department.
 - **Agent fields** (RENDER/UI): `party` (party id while invited), `hr_visit` ("queue" | "interview" | "kiosk"), `hr_office` (building id),
-  `chat_t`. Plan kinds: `party`, `hr`, `hr_visit`, `chat`.
+  `chat_t`. Plan kinds: `party`, `hr`, `hr_visit` (an idle talk makes no plan: the two stay idle and the talk row says `idle`).
 - **Role text:** `set_role` now says "is now an HR officer" (a/an by the first letter).
 - **Bug fixed on the way:** `answer_request allow` for a `leave_with_ship` request made the colonist a visitor without a visit record;
   the next think of that person would have failed. Both defections and transfers now use `sim.traffic.make_passenger(a, ship)`.

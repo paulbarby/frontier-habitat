@@ -174,8 +174,8 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 339,
-    "Addon_jacket": 419,
+    "Addon_apron": 340,
+    "Addon_jacket": 420,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
@@ -185,10 +185,10 @@
     "Addon_vest": 340,
     "Hair_m1": 520,
     "Head_m1": 159,
-    "Outfit_casual_a": 1900,
+    "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1898,
     "Outfit_casual_c": 1900,
-    "Outfit_swimwear": 1900,
+    "Outfit_swimwear": 1899,
     "Outfit_uniform": 1898
    },
    "triangles_on_screen": {
@@ -240,18 +240,20 @@
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2916,
     "uniform_science": 2997,
-    "uniform_food": 2916,
+    "uniform_food": 2917,
     "uniform_medical": 2996,
     "uniform_security": 3256,
-    "uniform_command": 3172,
+    "uniform_command": 3173,
     "prison": 2577,
-    "casual_a": 2579,
+    "casual_a": 2578,
     "casual_b": 2577,
     "casual_c": 2579,
-    "swimwear": 2579
+    "swimwear": 2578
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -287,6 +289,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -307,8 +311,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -482,7 +490,7 @@
    "triangles_lod1": {
     "Addon_apron": 339,
     "Addon_jacket": 420,
-    "Addon_labcoat": 419,
+    "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
@@ -492,7 +500,7 @@
     "Hair_m2": 520,
     "Head_m2": 159,
     "Outfit_casual_a": 1900,
-    "Outfit_casual_b": 1899,
+    "Outfit_casual_b": 1898,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1900,
     "Outfit_uniform": 1900
@@ -545,19 +553,21 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2919,
-    "uniform_science": 2998,
+    "uniform_science": 2999,
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3259,
     "uniform_command": 3175,
     "prison": 2579,
     "casual_a": 2579,
-    "casual_b": 2578,
+    "casual_b": 2577,
     "casual_c": 2579,
     "swimwear": 2579
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -593,6 +603,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -613,8 +625,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -786,21 +802,21 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 339,
-    "Addon_jacket": 419,
-    "Addon_labcoat": 420,
+    "Addon_apron": 340,
+    "Addon_jacket": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_m3": 519,
     "Head_m3": 160,
-    "Outfit_casual_a": 1899,
-    "Outfit_casual_b": 1900,
+    "Outfit_casual_a": 1900,
+    "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1899,
-    "Outfit_swimwear": 1899,
+    "Outfit_swimwear": 1900,
     "Outfit_uniform": 1900
    },
    "triangles_on_screen": {
@@ -851,19 +867,21 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
-    "uniform_science": 2999,
-    "uniform_food": 2918,
-    "uniform_medical": 2999,
+    "uniform_science": 2998,
+    "uniform_food": 2919,
+    "uniform_medical": 2998,
     "uniform_security": 3258,
-    "uniform_command": 3174,
+    "uniform_command": 3175,
     "prison": 2579,
-    "casual_a": 2578,
-    "casual_b": 2579,
+    "casual_a": 2579,
+    "casual_b": 2578,
     "casual_c": 2578,
-    "swimwear": 2578
+    "swimwear": 2579
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -899,6 +917,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -919,8 +939,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -1091,7 +1115,7 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 339,
+    "Addon_apron": 340,
     "Addon_jacket": 419,
     "Addon_labcoat": 419,
     "Addon_rank1": 128,
@@ -1102,10 +1126,10 @@
     "Addon_vest": 340,
     "Hair_f1": 520,
     "Head_f1": 160,
-    "Outfit_casual_a": 1899,
+    "Outfit_casual_a": 1900,
     "Outfit_casual_b": 1900,
-    "Outfit_casual_c": 1899,
-    "Outfit_swimwear": 1899,
+    "Outfit_casual_c": 1898,
+    "Outfit_swimwear": 1900,
     "Outfit_uniform": 1899
    },
    "triangles_on_screen": {
@@ -1157,18 +1181,20 @@
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2919,
     "uniform_science": 2998,
-    "uniform_food": 2918,
+    "uniform_food": 2919,
     "uniform_medical": 2998,
     "uniform_security": 3259,
     "uniform_command": 3174,
     "prison": 2579,
-    "casual_a": 2579,
+    "casual_a": 2580,
     "casual_b": 2580,
-    "casual_c": 2579,
-    "swimwear": 2579
+    "casual_c": 2578,
+    "swimwear": 2580
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -1204,6 +1230,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -1224,8 +1252,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -1383,7 +1415,7 @@
     "Outfit_uniform": 11674,
     "Outfit_casual_a": 11700,
     "Outfit_casual_b": 13998,
-    "Outfit_casual_c": 12424,
+    "Outfit_casual_c": 12426,
     "Outfit_swimwear": 7256,
     "Addon_toolbelt": 416,
     "Addon_apron": 716,
@@ -1397,8 +1429,8 @@
    },
    "triangles_lod1": {
     "Addon_apron": 340,
-    "Addon_jacket": 419,
-    "Addon_labcoat": 420,
+    "Addon_jacket": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
@@ -1408,7 +1440,7 @@
     "Hair_f2": 519,
     "Head_f2": 160,
     "Outfit_casual_a": 1900,
-    "Outfit_casual_b": 1900,
+    "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1899,
     "Outfit_uniform": 1899
@@ -1451,8 +1483,8 @@
      "with_head_and_hair": 20318
     },
     "casual_c": {
-     "outfit_and_addons": 12424,
-     "with_head_and_hair": 18744
+     "outfit_and_addons": 12426,
+     "with_head_and_hair": 18746
     },
     "swimwear": {
      "outfit_and_addons": 7256,
@@ -1461,19 +1493,21 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
-    "uniform_science": 2998,
+    "uniform_science": 2997,
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3258,
-    "uniform_command": 3173,
+    "uniform_command": 3174,
     "prison": 2578,
     "casual_a": 2579,
-    "casual_b": 2579,
+    "casual_b": 2578,
     "casual_c": 2579,
     "swimwear": 2578
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -1509,6 +1543,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -1529,8 +1565,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -1685,7 +1725,7 @@
    "triangles": {
     "Head_f3": 2916,
     "Hair_f3": 3400,
-    "Outfit_uniform": 11675,
+    "Outfit_uniform": 11674,
     "Outfit_casual_a": 11660,
     "Outfit_casual_b": 13998,
     "Outfit_casual_c": 12406,
@@ -1693,9 +1733,9 @@
     "Addon_toolbelt": 416,
     "Addon_apron": 712,
     "Addon_vest": 1500,
-    "Addon_labcoat": 2149,
-    "Addon_tunic": 2149,
-    "Addon_jacket": 2149,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176
@@ -1712,40 +1752,40 @@
     "Addon_vest": 340,
     "Hair_f3": 520,
     "Head_f3": 160,
-    "Outfit_casual_a": 1899,
+    "Outfit_casual_a": 1900,
     "Outfit_casual_b": 1899,
-    "Outfit_casual_c": 1899,
+    "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1900
+    "Outfit_uniform": 1899
    },
    "triangles_on_screen": {
     "uniform_engineering": {
-     "outfit_and_addons": 12091,
-     "with_head_and_hair": 18407
+     "outfit_and_addons": 12090,
+     "with_head_and_hair": 18406
     },
     "uniform_science": {
      "outfit_and_addons": 13824,
      "with_head_and_hair": 20140
     },
     "uniform_food": {
-     "outfit_and_addons": 12387,
-     "with_head_and_hair": 18703
+     "outfit_and_addons": 12386,
+     "with_head_and_hair": 18702
     },
     "uniform_medical": {
      "outfit_and_addons": 13824,
      "with_head_and_hair": 20140
     },
     "uniform_security": {
-     "outfit_and_addons": 13591,
-     "with_head_and_hair": 19907
+     "outfit_and_addons": 13590,
+     "with_head_and_hair": 19906
     },
     "uniform_command": {
      "outfit_and_addons": 14000,
      "with_head_and_hair": 20316
     },
     "prison": {
-     "outfit_and_addons": 11675,
-     "with_head_and_hair": 17991
+     "outfit_and_addons": 11674,
+     "with_head_and_hair": 17990
     },
     "casual_a": {
      "outfit_and_addons": 11660,
@@ -1765,20 +1805,22 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2920,
-    "uniform_science": 2999,
-    "uniform_food": 2920,
-    "uniform_medical": 3000,
-    "uniform_security": 3260,
-    "uniform_command": 3176,
-    "prison": 2580,
-    "casual_a": 2579,
+    "uniform_engineering": 2919,
+    "uniform_science": 2998,
+    "uniform_food": 2919,
+    "uniform_medical": 2999,
+    "uniform_security": 3259,
+    "uniform_command": 3175,
+    "prison": 2579,
+    "casual_a": 2580,
     "casual_b": 2579,
-    "casual_c": 2579,
+    "casual_c": 2580,
     "swimwear": 2580
    },
    "clips": [
     "argue",
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -1814,6 +1856,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "protest_fist",
     "punch",
@@ -1834,8 +1878,12 @@
     "sleep_cell",
     "sleep_r",
     "sleep_turn",
+    "stool_enter",
+    "stool_exit",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -1909,7 +1957,7 @@
     "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1899,
     "Outfit_school": 1898,
-    "Outfit_swimwear": 1899
+    "Outfit_swimwear": 1900
    },
    "triangles_on_screen": {
     "school": {
@@ -1933,9 +1981,11 @@
     "school": 2576,
     "casual_a": 2577,
     "casual_b": 2577,
-    "swimwear": 2577
+    "swimwear": 2578
    },
    "clips": [
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -1965,6 +2015,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "repair_kneel",
     "run",
@@ -1981,6 +2033,8 @@
     "sleep_turn",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -2049,10 +2103,10 @@
    "triangles_lod1": {
     "Hair_c2": 520,
     "Head_c2": 159,
-    "Outfit_casual_a": 1900,
-    "Outfit_casual_b": 1900,
+    "Outfit_casual_a": 1899,
+    "Outfit_casual_b": 1899,
     "Outfit_school": 1900,
-    "Outfit_swimwear": 1899
+    "Outfit_swimwear": 1900
    },
    "triangles_on_screen": {
     "school": {
@@ -2074,11 +2128,13 @@
    },
    "triangles_on_screen_lod1": {
     "school": 2579,
-    "casual_a": 2579,
-    "casual_b": 2579,
-    "swimwear": 2578
+    "casual_a": 2578,
+    "casual_b": 2578,
+    "swimwear": 2579
    },
    "clips": [
+    "bunk_enter",
+    "bunk_exit",
     "carry_idle",
     "carry_walk",
     "cheer",
@@ -2108,6 +2164,8 @@
     "lie_exit_r",
     "listen_nod",
     "lounge_pool",
+    "lounger_enter",
+    "lounger_exit",
     "play_arcade",
     "repair_kneel",
     "run",
@@ -2124,6 +2182,8 @@
     "sleep_turn",
     "sulk",
     "swim",
+    "swim_enter",
+    "swim_exit",
     "talk",
     "talk_gesture_a",
     "talk_gesture_b",
@@ -2267,7 +2327,8 @@
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
-   "loop": true
+   "loop": true,
+   "source": "motion capture: CMU 140_06 (mocap.cs.cmu.edu), retargeted"
   },
   "idle_look": {
    "frames": 180,
@@ -2523,7 +2584,8 @@
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
-   "loop": true
+   "loop": true,
+   "source": "motion capture: CMU 18_08 (mocap.cs.cmu.edu), retargeted"
   },
   "talk_gesture_b": {
    "frames": 120,
@@ -2646,8 +2708,8 @@
    "hit_s": 0.45
   },
   "fall_down": {
-   "frames": 48,
-   "duration_s": 1.6,
+   "frames": 62,
+   "duration_s": 2.0667,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "lie",
@@ -2886,6 +2948,122 @@
    "loop": false,
    "furniture": "bed",
    "note": "turns onto the back and back; play it now and then inside sleep"
+  },
+  "stool_enter": {
+   "frames": 52,
+   "duration_s": 1.7333,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "stool",
+   "loop": false,
+   "furniture": "bar_stool",
+   "stand_offset": [
+    0.0,
+    0.4,
+    0.0
+   ],
+   "adults_only": true
+  },
+  "stool_exit": {
+   "frames": 52,
+   "duration_s": 1.7333,
+   "kind": "exit",
+   "pose_from": "stool",
+   "pose_to": "stand",
+   "loop": false,
+   "furniture": "bar_stool",
+   "stand_offset": [
+    0.0,
+    0.4,
+    0.0
+   ],
+   "adults_only": true
+  },
+  "bunk_enter": {
+   "frames": 400,
+   "duration_s": 13.3333,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "bunk",
+   "loop": false,
+   "furniture": "bunk",
+   "stand_offset": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "bunk_exit": {
+   "frames": 411,
+   "duration_s": 13.7,
+   "kind": "exit",
+   "pose_from": "bunk",
+   "pose_to": "stand",
+   "loop": false,
+   "furniture": "bunk",
+   "stand_offset": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "swim_enter": {
+   "frames": 72,
+   "duration_s": 2.4,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "water",
+   "loop": false,
+   "furniture": "water",
+   "stand_offset": [
+    -1.7,
+    0.0,
+    0.15
+   ],
+   "note": "a dive from the deck (0.15 m above the water)"
+  },
+  "swim_exit": {
+   "frames": 168,
+   "duration_s": 5.6,
+   "kind": "exit",
+   "pose_from": "water",
+   "pose_to": "stand",
+   "loop": false,
+   "furniture": "water",
+   "stand_offset": [
+    0.8,
+    0.0,
+    0.15
+   ],
+   "note": "hands on the edge, push up, a foot on the deck"
+  },
+  "lounger_enter": {
+   "frames": 134,
+   "duration_s": 4.4667,
+   "kind": "enter",
+   "pose_from": "stand",
+   "pose_to": "lounger",
+   "loop": false,
+   "furniture": "lounger",
+   "stand_offset": [
+    0.0,
+    0.45,
+    0.0
+   ]
+  },
+  "lounger_exit": {
+   "frames": 136,
+   "duration_s": 4.5333,
+   "kind": "exit",
+   "pose_from": "lounger",
+   "pose_to": "stand",
+   "loop": false,
+   "furniture": "lounger",
+   "stand_offset": [
+    0.0,
+    0.45,
+    0.0
+   ]
   }
  },
  "clips_note": "Every clip is baked into every people_<variant>.glb on that variant's rig (heights differ; seats, beds, desks and consoles keep their world heights).  Clip names, frames and pose states are the same in every variant.  New pose state 'stool' (sit_bar_stool).  Pairs: npc_pairs.json.  Vehicle clips stay in the astronaut files (people wear the suit outside).",
