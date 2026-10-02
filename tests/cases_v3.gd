@@ -990,17 +990,24 @@ func long_v3_perf(t) -> void:
 	# Three windows of 1000 ticks; the median is checked (other programs on this PC slow
 	# single windows down; every window is on the result line).
 	var wins: Array = []
+	var cal: Array = []
 	for w in 3:
+		cal.append(H.calib_ms())
 		var t0: int = Time.get_ticks_usec()
 		g.run(1000)
 		wins.append(float(Time.get_ticks_usec() - t0) / 1000.0 / 1000.0)
+	cal.append(H.calib_ms())
+	var factor: float = H.calib_factor(cal)
+	var raw_w: Array = wins.duplicate()
+	for i in wins.size():
+		wins[i] = float(wins[i]) * factor
 	var sorted_w: Array = wins.duplicate()
 	sorted_w.sort()
 	var ms: float = float(sorted_w[1])
 	t.check(pop >= 70 and n >= 150, "the colony has the size of the budget (%d people, %d structures)" % [pop, n])
 	t.check(sim.alive_count() >= 68, "they are still alive while it is measured (%d)" % sim.alive_count())
-	t.check(ms <= 2.0, "a tick takes at most 2.0 ms on this machine (median %.3f ms of %s)" % [ms, str(wins)])
+	t.check(ms <= 2.0, "a tick takes at most 2.0 ms (scaled median %.3f ms of %s; raw %s, calibration %s ms, factor %.3f)" % [ms, str(wins), str(raw_w), str(cal), factor])
 	t.eq(sim.inv.audit(), {}, "ledger")
-	t.note("%.3f ms per tick (median of 1000-tick windows %.3f / %.3f / %.3f) with %d colonists and %d structures, hazards normal (%s)" % [ms, wins[0], wins[1], wins[2], pop, n, OS.get_processor_name()])
+	t.note("%.3f ms per tick scaled (windows %.3f / %.3f / %.3f; raw %.3f / %.3f / %.3f; calibration %.1f / %.1f / %.1f / %.1f ms, factor %.3f) with %d colonists and %d structures, hazards normal (%s)" % [ms, wins[0], wins[1], wins[2], raw_w[0], raw_w[1], raw_w[2], cal[0], cal[1], cal[2], cal[3], factor, pop, n, OS.get_processor_name()])
 	g.dispose()
 	t.done()

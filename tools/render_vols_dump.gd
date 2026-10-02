@@ -22,6 +22,8 @@ func _process(_d: float) -> bool:
 		if b["kind"] == "room":
 			if (b["pos"] as Vector2).distance_to(c) < float(b["radius"]) + reach:
 				out.append({"k": "room", "id": int(bid), "def": String(b["def"]), "x": b["pos"].x, "z": b["pos"].y, "r": float(b["radius"])})
+		elif b["kind"] != "link" and (b["pos"] as Vector2).distance_to(c) < float(b["radius"]) + reach:
+			out.append({"k": String(b["kind"]), "id": int(bid), "def": String(b["def"]), "x": b["pos"].x, "z": b["pos"].y, "r": float(b["radius"])})
 		elif b["def"] == "corridor":
 			var q: Vector2 = Geometry2D.get_closest_point_to_segment(c, b["p0"], b["p1"])
 			if q.distance_to(c) < reach:

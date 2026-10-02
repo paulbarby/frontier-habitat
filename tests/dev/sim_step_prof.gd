@@ -92,14 +92,14 @@ func _init() -> void:
 		if phase == 7:
 			_t("morale", func(): sim.agents.morale_second(1))
 			_t("research_goals_awards", func(): sim.research.tick_second(); sim.goals.tick_second(); sim.awards.tick_second())
-		if phase == 8:
+		if phase == 3 and (tick / hz) % 2 == 0:
 			_t("alerts", func(): sim.alerts.tick_second())
 		_t("people", func(): sim.people.tick())
 		_t("relations", func(): sim.relations.tick())
 		_t("education", func(): sim.education.tick())
 		_t("unrest", func(): sim.unrest.tick())
 		_t("rag", func(): sim.rag.tick())
-		if phase == 9:
+		if phase == 6:
 			_t("security", func(): sim.security.tick_second())
 			_t("leisure", func(): sim.leisure.tick_second())
 			_t("families", func(): sim.families.tick_second())

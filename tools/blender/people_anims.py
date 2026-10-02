@@ -25,9 +25,9 @@ from npc_common import sym, set_foot                             # noqa: E402
 
 # furniture for the new clips (character space, metres; the stool origin is the stool's centre on the floor)
 BAR_STOOL = dict(seat_z=0.76, footrest_z=0.30, footrest_r=0.20, counter_x=0.33, counter_z=1.07)
-HUG = dict(distance=0.44, facing_deg=180.0, sync_s=0.0)
+HUG = dict(distance=0.48, facing_deg=180.0, sync_s=0.0)      # (2026-10-02: 0.44 -> 0.48: the arms were 2-3 cm deep in the partner)
 # hug wrists at the hold (partner at +d): x behind the partner's centre, y outward, z (1.80 m frame)
-HUG_ARMS = dict(R=(0.23, 0.260, 1.300), L=(0.21, 0.260, 1.080))
+HUG_ARMS = dict(R=(0.20, 0.290, 1.300), L=(0.19, 0.285, 1.080))   # (2026-10-02: 3 cm less round the partner: B's hand reached A's spine)
 if os.environ.get("NPC_HUG"):                                          # tuning: "d rx ry rz lx ly lz"
     _h = [float(x) for x in os.environ["NPC_HUG"].split()]
     HUG["distance"], HUG_ARMS["R"], HUG_ARMS["L"] = _h[0], tuple(_h[1:4]), tuple(_h[4:7])
@@ -64,6 +64,7 @@ FOOT_DZ = 0.0             # this body's ankle height above the sole minus the v3
 KNEEL_ADJ = 0.0           # the kneeling hips (per body; MPFB builds calibrate it)
 BED_ADJ = 0.0             # the lying hips on a bed (per body; MPFB builds calibrate it: torso on the mattress)
 BED_BACK = 0.0            # the same lying on the back (sleep_turn; per body, calibrated)
+BED_ROLL = 0.0            # and half way through the roll (sleep_turn; per body, calibrated)
 ARM_IN = 0.0              # deg: standing FK arms closer to the body (MPFB builds: 5)
 WORLD_FEET = {"sit_bar_stool", "drink_bar"}
 LOCO_CLIPS = {"walk", "run", "carry_walk", "injured_walk", "jog", "child_run", "hold_hands_walk", "hold_hands_walk_r",
@@ -106,13 +107,13 @@ def people_fix(P, clip):
                     Q["arm.%s.x" % side], Q["arm.%s.y" % side], Q["arm.%s.z" % side] = r.x, r.y, r.z
     if clip in STOOL_CLIPS and STOOL_ADJ:
         Q["hips.z"] = Q.g("hips.z") + STOOL_ADJ
-    if clip in BED_CLIPS and (BED_ADJ or BED_BACK):       # on the mattress: the body rests ON it (per body)
+    if clip in BED_CLIPS and (BED_ADJ or BED_BACK or BED_ROLL):       # on the mattress: the body rests ON it (per body)
         # (2026-10-02) on the side and on the back the lowest points differ (hip and thigh vs the back and heels): one
         # offset each, mixed by how far the pelvis lies on its side (its lateral axis up) or on its back (forward up)
         qh = N.qeuler(P.g("hips.rx"), P.g("hips.ry"), P.g("hips.rz"))
         ws = (qh @ Vector((0.0, 1.0, 0.0))).z ** 2
         wb = (qh @ Vector((1.0, 0.0, 0.0))).z ** 2
-        dz = BED_ADJ * ws + BED_BACK * wb
+        dz = BED_ADJ * ws + BED_BACK * wb + BED_ROLL * 4.0 * ws * wb     # (mid-roll: its own offset)
         Q["hips.z"] = Q.g("hips.z") + dz
         # the whole body moves with the hips (2026-10-02: only the hips moved, so the feet and hands hung below the
         # mattress, 15 cm on the children)
@@ -121,17 +122,18 @@ def people_fix(P, clip):
             if Q.g("arm.%s.ik" % side) > 0:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + dz
     if clip in LIE_CLIPS:
-        w = max(0.0, min(1.0, (-hz - 0.55) / 0.25))
+        # (2026-10-02) from the kneel down (m3's knee went 1.3 cm into the floor in collapse); the hands are kept on the
+        # floor by the solver's surface guard now (the old +2.2 cm on IK hands only made get_up start 1.3 cm off dead)
+        w = max(0.0, min(1.0, (-hz - 0.30) / 0.40))
         Q["hips.z"] = Q.g("hips.z") + LIE_LIFT * w
-        for side in ("L", "R"):                     # the bigger people hands: fingertips clear of the floor
-            if Q.g("arm.%s.ik" % side) > 0:
-                Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + 0.022 * w
     return Q
 
 
 def retarget(P, s, clip, settled_z=None):
     """The pose for a variant of scale s (and this body's ankle height: FOOT_DZ)."""
     Q = _retarget(P, s, clip, settled_z)
+    if clip in LIE_CLIPS:                                     # the same guard on the floor (2026-10-02)
+        Q["bed.on"], Q["bed.z"], Q["bed.x0"], Q["bed.x1"] = 1.0, 0.0, -9.0, 9.0
     if clip in BED_CLIPS:                                     # the bed guard (npc_common Solver._bed_guard)
         Q["bed.z"] = CONTACT[clip][1]
         Q["bed.x0"], Q["bed.x1"] = -A.FURNITURE["bed_back"] - 0.45, -A.FURNITURE["bed_back"] + 0.45
@@ -177,11 +179,13 @@ def _retarget(P, s, clip, settled_z=None):
             qh = N.qeuler(P.g("hips.rx"), P.g("hips.ry"), P.g("hips.rz"))
             lie = min(1.0, (qh @ Vector((0.0, 1.0, 0.0))).z ** 2 + (qh @ Vector((1.0, 0.0, 0.0))).z ** 2)
             bb = A.FURNITURE["bed_back"]
-            x0 = -bb + 0.45 - 0.45 * lie
+            # seated: about a point 12 cm in front of the stand point, so a small body sits a little forward and its
+            # legs stay clear of the bed front (c2's legs and dress went 4 cm into the plinth under the mattress edge)
+            x0 = 0.20 * (1.0 - lie) + (-bb) * lie
             dx = w * x0 * (1.0 - s)
             Q["hips.x"] = Q.g("hips.x") + dx
             for side in ("L", "R"):
-                Q["foot.%s.x" % side] = Q.g("foot.%s.x" % side) + dx * max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.20) / 0.30))
+                Q["foot.%s.x" % side] = Q.g("foot.%s.x" % side) + dx * max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.15) / 0.15))
                 if side not in world and Q.g("arm.%s.ik" % side) > 0:
                     Q["arm.%s.x" % side] = Q.g("arm.%s.x" % side) + dx
         if kind == "seat" and s < 0.85:                     # children: the feet dangle (they cannot reach the floor)
@@ -191,7 +195,12 @@ def _retarget(P, s, clip, settled_z=None):
             for side in ("L", "R"):
                 # (2026-10-02: not the feet still on the floor, while sitting on the bed edge: m3's toes went 1.9 cm
                 # under the floor)
-                up = max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.20) / 0.30))
+                up = max(0.0, min(1.0, (P.g("foot.%s.z" % side) - 0.15) / 0.15))
+                if s < 0.85:
+                    # children hop up onto the mattress: their crotch is not above it, so with the feet on the floor
+                    # the legs stood straight and the body leaned into the bed front (2026-10-02, c2); the feet leave
+                    # the floor as they sit and hang from the edge
+                    up = max(up, w)
                 Q["foot.%s.z" % side] = Q.g("foot.%s.z" % side) + dz * up
         for side in ("L", "R"):
             if side not in world and Q.g("arm.%s.ik" % side) > 0:
@@ -459,10 +468,11 @@ def hug_keys():
     K3 = add(K2, hips__y=0.01, chest__rz=4.0, head__rz=4.0)
     # the hands go round the partner's sides on the way in and out (not through them)
     KM = add(S, spine__ry=2.5, chest__ry=2.5, neck__ry=3.0, spine__rx=-5.0, neck__rz=12.0, head__rz=26.0)
-    set_arm_ik(KM, "R", (d + 0.04, 0.42, 1.30), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
-    elbow_to(KM, "R", (0.0, -1.0, 0.0), 0.7)
-    set_arm_ik(KM, "L", (d + 0.03, 0.40, 1.08), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
-    elbow_to(KM, "L", (0.0, 1.0, -0.2), 0.7)
+    set_arm_ik(KM, "R", (d + 0.04, 0.46, 1.30), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-50.0)
+    elbow_to(KM, "R", (0.0, -1.0, 0.45), 0.8)          # (2026-10-02: the high elbow over the partner's low elbow)
+    # (2026-10-02: the low arm passes under the partner's high arm: its elbow went through the partner's forearm)
+    set_arm_ik(KM, "L", (d + 0.03, 0.40, 1.02), (0.6, -0.8, 0.0), (-0.6, -0.8, 0.0), w=1.0, pole=-40.0)
+    elbow_to(KM, "L", (0.0, 1.0, -0.6), 0.8)
     keys = [(0.0, S, {"hold": True}), (0.75, KM), (1.20, K2), (1.65, K3), (2.05, K2), (2.50, KM),
             (3.30, Pose(STAND), {"hold": True})]
     return [(t, ik_to_fk(k), *rest) for (t, k, *rest) in keys]
@@ -616,7 +626,8 @@ def people_clips():
 def pairs_json():
     import people_clips as PC
     pairs = {"hug": dict(clip_a="hug", clip_b="hug", distance_m=HUG["distance"], facing_deg=HUG["facing_deg"],
-                         sync_s=HUG["sync_s"], side_offset_m=0.0, note="arms round the partner's back, heads side by side")}
+                         sync_s=HUG["sync_s"], side_offset_m=0.0, hand_contact=True,
+                         note="arms round the partner's back, heads side by side; the hands rest on the partner's back")}
     pairs.update({k: dict(v) for k, v in PC.PAIRS.items()})
     return {
         "note": ("Paired clips.  Partner A plays clip_a at time 0, partner B plays clip_b from sync_s.  B stands at "

@@ -574,7 +574,8 @@ func step() -> void:
 		goals.tick_second()
 		awards.tick_second()
 	# Alerts every second tick of the clock (every 2 s): half the cost; raise and clear waits are 5 s and more.
-	if phase == _phase_of(8, hz) and (tick / hz) % 2 == 0:
+	# Phase 3 is the lightest phase (the job board parts are on 4, 9 and 1; worst tick budget 12 ms).
+	if phase == _phase_of(3, hz) and (tick / hz) % 2 == 0:
 		alerts.tick_second()
 	# V5: people (a slice a tick), courses and unrest (each base on its own tick).
 	people.tick()
@@ -582,7 +583,8 @@ func step() -> void:
 	education.tick()
 	unrest.tick()
 	rag.tick()
-	if phase == _phase_of(9, hz):
+	# Off phase 9, which carries job board part 1 (spike 10 ms now and then).
+	if phase == _phase_of(6, hz):
 		security.tick_second()
 		leisure.tick_second()
 		families.tick_second()

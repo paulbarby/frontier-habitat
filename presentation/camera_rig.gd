@@ -122,8 +122,30 @@ var dbg_target := Vector3.ZERO # measurement: the soft wall rule's target (befor
 var slide_fn: Callable         # (shoulder, last eye, sprung eye) -> eye slid along the walls (world_view.follow_slide)
 var _sh_slide_prev := Vector3.ZERO
 var _sh_slide_ok := false
+var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
+var occ_fn: Callable           # (eye) -> how far from the chest the eye may stand (world_view.follow_occluder)
+var _sh_occ := 1.0             # eased occluder pull (fraction of the eye's distance from the pivot)
+var _sh_occv := 0.0
+var _sh_occ_hold := 0.0
+const SH_W_OCC_IN := 4.0       # rad/s: in front of an occluder (9 gave 20-30 mm camera jerk)
+const SH_W_OCC_OUT := 2.0      # rad/s: back out slowly
+const SH_OCC_HOLD := 0.5       # s clear before easing back out
+const SH_OCC_MIN := 0.8        # m from the chest: a closer occluder is not avoided by pulling in
+var _sh_oo := 0.0              # occluder orbit offset (rad), eased
+var _sh_oov := 0.0
+var _sh_oo_t := 0.0            # its target
+var _sh_oo_clear := 0.0        # s the plain view has been clear
+var _sh_oo_blk := 0.0          # s the plain view has been blocked
+const SH_OCC_WAIT := 0.35      # s
+const SH_W_OCC_ORBIT := 3.0    # rad/s
 var head_boost := 1.0          # measurement switch (render_follow_headless rig.head_boost=0): the trailing-heading boost
 var collide_smooth := false   # set by collide_fn each call: the indoor wall rule is already smooth
+
+## The unpulled eye for a heading (the same formula as the follow frame's `free`), for the occluder search.
+func _free_eye(pivot: Vector3, hd: float, side: float, lift: float) -> Vector3:
+	var fw := Vector3(cos(hd), 0.0, -sin(hd))
+	var rt := Vector3(sin(hd), 0.0, cos(hd))
+	return pivot - fw * _sh_d * cos(_sh_pt) + rt * side + Vector3(0.0, lift + _sh_d * sin(_sh_pt), 0.0)
 
 ## One exact step of a critically damped spring (x, v) toward `target` with angular frequency w.
 static func _crit(x: float, v: float, target: float, w: float, dt: float) -> Vector2:
@@ -316,12 +338,44 @@ func _shoulder_process(delta: float) -> bool:
 	# V5 §3 (critic round 29): exactly eye height + 0.15 m; a seated or lying person gets a little more
 	# height so the camera still sees over them.
 	var lift: float = maxf(0.0, 1.65 - _sh_eh) * 0.5
-	var hd: float = _sh_heading + _sh_o
-	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
-	var right := Vector3(sin(hd), 0.0, cos(hd))
 	var pivot: Vector3 = _sh_p + Vector3(0.0, _sh_eh + SH_UP, 0.0)
 	# The shoulder offset shrinks with the zoom (a face close-up looks at the face, not past it).
 	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0)
+	# Occluders on the sight line (orchestrator 2026-10-02: a dome pillar between the lens and the person):
+	# the camera first swings round the person by the smallest of +-15/30/45/60 deg that clears both lines
+	# (chest, head), eased; it swings back once the plain view has been clear for SH_OCC_HOLD s.
+	if occ_fn.is_valid() and occ_on > 0.5 and not _sh_new and dt > 0.0:
+		var h0: float = _sh_heading + _sh_o
+		var cur_ok: bool = float(occ_fn.call(_free_eye(pivot, h0 + _sh_oo_t, side, lift))) == INF
+		var zero_ok: bool = absf(_sh_oo_t) < 0.001 and cur_ok or float(occ_fn.call(_free_eye(pivot, h0, side, lift))) == INF
+		if zero_ok:
+			_sh_oo_clear += dt
+			_sh_oo_blk = 0.0
+			if _sh_oo_clear > SH_OCC_HOLD:
+				_sh_oo_t = 0.0
+		else:
+			_sh_oo_clear = 0.0
+			_sh_oo_blk += dt
+			# (a short block, the camera following through a doorway past its jamb, passes by itself: only a
+			# block that lasts SH_OCC_WAIT s moves the camera)
+			if not cur_ok and _sh_oo_blk > SH_OCC_WAIT:
+				var pick := 0.0
+				for a_deg in [15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0]:
+					var a_off: float = deg_to_rad(a_deg) * _sh_side_s
+					if float(occ_fn.call(_free_eye(pivot, h0 + a_off, side, lift))) == INF:
+						pick = a_off
+						break
+				_sh_oo_t = pick
+		var roo: Vector2 = _crit(_sh_oo, _sh_oov, _sh_oo_t, SH_W_OCC_ORBIT, dt)
+		_sh_oo = roo.x
+		_sh_oov = roo.y
+	elif _sh_new:
+		_sh_oo = 0.0
+		_sh_oov = 0.0
+		_sh_oo_t = 0.0
+	var hd: float = _sh_heading + _sh_o + _sh_oo
+	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
+	var right := Vector3(sin(hd), 0.0, cos(hd))
 	var shoulder_pt: Vector3 = pivot + right * side
 	var free: Vector3 = pivot - fwd * _sh_d * cos(_sh_pt) + right * side + Vector3(0.0, lift + _sh_d * sin(_sh_pt), 0.0)
 	# The camera never passes a wall. The eye eases in when a wall comes within SH_SOFT of it (fast)
@@ -384,6 +438,31 @@ func _shoulder_process(delta: float) -> bool:
 		nl = lerpf(bl, maxf(nl, bl), clampf((pos.y + 2.5 - eye.y) / 0.4, 0.0, 1.0))
 		eye.x = pos.x + bn.x * nl
 		eye.z = pos.z + bn.y * nl
+	# Occluders on the sight line (a pillar, a shelf, a wall end; world_view.follow_occluder): the eye is drawn
+	# in toward the pivot to stand in front of the first one (fast in, slow out after OCC_HOLD s), so the person
+	# is never seen through a dithered band.
+	if occ_fn.is_valid() and occ_on > 0.5:
+		var chest: Vector3 = _sh_p + Vector3(0.0, 1.25, 0.0)
+		var cl: float = eye.distance_to(chest)
+		var allow: float = float(occ_fn.call(eye))
+		# (an occluder closer than SH_OCC_MIN to the chest is the person's own spot: pulling in there only puts
+		# the lens in their hair; the near fade takes it)
+		var want: float = 1.0 if allow == INF or cl < 0.01 or allow < SH_OCC_MIN or _sh_oo_blk <= SH_OCC_WAIT else clampf(allow / cl, 0.2, 1.0)
+		if _sh_new:
+			_sh_occ = want
+			_sh_occv = 0.0
+		elif dt > 0.0:
+			_sh_occ_hold = 0.0 if want < _sh_occ - 0.01 else _sh_occ_hold + dt
+			var w_o: float = SH_W_OCC_IN if want < _sh_occ else (SH_W_OCC_OUT if _sh_occ_hold > SH_OCC_HOLD else 0.0)
+			if w_o > 0.0:
+				var ro2: Vector2 = _crit(_sh_occ, _sh_occv, want, w_o, dt)
+				_sh_occ = ro2.x
+				_sh_occv = ro2.y
+			else:
+				_sh_occv = 0.0
+		var k_o: float = _sh_occ
+		if k_o < 0.999:
+			eye = pivot + (eye - pivot) * clampf(k_o, 0.2, 1.0)
 	if collide_fn.is_valid():
 		if collide_smooth:
 			# (indoors: slide from last frame's eye toward the sprung eye along the walls, so the eye moves

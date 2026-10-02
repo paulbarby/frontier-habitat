@@ -770,3 +770,19 @@ draw the polymer plant model until ART-HAB makes one.
   tourists, 0 deaths, calm, ledger {}). The content is the same as before; positions and days of play differ, so
   re-run your showcase probes. New log code `defect_ended` (a colonist's request to leave with a ship ended when the
   ship took off). Nothing else changed for the view.
+
+## 2026-10-02 (later) - what RENDER may draw for sections 16 and 17 (stubs first; "live" lines follow)
+
+- **Idle talk:** the same talk rows (`talks_near`), now with `heat` (0-3) and `idle` (true: one walked over). Heat 2-3
+  lines: closer stance, `flirt_lean`, laugh, `emote: "heart"`; awkward (`topic "awkward"`): `sulk`/step back, emote `sweat`.
+- **Parties:** `sim.party.parties()` rows (`pos`, `building`, `phase`, `guests`, `honoured`) and `sim.party.party_of(id)`.
+  While a person is at a party `sim.people.action(a)` returns `dance_a`, `dance_c`, `drink_bar`, `toast` (glass raised) or
+  `sing` (tipsy singer). Missing clips: use `drink_bar` for toast and `talk_gesture_a` for sing. Robot dancers in the
+  dome club while a party runs there. Bubbles use the talk lines (topics `party_talk`, `toast`).
+- **Drama (small):** spilled drink (`sweat`), dance-off (two dancers face to face), a bad joke (groan, `question`),
+  awkward flirt. **Big:** a public break-up (`tears`, one walks out), a jealous scene (`anger`, `argue`), a proposal
+  (kneel, `heart`), a fight (existing fight clips, security responds). The log entries `party_drama` / `party_drama_big`
+  carry `ents` (the actors) and `place`.
+- **HR:** the HR officer works at `Anchor_Desk_<i>` (stand at the desk); an interview is two people seated facing at
+  `Anchor_Interview_<i>_0/1`; the complaint queue stands at `Anchor_Queue_<i>`; the kiosk user stands at
+  `Anchor_Kiosk_<i>`. Agent field `hr_visit` ("queue"|"interview"|"kiosk"|"") says what a visitor is doing.

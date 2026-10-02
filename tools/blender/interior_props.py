@@ -490,6 +490,94 @@ def oat_carton(p, x, y, z):
     plate_x(p, x + 0.036, y - 0.03, y + 0.03, z + 0.05, z + 0.12, "PlantDark")
 
 
+# --------------------------------------------------------------------------------------
+# table clutter (round 2, coordinator 2026-10-02: density at 1.8 m eye height): two or three things on every table,
+# by the room's role (ROLE is set by rooms_build for each room).  Off the centre (lamps and vases stand there),
+# 60-90 triangles a table.
+# --------------------------------------------------------------------------------------
+ROLE = {"role": None, "n": 0}
+FOOD_ROLES = ("bar", "kitchen", "comfort", "housing", "park", "jail")
+DESK_ROLES = ("science", "academy", "security", "medical", "retail", "links", "civic", "hr")
+
+
+def _tray(p, x, y, z, k):
+    bbox(p, x - 0.17, x + 0.17, y - 0.12, y + 0.12, z, z + 0.015, ("Frame", "Accent", "HullDark")[k % 3])
+    with p.at(T(x - 0.05, y, 0.0)):
+        p.cap_disc(0.075, z + 0.018, "Hull", seg=8)
+    p.sphere((x - 0.05, y, z + 0.03), 0.045, ("Plant", "Hazard", "Fabric", "Wood")[k % 4], seg=6, rings=3,
+             scale=(1.0, 1.0, 0.5))
+    p.vcyl(x + 0.09, y + 0.03, z + 0.015, z + 0.10, 0.03, seg=6, mat=("WaterBlue", "Hull")[k % 2], cap0=False)
+
+
+def _bottle(p, x, y, z, k):
+    m = ("Plant", "WaterBlue", "Copper", "PlantDark")[k % 4]
+    p.vcyl(x, y, z, z + 0.18, 0.035, seg=6, mat=m, cap0=False, cap1=False)
+    p.vcyl(x, y, z + 0.18, z + 0.25, 0.035, 0.012, seg=6, mat=m, cap0=False)
+
+
+def _tablet(p, x, y, z, k):
+    with p.at(T(x, y, 0.0), RZ(15.0 * (k % 3) - 15.0)):
+        bbox(p, -0.10, 0.10, -0.14, 0.14, z, z + 0.012, "HullDark")
+        plate_z(p, z + 0.013, -0.085, 0.085, -0.125, 0.125, ("WaterBlue", "Cushion")[k % 2])
+
+
+def _notebook(p, x, y, z, k):
+    with p.at(T(x, y, 0.0), RZ(-12.0 + 9.0 * (k % 4))):
+        bbox(p, -0.11, 0.11, -0.08, 0.08, z, z + 0.02, ("Fabric", "Accent", "Hazard", "WaterBlue")[k % 4])
+        bbox(p, -0.10, 0.10, -0.075, 0.075, z + 0.02, z + 0.024, "Hull")
+
+
+def _toolbox(p, x, y, z, k):
+    with p.at(T(x, y, 0.0), RZ(10.0 * (k % 3))):
+        bbox(p, -0.18, 0.18, -0.09, 0.09, z, z + 0.12, ("SignalRed", "Hazard", "WaterBlue")[k % 3])
+        p.beam((-0.08, 0.0, z + 0.12), (-0.08, 0.0, z + 0.16), 0.02, 0.02, "Frame", caps=False)
+        p.beam((0.08, 0.0, z + 0.12), (0.08, 0.0, z + 0.16), 0.02, 0.02, "Frame", caps=False)
+        p.beam((-0.08, 0.0, z + 0.165), (0.08, 0.0, z + 0.165), 0.02, 0.02, "Frame")
+
+
+def _wrench(p, x, y, z, k):
+    with p.at(T(x, y, 0.0), RZ(35.0 + 20.0 * (k % 3))):
+        bbox(p, -0.12, 0.12, -0.012, 0.012, z, z + 0.008, "Metal")
+        bbox(p, 0.10, 0.15, -0.03, 0.03, z, z + 0.01, "Metal")
+
+
+def _toy(p, x, y, z, k):
+    for j, m in enumerate(("Hazard", "SignalRed", "WaterBlue")):
+        bbox(p, x - 0.03 + 0.01 * j, x + 0.03 + 0.01 * j, y - 0.03, y + 0.03, z + 0.06 * j, z + 0.06 * (j + 1), m)
+
+
+def table_clutter(p, hx, hy, zt, round_r=None):
+    """Things on a table top (table frame, centred at the origin, top at zt)."""
+    role = ROLE.get("role")
+    if role is None:
+        return
+    ROLE["n"] += 1
+    k = ROLE["n"]
+    rng = random.Random(k * 7 + len(role))
+    if round_r:
+        spots = [(0.45 * round_r * cos(radians(a)), 0.45 * round_r * sin(radians(a))) for a in (40.0, 220.0, 130.0)]
+        small = round_r < 0.33
+    else:
+        spots = [(0.50 * hx, 0.40 * hy), (-0.50 * hx, -0.40 * hy), (-0.50 * hx, 0.40 * hy)]
+        small = min(hx, hy) < 0.25
+    if role in FOOD_ROLES:
+        kinds = [_tray, _bottle, (_toy if role == "housing" else mug)]
+    elif role in DESK_ROLES:
+        kinds = [_tablet, _notebook, mug]
+    else:
+        kinds = [_toolbox, _wrench, mug]
+    rng.shuffle(kinds)
+    n = 1 if small else (2 if rng.random() < 0.6 else 3)
+    for j in range(n):
+        x, y = spots[j]
+        fn = kinds[j]
+        if fn is mug:
+            mug(p, x, y, zt, mat=("Hull", "Accent", "Fabric", "CushionLight")[(k + j) % 4], tall=(k + j) % 3 == 0)
+        else:
+            fn(p, x, y, zt, k + j)
+    USED["table_clutter"] = USED.get("table_clutter", 0) + 1
+
+
 def counter_set(p, x, y0, y1, z, seed=0):
     """Kitchen counter top things along +Y from y0 to y1 at height z (front +X): kettle bot, subscription toaster,
     sourdough and an oat carton, whatever fits."""

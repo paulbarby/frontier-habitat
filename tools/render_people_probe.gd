@@ -5,6 +5,7 @@ func _init() -> void:
 	var a := OS.get_cmdline_user_args()
 	var v: String = a[0] if a.size() > 0 else "m1"
 	var n: Node = (load("res://assets/models/people_%s.glb" % v) as PackedScene).instantiate()
+	print("FILE people_%s.glb" % v)
 	for sk in n.find_children("*", "Skeleton3D", true, false):
 		print("SKEL %s bones %d" % [sk.name, (sk as Skeleton3D).get_bone_count()])
 	for mi in n.find_children("*", "MeshInstance3D", true, false):

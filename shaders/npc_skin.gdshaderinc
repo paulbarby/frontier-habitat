@@ -27,7 +27,7 @@ uniform bool people = false;
 uniform bool alpha_clip = false;   // Hair*: alpha MASK, cutoff 0.5
 uniform vec4 cloth_cols[8];        // linear clothes colours (mode 5), by INSTANCE_CUSTOM.w % 8
 uniform vec4 stripe_cols[8];       // V5 people: department stripe (mode 1, look role bits = stripe index)
-uniform vec4 ubase_cols[8];        // linear UniformBase colour per outfit (mode 6), by INSTANCE_CUSTOM.w / 8
+uniform vec4 ubase_cols[16];       // linear UniformBase colour per outfit (mode 6), by INSTANCE_CUSTOM.w / 8 (16 outfits, 2026-10-02)
 // V3.1 visitors (look code role >= 8, v = role - 8): this material's colour per visitor look;
 // a negative colour = keep the material's own colour.
 uniform vec4 vis_cols[7];
@@ -171,7 +171,7 @@ void vertex() {
 	} else if (mode == 5) {
 		v_tint = cloth_cols[int(INSTANCE_CUSTOM.w + 0.5) % 8].rgb / max(albedo.rgb, vec3(0.04));
 	} else if (mode == 6) {
-		v_tint = ubase_cols[clamp(int(INSTANCE_CUSTOM.w + 0.5) / 8, 0, 7)].rgb / max(albedo.rgb, vec3(0.04));
+		v_tint = ubase_cols[clamp(int(INSTANCE_CUSTOM.w + 0.5) / 8, 0, 15)].rgb / max(albedo.rgb, vec3(0.04));
 	}
 }
 

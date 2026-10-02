@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import npc_common as N          # noqa: E402
 _ARGV = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-if "--body" in _ARGV and _ARGV[_ARGV.index("--body") + 1] not in ("suit", "indoor"):
+if "--body" in _ARGV and any(b not in ("suit", "indoor") for b in _ARGV[_ARGV.index("--body") + 1].split(",")):
     import people_mpfb             # noqa: E402,F401  (people skeleton: face + expression bones, before any solver)
 import npc_render as NR         # noqa: E402
 import people_render as PR      # noqa: E402
@@ -144,7 +144,9 @@ def main():
         NR.compose(rows, out, title="%s (%s): poses" % (body, outfit))
         print("STRIP", out)
         return
-    for clip in clips:
+    bodies = body.split(",")
+    for clip in [(b, c) for b in bodies for c in clips]:
+        body, clip = clip
         NR.setup(w, h, ground=(0.46, 0.44, 0.42), samples=16)
         NR.add_grid(step=0.25, half=3.0)
         if clip in PR.FURNITURE_PROPS:
@@ -176,7 +178,7 @@ def main():
                 p = os.path.join(PR.TMP, "st_%s_%s_%s_%d.png" % (body, clip, v, f))
                 row.append(("%s %s %s f%d" % (body, clip, v, f), NR.render(p)))
             rows.append(row)
-    NR.compose(rows, out, title="%s (%s): %s - follow = 1.9 m behind the right shoulder" % (body, outfit, ", ".join(clips)))
+    NR.compose(rows, out, title="%s (%s): %s; follow = behind the right shoulder" % (",".join(bodies), outfit, ", ".join(clips)))
     print("STRIP", out)
 
 

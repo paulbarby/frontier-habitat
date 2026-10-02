@@ -123,7 +123,8 @@ def fill_arm_targets(P, sides=("L", "R")):
         return P
     for s in todo:
         Q["arm.%s.ik" % s] = 0.0
-    D, _, pos, _ = solver().solve(Q)
+    with N.raw_solve():
+        D, _, pos, _ = solver().solve(Q)
     for s in todo:
         wr = pos["hand." + s]
         P["arm.%s.x" % s], P["arm.%s.y" % s], P["arm.%s.z" % s] = wr.x, wr.y, wr.z
@@ -139,7 +140,8 @@ def ik_to_fk(P, sides=("L", "R")):
     """The same pose with the arms as FK angles (ik = 0): a key after which the clip can move in FK with no
     FK/IK mismatch (the IK solution's local rotations become the FK parameters)."""
     Q = Pose(P)
-    _, L, _, _ = solver().solve(P)
+    with N.raw_solve():
+        _, L, _, _ = solver().solve(P)
     for s in sides:
         for b in ("upper_arm", "forearm", "hand"):
             e = L["%s.%s" % (b, s)].to_euler("XYZ")
@@ -252,6 +254,10 @@ def make_lie():
     # (set_arm_ik mirrors y for the right side: these values put the right hand at y +0.30, pointing to +Y)
     set_arm_ik(P, "R", (-0.185, -0.300, 0.690), (0.6, -0.6, 0.15), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(P, "R", (0.8, 0.0, 0.4), 1.0)                # the top elbow forward and up, in front of the chest
+    # (2026-10-02, the audit: the hand orientations above bent the wrists 112 deg): stiff hands, the wrists stay
+    # near straight and the forearms turn the palms
+    P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0
+    P["hand.L.ry"] = P["hand.R.ry"] = -18.0               # relaxed: a slight curl towards the palm
     return P
 
 
@@ -277,6 +283,8 @@ def make_dead():
     elbow_to(P, "L", (0.0, -0.4, 1.0))                   # arm stretched along the ground, elbow not into it
     set_arm_ik(P, "R", (0.250, -0.300, 0.130), (0.8, -0.4, -0.2), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(P, "R", (0.6, 0.0, 0.8), 1.0)                # the top arm fallen in front, the elbow up (not through the body)
+    P["arm.L.stiff"] = P["arm.R.stiff"] = 1.0             # (2026-10-02: limp wrists, not bent back)
+    P["hand.L.ry"] = P["hand.R.ry"] = -18.0
     return P
 
 
@@ -1039,8 +1047,9 @@ def lie_enter_keys():
     elbow_to(K3, "R", (0.8, 0.0, 0.5), 1.0)
     K2b = Pose(K2)
     K2b.update({"hips.rx": -45.0, "hips.x": -0.38, "hips.z": -0.205})
-    set_foot(K2b, "L", (0.20, 0.10, 0.36), knee_out=0.0)
-    set_foot(K2b, "R", (0.22, 0.05, 0.42), knee_out=0.0)
+    # (2026-10-02: 6 cm further forward: the short shins of f2 and the children swept through the bed front)
+    set_foot(K2b, "L", (0.26, 0.10, 0.44), knee_out=0.0)     # (and 8 cm higher: the shins clear the bed front)
+    set_foot(K2b, "R", (0.33, 0.05, 0.50), knee_out=0.0)
     for s in ("L", "R"):
         K2b["foot.%s.rel" % s] = 0.5
         K2b["foot.%s.rp" % s] = 15.0
@@ -1139,7 +1148,16 @@ def bottom_arm_ik(keys, sides=("L",)):
     for k0, k1 in zip(keys, out):
         Q = Pose(k1[1])
         for s in sides:
-            if Pose(k0[1]).g("arm.%s.ik" % s) > 0:
+            K0 = Pose(k0[1])
+            if K0.g("arm.%s.ik" % s) > 0:
+                # the key's own IK values (target, pole, hand turn, stiffness): the converted ones would turn a stiff
+                # forearm differently (2026-10-02: lie_enter ended 5.4 deg off the lie rest pose)
+                for k in list(Q):
+                    if k.startswith(("arm.%s." % s, "hand.%s.w" % s)):
+                        del Q[k]
+                for k, v in K0.items():
+                    if k.startswith(("arm.%s." % s, "hand.%s.w" % s)):
+                        Q[k] = v
                 Q["arm.%s.ik" % s] = 1.0
         res.append((k1[0], Q) + tuple(k1[2:]))
     return res
@@ -1633,8 +1651,8 @@ def step_up_keys():
     palm_to(K4, "R", gh + Vector((0.0, 0.0, -0.02)))
     K4 = add(K4, upper_arm__L__rx=-4.0, forearm__L__ry=5.0)
     S0, K1, K1b, K2, K3, K4, END = (ik_to_fk(k) for k in (S0, K1, K1b, K2, K3, K4, END))
-    return [(0.0, S0, {"hold": True}), (0.38, K1), (0.65, K1b), (0.89, K2), (1.22, K3), (1.55, K4),
-            (1.88, END, {"hold": True})]
+    return [(0.0, S0, {"hold": True}), (0.44, K1), (0.73, K1b), (0.97, K2), (1.30, K3), (1.63, K4),
+            (1.96, END, {"hold": True})]                       # (2026-10-02: the reach 0.06 s longer: < 15 deg/frame)
 
 
 def step_down_keys():
@@ -1690,6 +1708,19 @@ POSE_STATE_REST = {"stand": ("idle", 0), "sit": ("sit_idle", 0), "lie": ("sleep"
                    "vehicle": ("ride_sit", 0)}
 
 
+def bed_keys(keys, z=None):
+    """The bed guard values on every key BEFORE the retime (2026-10-02): the retime then also slows the guard's own
+    corrections, and the bake despike (4.5 deg/frame) no longer smooths them away (hands 2-3 cm in the mattress)."""
+    bz = FURNITURE["bed_z"] if z is None else z
+    bb = FURNITURE["bed_back"]
+    out = []
+    for k in keys:
+        P = Pose(k[1])
+        P["bed.z"], P["bed.x0"], P["bed.x1"] = bz, -bb - 0.45, -bb + 0.45
+        out.append((k[0], P) + tuple(k[2:]))
+    return out
+
+
 def on_bed(fn, z=None):
     """The bed guard (Solver._bed_guard) for a clip on the mattress: elbows and hands stay on top of it."""
     bz = FURNITURE["bed_z"] if z is None else z
@@ -1698,6 +1729,15 @@ def on_bed(fn, z=None):
     def g(f):
         P = Pose(fn(f))
         P["bed.z"], P["bed.x0"], P["bed.x1"] = bz, -bb - 0.45, -bb + 0.45
+        return P
+    return g
+
+
+def on_floor(fn):
+    """The surface guard on the floor (z 0) for the lying clips: hands and elbows stay on the ground, not in it."""
+    def g(f):
+        P = Pose(fn(f))
+        P["bed.on"], P["bed.z"], P["bed.x0"], P["bed.x1"] = 1.0, 0.0, -9.0, 9.0
         return P
     return g
 
@@ -1748,16 +1788,16 @@ def all_clips():
     out.append(("sit_type", "loop", "sit", "sit", True, 120, typing(sit_type_base(), 120), {}))
     fn, n = keyed_clip(sit_exit_keys())
     out.append(("sit_exit", "exit", "sit", "stand", False, n, fn, {}))
-    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_enter_keys())))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(bed_keys(lie_enter_keys()))))
     out.append(("lie_enter", "enter", "stand", "lie", False, n, on_bed(fn), {}))
     fn, n = sleep_fn()
     out.append(("sleep", "loop", "lie", "lie", True, n, on_bed(fn), {}))
-    fn, n = keyed_clip(retime_keys(bottom_arm_ik(lie_exit_keys())))
+    fn, n = keyed_clip(retime_keys(bottom_arm_ik(bed_keys(lie_exit_keys()))))
     out.append(("lie_exit", "exit", "lie", "stand", False, n, on_bed(fn), {}))
     gait("injured_walk", INJURED)
     fn, n = keyed_clip(collapse_keys())
-    out.append(("collapse", "oneshot", "stand", "lie", False, n, fn, dict(ends_on="dead")))
-    out.append(("dead", "hold", "lie", "lie", True, 30, lambda f: Pose(DEAD), {}))
+    out.append(("collapse", "oneshot", "stand", "lie", False, n, on_floor(fn), dict(ends_on="dead")))
+    out.append(("dead", "hold", "lie", "lie", True, 30, on_floor(lambda f: Pose(DEAD)), {}))
     fn, n = keyed_clip(cheer_keys())
     out.append(("cheer", "oneshot", "stand", "stand", False, n, fn, {}))
     fn, n = keyed_clip(suit_swap_keys())

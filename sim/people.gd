@@ -247,8 +247,8 @@ func tick() -> void:
 	var agents: Dictionary = sim.state["agents"]
 	# (now + id) % every == 0  <=>  id % every == -now mod every
 	# The ranks are made again once a game minute (stored: see _refresh_ranks).
-	# Tick 3 of the minute, not tick 0 (tick 0 carries the other once-a-minute work: worst tick budget).
-	if now % (60 * hz) == 3 or not sim.state.get("v5", {}).has("ranks"):
+	# Tick 5 of the minute, not tick 0 (tick 0 carries the other once-a-minute work: worst tick budget).
+	if now % (60 * hz) == 5 or not sim.state.get("v5", {}).has("ranks"):
 		store_ranks()
 	var due: Array = ids_mod(every, -now).duplicate()
 	if due.is_empty():

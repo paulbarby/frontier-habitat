@@ -450,6 +450,28 @@ ELBOW_KNEE, ELBOW_MAX = 135.0, 150.0
 WRIST_KNEE, WRIST_MAX = 60.0, 75.0
 
 
+class raw_solve:
+    """with raw_solve(): ...  the solver without the shoulder rhythm, the joint limits and the bed / floor guard.  The
+    IK <-> FK conversions run raw, so a converted key replays exactly (the soft limits are not idempotent: applied
+    twice they bent a lie_enter end pose 3.6 deg away from the lie rest pose)."""
+    def __enter__(self):
+        global SCAP_RHYTHM, JOINT_LIMITS, SURFACE_GUARD
+        self.saved = (SCAP_RHYTHM, JOINT_LIMITS, SURFACE_GUARD)
+        SCAP_RHYTHM = JOINT_LIMITS = SURFACE_GUARD = False
+        return self
+
+    def __exit__(self, *a):
+        global SCAP_RHYTHM, JOINT_LIMITS, SURFACE_GUARD
+        SCAP_RHYTHM, JOINT_LIMITS, SURFACE_GUARD = self.saved
+        return False
+
+
+SURFACE_GUARD = True     # Solver._bed_guard (beds and, for the lying clips, the floor)
+GUARD_CLEAR = 0.004
+GUARD_PALM, GUARD_BACK = 0.085, 0.015   # m (x scale): measured, the curled MPFB fingers reach 9 cm to the palm side: the hand's palm-side and back-side reach from the bone line
+                                        # (MPFB hands; npc_build sets the thicker suit gloves)
+
+
 def _sramp(x, w):
     """Smooth ramp: 0 below 0, x^2 / 2w up to w, then x - w/2 (continuous slope)."""
     if x <= 0.0:
@@ -717,7 +739,7 @@ class Solver:
             self._fk_elbow_out(s, D, Q, pos)
         if JOINT_LIMITS:
             self._joint_limits(s, D, Q, pos)
-        if P.g("bed.z") > 0.0:
+        if SURFACE_GUARD and (P.g("bed.z") > 0.0 or P.g("bed.on") > 0.0):
             self._bed_guard(P, s, D, Q, pos)
         Q[pr] = Quaternion()
         D[pr] = D[hd]
@@ -740,6 +762,16 @@ class Solver:
                 continue
             a2 = knee + (lim - knee) * math.tanh((a - knee) / (lim - knee))
             ax = da.cross(db)
+            if ch == hd and ax.length < 0.5:
+                # near a straight or a fully folded wrist the bend axis is unstable (2026-10-02: a 160 deg hand flip in
+                # sleep_turn): lean on the flexion axis from the palm normal (a wrist bends towards the palm)
+                pn = PALM_N if s == "L" else Vector((PALM_N.x, -PALM_N.y, PALM_N.z))
+                fb = da.cross(D[hd] @ pn)
+                if fb.length > 1e-6:
+                    fb.normalize()
+                    if ax.length > 1e-9 and fb.dot(ax) < 0.0:
+                        fb = -fb
+                    ax = ax + fb * (0.5 - ax.length)
             if ax.length < 1e-9:
                 continue
             q = Quaternion(ax.normalized(), radians(a2 - a))
@@ -766,8 +798,10 @@ class Solver:
         ua, fa, hd = "upper_arm." + s, "forearm." + s, "hand." + s
         up = Vector((0.0, 0.0, 1.0))
 
+        y1 = 9.0 if P.g("bed.on") > 0 and zf <= 0.0 else 1.05
+
         def over(p):
-            return x0 <= p.x <= x1 and abs(p.y) < 1.05
+            return x0 <= p.x <= x1 and abs(p.y) < y1
 
         def lift(z, want):
             """the z to reach: soft so the correction starts 1.5 cm before contact (no corner in the motion)"""
@@ -796,25 +830,43 @@ class Solver:
             Q[ua] = D["shoulder." + s].inverted() @ D[ua]
             pos[fa] = pos[ua] + D[ua] @ (self.head[fa] - self.head[ua])
             pos[hd] = pos[fa] + D[fa] @ (self.head[hd] - self.head[fa])
-        # 2. the hand's finger line (wrist -> about 19 cm out) above the mattress, by the hand's half thickness and the
-        # curl of the relaxed fingers (MPFB hands: 3 cm under the bone line at the tips)
+        # 2. the hand above the surface: points on the palm side (the relaxed MPFB fingers curl about 3 cm under the
+        # bone line) and on the back of the hand, at the knuckles and at the finger tips; the hand pitches up about the
+        # wrist until the worst one clears the top
         wr = pos[hd]
         tipv = D[hd] @ ((self.tail[hd] - self.head[hd]) * 1.9)
-        tip = wr + tipv
-        if over(tip) or over(wr):
-            want = zf + 0.032 * sc
-            need = lift(tip.z, want)
-            if need > 0.0 and tipv.length > 1e-6:
-                ax = tipv.cross(up)
-                if ax.length > 1e-6:
-                    ax.normalize()
-                    r = tipv.length
-                    e0 = math.asin(max(-1.0, min(1.0, tipv.z / r)))
-                    e1 = math.asin(max(-1.0, min(0.95, (tipv.z + need) / r)))
-                    q = Quaternion(ax, -(e1 - e0))
-                    if (q @ tipv).z < tipv.z:
-                        q = Quaternion(ax, e1 - e0)
-                    D[hd] = (q @ D[hd]).normalized()
+        pn = D[hd] @ (PALM_N if s == "L" else Vector((PALM_N.x, -PALM_N.y, PALM_N.z)))
+        for _ in range(2):
+            worst = (0.0, None)
+            lat = tipv.cross(pn)
+            lat = lat.normalized() if lat.length > 1e-9 else Vector((0.0, 0.0, 0.0))
+            for k_, off, lo in ((0.85, GUARD_PALM, 0.0), (0.6, GUARD_PALM * 0.75, 0.0), (1.0, GUARD_PALM * 0.5, 0.0),
+                                (1.0, -GUARD_BACK * 0.8, 0.0), (0.55, -GUARD_BACK, 0.0),
+                                (0.45, GUARD_PALM * 0.5, 0.045), (0.45, GUARD_PALM * 0.5, -0.045)):
+                # (and the thumb and little-finger sides of the palm, 2026-10-02)
+                v = tipv * k_ + pn * (off * sc) + lat * (lo * sc)
+                p_ = wr + v
+                if not over(p_):
+                    continue
+                need = lift(p_.z, zf + GUARD_CLEAR * sc)
+                if need > worst[0]:
+                    worst = (need, v)
+            need, v = worst
+            if v is None or need <= 0.0:
+                break
+            ax = v.cross(up)
+            if ax.length < 1e-6:
+                break
+            ax.normalize()
+            r = v.length
+            e0 = math.asin(max(-1.0, min(1.0, v.z / r)))
+            e1 = math.asin(max(-1.0, min(0.95, (v.z + need) / r)))
+            q = Quaternion(ax, -(e1 - e0))
+            if (q @ v).z < v.z:
+                q = Quaternion(ax, e1 - e0)
+            D[hd] = (q @ D[hd]).normalized()
+            tipv = q @ tipv
+            pn = q @ pn
         Q[fa] = D[ua].inverted() @ D[fa]
         Q[hd] = D[fa].inverted() @ D[hd]
 
@@ -1424,7 +1476,7 @@ def arm_rule(s, cap=False):
         # top of the deltoid (above the arm axis, near the joint) stays partly with the clavicle, so it does not
         # swing up and in when the arm drops from the bind; the armpit side still follows the arm.
         d = p - sh
-        t = 0.55 * sstep(0.005, 0.05, d.dot(up)) * sstep(0.13, 0.03, d.dot(ua))
+        t = 0.55 * sstep(0.005, 0.05, d.dot(up)) * sstep(0.10, 0.03, d.dot(ua))
         w = out.get("upper_arm." + s, 0.0) * t
         if w > 0:
             out["upper_arm." + s] -= w

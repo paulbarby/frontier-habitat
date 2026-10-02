@@ -22,6 +22,7 @@ import npc_common as N          # noqa: E402
 import npc_anims as A           # noqa: E402
 import npc_visitors as V        # noqa: E402
 
+N.GUARD_PALM, N.GUARD_BACK, N.GUARD_CLEAR = 0.070, 0.035, 0.020   # the suit glove (the indoor file shares the suit's clips)
 ANIMS_JSON = os.path.join(N.MODEL_DIR, "astronaut_anims.json")
 BUDGET = {"suit": 7000, "indoor": 6000}
 

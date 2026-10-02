@@ -249,9 +249,10 @@ void fragment() {
 		// Frost on the up-facing ground and rime in the hollows; bare rock on the steep faces.
 		float fup = smoothstep(0.62, 0.92, n.y);
 		float fn = vnoise3(wpos * 0.31) * 0.55 + vnoise3(wpos * 1.45) * 0.3 + vnoise3(wpos * 5.2) * 0.15;
-		float fk = fup * smoothstep(0.36, 0.62, fn + 0.18 * frost) * frost;
-		fk = max(fk, smoothstep(0.75, 0.98, n.y) * 0.35 * frost);
-		alb = mix(alb, vec3(0.80, 0.86, 0.93), clamp(fk, 0.0, 0.85));
+		float fk = fup * smoothstep(0.45, 0.7, fn + 0.12 * frost) * frost;
+		// a thin rime everywhere flat, thicker frost patches in the noise; ice glints (low roughness)
+		fk = max(fk, smoothstep(0.8, 0.98, n.y) * 0.22 * frost);
+		alb = mix(alb, vec3(0.80, 0.86, 0.93), clamp(fk, 0.0, 0.8));
 		rough = mix(rough, 0.42, fk * 0.6);
 		nxy *= 1.0 - fk * 0.55;
 	}

@@ -151,6 +151,11 @@ def m_printer(n, s, compact=False):
     bbox(n, -0.6, 0.6, -0.4, 0.4, F + 0.5, F + 0.90, "Hull", bevel=0.03)
 
 
+ZONE = {"mine": "Ore", "refinery": "Copper", "polymer_plant": "PlantDark", "workshop": "WaterBlue",
+        "glassworks": "CushionLight", "electronics_fab": "Hull", "fabricator": "Cushion", "steel_mill": "SignalRed",
+        "titanium_smelter": "Metal", "ceramics_kiln": "Wood", "carbon_works": "SecBlack", "battery_plant": "Plant",
+        "parts_works": "Hazard", "magnet_works": "Fabric", "superconductor_lab": "Frost",
+        "metamaterial_foundry": "Accent"}
 MACHINES = {"mine": m_mine, "refinery": m_refinery, "polymer_plant": m_polymer, "workshop": m_workshop,
             "glassworks": m_glassworks, "electronics_fab": m_litho, "fabricator": m_printer}
 
@@ -436,9 +441,16 @@ def industry(rm):
     rm.v3_info = dict(machine_scale=round(sc, 2), compact=compact)
     with at(n, mx, my, 0.0):
         run_machine(n, tid, s, compact, sc)
+        import interior_heroes as _HE          # round 2: each industry type's own silhouette
+        _HE.hero(rm, n, tid, mx, my, vs)
     cxm, cym = mx + (x0 + x1) / 2, my + (y0 + y1) / 2
     with at(n, cxm, cym, 0.0):
         FU.hazard_rect(n, (x1 - x0) / 2, (y1 - y0) / 2)
+        # round 2: each type's own floor colour inside the hazard line (identity from the follow camera and above)
+        zc = ZONE.get(tid)
+        if zc:
+            plate_z(n, F + 0.003, -(x1 - x0) / 2 + 0.10, (x1 - x0) / 2 - 0.10, -(y1 - y0) / 2 + 0.10,
+                    (y1 - y0) / 2 - 0.10, zc)
     plan.rect(cxm, cym, (x1 - x0) / 2, (y1 - y0) / 2, 0.0, tag="machine")
     cx = mx + x1 + line_d - 0.45
     ys = [(j - (nw - 1) / 2) * span for j in range(nw)]

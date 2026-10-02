@@ -829,3 +829,48 @@ dome_frame, dome_glass, fitout). Roles: `security` ("Security officer"), `child`
   are unchanged.
 - `showcase_v5.fhsave` rebuilt (134 people, 0 deaths, calm, ledger {}).
 - Checked on this build: test_ships_ui (pad active and powered: PASS), test_v5_people, test_v5_orders, test_rag: 0 failed.
+
+## 2026-10-02 (later) - API for V5_DESIGN section 16 (idle talk, innuendo, parties) and section 17 (HR). STUBS FIRST.
+
+Names below are final. The first build returns the shapes with empty lists; the real behaviour follows in the next
+hours (I will append "live" lines here). Everything is simulation state in `state.v5` (schema stays 6; old saves get
+empty records on load). All text is plain STE-style English; innuendo text is never explicit.
+
+**Requests tab: three new kinds** in `sim.relations.requests()` rows (same row as today: `{id, kind, agent, other,
+ship, tick, text}`) plus: `options: [{id, text, effect}]` (what each answer does, shown BEFORE confirming),
+`expires` (tick the request lapses, -1 none), `reason` (short), `place_choices: [{building, name, cost}]` (party only).
+Answer with the existing command `answer_request {id, answer: <option id>, place?: building id}`.
+- `party_offer` (a celebration is a reason for a party). options `throw` (place from `place_choices`; needs the
+  drinks and snacks in `cost`), `skip`. If nobody answers by `expires`, a small automatic gathering happens at no cost.
+- `hr_complaint` (only with an active, staffed HR office). options depend on the category: `mediate`, `move_home`,
+  `change_job`, `leisure_day`, `dismiss`, `leave_to_hr` (HR tries by itself over time). Each has `effect` text.
+- `hr_transfer` (a very unhappy person asks to go off world). options `approve` (leaves on the next ship with seats),
+  `refuse` (satisfaction and attitude cost; the request can come back; many refusals raise unrest).
+
+**Parties.** `sim.party.offers() -> Array` (the party_offer rows); `sim.party.parties() -> Array` of `{id, base,
+building, pos (Vector2), reason {kind, who [agent ids], text}, start, end (ticks), phase ("gathering"|"on"|"over"),
+guests [ids], honoured [ids], score {fun, attendance, drama}, drama [{kind, big (bool), text, tick, actors [ids]}]}`;
+`sim.party.party_of(agent_id) -> int` (-1 none); `sim.party.events(n = 20) -> Array` of the last celebration events
+`{id, kind, tick, who [ids], text, party}`; kinds: birthday, promotion, goal, medal, structure, wedding, adoption, record.
+Commands: `throw_party {building, hours (1..3), reason?: event id}` -> `{ok, code, text, party}` (the player may also
+throw one without an offer; same cost); `set_option {key: "cheeky", value: bool}` (the setting "Cheeky dialogue", on by
+default; `sim.cheeky() -> bool`; also `options.cheeky` in `new_game`). Debug (tests): `celebrate {kind, agent}`.
+Log codes (the watchers table): `party_offer` (warn, home), `party_start`, `party_end`, `party_drama` (info, small),
+`party_drama_big` (warn, popup once), `birthday`, `celebration`. Agent field `party` (id or -1) for the HUD.
+
+**Talk rows** (`sim.social.talks()`) gain `heat` (0 none, 1 flirt, 2 cheeky, 3 very cheeky) and `idle` (true when the
+talk began with one person walking over to an idle neighbour). New topic ids: `joke`, `rivalry`, `flirt`,
+`innuendo`, `awkward` (one is not interested), `party_talk`, `toast`, `hr_praise`, `hr_gossip`. With
+`cheeky` off, `innuendo` is never chosen (flirt lines instead).
+
+**HR** (`sim.hr`): `active(base = -1) -> bool` (an HR office is active, powered AND has a staffed desk);
+`complaints() -> Array` `{id, agent, category ("home"|"punishment"|"feud"|"overwork"|"condition"|"pay"), target {kind,
+id, name}, tick, state ("open"|"hr_working"|"resolved"), text, options [...]}`; `transfers() -> Array` `{id, agent,
+reason, tick, department}`; `survey(base = -1) -> Dictionary` the last feedback round `{tick, day, base, depts [{dept,
+n, sat, trend}], top3 [{category, count}], morale_trend}` ({} before the first); `reputation(agent_id) ->
+{public, private, officer (bool)}` (public 0..100 as people say to the officer's face; private -100..100 behind the
+back); `offices(base = -1) -> Array` of structure ids. Role id `hr` ("HR officer"; set with `set_role`; department
+"hr", skill Social). Structure `hr_office` (Civic tab, research civic_1; sizes S/M/L = 1/2/3 officers). Log codes:
+`hr_complaint`, `hr_resolved`, `hr_survey`, `hr_transfer_request`, `hr_transfer_approved`, `hr_transfer_refused`.
+Without an active staffed office none of these exist: `complaints()` and `transfers()` are empty and no request
+kinds `hr_*` are raised.

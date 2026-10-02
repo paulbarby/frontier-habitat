@@ -41,14 +41,15 @@ PAIRS = {
                       side_offset_m=0.0, hand_contact=True,
                       note="right hands meet at (0.40, 0, 1.00) from A; prop.R of A and B meet"),
     "kiss_brief": dict(clip_a="kiss_brief", clip_b="kiss_brief", distance_m=0.53, facing_deg=180.0, sync_s=0.0,
-                       side_offset_m=0.0, note="adults only; faces meet 0.6-1.2 s, no more"),
+                       side_offset_m=0.0, hand_contact=True,
+                       note="adults only; faces meet 0.6-1.2 s, no more; hands rest on the partner's upper arms"),
     "hold_hands_walk": dict(clip_a="hold_hands_walk", clip_b="hold_hands_walk_r", distance_m=0.0, facing_deg=0.0,
-                            sync_s=0.0, side_offset_m=0.50, hand_contact=True, note="B walks at A's left (+Y), the same phase; A's left "
+                            sync_s=0.0, side_offset_m=0.64, hand_contact=True, note="B walks at A's left (+Y), the same phase; A's left "
                             "hand holds B's right hand; move both along +X at the walk speed"),
     "slap": dict(clip_a="slap", clip_b="hit_react", distance_m=0.60, facing_deg=180.0, sync_s=0.47,
-                 side_offset_m=0.0, note="contact at 0.92 s (A); B plays hit_react 0.47 s later (its hit at 0.45 s)"),
+                 side_offset_m=0.0, hand_contact=True, note="contact at 0.92 s (A); B plays hit_react 0.47 s later (its hit at 0.45 s)"),
     "punch": dict(clip_a="punch", clip_b="hit_react", distance_m=0.70, facing_deg=180.0, sync_s=0.27,
-                  side_offset_m=0.0, note="contact at 0.72 s (A); B plays hit_react 0.27 s later (its hit at 0.45 s)"),
+                  side_offset_m=0.0, hand_contact=True, note="contact at 0.72 s (A); B plays hit_react 0.27 s later (its hit at 0.45 s)"),
     "escort": dict(clip_a="escort_walk", clip_b="handcuffed_walk", distance_m=0.0, facing_deg=0.0, sync_s=0.0,
                    side_offset_m=0.45, hand_contact=True, note="the prisoner B walks at the escort A's left (+Y), the same phase; A's "
                    "left hand holds B's right upper arm"),
@@ -245,7 +246,8 @@ def kiss_brief_keys():
     for s in ("L", "R"):
         # hands rest on the partner's upper arms, fingers down along them (2026-10-02: they pointed inward, the
         # fingertips went 3 cm into the partner's chest)
-        set_arm_ik(K, s, (0.310, 0.200, 1.220), (0.25, -0.05, -0.95), (1.0, 0.0, 0.0), w=1.0, pole=-25.0)
+        # (2026-10-02: 3.5 cm further out and 1 cm back: the forearms touched the partner's arms 2-3 cm deep)
+        set_arm_ik(K, s, (0.300, 0.235, 1.220), (0.25, 0.05, -0.95), (1.0, 0.0, 0.0), w=1.0, pole=-25.0)
     M = Pose(K)
     M.update({"hips.x": 0.010, "spine.ry": 4.0, "neck.ry": 4.0, "head.ry": 3.0})
     return _ks([(0.0, S, {"hold": True}), (0.60, add(S, hips__x=0.015, spine__ry=2.0)), (0.95, M), (1.50, M),
@@ -261,7 +263,8 @@ def _gait_with(upper):
 def hold_hands_upper(phi, P):
     A._walk_upper(phi, P, lean=0.8)
     sw = cos(TAU * (phi - 0.03))
-    set_arm_ik(P, "L", (0.020 + 0.035 * sw, 0.215, 0.880), (0.5, 0.35, -0.8), (0.0, 1.0, 0.0), w=1.0, pole=10.0)
+    # (2026-10-02: 6 cm further apart, the shoulders touched 2-3 cm deep; the hands still meet half way)
+    set_arm_ik(P, "L", (0.020 + 0.035 * sw, 0.290, 0.880), (0.5, 0.35, -0.8), (0.0, 1.0, 0.0), w=1.0, pole=10.0)
     P["head.aim"] = 0.6
     P["head.wz"] = 8.0
 
@@ -773,9 +776,12 @@ def sleep_turn_keys():
     hm = (hs + hu) * 0.5
     set_arm_ik(H, "L", (hm.x + HAND_OUT, hm.y, hm.z + HAND_LIFT), (0.6, -0.8, 0.0), (0.0, 0.0, -1.0), w=1.0, pole=0.0)
     elbow_to(H, "L", (1.0, 0.2, -0.3), 1.0)
+    for K in (SUP, H):                                  # (2026-10-02: wrists 160 deg on the back: stiff hands)
+        K["arm.L.stiff"] = K["arm.R.stiff"] = 1.0
+        K["hand.L.ry"] = K["hand.R.ry"] = -18.0
     SUP2 = add(SUP, chest__ry=-1.5, head__rz=-6.0)
     keys = [(0.0, S0, {"hold": True}), (1.2, H), (2.3, SUP), (4.4, SUP2), (5.6, H), (6.8, Pose(LIE), {"hold": True})]
-    return A.retime_keys(A.fk_keys(keys))
+    return A.retime_keys(A.fk_keys(A.bed_keys(keys)))
 
 
 def child_play_fn(n=120):

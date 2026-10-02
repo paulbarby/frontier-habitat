@@ -50,6 +50,7 @@ const CLOTH_COLS := ["2b3a55", "7a2e35", "55603a", "3a3d42", "2f6f6a", "b08a2e",
 const STRIPES := ["amber", "blue", "green", "red", "", "gold"]
 const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a", "c9d3e0", "c9d3e0"]
 
+const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
 const FPS := 30.0
 const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
 const FILES := {"suit": "res://assets/models/astronaut_suit.glb", "in": "res://assets/models/astronaut_indoor.glb"}
@@ -155,6 +156,10 @@ func setup(v, fixture: bool = false) -> void:
 	if not fixture:
 		for pv in people_variants():
 			variants.append("p_" + pv)
+		# LOD1 (ART-NPC: beyond 12 m, the same skeleton and bind, no clips: the LOD0 clips are shared)
+		for pv in people_variants():
+			if ResourceLoader.exists("res://assets/models/people_%s_lod1.glb" % pv):
+				variants.append("p_%s_lod1" % pv)
 	for variant in variants:
 		var lib: Dictionary = load_lib(variant, fixture)
 		status[variant] = String(lib.get("status", "missing"))
@@ -235,15 +240,20 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 		share = _libs["suit" + (":fixture" if fixture else "")]
 		if not bool(share.get("ok", false)):
 			share = null
+	if variant.ends_with("_lod1"):
+		share = load_lib(variant.trim_suffix("_lod1"), fixture)
+		if not bool(share.get("ok", false)):
+			share = null
 	_baking_people = people
 	var lib: Dictionary = bake(root, meta, share)
 	_baking_people = false
 	lib["people"] = people
 	if people and bool(lib.get("ok", false)):
-		lib["pvariant"] = variant.substr(2)
+		lib["pvariant"] = variant.substr(2).trim_suffix("_lod1")
+		lib["lod1"] = variant.ends_with("_lod1")
 		# UniformBase colour per outfit (mode 6), indexed by the outfit's idx.
 		var ub := PackedColorArray()
-		ub.resize(8)
+		ub.resize(16)
 		ub.fill(Color(1, 1, 1))
 		var ot: Dictionary = outfit_table(lib)
 		for oid in ot:
@@ -274,6 +284,23 @@ const VIS_FILES := {"suit": "res://assets/models/astronaut_visitor_suit.glb", "i
 const VIS_KINDS := ["trader", "tourist", "medical", "science", "inspector"]
 ## Look index v (ART-NPC visitors.looks) -> attachment kind index.
 const VIS_LOOK_KIND := [0, 1, 1, 1, 2, 3, 4]
+## The clips baked for a people library: the v3 set + every clip of people_manifest.json, but the mirrored
+## bed-side set, the turn in bed and the vehicle seat (not drawn on people; 2026-10-02: 1,334 texture rows less).
+const PEOPLE_SKIP := ["lie_enter_r", "sleep_r", "lie_exit_r", "sleep_turn", "drive_sit", "suit_swap"]
+static func _people_clips(meta: Dictionary) -> Array:
+	var out: Array = []
+	for c in ALL_CLIPS:
+		if not (c in PEOPLE_SKIP) and not (c in VEHICLE_CLIPS):
+			out.append(c)
+	var mc = meta.get("clips", {})
+	if mc is Dictionary:
+		var ks: Array = (mc as Dictionary).keys()
+		ks.sort()
+		for c in ks:
+			if not (String(c) in out) and not (String(c) in PEOPLE_SKIP) and not (String(c) in VEHICLE_CLIPS):
+				out.append(String(c))
+	return out
+
 static var _baking_variant := ""
 static var _baking_people := false
 static var _pman = null
@@ -477,7 +504,8 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 			anims[short] = player.get_animation(an)
 	var clips := {}
 	var missing: Array = []
-	for c in ALL_CLIPS:
+	var clip_list: Array = _people_clips(meta) if _baking_people else ALL_CLIPS
+	for c in clip_list:
 		# Each file family owns its clips (decided 2026-10-01, RENDER-to-ART-NPC.md): the vehicle clips
 		# are only in the astronaut files (people wear the suit outside); the V5 social clips are only in
 		# the people files (the astronaut `in` body is a fallback; resolve_loop maps them to near clips).
@@ -485,8 +513,10 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 			continue
 		if not anims.has(c):
 			missing.append(c)
-	if not anims.has("idle") or not anims.has("walk"):
+	if (not anims.has("idle") or not anims.has("walk")) and share == null:
 		return {"ok": false, "status": "no idle/walk clip (missing: %s)" % ", ".join(missing)}
+	if anims.is_empty():
+		missing = []
 	var mclips: Dictionary = meta.get("clips", {})
 	var reuse: bool = share != null and share.get("names", []) == names
 	if reuse:
@@ -500,7 +530,7 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 		clips = share["clips"]
 		rows_total = int(share["rows"])
 	else:
-		for c in ALL_CLIPS:
+		for c in clip_list:
 			if not anims.has(c):
 				continue
 			var a: Animation = anims[c]
@@ -1145,7 +1175,61 @@ func _floor_y(b: Dictionary) -> float:
 	var base: float = view.h(b["pos"].x, b["pos"].y) + 0.02
 	if meta != null:
 		base = (meta["xf"] as Transform3D).origin.y
+		# (a room drawn at a scale, e.g. an old save's 0.667 x model: its floor top is FLOOR_Z x scale up;
+		# the unscaled 0.14 m left people 4.7 cm in the air there, 2026-10-02)
+		var sc: float = float((meta.get("tpl", {}) as Dictionary).get("scale", 1.0))
+		# (a multi-storey building: its ground floor's top from the model; the dome's plaza is 0.30 m up)
+		var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
+		if nf > 1:
+			var tops: Array = _floor_tops(meta, nf)
+			if not tops.is_empty():
+				return base + float(tops[0]) * sc
+		return base + FLOOR_Z * sc
 	return base + FLOOR_Z
+
+## World y of the top of floor f of a multi-storey building, from its model's anchors (each floor's anchors
+## stand on its floor top: the heights that most anchors share, one per floor); SIM's height when the model
+## does not show the floors.
+func level_y(b: Dictionary, f: int, sim_h: float) -> float:
+	var meta = view.bmeta.get(int(b["id"]))
+	if meta == null:
+		return _floor_y(b) + sim_h
+	var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
+	var tops: Array = _floor_tops(meta, nf)
+	if f >= 0 and f < tops.size():
+		return (meta["xf"] as Transform3D).origin.y + float(tops[f]) * float((meta.get("tpl", {}) as Dictionary).get("scale", 1.0))
+	return _floor_y(b) + sim_h
+
+static func _floor_tops(meta: Dictionary, nf: int) -> Array:
+	if meta.has("floor_tops"):
+		return meta["floor_tops"]
+	var tpl: Dictionary = meta.get("tpl", {})
+	var hist := {}
+	for an in (tpl.get("anchors", {}) as Dictionary):
+		var yk: int = int(round((tpl["anchors"][an] as Transform3D).origin.y / 0.05))
+		hist[yk] = int(hist.get(yk, 0)) + 1
+	# clusters of neighbouring heights (within 0.25 m), weighted
+	var keys: Array = hist.keys()
+	keys.sort()
+	var cl: Array = []   # [count, y of the most common height]
+	for k in keys:
+		if not cl.is_empty() and k - int(cl[-1][2]) <= 5:
+			cl[-1][0] = int(cl[-1][0]) + int(hist[k])
+			if int(hist[k]) > int(cl[-1][3]):
+				cl[-1][1] = k * 0.05
+				cl[-1][3] = int(hist[k])
+			cl[-1][2] = k
+		else:
+			cl.append([int(hist[k]), k * 0.05, k, int(hist[k])])
+	cl.sort_custom(func(x, y): return int(x[0]) > int(y[0]))
+	var tops: Array = []
+	for c in cl.slice(0, nf):
+		tops.append(float(c[1]))
+	tops.sort()
+	if tops.size() < nf or tops.is_empty() or float(tops[0]) > 1.0:
+		tops = []
+	meta["floor_tops"] = tops
+	return tops
 
 ## The world stand point and facing of a furniture anchor, or {} when the room has none.
 func _anchor(use: Dictionary) -> Dictionary:
@@ -1161,11 +1245,13 @@ func _anchor(use: Dictionary) -> Dictionary:
 	var i: int = int(use.get("i", 0))
 	var nm := "Service"
 	match kind:
-		"bed": nm = "Bed_%d" % i
+		"bed", "child_bed": nm = "Bed_%d" % _bed_anchor(b, kind, i)
 		"seat": nm = "Seat_%d" % i
 		"work": nm = "Work_%d" % i
 		"stand": nm = "Stand_%d" % i
 	var floor_y: float = _floor_y(b) if b["kind"] != "exterior" else view.h(b["pos"].x, b["pos"].y) + 0.02
+	if i >= 0 and not anchors.has(nm) and kind != "service":
+		nm = _alt_anchor(bid, kind, i, nm)
 	if i >= 0 and anchors.has(nm) or kind == "service" and anchors.has(nm):
 		var xf: Transform3D = anchors[nm]
 		var local_y: float = xf.origin.y - (view.bmeta[bid]["xf"] as Transform3D).origin.y
@@ -1199,6 +1285,62 @@ func _anchor(use: Dictionary) -> Dictionary:
 	var face: Vector2 = (c - q).normalized()
 	return {"pos": Vector3(q.x, floor_y, q.y), "yaw": -atan2(face.y, face.x), "aisles": [], "found": false}
 
+## A structure whose anchors carry a venue or floor in their names (the super dome: Seat_<venue>_<k>,
+## Bed_<floor>_<unit>_<k>, Work_<venue>_<k>, Plaza_<k>): SIM's slot i of a kind -> the i-th of those
+## anchors (sorted, wrapping). It replaced the standing ring of "no Anchor_Seat_6" (2026-10-02).
+const ALT_PREFIX := {"seat": ["Seat_", "Bench_"], "bed": ["Bed_"], "child_bed": ["Bed_"], "work": ["Work_"], "stand": ["Stand_", "Plaza_", "Dance_"]}
+func _alt_anchor(bid: int, kind: String, i: int, nm: String) -> String:
+	var meta: Dictionary = view.bmeta[bid]
+	var b: Dictionary = sim.state["buildings"][bid]
+	# (on SIM's floor of that slot: the anchors between that floor's top and the next one's)
+	var f := 0
+	var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
+	if nf > 1 and sim.get("floors") != null:
+		f = int(sim.floors.slot_floor(b, kind, i))
+	var ck: String = "alt_%s_%d" % [kind, f]
+	if not meta.has(ck):
+		var tops: Array = _floor_tops(meta, nf) if nf > 1 else []
+		var lo: float = (float(tops[f]) - 0.3) if f < tops.size() else -INF
+		var hi: float = (float(tops[f + 1]) - 0.3) if f + 1 < tops.size() else INF
+		var lst: Array = []
+		var tpl_an: Dictionary = (meta.get("tpl", {}) as Dictionary).get("anchors", {})
+		for pre in ALT_PREFIX.get(kind, []):
+			for an in tpl_an:
+				if String(an).begins_with(pre):
+					var ly: float = (tpl_an[an] as Transform3D).origin.y
+					if ly >= lo and ly < hi:
+						lst.append(String(an))
+		lst.sort()
+		meta[ck] = lst
+	var l: Array = meta[ck]
+	return nm if l.is_empty() else String(l[i % l.size()])
+
+## SIM numbers adult beds and children's bunks separately (agents: "bed" = beds - child_beds, "child_bed");
+## the models number every bed of a unit together, unit by unit (ART-HAB: parents' beds, then the bunks:
+## Bed 4u .. 4u+3). Slot i of a kind -> the Bed_<n> anchor. Without children's bunks n = i.
+func _bed_anchor(b: Dictionary, kind: String, i: int) -> int:
+	var fl = sim.get("floors")
+	if i < 0 or fl == null or not fl.has_method("units"):
+		return i
+	var us: Array = fl.units(b)
+	var kids := false
+	for u in us:
+		if int(u.get("child_beds", 0)) > 0:
+			kids = true
+	if not kids:
+		return i
+	var base := 0
+	var acc := 0
+	for u in us:
+		var na: int = int(u["beds"])
+		var nc: int = int(u.get("child_beds", 0))
+		var n: int = na if kind == "bed" else nc
+		if i < acc + n:
+			return base + (i - acc) + (0 if kind == "bed" else na)
+		acc += n
+		base += na + nc
+	return i
+
 func _goal_for(use: Dictionary, b: Dictionary, found: bool) -> Array:
 	var kind: String = String(use.get("kind", ""))
 	var act: String = String(use.get("act", "idle"))
@@ -1210,7 +1352,7 @@ func _goal_for(use: Dictionary, b: Dictionary, found: bool) -> Array:
 		var l0: String = "work_console" if kind == "work" else ("talk" if act == "talk" else "idle_look")
 		return ["stand", l0]
 	match kind:
-		"bed":
+		"bed", "child_bed":
 			return ["lie", "sleep"]
 		"seat":
 			return ["sit", {"eat": "sit_eat", "work": "sit_type"}.get(act, "sit_idle")]
@@ -1239,12 +1381,12 @@ func _people_key(a: Dictionary) -> String:
 		return _pkey[id]
 	var k := "in"
 	var pp = sim.get("people") if sim != null else null
-	if pp != null and String(a.get("kind", "")) != "child" and libs.has("in"):
+	if pp != null and libs.has("in"):
 		var idn: Dictionary = pp.identity(a)
 		var v: String = String(idn.get("variant", ""))
 		if libs.has("p_" + v):
 			k = "p_" + v
-		elif not bool(idn.get("child", false)):
+		elif String(a.get("kind", "")) != "child" and not bool(idn.get("child", false)):
 			var keys: Array = libs.keys()
 			keys.sort()
 			for lk in keys:
@@ -1314,13 +1456,13 @@ static func outfit_table(lib: Dictionary) -> Dictionary:
 			var rgb = e.get("base_rgb", null)
 			if rgb is Array and (rgb as Array).size() >= 3:
 				base = Color(float(rgb[0]), float(rgb[1]), float(rgb[2])).srgb_to_linear()
-		if have.has(mesh) and t.size() < 8:
+		if have.has(mesh) and t.size() < 16:
 			t[String(id)] = {"mesh": mesh, "addons": adds, "idx": t.size(), "base": base}
 	if t.is_empty():
 		var ms: Array = have.keys()
 		ms.sort()
 		for m in ms:
-			if t.size() < 8:
+			if t.size() < 16:
 				t[m] = {"mesh": m, "addons": [], "idx": t.size(), "base": Color(1, 1, 1)}
 	lib["outfit_table"] = t
 	return t
@@ -1475,6 +1617,12 @@ func sync(delta: float) -> bool:
 			agents[id].erase("var_hold")
 		# V5: indoors the body comes from the person's own people library when it exists.
 		var dk: String = _people_key(a) if variant == "in" else variant
+		# LOD1 beyond LOD1_DIST m from the camera (hysteresis 1 m; never the person in the follow view)
+		if dk.begins_with("p_") and libs.has(dk + "_lod1") and agents.has(id) and int(id) != _follow_id and _cam_pos != Vector3.INF:
+			var cdl: float = (agents[id]["pos"] as Vector3).distance_to(_cam_pos)
+			var was: bool = String(agents[id].get("dk", "")).ends_with("_lod1")
+			if cdl > LOD1_DIST + (-1.0 if was else 1.0):
+				dk += "_lod1"
 		var lib: Dictionary = libs[dk]
 		if not agents.has(id):
 			agents[id] = _new_rec(a, lib)
@@ -1484,6 +1632,7 @@ func sync(delta: float) -> bool:
 		if String(rec.get("dk", "")) != dk:
 			if rec.has("dk"):
 				_rebind(rec, lib)
+				rec.erase("plook")
 			rec["dk"] = dk
 		if bool(lib.get("people", false)):
 			_people_look(a, rec, lib)
@@ -1730,11 +1879,15 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 			y = _floor_y(bb)
 			if bb["def"] == "lander":
 				y += 1.6
-			# V5 §7 multi-storey buildings: the person walks on their floor (SIM floors.agent_floor).
+			# V5 §7 multi-storey buildings: the person walks on their floor (SIM floors.agent_floor), at that
+			# floor's top in the MODEL (the super dome's floors are 5.0 / 4.2 m apart, SIM's floor_height is 6:
+			# people on floor 4 stood 6.2 m above it; the plaza is 0.30 m up, not 0.14; 2026-10-02).
 			if int(sim.bdef(bb["def"]).get("floors", 1)) > 1 and sim.get("floors") != null:
 				var fa: Dictionary = sim.floors.agent_floor(a)
 				if int(fa.get("building", -1)) == bld:
-					y += float(fa.get("height", 0.0))
+					y = level_y(bb, int(fa.get("floor", 0)), float(fa.get("height", 0.0)))
+				else:
+					y = level_y(bb, 0, 0.0)
 		else:
 			y = view.h(pos.x, pos.y) + 0.05 + FLOOR_Z
 	var spread := Vector3(sin(float(a["id"]) * 2.4), 0, cos(float(a["id"]) * 2.4)) * (0.35 if inside else 0.2)
@@ -1967,6 +2120,31 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 			if not dead and sm.settled_in("stand") and float(rec["speed"]) < 0.2 and rec["mode"] == "follow":
 				sm.play_oneshot("cheer")
 			rec["cheer_in"] = -1.0
+	# V5 shows (SIM 2026-10-01, sim.people.action): a fight, a dance (the Konami egg too), an escort, a
+	# class, a venue act. A stand or sit loop replaces the goal's loop in the same pose (a walking body
+	# keeps walking); the cuffed and escort walks replace the walk cycle; fall_down plays once and holds
+	# until the action ends (then get_up). Clips of the stool, bunk, lounger and water poses are not
+	# drawn yet (no enter / exit clips for those poses).
+	var act: String = ""
+	if not dead and bool(lib.get("people", false)):
+		act = _action_cached(a, rec)
+		if float(rec.get("egg_until", -1.0)) > view._time:
+			act = "dance_c"
+	sm.walk_override = act if act in WALK_ACTS and sm.has(act) else ""
+	if act == "fall_down" and sm.has("fall_down"):
+		if not bool(rec.get("knocked", false)):
+			rec["knocked"] = true
+			sm.play_oneshot("fall_down")
+	elif bool(rec.get("knocked", false)):
+		rec["knocked"] = false
+		sm.revive()
+	elif act != "" and sm.has(act) and not (act in WALK_ACTS) and not (act in ACT_UNREACHED):
+		var ap: String = String(ACT_POSE.get(act, "stand"))
+		if goal[0] == ap and (goal[1] != "loco" or float(rec["speed"]) < 0.2):
+			goal = [ap, act]
+		elif ap == "stand" and goal[1] == "loco" and float(rec["speed"]) < 0.2:
+			goal = ["stand", act]
+	rec["act"] = act
 	# Pose machine.
 	if dead:
 		if not bool(rec["dead"]):
@@ -1985,6 +2163,35 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 	_prof_mark("pose")
 	_sync_crate(rec, lib, cargo, dead)
 	_prof_mark("crate")
+
+const WALK_ACTS := ["handcuffed_walk", "escort_walk"]
+const ACT_POSE := {"sit_class": "sit", "sit_bench": "sit"}
+const ACT_UNREACHED := ["drink_bar", "sit_bar_stool", "sleep_cell", "lounge_pool", "swim"]
+
+## sim.people.action(a), asked once per simulation tick per person (it walks the plan and the venues).
+func _action_cached(a: Dictionary, rec: Dictionary) -> String:
+	var tk: int = int(sim.state["tick"])
+	if int(rec.get("act_tick", -1)) == tk:
+		return String(rec.get("act_v", ""))
+	var pp = sim.get("people")
+	var v: String = String(pp.action(a)) if pp != null and pp.has_method("action") else ""
+	rec["act_tick"] = tk
+	rec["act_v"] = v
+	return v
+
+## The Konami dance (UI calls view.egg_dance, V5 4.5): the person and everyone within 6 m indoors dance
+## for 12 s at once (SIM's own "dance" mod follows on its next tick).
+func egg_dance(id: int) -> int:
+	if not agents.has(id):
+		return 0
+	var c: Vector3 = agents[id]["pos"]
+	var n := 0
+	for k in agents:
+		var r: Dictionary = agents[k]
+		if String(r.get("var", "")) == "in" and (r["pos"] as Vector3).distance_to(c) < 6.0:
+			r["egg_until"] = view._time + 12.0
+			n += 1
+	return n
 
 ## Turn with easing, at most 300 deg/s of GAME time (V3_1 §4.1): facing never snaps.
 func _turn(y0: float, y1: float, dt: float) -> float:

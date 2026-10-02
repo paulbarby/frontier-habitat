@@ -1599,6 +1599,9 @@ def ao_sets_for(objs):
     for d in decals:
         src = d.rsplit("_", 1)[-1] if d.startswith("Decal_") else "Roof"
         out[d] = tuple(AO_SETS.get(src, AO_SETS["Base"])) + walls + (d,)
+    for c in objs:                           # 5.0 round 2: the inner ceiling shades with the roof and the walls
+        if c.startswith("RoofCeil"):
+            out[c] = ("Base", "Roof", c) + walls
     for k, names in floors.items():         # a floor shades itself (its slab, walls, furniture), nothing else
         for n in names:
             out[n] = tuple(sorted(names))

@@ -31,7 +31,7 @@ func tick_second() -> void:
 ## construction, and each part indexes the board again (the state moved between the parts).
 func tick_part(part: int) -> void:
 	if part != 0:
-		_index()
+		_index(part == 1)
 	match part:
 		0:
 			_expire()
@@ -39,11 +39,12 @@ func tick_part(part: int) -> void:
 			# Machines take their inputs before plans reserve the rest: a factory that waits for
 			# steel while every unit is promised to construction sites makes no more steel.
 			_gen_machine_inputs()
+		1:
 			# V3: repairs, breach seals and maintenance take their parts before construction plans
-			# reserve the rest (a cracked corridor must not wait for a new solar array).
+			# reserve the rest (a cracked corridor must not wait for a new solar array). They open this
+			# part (they closed part 0 before: part 0 was 5-7 ms, part 1 1.3 ms; worst tick budget).
 			_gen_repair()
 			_gen_hazard_work()
-		1:
 			_gen_research()
 			_gen_medical()
 			# V3: the Meridian's parts are reserved before ordinary construction and upgrades
@@ -56,8 +57,8 @@ func tick_part(part: int) -> void:
 			_gen_dining()
 			_gen_venues()
 			_gen_trade()
-		2:
 			_gen_water_fill()
+		2:
 			_gen_clearing()
 			_gen_operate()
 			_gen_tend()
@@ -65,7 +66,9 @@ func tick_part(part: int) -> void:
 			# Every 10 s.
 			if (int(sim.state["tick"]) / int(sim.bal["tick_hz"])) % 10 == 0:
 				_clean_piles()
-func _index() -> void:
+## full = false: no item-source index (_src_index); part 2 never calls find_source, so it skips the biggest
+## part of the rebuild (about a third of it).
+func _index(full: bool = true) -> void:
 	_inbound = {}
 	_open_hauls = {}
 	_count = {}
@@ -102,6 +105,8 @@ func _index() -> void:
 	for inv_id in invs:
 		var inv: Dictionary = invs[inv_id]
 		var role: String = inv["role"]
+		if not full and role != "pile":
+			continue
 		if role != "pile" and role != "out" and role != "store":
 			continue
 		# Meteor fragments beyond suit range are nobody's source until an airlock is near.
@@ -111,6 +116,8 @@ func _index() -> void:
 			if sim.agents.nearest_air_metres(inv["pos"]) > reach:
 				_far_piles[inv_id] = true
 				continue
+		if not full:
+			continue
 		for r in inv["items"]:
 			if not _src_index.has(r):
 				_src_index[r] = []

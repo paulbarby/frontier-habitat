@@ -1096,7 +1096,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
     import people_anims as PA
     if not PA_DEFAULTS:
         PA_DEFAULTS.update(LIE_LIFT=PA.LIE_LIFT, SEAT_DROP=PA.SEAT_DROP, STOOL_ADJ=PA.STOOL_ADJ, KNEEL_ADJ=0.0,
-                           BED_ADJ=0.0, BED_BACK=0.0)
+                           BED_ADJ=0.0, BED_BACK=0.0, BED_ROLL=0.0)
     # the torso vertices (strongest weight on hips / spine / chest) of the first object: the bed contact
     # (2026-10-02: the thighs and the other outfits too: m2 / m3 lay 1-2.5 cm in the mattress at the bottom hip)
     bed_obs = [o for o in (feet_obs or obs[:1]) if o.name.split(".")[0] in ("Outfit_uniform", "Outfit_school",
@@ -1142,6 +1142,27 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                     lows.append(float(tc[m_, 2].min()))
             if lows:
                 PA.BED_BACK += (A_BED_Z + 0.004) - min(lows)
+            # half way through the roll (the frames where the pelvis is 45 deg over): the lowest point over the frames
+            # near the largest side x back mix, both rolls (2026-10-02: m1 sank 0.9 cm, m3 rose 0.5 cm too far)
+            rolls = []
+            for f_ in range(0, 330, 3):
+                P_ = st(f_)
+                qh = N.qeuler(P_.g("hips.rx"), P_.g("hips.ry"), P_.g("hips.rz"))
+                ws_ = (qh @ Vector((0.0, 1.0, 0.0))).z ** 2
+                wb_ = (qh @ Vector((1.0, 0.0, 0.0))).z ** 2
+                if 4.0 * ws_ * wb_ > 0.6:
+                    rolls.append(f_)
+            if rolls:
+                lo_, hi_ = 9.0, 0.0
+                for f_ in rolls[::2]:
+                    tc = pose_eval(rig, solver, PA.retarget(st(f_), s, "sleep_turn"), bed_obs[:1])
+                    m_ = (tc[:, 2] > 0.35) & (np.abs(tc[:, 0] + 0.55) < 0.45)
+                    if m_.any():
+                        z_ = float(tc[m_, 2].min())
+                        lo_, hi_ = min(lo_, z_), max(hi_, z_)
+                if lo_ < 9.0:
+                    # the band is -1.5..+3.5 cm: centre the roll's lowest points in it
+                    PA.BED_ROLL += (A_BED_Z + 0.010) - 0.5 * (lo_ + hi_)
         co = pose_eval(rig, solver, PA.retarget(clips["repair_kneel"](0), s, "repair_kneel"), obs)
         PA.KNEEL_ADJ += 0.004 - co[:, 2].min()
         co = pose_eval(rig, solver, PA.retarget(clips["sit_idle"](0), s, "sit_idle"), obs)
@@ -1158,7 +1179,7 @@ def calibrate_contacts(rig, solver, s, obs, feet_obs=None):
                     tuple(round(x, 3) for x in rig.pose.bones["hips"].location)))
             PA.STOOL_ADJ += 0.762 - co[m, 2].min()
     N.reset_pose(rig)
-    print("  contacts: BED_BACK %.3f" % PA.BED_BACK)
+    print("  contacts: BED_BACK %.3f  BED_ROLL %.3f" % (PA.BED_BACK, PA.BED_ROLL))
     print("  contacts: LIE_LIFT %.3f  BED_ADJ %.3f  SEAT_DROP %.3f  STOOL_ADJ %.3f  KNEEL_ADJ %.3f  FOOT_DZ %.3f" % (
         PA.LIE_LIFT, PA.BED_ADJ, PA.SEAT_DROP, PA.STOOL_ADJ, PA.KNEEL_ADJ, PA.FOOT_DZ))
 

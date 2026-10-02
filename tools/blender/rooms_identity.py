@@ -108,6 +108,19 @@ def _crate():
     return [[o, i], [bar], [bar2]]
 
 
+def _hr():
+    """5.0 HR office: a speech bubble with a heart cut out of it ("we are listening")."""
+    out = []
+    for k in range(24):
+        t = 2 * pi * k / 24
+        if k == 16:
+            out.append((-0.50, -0.80))            # the bubble's tail
+            continue
+        out.append((0.74 * cos(t), 0.14 + 0.54 * sin(t)))
+    heart = [(0.50 * x, 0.50 * y + 0.12) for (x, y) in _heart()[0][0]]
+    return [[out, list(reversed(heart))]]
+
+
 ICONS = {
     "housing": [[[(-0.62, -0.66), (-0.16, -0.66), (-0.16, -0.20), (0.16, -0.20), (0.16, -0.66), (0.62, -0.66),
                   (0.62, 0.12), (0.0, 0.74), (-0.62, 0.12)]],
@@ -142,12 +155,13 @@ ICONS = {
     # 5.0: civic (security office, jail): a shield with a bar
     "civic": [[[(-0.62, 0.62), (-0.62, -0.05), (0.0, -0.78), (0.62, -0.05), (0.62, 0.62), (0.0, 0.76)],
                [(-0.11, -0.46), (0.11, -0.46), (0.11, 0.46), (-0.11, 0.46)]]],
+    "hr": _hr(),
     "life_support": _drop(),
     "logistics": _crate(),
     "utilities": [[[(0.10, 0.78), (-0.42, -0.06), (-0.04, -0.06), (-0.18, -0.78), (0.44, 0.10), (0.04, 0.10),
                     (0.22, 0.78)]]],
 }
-ICON_MAT = {"security": "SignalRedGlow", "jail": "PrisonOrangeGlow", "shop": "Light"}   # critic 37: bright bag      # security red, jail amber (critic round 33)
+ICON_MAT = {"security": "SignalRedGlow", "jail": "PrisonOrangeGlow", "shop": "Light", "hr": "Light"}   # critic 37: bright bag      # security red, jail amber (critic round 33)
 
 
 def _signed_area(loop):

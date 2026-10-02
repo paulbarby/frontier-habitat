@@ -15,6 +15,49 @@ const Persistence = preload("res://sim/persistence.gd")
 const HZ := 10
 const DAY_TICKS := 6000
 
+## Perf calibration (orchestrator decision 2026-10-02): this machine is shared (Blender and other Godot runs), so a
+## perf test measures a fixed GDScript workload before, between and after its windows and scales its times by
+## CALIB_QUIET_MS / the median reading. The workload is built like the load of the sim itself: dictionaries with
+## nested values read in a scattered order (a few MB, so cache and memory pressure from neighbours count), cut in 200
+## slices of about 2 ms; the reading is the MEDIAN slice, in ms for 1,000 accesses, the same statistic as the median
+## tick of a perf test. (A first version, the minimum of 7 small loops, read 40 ms under any load while the sim cost
+## rose 30-50 %: it found the quiet slices and the sim did not.) The factor never goes above 1.
+const CALIB_QUIET_MS := 0.75
+
+## [median, mean] slice time of the fixed workload (about 0.5 s of CPU), in ms for 1,000 accesses.
+static func calib_stats() -> Array:
+	var big := {}
+	for i in 6000:
+		big[i] = {"a": float(i), "b": Vector2(i, i * 2), "c": [i, i + 1, i + 2], "s": "x%d" % (i % 13), "t": {"u": i}}
+	var times: Array = []
+	var k := 12345
+	var acc := 0.0
+	for slice in 200:
+		var t0: int = Time.get_ticks_usec()
+		for r in 1000:
+			k = (k * 1103515245 + 12345) & 0x7fffffff
+			var e: Dictionary = big[k % 6000]
+			acc += float(e["a"]) * 0.5 + (e["b"] as Vector2).length() * 0.01 + float((e["c"] as Array)[1]) + float((e["t"] as Dictionary)["u"])
+			if String(e["s"]) == "x3":
+				e["a"] = float(e["a"]) + 0.001
+		times.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+	var sum := 0.0
+	for x in times:
+		sum += float(x)
+	times.sort()
+	return [float(times[times.size() / 2]), sum / float(times.size())]
+
+## The reading used for the scale: the MEAN slice (wall time, preemptions included, like a window of ticks).
+static func calib_ms() -> float:
+	return float(calib_stats()[1])
+
+## The scale factor from calibration readings: CALIB_QUIET_MS / median, at most 1.
+static func calib_factor(readings: Array) -> float:
+	var s: Array = readings.duplicate()
+	s.sort()
+	return minf(1.0, CALIB_QUIET_MS / float(s[s.size() / 2]))
+
+
 ## Offsets (metres from the lander) of the reference layout. Custom layouts reuse these
 ## places because the reference layout proves they are legal on every tutorial seed.
 ## The v3 slots x 1.5: rooms are 1.5 x the v3 radius since V4 (balance.layout_scale).

@@ -279,3 +279,21 @@ office and the jail keep their own materials. No change on your side.
   build `distillery_{s,m,l,xl}.glb` when you can and list its door angles in `content/door_blocked.json`.
 - Jail: the furniture `beds` are now the cells (2/4/8): SIM puts a prisoner on bed anchor i = your `Anchor_Cell_<i>`.
   The jail has a tap now (`tap: true`) - prisoners drink in the cell block; no model change needed.
+## 2026-10-02 - hr_office: furniture counts and anchors (V5_DESIGN section 17)
+
+Structure `hr_office` (Civic; research civic_1; metal 10, polymer 6, electronics 6; power 1, comfort class), sizes S/M/L
+(size_list [0, 1, 2]; radius [6, 7.5, 9.6]; occupants [4, 6, 10]). Style section 15.3: corporate-wellness satire,
+original names. Counts per size (S / M / L) and anchors:
+
+| item | S | M | L | anchor |
+|---|---|---|---|---|
+| reception desk, officer behind it (stand/sit) | 1 | 2 | 3 | `Anchor_Desk_<i>` |
+| interview room, two chairs facing | 1 | 1 | 2 | `Anchor_Interview_<i>_0`, `Anchor_Interview_<i>_1` (seated, facing) |
+| feedback kiosk ("AI-powered wellbeing kiosk": answers every complaint with a breathing exercise) | 1 | 1 | 2 | `Anchor_Kiosk_<i>` (stand) |
+| filing cabinets | 1 | 2 | 2 | `Anchor_Filing_<i>` |
+| queue spots for complainants | 3 | 4 | 6 | `Anchor_Queue_<i>` (stand, in a line) |
+| waiting chairs | 2 | 3 | 4 | `Anchor_Chair_<i>` (seated) |
+
+Décor (no anchor needed): a "Synergy" poster, a suggestion box with a padlock, a ficus, a sign "Your feelings are
+valid (pending review)". Door count as the other civic rooms. Furniture block in the content: `beds` 0, `seats`
+[4, 5, 8], `work_slots` [1, 2, 3], `stands` [4, 5, 8], `work_pose` "stand". Tell me if the anchor names differ.

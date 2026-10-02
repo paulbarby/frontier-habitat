@@ -165,7 +165,7 @@ def shop_counter(p, w=1.8, seed=0):
 
 def display_table(p, r=0.55, seed=0):
     """A round display table with gadgets (small boxes with screens) and gift boxes."""
-    FU.table_round(p, r=r, h=0.80, top="Hull", edge="Accent")
+    FU.table_round(p, r=r, h=0.80, top="Hull", edge="Accent", clutter=False)
     rng = random.Random(seed)
     for k in range(5):
         a = 72.0 * k + rng.uniform(-10, 10)

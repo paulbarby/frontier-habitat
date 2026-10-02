@@ -435,9 +435,16 @@ func follow_start(id: int) -> bool:
 	r.collide_fn = _follow_collide
 	if "slide_fn" in r:
 		r.slide_fn = follow_slide
+	if "occ_fn" in r:
+		r.occ_fn = follow_occluder
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
+
+## V5 4.5 (UI-to-RENDER 2026-09-29): the Konami dance for the person and their friends nearby. Returns how
+## many dance (the UI also submits the egg to SIM, whose "dance" mod keeps it going).
+func egg_dance(agent_id: int) -> int:
+	return npc.egg_dance(agent_id) if npc != null else 0
 
 func follow_stop() -> void:
 	var r = rig()
@@ -528,7 +535,7 @@ func _follow_collide(pivot: Vector3, eye: Vector3, margin: float = 0.3, point_on
 		rg.collide_smooth = false
 	if fb != null and fin:
 		var vols: Array = _follow_volumes(pivot, (eye - pivot).length() + 2.0 + knee)
-		if _vol_inside(vols, fb as Vector3, 0.0):
+		if _vol_inside(vols, fb as Vector3, -FOLLOW_BODY_SLACK):
 			if knee > 0.0:
 				# Indoors with a knee: the soft wall rule (2026-10-02). One smooth function of the free eye, no
 				# springs, no hard clamp after it: see _vol_soft.
@@ -652,6 +659,8 @@ static func _vol_project(vols: Array, p: Vector3, margin: float) -> Vector3:
 
 const FOLLOW_UNION_TAU := 0.2  # m: smoothing of the union of the volumes (log-sum-exp; the guard: weighted mean)
 const FOLLOW_TARGET_TAU := 0.4 # m: the camera target's union (weighted mean): a wider fillet where a corridor meets a room
+const FOLLOW_BODY_SLACK := 0.5 # m: the person counts as inside the rooms and corridors up to this far out (a doorway
+								# gap between a room and its corridor turned the indoor wall rule off for a frame: 0.6 m camera jumps)
 const FOLLOW_BOOM_IN := 1.5    # m: an eye this far outside the walls is drawn in to 35 % of the boom first
 ## The soft wall rule (2026-10-02; the indoor camera jerk regression: springs after a hard projection made a kinked
 ## path). Depth field H(q) = log-sum-exp over the rooms and corridors of their depth inside a margin: R - m_room
@@ -687,6 +696,67 @@ func _vol_soft(vols: Array, p: Vector3, knee: float, m_room: float, m_tube: floa
 		return _vol_project(vols, p, maxf(m_room, 0.05))
 	return Vector3(cur.x, p.y, cur.y)
 
+## Sight-line occluders (orchestrator 2026-10-02: a dome pillar between the camera and the person, drawn as a
+## dithered band over the body). The lines from the person's chest (1.25 m) and head (1.6 m) to the eye are
+## walked through the occluder grids (fx_occ) of the structures round the person, from 0.5 m off the body.
+## Returns how far from the chest the eye may stand (the first occluder minus FOLLOW_OCC_GAP), INF when the
+## view is clear. The camera rig pulls the eye in to that distance (camera_rig, SH_W_OCC_*).
+const FOLLOW_OCC_GAP := 0.25
+const FOLLOW_OCC_NEAR := 0.5   # m: the person's own space (a kiosk canopy over them, a shelf beside them) is not tested
+const Occ = preload("res://presentation/fx_occ.gd")
+var follow_occ_n := 0        # measurement: occluded lines in the last call
+var follow_occ_at := Vector3.ZERO  # measurement: the last occluder point (world)
+func follow_occluder(eye: Vector3) -> float:
+	follow_occ_n = 0
+	if follow_id < 0:
+		return INF
+	var fb = agent_world_pos(follow_id)
+	if fb == null:
+		return INF
+	var body: Vector3 = fb
+	var blds: Array = []
+	var b2 := Vector2(body.x, body.z)
+	for bid in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(bid, {})
+		if b.is_empty() or not (b["kind"] in ["room", "exterior", "special"]):
+			continue
+		if (b["pos"] as Vector2).distance_to(b2) > float(b["radius"]) + 4.0:
+			continue
+		var meta: Dictionary = bmeta[bid]
+		var tpl: Dictionary = meta.get("tpl", {})
+		if tpl.is_empty():
+			continue
+		var g: Dictionary = Occ.grid_of(tpl)
+		if g.is_empty():
+			continue
+		var sc: float = float(tpl.get("scale", 1.0))
+		blds.append([g, ((meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Vector3(sc, sc, sc)), Vector3.ZERO)).affine_inverse()])
+	if blds.is_empty():
+		return INF
+	var best := INF
+	for hgt in [1.25, 1.6]:
+		var a: Vector3 = body + Vector3(0.0, hgt, 0.0)
+		var d: Vector3 = eye - a
+		var l: float = d.length()
+		if l < 0.4:
+			continue
+		var u: Vector3 = d / l
+		var s0 := FOLLOW_OCC_NEAR
+		while s0 < l:
+			var q: Vector3 = a + u * s0
+			var hit := false
+			for e in blds:
+				if Occ.blocked(e[0], (e[1] as Transform3D) * q):
+					hit = true
+					break
+			if hit:
+				follow_occ_n += 1
+				follow_occ_at = q
+				best = minf(best, s0 - FOLLOW_OCC_GAP)
+				break
+			s0 += 0.08
+	return best
+
 ## The indoor guard as a SLIDE (2026-10-02): from last frame's eye `from` (inside the rooms and corridors) toward
 ## the sprung eye `to` in 4 cm steps; a step that leaves the walls (margin 0.05 m) is pushed back onto them along
 ## the nearest volume's normal. The eye moves continuously by construction. The projection of the sprung eye
@@ -697,7 +767,7 @@ func follow_slide(shoulder: Vector3, from: Vector3, to: Vector3) -> Vector3:
 	if fb == null or String(sim.state["agents"].get(follow_id, {}).get("where", "out")) == "out":
 		return to
 	var vols: Array = _follow_volumes(shoulder, (to - shoulder).length() + 2.5)
-	if not _vol_inside(vols, fb as Vector3, 0.0):
+	if not _vol_inside(vols, fb as Vector3, -FOLLOW_BODY_SLACK):
 		return to
 	var p := Vector2(from.x, from.z)
 	var q := Vector2(to.x, to.z)
@@ -849,7 +919,7 @@ static func _vol_inside(vols: Array, p: Vector3, margin: float) -> bool:
 			if q.distance_to(v[1]) < float(v[2]) - margin:
 				return true
 		else:
-			if Geometry2D.get_closest_point_to_segment(q, v[1], v[2]).distance_to(q) < float(v[3]) - (clampf(margin, 0.3, 0.5) if margin > 0.0 else 0.0):
+			if Geometry2D.get_closest_point_to_segment(q, v[1], v[2]).distance_to(q) < float(v[3]) - (clampf(margin, 0.3, 0.5) if margin > 0.0 else margin):
 				return true
 	return false
 
@@ -1785,8 +1855,9 @@ func _focus() -> Vector3:
 ## The planet's look (Paul 2026-10-01, V5 15.7: terrain, rocks, sky, light, fog and weather follow the
 ## planet option). Applied when the loaded planet changes; airless has no storm, dust or wind effects.
 var _planet_seen := ""
+var planet_look := ""          # debug "planet": a look override for shots ("" = the save's planet)
 func _planet_check() -> void:
-	var pl: String = String(sim.state.get("planet", "dry"))
+	var pl: String = planet_look if planet_look != "" else String(sim.state.get("planet", "dry"))
 	if pl == _planet_seen:
 		return
 	_planet_seen = pl
@@ -3415,6 +3486,12 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"planet":
+			# planet dry|cold|airless|auto: the planet LOOK only (sky, light, ground, rocks, weather), for the shot
+			# sheets; the simulation keeps its own planet. auto = the save's planet.
+			planet_look = "" if w.size() < 2 or w[1] == "auto" else w[1]
+			_planet_seen = "?"
+			return "planet look %s" % (planet_look if planet_look != "" else "auto")
 		"roofs":
 			# roofs off|on: Paul's all-roofs-off toggle (set_roofs_off).
 			set_roofs_off(w.size() > 1 and w[1] == "off")

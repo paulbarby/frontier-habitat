@@ -109,7 +109,12 @@ func record(rig, delta: float) -> void:
 	if sm.loco:
 		key = "run" if sm.run_latch else "walk"
 	var a: Dictionary = view.sim.state["agents"].get(id, {})
-	rows.append({"t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
+	# occluders between the camera and the person's chest / head (fx_occ), from the drawn camera
+	var occ := 0
+	if view.has_method("follow_occluder"):
+		view.follow_occluder(cam.global_position)
+		occ = int(view.follow_occ_n)
+	rows.append({"occ": occ, "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
 		"mode": String(rec["mode"]), "v": float(rec.get("v", 0.0)), "cam": cam.global_position, "cyaw": atan2(-f.z, f.x),
 		"cpitch": asin(clampf(f.y, -1.0, 1.0)), "scr": sp, "pull": float(rig.get("_sh_pull")), "eye": float(rig.get("_sh_eyeh")),
 		"cut": cut_left > 0.0, "tick": int(view.sim.state["tick"]), "where": String(a.get("where", "")), "off": (rec.get("off", Vector3.ZERO) as Vector3).length(),
@@ -179,6 +184,13 @@ func report() -> Dictionary:
 			pops += 1
 	out["pops"] = pops
 	out["pulled_frames"] = pulled
+	# Frames where an occluder (a pillar, a shelf, a wall end) stands between the camera and the person's
+	# chest or head (orchestrator 2026-10-02; target 0), outside camera cuts.
+	var occf := 0
+	for r in rows:
+		if not bool(r["cut"]) and int(r.get("occ", 0)) > 0:
+			occf += 1
+	out["occluded_frames"] = occf
 	# Locomotion state changes while the person is moving (sim position moving in the last 0.5 s).
 	var sw := 0
 	var move_t := 0.0
@@ -245,13 +257,13 @@ func report() -> Dictionary:
 
 ## Raw samples as CSV (analysis outside the game).
 func csv(max_rows: int = 3000) -> String:
-	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu,fx,fz,tx,tz,hd,win"]
+	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu,fx,fz,tx,tz,hd,win,occ"]
 	for i in mini(rows.size(), max_rows):
 		var r: Dictionary = rows[i]
 		var b: Vector3 = r["bp"]
 		var c: Vector3 = r["cam"]
 		var s: Vector2 = r["scr"]
-		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f,%.4f,%.4f,%.4f,%.4f,%.3f,%s" % [
+		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f,%.4f,%.4f,%.4f,%.4f,%.3f,%s,%d" % [
 			float(r["t"]), float(r["dt"]), float(r["gr"]), b.x, b.y, b.z, float(r["yaw"]), r["key"], r["mode"], float(r["v"]),
-			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"]), float(r["fx"]), float(r["fz"]), float(r["tx"]), float(r["tz"]), float(r["hd"]), r["win"]])
+			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"]), float(r["fx"]), float(r["fz"]), float(r["tx"]), float(r["tz"]), float(r["hd"]), r["win"], int(r.get("occ", 0))])
 	return "\n".join(lines)

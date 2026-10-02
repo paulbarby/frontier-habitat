@@ -176,8 +176,11 @@ def sofa(p, n=3, seat_w=0.62, fabric="Cushion", frame="Frame", arm="Hull", pillo
     return seats
 
 
-def coffee_table(p, hx=0.55, hy=0.35, top="Wood"):
+def coffee_table(p, hx=0.55, hy=0.35, top="Wood", clutter=True):
     bbox(p, -hx, hx, -hy, hy, F + 0.36, F + 0.40, top, bevel=0.012)
+    if clutter:
+        import interior_props as PR
+        PR.table_clutter(p, hx, hy, F + 0.40)
     bbox(p, -hx + 0.05, hx - 0.05, -hy + 0.05, hy - 0.05, F + 0.08, F + 0.11, "Frame")
     for sx in (-1, 1):
         for sy in (-1, 1):
@@ -185,16 +188,22 @@ def coffee_table(p, hx=0.55, hy=0.35, top="Wood"):
                  F, F + 0.36, "Frame", mats={"-z": None, "+z": None})
 
 
-def table_round(p, r=0.62, h=0.74, top="Wood", seg=18, edge="Accent"):
+def table_round(p, r=0.62, h=0.74, top="Wood", seg=18, edge="Accent", clutter=True):
     p.lathe([(r * 0.46, F), (r * 0.44, F + 0.03), (0.07, F + 0.05), (0.0, F + 0.05)], "Frame", seg=10, smooth=False)
     p.vcyl(0, 0, F + 0.04, F + h - 0.06, 0.06, seg=8, mat="Metal", cap0=False, cap1=False)
     p.lathe([(0.20, F + h - 0.06), (0.20, F + h - 0.035), (0.0, F + h - 0.035)], "Frame", seg=8, smooth=False)
     p.lathe([(r - 0.01, F + h - 0.035), (r, F + h - 0.015), (r - 0.012, F + h), (0.0, F + h)],
             lambda k, i: edge if k == 0 else top, seg=seg, smooth=False)
+    if clutter and r >= 0.24:
+        import interior_props as PR
+        PR.table_clutter(p, r, r, F + h, round_r=r)
 
 
-def table_rect(p, hx, hy, h=0.74, top="Hull", edge="Frame", legs="Frame"):
+def table_rect(p, hx, hy, h=0.74, top="Hull", edge="Frame", legs="Frame", clutter=True):
     """Rectangular table centred at the origin (half sizes hx, hy)."""
+    if clutter:
+        import interior_props as PR
+        PR.table_clutter(p, hx, hy, F + h)
     bbox(p, -hx, hx, -hy, hy, F + h - 0.045, F + h, top, bevel=0.012)
     plate_x(p, hx + 0.001, -hy + 0.01, hy - 0.01, F + h - 0.04, F + h - 0.008, edge)
     plate_x(p, -hx - 0.001, -hy + 0.01, hy - 0.01, F + h - 0.04, F + h - 0.008, edge, facing=-1)

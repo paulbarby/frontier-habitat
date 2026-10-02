@@ -469,11 +469,20 @@ def check_pairs(check, M):
     name_b = out_mesh(next((e for o, e in M["variants"][b]["outfits"].items() if o.startswith("casual")),
                            list(M["variants"][b]["outfits"].values())[0]))
     ob_b = next(o for o in new if o.type == "MESH" and o.name.split(".")[0] == name_b)
-    def hand_mask(ob):
+    def hand_mask(ob, rig):
+        """The hands, and the wrists (forearm vertices within 7 cm of the wrist joint, bind pose): what touches the
+        partner by design in the hand_contact pairs."""
         names = {g.index: g.name for g in ob.vertex_groups}
-        return np.array([bool(v.groups) and names.get(max(v.groups, key=lambda g: g.weight).group, "").startswith(
-            ("hand.", "prop.")) for v in ob.data.vertices], dtype=bool)
-    hand_a, hand_b = hand_mask(ob_a), hand_mask(ob_b)
+        wr = {sd: rig.data.bones["hand." + sd].head_local for sd in ("L", "R")}
+        out = []
+        for v in ob.data.vertices:
+            g = names.get(max(v.groups, key=lambda g: g.weight).group, "") if v.groups else ""
+            m = g.startswith(("hand.", "prop."))
+            if g.startswith("forearm."):
+                m = (v.co - wr[g[-1]]).length < 0.07
+            out.append(m)
+        return np.array(out, dtype=bool)
+    hand_a, hand_b = hand_mask(ob_a, rig_a), hand_mask(ob_b, rig_b)
     for pname, pr in pairs.items():
         if pr["clip_a"] not in M["clips"] or pr["clip_b"] not in M["clips"]:
             continue
@@ -500,13 +509,20 @@ def check_pairs(check, M):
             bpy.context.view_layer.update()
             pa = world_co(ob_a)
             pb = world_co(ob_b)
+            ia, ib = np.arange(len(pa)), np.arange(len(pb))
             if pr.get("hand_contact"):                  # the gripping hands touch by design
-                pa, pb = pa[~hand_a], pb[~hand_b]
-            pa, pb = pa[::2], pb[::2]
-            n2a, da = deep_points(pa, capsules(rig_b, sb), 0.02)
-            n2b, db = deep_points(pb, capsules(rig_a, sa), 0.02)
-            n4a, _ = deep_points(pa, capsules(rig_b, sb), 0.04)
-            n4b, _ = deep_points(pb, capsules(rig_a, sa), 0.04)
+                pa, pb, ia, ib = pa[~hand_a], pb[~hand_b], ia[~hand_a], ib[~hand_b]
+            pa, pb, ia, ib = pa[::2], pb[::2], ia[::2], ib[::2]
+            cb, ca = capsules(rig_b, sb), capsules(rig_a, sa)
+            if pr.get("hand_contact"):
+                # hands and wrists touch the partner's hands and wrists by design: not the forearm-hand capsules
+                keep = [i for i, c in enumerate(CAPS) if not (c[0].startswith("forearm.") and c[1].startswith("hand."))]
+                keep += list(range(len(CAPS), len(cb)))
+                cb, ca = [cb[i] for i in keep], [ca[i] for i in keep]
+            n2a, da = deep_points(pa, cb, 0.02)
+            n2b, db = deep_points(pb, ca, 0.02)
+            n4a, _ = deep_points(pa, cb, 0.04)
+            n4b, _ = deep_points(pb, ca, 0.04)
             if n2a + n2b > worst2:
                 worst2, at = n2a + n2b, "f%d" % f
             worst4 = max(worst4, n4a + n4b)
@@ -525,13 +541,15 @@ def check_pairs(check, M):
                             sel_ = P_[dd_ < r_ - 0.02]
                             print("      at", tuple(np.round(sel_.mean(axis=0), 3)), "axis", tuple(np.round(A_, 3)), tuple(np.round(B_, 3)))
                             ob_x = ob_b if nm_ == "B-in-A" else ob_a
-                            ids_ = np.nonzero(dd_ < r_ - 0.02)[0][:8] * 2
+                            ids_ = (ib if nm_ == "B-in-A" else ia)[np.nonzero(dd_ < r_ - 0.02)[0][:8]]
                             for vi_ in ids_:
                                 vv_ = ob_x.data.vertices[int(vi_)]
                                 gs_ = sorted(((ob_x.vertex_groups[g.group].name, round(g.weight, 2)) for g in vv_.groups), key=lambda x: -x[1])[:3]
-                                print("        v", int(vi_), tuple(round(float(x), 3) for x in P_[int(vi_) // 2]), gs_)
+                                print("        v", int(vi_), gs_)
                             lab_ = (CAPS[ci][0] + "-" + CAPS[ci][1]) if ci < len(CAPS) else ("head" if ci == len(CAPS) else "pelvis")
                             print("   ", nm_, lab_, k_)
+        # (2026-10-02: strict, V5_RUN3 "pairs without interpenetration": no point deeper than 2 cm; hands that touch
+        # the partner by design (hand_contact) are left out)
         check("people pair %s (%s with %s): no body point deeper than 2 cm in the partner (bone capsules), whole clip"
-              % (pname, a, b), (worst2 <= 6 or (pr.get("hand_contact") and worst2 <= 16)) and worst4 == 0,
+              % (pname, a, b), worst2 == 0 and worst4 == 0,
               "%d points deeper than 2 cm (worst %s), %d deeper than 4 cm, deepest %.3f m" % (worst2, at, worst4, deepest))

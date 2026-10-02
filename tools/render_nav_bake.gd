@@ -6,10 +6,13 @@ extends SceneTree
 
 const Models = preload("res://presentation/models.gd")
 const Nav = preload("res://presentation/fx_nav.gd")
+const Occ = preload("res://presentation/fx_occ.gd")
 
 func _init() -> void:
 	var n := 0
 	var skipped := 0
+	var occ_n := 0
+	var occ_cells := 0
 	var t0: int = Time.get_ticks_msec()
 	var dir := DirAccess.open("res://assets/models")
 	for f in dir.get_files():
@@ -28,6 +31,9 @@ func _init() -> void:
 			continue
 		if Nav.bake(tpl, name):
 			n += 1
+		# the follow view's sight-line occluders (fx_occ), same models
+		occ_cells += Occ.bake(tpl)
+		occ_n += 1
 	# Per-room decal data from ART-HAB's build report (tools/ is not exported).
 	var meta := {}
 	if FileAccess.file_exists("res://tools/blender/build_report.json"):
@@ -40,5 +46,9 @@ func _init() -> void:
 	var r := Resource.new()
 	r.set_meta("rooms", meta)
 	ResourceSaver.save(r, Nav.BAKE_DIR + "room_meta.res", ResourceSaver.FLAG_COMPRESS)
-	print("render_nav_bake: %d grids, %d models without a wall ring, %d room metas, %d ms" % [n, skipped, meta.size(), Time.get_ticks_msec() - t0])
+	# the super dome (one merged template of ART-B's files) has no wall ring of its own: occluders only
+	for merged in [true, false]:
+		occ_cells += Occ.bake(Models.dome_template(merged))
+		occ_n += 1
+	print("render_nav_bake: %d grids, %d models without a wall ring, %d room metas, %d occluder grids (%d cells), %d ms" % [n, skipped, meta.size(), occ_n, occ_cells, Time.get_ticks_msec() - t0])
 	quit()

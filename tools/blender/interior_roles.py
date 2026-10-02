@@ -661,6 +661,37 @@ def shopsign(p, w, d, k):
         text(p, "*TERMS APPLY", 0.0, zc - h / 2 - 0.085, 0.016, "HullDark", x=WALL_OFF + 0.002)
 
 
+def synergy(p, w, d, k):
+    """The HR office's 'SYNERGY' poster: three overlapping circles (an original design) over a slogan."""
+    ww = min(0.66, w - 0.06)
+    z0, z1 = ZB + 0.04, ZB + 0.70
+    x = board(p, ww, z0, z1, ("Cushion", "PlantDark", "Accent")[k % 3])
+    for j, (dy, dz, m) in enumerate(((-0.08, 0.04, "Fabric"), (0.08, 0.04, "WaterBlue"), (0.0, -0.08, "Hazard"))):
+        disc_x(p, x + 0.001 + 0.001 * j, dy, z1 - 0.26 + dz, 0.12, m, seg=14)
+    text(p, "SYNERGY", 0.0, z0 + 0.17, fit_h(["SYNERGY"], ww - 0.10, 0.075), "Hull", x=x + 0.004)
+    text(p, ("TOGETHER WE ALIGN", "CIRCLE BACK. ALWAYS.", "1 TEAM 1 DREAM 0 BUDGET")[k % 3], 0.0, z0 + 0.07, 0.018,
+         "Hull", x=x + 0.004)
+
+
+def feelings(p, w, d, k):
+    ww = min(0.74, w - 0.04)
+    z0, z1 = ZB + 0.10, ZB + 0.62
+    x = board(p, ww, z0, z1, "CushionLight")
+    lines = ("YOUR FEELINGS", "ARE VALID")
+    zz = text_lines(p, lines, 0.0, z1 - 0.05, fit_h(lines, ww - 0.10, 0.060), "HullDark", x=x + 0.001)
+    text(p, "(PENDING REVIEW)", 0.0, zz - 0.07, fit_h(["(PENDING REVIEW)"], ww - 0.12, 0.034), "SignalRed", x=x + 0.001)
+
+
+def survey(p, w, d, k):
+    ww = min(0.74, w - 0.04)
+    z0, z1 = ZB + 0.10, ZB + 0.62
+    x = board(p, ww, z0, z1, "Screen", d=0.04)
+    text(p, "STAFF SURVEY", 0.0, z1 - 0.06, fit_h(["STAFF SURVEY"], ww - 0.12, 0.036), "Neon", x=x + 0.001)
+    ls = ("MORALE: 104%", "COMPLAINTS: 0*", "VIBES: ALIGNED")
+    text_lines(p, ls, 0.0, z1 - 0.13, fit_h(ls, ww - 0.14, 0.036), "LightStrip", x=x + 0.001, gap=0.6)
+    text(p, "*FILTERED", 0.0, z0 + 0.045, 0.016, "Window", x=x + 0.001)
+
+
 def motto(txt, mat="Neon"):
     """A room motto as a neon sign (every room type has one in the table below)."""
     def fn(p, w, d, k):
@@ -685,14 +716,14 @@ KINDS = {
     "r_inventory": inventory, "r_barcodes": barcodes, "r_eyechart": eyechart, "r_diagnose": diagnose,
     "r_peer": peer, "r_wanted": wanted, "r_tally": tally, "r_blackboard": blackboard, "r_route": routesign,
     "r_photos": photos, "r_shop": shopsign, "r_suitcheck": suitcheck, "r_stilllabel": stilllabel, "r_fryer": fryer_station, "r_jukebox": jukebox,
-    "r_recipe": recipe,
+    "r_recipe": recipe, "r_synergy": synergy, "r_feelings": feelings, "r_survey": survey,
 }
 DEPTHS = {k: 0.08 for k in KINDS}
 DEPTHS.update({"r_fryer": 0.42, "r_jukebox": 0.36, "r_hats": 0.17, "r_gauges": 0.10, "r_extinguisher": 0.20, "r_vending": 0.42, "r_seedrack": 0.28,
                "r_clock": 0.10, "r_whiteboard": 0.10})
 SATIRE = {"r_floormark", "r_stilllabel", "r_chamber", "r_motto", "r_suitcheck", "r_fryer", "r_jukebox", "r_recipe", "r_foreman", "r_agi", "r_safety", "r_vending", "r_plantboard", "r_diagnose", "r_peer", "r_blackboard",
           "r_whiteboard", "r_inventory", "r_clock", "r_wanted", "r_tally", "r_shop", "r_hats", "r_extinguisher",
-          "r_air", "r_barcodes", "r_route", "r_seedrack", "r_rota", "r_photos"}
+          "r_air", "r_barcodes", "r_route", "r_seedrack", "r_rota", "r_photos", "r_synergy", "r_feelings", "r_survey"}
 
 MOTTOS = {
     "habitat": "HOME SWEET/POD", "lounge": "CHILL.EXE", "cantina": "NO AGENTS", "kitchen": "TASTE/THE FUTURE*",
@@ -710,7 +741,7 @@ MOTTOS = {
     "airlock": "SUIT UP", "junction": "YOU ARE HERE/(PROBABLY)",
     "residence_tube": "HOME IS WHERE/THE WIFI IS", "apartment_block": "NOW WITH/BALCONIES",
     "retail": "BUY MORE", "park": "TOUCH GRASS", "academy": "LEARN/FASTER", "security_office": "WATCHING/(POLITELY)",
-    "jail": "TIME OUT",
+    "jail": "TIME OUT", "hr_office": "WE ARE/LISTENING*",
 }
 
 # role -> wall kinds in the order they are placed (the motto first, then these round-robin)
@@ -735,6 +766,7 @@ ROLE_KINDS = {
     "jail": ["r_tally", "r_wanted", "r_agi", "r_clock", "r_tally"],
     "park": ["r_agi", "r_plantboard", "r_photos"],
     "comfort": ["r_agi", "r_jukebox", "r_vending", "vibeposter", "r_photos", "r_whiteboard"],
+    "hr": ["r_synergy", "r_feelings", "r_survey", "r_agi", "r_whiteboard", "r_clock", "r_photos"],
 }
 ROLE_OF = {}
 for _t in ("mine", "refinery", "polymer_plant", "workshop", "glassworks", "electronics_fab", "fabricator", "steel_mill",
@@ -759,7 +791,7 @@ for _t in ("airlock", "junction"):
 for _t in ("habitat", "residence_tube", "apartment_block"):
     ROLE_OF[_t] = "housing"
 for _t, _r in (("retail", "retail"), ("academy", "academy"), ("security_office", "security"), ("jail", "jail"),
-               ("park", "park"), ("lounge", "comfort")):
+               ("park", "park"), ("lounge", "comfort"), ("hr_office", "hr")):
     ROLE_OF[_t] = _r
 FILLER = ("vent", "cable", "panel", "poster", "plant", "notice", None)
 CAPS = {"r_agi": 1, "r_vending": 1, "r_extinguisher": 1, "r_clock": 1, "r_motto": 1, "r_fryer": 1, "r_jukebox": 1,

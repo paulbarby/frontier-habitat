@@ -109,7 +109,7 @@ func play_oneshot(c: String) -> void:
 	if c == "collapse" and (phase == "hold" or pose_state == "lie"):
 		return
 	_start(c, "oneshot")
-	oneshot_next = "hold" if c == "collapse" else ""
+	oneshot_next = "hold" if c == "collapse" or c == "fall_down" else ""
 
 ## V4 vehicle crews (fx_vehicles): a clip chosen by the caller, played as it is ("script"
 ## phase: no pose logic). `cut` = a hand-over at an exact cut frame (step_up -> board -> seat
@@ -166,12 +166,22 @@ func _rate_of(c: String) -> float:
 	return 1.0
 
 func _walk_clip() -> String:
+	if walk_override != "" and clips.has(walk_override):
+		return walk_override
 	if injured and clips.has("injured_walk"):
 		return "injured_walk"
 	return "walk" if clips.has("walk") else "idle"
 
 func _loco_clip() -> String:
-	return "run" if run_w > 0.5 and clips.has("run") and not injured else _walk_clip()
+	return "run" if run_w > 0.5 and clips.has("run") and not injured and walk_override == "" else _walk_clip()
+
+## V5 (SIM people.action): a walk cycle that replaces walk and run (handcuffed_walk, escort_walk), "" = none.
+var walk_override := ""
+
+## Knocked down (fall_down, held lying): stand up again with get_up.
+func revive() -> void:
+	if phase == "hold" and cur == "dead" and clips.has("get_up"):
+		_start("get_up", "exit")
 
 ## Cycles per second of the locomotion blend: speed / stride, so the feet do not slide.
 ## No cap (orchestrator, 2026-09-24): foot sliding is the bigger fault; the run clip covers
@@ -331,7 +341,7 @@ func _loop_step(dt: float) -> void:
 		# A change of the latch needs STOP_HOLD s of the new speed (one slow frame at a corner made a
 		# run -> walk -> run flicker at 4x, 2026-10-01).
 		var want_run: bool = run_latch
-		if injured or not clips.has("run"):
+		if injured or not clips.has("run") or walk_override != "":
 			want_run = false
 		elif speed > vw + (vr - vw) * 0.55:
 			want_run = true

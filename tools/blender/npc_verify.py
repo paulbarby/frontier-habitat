@@ -764,11 +764,12 @@ def run(renders):
                 check("suit: sleep on the mattress (suits do not sleep in beds; for information)", True,
                       "lowest %.3f m (the thicker suit sinks %.1f cm)" % (low, max(0.0, bz - low) * 100), info=True)
             # the bed as ART-HAB builds it: mattress 0.15 m thick over a plinth set 0.08 m in from its edge
-            inside = max(box_count(r2["all"], (-bb - 0.47, -1.0, bz - 0.15), (-bb + 0.42, 1.0, bz - 0.015)) +
+            # (2026-10-02: the front 15 cm of the mattress is soft, as in the people check: a person sits on the edge)
+            inside = max(box_count(r2["all"], (-bb - 0.47, -1.0, bz - 0.15), (-bb + 0.30, 1.0, bz - 0.015)) +
                          box_count(r2["all"], (-bb - 0.39, -0.92, 0.0), (-bb + 0.39, 0.92, bz - 0.15))
                          for c in ("lie_enter", "lie_exit") if c in ev for r2 in ev[c])
             if v == "indoor":
-                check("indoor: lie_enter / lie_exit do not pass through the bed (front 5 cm of the mattress soft)",
+                check("indoor: lie_enter / lie_exit do not pass through the bed (front 15 cm of the mattress soft, as for people)",
                       inside == 0, "%d vertices inside the bed box at worst" % inside)
             else:
                 check("suit: lie_enter / lie_exit and the bed (suits never use beds; for information)", True,

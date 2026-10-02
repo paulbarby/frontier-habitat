@@ -106,6 +106,33 @@ def wall(c, u0, v0, u1, v1, gaps=(), h=WALL_H, stripe="Accent", posts=True):
     for t0, t1 in pieces:
         tm = 0.5 * (t0 + t1)
         plan.rect(A[0] + ca * tm, A[1] + sa * tm, 0.5 * (t1 - t0), 0.07, ang, tag="wall")
+    if PARTTOP and h <= WALL_H + 1e-6:
+        # round 2 (coordinator 2026-10-02, waits for RENDER): the partition from 1.30 to 2.10 m in its own object,
+        # PartTop (F<k>_PartTop on the block's floors): hidden in the cutaway, shown with the roof on
+        q = part_top(plan)
+        with q.at(T(A[0], A[1], 0.0), RZ(ang)):
+            for t0, t1 in pieces:
+                bbox(q, t0, t1, -0.045, 0.045, F + h, F + PART_H - 0.03, "Hull", mats={"-z": None, "+z": None})
+                bbox(q, t0 - 0.005, t1 + 0.005, -0.06, 0.06, F + PART_H - 0.03, F + PART_H, "Frame", mats={"-z": None})
+            for c0, c1 in cuts:
+                for tt in (c0, c1):
+                    if 0.05 < tt < L - 0.05:
+                        bbox(q, tt - 0.035, tt + 0.035, -0.075, 0.075, F + h + 0.05, F + PART_H, "Frame",
+                             mats={"-z": None})
+
+
+PARTTOP = bool(__import__("os").environ.get("FH_PARTTOP"))
+PART_H = 2.10
+
+
+def part_top(plan):
+    q = getattr(plan, "part_top", None)
+    if q is None:
+        nm = plan.n.name
+        q = K.P("PartTop" if nm == "Interior" else nm.replace("Interior", "PartTop"))
+        plan.part_top = q
+        plan.rm.extra_parts = list(getattr(plan.rm, "extra_parts", [])) + [q]
+    return q
 
 
 def door_plate(c, u, number):
@@ -392,12 +419,14 @@ def pendant(plan, c, u, v, seed=0):
     """A pendant lamp over a table: a cord from the ceiling line, a warm shade; a lamp anchor for the light pool."""
     n = plan.n
     x, y = c.w(u, v)
-    n.vcyl(x, y, F + 1.78, F + 2.36, 0.008, seg=4, mat="Frame", cap0=False, cap1=False)
+    # 2026-10-02: the shade hangs at 2.05-2.28 m (it was 1.56-1.79 m: a tall person walked through it and it filled
+    # the follow camera, eye 1.8 m)
+    n.vcyl(x, y, F + 2.27, F + 2.50, 0.008, seg=4, mat="Frame", cap0=False, cap1=False)
     with n.at(T(x, y, 0.0)):
-        n.lathe([(0.26, F + 1.56), (0.20, F + 1.70), (0.05, F + 1.79), (0.0, F + 1.79)], "Wood" if seed % 2 else "Accent",
+        n.lathe([(0.26, F + 2.05), (0.20, F + 2.19), (0.05, F + 2.28), (0.0, F + 2.28)], "Wood" if seed % 2 else "Accent",
                 seg=14, smooth=True)
-        n.lathe([(0.0, F + 1.57), (0.22, F + 1.57)], "Window", seg=14, smooth=False)
-    plan.lamp(x, y, F + 1.50)
+        n.lathe([(0.0, F + 2.06), (0.22, F + 2.06)], "Window", seg=14, smooth=False)
+    plan.lamp(x, y, F + 1.99)
 
 
 def headboard_wall(c, uc, v_head, width=2.9):

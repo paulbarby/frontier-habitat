@@ -30,7 +30,7 @@ import rooms_kit as K        # noqa: E402
 
 BUILDERS = {}
 _MODULES = ("rooms_habitat", "rooms_agri", "rooms_life", "rooms_science", "rooms_industry", "rooms_links",
-            "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ", "rooms_distillery")
+            "rooms_v4ind", "rooms_v5", "rooms_v5apt", "rooms_v5civ", "rooms_distillery", "rooms_v5hr")
 for _m in _MODULES:
     try:
         mod = __import__(_m)
@@ -48,7 +48,7 @@ ORDER = ["habitat", "greenhouse", "kitchen", "storehouse", "oxygen_plant", "rese
          "magnet_works", "superconductor_lab", "metamaterial_foundry",
          # 5.0 (docs/V5_DESIGN.md section 7)
          "residence_tube", "apartment_block", "retail", "park", "academy", "security_office", "jail",
-         "distillery"]
+         "distillery", "hr_office"]
 FAMILY = {
     "habitat": "habitat", "lounge": "habitat", "cantina": "habitat", "medical": "habitat", "bio_lab": "habitat",
     "storehouse": "habitat", "cold_storage": "habitat",
@@ -64,6 +64,7 @@ FAMILY = {
     "residence_tube": "habitat", "apartment_block": "habitat", "retail": "habitat", "park": "agri",
     "academy": "science", "security_office": "habitat", "jail": "habitat",
     "distillery": "industry",
+    "hr_office": "habitat",
 }
 # 3.0 (docs/V3_DESIGN.md section 7): builders with the detailed interiors and wall segments.  A v3 builder may
 # raise NotImplementedError for a size it does not make yet; that size then uses the v2 builder.
@@ -108,6 +109,9 @@ def jobs(buildings, only=None, sizes=None):
         bdef = buildings.get(tid, {})
         if not bdef and tid in V4_PROVISIONAL:
             bdef = V4_PROVISIONAL[tid]            # 4.0 rooms SIM has named but not put in content yet
+        if not bdef:
+            import rooms_build_defs as _RBD
+            bdef = _RBD.V5_PROVISIONAL.get(tid, {})   # 5.0 (HR office) until SIM's content has it
         radii = bdef.get("sizes", {}).get("radius")
         if radii and tid not in ("airlock", "junction", "corridor"):
             size_list = bdef.get("size_list", [0, 1, 2, 3])
@@ -349,6 +353,9 @@ def build_one(job):
     built_v3 = False
     import interior_props as _PR0
     _PR0.reset_used()                      # 5.0: the prop kit records what this room used (build report, style check)
+    import interior_roles as _RO0
+    _PR0.ROLE["role"] = _RO0.ROLE_OF.get(job["tid"])    # round 2: table clutter by role
+    _PR0.ROLE["n"] = 0
     if job["tid"] in V3_BUILDERS and "--v2" not in sys.argv:
         try:
             V3_BUILDERS[job["tid"]](rm)
@@ -357,6 +364,11 @@ def build_one(job):
             rm = K.Room(job["tid"], job["size"], job["R"], cat, bdef, single=job["single"])
     if not built_v3:
         BUILDERS[job["tid"]](rm)
+    if getattr(rm, "v3", False):
+        import interior_surfaces as _IS      # 5.0 round 2: work mats, dance floor, wait spots
+        _IS.floor_detail(rm)
+        import interior_ceiling as _IC       # 5.0 round 2 (coordinator 2026-10-02): the inner ceiling, object RoofCeil
+        _IC.build(rm)
     path = os.path.join(K.MODEL_DIR, job["file"] + ".glb")
     also = [os.path.join(K.MODEL_DIR, a + ".glb") for a in job["also"]]
     objs, rays, secs = K.build_file(rm, path, also=also)
@@ -386,6 +398,9 @@ def build_one(job):
             flags.append("V5 15.3 style: only %d prop kinds (%s), satire %s" %
                          (len(prop_use), sorted(prop_use), sorted(set(prop_use) & satire)))
         budget = max(budget, int(V3_BUDGET[job["size"]] * 1.8))      # 5.0: the interior budget of every room type
+        import interior_ceiling as _IC
+        if getattr(rm, "ceiling_info", None):
+            budget += _IC.ALLOWANCE[min(3, job["size"])]  # round 2: the ceiling (drawn only with the roof on)
     if job["tid"] == "corridor":
         budget = 1200
     if tris > budget:
@@ -502,6 +517,7 @@ def build_one(job):
         row["v3"]["tall_parts"] = len([q for q in getattr(rm, "extra_parts", []) if q.faces])
         row["v3"]["surfaces"] = {k: list(v) for k, v in getattr(rm, "surfaces", {}).items()}
         row["v3"]["group_surfaces"] = getattr(rm, "group_surfaces", {})
+        row["v3"]["ceiling"] = getattr(rm, "ceiling_info", None)
         di = getattr(rm, "decal_info", None) or {}
         row["v3"]["decals"] = dict(decal_objects=len(di.get("decals", [])), upper_objects=len(di.get("upper", [])),
                                    upper_z=di.get("upper_z"), upper_band=di.get("upper_band"),

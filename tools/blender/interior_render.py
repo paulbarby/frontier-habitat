@@ -98,7 +98,7 @@ def import_at(name, M=Matrix.Identity(4), hide=()):
     place([o for o in objs if o.parent is None], M)
     for o in objs:
         base = o.name.split(".")[0]
-        if base in hide or any(base.startswith(h) for h in hide if h.endswith("*")):
+        if base in hide or any(base.startswith(h) for h in hide if h.endswith("*")) or                 ("Roof" in hide and base.startswith("RoofCeil")):          # round 2: the ceiling is in the Roof group
             o.hide_render = True
             o.hide_viewport = True
     return objs

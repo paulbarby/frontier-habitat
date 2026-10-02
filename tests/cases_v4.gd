@@ -1686,10 +1686,12 @@ func long_v4_perf(t) -> void:
 				n += 1
 		return n
 	var wins: Array = []
+	var cal: Array = []
 	var driving := 0
 	var low := 999
 	for w in 3:
 		H.fill_utilities(sim, 1.0, 0.8, true)                                            # test set-up: air for 100
+		cal.append(H.calib_ms())
 		var t0: int = Time.get_ticks_usec()
 		for s in 10:
 			g.run(100)
@@ -1698,6 +1700,11 @@ func long_v4_perf(t) -> void:
 				H.fill_utilities(sim, 1.0, 0.8, true)
 		wins.append(float(Time.get_ticks_usec() - t0) / 1000.0 / 1000.0)
 		low = mini(low, sim.alive_count())
+	cal.append(H.calib_ms())
+	var factor: float = H.calib_factor(cal)
+	var raw_w: Array = wins.duplicate()
+	for i in wins.size():
+		wins[i] = float(wins[i]) * factor
 	var causes := {}
 	for aid in sim.state["agents"]:
 		var ag: Dictionary = sim.state["agents"][aid]
@@ -1714,9 +1721,9 @@ func long_v4_perf(t) -> void:
 	var ms: float = float(sorted_w[1])
 	t.check(low >= 95, "95 or more colonists while it is measured (%d)" % low)
 	t.check(float(driving) / 30.0 >= 5.0, "5 or more vehicles driving on average (%.1f)" % (float(driving) / 30.0))
-	t.check(ms <= 2.5, "a tick takes at most 2.5 ms (median %.3f ms of %s)" % [ms, str(wins)])
+	t.check(ms <= 2.5, "a tick takes at most 2.5 ms (scaled median %.3f ms of %s; raw %s, calibration %s ms, factor %.3f)" % [ms, str(wins), str(raw_w), str(cal), factor])
 	t.eq(sim.inv.audit(), {}, "ledger")
-	t.note("%.3f ms per tick (windows %.3f / %.3f / %.3f), %d colonists, %d structures, 6 vehicles, fog %.0f %% (%s)" % [ms, wins[0], wins[1], wins[2],
+	t.note("%.3f ms per tick scaled (windows %.3f / %.3f / %.3f; raw %.3f / %.3f / %.3f; calibration %.1f / %.1f / %.1f / %.1f ms, factor %.3f), %d colonists, %d structures, 6 vehicles, fog %.0f %% (%s)" % [ms, wins[0], wins[1], wins[2], raw_w[0], raw_w[1], raw_w[2], cal[0], cal[1], cal[2], cal[3], factor,
 		sim.alive_count(), sim.state["buildings"].size(), sim.explore.explored_share() * 100.0, OS.get_processor_name()])
 	g.dispose()
 	t.done()
