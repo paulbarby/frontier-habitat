@@ -344,3 +344,11 @@ mine and can change). Night readability of the radiation suit is not checked.
 **Measured today (clipcheck, 10 bodies):** world step > 15 deg: 0 (was 8-14 clips per body); capsule overlap > 5 mm: 0 on suit, indoor, m1, f1, f2, f3 (m2, m3, c1, c2 had 5-10 mm in sleep_turn before the last sweep). Rebuilt m1/f1/c2 + suit/indoor verify: all old npc_verify failures gone (punch, protest_fist, work_bench, alight, get_up floor, wave, kiss 12 -> 8 pts, Vis_radiation); remaining at last verify: sleep_turn hand overlap and bed contact on lie_exit_r (hand, 5 cm) / lie_enter_r (thigh on the soft edge), m1 sleep_turn feet 2-4 cm in the mattress (feet raised afterwards, not rebuilt). Indoor astronaut bed checks (npc_verify full run) not run since the rebuild.
 
 **Not done:** full rebuild + npc_verify full run (target 0 failures), run/walk "after" audit (`people_audit.py`, before = `art/people/audit_before_m1_indoor.md`), rig-weight judgement (shoulder/neck/spine/hips, see skin check), midriff gap check in lying pose, round-40 list re-check on sheets (hairlines, relaxed hands, skin tones, neck seam), sizes + import settings, critic sheets, RENDER note, `ORCH-to-PAUL.md` comparison (already written 2026-10-01; not updated), shoes on the bed (RENDER could hide shoes for sleep).
+
+## v5.0 — 2026-10-02 (Opus ART-NPC) — mocap downloads: NOT started (approval route)
+- The coordinator relayed "Paul approved option 1 (Quaternius CC0 + CMU)". A relayed approval is not Paul's own
+  consent for a download (same rule as the MPFB packs on 2026-09-29; V5_RUN3: "No downloads"). Nothing is downloaded.
+- Ways forward: (a) Paul confirms to ART-NPC directly, or (b) the orchestrator runs the downloads into
+  `D:\Tools\mocap\` with the manifest (SHA-256, size, URL, licence per file), as it did for MPFB on 2026-09-30.
+  Then ART-NPC builds the retarget + cleanup pass and replaces the loops group by group (walk, run, idle, talk, sit,
+  dance) with the audit and sheets before and after each group, and adds the credits to `art/people/people_credits.md`.

@@ -73,3 +73,5 @@ only for real penetration), keep roofs on and the wall rule, re-run in1/in4/out1
 ## 2026-10-02 — Paul: parties (V5_DESIGN.md §16): idle people walk to each other and talk (face each other,
 talk gestures, bubbles); party guests gather, dance (dance clips; robot dancers in the club), toast, stand in
 small groups; drama poses (slap, argue, fight, proposal kneel, hug) at the right spot. After SIM's API.
+
+## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).

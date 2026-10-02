@@ -18,3 +18,5 @@ Do:
 4. Tell UI (forecast, hazard texts, codex) and RENDER (no dust/haze/wind effects on airless).
 
 ## 2026-10-02 — Paul: idle talk, innuendo, celebrations, parties, party drama → V5_DESIGN.md §16 (all of it)
+
+## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).

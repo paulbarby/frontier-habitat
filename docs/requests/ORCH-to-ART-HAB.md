@@ -35,3 +35,5 @@ Start with the rooms the over-the-shoulder camera sees most: habitat, cantina/ki
 residences, the dome venues. Per room: dense props at human scale (desks with personal items, posters,
 screens with content, cables, signs, plants, clutter by role), wall and floor detail, lighting accents.
 Keep the triangle and pck budgets; reuse a shared prop kit.
+
+## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).

@@ -74,3 +74,5 @@ level in a storm) and report the dB numbers.
 ## 2026-10-02 — Paul: parties (V5_DESIGN.md §16): "Throw a party?" request rows (place, cost, guests, the reason),
 party and drama items in the dock (News/Events), a party card in the venue inspector, the "Cheeky dialogue"
 setting, Rag party reports, help text (STE). After SIM lands the API (SIM-to-UI.md).
+
+## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).

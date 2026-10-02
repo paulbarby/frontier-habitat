@@ -560,3 +560,43 @@ Rules (SIM owns the mechanic and content; UI shows; RENDER draws):
 7. **Tests:** idle pairs start talks; innuendo only between mutually attracted adults; setting off gives no
    innuendo; each event type creates a party offer; party drama rates match (small 1-3 per party; big about
    1 in 6 with cooldown) over a long run; determinism and perf budgets hold.
+
+## 17. HR department (Paul, 2026-10-02)
+
+Paul's words (summary): add an HR department, so people who are not satisfied can complain and ask for a
+transfer off world. The structure allows feedback from the base staff and transfers off world; with no HR
+module active this cannot happen. HR is a dedicated role, and that person is loved in public and gossiped
+about behind their back.
+
+Rules:
+1. **Structure:** `hr_office` (Civic), sizes S/M/L, room kind, needs power; stations: a reception desk, an
+   interview room (2 chairs facing), a feedback kiosk, filing. Style §15.3: corporate-wellness satire with
+   original names (an "AI-powered wellbeing kiosk" that answers every complaint with a breathing exercise,
+   a "Synergy" poster, a suggestion box with a padlock, a ficus, a "Your feelings are valid (pending review)"
+   sign). ART-HAB builds it; SIM adds the content (cost, power, research or stage, furniture counts).
+2. **Role:** `hr` is a dedicated role (set with `set_role`), one HR officer per office size slot (S 1, M 2,
+   L 3); skill used: Social (or Lead). Without an active, staffed HR office: no complaints, no feedback
+   rounds, no transfer requests; unhappy people only grumble (as today) and unrest works as today.
+3. **Complaints:** an unhappy person (satisfaction under a threshold, or a grievance: bad home, unfair
+   punishment, a feud, overwork) walks to the HR office and files a complaint (category, target: a person, a
+   department, a condition). HR resolves some by itself over time (skill check); others need the player:
+   options with effects shown before confirming (mediate a feud, move home, change job, a leisure day,
+   dismiss). Filing a complaint gives a small satisfaction rise ("being heard").
+4. **Feedback rounds:** HR runs a staff survey every few days: per department satisfaction, top three
+   complaints, morale trend. The player reads it in the HR window; it is a real information source.
+5. **Transfer off world:** a very unhappy person (or one with a family reason) asks HR for a transfer. The
+   player approves (the person leaves on the next ship with seats; the colony loses the person; others in the
+   same department may be relieved or upset by relation) or refuses (a satisfaction and attitude cost; the
+   request can come back; refusing many transfers raises unrest). Without HR, no transfer requests exist.
+   Replaces nothing in §6; the `leave_with_ship` defection still exists for people who leave without asking.
+6. **The HR officer, loved in public, gossiped about in private:** in public talk (bubbles, talk sessions
+   with the officer present) people are warm to the officer; behind their back (talks without the officer)
+   gossip about them is frequent and negative or funny ("she says 'circle back' in her sleep"). The officer's
+   public relation score and private reputation are two values; the Rag runs HR gossip in the gossip column.
+   Lines: at least 40 public-praise lines and 60 behind-the-back lines, original, funny, not cruel.
+7. **UI:** an HR window or Crew tab (complaints queue with actions and predicted effects; transfer requests
+   with Approve/Refuse; the last feedback round); all items through the panel manager (Requests tab).
+   Help text (STE). RENDER: HR officer at the desk, interviews (2 people seated facing), people queueing.
+8. **Tests:** no HR → no complaints and no transfers; with HR → complaints filed by unhappy people;
+   transfer approved → person leaves on the next ship; refused → costs applied; public vs private gossip
+   rates differ for the HR officer; determinism and perf budgets hold.
