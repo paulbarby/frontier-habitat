@@ -242,7 +242,9 @@ func _sync_sats(ex, _delta: float) -> void:
 		beam.visible = false
 		beam.global_transform = Transform3D(Basis().scaled(Vector3(1.0, (ORBIT_H - ground), 1.0)), Vector3(x, (ORBIT_H + ground) * 0.5, z))
 		var line: MeshInstance3D = e["line"]
-		line.visible = not done and bool(s.get("uplink", true))
+		# (not in the follow view: the scan band crossed the whole frame as a white line, critic round 41)
+		line.visible = not done and bool(s.get("uplink", true)) and not view.in_follow()
+		node.visible = not view.in_follow()
 		line.position = Vector3(x, ground, z)
 		line.scale = Vector3(size / float(nb) * 0.35, 1, size / float(nb) * 0.55)
 	for id in sats.keys():

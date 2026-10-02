@@ -22,6 +22,7 @@ var rows: Array = []      # one Dictionary per frame
 var cut_left := 0.0       # s: frames after a camera cut are not measured
 var _still_t := 0.0
 var hops := 0
+var why_n := {}   # what the frame test met (measurement)
 var _last_bp = null
 const H60 := 1.0 / 60.0
 
@@ -114,7 +115,23 @@ func record(rig, delta: float) -> void:
 	if view.has_method("follow_occluder"):
 		view.follow_occluder(cam.global_position)
 		occ = int(view.follow_occ_n)
-	rows.append({"occ": occ, "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
+	# critic round 41: a surface within 0.8 m across the frame centre; the head or chest off screen
+	var fbad := 0
+	if view.has_method("follow_frame_hit"):
+		fbad = int(view.follow_frame_hit(cam.global_position, -cam.global_transform.basis.z) != INF)
+		if fbad > 0:
+			why_n[view.frame_why] = int(why_n.get(view.frame_why, 0)) + 1
+	var vp: Vector2 = view.get_viewport().get_visible_rect().size
+	var chest: Vector3 = bp + Vector3(0.0, 1.25, 0.0)
+	var offs := 0
+	for pt in [head, chest]:
+		if cam.is_position_behind(pt):
+			offs = 1
+		else:
+			var sp2: Vector2 = cam.unproject_position(pt)
+			if sp2.x < 0.0 or sp2.y < 0.0 or sp2.x > vp.x or sp2.y > vp.y:
+				offs = 1
+	rows.append({"fbad": fbad, "offs": offs, "occ": occ, "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
 		"mode": String(rec["mode"]), "v": float(rec.get("v", 0.0)), "cam": cam.global_position, "cyaw": atan2(-f.z, f.x),
 		"cpitch": asin(clampf(f.y, -1.0, 1.0)), "scr": sp, "pull": float(rig.get("_sh_pull")), "eye": float(rig.get("_sh_eyeh")),
 		"cut": cut_left > 0.0, "tick": int(view.sim.state["tick"]), "where": String(a.get("where", "")), "off": (rec.get("off", Vector3.ZERO) as Vector3).length(),
@@ -191,6 +208,15 @@ func report() -> Dictionary:
 		if not bool(r["cut"]) and int(r.get("occ", 0)) > 0:
 			occf += 1
 	out["occluded_frames"] = occf
+	var fb2 := 0
+	var of2 := 0
+	for r in rows:
+		if not bool(r["cut"]):
+			fb2 += int(r.get("fbad", 0))
+			of2 += int(r.get("offs", 0))
+	out["wall_centre_frames"] = fb2
+	out["wall_centre_why"] = why_n
+	out["off_screen_frames"] = of2
 	# Locomotion state changes while the person is moving (sim position moving in the last 0.5 s).
 	var sw := 0
 	var move_t := 0.0

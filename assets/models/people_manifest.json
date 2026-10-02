@@ -159,10 +159,10 @@
     "Head_m1": 2918,
     "Hair_m1": 1050,
     "Outfit_uniform": 11674,
-    "Outfit_casual_a": 11932,
-    "Outfit_casual_b": 13998,
+    "Outfit_casual_a": 11760,
+    "Outfit_casual_b": 13996,
     "Outfit_casual_c": 12606,
-    "Outfit_swimwear": 8748,
+    "Outfit_swimwear": 8344,
     "Addon_toolbelt": 416,
     "Addon_apron": 669,
     "Addon_vest": 1500,
@@ -185,10 +185,10 @@
     "Addon_vest": 340,
     "Hair_m1": 520,
     "Head_m1": 159,
-    "Outfit_casual_a": 1899,
-    "Outfit_casual_b": 1899,
+    "Outfit_casual_a": 1900,
+    "Outfit_casual_b": 1898,
     "Outfit_casual_c": 1900,
-    "Outfit_swimwear": 1899,
+    "Outfit_swimwear": 1900,
     "Outfit_uniform": 1898
    },
    "triangles_on_screen": {
@@ -221,20 +221,20 @@
      "with_head_and_hair": 15642
     },
     "casual_a": {
-     "outfit_and_addons": 11932,
-     "with_head_and_hair": 15900
+     "outfit_and_addons": 11760,
+     "with_head_and_hair": 15728
     },
     "casual_b": {
-     "outfit_and_addons": 13998,
-     "with_head_and_hair": 17966
+     "outfit_and_addons": 13996,
+     "with_head_and_hair": 17964
     },
     "casual_c": {
      "outfit_and_addons": 12606,
      "with_head_and_hair": 16574
     },
     "swimwear": {
-     "outfit_and_addons": 8748,
-     "with_head_and_hair": 12716
+     "outfit_and_addons": 8344,
+     "with_head_and_hair": 12312
     }
    },
    "triangles_on_screen_lod1": {
@@ -245,10 +245,10 @@
     "uniform_security": 3256,
     "uniform_command": 3173,
     "prison": 2577,
-    "casual_a": 2578,
-    "casual_b": 2578,
+    "casual_a": 2579,
+    "casual_b": 2577,
     "casual_c": 2579,
-    "swimwear": 2578
+    "swimwear": 2579
    },
    "clips": [
     "argue",
@@ -465,10 +465,10 @@
     "Head_m2": 2914,
     "Hair_m2": 3400,
     "Outfit_uniform": 11673,
-    "Outfit_casual_a": 13996,
+    "Outfit_casual_a": 13998,
     "Outfit_casual_b": 13996,
     "Outfit_casual_c": 12596,
-    "Outfit_swimwear": 8789,
+    "Outfit_swimwear": 8387,
     "Addon_toolbelt": 416,
     "Addon_apron": 665,
     "Addon_vest": 1472,
@@ -481,7 +481,7 @@
    },
    "triangles_lod1": {
     "Addon_apron": 339,
-    "Addon_jacket": 419,
+    "Addon_jacket": 420,
     "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
@@ -491,7 +491,7 @@
     "Addon_vest": 340,
     "Hair_m2": 520,
     "Head_m2": 159,
-    "Outfit_casual_a": 1899,
+    "Outfit_casual_a": 1900,
     "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1900,
@@ -527,8 +527,8 @@
      "with_head_and_hair": 17987
     },
     "casual_a": {
-     "outfit_and_addons": 13996,
-     "with_head_and_hair": 20310
+     "outfit_and_addons": 13998,
+     "with_head_and_hair": 20312
     },
     "casual_b": {
      "outfit_and_addons": 13996,
@@ -539,8 +539,8 @@
      "with_head_and_hair": 18910
     },
     "swimwear": {
-     "outfit_and_addons": 8789,
-     "with_head_and_hair": 15103
+     "outfit_and_addons": 8387,
+     "with_head_and_hair": 14701
     }
    },
    "triangles_on_screen_lod1": {
@@ -549,9 +549,9 @@
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3259,
-    "uniform_command": 3174,
+    "uniform_command": 3175,
     "prison": 2579,
-    "casual_a": 2578,
+    "casual_a": 2579,
     "casual_b": 2578,
     "casual_c": 2579,
     "swimwear": 2579
@@ -771,10 +771,10 @@
     "Head_m3": 2914,
     "Hair_m3": 3344,
     "Outfit_uniform": 11673,
-    "Outfit_casual_a": 11948,
+    "Outfit_casual_a": 11780,
     "Outfit_casual_b": 13998,
     "Outfit_casual_c": 12614,
-    "Outfit_swimwear": 8744,
+    "Outfit_swimwear": 8368,
     "Addon_toolbelt": 416,
     "Addon_apron": 654,
     "Addon_vest": 1472,
@@ -787,17 +787,17 @@
    },
    "triangles_lod1": {
     "Addon_apron": 339,
-    "Addon_jacket": 420,
+    "Addon_jacket": 419,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 339,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_m3": 519,
     "Head_m3": 160,
-    "Outfit_casual_a": 1900,
+    "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1900,
     "Outfit_casual_c": 1899,
     "Outfit_swimwear": 1900,
@@ -833,8 +833,8 @@
      "with_head_and_hair": 17931
     },
     "casual_a": {
-     "outfit_and_addons": 11948,
-     "with_head_and_hair": 18206
+     "outfit_and_addons": 11780,
+     "with_head_and_hair": 18038
     },
     "casual_b": {
      "outfit_and_addons": 13998,
@@ -845,19 +845,19 @@
      "with_head_and_hair": 18872
     },
     "swimwear": {
-     "outfit_and_addons": 8744,
-     "with_head_and_hair": 15002
+     "outfit_and_addons": 8368,
+     "with_head_and_hair": 14626
     }
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2917,
     "uniform_science": 2998,
     "uniform_food": 2917,
-    "uniform_medical": 2998,
+    "uniform_medical": 2997,
     "uniform_security": 3257,
-    "uniform_command": 3174,
+    "uniform_command": 3173,
     "prison": 2578,
-    "casual_a": 2579,
+    "casual_a": 2578,
     "casual_b": 2579,
     "casual_c": 2578,
     "swimwear": 2579
@@ -1075,10 +1075,10 @@
    "triangles": {
     "Head_f1": 2922,
     "Hair_f1": 2852,
-    "Outfit_uniform": 11674,
-    "Outfit_casual_a": 11884,
+    "Outfit_uniform": 11673,
+    "Outfit_casual_a": 11704,
     "Outfit_casual_b": 13998,
-    "Outfit_casual_c": 12632,
+    "Outfit_casual_c": 12422,
     "Outfit_swimwear": 7233,
     "Addon_toolbelt": 416,
     "Addon_apron": 705,
@@ -1098,7 +1098,7 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_f1": 520,
     "Head_f1": 160,
@@ -1110,44 +1110,44 @@
    },
    "triangles_on_screen": {
     "uniform_engineering": {
-     "outfit_and_addons": 12090,
-     "with_head_and_hair": 17864
+     "outfit_and_addons": 12089,
+     "with_head_and_hair": 17863
     },
     "uniform_science": {
-     "outfit_and_addons": 13824,
-     "with_head_and_hair": 19598
+     "outfit_and_addons": 13823,
+     "with_head_and_hair": 19597
     },
     "uniform_food": {
-     "outfit_and_addons": 12379,
-     "with_head_and_hair": 18153
+     "outfit_and_addons": 12378,
+     "with_head_and_hair": 18152
     },
     "uniform_medical": {
-     "outfit_and_addons": 13824,
-     "with_head_and_hair": 19598
+     "outfit_and_addons": 13823,
+     "with_head_and_hair": 19597
     },
     "uniform_security": {
-     "outfit_and_addons": 13590,
-     "with_head_and_hair": 19364
+     "outfit_and_addons": 13589,
+     "with_head_and_hair": 19363
     },
     "uniform_command": {
-     "outfit_and_addons": 14000,
-     "with_head_and_hair": 19774
+     "outfit_and_addons": 13999,
+     "with_head_and_hair": 19773
     },
     "prison": {
-     "outfit_and_addons": 11674,
-     "with_head_and_hair": 17448
+     "outfit_and_addons": 11673,
+     "with_head_and_hair": 17447
     },
     "casual_a": {
-     "outfit_and_addons": 11884,
-     "with_head_and_hair": 17658
+     "outfit_and_addons": 11704,
+     "with_head_and_hair": 17478
     },
     "casual_b": {
      "outfit_and_addons": 13998,
      "with_head_and_hair": 19772
     },
     "casual_c": {
-     "outfit_and_addons": 12632,
-     "with_head_and_hair": 18406
+     "outfit_and_addons": 12422,
+     "with_head_and_hair": 18196
     },
     "swimwear": {
      "outfit_and_addons": 7233,
@@ -1158,7 +1158,7 @@
     "uniform_engineering": 2919,
     "uniform_science": 2998,
     "uniform_food": 2918,
-    "uniform_medical": 2999,
+    "uniform_medical": 2998,
     "uniform_security": 3259,
     "uniform_command": 3175,
     "prison": 2579,
@@ -1379,11 +1379,11 @@
    ],
    "triangles": {
     "Head_f2": 2920,
-    "Hair_f2": 2192,
+    "Hair_f2": 3400,
     "Outfit_uniform": 11674,
-    "Outfit_casual_a": 11868,
+    "Outfit_casual_a": 11700,
     "Outfit_casual_b": 13998,
-    "Outfit_casual_c": 12622,
+    "Outfit_casual_c": 12424,
     "Outfit_swimwear": 7256,
     "Addon_toolbelt": 416,
     "Addon_apron": 716,
@@ -1398,79 +1398,79 @@
    "triangles_lod1": {
     "Addon_apron": 340,
     "Addon_jacket": 420,
-    "Addon_labcoat": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
     "Addon_tunic": 420,
     "Addon_vest": 340,
-    "Hair_f2": 520,
+    "Hair_f2": 519,
     "Head_f2": 160,
-    "Outfit_casual_a": 1899,
+    "Outfit_casual_a": 1900,
     "Outfit_casual_b": 1900,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1899,
-    "Outfit_uniform": 1898
+    "Outfit_uniform": 1899
    },
    "triangles_on_screen": {
     "uniform_engineering": {
      "outfit_and_addons": 12090,
-     "with_head_and_hair": 17202
+     "with_head_and_hair": 18410
     },
     "uniform_science": {
      "outfit_and_addons": 13823,
-     "with_head_and_hair": 18935
+     "with_head_and_hair": 20143
     },
     "uniform_food": {
      "outfit_and_addons": 12390,
-     "with_head_and_hair": 17502
+     "with_head_and_hair": 18710
     },
     "uniform_medical": {
      "outfit_and_addons": 13823,
-     "with_head_and_hair": 18935
+     "with_head_and_hair": 20143
     },
     "uniform_security": {
      "outfit_and_addons": 13590,
-     "with_head_and_hair": 18702
+     "with_head_and_hair": 19910
     },
     "uniform_command": {
      "outfit_and_addons": 13999,
-     "with_head_and_hair": 19111
+     "with_head_and_hair": 20319
     },
     "prison": {
      "outfit_and_addons": 11674,
-     "with_head_and_hair": 16786
+     "with_head_and_hair": 17994
     },
     "casual_a": {
-     "outfit_and_addons": 11868,
-     "with_head_and_hair": 16980
+     "outfit_and_addons": 11700,
+     "with_head_and_hair": 18020
     },
     "casual_b": {
      "outfit_and_addons": 13998,
-     "with_head_and_hair": 19110
+     "with_head_and_hair": 20318
     },
     "casual_c": {
-     "outfit_and_addons": 12622,
-     "with_head_and_hair": 17734
+     "outfit_and_addons": 12424,
+     "with_head_and_hair": 18744
     },
     "swimwear": {
      "outfit_and_addons": 7256,
-     "with_head_and_hair": 12368
+     "with_head_and_hair": 13576
     }
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
-    "uniform_science": 2998,
+    "uniform_science": 2997,
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3258,
     "uniform_command": 3174,
     "prison": 2578,
     "casual_a": 2579,
-    "casual_b": 2580,
-    "casual_c": 2580,
-    "swimwear": 2579
+    "casual_b": 2579,
+    "casual_c": 2579,
+    "swimwear": 2578
    },
    "clips": [
     "argue",
@@ -1547,7 +1547,7 @@
    "source": "MPFB 2.0.17 + CC0 MakeHuman assets",
    "assets": {
     "skin": "skins/middleage_african_female",
-    "hair": "hair/afro01",
+    "hair": "hair/ponytail01",
     "brows": "eyebrows/eyebrow001",
     "eyes": "eyes/materials/brown.mhmat",
     "outfits": {
@@ -1686,9 +1686,9 @@
     "Head_f3": 2916,
     "Hair_f3": 3400,
     "Outfit_uniform": 11675,
-    "Outfit_casual_a": 13996,
+    "Outfit_casual_a": 11660,
     "Outfit_casual_b": 13998,
-    "Outfit_casual_c": 12558,
+    "Outfit_casual_c": 12406,
     "Outfit_swimwear": 7236,
     "Addon_toolbelt": 416,
     "Addon_apron": 712,
@@ -1703,16 +1703,16 @@
    "triangles_lod1": {
     "Addon_apron": 340,
     "Addon_jacket": 420,
-    "Addon_labcoat": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 420,
+    "Addon_tunic": 419,
     "Addon_vest": 340,
     "Hair_f3": 520,
     "Head_f3": 160,
-    "Outfit_casual_a": 1898,
+    "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1899,
     "Outfit_swimwear": 1900,
@@ -1748,16 +1748,16 @@
      "with_head_and_hair": 17991
     },
     "casual_a": {
-     "outfit_and_addons": 13996,
-     "with_head_and_hair": 20312
+     "outfit_and_addons": 11660,
+     "with_head_and_hair": 17976
     },
     "casual_b": {
      "outfit_and_addons": 13998,
      "with_head_and_hair": 20314
     },
     "casual_c": {
-     "outfit_and_addons": 12558,
-     "with_head_and_hair": 18874
+     "outfit_and_addons": 12406,
+     "with_head_and_hair": 18722
     },
     "swimwear": {
      "outfit_and_addons": 7236,
@@ -1766,13 +1766,13 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2919,
-    "uniform_science": 2999,
+    "uniform_science": 2998,
     "uniform_food": 2919,
-    "uniform_medical": 2999,
+    "uniform_medical": 2998,
     "uniform_security": 3259,
     "uniform_command": 3175,
     "prison": 2579,
-    "casual_a": 2578,
+    "casual_a": 2579,
     "casual_b": 2579,
     "casual_c": 2579,
     "swimwear": 2580
@@ -1860,7 +1860,7 @@
       "clothes/toigo_ankle_boots_male"
      ],
      "casual_a": [
-      "clothes/toigo_turtleneck_halter_top",
+      "clothes/joepal_crude_t-shirt_female",
       "clothes/cortu_cargo_pants",
       "clothes/shoes05"
      ],
@@ -1898,40 +1898,40 @@
    "triangles": {
     "Head_c1": 2912,
     "Hair_c1": 1922,
-    "Outfit_school": 13998,
-    "Outfit_casual_a": 12024,
-    "Outfit_casual_b": 13996,
-    "Outfit_swimwear": 8671
+    "Outfit_school": 13996,
+    "Outfit_casual_a": 11804,
+    "Outfit_casual_b": 13998,
+    "Outfit_swimwear": 8345
    },
    "triangles_lod1": {
     "Hair_c1": 519,
     "Head_c1": 159,
-    "Outfit_casual_a": 1898,
+    "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1899,
-    "Outfit_school": 1900,
+    "Outfit_school": 1898,
     "Outfit_swimwear": 1899
    },
    "triangles_on_screen": {
     "school": {
-     "outfit_and_addons": 13998,
-     "with_head_and_hair": 18832
-    },
-    "casual_a": {
-     "outfit_and_addons": 12024,
-     "with_head_and_hair": 16858
-    },
-    "casual_b": {
      "outfit_and_addons": 13996,
      "with_head_and_hair": 18830
     },
+    "casual_a": {
+     "outfit_and_addons": 11804,
+     "with_head_and_hair": 16638
+    },
+    "casual_b": {
+     "outfit_and_addons": 13998,
+     "with_head_and_hair": 18832
+    },
     "swimwear": {
-     "outfit_and_addons": 8671,
-     "with_head_and_hair": 13505
+     "outfit_and_addons": 8345,
+     "with_head_and_hair": 13179
     }
    },
    "triangles_on_screen_lod1": {
-    "school": 2578,
-    "casual_a": 2576,
+    "school": 2576,
+    "casual_a": 2577,
     "casual_b": 2577,
     "swimwear": 2577
    },
@@ -2042,7 +2042,7 @@
     "Head_c2": 2916,
     "Hair_c2": 2248,
     "Outfit_school": 13998,
-    "Outfit_casual_a": 12000,
+    "Outfit_casual_a": 11752,
     "Outfit_casual_b": 13998,
     "Outfit_swimwear": 7031
    },
@@ -2060,8 +2060,8 @@
      "with_head_and_hair": 19162
     },
     "casual_a": {
-     "outfit_and_addons": 12000,
-     "with_head_and_hair": 17164
+     "outfit_and_addons": 11752,
+     "with_head_and_hair": 16916
     },
     "casual_b": {
      "outfit_and_addons": 13998,
@@ -2406,8 +2406,8 @@
    "loop": false
   },
   "lie_enter": {
-   "frames": 304,
-   "duration_s": 10.1333,
+   "frames": 392,
+   "duration_s": 13.0667,
    "kind": "enter",
    "pose_from": "stand",
    "pose_to": "lie",
@@ -2422,8 +2422,8 @@
    "loop": true
   },
   "lie_exit": {
-   "frames": 308,
-   "duration_s": 10.2667,
+   "frames": 404,
+   "duration_s": 13.4667,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",
@@ -2473,16 +2473,16 @@
    "loop": true
   },
   "laugh": {
-   "frames": 75,
-   "duration_s": 2.5,
+   "frames": 76,
+   "duration_s": 2.5333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false
   },
   "argue": {
-   "frames": 105,
-   "duration_s": 3.5,
+   "frames": 102,
+   "duration_s": 3.4,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2524,8 +2524,8 @@
    "loop": true
   },
   "talk_gesture_b": {
-   "frames": 121,
-   "duration_s": 4.0333,
+   "frames": 120,
+   "duration_s": 4.0,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2540,8 +2540,8 @@
    "loop": true
   },
   "shout": {
-   "frames": 88,
-   "duration_s": 2.9333,
+   "frames": 91,
+   "duration_s": 3.0333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2556,8 +2556,8 @@
    "loop": true
   },
   "wave": {
-   "frames": 96,
-   "duration_s": 3.2,
+   "frames": 100,
+   "duration_s": 3.3333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2573,8 +2573,8 @@
    "pair": "handshake"
   },
   "kiss_brief": {
-   "frames": 100,
-   "duration_s": 3.3333,
+   "frames": 89,
+   "duration_s": 2.9667,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2615,28 +2615,28 @@
    "adults_only": true
   },
   "slap": {
-   "frames": 71,
-   "duration_s": 2.3667,
+   "frames": 74,
+   "duration_s": 2.4667,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false,
    "pair": "slap",
-   "contact_s": 1.21
+   "contact_s": 1.31
   },
   "punch": {
-   "frames": 81,
-   "duration_s": 2.7,
+   "frames": 88,
+   "duration_s": 2.9333,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
    "loop": false,
    "pair": "punch",
-   "contact_s": 1.19
+   "contact_s": 1.35
   },
   "hit_react": {
-   "frames": 76,
-   "duration_s": 2.5333,
+   "frames": 78,
+   "duration_s": 2.6,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2671,8 +2671,8 @@
    "loop": true
   },
   "protest_fist": {
-   "frames": 84,
-   "duration_s": 2.8,
+   "frames": 80,
+   "duration_s": 2.6667,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2778,8 +2778,8 @@
    "furniture": "arcade_panel"
   },
   "shop_browse": {
-   "frames": 161,
-   "duration_s": 5.3667,
+   "frames": 162,
+   "duration_s": 5.4,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2797,8 +2797,8 @@
    "furniture": "desk"
   },
   "teach": {
-   "frames": 164,
-   "duration_s": 5.4667,
+   "frames": 162,
+   "duration_s": 5.4,
    "kind": "loop",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -2825,8 +2825,8 @@
    "note": "arcade racer seat"
   },
   "lie_enter_r": {
-   "frames": 304,
-   "duration_s": 10.1333,
+   "frames": 392,
+   "duration_s": 13.0667,
    "kind": "enter",
    "pose_from": "stand",
    "pose_to": "lie",
@@ -2845,8 +2845,8 @@
    "note": "the right side of a double bed: the head to -Y"
   },
   "lie_exit_r": {
-   "frames": 308,
-   "duration_s": 10.2667,
+   "frames": 404,
+   "duration_s": 13.4667,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",
@@ -2876,8 +2876,8 @@
    "children_only": true
   },
   "sleep_turn": {
-   "frames": 309,
-   "duration_s": 10.3,
+   "frames": 270,
+   "duration_s": 9.0,
    "kind": "oneshot",
    "pose_from": "lie",
    "pose_to": "lie",

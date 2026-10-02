@@ -128,6 +128,24 @@ def hex_rgb(h):
     return tuple(int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
 
 
+ROLE_LIGHT = {"rgb": None}
+
+
+def role_light_for(file):
+    """Critic 41: the room's light colour (build report v3.ceiling.light, by role), mixed half with white."""
+    try:
+        import json as _json
+        rep = _json.load(open(K.REPORT_JSON, encoding="utf-8"))
+        row = next((m for m in rep.get("models", []) if m.get("id") == file), None)
+        hx = (((row or {}).get("v3") or {}).get("ceiling") or {}).get("light")
+        if hx and hx.startswith("#"):
+            c = tuple(int(hx[i:i + 2], 16) / 255.0 for i in (1, 3, 5))
+            return tuple(0.5 + 0.5 * v for v in c)
+    except Exception:
+        pass
+    return None
+
+
 def night_lighting(objs, R, ceiling_w=90.0, lamp_w=14.0, pool_w=None, tid=None, accent_w=80.0, spill_w=30.0):
     """The target night look for RENDER (critic round 2): dim moon ambient; ceiling lights at the Anchor_Light_*
     points (about 4,800 K, range 3.5 m); warm lamp pools at the Anchor_Lamp_* points (about 3,100 K); one warm
@@ -150,7 +168,7 @@ def night_lighting(objs, R, ceiling_w=90.0, lamp_w=14.0, pool_w=None, tid=None, 
         if nm.startswith("Anchor_Light_"):
             ld = bpy.data.lights.new("L_" + nm, "POINT")
             ld.energy = ceiling_w
-            ld.color = (1.0, 0.91, 0.82)
+            ld.color = ROLE_LIGHT["rgb"] or (1.0, 0.91, 0.82)
             ld.shadow_soft_size = 0.35
             try:
                 ld.use_custom_distance = True
@@ -216,7 +234,7 @@ def lamps_from_anchors(objs, power=140.0, color=(1.0, 0.86, 0.70), radius=0.25):
         if o.type == "EMPTY" and o.name.startswith("Anchor_Light_"):
             ld = bpy.data.lights.new("L_" + o.name, "POINT")
             ld.energy = power
-            ld.color = color
+            ld.color = ROLE_LIGHT["rgb"] or color
             ld.shadow_soft_size = radius
             lo = bpy.data.objects.new("L_" + o.name, ld)
             lo.location = o.matrix_world.translation
@@ -593,6 +611,7 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
               azimuth=-42.0, margin=1.04, open_doors=False, focus=None, samples=64, lamps=True, top_z=None,
               hide_extra=(), marker_z=None, floor=None, cam_fn=None):
     setup(size[0], size[1], night=night, samples=samples)
+    ROLE_LIGHT["rgb"] = role_light_for(file)
     if marker_z is not None:
         bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.12, minor_radius=0.025, location=(0.0, 0.0, marker_z),
                                          major_segments=96, minor_segments=6)
@@ -701,6 +720,76 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         RR.place_camera(pts, azimuth=azimuth, elevation=elevation, margin=margin, aspect=size[0] / size[1], focal=50.0)
     RR.render_to(out)
     print("  wrote", out)
+    return out
+
+
+def auto_eye_spots(file, R, n=3, dist=1.9, side=0.55):
+    """Critic 41: follow-view spots on free aisle points.  The person stands on an Anchor_Aisle / Seat / Stand point
+    (moved 0.5 m off a seat), at least 0.4 m from every face; the camera (dist behind, side right, 1.8 m) is at least
+    0.4 m from every face, the line person -> camera is free, and the view ahead (3 m at 1.4 m) is free for 2.5 m.
+    Returns [(x, y, yaw)] spread round the room (at most n)."""
+    from mathutils.bvhtree import BVHTree
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.gltf(filepath=os.path.join(K.MODEL_DIR, file + ".glb"))
+    dg = bpy.context.evaluated_depsgraph_get()
+    trees = []
+    pts = []
+    for o in bpy.data.objects:
+        nm = o.name.split(".")[0]
+        if o.type == "MESH":
+            if nm.startswith(K.LEVELS) or nm.startswith(("Base", "Roof", "Decal", "NameSign", "Lights")):
+                continue        # the roof is above the eye; the floor is not an obstacle
+            trees.append(BVHTree.FromObject(o, dg))
+        elif nm.startswith(("Anchor_Aisle", "Anchor_Stand", "Anchor_Seat", "Anchor_Work")):
+            pts.append((nm, o.matrix_world.translation.copy(), o.matrix_world.to_euler().z))
+
+    def clear(p, r=0.4):
+        return all((t.find_nearest(p, r)[0] is None) for t in trees)
+
+    def free(a, b):
+        d = b - a
+        L = d.length
+        if L < 1e-6:
+            return True
+        return all(t.ray_cast(a, d.normalized(), L)[0] is None for t in trees)
+    out = []
+    # extra candidates: a polar grid (small rooms have few anchors)
+    for rr in (0.25, 0.4, 0.55, 0.7):
+        for k in range(12):
+            a_ = radians(30.0 * k + 15.0 * (rr > 0.3))
+            pts.append(("Anchor_Aisle_grid", Vector((rr * R * cos(a_), rr * R * sin(a_), 0.14)), 0.0))
+    for nm, p, rz in pts:
+        if p.z > 1.0:
+            continue                      # upper floors: not here
+        base = Vector((p.x, p.y, 0.0))
+        if not nm.startswith("Anchor_Aisle"):
+            base = base - Vector((cos(rz), sin(rz), 0.0)) * 0.5
+        a_c = degrees(atan2(-base.y, -base.x))
+        yaws = [a_c, a_c + 60.0, a_c - 60.0, degrees(rz), a_c + 90.0, a_c - 90.0]
+        done = False
+        body = [base + Vector((0, 0, z)) for z in (0.4, 1.0, 1.6)]
+        cl = 0.4 if R > 4.0 else 0.22       # small rooms (junction, airlock): a narrower aisle
+        if not all(clear(q, cl) for q in body) or any((base.xy - Vector(q[:2])).length < 0.45 * R for q in out):
+            continue
+        for d_ in (dist, 1.4, 1.0, 0.7):     # the game's wall rule pulls the camera in where the room is small
+            for yaw in yaws:
+                f = Vector((cos(radians(yaw)), sin(radians(yaw)), 0.0))
+                r = Vector((f.y, -f.x, 0.0))
+                cam = base - f * d_ + r * min(side, 0.3 * d_) + Vector((0, 0, 1.80))
+                if not clear(cam, min(0.3, cl)) or cam.xy.length > R - 0.30:
+                    continue
+                if not free(base + Vector((0, 0, 1.5)), cam):
+                    continue
+                eye_ahead = cam + (base + f * 4.0 + Vector((0, 0, 1.35)) - cam).normalized() * min(2.5, 0.5 * R)
+                if not free(cam, eye_ahead):
+                    continue
+                out.append((round(base.x, 2), round(base.y, 2), round(yaw, 1), None, d_))
+                done = True
+                break
+            if done:
+                break
+        if len(out) >= n:
+            break
     return out
 
 
@@ -847,16 +936,24 @@ def main():
         # the follow camera: --eye x,y,yaw[;x,y,yaw...] (m, m, deg): a person at (x, y) facing yaw, roof on, interior lights
         spec_s = argv[argv.index("--eye") + 1] if "--eye" in argv else "auto"
         if spec_s == "auto":
-            # three people at 40 % of the radius, walking towards the far side a little off the centre line
-            specs = [(0.40 * R * cos(radians(a_)), 0.40 * R * sin(radians(a_)), a_ + 180.0 + 25.0)
-                     for a_ in (20.0, 140.0, 260.0)]
+            # critic 41: spots on free aisle points with a clear camera (auto_eye_spots); the old fixed spots (40 % of
+            # the radius) fill in when fewer than three are found
+            specs = auto_eye_spots(file, R)
+            for a_ in (20.0, 140.0, 260.0):
+                if len(specs) >= 3:
+                    break
+                specs.append((0.40 * R * cos(radians(a_)), 0.40 * R * sin(radians(a_)), a_ + 180.0 + 25.0))
         else:
             specs = [tuple(float(v) for v in s_.split(",")) for s_ in spec_s.split(";")]
         for j, sp_ in enumerate(specs):
             ex, ey, eyaw = sp_[:3]
-            efl = int(sp_[3]) if len(sp_) > 3 else None          # a floor of a multi-storey building (x, y, yaw, floor)
+            efl = int(sp_[3]) if len(sp_) > 3 and sp_[3] is not None else None   # a floor (x, y, yaw, floor)
+            # --eye-dist d: the camera pulled in to d m behind the person (the game's wall rule does this in small
+            # rooms; the unit views behind 2.1 m partitions)
+            edist = float(argv[argv.index("--eye-dist") + 1]) if "--eye-dist" in argv else (sp_[4] if len(sp_) > 4 else 1.9)
             shot_room(file, R, base + "_eye%d.png" % j, size=(1500, 840), cutaway=False, night=("--night" in argv),
-                      floor=efl, cam_fn=eye_camera(ex, ey, eyaw, floor_z=3.6 * (efl or 0)))
+                      floor=efl, cam_fn=eye_camera(ex, ey, eyaw, dist=edist, side=min(0.55, 0.3 * edist),
+                                                   floor_z=3.6 * (efl or 0)))
     if "cutproof" in only:
         # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
         # the cutaway may stand above the ring

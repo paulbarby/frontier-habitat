@@ -177,7 +177,9 @@ void vertex() {
 
 void fragment() {
 	if (v_fade < 0.999) {
-		float hh = fract(sin(dot(floor(FRAGCOORD.xy), vec2(12.9898, 78.233))) * 43758.5453);
+		// (the pattern moves every frame: a fade in time reads as a soft fade, not a fixed screen door)
+		vec2 fq = floor(FRAGCOORD.xy) + floor(vec2(fract(TIME * 13.7), fract(TIME * 7.3)) * 64.0);
+		float hh = fract(sin(dot(fq, vec2(12.9898, 78.233))) * 43758.5453);
 		if (hh > v_fade) {
 			discard;
 		}

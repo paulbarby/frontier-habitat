@@ -126,6 +126,7 @@ var _sh_fin := Vector3.ZERO     # eased eye offset from the pivot after the indo
 var _sh_finv := Vector3.ZERO
 const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
+var frame_fn: Callable         # (eye, look dir) -> true when no surface is within 0.8 m across the frame centre
 var occ_fn: Callable           # (eye) -> how far from the chest the eye may stand (world_view.follow_occluder)
 var _sh_occ := 1.0             # eased occluder pull (fraction of the eye's distance from the pivot)
 var _sh_occv := 0.0
@@ -137,18 +138,48 @@ const SH_OCC_MIN := 0.8        # m from the chest: a closer occluder is not avoi
 var _sh_oo := 0.0              # occluder orbit offset (rad), eased
 var _sh_oov := 0.0
 var _sh_oo_t := 0.0            # its target
+var _sh_od := 1.0              # framing boom factor (a cramped room: a shorter boom), eased
+var _sh_odv := 0.0
+var _sh_od_t := 1.0
 var _sh_oo_clear := 0.0        # s the plain view has been clear
 var _sh_oo_blk := 0.0          # s the plain view has been blocked
-const SH_OCC_WAIT := 0.35      # s
+const SH_OCC_WAIT := 0.25      # s
 const SH_W_OCC_ORBIT := 3.0    # rad/s
 var head_boost := 1.0          # measurement switch (render_follow_headless rig.head_boost=0): the trailing-heading boost
 var collide_smooth := false   # set by collide_fn each call: the indoor wall rule is already smooth
 
+## Is the view from heading h good: no occluder between the eye and the person, and (frame_fn) no surface
+## within 0.8 m across the centre of the frame? The eye is the wall rule's target for that heading.
+var _sh_chk_clock := 0.0
+var dbg_search := [0, 0]      # measurement: framing searches [failed, found]
+func _view_ok(pivot: Vector3, h: float, side: float, lift: float, df: float = 1.0) -> bool:
+	var e: Vector3 = _free_eye(pivot, h, side, lift, df)
+	if collide_fn.is_valid():
+		var rt := Vector3(sin(h), 0.0, cos(h))
+		var keep: bool = collide_smooth
+		e = collide_fn.call(pivot + rt * side, e, SH_SOFT, false, SH_KNEE) as Vector3
+		collide_smooth = keep
+	# (under the ceiling, as the frame will be: a low room brings the eye down to the shelves)
+	if ceil_fn.is_valid():
+		var cy: float = float(ceil_fn.call(_sh_p, e))
+		if cy < INF:
+			e.y = minf(e.y, cy - 0.3 - SH_CEIL_KNEE * 0.4)
+	e.y = maxf(e.y, _sh_p.y + 0.25)
+	if float(occ_fn.call(e)) != INF:
+		return false
+	if frame_fn.is_valid():
+		var to_p: Vector3 = pivot - e
+		var off: float = atan2(side, maxf(_sh_d * cos(_sh_pt), 0.05))
+		var look: Vector3 = to_p.normalized().rotated(Vector3.UP, -off)
+		return bool(frame_fn.call(e, look))
+	return true
+
 ## The unpulled eye for a heading (the same formula as the follow frame's `free`), for the occluder search.
-func _free_eye(pivot: Vector3, hd: float, side: float, lift: float) -> Vector3:
+func _free_eye(pivot: Vector3, hd: float, side: float, lift: float, df: float = 1.0) -> Vector3:
 	var fw := Vector3(cos(hd), 0.0, -sin(hd))
 	var rt := Vector3(sin(hd), 0.0, cos(hd))
-	return pivot - fw * _sh_d * cos(_sh_pt) + rt * side + Vector3(0.0, lift + _sh_d * sin(_sh_pt), 0.0)
+	var dd: float = _sh_d * df
+	return pivot - fw * dd * cos(_sh_pt) + rt * side + Vector3(0.0, lift + dd * sin(_sh_pt), 0.0)
 
 ## One exact step of a critically damped spring (x, v) toward `target` with angular frequency w.
 static func _crit(x: float, v: float, target: float, w: float, dt: float) -> Vector2:
@@ -348,39 +379,57 @@ func _shoulder_process(delta: float) -> bool:
 	# the camera first swings round the person by the smallest of +-15/30/45/60 deg that clears both lines
 	# (chest, head), eased; it swings back once the plain view has been clear for SH_OCC_HOLD s.
 	if occ_fn.is_valid() and occ_on > 0.5 and not _sh_new and dt > 0.0:
+		# The framing rule (critic round 41): the person in sight (no occluder on the chest / head lines) AND no
+		# surface closer than 0.8 m across the centre of the frame. The camera swings round the person by the
+		# smallest of +-15..90 deg that gives both, eased; back behind the shoulder once the plain view has
+		# been good for SH_OCC_HOLD s. A short block (a doorway jamb passing) waits SH_OCC_WAIT s first.
 		var h0: float = _sh_heading + _sh_o
-		var cur_ok: bool = float(occ_fn.call(_free_eye(pivot, h0 + _sh_oo_t, side, lift))) == INF
-		var zero_ok: bool = absf(_sh_oo_t) < 0.001 and cur_ok or float(occ_fn.call(_free_eye(pivot, h0, side, lift))) == INF
-		if zero_ok:
-			_sh_oo_clear += dt
-			_sh_oo_blk = 0.0
-			if _sh_oo_clear > SH_OCC_HOLD:
-				_sh_oo_t = 0.0
-		else:
-			_sh_oo_clear = 0.0
-			_sh_oo_blk += dt
-			# (a short block, the camera following through a doorway past its jamb, passes by itself: only a
-			# block that lasts SH_OCC_WAIT s moves the camera)
-			if not cur_ok and _sh_oo_blk > SH_OCC_WAIT:
-				var pick := 0.0
-				for a_deg in [15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0]:
-					var a_off: float = deg_to_rad(a_deg) * _sh_side_s
-					if float(occ_fn.call(_free_eye(pivot, h0 + a_off, side, lift))) == INF:
-						pick = a_off
-						break
-				_sh_oo_t = pick
+		_sh_chk_clock -= dt
+		if _sh_chk_clock <= 0.0:
+			_sh_chk_clock = 0.05
+			var cur_ok: bool = _view_ok(pivot, h0 + _sh_oo_t, side, lift, _sh_od_t)
+			var zero_ok: bool = cur_ok if absf(_sh_oo_t) < 0.001 and _sh_od_t > 0.999 else _view_ok(pivot, h0, side, lift, 1.0)
+			if zero_ok:
+				_sh_oo_clear += 0.05
+				_sh_oo_blk = 0.0
+				if _sh_oo_clear > SH_OCC_HOLD:
+					_sh_oo_t = 0.0
+					_sh_od_t = 1.0
+			else:
+				_sh_oo_clear = 0.0
+				_sh_oo_blk += 0.05
+				if not cur_ok and _sh_oo_blk > SH_OCC_WAIT:
+					# (a cramped room: when no swing of the full boom clears the view, a shorter boom)
+					var found := false
+					for df in [1.0, 0.75, 0.55, 0.4]:
+						for a_deg in [0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0, 60.0, -60.0, 75.0, -75.0, 90.0, -90.0]:
+							var a_off: float = deg_to_rad(a_deg) * _sh_side_s
+							if _view_ok(pivot, h0 + a_off, side, lift, df):
+								_sh_oo_t = a_off
+								_sh_od_t = df
+								found = true
+								break
+						if found:
+							break
+					dbg_search[1 if found else 0] += 1
 		var roo: Vector2 = _crit(_sh_oo, _sh_oov, _sh_oo_t, SH_W_OCC_ORBIT, dt)
 		_sh_oo = roo.x
 		_sh_oov = roo.y
+		var rod: Vector2 = _crit(_sh_od, _sh_odv, _sh_od_t, SH_W_OCC_ORBIT, dt)
+		_sh_od = rod.x
+		_sh_odv = rod.y
 	elif _sh_new:
 		_sh_oo = 0.0
 		_sh_oov = 0.0
 		_sh_oo_t = 0.0
+		_sh_od = 1.0
+		_sh_odv = 0.0
+		_sh_od_t = 1.0
 	var hd: float = _sh_heading + _sh_o + _sh_oo
 	var fwd := Vector3(cos(hd), 0.0, -sin(hd))
 	var right := Vector3(sin(hd), 0.0, cos(hd))
 	var shoulder_pt: Vector3 = pivot + right * side
-	var free: Vector3 = pivot - fwd * _sh_d * cos(_sh_pt) + right * side + Vector3(0.0, lift + _sh_d * sin(_sh_pt), 0.0)
+	var free: Vector3 = pivot - fwd * _sh_d * _sh_od * cos(_sh_pt) + right * side + Vector3(0.0, lift + _sh_d * _sh_od * sin(_sh_pt), 0.0)
 	# The camera never passes a wall. The eye eases in when a wall comes within SH_SOFT of it (fast)
 	# and out when the wall is gone (slow, with a dead band, so a wall at the edge does not make it
 	# pump); it is never closer than SH_HARD to a wall (a hard clamp, only if the easing is too late).

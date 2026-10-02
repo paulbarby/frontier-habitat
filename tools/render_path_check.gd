@@ -60,6 +60,9 @@ func _next_save() -> bool:
 		print("missing save ", path)
 		return _next_save()
 	main._import_bytes(FileAccess.get_file_as_bytes(path))
+	# (the engine must not also run main on the real frame time: the 5 build frames below stepped the
+	# simulation twice per frame once in a while, so a run could end one tick apart, 2026-10-02)
+	main.set_process(false)
 	# Determinism (2026-10-02): the HUD and audio run on the real frame time and ask the simulation things
 	# (talks, people) at their own pace; not under test here, so they do not run.
 	for nm in ["hud", "audio"]:
@@ -200,6 +203,13 @@ func _finish_save() -> void:
 	for aid2 in main.view.npc.agents:
 		var pv: Vector3 = main.view.npc.agents[aid2]["pos"]
 		hv += pv.x * 1.31 + pv.z * 0.77
+	if OS.get_environment("FH_PATH_DUMP") != "":
+		var dump := {}
+		for aid3 in main.view.npc.agents:
+			var rr: Dictionary = main.view.npc.agents[aid3]
+			dump[str(aid3)] = [snappedf((rr["pos"] as Vector3).x, 0.0001), snappedf((rr["pos"] as Vector3).z, 0.0001), String(rr["mode"]), String(rr["sm"].cur), String(rr.get("dk", "")), bool(rr.get("far", false))]
+		var fd := FileAccess.open(OS.get_environment("FH_PATH_DUMP") + "_" + String(cur["save"]) + ".json", FileAccess.WRITE)
+		fd.store_string(JSON.stringify(dump))
 	cur["hash_sim"] = snappedf(hs, 0.0001)
 	cur["hash_view"] = snappedf(hv, 0.0001)
 	cur["tick_end"] = int(main.sim.state["tick"])

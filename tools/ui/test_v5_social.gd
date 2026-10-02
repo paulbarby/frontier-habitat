@@ -145,7 +145,8 @@ func _process(_d: float) -> bool:
 			var r1: String = main._on_cmd("request")
 			check("debug request shows the card", hud.request_card.visible and r1.begins_with("request for"), r1)
 			main._on_cmd("request off")
-			check("debug request off hides it", not hud.request_card.visible)
+			# (A real party offer or HR request can show the card now: only the debug rows must be gone.)
+			check("debug request off hides it", hud.v5.request_override.is_empty() and not hud.v5.requests().any(func(q): return String(q.get("kind", "")) == "leave_with_ship" and int(q.get("id", -1)) == 0) and (not hud.request_card.visible or hud.v5.requests().size() > 0))
 			var ids2: Array = []
 			for tp in load("res://ui/v5_help.gd").TOPICS:
 				ids2.append(String(tp[0]))

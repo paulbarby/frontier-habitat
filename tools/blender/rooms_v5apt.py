@@ -105,6 +105,12 @@ def _slab(part, z0, r_in, r_out, inside="Floor", outside="HullDark", edge="Frame
     prof.append((0.0, zt))
     mats.append(inside)
     part.lathe_a(prof, reg_angles(96), lambda k, i: mats[k], smooth=False)
+    # critic 41: the slab's underside, facing down (the floor below sees a ceiling, not the furniture above), with two
+    # light rings
+    part.lathe_a([(0.0, z0 + 0.01), (r_out + 0.02, z0 + 0.01)], reg_angles(48), lambda k, i: "Hull", smooth=False)
+    for rr in (0.45 * r_out, 0.75 * r_out):
+        part.lathe_a([(rr - 0.05, z0 + 0.005), (rr + 0.05, z0 + 0.005)], reg_angles(48), lambda k, i: "LightStrip",
+                     smooth=False)
     for k in range(16):
         a = radians(360.0 * k / 16 + 5.625)
         c_, s_ = cos(a), sin(a)

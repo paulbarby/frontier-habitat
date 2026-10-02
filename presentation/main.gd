@@ -658,6 +658,64 @@ func _on_cmd(text: String) -> String:
 				return "no screen"
 			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
 			return str(ts._scroll.scroll_vertical)
+		"partydemo":
+			# partydemo [throw]: debug only (changes the colony): a birthday party offer for the first adult; with
+			# "throw" the offer is answered at once (the first place, 2 hours). For screenshots of the Requests tab,
+			# the party card and the Party tab.
+			if not debug_mode():
+				return "debug only"
+			var pd_id := -1
+			for r in hud.v5.people():
+				if String(r["kind"]) == "colonist" and float(r.get("age", 30)) >= 18.0:
+					pd_id = int(r["id"])
+					break
+			submit("celebrate", {"kind": "birthday", "agent": pd_id})
+			if w.size() > 1 and w[1] == "throw":
+				for q in hud.v5.requests():
+					if String(q.get("kind", "")) == "party_offer":
+						var pc: Array = q.get("place_choices", [])
+						var pr := {"id": int(q["id"]), "answer": "throw", "hours": 2}
+						if not pc.is_empty():
+							pr["place"] = int(pc[0]["building"])
+						return "throw: " + JSON.stringify(hud.v5.command("answer_request", pr))
+			return "offer for %d" % pd_id
+		"hrdemo":
+			# hrdemo: debug only (changes the colony): an HR office (joined to a habitat's air), an HR officer, one
+			# complaint and one transfer request, one survey round. For screenshots of the Requests tab and the HR tab.
+			if not debug_mode():
+				return "debug only"
+			sim.state["flags"]["unlock_all"] = true
+			var spot: PackedStringArray = String(_on_cmd("findspot hr_office 1 40")).split(" ")
+			if spot.size() < 2:
+				return "no place"
+			submit("place_finished", {"def": "hr_office", "x": float(spot[0]), "y": float(spot[1]), "rot": 0.0, "size": 1})
+			_fast_forward(2.0)
+			var oid := -1
+			for id in sim.state["buildings"]:
+				if String(sim.state["buildings"][id]["def"]) == "hr_office":
+					oid = int(id)
+			if oid < 0:
+				return "no office"
+			sim.state["buildings"][oid]["powered"] = true
+			for id in sim.state["buildings"]:
+				if String(sim.state["buildings"][id]["def"]) == "habitat" and sim.topo.atmo_comp.has(int(id)):
+					sim.topo.atmo_comp[oid] = sim.topo.atmo_comp[int(id)]
+					break
+			var adults: Array = []
+			for r in hud.v5.people():
+				if String(r["kind"]) == "colonist" and float(r.get("age", 30)) >= 18.0:
+					adults.append(int(r["id"]))
+			submit("set_role", {"agent": int(adults[adults.size() - 1]), "role": "hr"})
+			_fast_forward(1.0)
+			var a: Dictionary = sim.state["agents"][int(adults[0])]
+			var base: int = int(sim.bases.home_of(a)) if sim.bases.count() > 0 else -1
+			sim.hr._new_complaint(a, "home", sim.people.rec_of(int(a["id"])), base, oid)
+			for cid in sim.state["v5"]["hr"]["complaints"]:
+				sim.state["v5"]["hr"]["complaints"][cid]["state"] = "open"
+				sim.state["v5"]["hr"]["complaints"][cid]["needs_player"] = true
+			sim.hr._new_transfer(sim.state["agents"][int(adults[1])], "unhappy", base)
+			sim.hr._survey(int(sim.bases.ids()[0]) if sim.bases.count() > 0 else -1, int(sim.util.day_number()))
+			return "office %d, %d officers, %d complaints" % [oid, sim.hr.officers(-1).size(), sim.hr.complaints().size()]
 		"request":
 			# request [home|off]: shows a "leave with a ship" (or shared-home) request card for the selected person (the UI's view
 			# only; SIM is not changed; an answer gets SIM's "No such request."). For screenshots.

@@ -572,7 +572,7 @@ class Solver:
             qs = qeuler(P.g("shoulder.%s.rx" % s), P.g("shoulder.%s.ry" % s), P.g("shoulder.%s.rz" % s))
             fk("shoulder." + s, qs)
             self._arm(P, s, D, Q, pos, fk)
-            if SCAP_RHYTHM:
+            if SCAP_RHYTHM and P.g("scap.off") <= 0.0:          # (motion capture brings its own shoulders)
                 qx = self._scap(s, D)
                 if qx is not None:
                     d_old = D["shoulder." + s]

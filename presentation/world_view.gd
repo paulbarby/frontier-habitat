@@ -439,12 +439,14 @@ func follow_start(id: int) -> bool:
 	follow_id = id
 	bubbles.follow_id = id
 	r.shoulder_start(func(): return _follow_body(id))
-	Models.near_fade(0.5, 0.7)   # (a narrow ring: the 0.8-1.4 m band drew a grainy half-transparent pillar over the person, 2026-10-02)
+	Models.near_fade(0.45, 0.47)   # (a clean cut, no screen-door band: the 0.8-1.4 m dither drew a grainy pillar over the person, critic 41)
 	r.collide_fn = _follow_collide
 	if "slide_fn" in r:
 		r.slide_fn = follow_slide
 	if "occ_fn" in r:
 		r.occ_fn = follow_occluder
+	if "frame_fn" in r:
+		r.frame_fn = follow_frame_clear
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
@@ -769,6 +771,72 @@ func follow_occluder(eye: Vector3) -> float:
 				break
 			s0 += 0.08
 	return best
+
+## The framing rule (critic round 41): no surface within FRAME_CLEAR m across the centre 50 % of the frame.
+## 9 rays (+-12 deg across, +-7 deg up and down round `look`) are walked from the eye in 0.1 m steps: a step
+## outside the rooms and corridors (indoors) or in an occluder cell (fx_occ) is a surface.
+const FRAME_CLEAR := 0.8
+var frame_why := ""   # measurement: what the last frame test met
+func follow_frame_clear(eye: Vector3, look: Vector3) -> bool:
+	return follow_frame_hit(eye, look) == INF
+
+## The nearest surface along the centre rays (m), INF when none within FRAME_CLEAR.
+func follow_frame_hit(eye: Vector3, look: Vector3) -> float:
+	if follow_id < 0:
+		return INF
+	var fb = agent_world_pos(follow_id)
+	if fb == null:
+		return INF
+	var indoor: bool = String(sim.state["agents"].get(follow_id, {}).get("where", "out")) != "out"
+	var vols: Array = _follow_volumes(eye, FRAME_CLEAR + 0.5) if indoor else []
+	var blds: Array = _occ_grids_near(fb as Vector3)
+	var f: Vector3 = look.normalized()
+	var rt: Vector3 = f.cross(Vector3.UP).normalized()
+	var up: Vector3 = rt.cross(f).normalized()
+	var best := INF
+	for ay in [-0.21, 0.0, 0.21]:
+		for ap in [-0.12, 0.0, 0.12]:
+			var d: Vector3 = (f + rt * tan(ay) + up * tan(ap)).normalized()
+			var t := 0.1
+			while t <= FRAME_CLEAR:
+				var q: Vector3 = eye + d * t
+				var hit := false
+				if indoor and not vols.is_empty() and not _vol_inside(vols, q, 0.0):
+					hit = true
+					frame_why = "wall"
+				if not hit:
+					for e in blds:
+						if Occ.blocked(e[0], (e[1] as Transform3D) * q):
+							hit = true
+							var lq: Vector3 = (e[1] as Transform3D) * q
+							frame_why = "occ %s ly%.2f eye%.2f t%.1f" % [String(e[2]), snappedf(lq.y, 0.1), eye.y - (fb as Vector3).y, t]
+							break
+				if hit:
+					best = minf(best, t)
+					break
+				t += 0.1
+	return best
+
+## The occluder grids of the structures within 4 m of p, with their world -> model transform.
+func _occ_grids_near(body: Vector3) -> Array:
+	var out: Array = []
+	var b2 := Vector2(body.x, body.z)
+	for bid in bmeta:
+		var b: Dictionary = sim.state["buildings"].get(bid, {})
+		if b.is_empty() or not (b["kind"] in ["room", "exterior", "special"]):
+			continue
+		if (b["pos"] as Vector2).distance_to(b2) > float(b["radius"]) + 4.0:
+			continue
+		var meta: Dictionary = bmeta[bid]
+		var tpl: Dictionary = meta.get("tpl", {})
+		if tpl.is_empty():
+			continue
+		var g: Dictionary = Occ.grid_of(tpl)
+		if g.is_empty():
+			continue
+		var sc: float = float(tpl.get("scale", 1.0))
+		out.append([g, ((meta["xf"] as Transform3D) * Transform3D(Basis.from_scale(Vector3(sc, sc, sc)), Vector3.ZERO)).affine_inverse(), String(b["def"])])
+	return out
 
 ## The indoor guard as a SLIDE (2026-10-02): from last frame's eye `from` (inside the rooms and corridors) toward
 ## the sprung eye `to` in 4 cm steps; a step that leaves the walls (margin 0.05 m) is pushed back onto them along
@@ -1567,7 +1635,8 @@ func sync(delta: float) -> void:
 		_weather_clip(focus, cam.global_position if cam != null else focus)
 	if not _skip.has("fx"): fx.sync(delta, sim_dt, cam, focus, wind, sky.night, sky.storm, sky.sun_dir)
 	tp = _prof("fx", tp)
-	var show_words: bool = labels_visible and time_override < 0.0 and not _photo_mode()
+	# (critic round 41: no world marker in the follow view: labels, deposit rings and words, badges)
+	var show_words: bool = labels_visible and time_override < 0.0 and not _photo_mode() and follow_id < 0
 	# V4 (critic round 20): on the v4 map the deposit rings and words show only with the resource
 	# overlay (a survey will add per-deposit visibility when SIM publishes it).
 	# SIM: a deposit counts once surveyed; unsurveyed ones show only with the resource overlay.
@@ -1584,7 +1653,7 @@ func sync(delta: float) -> void:
 		var dk: bool = _dep_known(lab.get_meta("dep", {}))
 		(lab as Label3D).visible = show_words and camera_distance < 55.0 and ((overlay == "" and dk) or ov_res)
 	for rg in _dep_rings:
-		(rg as MeshInstance3D).visible = labels_visible and not _photo_mode() and (float(rg.get_meta("known", 1.0)) > 0.5 or ov_res)
+		(rg as MeshInstance3D).visible = labels_visible and not _photo_mode() and follow_id < 0 and (float(rg.get_meta("known", 1.0)) > 0.5 or ov_res)
 	for id in _labels:
 		(_labels[id] as Label3D).visible = show_words
 	icons.visible = labels_visible and not _photo_mode() and follow_id < 0   # (none in the follow view: the badges cluttered the view inside, 2026-10-02)
@@ -3543,6 +3612,20 @@ func debug_cmd(text: String) -> String:
 				layer2.add_child(lb)
 				gx += 1
 			return "%d photos, %s" % [photos.cache.size(), str(photos.stats)]
+		"framecheck":
+			# framecheck: the follow camera's framing test now (nearest surface across the frame centre, what).
+			var rr = rig()
+			if rr == null or follow_id < 0:
+				return "no follow"
+			frame_why = ""
+			var hh: float = follow_frame_hit(rr.camera.global_position, -rr.camera.global_transform.basis.z)
+			var fbp = agent_world_pos(follow_id)
+			var gl: Array = _occ_grids_near(fbp as Vector3) if fbp != null else []
+			var cells := 0
+			for e in gl:
+				cells += (e[0]["cells"] as Dictionary).size()
+			var vl: Array = _follow_volumes(rr.camera.global_position, 1.3)
+			return "%s %s | grids %d cells %d vols %d eye_in %s where %s" % ["clear" if hh == INF else "hit %.1f" % hh, frame_why, gl.size(), cells, vl.size(), str(_vol_inside(vl, rr.camera.global_position, 0.0)), String(sim.state["agents"].get(follow_id, {}).get("where", "?"))]
 		"robots":
 			# robots open|auto: the Club's robot dancers dance whatever its hours (evidence shots).
 			if robots != null:

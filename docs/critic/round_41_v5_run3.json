@@ -1,0 +1,134 @@
+{
+  "round": 41,
+  "date": "2026-10-02",
+  "scope": "v5 run 3: interiors_close (every room type at follow-camera eye height, V5_DESIGN 15.3 style), hr_office (17.1), planets (15.7), follow_view in game (15.5 roofs on, no weather inside), club_robots, people_in_game (provisional, ART-NPC mid-rebuild).",
+  "evidence": {
+    "blender": "art/interiors/*_eye0..2.png (49 views: every M room type, airlock, junction, residence L family/executive, apartment block M, unit views), *_m.png day cutaways, *_night.png samples, hr_office_{s,m,l}{,_night,_exterior,_eye0..2}.png (ART-HAB, 2026-10-02 19:50-20:19). My contact sheets in the critic scratchpad, not kept.",
+    "render_inputs": "art/critic_input/render/180-189 (planet sheet), 190-194 (follow), 199_club_robots_a/b.",
+    "my_ingame": "build/web_v5preview (commit 325d0af, pck 179.3 MB, exported 18:33 - BEFORE ART-HAB's ceiling/HR files of 19:50-20:19). node tools/shoot.mjs --dir build/web_v5preview --gpu --query title=0 --steps <run>.json. Run 1: loadurl showcase_v3_late, fprobe start 200 in (follows Ines Varga 2 through medical, lounge, habitat, cold_storage, research_lab, kitchen), time 540, storm 1, shoulder 2.6 35 1 8. Run 2: fprobe start 200 out (astronaut 12118), planet airless / cold / auto, storm 1. Run 3: loadurl dome_v5, fprobe start 200 b:super_dome (Marek Dufour, Bram Achebe), time 540, robots open, viewanchor Dancer, viewanchor DJ_club, shoulder 3.5 0 1 -5. 38 shots: art/critic/r41_in_day_0..7, r41_in_night_0..2, r41_in_storm_0..1, r41_in_orbit_0..1, r41_out_dry_0..3, r41_out_airless_0..2, r41_out_cold_0..1, r41_out_storm_0..1, r41_dome_day_0..5, r41_dome_night_0..2, r41_club_a_0..2, r41_club_b_0..1, r41_club_c_0..1. HUD on (the player's view).",
+    "not_seen": [
+      "The new ceilings (RoofCeil), WallsUp bands and the HR office in the game: the preview build is older than those files. Ceiling and HR scores are Blender-only for those parts.",
+      "Robot dancers in my build: 'robots open' -> 'unknown command'; my 7 club shots show no robot. club_robots is scored on RENDER's 199 only (provisional).",
+      "Night in my in-game follow shots: 'time 540' did not visibly change the indoor light in showcase_v3_late; the dome did go blue. Indoor night is not judged in game.",
+      "The V-key follow path (UI card, HUD dim): I entered the follow view by debug command (fprobe), which bypasses the UI."
+    ]
+  },
+  "pass_mark": 0.65,
+  "subjects": {
+    "interiors_close": {"consistency": 0.64, "appeal": 0.58, "style": 0.70, "score": 0.64, "pass": false, "provisional": false,
+      "what_works": [
+        "15.3 satire is in every room I could see, and the best lines read at eye height: kitchen 'SPECIALS: TOFU BYTES / LATENCY LATTE / DUST CAKE', 'TODAY: ALGAE AGAIN', 'TASTE THE FUTURE*'; medical 'PLEASE WAIT: THE AI IS THINKING', 'AI-POWERED FRIDGE V2.6'; oxygen 'BREATHE IN. WE CHECKED.', whiteboard 'SPRINT 12: MAKE IT AI  DATA -> ??? -> AGI'; cantina 'LAST ORDERS: NEVER', 'ASK ME ANYTHING (I WILL TRY)'; lounge 'CHILL.EXE IS RUNNING', 'TOUCH GRASS (FAKE)'; academy planet mobile 'THE CLOUD'; mine 'WORK SMARTER / NOT HUMANER'; fabricator giant rubber duck; habitat 'SHOES OFF / ROBOTS TOO', 'HOME SWEET POD'. Original names, playful, nothing mean. Text contrast is fixed (dark ink).",
+        "Every dome room now has a ceiling at eye height (panelled liner, ribs, crown ring light, vents, pendants), so the follow view reads as an enclosed room, as Paul asked (15.5).",
+        "Role identity at eye height is clear for kitchen, cantina, lounge, greenhouse, research lab, academy, retail, park, distillery (copper stills, barrels) and the HR office.",
+        "In game (showcase_v3_late) the lounge and research lab read warm and lived-in with the game's light: r41_in_day_1, r41_in_night_0."
+      ],
+      "faults": [
+        "BROKEN EVIDENCE: airlock_m_eye0..2, junction_eye0..2 and water_recycler_m_eye0..2 show only a wall or a tank face (the camera is inside geometry); storehouse_m_eye2 and cold_storage_m_eye0 put the camera inside a rack; cold_storage_m_eye2 and medical_m_eye0/1 have the stand-in inside a rack or behind a 2 m cabinet. 3 room types have no eye-height evidence at all. ART-HAB's log says 'looked at'.",
+        "RESIDENCE TUBE (family and executive L): the new ceiling liner fails under the half-tube vault - huge grey triangular shards hang from the vault into the room (residence_tube_l_eye0/1, residence_tube_executive_l_eye1/2). It reads as broken geometry.",
+        "APARTMENT BLOCK M: from floor 1 the upper floors are open from below - furniture of the floors above is visible through the slabs (apartment_block_m_eye0..2). The slab underside is missing or back-face culled.",
+        "Residences read as an office cubicle farm at eye height: 1.30 m partitions, one long view over every unit, no unit ceiling, almost no satire in the units (one 'SELECT ALL SQUARES WITH HOPE' sign).",
+        "The 17 industry types are one room with a different centre machine: the same radial 'sunburst' ceiling, the same console right of the stand-in, the same grey bench, the same wall ring, the same orange band (grp sheets of algae..titanium). The hero pieces (duck, maglev pod, tesseract, horseshoe) help but sit inside identical surroundings.",
+        "Realism at 1.8 m: every surface is a flat colour (no texture, no wear, no decal grime, no normal detail), every room has the same even white light, and big tile floors are empty (HR office L: 8 benches at random angles on an empty floor; medical, water recycler, park, oxygen plant: large bare floor). It looks like a clean blockout with jokes, not a lived-in colony.",
+        "Security office is white and grey with a thin red line; the rubric asks for black and red.",
+        "Small labels (console 'AI-ENABLED' plates, motto signs on the upper band in industry rooms) do not read at 1600x900 at this distance; they are decoration, not a cap, but the joke is lost."
+      ],
+      "weakest_5": [
+        {"room": "residence_tube_l / residence_tube_executive_l", "why": "ceiling shards under the vault; cubicle look; no unit ceilings; eye2 camera in a wall", "fix": "ART-HAB: (1) RoofCeil on the half-tube: follow the vault with a curved liner, or skip the liner where the ray cast hits a rib or a face steeper than 45 deg; reject any liner triangle longer than 1.5 m. (2) Raise unit partitions to 2.1 m (FH_PARTTOP, RENDER must answer the 17:50 request) and give each unit a flat ceiling at 2.4 m with a pendant. (3) Two satire pieces per unit (fridge with a chatbot screen, 'smart' toaster subscription note, a VR headset on the sofa). (4) Re-render eye views with the camera inside a unit."},
+        {"room": "apartment_block_m", "why": "upper floors seen from below through the slab", "fix": "ART-HAB: add a solid slab underside (a ceiling mesh facing down, 5 cm under each upper floor) to every floor; RENDER: draw it with the floor cutaway rule (hidden with the floor above). Eye views from F1 and F2 looking up."},
+        {"room": "water_recycler_m", "why": "no eye evidence; cutaway shows 6 items on an empty floor; no hero piece", "fix": "ART-HAB: fix the eye cameras (auto-place them on free aisle points, reject a camera within 0.4 m of any face); add a hero (glass filter column with visible stages, a 'TODAY'S WATER WAS YESTERDAY'S COFFEE' board) and fill the floor ring (pipe runs on the floor, pumps, a sample bench)."},
+        {"room": "cold_storage_m (and storehouse_m)", "why": "rack canyons, the camera clips the racks, no satire in view, one colour", "fix": "ART-HAB: aisles >= 1.6 m so the follow camera fits; end-of-aisle signs and floor numbers; 2-3 jokes at aisle ends ('AI-SORTED. GOOD LUCK.', a robot vacuum stuck under a rack); frost and labels on cold crates."},
+        {"room": "airlock / junction", "why": "no eye evidence; the junction is an empty drum with a post", "fix": "ART-HAB: working eye views; junction: benches, a wayfinding totem with arrows and a lost-and-found shelf, a notice board; airlock: suit rack and checklist at eye height in view."}
+      ]},
+    "hr_office": {"consistency": 0.72, "appeal": 0.60, "style": 0.72, "score": 0.68, "pass": true, "provisional": true,
+      "what_works": [
+        "Every 17.1 item is there: reception counter with stress balls, two interview rooms with tissues, the WELLBEING.AI kiosk ('1 GREAT 2 GREAT 3 OTHER*'), filing banks, the padlocked suggestion box, a ficus, 'YOUR FEELINGS ARE VALID (PENDING REVIEW)', 'SYNERGY', a 'PLEASE QUEUE (EMOTIONALLY)' floor queue with yellow rings, standing desks. S, M and L exist.",
+        "The kiosk, SYNERGY and FEELINGS pieces read at eye height (hr_office_m_eye1, hr_office_l_eye0). The tone is right: corporate wellness, playful.",
+        "Exterior: coral band and a lit roof sign 'WE ARE LISTENING*' that reads from above."
+      ],
+      "faults": [
+        "The floor is mostly empty: L has 8 benches at random angles across a bare tiled floor (hr_office_l.png); it reads as furniture dropped in a hall, not an office. The interview rooms are 1.4 m booths, not rooms.",
+        "At eye height it is a generic white office; the jokes are all on the wall ring 6-10 m away. Nothing funny is near the reception or the queue except the queue rings.",
+        "The roof badge (speech bubble with a heart) reads as a '3' from above.",
+        "Not seen in game (the preview build is older than the HR files); provisional."
+      ]},
+    "planets": {"consistency": 0.72, "appeal": 0.70, "style": 0.72, "score": 0.71, "pass": true, "provisional": false,
+      "what_works": [
+        "Airless is the strongest: black sky with stars by day, a hard white sun, black hard shadows, grey regolith (186). At eye height in the follow view it is striking (r41_out_airless_1/2).",
+        "Cold reads as cold: frost on the ground, pale sky, ice haze in the distance, blue night (183, 185, r41_out_cold_0/1).",
+        "The three planets are told apart in one glance on the 189 sheet; dry is unchanged."
+      ],
+      "faults": [
+        "A yellow-green ground patch (left of the colony) glows on airless and cold, day and dusk (186, 187, 183, 184): it reads as a sickly lawn on a dead world.",
+        "Cold frost is a blotchy camouflage pattern over a pink-brown base (the dry orange desaturated shows through): 183, r41_out_cold_0.",
+        "A wind turbine stands and turns on the airless planet (186-188). SIM should refuse it there (no wind); until then it breaks the planet.",
+        "No frost on structures at night on cold (RENDER's own open item); the minimap stays orange on every planet (UI, already asked).",
+        "The mountain and mesa shapes are identical on all three planets; only the colour changes (acceptable for 5.0)."
+      ]},
+    "follow_view": {"consistency": 0.58, "appeal": 0.52, "style": 0.66, "score": 0.59, "pass": false, "provisional": false,
+      "what_works": [
+        "Roofs are on: every indoor shot has a ceiling over the person (r41_in_day_1, r41_in_night_0, r41_in_orbit_0, 193).",
+        "No weather inside: with 'storm 1' forced, 0 particles inside in r41_in_storm_0/1 (RENDER's weather check: 0 drawn inside).",
+        "Bubbles are the glass style, readable, above the heads, never over the followed face in my shots (r41_in_night_0, 191).",
+        "Outdoors the framing is good: the suit on the left third, look room to the right (r41_out_dry_0..3).",
+        "The super dome gallery at eye height reads as a mall: GROCERY, GIFTS, ELECTRONICS, fountain, benches, people (r41_dome_day_2)."
+      ],
+      "faults": [
+        "Camera faces a wall or a pillar: 194 (whole frame one wall, no person), 192 (person cut at the left edge, frame filled by a wall), r41_in_day_4, r41_in_day_5 (person not in frame at all), r41_in_orbit_1, r41_in_day_2/3 (person cut at the left edge, frame filled by the dome wall). 5 of my 15 indoor shots fail the 'person clear' test.",
+        "A body through the camera: r41_in_storm_0 - another walker passes 0.3-0.4 m in front of the lens and fills 60 % of the frame; the people near-fade did not act.",
+        "Grainy occluder: 191 - the stipple dither fade over a near person is a noisy screen-door pattern over a third of the frame.",
+        "World markers stay on in the follow view: status badges (190, 193, 194), 'WORN 80%' labels inside rooms (r41_in_day_2/3, r41_out_airless_0), and outdoor POI labels 'METEORITE FIELD / RICH DEPOSIT needs anyone' drawn through the dome walls over the mall (r41_dome_day_1..5).",
+        "190: a hard white horizontal line crosses the whole screen at 0.6 height, and the tube outside is a black void.",
+        "Framing indoors: the followed person sits in the centre and fills 40-60 % of the frame at 1.7-2.4 m (r41_in_day_1, r41_dome_day_4/5); there is no look room ahead and no depth cue.",
+        "HUD: in my (debug) follow the full HUD stays at full strength and the mission dock covers the left quarter; no follow card. UI must confirm that the V-key path dims the HUD and shows the card (15.6 centre clear)."
+      ]},
+    "club_robots": {"consistency": 0.62, "appeal": 0.55, "style": 0.66, "score": 0.61, "pass": false, "provisional": true,
+      "what_works": [
+        "Three robot dancers on podiums dance different moves (an arm raise, a step) between frames a and b (199).",
+        "They are clearly machines: light-bar faces, jointed chrome-black limbs, no human anatomy. Tone: PASS. The podium poles are in the contract (8, 'podiums with poles'); the framing is a performance, not sexual."
+      ],
+      "faults": [
+        "The dancers are near-black silhouettes: no key light, no rim light, no spot on the podiums; the chrome does not read (199).",
+        "The floor is black, the LED tiles are blown out to white, the wall screen is a cyan noise texture with black holes, the room is empty of people.",
+        "Not in the current preview: 'robots open' -> unknown command; r41_club_a/b/c show the club black with no robots.",
+        "The camera sits behind the dancer anchors looking at the floor; there is no designed view of the stage."
+      ]},
+    "people_in_game": {"consistency": 0.66, "appeal": 0.58, "style": 0.65, "score": 0.63, "pass": false, "provisional": true,
+      "what_works": [
+        "A crowd reads as different people: skin tones, hair (bun with texture, short, long), outfits (white coat with blue trim, green tracksuit, black tee, the suit) (r41_in_night_0, r41_dome_day_2, 191).",
+        "Faces at 0.5 m are smooth and plausible, not uncanny (r41_in_storm_0). Walk is smooth at speed 1; feet look planted in my shots.",
+        "The suit outdoors holds at the follow distance."
+      ],
+      "faults": [
+        "Arms hang straight and stiff with the hands at the thighs while walking and standing (r41_in_storm_0, r41_dome_day_4/5) - the A-pose of round 40 in a new form.",
+        "Cloth is a single glossy colour: the black tee reads as latex, the coat as plastic; no folds visible at 2 m.",
+        "Indoor people never turn to camera in the follow view, so faces are rarely seen; idle at a counter is a still back for 50 s (r41_dome_day_3..night_2)."
+      ]}
+  },
+  "mean_this_round": 0.643,
+  "gap_to_stunning": {
+    "interiors": "Now 0.64. To 0.80: textures and wear (one atlas: brushed metal, painted panel with scuffs, rubber floor, fabric; decals for grime, labels and floor paint), light per role (warm pools in the cantina and lounge, cold white in labs, amber work lights in industry, coloured neon accents), per-family ceiling and wall variants so the 17 industry rooms differ, filled floors (no empty tile fields), and the residence/apartment geometry fixed. To 0.90: hand-dressed hero corners per room (a messy desk, a half-eaten lunch, a cat bed under a console), emissive screens with animated content, glass and reflections.",
+    "follow_view": "Now 0.59. To 0.80: a framing rule (person on the left or right third, look room ahead, never a wall within 0.8 m of the lens), a clean near fade with a dither that is smoothed by TAA or an alpha fade, every world marker hidden in the follow view, the HUD dimmed with the follow card, a soft depth-of-field on the background. To 0.90: cinematic auto-shots (watch mode, 15.2).",
+    "people": "Provisional 0.63; see round 40: relaxed arms, cloth with folds and a matte fabric shader, expressions."
+  },
+  "fixes": [
+    {"rank": 1, "owner": "RENDER", "subject": "follow_view", "fix": "Framing rule: the camera never faces a surface closer than 0.8 m across the centre 50 % of the frame; when it would, orbit to the free side (sample +-15..90 deg) or pull in over the shoulder; keep the person on a third (screen x 0.33 or 0.67) with look room in the walk direction. Prove it: 30 indoor follow shots on showcase_v3_late, 0 frames with the person off-screen or a wall over the centre."},
+    {"rank": 2, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Residence tube ceiling shards: make RoofCeil follow the half-tube vault (or skip it there), reject liner triangles > 1.5 m; re-render residence_tube_l and _executive_l eye views."},
+    {"rank": 3, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Eye-view evidence for every room: auto-place the eye camera on free aisle points 0.4 m from any face; re-render airlock, junction, water_recycler, storehouse, cold_storage, medical; look at each before claiming."},
+    {"rank": 4, "owner": "RENDER", "subject": "follow_view", "fix": "Hide every world marker in the follow view: status badges, 'WORN nn%' labels, POI labels (METEORITE FIELD, RICH DEPOSIT, derelict probe) - at least those not in line of sight; remove the white horizontal line of 190."},
+    {"rank": 5, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Texture and light pass: one shared atlas (painted panel with scuffs, brushed metal, rubber floor, fabric) and decals (floor paint, grime at the wall foot, labels); a light colour per role family (warm cantina/lounge/housing, cool labs/medical, amber industry). Budget: the 25 MB ART-HAB allocation."},
+    {"rank": 6, "owner": "RENDER", "subject": "follow_view", "fix": "People near the lens: fade any body within 0.8 m of the camera to 0 alpha (smooth, not stipple) and replace the screen-door dither of the occluder fade with a smooth fade or a blue-noise dither filtered by TAA (191, r41_in_storm_0)."},
+    {"rank": 7, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Apartment block slab undersides (a down-facing ceiling under every upper floor) and residence/apartment units with 2.1 m partitions, a unit ceiling and two satire pieces each."},
+    {"rank": 8, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Industry family variety: 3 ceiling variants (crane bay, duct grid, open truss), the console and bench moved per type, a type-coloured wall band, and fill the floor ring (pipe runs, pallets, tool carts) so no tile field stays bare."},
+    {"rank": 9, "owner": "RENDER", "subject": "club_robots", "fix": "Light the dancers: a coloured spot from above per podium and a rim light, lift the floor from black, cap the LED tile emission (no white blow-out); ship fx_robots in the preview build; a stage view anchor. The wall screen texture and black holes: ART-B."},
+    {"rank": 10, "owner": "RENDER", "subject": "planets", "fix": "Remove the yellow-green ground patch on airless and cold; cold frost as a smooth slope/height-based cover over a grey-blue base (no pink camouflage); frost on structures at night. Turbine on airless: SIM to refuse the build there (note to the orchestrator)."},
+    {"rank": 11, "owner": "UI", "subject": "follow_view", "fix": "Follow view by V: dim the HUD to 35 %, collapse the left dock, show the follow card; minimap palette per planet."},
+    {"rank": 12, "owner": "ART-HAB", "subject": "hr_office", "fix": "HR office: replace the scattered benches with a waiting area (2 rows facing reception), make interview rooms 2.1 m rooms with a door gap, put 2 jokes at the reception (a 'HOW WAS YOUR COMPLAINT? 1-5 STARS' tablet, a 'MANDATORY FUN' calendar); a clearer heart badge."},
+    {"rank": 13, "owner": "ART-NPC", "subject": "people_in_game", "fix": "Relaxed arms (8-10 deg off the body, elbows bent 10-15 deg, fingers curled) in idle, walk and work_bench; a matte fabric material with a fold normal map for tee, coat and tracksuit."},
+    {"rank": 14, "owner": "ART-HAB", "subject": "interiors_close", "fix": "Security office black and red (dark panels, red accent), as the rubric and room identity ask."}
+  ],
+  "notes": [
+    "Scores: interiors_close 0.64 FAIL, hr_office 0.68 PASS (provisional), planets 0.71 PASS, follow_view 0.59 FAIL, club_robots 0.61 FAIL (provisional), people_in_game 0.63 FAIL (provisional). Mean 0.643.",
+    "Definition of done item 4 (interiors >= 0.65) and item 1 (follow view: no body through the camera) are not met on this evidence.",
+    "Orchestrator note (not one of my four owners): the wind turbine is buildable and drawn on the airless planet."
+  ]
+}

@@ -992,7 +992,7 @@ func long_v3_perf(t) -> void:
 	# single windows down; every window is on the result line).
 	var wins: Array = []
 	var raw_w: Array = []
-	var pc = Pacer.new(true)
+	var pc = Pacer.new(true, 0.55)
 	pc.start()
 	for w in 3:
 		for b in 10:

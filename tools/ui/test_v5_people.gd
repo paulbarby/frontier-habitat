@@ -129,8 +129,13 @@ func _process(_d: float) -> bool:
 			check("the order goes to SIM; SIM's answer (or 'not yet') is shown", not lr.is_empty() and (bool(lr.get("ok", false)) or String(lr.get("code", "")) == "not_yet"), str(lr))
 			hud.person.visible = false
 			main.select("agent", pid)
-			# Follow HUD (the camera itself is RENDER's; headless has no drawn people, so the card is shown directly).
-			hud.follow_changed(pid)
+			# Follow HUD, through the player's path (the HUD takes the state of the view since 2026-10-02: hud._sync_follow).
+			if not main.follow_person(pid):   # the person rides in a rover in this save: the next one who can be followed
+				for r in hud.v5.people():
+					if String(r["kind"]) == "colonist" and int(r["id"]) != pid and main.follow_person(int(r["id"])):
+						pid = int(r["id"])
+						break
+			main.select("agent", pid)
 			_step = 6
 			_n = 0
 		6:

@@ -1247,3 +1247,8 @@ follow_hud, personnel_file, crew_security, venues, rag, settings, each at 1920 a
 Not done: click a speech bubble to switch the followed person (waits for RENDER). Not tested: the loader tips on screen (the
 shell is built by the orchestrator); the tab layout at an interface scale of 140 % in the web build (headless only).
 For RENDER: the personnel file portrait still shows the "RAG SNAP" placeholder (`view.photo`); nothing else found. For SIM: nothing.
+
+## 2026-10-02 (later) - PAUSED (coordinator): sections 16/17 UI, bubble click, planet colours, V-path follow state
+- Done, tested alone (test_v5_party_hr, test_keys, test_v5_people, test_v5_social, test_help_v5, test_panels: PASS): bubble click switches the follow (`main._on_bubble_clicked`); minimap palette by planet; title preview of the chosen planet; party offers, HR complaints and transfers in the Requests tab and the Crew HR tab; party card (Events tab); Party tab in the venue inspector; Cheeky dialogue setting; help, What's new, tips; the HUD takes the follow state of the view whatever started it (dock folds, HUD dims to 35 %). Shots `docs/shots/ui20_*` taken from build/web_ui (not looked at yet).
+- Half-done: the full 29-test suite was not re-run after the last edits (hud._sync_follow, debug commands partydemo/hrdemo in main.gd); the rest of CRITIC-to-UI round 41 is covered by the follow-state sync and the minimap, POI labels hide in the follow view.
+- Not done: a real mouse click on a bubble (only the signal is tested); the ui20 shots are unchecked; `check` was clean at the last run.

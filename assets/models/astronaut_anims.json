@@ -174,8 +174,8 @@
    "loop": true
   },
   "lie_enter": {
-   "frames": 304,
-   "duration_s": 10.1333,
+   "frames": 392,
+   "duration_s": 13.0667,
    "kind": "enter",
    "pose_from": "stand",
    "pose_to": "lie",
@@ -190,8 +190,8 @@
    "loop": true
   },
   "lie_exit": {
-   "frames": 308,
-   "duration_s": 10.2667,
+   "frames": 404,
+   "duration_s": 13.4667,
    "kind": "exit",
    "pose_from": "lie",
    "pose_to": "stand",
@@ -324,8 +324,8 @@
    "door": "right of the seat (seat on the left)"
   },
   "step_up": {
-   "frames": 60,
-   "duration_s": 2.0,
+   "frames": 63,
+   "duration_s": 2.1,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -336,12 +336,12 @@
     -0.53,
     0.5
    ],
-   "cut_frame": 60,
+   "cut_frame": 63,
    "door": "left door (vehicle on the right)"
   },
   "step_up_r": {
-   "frames": 60,
-   "duration_s": 2.0,
+   "frames": 63,
+   "duration_s": 2.1,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",
@@ -352,7 +352,7 @@
     0.53,
     0.5
    ],
-   "cut_frame": 60,
+   "cut_frame": 63,
    "door": "right door (vehicle on the left)"
   },
   "step_down": {

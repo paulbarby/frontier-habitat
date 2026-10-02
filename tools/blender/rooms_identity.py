@@ -109,16 +109,17 @@ def _crate():
 
 
 def _hr():
-    """5.0 HR office: a speech bubble with a heart cut out of it ("we are listening")."""
-    out = []
+    """5.0 HR office (critic 41: the cut-out heart read as a '3'): a speech-bubble ring with a tail, a solid heart in it."""
+    out, inn = [], []
     for k in range(24):
         t = 2 * pi * k / 24
         if k == 16:
-            out.append((-0.50, -0.80))            # the bubble's tail
-            continue
-        out.append((0.74 * cos(t), 0.14 + 0.54 * sin(t)))
-    heart = [(0.50 * x, 0.50 * y + 0.12) for (x, y) in _heart()[0][0]]
-    return [[out, list(reversed(heart))]]
+            out.append((-0.52, -0.84))            # the bubble's tail
+        else:
+            out.append((0.78 * cos(t), 0.12 + 0.58 * sin(t)))
+        inn.append((0.62 * cos(t), 0.12 + 0.44 * sin(t)))
+    heart = [(0.42 * x, 0.42 * y + 0.10) for (x, y) in _heart()[0][0]]
+    return [[out, list(reversed(inn))], [heart]]
 
 
 ICONS = {

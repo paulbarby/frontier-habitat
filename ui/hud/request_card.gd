@@ -215,7 +215,6 @@ func _option_controls(v: VBoxContainer, q: Dictionary) -> void:
 	row.add_theme_constant_override("h_separation", 6)
 	row.add_theme_constant_override("v_separation", 4)
 	v.add_child(row)
-	var first := true
 	for o in opts:
 		var oid: String = String(o["id"])
 		var primary: bool = (oid == "refuse") if kind == "hr_transfer" else (oid in ["throw", "mediate", "move_home"])
@@ -226,9 +225,6 @@ func _option_controls(v: VBoxContainer, q: Dictionary) -> void:
 		if oid == "throw" and (q.get("place_choices", []) as Array).is_empty():
 			b.disabled = true
 		row.add_child(b)
-		if first:
-			_allow = b
-			first = false
 	row.add_child(Kit.button("File", func(): hud.open_person(int(q.get("agent", -1)), "file"), "Personnel file\nMood, skills and relationships of this person.", "GhostButton", "colonists", 13))
 	row.add_child(Kit.button("Show", func(): _show(q), "Show\nThe camera goes to this person.", "GhostButton", "target", 13))
 	var lines: Array = []

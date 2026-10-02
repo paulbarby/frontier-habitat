@@ -177,6 +177,17 @@ def interview_room(plan, cx, cy, W, D, door_y, number=1):
     return chairs
 
 
+def _lounge_set(plan, x, y, k):
+    """A 'decompression corner': two armchairs facing over a small table, turned to the room centre."""
+    n = plan.n
+    yaw = degrees(atan2(y, x)) + 90.0
+    with at(plan, x, y, yaw):
+        FU.coffee_table(n, hx=0.42, hy=0.30, clutter=False)
+        for sd in (-1, 1):
+            with n.at(T(0.0, sd * 0.62, 0.0), RZ(-90.0 * sd)):
+                V5.armchair(n, fabric=("Fabric", "CushionLight")[sd > 0])
+
+
 def _bench(plan, x, y, k):
     """A waiting bench turned to the room centre (the filler's small unit)."""
     with at(plan, x, y, degrees(atan2(y, x)) + 90.0):
@@ -204,6 +215,21 @@ def hr_office(rm):
     with at(plan, rx, 0.0, 0.0):
         shop_counter(n, w=1.6, seed=3)
         PR.desk_plate(n, 0.18, -0.45, F + 1.00, "CHIEF PEOPLE OFFICER")
+        # critic 41: two jokes at the counter - a rating tablet and a "MANDATORY FUN" calendar on the front
+        with n.at(T(0.12, 0.05, F + 1.00), RY(-25.0)):
+            bbox(n, -0.01, 0.01, -0.13, 0.13, 0.0, 0.20, "HullDark")
+            plate_x(n, 0.011, -0.12, 0.12, 0.01, 0.19, "Screen")
+            PR.text_lines(n, ("RATE YOUR", "COMPLAINT"), 0.0, 0.175, 0.026, "LightStrip", x=0.012, gap=0.4)
+            for st in range(5):
+                with n.at(T(0.013, -0.09 + 0.045 * st, 0.05), RY(90.0)):
+                    n.cap_disc(0.016, 0.0, "Window", seg=5)
+        plate_x(n, 0.303, -0.35, 0.05, F + 0.42, F + 0.80, "Hull")
+        plate_x(n, 0.304, -0.35, 0.05, F + 0.72, F + 0.80, "SignalRed")
+        PR.text(n, "MANDATORY FUN", -0.15, F + 0.76, 0.030, "Hull", x=0.305)
+        for r_ in range(3):
+            for c_ in range(5):
+                plate_x(n, 0.305, -0.32 + 0.072 * c_, -0.27 + 0.072 * c_, F + 0.62 - 0.07 * r_, F + 0.67 - 0.07 * r_,
+                        "Hazard" if (r_ * 5 + c_) % 4 == 1 else "CushionLight")
         for (by, bz) in ((0.45, 0.035), (0.55, 0.035), (0.50, 0.095)):                 # stress balls
             n.sphere((-0.05, by, F + 1.00 + bz), 0.035, ("Fabric", "Hazard", "Plant")[int(bz > 0.05)], seg=6, rings=3)
     plan.rect(rx, 0.0, 0.34, 0.82, 0.0, tag="counter")
@@ -279,8 +305,28 @@ def hr_office(rm):
         anchor(plan, "Seat", wx, wy, yaw, lx=SEAT_BACK, alias="Chair_%d" % k)
     pattern = ["cab_plant", "r_synergy", "aiposter", "cab_books", "r_feelings", "notice", "planter", "r_survey"]
     plan.wall_items(pattern, IR.wall_set(plan), open_every=3, seed=17 + s, depth_of=IR.DEPTHS)
-    fill(plan, [(lambda p_, x, y, k_: _group_table(p_, x, y, k_), 1.1), (_bench, 0.65), (f_plant, 0.25)], target=2.1,
-         max_items=14)
+    # critic 41: a waiting area - a second row of chairs behind the anchored ones, facing the reception side
+    for k in range(N_CHAIR[s] + 1 if s >= 1 else 0):
+        wx, wy = qx0 + 0.75 * k - 0.2, -1.85
+        if hypot(wx, wy) > R - 0.4 or plan.dist(wx, wy) < 0.30:
+            continue
+        with at(plan, wx, wy, 90.0):
+            FU.chair(n, seat=("CushionLight", "Fabric", "Accent")[k % 3])
+        plan.rect(wx, wy, 0.24, 0.24, 90.0, tag="chair")
+    if s >= 1:
+        # the decompression corners (M, L): armchair pairs on the largest free spots away from the people anchors
+        people = [a_[1][:2] for a_ in rm.anchors if a_[0].startswith(("Anchor_Seat", "Anchor_Work", "Anchor_Stand"))]
+        placed = 0
+        for rr in (0.55, 0.40, 0.70, 0.25):
+            for k in range(16):
+                x, y = polar(rr * R, 22.5 * k + 11.25)
+                if placed >= s or plan.dist(x, y) < 1.05 or min([hypot(x - px, y - py) for px, py in people] or [9]) < 1.3:
+                    continue
+                _lounge_set(plan, x, y, k)
+                plan.circle(x, y, 0.95, tag="lounge")
+                placed += 1
+    items = [(lambda p_, x, y, k_: _group_table(p_, x, y, k_), 1.1), (f_plant, 0.25)]
+    fill(plan, items, target=2.1, max_items=12)
     plan.lights()
     plan.aisles()
     plan.v4_patch = IR.empty_patch(plan)[0]

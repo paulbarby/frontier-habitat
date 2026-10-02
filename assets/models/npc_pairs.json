@@ -4,11 +4,12 @@
   "hug": {
    "clip_a": "hug",
    "clip_b": "hug",
-   "distance_m": 0.44,
+   "distance_m": 0.48,
    "facing_deg": 180.0,
    "sync_s": 0.0,
    "side_offset_m": 0.0,
-   "note": "arms round the partner's back, heads side by side"
+   "hand_contact": true,
+   "note": "arms round the partner's back, heads side by side; the hands rest on the partner's back"
   },
   "handshake": {
    "clip_a": "handshake",
@@ -27,7 +28,8 @@
    "facing_deg": 180.0,
    "sync_s": 0.0,
    "side_offset_m": 0.0,
-   "note": "adults only; faces meet 0.6-1.2 s, no more"
+   "hand_contact": true,
+   "note": "adults only; faces meet 0.6-1.2 s, no more; hands rest on the partner's upper arms"
   },
   "hold_hands_walk": {
    "clip_a": "hold_hands_walk",
@@ -35,7 +37,7 @@
    "distance_m": 0.0,
    "facing_deg": 0.0,
    "sync_s": 0.0,
-   "side_offset_m": 0.5,
+   "side_offset_m": 0.64,
    "hand_contact": true,
    "note": "B walks at A's left (+Y), the same phase; A's left hand holds B's right hand; move both along +X at the walk speed"
   },
@@ -44,18 +46,20 @@
    "clip_b": "hit_react",
    "distance_m": 0.6,
    "facing_deg": 180.0,
-   "sync_s": 0.76,
+   "sync_s": 0.86,
    "side_offset_m": 0.0,
-   "note": "contact at 1.21 s (A); B plays hit_react 0.76 s later (its hit at 0.45 s)"
+   "hand_contact": true,
+   "note": "contact at 1.31 s (A); B plays hit_react 0.86 s later (its hit at 0.45 s)"
   },
   "punch": {
    "clip_a": "punch",
    "clip_b": "hit_react",
    "distance_m": 0.7,
    "facing_deg": 180.0,
-   "sync_s": 0.74,
+   "sync_s": 0.9,
    "side_offset_m": 0.0,
-   "note": "contact at 1.19 s (A); B plays hit_react 0.74 s later (its hit at 0.45 s)"
+   "hand_contact": true,
+   "note": "contact at 1.35 s (A); B plays hit_react 0.90 s later (its hit at 0.45 s)"
   },
   "escort": {
    "clip_a": "escort_walk",

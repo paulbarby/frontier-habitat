@@ -362,7 +362,7 @@ func _marker_label(ev: Dictionary) -> void:
 	var names := {"meteor": "METEOR", "meteor_shower": "METEOR SHOWER", "quake": "QUAKE", "dust_devil": "DUST DEVIL"}
 	var t: int = int(ceil(float(ev["eta_s"])))
 	lab.text = "%s  %d s%s" % [names.get(String(ev["kind"]), "HAZARD"), t, "\nCOVERED" if bool(ev["countered"]) else ""]
-	lab.visible = view.labels_visible and view.time_override < 0.0 and not view._photo_mode()
+	lab.visible = view.labels_visible and view.time_override < 0.0 and not view._photo_mode() and not view.in_follow()
 
 func _drop_marker(id: int) -> void:
 	for n in markers[id]["nodes"]:

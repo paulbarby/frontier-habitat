@@ -1688,13 +1688,20 @@ func long_v4_perf(t) -> void:
 		return n
 	var wins: Array = []
 	var raw_w: Array = []
-	var pc = Pacer.new(true)
+	var pc = Pacer.new(true, 0.95)
 	pc.start()
 	var driving := 0
 	var low := 999
 	for w in 3:
 		H.fill_utilities(sim, 1.0, 0.8, true)                                            # test set-up: air for 100
 		for s in 10:
+			# TEST SET-UP: the six riders are fed and rested. The test sends each vehicle out again the moment it
+			# stops, so a rider with a critical need could never get out to eat or sleep (a rider of the hopper
+			# died of exhaustion on some paths of the run; the paths move with any change of the colony's day).
+			for cw in crew:
+				cw["fatigue"] = minf(float(cw["fatigue"]), 50.0)
+				cw["hunger"] = minf(float(cw["hunger"]), 50.0)
+				cw["thirst"] = minf(float(cw["thirst"]), 50.0)
 			var t0: int = Time.get_ticks_usec()
 			g.run(100)
 			driving += drive.call()

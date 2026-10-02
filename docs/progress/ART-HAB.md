@@ -5,6 +5,11 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-02 v5 run 3 — 2.1 m partitions + critic 41 fixes (STOPPED by the user; models consistent)
+- Built: unit partitions 1.30-2.10 m in `PorchTop` / `F<k>_PorchTop` (boxes in build report v3.partitions for RENDER), tube unit ceilings 2.40 m + FRIDGE.AI screen + roombot, slab undersides (block), no liner under the tube vault, role light colours (v3.ceiling.light), security black/red band, industry ceiling variants (crane / duct grid / truss) + type-coloured band + walkway paint, floor wear, junction totem + lost-and-found, storage aisle-end signs + floor numbers, water-recycler filter column, HR waiting rows + 2 reception jokes + new badge, auto eye-camera spots in `interior_render.py`.
+- RESULT all 160 room files rebuilt 20:20-21:00 (0 flags), import done, check 312 scripts 0 failed, render_nav_bake 160 grids, seat check 1 overlap (shin) > 20 mm, pck 156.1 MB, my room .scn 71.3 MB. Changed models needing a nav rebake: ALL room files (already rebaked once after the last import).
+- Not done: re-render of the eye views after these fixes (art/interiors eye renders predate them), texture atlas (needs RENDER shader support), console/bench moved per industry type, VR headset joke.
+
 ## 2026-10-02 v5 run 3 round 2 (coordinator) — ceilings, surfaces, density, industry heroes; the HR office
 
 **Ceilings (every room type; `tools/blender/interior_ceiling.py`, hooked in `rooms_build.build_one`):**

@@ -50,6 +50,7 @@ const CLOTH_COLS := ["2b3a55", "7a2e35", "55603a", "3a3d42", "2f6f6a", "b08a2e",
 const STRIPES := ["amber", "blue", "green", "red", "", "gold"]
 const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a", "c9d3e0", "c9d3e0"]
 
+const CAM_FADE_R := 0.8         # m: another body this close to the follow camera fades out (critic round 41)
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
 const FPS := 30.0
 const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
@@ -3376,12 +3377,19 @@ func _write_mm(variant: String, list: Array) -> void:
 		fades[n] = float(rec.get("fade", 1.0))
 		# Follow view: another person who passes through the camera fades out (dithered) inside
 		# 0.3-0.75 m of it, measured to the body's axis (feet to head), not only its root.
+		# Critic round 41: any body within 0.8 m of the lens fades to nothing, smoothly IN TIME (0.25 s), so a
+		# still frame shows it gone or whole, rarely half (the shader's dither also moves every frame).
+		var cf: float = float(rec.get("camfade", 1.0))
+		var cwant := 1.0
 		if _follow_id >= 0 and int(rec.get("id", -1)) != _follow_id:
 			var qa: Vector3 = Geometry3D.get_closest_point_to_segment(_cam_pos, p + Vector3(0, 0.1, 0), p + Vector3(0, 1.75, 0))
 			var cd: float = qa.distance_to(_cam_pos)
-			if cd < 0.75:
-				fades[n] = minf(fades[n], smoothstep(0.45, 0.6, cd))   # (a narrow ring: a wide dither drew grainy ghosts, 2026-10-02)
+			if cd < CAM_FADE_R:
+				cwant = 0.0
 				stats_slots["cam_faded"] = int(stats_slots.get("cam_faded", 0)) + 1
+		cf = move_toward(cf, cwant, _sep_dt / 0.25)
+		rec["camfade"] = cf
+		fades[n] = minf(fades[n], cf * cf * (3.0 - 2.0 * cf))
 		var look_v: float = float(rec["look"])
 		if people:
 			look_v = float(rec.get("plook", rec["look"]))

@@ -439,3 +439,70 @@ The pilot is ready for CRITIC. Structure and names are final unless a later date
   - Hip block, thicker thighs, knee plates.
   - The names, frames and chain rule do not change. 16,056 triangles, 412,530 bytes imported.
 - **Not tested:** people in the game, your tint modes on the new material set, alpha MASK hair in your shader.
+
+
+## 2026-10-02 — v5 people FULL SET, final for the people loader (file names, manifest fields, rig notes)
+
+This replaces the pilot notes above where they differ. All files are one consistent build (2026-10-02 20:39-20:48).
+
+### Files (assets/models/)
+
+| file | content |
+|---|---|
+| `people_m1.glb` `people_m2.glb` `people_m3.glb` `people_f1.glb` `people_f2.glb` `people_f3.glb` | adults, LOD0: armature `Rig`, `Head_<v>`, `Hair_<v>`, `Outfit_uniform`, `Outfit_casual_a`, `Outfit_casual_b`, `Outfit_casual_c`, `Outfit_swimwear`, 9 `Addon_*` meshes, every clip |
+| `people_c1.glb` `people_c2.glb` | children, LOD0: `Head_<v>`, `Hair_<v>`, `Outfit_school`, `Outfit_casual_a`, `Outfit_casual_b`, `Outfit_swimwear`; no add-ons; children's clip list (no adult-only clips) |
+| `people_<v>_lod1.glb` | LOD1 (beyond 12 m): the same mesh names, the same skeleton and bind, NO clips (use the LOD0 file's clips) |
+| `people_tex_shared/*.png` | the textures the glb files reference (external) |
+| `people_manifest.json` | everything below |
+| `npc_pairs.json` | paired clips (placement of partner B) |
+| `astronaut_suit.glb`, `astronaut_indoor.glb`, `astronaut_visitor_suit.glb`, `astronaut_visitor_indoor.glb`, `astronaut_anims.json` | rebuilt with the same names and draw rules |
+| `robot_dancer.glb`, `robot_manifest.json` | unchanged |
+
+### people_manifest.json fields
+
+- `skeleton.bones` (31) and `skeleton.face_bones` (`jaw`, `lids`, `brow.L/R`, `mouth.L/R`, `lids_low`).
+- `variants.<v>`: `sex`, `child`, `height_m`, `scale`, `file`, `lod1_file`, `head`, `hair`, `outfits`, `addons`,
+  `triangles`, `triangles_lod1`, `triangles_on_screen` (`outfit_and_addons`, `with_head_and_hair` per outfit id),
+  `triangles_on_screen_lod1`, `clips` (the clips this variant has), `look`, `source`, `assets`.
+- `variants.<v>.outfits.<outfit id>`: a mesh name (casual, swimwear, school) or `{mesh, addons, base_rgb, accent_rgb?}`
+  (the six uniforms and `prison` share `Outfit_uniform`: draw it with the listed `Addon_*` and tint `UniformBase*` with
+  `base_rgb`; `accent_rgb` overrides the department colour for `SuitAccent*`).
+- `outfits` (who / look per outfit id), `addons` (what each `Addon_*` is), `draw` (per-person rule and the material
+  table), `clips.<name>` (`frames`, `duration_s`, `kind`, `pose_from`, `pose_to`, `loop`, and where present
+  `speed_mps`, `stride_m`, `furniture`, `pair`, `mirror_of`, `children_only`, `note`), `furniture`, `pose_states`,
+  `textures`, `credits`.
+
+### Draw rule (unchanged)
+
+`Head_<v>` + `Hair_<v>` + ONE `Outfit_<mesh>` + that outfit's `Addon_*`. Hide every other `Outfit_*` and `Addon_*`.
+Material table as in `draw.materials` (Skin* tone tint, Hair* tint + alpha clip 0.5, SuitAccent* department colour,
+UniformBase* `base_rgb`, ClothTint* per-person colour; everything else plain).
+
+### Rig and clip notes
+
+- Bones, parents and bind directions as before. Root never moves; no scale keys; hips carry the translation.
+- The clip data now contains: shoulder rhythm (the clavicles move with the arms), soft elbow and wrist limits, and a
+  surface guard (hands and elbows on the mattress and on the floor). Nothing to do on your side.
+- Frame counts that changed (manifest is the source; re-read it): people: lie_enter / lie_enter_r 304 -> 392, lie_exit / lie_exit_r 308 -> 404, sleep_turn 309 -> 270, argue 105 -> 102, laugh 75 -> 76, talk_gesture_b 121 -> 120, shout 88 -> 91, wave 96 -> 100, kiss_brief 100 -> 89, slap 71 -> 74, punch 81 -> 88, hit_react 76 -> 78, protest_fist 84 -> 80, shop_browse 161 -> 162, teach 164 -> 162; astronauts (`astronaut_anims.json`): lie_enter 304 -> 392, lie_exit 308 -> 404, step_up / step_up_r 60 -> 63
+- `npc_pairs.json`: hug `distance_m` 0.44 -> 0.48; hold_hands_walk `side_offset_m` 0.50 -> 0.64; slap `sync_s` 0.76 -> 0.86; punch `sync_s` 0.74 -> 0.90; `hand_contact: true` added to hug, kiss_brief, slap, punch. `hand_contact: true` means the hands touch the partner by design (information only).
+- Children on adult seats: their feet hang (they cannot reach the floor); on the bed they hop up onto the mattress.
+- Outfits now share one sole height per body (soles raised up to 19 mm on the thicker-soled outfits), so every outfit
+  stands on the floor (the clips have one ankle offset per body).
+- Shoes stay on in bed: they are part of the `Outfit_*` mesh. If you want them hidden in bed, ask; it needs a separate
+  shoe mesh per outfit (more draw calls).
+
+### Import settings (people files)
+
+`meshes/generate_lods=false` (LOD1 is its own file), `meshes/create_shadow_meshes=false`,
+`meshes/ensure_tangents=false` (no normal maps: your people shader samples albedo only); textures in
+`people_tex_shared/` lossy (0.85) with mipmaps.
+
+### Sizes (imported) and triangles
+
+- Imported (`.godot/imported`): people scenes LOD0 22.3 MB (2.3-3.0 MB per body), LOD1 2.9 MB, shared textures 6.3 MB (51 files): **people total 31.5 MB**. Astronaut files 1.6 MB, robot 0.4 MB.
+- Unused textures (146 + 6 files, 15.6 MB source) moved out of the imported tree to `art/people/_tmp/stale_tex/`.
+- Triangles per person on screen, LOD0: body + outfit + add-ons <= 14,000 (V5 §1); with head and hair 18.0k-20.3k. LOD1: outfit 1,900; with head, hair and add-ons 2.6k-3.3k (uniform_security 3,259 and uniform_command 3,174 are over 3k by the vest / jacket add-ons).
+
+### Not tested by me
+
+People in the game, your tint modes on these materials, alpha-clip hair in your shader, LOD switching.

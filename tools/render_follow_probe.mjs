@@ -60,6 +60,6 @@ for (const name of list) {
   fs.writeFileSync(path.join(OUT, `${name}.csv`), csv);
   summary[name] = rep;
   const s = rep.straight || {}; const w = rep.walk || {};
-  console.log(`${name}: fps ${rep.fps} frames ${rep.frames} hops ${rep.hops} | straight n ${s.n} head ${s.head_jit_px}px cam ${s.cam_jerk_mm}mm yaw ${s.cam_yaw_deg}deg spd ${s.speed_rip_pct}% byaw ${s.yaw_rip_deg}deg | walk n ${w.n} head ${w.head_jit_px}px cam ${w.cam_jerk_mm}mm spd ${w.speed_rip_pct}% | pops ${rep.pops} pulled ${rep.pulled_frames} clip_sw/min ${rep.clip_sw_min} occluded ${rep.occluded_frames}`);
+  console.log(`${name}: fps ${rep.fps} frames ${rep.frames} hops ${rep.hops} | straight n ${s.n} head ${s.head_jit_px}px cam ${s.cam_jerk_mm}mm yaw ${s.cam_yaw_deg}deg spd ${s.speed_rip_pct}% byaw ${s.yaw_rip_deg}deg | walk n ${w.n} head ${w.head_jit_px}px cam ${w.cam_jerk_mm}mm spd ${w.speed_rip_pct}% | pops ${rep.pops} pulled ${rep.pulled_frames} clip_sw/min ${rep.clip_sw_min} occluded ${rep.occluded_frames} wall_centre ${rep.wall_centre_frames} off_screen ${rep.off_screen_frames}`);
 }
 fs.writeFileSync(path.join(OUT, 'summary.json'), JSON.stringify(summary, null, 1));

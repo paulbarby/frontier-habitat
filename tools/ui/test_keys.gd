@@ -400,6 +400,7 @@ func _plan() -> void:
 		key(KEY_V), 12)
 	q(func():
 		check("V goes over the shoulder", main.in_follow(), str(main.view.follow_id))
+		check("V shows the follow card, dims the HUD to about 35 % and folds the dock", hud.follow_hud.visible and absf(hud.top_bar.modulate.a - 0.35) < 0.02 and hud.panels.minimised, "%s %s" % [str(hud.top_bar.modulate.a), str(hud.panels.minimised)])
 		var rig = main.rig
 		var s0: float = rig.sh_side
 		key(KEY_E)

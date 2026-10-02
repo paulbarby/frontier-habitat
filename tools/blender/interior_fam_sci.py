@@ -253,6 +253,23 @@ def airlock(rm):
     plan.aisles(spacing=0.8, clearance=0.30, link=1.4)
 
 
+def lost_found(p, w, d, k):
+    """A flat lost-and-found board (8 cm deep): pegs with a hat, one glove, a teddy, a single sock; the sign."""
+    import interior_props as PR
+    from interior_props import ZLO, ZHI, WALL_OFF
+    ww = min(0.76, w - 0.14)
+    z0, z1 = F + ZLO + 0.02, F + ZHI - 0.02
+    bbox(p, WALL_OFF, WALL_OFF + 0.02, -ww / 2, ww / 2, z0, z1, "Wood")
+    plate_x(p, WALL_OFF + 0.021, -ww / 2 + 0.03, ww / 2 - 0.03, z1 - 0.17, z1 - 0.03, "HullDark")
+    PR.text(p, "LOST + FOUND", 0.0, z1 - 0.075, PR.fit_h(["LOST + FOUND"], ww - 0.10, 0.05), "Hazard", x=WALL_OFF + 0.022)
+    PR.text(p, "(MOSTLY LOST)", 0.0, z1 - 0.135, 0.030, "Hull", x=WALL_OFF + 0.022)
+    items = (("Accent", 0.10, 0.12), ("Fabric", 0.07, 0.10), ("Wood", 0.10, 0.14), ("Hazard", 0.06, 0.14))
+    for j, (m, hw, hh) in enumerate(items):
+        y = -ww / 2 + ww * (j + 0.5) / len(items)
+        bbox(p, WALL_OFF + 0.02, WALL_OFF + 0.07, y - 0.008, y + 0.008, z1 - 0.26, z1 - 0.24, "Frame")
+        bbox(p, WALL_OFF + 0.03, WALL_OFF + 0.075, y - hw, y + hw, z1 - 0.26 - hh * 2, z1 - 0.26, m, bevel=0.01)
+
+
 def junction(rm):
     fu = furniture_of(rm)
     plan = Plan(rm, clear=0.45, item_depth=0.10)
@@ -265,15 +282,31 @@ def junction(rm):
                    "Accent")
             n.quad((0.95, 0.0, F + 0.012), (1.25, 0.0, F + 0.012), (1.15, 0.10, F + 0.012), (0.85, 0.10, F + 0.012),
                    "Accent")
-    # a low information post at the centre (seen from above as a lit disc)
+    # critic 41: a wayfinding totem at the centre (a lit disc on top, seen from above), arrows at three heights
+    import interior_props as PR
     n.vcyl(0, 0, F, F + 0.06, 0.22, seg=10, mat="Frame", cap0=False)
-    n.vcyl(0, 0, F + 0.06, F + 0.95, 0.07, seg=8, mat="Hull", cap0=False)
-    n.vcyl(0, 0, F + 0.95, F + 1.05, 0.16, seg=10, mat="Frame")
-    with n.at(T(0, 0, F + 1.051)):
+    n.vcyl(0, 0, F + 0.06, F + 2.05, 0.07, seg=8, mat="Hull", cap0=False)
+    n.vcyl(0, 0, F + 2.05, F + 2.12, 0.16, seg=10, mat="Frame")
+    with n.at(T(0, 0, F + 2.121)):
         n.cap_disc(0.13, 0.0, "Screen", seg=10)
+    for k, (yaw, z, txt, m) in enumerate(((20.0, 1.85, "CANTINA", "Plant"), (150.0, 1.58, "NOT THE CANTINA", "Hazard"),
+                                          (265.0, 1.31, "AIRLOCK*", "SignalRed"))):
+        with n.at(T(0.0, 0.0, 0.0), RZ(yaw)):
+            L = 0.62
+            bbox(n, 0.07, 0.07 + L, -0.015, 0.015, F + z - 0.09, F + z + 0.09, m)
+            n.convex([(0.07 + L, -0.015, F + z - 0.12), (0.07 + L, 0.015, F + z - 0.12), (0.07 + L, -0.015, F + z + 0.12),
+                      (0.07 + L, 0.015, F + z + 0.12), (0.07 + L + 0.14, -0.015, F + z), (0.07 + L + 0.14, 0.015, F + z)],
+                     [(0, 2, 4), (1, 5, 3), (0, 1, 3, 2), (0, 4, 5, 1), (2, 3, 5, 4)], m)
+            with n.at(T(0.07 + L / 2, 0.0, 0.0), RZ(-90.0)):
+                h_ = PR.fit_h([txt], L - 0.06, 0.07)
+                PR.text(n, txt, 0.0, F + z, h_, "Rubber", x=0.016)
+            with n.at(T(0.07 + L / 2, 0.0, 0.0), RZ(90.0)):
+                PR.text(n, txt, 0.0, F + z, h_, "Rubber", x=0.016)
+    with n.at(T(0.075, 0.0, 0.0)):
+        PR.text_lines(n, ("YOU ARE", "HERE", "(PROBABLY)"), 0.0, F + 1.12, 0.035, "Hull", x=0.0, gap=0.4)
     plan.circle(0.0, 0.0, 0.25, tag="post")
-    plan.wall_items(["vent", "panel"], wall_set(plan), open_every=2, open_kinds=("panel", None), seed=181,
-                    depth_of=DEPTHS)
+    plan.wall_items(["lostfound", "panel", "vent", "panel"], wall_set(plan, extra={"lostfound": lost_found}),
+                    open_every=2, open_kinds=("panel", None), seed=181, depth_of=dict(DEPTHS, lostfound=0.10))
     plan.stands(fu["stands"], [(0.65, 0.0, 180.0)])
     plan.lights([(0.0, 0.0), (0.6, 0.6)], z=2.1)
     plan.aisles(spacing=0.7, clearance=0.30, link=1.2)

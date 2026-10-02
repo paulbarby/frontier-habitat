@@ -83,8 +83,8 @@ VARIANTS = {
                eye_mat="eyes/materials/green.mhmat", lid_rest=10.0),
     "f2": dict(sex="f", height=1.62, macro=dict(gender=0.0, age=0.60, muscle=0.55, weight=0.60, proportions=0.50,
                                                 race=(0.75, 0.05, 0.20)),
-               skin="skins/middleage_african_female", hair="hair/elvs_french_braid_variation", brows="eyebrows/eyebrow001",
-               # (2026-10-02: afro01's cards rendered as a grey shattered helmet at 1.5 m; a French braid instead)
+               skin="skins/middleage_african_female", hair="hair/ponytail01", brows="eyebrows/eyebrow001",
+               # (2026-10-02: afro01 rendered as a grey shattered helmet at 1.5 m and the French braid did not fit: ponytail01)
                eye_mat="eyes/materials/brown.mhmat"),
     "f3": dict(sex="f", height=1.74, macro=dict(gender=0.0, age=0.70, muscle=0.40, weight=0.50, proportions=0.55,
                                                 race=(0.05, 0.75, 0.20)),
@@ -144,9 +144,8 @@ VARIANT_OUTFITS = {
                          ("clothes/shoes04", "own")]},
     "m3": {"casual_b": [("clothes/male_casualsuit05", "own"), ("clothes/shoes02", "own")]},
     "f2": {"casual_b": [("clothes/toigo_halter_dress_knee_length", "tint:ClothTint"), ("clothes/toigo_ballet_flats", "own")]},
-    # (2026-10-02: the halter top is cropped: skin at the waist, CRITIC r40 #2; f3 wears the knit and wool trousers)
-    "f3": {"casual_a": [("clothes/toigo_fisherman_sweater", "tint:ClothTint"), ("clothes/cortu_cargo_pants", "own"),
-                         ("clothes/shoes05", "own")]},
+    # (2026-10-02: the halter top was cropped (skin at the waist, CRITIC r40 #2) and the knit's hem showed skin: f3
+    # wears the women's default casual_a, the tee in her own colour)
 }
 ADULT_OUTFITS = ["uniform", "casual_a", "casual_b", "casual_c", "swimwear"]
 CHILD_OUTFITS = ["school", "casual_a", "casual_b", "swimwear"]
@@ -899,18 +898,20 @@ def build_variant(m, v, outfits, stop=None):
         body = bodies[oid]
         replace_materials(body, skin_mat)
         is_shell = any(g[2] == "shell" for g in gs)
-        if is_shell:
-            nk = remove_inside_coverall(body, J)
-            nk += remove_covered(body, [ob for ob, _, m_, _ in gs if m_ != "shell"])
-        else:
-            nk = remove_covered(body, [ob for ob, _, _, _ in gs])
+        # (before the covered skin goes, so the skin under the longer hem goes too)
         # (2026-10-02, CRITIC r40 #2 and Paul's sleep shot: the tees ended above the waistband, skin showed at the
         # waist): a top over trousers is lengthened 5 cm at its hem, outside the body and the trousers
         lowers = [o2 for o2, f2, m2, _ in gs if m2 != "shell" and garment_layer(f2) == 2]
         if lowers:
             for ob, f, m_, _ in gs:
                 if m_ != "shell" and garment_layer(f) == 3 and "dress" not in f.lower():
-                    extend_hem(ob, [body] + lowers, band=0.09, drop=0.05, gap=0.005)
+                    extend_hem(ob, [body] + lowers, band=0.09, drop=0.05, gap=0.013)
+
+        if is_shell:
+            nk = remove_inside_coverall(body, J)
+            nk += remove_covered(body, [ob for ob, _, m_, _ in gs if m_ != "shell"])
+        else:
+            nk = remove_covered(body, [ob for ob, _, _, _ in gs])
         # between garments: an inner layer loses what an outer layer covers (tops over trousers over shoes)
         for ob, f, _, _ in gs:
             outer = [o2 for o2, f2, _, _ in gs if garment_layer(f2) > garment_layer(f)]

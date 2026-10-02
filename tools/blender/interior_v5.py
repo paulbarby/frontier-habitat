@@ -161,6 +161,50 @@ def part_top_pieces(plan, A, ang, L, pieces, cuts, h, thick=0.045):
                               round(z0 + F + PART_H, 3), round(0.5 * (t1 - t0), 3), 0.06, round(ang % 360.0, 2)])
 
 
+UNIT_CEIL = 2.40          # round 2 (critic 41): each tube unit has a ceiling at 2.40 m (PorchTop: hidden in the cutaway)
+
+
+def unit_ceiling(plan, c):
+    """A flat ceiling over the cell at UNIT_CEIL, facing down, with a light strip round its edge."""
+    q = part_top(plan)
+    z = F + UNIT_CEIL
+    W, D = c.W, c.Dp
+    pts = [c.w(0.0, 0.0), c.w(W, 0.0), c.w(W, D), c.w(0.0, D)]
+    q.quad(*[(x, y, z) for (x, y) in reversed(pts)], "Hull")          # down-facing
+    for (u0, v0, u1, v1) in ((0.0, 0.0, W, 0.0), (W, 0.0, W, D), (W, D, 0.0, D), (0.0, D, 0.0, 0.0)):
+        # a 6 cm light strip 8 cm inside each edge, 5 mm under the ceiling
+        du, dv = u1 - u0, v1 - v0
+        L = max(1e-6, (du * du + dv * dv) ** 0.5)
+        nu, nv = -dv / L, du / L                     # inward normal (the cell is counter-clockwise)
+        a0 = c.w(u0 + nu * 0.08, v0 + nv * 0.08)
+        a1 = c.w(u1 + nu * 0.08, v1 + nv * 0.08)
+        b0 = c.w(u0 + nu * 0.14, v0 + nv * 0.14)
+        b1 = c.w(u1 + nu * 0.14, v1 + nv * 0.14)
+        q.quad((b0[0], b0[1], z - 0.005), (b1[0], b1[1], z - 0.005), (a1[0], a1[1], z - 0.005),
+               (a0[0], a0[1], z - 0.005), "LightStrip")
+
+
+def roombot(plan, c, seed=0):
+    """A robot vacuum on its dock by a wall (2026: it is stuck again): 'ROOMBOT: STUCK x14'."""
+    n = plan.n
+    for (u, v) in ((0.45, c.Dp - 0.45), (c.W - 0.45, c.Dp - 0.45), (0.45, 0.45), (c.W - 0.45, 0.45),
+                   (0.5 * c.W, c.Dp - 0.40)):
+        x, y = c.w(u, v)
+        if plan.dist(x, y) > 0.30:
+            break
+    else:
+        return False
+    with n.at(T(x, y, 0.0)):
+        n.vcyl(0.0, 0.0, F, F + 0.08, 0.17, seg=12, mat=("Hull", "SecBlack")[seed % 2])
+        n.vcyl(0.0, 0.0, F + 0.08, F + 0.09, 0.05, seg=8, mat="Glow")
+        n.cap_disc(0.12, F + 0.091, "HullDark", seg=10)
+    PR_ = __import__("interior_props")
+    PR_.floor_text(n, ("STUCK x14", "PLEASE HELP", "I SAW DUST")[seed % 3], x, y - 0.26, 0.0, 0.045, "Rubber")
+    plan.circle(x, y, 0.19, tag="robot")
+    PR_.USED["roombot"] = PR_.USED.get("roombot", 0) + 1
+    return True
+
+
 def door_plate(c, u, number):
     """The unit number plate beside the unit door, on the street face (Accent square + a lamp strip)."""
     n = c.plan.n
@@ -211,7 +255,12 @@ def kitchenette(p, w=2.0, fridge=True, seed=0):
         plate_x(p, 0.623, yf + 0.05, y1 - 0.03, F + 1.12, F + 1.14, "Frame")
         bbox(p, 0.62, 0.66, y1 - 0.12, y1 - 0.08, F + 0.60, F + 1.00, "Frame")
         bbox(p, 0.62, 0.66, y1 - 0.12, y1 - 0.08, F + 1.24, F + 1.60, "Frame")
-        plate_x(p, 0.624, yf + 0.10, yf + 0.26, F + 1.50, F + 1.60, "Screen")
+        # round 2 (critic 41): the fridge talks (FRIDGE.AI)
+        plate_x(p, 0.624, yf + 0.08, y1 - 0.16, F + 1.30, F + 1.58, "Screen")
+        import interior_props as PR2
+        PR2.text(p, "FRIDGE.AI", 0.5 * (yf + 0.08 + y1 - 0.16), F + 1.52, 0.034, "Neon", x=0.626)
+        PR2.text_lines(p, (("OAT MILK: 0", "ORDERED: 40"), ("I SAW THAT", "MIDNIGHT SNACK"))[seed % 2],
+                       0.5 * (yf + 0.08 + y1 - 0.16), F + 1.45, 0.024, "LightStrip", x=0.626, gap=0.5)
 
 
 def bunk_bed(p, blankets=("Accent", "Fabric"), seed=0):
@@ -447,7 +496,7 @@ def pendant(plan, c, u, v, seed=0):
     x, y = c.w(u, v)
     # 2026-10-02: the shade hangs at 2.05-2.28 m (it was 1.56-1.79 m: a tall person walked through it and it filled
     # the follow camera, eye 1.8 m)
-    n.vcyl(x, y, F + 2.27, F + 2.50, 0.008, seg=4, mat="Frame", cap0=False, cap1=False)
+    n.vcyl(x, y, F + 2.27, F + UNIT_CEIL, 0.008, seg=4, mat="Frame", cap0=False, cap1=False)
     with n.at(T(x, y, 0.0)):
         n.lathe([(0.26, F + 2.05), (0.20, F + 2.19), (0.05, F + 2.28), (0.0, F + 2.28)], "Wood" if seed % 2 else "Accent",
                 seg=14, smooth=True)
@@ -1106,6 +1155,10 @@ def residence_tube(rm):
         wall(c, 0.0, c.Dp, c.W, c.Dp)
         wall(c, 0.0, 0.0, 0.0, c.Dp)
         wall(c, c.W, 0.0, c.W, c.Dp)
+        if PARTTOP:
+            unit_ceiling(plan, c)
+        if i < units:
+            roombot(plan, c, seed)
     # the street: a runner with Accent edge lines, from porch to porch
     for sy in (-1, 1):
         FU.floor_line(n, -r_o + 0.3, sy * (HS - 0.18), r_o - 0.3, sy * (HS - 0.18), w=0.06, mat="LightStrip")

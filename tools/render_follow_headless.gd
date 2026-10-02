@@ -64,6 +64,11 @@ func _process(_d: float) -> bool:
 			print("skip ", cases[ci])
 			return false
 		main._import_bytes(FileAccess.get_file_as_bytes(c[0]))
+		main.set_process(false)
+		for nm in ["hud", "audio"]:
+			var nd = main.get(nm)
+			if nd != null and nd is Node:
+				(nd as Node).process_mode = Node.PROCESS_MODE_DISABLED
 		main.view.npc.plan_budget_us = 1 << 30
 		main.view.npc.no_far = true
 		main.step_cap_us = 1 << 30
@@ -102,8 +107,10 @@ func _process(_d: float) -> bool:
 	f.store_string(main.view.fprobe.csv(100000))
 	var s: Dictionary = rep.get("straight", {})
 	var w: Dictionary = rep.get("walk", {})
-	print("%s: frames %d hops %d | straight n %d head %.3f px cam %.3f mm spd %.2f %% | walk n %d head %.3f px cam %.3f mm | pops %d clip_sw/min %.1f occluded %d" % [cases[ci], int(rep.get("frames", 0)), int(rep.get("hops", 0)),
-		int(s.get("n", 0)), float(s.get("head_jit_px", 0)), float(s.get("cam_jerk_mm", 0)), float(s.get("speed_rip_pct", 0)), int(w.get("n", 0)), float(w.get("head_jit_px", 0)), float(w.get("cam_jerk_mm", 0)), int(rep.get("pops", 0)), float(rep.get("clip_sw_min", 0)), int(rep.get("occluded_frames", -1))])
+	print("%s: frames %d hops %d | straight n %d head %.3f px cam %.3f mm spd %.2f %% | walk n %d head %.3f px cam %.3f mm | pops %d clip_sw/min %.1f occluded %d wall_centre %d off_screen %d" % [cases[ci], int(rep.get("frames", 0)), int(rep.get("hops", 0)),
+		int(s.get("n", 0)), float(s.get("head_jit_px", 0)), float(s.get("cam_jerk_mm", 0)), float(s.get("speed_rip_pct", 0)), int(w.get("n", 0)), float(w.get("head_jit_px", 0)), float(w.get("cam_jerk_mm", 0)), int(rep.get("pops", 0)), float(rep.get("clip_sw_min", 0)), int(rep.get("occluded_frames", -1)), int(rep.get("wall_centre_frames", -1)), int(rep.get("off_screen_frames", -1))])
+	print("   search [fail, found] ", main.rig.dbg_search, " od ", snappedf(main.rig._sh_od, 0.01))
+	main.rig.dbg_search = [0, 0]
 	main.view.debug_cmd("fprobe stop")
 	main.view.follow_stop()
 	phase = 0

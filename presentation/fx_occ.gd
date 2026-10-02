@@ -12,7 +12,8 @@ extends RefCounted
 ## occ_<model>.res, a tri signature like fx_nav), so the web build never rasterises a model at run time.
 
 const CELL := 0.2
-const BAND := 0.3         # 62 bands (64-bit masks): 18.6 m
+const BAND := 0.15        # two 62-bit masks per cell (cell key x 2 + layer): 124 bands, 18.6 m
+const VER := 2            # baked format (1: one 0.3 m mask; its 1.2 m pieces read up to 1.5 m)
 const STEEP := 0.7        # |normal.y| under this is a wall-like surface
 const SKIP_GROUPS := ["Roof", "PorchTop", "Decal", "NameSign", "Lights", "Base", "Rotor", "Beacon"]
 const BAKE_DIR := "res://presentation/navgrid/"
@@ -29,7 +30,10 @@ static func grid_of(tpl: Dictionary) -> Dictionary:
 		var r = load(path)
 		if r != null and (r as Resource).has_meta("occ"):
 			var d: Dictionary = (r as Resource).get_meta("occ")
-			if int(d.get("sig", -1)) == sig(tpl):
+			# (the version must match; the triangle signature is not checked: the game's template of a model
+			# carries merged and proxy surfaces the bake's raw template does not, so it never matched and the web
+			# build had no occluders at all, 2026-10-02. tools/render_nav_bake.gd runs before every export.)
+			if int(d.get("ver", 1)) == VER:
 				var cells := {}
 				var ks: PackedInt32Array = d["keys"]
 				var ms: PackedInt64Array = d["masks"]
@@ -67,7 +71,9 @@ static func _use_part(p: Dictionary) -> bool:
 	for sk in SKIP_GROUPS:
 		if g == sk or g.begins_with(sk + "_"):
 			return false
-	return not g.ends_with("Top")
+	# (the 2.1 m unit partitions, ART-HAB PartTop / F<k>_PartTop, are walls for the camera though hidden in
+	# the cutaway like every *Top group)
+	return not g.ends_with("Top") or g.ends_with("PartTop")
 
 static func build(tpl: Dictionary) -> Dictionary:
 	var ab: AABB = tpl.get("aabb", AABB())
@@ -108,11 +114,15 @@ static func build(tpl: Dictionary) -> Dictionary:
 				var nrm: Vector3 = (b - a).cross(c - a)
 				if nrm.length() < 1e-6 or absf(nrm.normalized().y) >= STEEP:
 					continue
-				var lo: int = clampi(int(floor((minf(a.y, minf(b.y, c.y)) - y0) / BAND)), 0, 61)
-				var hi: int = clampi(int(floor((maxf(a.y, maxf(b.y, c.y)) - y0) / BAND)), 0, 61)
-				var mask := 0
+				var lo: int = clampi(int(floor((minf(a.y, minf(b.y, c.y)) - y0) / BAND)), 0, 123)
+				var hi: int = clampi(int(floor((maxf(a.y, maxf(b.y, c.y)) - y0) / BAND)), 0, 123)
+				var mask0 := 0
+				var mask1 := 0
 				for k in range(lo, hi + 1):
-					mask |= 1 << k
+					if k < 62:
+						mask0 |= 1 << k
+					else:
+						mask1 |= 1 << (k - 62)
 				# steep triangles project to thin shapes: mark along the edges (half-cell steps)
 				for e in [[a, b], [b, c], [c, a]]:
 					var p0 := Vector2((e[0] as Vector3).x, (e[0] as Vector3).z)
@@ -125,7 +135,10 @@ static func build(tpl: Dictionary) -> Dictionary:
 						if i < 0 or j < 0 or i >= n or j >= n:
 							continue
 						var key: int = j * n + i
-						cells[key] = int(cells.get(key, 0)) | mask
+						if mask0 != 0:
+							cells[key * 2] = int(cells.get(key * 2, 0)) | mask0
+						if mask1 != 0:
+							cells[key * 2 + 1] = int(cells.get(key * 2 + 1, 0)) | mask1
 	return {"cells": cells, "y0": y0, "n": n, "o": o}
 
 ## Writes the grid of a template for the web build. Returns the cell count.
@@ -139,7 +152,7 @@ static func bake(tpl: Dictionary) -> int:
 		ks.append(int(k))
 		ms.append(int(g["cells"][k]))
 	var r := Resource.new()
-	r.set_meta("occ", {"keys": ks, "masks": ms, "y0": g["y0"], "n": g["n"], "ox": (g["o"] as Vector2).x, "oz": (g["o"] as Vector2).y, "sig": sig(tpl)})
+	r.set_meta("occ", {"keys": ks, "masks": ms, "y0": g["y0"], "n": g["n"], "ox": (g["o"] as Vector2).x, "oz": (g["o"] as Vector2).y, "sig": sig(tpl), "ver": VER})
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(BAKE_DIR))
 	ResourceSaver.save(r, BAKE_DIR + "occ_" + _name_of(key) + ".res", ResourceSaver.FLAG_COMPRESS)
 	return ks.size()
@@ -152,8 +165,8 @@ static func blocked(g: Dictionary, p: Vector3) -> bool:
 	var j: int = int(floor(q.y / CELL))
 	if i < 0 or j < 0 or i >= n or j >= n:
 		return false
-	var m: int = int((g["cells"] as Dictionary).get(j * n + i, 0))
-	if m == 0:
-		return false
 	var b: int = int(floor((p.y - float(g["y0"])) / BAND))
-	return b >= 0 and b < 62 and (m & (1 << b)) != 0
+	if b < 0 or b >= 124:
+		return false
+	var m: int = int((g["cells"] as Dictionary).get((j * n + i) * 2 + (b / 62), 0))
+	return m != 0 and (m & (1 << (b % 62))) != 0

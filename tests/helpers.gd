@@ -21,10 +21,12 @@ const DAY_TICKS := 6000
 ## dictionaries with nested values read in a scattered order (a few MB, so cache and memory pressure from
 ## neighbours count), cut in 200 slices of about 2 ms. Two readings: the MEDIAN slice (for a test that checks the
 ## median tick: v5) and the MEAN slice (for a test that checks the mean of 1,000-tick windows: v3, v4; preemptions
-## count in a window mean and in the slice mean). Measured on this machine, the calibration slows 10-25 % MORE than
-## the sim under load, so the ratio is damped: factor = min(1, (quiet / reading) ^ CALIB_POWER). A first version, the
-## minimum of 7 small loops, read 40 ms under any load while the sim cost rose 30-50 %. A reading below the quiet one
-## never scales a test up.
+## count in a window mean and in the slice mean). Measured on this machine (neighbours: Blender, other Godot runs),
+## the sim slows down less than the calibration under load, by a different amount for each test, so the ratio is
+## damped by a power: factor = min(1, (quiet / reading) ^ power). The powers (fitted to runs at 20-100 % neighbour
+## load; tests/pacer.gd takes it as an argument): v3 0.55, v4 0.95, v5 1.0; CALIB_POWER is the default. A first
+## version, the minimum of 7 small loops, read 40 ms under any load while the sim cost rose 30-50 %. A reading
+## below the quiet one never scales a test up.
 const CALIB_QUIET_MEDIAN_MS := 0.78
 const CALIB_QUIET_MEAN_MS := 0.80
 const CALIB_POWER := 0.85
@@ -57,11 +59,11 @@ static func calib_ms(mean_of_slices: bool = false, slice_count: int = 200) -> fl
 	return float(calib_stats(slice_count)[1 if mean_of_slices else 0])
 
 ## The scale factor from readings (ms): min(1, (quiet / median reading) ^ CALIB_POWER).
-static func calib_factor(readings: Array, mean_of_slices: bool = false) -> float:
+static func calib_factor(readings: Array, mean_of_slices: bool = false, power: float = CALIB_POWER) -> float:
 	var s: Array = readings.duplicate()
 	s.sort()
 	var quiet: float = CALIB_QUIET_MEAN_MS if mean_of_slices else CALIB_QUIET_MEDIAN_MS
-	return minf(1.0, pow(quiet / float(s[s.size() / 2]), CALIB_POWER))
+	return minf(1.0, pow(quiet / float(s[s.size() / 2]), power))
 
 ## Offsets (metres from the lander) of the reference layout. Custom layouts reuse these
 ## places because the reference layout proves they are legal on every tutorial seed.

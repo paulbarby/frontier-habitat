@@ -706,6 +706,38 @@ def _oxygen_finish(rm, plan, s, fu, hx, hy, oy):
     finish(plan)
 
 
+def filter_column(rm, plan, n, cands):
+    """Critic 41: the water recycler's hero - a tall glass filter column, blue water with lit rings (bubbles), on a
+    plinth, with a joke sign: 'TODAY'S WATER: YESTERDAY'S WATER'."""
+    import interior_props as PR
+    for (x, y) in cands:
+        if plan.dist(x, y) > 0.75 and hypot(x, y) < plan.lane_r() - 0.5:
+            break
+    else:
+        return False
+    zt = min(rm.headroom(x, y) - 0.10, F + 2.6)
+    n.vcyl(x, y, F, F + 0.18, 0.46, seg=14, mat="Frame")
+    n.vcyl(x, y, F + 0.18, zt - 0.12, 0.34, seg=14, mat="Glass", cap0=False, cap1=False)
+    n.vcyl(x, y, F + 0.20, zt - 0.40, 0.30, seg=12, mat="WaterBlue", cap0=False)
+    for k in range(5):
+        zz = F + 0.45 + (zt - F - 1.0) * k / 4.0
+        with n.at(T(x, y, zz)):
+            n.torus(0.30, 0.018, "L3Band", seg=12, tseg=3)
+    n.vcyl(x, y, zt - 0.12, zt, 0.40, seg=14, mat="Frame")
+    for a_ in (0.0, 120.0, 240.0):
+        n.beam((x + 0.36 * cos(radians(a_)), y + 0.36 * sin(radians(a_)), F + 0.18),
+               (x + 0.36 * cos(radians(a_)), y + 0.36 * sin(radians(a_)), zt - 0.12), 0.04, 0.04, "Frame")
+    yaw = degrees(atan2(-y, -x))                    # the sign faces the room centre
+    with n.at(T(x, y, 0.0), RZ(yaw)):
+        bbox(n, 0.47, 0.50, -0.42, 0.42, F + 0.95, F + 1.35, "Frame")
+        plate_x(n, 0.501, -0.40, 0.40, F + 0.97, F + 1.33, "HullDark")
+        PR.text_lines(n, ("TODAY'S WATER:", "YESTERDAY'S WATER"), 0.0, F + 1.30, 0.046, "L3Band", x=0.502, gap=0.5)
+        PR.text(n, "(AND THE DAY BEFORE)", 0.0, F + 1.03, 0.022, "Hull", x=0.502)
+    plan.circle(x, y, 0.50, tag="column")
+    PR.USED["hero_water_recycler"] = 1
+    return True
+
+
 def water_recycler(rm):
     s = rm.size
     fu = furniture_of(rm)
@@ -760,6 +792,8 @@ def water_recycler(rm):
         for sx in (-0.6, 0.6):
             bbox(n, sx - 0.04, sx + 0.04, -0.3, 0.3, F + 0.12, F + 0.75, "Frame")
     plan.rect(ux, 0.0, 0.35, 0.8, 0.0, tag="uv")
+    filter_column(rm, plan, n, [(ox - hx - 0.85, 0.0), (ox, hy + 0.95), (ox, -hy - 0.95), (ux + 1.0, -1.3),
+                                (ux + 1.0, 1.3)])
     for sy in ((1,) if s < 2 else (-1, 1)):
         FU.pump(n, ux, sy * 1.25, 90.0)
         plan.rect(ux, sy * 1.25, 0.3, 0.42, 0.0)

@@ -352,3 +352,74 @@ mine and can change). Night readability of the radiation suit is not checked.
   `D:\Tools\mocap\` with the manifest (SHA-256, size, URL, licence per file), as it did for MPFB on 2026-09-30.
   Then ART-NPC builds the retarget + cleanup pass and replaces the loops group by group (walk, run, idle, talk, sit,
   dance) with the audit and sheets before and after each group, and adds the credits to `art/people/people_credits.md`.
+
+## v5.0 — 2026-10-02 (Opus ART-NPC) — one consistent build; rig, run, sleep, contacts; audit; sizes; RENDER note
+**State:** every people file (m1 m2 m3 f1 f2 f3 c1 c2 + `_lod1`), both astronaut files and the visitor files come from
+one build of the current source (20:39-20:48). `npc_pairs.json` and `people_manifest.json` rewritten by that build.
+`godot.mjs import` done; `godot.mjs check`: 312 scripts, 0 failed.
+
+**Checks (RESULT lines):**
+- `npc_verify` full: **602 passed, 2 failed** (baseline at the start of the day: 579 / 25).
+  - FAIL m3 `collapse` f66: lowest point -1.2 cm (rule -1.0 cm).
+  - FAIL pair `hug` (m1 with f1): 3 points 2.8 cm deep (B's forearm over A's shoulder, f42). The rule is now strict:
+    0 points deeper than 2 cm (was "<= 6 points"); hands and wrists that touch the partner by design are left out.
+- `npc_clipcheck` (10 bodies): 0 world steps over 15 deg, 0 limb-capsule overlaps over 5 mm.
+- Animation audit (`people_audit.py`, all 10 bodies, 578 clips): clips with a fault **416 -> 172**.
+  wrist > 75 deg 170 -> 1; elbow > 150 deg 57 -> 8; planted foot floats > 1 cm 201 -> 32; shrug 0 -> 0;
+  step 19 -> 18; snap 90 -> 98; slide 68 -> 68; neck 8 -> 8. Files: `art/people/audit_before_all.md`,
+  `audit_after_all.md` (+ .json).
+  - run: largest step 43.6 -> 27.5 deg/frame (shin), the 30 deg/frame snap at toe-off gone (m1).
+  - sleep, sleep_turn, lie_enter, lie_exit: every bone <= 4.5 deg/frame; wrists 112-179 -> 16-73 deg.
+
+**What changed (source):**
+- `npc_common.Solver`:
+  - shoulder rhythm (`_scap`): the clavicle rises with an arm above 55 deg (max 16 deg) and swings forward on a reach
+    (max 14 deg), only for upright torsos; FK hands keep their place (`_keep_hand`), stiff IK hands keep their turn.
+  - soft joint limits (`_joint_limits`): elbow 150 (knee 135), wrist 75 (knee 60), stable axis near a folded wrist.
+  - surface guard (`_bed_guard`): on beds (`bed.z`) and, for the lying clips, the floor: elbow, wrist and hand
+    (palm, back, sides: measured MPFB hand reach) stay above; the arm turns up about the shoulder.
+  - `raw_solve()`: the IK/FK conversions run without rhythm / limits / guard (a key replays exactly).
+  - jumpsuit shoulder cap weights (`arm_rule(cap=True)`, indoor only): the top of the deltoid stays with the clavicle.
+- `npc_anims`: run arms (swing centred behind, elbows 80-96 deg, hands to the midline), run swing lift without the
+  infinite-slope start; work_bench bends from the hips (head 41 deg, was 54); work_console 1 cm lower, sit_type 4 mm
+  higher; LIE/DEAD hands relaxed and settled; bottom arm IK in lie_enter/exit; `relax_wrists` (IK keys <= 70 deg);
+  cheer without the manual shoulder key; step_up reach 0.06 s longer; K2b legs higher and further forward.
+- `people_anims` / `people_clips`: bed offsets on the side, on the back and mid-roll (BED_ADJ, BED_BACK, BED_ROLL,
+  calibrated); children hop onto the bed; bed x scaled about the mattress; seated weight from the standing hips (a clip
+  that starts standing starts on idle); ankle offset along the foot's own up axis (+ SOLE_DZ); floor lift from the kneel
+  + COLLAPSE_ADJ; hug (IK arms, 0.48 m, high arm over, low arm under), kiss hands on the arms, hold_hands 0.64 m, punch
+  / slap / kiss / hug `hand_contact`; dance_c and child_play arm rises slower.
+- `people_mpfb`: soles of every outfit at one height (`align_soles`); tops over trousers 5 cm longer (`extend_hem`, before
+  the covered skin goes); f2 hair `ponytail01` (afro01 rendered as a grey shattered helmet); f3 casual_a = the women's tee
+  (the halter top was cropped); bed calibration on torso + thighs of uniform/school + casual_a.
+- Checks: `people_verify` strict pair rule, wrists as hand contact; `npc_verify` indoor bed front 15 cm soft (as for people);
+  `people_audit` plant >= 4 frames, children's dangling feet on adult seats not counted.
+- New tools: `tools/blender/npc_strip.py` (frame strips at the follow camera; `--rebake` previews a source change in 15 s
+  without the build; `--poses`), `$TEMP/artnpc_*.sh` build / chain scripts (not in the repo).
+
+**Sizes:** people imported 31.5 MB (LOD0 scenes 22.3, LOD1 2.9, textures 6.3; was about 46 MB + stale PNGs).
+Import settings: no auto LODs, no shadow meshes, no tangents; textures lossy 0.85 + mipmaps. 152 unused texture files
+(15.6 MB source) moved to `art/people/_tmp/stale_tex/`. Triangles: body + outfit + add-ons <= 14,000 (LOD0); LOD1 with
+head, hair and add-ons up to 3,259 (security, command: over the 3k line by the add-ons).
+
+**Sheets (art/people/):** `people_closeup.png`, `people_faces.png`, `people_outfits.png`, `people_wardrobe.png`,
+`people_uniforms.png`, `people_clips.png` (pilot), `people_clips_sleep.png`, `people_clips_social.png`,
+`people_clips_paired.png`, `people_deform.png`, `people_run.png`, `people_walk.png`, `people_sleep.png`,
+`people_crate_reach.png`; `art/npc/indoor_crate_reach_run.png`; before images in `art/people/before/`.
+
+**Not done / known:**
+- The 2 verify failures above.
+- Audit faults left: foot slide > 1 cm in kneel_enter/exit, sit_enter/exit, dance_c, fight_idle, punch, hit_react,
+  flirt_lean (68); snaps > 6 deg/frame^2 in fall_down, swim, dance_c, injured_walk, talk, drink_bar (98); dance lifts
+  counted as floats (32); swim neck 8; fight_idle / punch elbow 150-152 (8); run shin 27.5 deg/frame (loco rule 25).
+- lie_enter / lie_exit are now 13 s (were 10 s): the 4.5 deg/frame retime with the bottom arm in IK.
+- Critic r40: coverall leg hems still flare and look ragged at the boot; tee necklines are uneven; brows are thin solid
+  lines; f1's hair texture and skin not changed today. The indoor astronaut's upper-arm blocks still rise beside the
+  collar in work_bench (better than before, see `art/npc/indoor_crate_reach_run.png`).
+- Mocap retarget: not started (downloads need Paul's own approval or the orchestrator, see the section above).
+- Not tested: the people in the game (RENDER's loader), the shoes-on-the-bed question (RENDER note).
+
+## v5.0 — 2026-10-02 (late) — PAUSED (Paul): mocap retarget started
+- Files on disk = the 20:39-20:48 consistent build (npc_verify 602/2); after the pause `godot.mjs import` done, `check` 312/0.
+- New `tools/blender/npc_mocap.py` (CMU BVH -> our Pose params; 140-143 takes are 60 fps): walk, run (3.3 m/s), jog, idle JSON in `tools/blender/mocap/`; `people_anims.mocap_override` + `scap.off` wired but OFF (`NPC_MOCAP_USE` empty) until checked.
+- Not done: mocap groups (preview only), credits file, the 2 verify failures, round-40 hems/necklines/brows/f1, RENDER's walk dip and work_console->talk pop.

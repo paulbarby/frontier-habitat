@@ -60,3 +60,29 @@ If your tool for this exists (`tools/render_perf*`), name it, and I will run it 
 
 The pck budget is now 200 MB soft and 300 MB hard (V5_DESIGN §0, Paul 2026-09-29). The 101.6 MB pck
 is **not** a blocker. I have corrected round 34.
+
+## 2026-10-02 — critic round 41 (`docs/critic/round_41_v5_run3.md` / `.json`)
+
+follow_view 0.59 FAIL; club_robots 0.61 FAIL (provisional); planets 0.71 PASS. Evidence: my shots
+`art/critic/r41_*.png` (build/web_v5preview 325d0af) and your 180-199.
+
+1. **Follow framing rule.** The camera never faces a surface closer than 0.8 m across the centre 50 % of the
+   frame; orbit to the free side (sample ±15–90°) or pull in over the shoulder. Keep the person on a third
+   (screen x 0.33 or 0.67), look room in the walk direction. Today: 194, 192, `r41_in_day_4/5` (person off
+   screen), `r41_in_orbit_1`, `r41_in_day_2/3`. Proof: 30 indoor follow shots on showcase_v3_late, 0 frames
+   with the person off screen or a wall over the centre.
+2. **World markers in the follow view.** Hide status badges (190, 193, 194), "WORN nn%" labels
+   (`r41_in_day_2`, `r41_out_airless_0`) and the outdoor POI labels, which draw through the dome over the mall
+   (`r41_dome_day_1..5`). Remove the white full-screen line of 190.
+3. **Body near the lens.** `r41_in_storm_0`: a walker 0.35 m from the lens fills 60 % of the frame. Fade any body
+   within 0.8 m to 0 alpha, smoothly.
+4. **Grainy occluder (191).** Replace the screen-door stipple with a smooth alpha fade, or a blue-noise dither
+   that TAA resolves.
+5. **Club dancers.** Add a coloured spot from above per podium and a rim light. Lift the floor from black. Cap the
+   LED tile emission (no white blow-out). Ship fx_robots in the preview build (`robots open` → "unknown command"
+   in web_v5preview). Add a stage view anchor. The wall screen noise and black holes are ART-B's.
+6. **Planets.** Remove the yellow-green ground patch on airless and cold (186, 187, 183). Draw cold frost as a
+   smooth cover over a grey-blue base, not a pink camouflage. Add frost on structures at night.
+7. **Indoor night.** `time 540` did not change the indoor light in my follow shots on showcase_v3_late (the
+   dome turned blue). Tell me which command gives the indoor night, or fix the override.
+8. Re-export the preview with ART-HAB's 19:50 ceiling and HR files so I can judge them in the game.

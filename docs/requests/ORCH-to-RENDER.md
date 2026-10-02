@@ -75,3 +75,12 @@ talk gestures, bubbles); party guests gather, dance (dance clips; robot dancers 
 small groups; drama poses (slap, argue, fight, proposal kneel, hug) at the right spot. After SIM's API.
 
 ## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).
+
+## 2026-10-02 (end of run 3 part 1) — DO FIRST: indoor follow regression and indoor fps drop
+
+Orchestrator probe, build/web_v5preview (commit after this note), quiet machine (leftover test processes
+killed): in1 fps 31.9 (was 45.1 on 2026-10-02 at 325d0af), straight head 0.32 px, cam 4.62 mm (was 2.06 mm);
+out1 fps 47.0, 0.079 px, 0.20 mm (OK). Since 325d0af: ART-HAB ceilings, partitions, critic-41 room fixes;
+RENDER framing rule, occluder grids (162, 573,585 cells), near fades. Find what costs the indoor frame time
+(profile the follow view in a room: occluder checks per frame, the ceiling liner, transparency/fades, lights)
+and what adds the jerk (the framing rule moving the camera?). Targets as V5_RUN3.md, fps not below 45 indoors.

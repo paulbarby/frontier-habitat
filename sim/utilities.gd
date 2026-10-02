@@ -252,6 +252,9 @@ func power_tick() -> void:
 	var wind_mult: float = (1.0 + sim.research.bonus("wind_mult")) * float(env.get("wind_mult", 1.0))
 	var batt_mult: float = 1.0 + sim.research.bonus("battery_mult")
 	var v4sun: bool = int(sim.world.version) >= 4
+	# V5 section 15.7 (critic): a wind turbine makes no power on a planet without air; one in an old save
+	# stops and shows the block "no_atmosphere".
+	var air: bool = sim.planet_has_air()
 	for id in _off_grid_ids():
 		var b0: Dictionary = blds.get(id, {})
 		if not b0.is_empty():
@@ -274,8 +277,11 @@ func power_tick() -> void:
 				if f1 & PF_SOLAR:
 					gen += rt(float(e0[PE_SOLAR]) * sun * solar_mult * float(b1["out_rate"]) * (0.5 if bool(b1.get("dust", false)) else 1.0) * (_sun_on(b1) if v4sun else 1.0))
 				if f1 & PF_WIND:
-					gen += rt(float(e0[PE_WIND]) * wind * wind_mult * float(b1["out_rate"]))
-				b1["powered"] = true
+					if air:
+						gen += rt(float(e0[PE_WIND]) * wind * wind_mult * float(b1["out_rate"]))
+					else:
+						b1["block"] = "no_atmosphere"
+				b1["powered"] = air or (f1 & PF_SOLAR) != 0
 			var st1: Dictionary = plan["st"]
 			st1["gen"] = gen
 			power_stats[comp] = st1
@@ -311,7 +317,10 @@ func power_tick() -> void:
 					# Dust from a dust devil halves a panel's output until it is cleaned.
 					gen += rt(float(e[PE_SOLAR]) * sun * solar_mult * float(b["out_rate"]) * (0.5 if bool(b.get("dust", false)) else 1.0) * (_sun_on(b) if v4sun else 1.0))
 				if f & PF_WIND:
-					gen += rt(float(e[PE_WIND]) * wind * wind_mult * float(b["out_rate"]))
+					if air:
+						gen += rt(float(e[PE_WIND]) * wind * wind_mult * float(b["out_rate"]))
+					else:
+						b["block"] = "no_atmosphere"
 				if f & PF_FUSION:
 					gen += _fusion(b, e[PE_D])
 			if f & PF_BATT:
@@ -323,7 +332,7 @@ func power_tick() -> void:
 					# Switched off, or tripped by a solar flare: it takes no power.
 					b["powered"] = false
 			else:
-				b["powered"] = true
+				b["powered"] = air or (f & (PF_SOLAR | PF_FUSION)) != 0 or (f & PF_WIND) == 0
 		var stored := 0
 		var cap := 0
 		var rate := 0

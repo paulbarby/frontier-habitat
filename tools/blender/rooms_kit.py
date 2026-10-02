@@ -1990,6 +1990,30 @@ def palette_merge(o, mset, max_surfaces=MAX_SURFACES, keep=()):
     return before, len(order)
 
 
+def conform_to(o, ref, mset):
+    """Re-map the materials of object `o` to the material set of `ref` (the same game group must stay within its draw
+    call budget): an emissive goes to the nearest emissive colour of `ref`, anything else to Palette / PaletteMetal /
+    the first material of `ref`."""
+    allowed = [m.name.split(".")[0] for m in ref.data.materials if m]
+    if not allowed:
+        return
+    em = [nm for nm in allowed if _spec_of(mset, nm).get("emit")]
+    me = o.data
+    for si, m in enumerate(me.materials):
+        nm = m.name.split(".")[0] if m else ""
+        if nm in allowed:
+            continue
+        sp = _spec_of(mset, nm)
+        if sp.get("emit") and em:
+            c = BA.hex_to_linear(sp.get("emit", sp.get("color", "#ffffff")))
+            dst = min(em, key=lambda q: sum((a - b) ** 2 for a, b in zip(
+                c, BA.hex_to_linear(_spec_of(mset, q).get("emit", _spec_of(mset, q).get("color", "#ffffff"))))))
+        else:
+            dst = next((q for q in ("Palette", "PaletteMetal") if q in allowed), allowed[0])
+        me.materials[si] = mset.get(dst)
+    me.update()
+
+
 SHELL_FOLD_INTO = "Hull"
 SHELL_FOLD = ("HullDark", "Frame", "Metal", "Rubber", "Trim")     # all darker than Hull on every channel
 
@@ -2095,6 +2119,8 @@ def build_file(rm, path, also=(), ao=None):
                                                 keep=INTERIOR_ONLY if game_group(nm) == "Base" else ())
             elif game_group(nm).startswith("Decal"):
                 palette_merge(o, mset, max_surfaces=99)
+    if getattr(rm, "v3", False) and "RoofCeil" in objs and "Roof" in objs:
+        conform_to(objs["RoofCeil"], objs["Roof"], mset)     # 5.0 round 2: the ceiling uses the roof's surfaces only
     export_glb_atomic(path)
     for extra in also:
         copy_atomic(path, extra)

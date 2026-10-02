@@ -38,8 +38,9 @@ LINER_MIN = 2.20        # the lowest liner (flush, GAP under the roof): low flat
 GAP = 0.05              # liner under the roof
 NAME = "RoofCeil"
 SKIP = ("apartment_block", "corridor")
+NO_LINER = ("residence_tube",)     # critic 41: the vault with its lattice keeps its look (units have their own ceilings)
 ALLOWANCE = (1900, 2600, 3200, 3800)     # triangle budget added per size (rooms_build): the ceiling
-MAX_SURF = 6            # rooms_kit.MAX_SHELL_SURFACES
+MAX_SURF = 5            # rooms_kit.MAX_SHELL_SURFACES is 6: one spare (parts added to the roof after this pass)
 
 
 # --------------------------------------------------------------------------------------
@@ -66,8 +67,23 @@ class Mats:
     """mat(name) -> a material the Roof group can take: its own surface if the roof has it or there is room, else the
     nearest surface the roof already has."""
 
-    def __init__(self, roof):
-        self.S = {_target(m) for m in set(roof.fmat)}
+    def __init__(self, roof, rm=None):
+        # the surfaces the Roof group keeps: faces that interior_kit.split_decals moves to Decal parts later (outer-wall
+        # decals in the doorway zone) do not count
+        import interior_kit as IK_
+        from math import hypot as _h
+        keep = set()
+        Rw = (rm.R - 0.32) if rm is not None else 1e9
+        for idx, m in zip(roof.faces, roof.fmat):
+            if rm is not None and m in IK_.DECAL_MATS:
+                vs = [roof.verts[i] for i in idx]
+                cx = sum(v.x for v in vs) / len(vs)
+                cy = sum(v.y for v in vs) / len(vs)
+                cz = sum(v.z for v in vs) / len(vs)
+                if _h(cx, cy) >= Rw - 0.45 and 0.05 <= cz <= IK_.DECAL_ZMAX:
+                    continue
+            keep.add(_target(m))
+        self.S = keep
 
     def __call__(self, nm):
         t = _target(nm)
@@ -195,7 +211,7 @@ def pendant(p, ctx, x, y, shade="Accent", drop=0.55):
         return False
     with p.at(T(x, y, 0.0)):
         p.lathe([(0.24, zb), (0.17, zb + 0.13), (0.05, zb + 0.20), (0.0, zb + 0.20)], M(shade), seg=10, smooth=True)
-        p.lathe([(0.0, zb + 0.01), (0.20, zb + 0.01)], M("LightStrip"), seg=10, smooth=False)
+        p.lathe([(0.0, zb + 0.01), (0.20, zb + 0.01)], M(ctx.light), seg=10, smooth=False)
     cord(p, x, y, zb + 0.20, zc, M)
     return True
 
@@ -237,7 +253,12 @@ def liner(ctx):
                 q = [(k, j), (k + 1, j), (k + 1, j + 1), (k, j + 1)]
             if any(V(*v) is None for v in q):
                 continue
-            mat = M("Hull") if (k + j) % 2 else M("Cargo")
+            zq = [V(*v)[2] for v in q]
+            if max(zq) - min(zq) > 0.6 or any(
+                    ((V(*q[i])[0] - V(*q[i - 1])[0]) ** 2 + (V(*q[i])[1] - V(*q[i - 1])[1]) ** 2) ** 0.5 > 2.6
+                    for i in range(len(q))):
+                continue                  # critic 41: no steep shards, no huge triangles
+            mat = M(ctx.panel[0]) if (k + j) % 2 else M(ctx.panel[1])
             # faces look down (into the room): reverse the counter-clockwise (from above) order
             p.f([vid(*v) for v in reversed(q)], mat)
             cells.append((k, j))
@@ -280,7 +301,7 @@ def ribs(ctx):
             if (k, j) in cellset or (k, j - 1) in cellset:
                 A, B = V(k, j), V(k + 1, j)
                 if A and B:
-                    rib(A, B, M("LightStrip") if j % lit == 0 and k >= NR // 2 else M("Frame"))
+                    rib(A, B, M(ctx.light) if j % lit == 0 and k >= NR // 2 else M("Frame"))
     km = max(1, NR // 2)
     for j in range(NS):
         if (km, j) in cellset or (km - 1, j) in cellset:
@@ -308,7 +329,7 @@ def cove(ctx, wide=False):
         ia = Vector((-a.x, -a.y, 0)).normalized() * 0.03
         ib = Vector((-b.x, -b.y, 0)).normalized() * 0.03
         dn = Vector((0, 0, -h))
-        p.quad(b + ib, b + ib + dn, a + ia + dn, a + ia, M("LightStrip"))
+        p.quad(b + ib, b + ib + dn, a + ia + dn, a + ia, M(ctx.light))
         if wide:
             p.quad(a + ia + dn, a + ia * 4 + dn, b + ib * 4 + dn, b + ib + dn, M("Frame"))
 
@@ -325,10 +346,10 @@ def crown(ctx):
     if zb < MIN_Z:
         # a low roof: a flush light ring 6 mm under the liner
         z = min(zs) - 0.006
-        p.lathe([(rc - w, z), (rc + w, z)], M("LightStrip"), seg=20, smooth=False, caps=False)
+        p.lathe([(rc - w, z), (rc + w, z)], M(ctx.light), seg=20, smooth=False, caps=False)
         return True
     p.lathe([(rc - w, zt), (rc - w, zb), (rc + w, zb), (rc + w, zt)],
-            lambda k, i: (M("Frame"), M("LightStrip"), M("Frame"))[k], seg=20, smooth=False)
+            lambda k, i: (M("Frame"), M(ctx.light), M("Frame"))[k], seg=20, smooth=False)
     for k in range(3):
         a = radians(120.0 * k + 30.0)
         cord(p, rc * cos(a), rc * sin(a), zt, min(zs) + 0.02, M)
@@ -542,10 +563,64 @@ def surgical(ctx):
     return put > 0
 
 
-def duct(ctx):
+def truss(ctx):
+    """Two open steel trusses across the room (top and bottom chords, diagonals), a cable tray between them."""
     p, c, M = ctx.p, ctx.c, ctx.M
     rmax = ctx.rmax
     put = 0
+    for y in (0.30 * rmax, -0.30 * rmax):
+        hx = chord(rmax, y, 0.80)
+        zl = c.zline(-hx, y, hx, y)
+        if zl is None:
+            continue
+        zt = zl - 0.04
+        dh = min(0.45, zt - MIN_Z - 0.02)
+        if dh < 0.18:
+            continue
+        zb = zt - dh
+        for z in (zt, zb):
+            p.beam((-hx, y, z), (hx, y, z), 0.07, 0.07, M("Hazard" if z == zb else "Frame"))
+        nseg = max(3, int(2 * hx / 0.8))
+        for k in range(nseg):
+            x0 = -hx + 2 * hx * k / nseg
+            x1 = -hx + 2 * hx * (k + 1) / nseg
+            p.beam((x0, y, zb), (x0, y, zt), 0.04, 0.04, M("Frame"), caps=False)
+            if k % 2 == 0:
+                p.beam((x0, y, zb), (x1, y, zt), 0.035, 0.035, M("Frame"), caps=False)
+            else:
+                p.beam((x0, y, zt), (x1, y, zb), 0.035, 0.035, M("Frame"), caps=False)
+        put += 1
+    if put == 2:
+        y0, y1 = -0.30 * rmax + 0.1, 0.30 * rmax - 0.1
+        zl = c.zline(0.0, y0, 0.0, y1)
+        if zl is not None and zl - 0.25 > MIN_Z:
+            hang_box(p, -0.25, 0.25, y0, y1, zl - 0.25, zl - 0.18, M("Frame"))           # the cable tray
+            for k in range(3):
+                hang_box(p, -0.20 + 0.15 * k, -0.15 + 0.15 * k, y0, y1, zl - 0.18, zl - 0.15,
+                         M(("Hazard", "WaterBlue", "SignalRed")[k]))
+    return put > 0
+
+
+def duct(ctx, cross=False):
+    p, c, M = ctx.p, ctx.c, ctx.M
+    rmax = ctx.rmax
+    put = 0
+    if cross:
+        # the cross duct of the duct grid: along Y at x = 0, under the other two
+        hy = chord(rmax, 0.0, 0.78)
+        zl = c.zline(0.0, -hy, 0.0, hy)
+        if zl is None:
+            return False
+        r = 0.16
+        zc = zl - 0.10 - 0.44 - r
+        if zc - r < MIN_Z:
+            zc = zl - 0.06 - r
+            if zc - r < MIN_Z:
+                return False
+        p.cyl((0.0, -hy, zc), (0.0, hy, zc), r, seg=8, mat=M("Metal"), smooth=True)
+        for yy in (-hy * 0.5, hy * 0.5):
+            cord(p, 0.0, yy, zc + r, zl + GAP, M, w=0.03)
+        return True
     for y in (0.35 * rmax, -0.35 * rmax):
         hx = chord(rmax, y, 0.82)
         zl = c.zline(-hx, y, hx, y)
@@ -683,7 +758,7 @@ def cagelamps(ctx):
         zb = max(MIN_Z, zc - 0.45)
         if zc - zb < 0.25:
             continue
-        hang_box(p, x - 0.12, x + 0.12, y - 0.12, y + 0.12, zb + 0.04, zb + 0.16, M("Frame"), bottom=M("LightStrip"))
+        hang_box(p, x - 0.12, x + 0.12, y - 0.12, y + 0.12, zb + 0.04, zb + 0.16, M("Frame"), bottom=M(ctx.light))
         for sx in (-1, 1):
             for sy in (-1, 1):
                 p.box((x + sx * 0.14, y + sy * 0.14, zb + 0.09), (0.015, 0.015, 0.18), M("PrisonOrange"),
@@ -730,8 +805,22 @@ def role_piece(ctx, role):
         if role == "distillery":
             if pipes(ctx):
                 put.append("pipes")
-        if crane(ctx, small=role == "distillery"):
-            put.append("crane")
+            if crane(ctx, small=True):
+                put.append("crane")
+        else:
+            # critic 41: three ceiling variants, by type: a crane bay, a duct grid, an open truss
+            var = sum(ord(ch) for ch in ctx.rm.tid) % 3
+            done = False
+            if var == 1:
+                done = duct(ctx) and duct(ctx, cross=True)
+                if done:
+                    put.append("ductgrid")
+            elif var == 2:
+                done = truss(ctx)
+                if done:
+                    put.append("truss")
+            if not done and crane(ctx):
+                put.append("crane")
     elif role == "logistics":
         if crane(ctx, small=True):
             put.append("crane")
@@ -860,7 +949,7 @@ def band(ctx):
         V0 = [Vector((r * cos(a0), r * sin(a0), z)) for r, z in cols[0][:n]]
         V1 = [Vector((r * cos(a1), r * sin(a1), z)) for r, z in cols[1][:n]]
         for i in range(n - 1):
-            p.quad(V0[i], V0[i + 1], V1[i + 1], V1[i], "Hull")          # faces the room
+            p.quad(V0[i], V0[i + 1], V1[i + 1], V1[i], ctx.band[0])     # faces the room
         inn = Vector((-cos(a0), -sin(a0), 0.0)) * 0.012
         t_ = Vector((-sin(a0), cos(a0), 0.0)) * 0.012
         for i in range(n - 1 if k % 2 == 0 else 0):                      # a seam on every other segment edge
@@ -873,7 +962,7 @@ def band(ctx):
                 in0 = Vector((-cos(a0), -sin(a0), 0.0)) * 0.01
                 in1 = Vector((-cos(a1), -sin(a1), 0.0)) * 0.01
                 up = Vector((0, 0, 0.025))
-                p.quad(q0 + in0 - up, q0 + in0 + up, q1 + in1 + up, q1 + in1 - up, "Accent")
+                p.quad(q0 + in0 - up, q0 + in0 + up, q1 + in1 + up, q1 + in1 - up, ctx.band[1])
         rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [p]
         ctx.band_tris += sum(len(f) - 2 for f in p.faces)
         put += 1
@@ -930,6 +1019,21 @@ class Ctx:
     pass
 
 
+# critic 41 (light colour and identity per role): the light-strip colour, the two liner panel tones and the upper band
+# (panel, stripe).  The light colour also goes to the build report (v3.ceiling.light) for RENDER's lights.
+WARM, COOL, AMBER = "Window", "LightStrip", "BeaconAmber"
+LIGHT_OF = {"bar": WARM, "kitchen": WARM, "comfort": WARM, "housing": WARM, "hr": WARM, "park": WARM,
+            "science": COOL, "medical": COOL, "academy": COOL, "life": COOL, "links": COOL, "retail": "Neon",
+            "industry": AMBER, "logistics": AMBER, "distillery": AMBER, "farm": "L4Band",
+            "security": "SignalRedGlow", "jail": "PrisonOrangeGlow"}
+LIGHT_HEX = {WARM: "#ffd27a", COOL: "#eaf6ff", AMBER: "#ffb020", "L4Band": "#a78bfa", "Neon": "category",
+             "SignalRedGlow": "#d93a3a", "PrisonOrangeGlow": "#ff7a1a"}
+PANEL_OF = {"bar": ("Hull", "Wood"), "comfort": ("Hull", "Wood"), "housing": ("Hull", "Wood"), "hr": ("Hull", "Wood"),
+            "security": ("SecBlack", "HullDark"), "jail": ("HullDark", "Frame"),
+            "industry": ("Hull", "HullDark"), "distillery": ("Hull", "Copper")}
+BAND_OF = {"security": ("SecBlack", "SignalRed"), "jail": ("HullDark", "PrisonOrange")}
+
+
 def build(rm):
     """Add RoofCeil to rm.extra_parts.  Returns the triangle count (also in interior_props.USED_TRIS['_ceiling'])."""
     import interior_roles as RO
@@ -939,11 +1043,18 @@ def build(rm):
     ctx = Ctx()
     ctx.rm = rm
     ctx.c = Ceil(rm)
-    ctx.M = Mats(rm.roof)
+    ctx.M = Mats(rm.roof, rm)
     ctx.p = P(NAME)
     ctx.rmax = rm.Ri - 0.06
     ctx.size = 1 if getattr(rm, "single", False) else (getattr(rm, "size", 1) or 0)
     ctx.rng = random.Random(sum(ord(ch) for ch in tid) * 7 + ctx.size)
+    role0 = RO.role_for(rm)
+    ctx.light = LIGHT_OF.get(role0, COOL)
+    ctx.panel = PANEL_OF.get(role0, ("Hull", "Cargo"))
+    ctx.band = BAND_OF.get(role0, ("Hull", "Accent"))
+    if role0 in ("industry", "distillery"):
+        import interior_fam_ind as _IND          # critic 41: a type-coloured wall band in industry
+        ctx.band = ("Hull", _IND.ZONE.get(tid, "Accent"))
     plan = getattr(rm, "plan", None)
     ctx.machine = None
     ctx.focus = (0.0, 0.0)
@@ -956,7 +1067,7 @@ def build(rm):
             if tag in ("counter", "bench", "table"):
                 ctx.focus = (cx, cy)
                 break
-    n = liner(ctx)
+    n = liner(ctx) if tid not in NO_LINER else 0
     if n == 0:
         # no roof to line (glass): the role piece only
         ctx.cells, ctx.edge, ctx.NR, ctx.NS = [], {}, 0, 0
@@ -979,5 +1090,6 @@ def build(rm):
     PR.USED_TRIS["_ceiling"] = tris
     for k in put:
         PR.USED["c_" + k] = PR.USED.get("c_" + k, 0) + 1
-    rm.ceiling_info = dict(cells=n, band_segments=nb, pieces=put, tris=tris, surfaces=sorted(ctx.M.S))
+    rm.ceiling_info = dict(cells=n, band_segments=nb, pieces=put, tris=tris, surfaces=sorted(ctx.M.S),
+                           light=LIGHT_HEX.get(ctx.light, "#eaf6ff"), light_mat=ctx.light)
     return tris

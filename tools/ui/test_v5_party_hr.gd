@@ -331,6 +331,29 @@ func _plan() -> void:
 	q(func():
 		check("a bubble click outside the follow view does nothing", not main.in_follow()), 2)
 
+	# ---- The view's own follow call (a debug command, RENDER's probe) gives the same HUD as V (critic round 41).
+	q(func():
+		_v["min_before"] = bool(hud.panels.minimised)
+		main.select("", -1)
+		main.view.follow_start(int(_v["a"])), 12)
+	q(func():
+		var pm = hud.panels
+		check("follow_start without the UI path: the follow card shows", hud.follow_hud.visible and int(hud.follow_hud.agent_id) == int(_v["a"]))
+		check("... the HUD dims to about 35 %", absf(hud.top_bar.modulate.a - 0.35) < 0.02 and absf(hud.minimap.modulate.a - 0.35) < 0.02 and absf(hud.build_bar.modulate.a - 0.35) < 0.02, str(hud.top_bar.modulate.a))
+		check("... the left dock folds to its tabs", pm.minimised and not pm._body.visible, str(pm.minimised))
+		check("... the selection is the followed person", main.view.selected_kind == "agent" and int(main.view.selected_id) == int(_v["a"]))
+		var v: Vector2 = hud.root.get_viewport_rect().size
+		var centre := Rect2(v * 0.25, v * 0.5)
+		var bad: Array = []
+		for r in pm.shown_rects():
+			if (r as Rect2).grow(-0.5).intersects(centre):
+				bad.append(str(r))
+		check("... the centre stays clear", bad.is_empty(), str(bad))
+		main.view.follow_stop(), 12)
+	q(func():
+		var pm = hud.panels
+		check("follow_stop without the UI path: the card goes, the HUD is bright, the dock is as before", not hud.follow_hud.visible and absf(hud.top_bar.modulate.a - 1.0) < 0.02 and pm.minimised == bool(_v["min_before"]), "%s %s" % [str(hud.top_bar.modulate.a), str(pm.minimised)]), 2)
+
 	# ---- 5. Planet colours
 	for pl in ["dry", "cold", "airless"]:
 		var pln: String = pl

@@ -57,6 +57,53 @@ def wait_spots(plan, n):
     return put
 
 
+DARK_FLOOR = ("industry", "logistics", "life", "distillery", "links", "security", "jail")
+
+
+def wear(plan, n, role, seed):
+    """Critic 41 (decals for wear): worn patches along the walking ring - irregular arcs a shade off the floor."""
+    import random
+    from math import sin, cos, radians
+    rng = random.Random(seed)
+    rr = 0.5 * (plan.wall_front + plan.r_max)
+    mat = "HullDark" if role in DARK_FLOOR else "Cargo"
+    put = 0
+    a = rng.uniform(0.0, 30.0)
+    while a < 360.0:
+        L = rng.uniform(10.0, 28.0)
+        w0, w1 = rng.uniform(0.18, 0.30), rng.uniform(0.18, 0.30)
+        r0, r1 = rr - w0, rr + w1
+        steps = 3
+        for k in range(steps):
+            t0, t1 = radians(a + L * k / steps), radians(a + L * (k + 1) / steps)
+            n.quad((r0 * cos(t0), r0 * sin(t0), F + 0.002), (r1 * cos(t0), r1 * sin(t0), F + 0.002),
+                   (r1 * cos(t1), r1 * sin(t1), F + 0.002), (r0 * cos(t1), r0 * sin(t1), F + 0.002), mat)
+        put += 1
+        a += L + rng.uniform(12.0, 40.0)
+    return put
+
+
+def walkway(plan, n):
+    """Industry and logistics: dashed walkway edges on the ring and arrows (floor paint)."""
+    from math import sin, cos, radians
+    import interior_kit as IK
+    rr = 0.5 * (plan.wall_front + plan.r_max)
+    for r_ in (rr - 0.55, rr + 0.55):
+        for k in range(48):
+            if k % 2:
+                continue
+            t0, t1 = radians(7.5 * k), radians(7.5 * k + 4.5)
+            n.quad((r_ * cos(t0) - 0.03 * cos(t0), r_ * sin(t0) - 0.03 * sin(t0), F + 0.003),
+                   (r_ * cos(t0) + 0.03 * cos(t0), r_ * sin(t0) + 0.03 * sin(t0), F + 0.003),
+                   (r_ * cos(t1) + 0.03 * cos(t1), r_ * sin(t1) + 0.03 * sin(t1), F + 0.003),
+                   (r_ * cos(t1) - 0.03 * cos(t1), r_ * sin(t1) - 0.03 * sin(t1), F + 0.003), "Hazard")
+    for k in range(6):
+        a = 60.0 * k + 30.0
+        with n.at(T(rr * cos(radians(a)), rr * sin(radians(a)), 0.0), RZ(a + 90.0)):
+            n.tri((0.22, 0.0, F + 0.004), (-0.10, 0.16, F + 0.004), (-0.10, -0.16, F + 0.004), "Hazard")
+    return 1
+
+
 def floor_detail(rm):
     import interior_roles as RO
     plan = getattr(rm, "plan", None)
@@ -65,6 +112,9 @@ def floor_detail(rm):
     role = RO.role_for(rm)
     n = plan.n
     put = work_mats(rm, n, role)
+    put += wear(plan, n, role, sum(ord(c_) for c_ in rm.tid) + (getattr(rm, "size", 1) or 0))
+    if role in ("industry", "logistics", "distillery"):
+        put += walkway(plan, n)
     if role == "bar":
         put += dance_floor(plan, n)
     if role == "medical":

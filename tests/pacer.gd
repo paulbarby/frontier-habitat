@@ -9,13 +9,15 @@ extends RefCounted
 const H = preload("res://tests/helpers.gd")
 
 var mean_of_slices: bool
+var power: float
 var slices: int
 var readings: Array = []      # ms, one more than blocks
 var raw: Array = []           # raw ms of each block
 var ticks: Array = []         # ticks of each block
 
-func _init(mean_of_slices_: bool = true, slices_: int = 60) -> void:
+func _init(mean_of_slices_: bool = true, power_: float = 0.85, slices_: int = 60) -> void:
 	mean_of_slices = mean_of_slices_
+	power = power_
 	slices = slices_
 
 ## The first reading (call once before the first block).
@@ -30,7 +32,7 @@ func block(raw_ms: float, n: int) -> void:
 
 func factor_of(i: int) -> float:
 	var c: float = (float(readings[i]) + float(readings[i + 1])) * 0.5
-	return H.calib_factor([c], mean_of_slices)
+	return H.calib_factor([c], mean_of_slices, power)
 
 ## Scaled ms a tick of blocks [from, to).
 func per_tick(from: int, to: int) -> float:

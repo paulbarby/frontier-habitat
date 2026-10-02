@@ -91,7 +91,7 @@ def people_fix(P, clip):
         for side in ("L", "R"):
             if Q.g("arm.%s.ik" % side) > 0 and side not in CONTACT.get(clip, (None, 0, ()))[2]:
                 Q["arm.%s.z" % side] = Q.g("arm.%s.z" % side) + KNEEL_ADJ * w
-    if ARM_IN and clip not in LOCO_CLIPS:
+    if ARM_IN and clip not in LOCO_CLIPS and not P.g("scap.off"):
         stand = max(0.0, min(1.0, (hz + 0.12) / 0.06))           # standing poses only (gaits set their own)
         for side, sg in (("L", -1.0), ("R", 1.0)):
             f = stand * (1.0 - max(0.0, min(1.0, Q.g("arm.%s.ik" % side))))
@@ -637,6 +637,47 @@ def people_clips():
     for c in PC.v5_clips():
         name, kind, pf, pt, loop, n, fn, meta = c
         out.append((name, kind, pf, pt, loop, n, with_face(fn, name, n, loop, jaws.get(name)), meta))
+    jaws.update({k: (lambda t, d, kw=kw: talk_jaw(t, d, True, **kw)) for k, kw in talking.items()})
+    return mocap_override(out, jaws)
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# motion capture (npc_mocap.py writes tools/blender/mocap/<clip>.json; CMU data, credit in art/people/people_credits.md)
+# ------------------------------------------------------------------------------------------------------------------
+MOCAP_DIR = os.path.join(HERE, "mocap")
+MOCAP_USE = [x for x in os.environ.get("NPC_MOCAP_USE", "").split(",") if x]   # off until checked (2026-10-02 pause)
+
+
+def mocap_clip(name):
+    """(fn, frames, meta) of a retargeted capture, or None."""
+    import json
+    path = os.path.join(MOCAP_DIR, name + ".json")
+    if not os.path.exists(path):
+        return None
+    d = json.load(open(path, encoding="utf-8"))
+    frames = d["frames"]
+    n = len(frames) - 1
+
+    def fn(f):
+        return Pose(frames[int(f) % n] if n else frames[0])
+    return fn, n, d["meta"]
+
+
+def mocap_override(clips, jaws):
+    out = []
+    for c in clips:
+        name, kind, pf, pt, loop, n, fn, meta = c
+        m = mocap_clip(name) if name in MOCAP_USE else None
+        if m is None:
+            out.append(c)
+            continue
+        mfn, mn, mmeta = m
+        meta = dict(meta)
+        for k in ("speed_mps", "stride_m"):
+            if k in mmeta:
+                meta[k] = mmeta[k]
+        meta["source"] = "motion capture: CMU %s (mocap.cs.cmu.edu), retargeted" % mmeta["source"]
+        out.append((name, kind, pf, pt, loop, mn, with_face(mfn, name, mn, loop, jaws.get(name)), meta))
     return out
 
 

@@ -281,6 +281,31 @@ def pallet_rack(plan, x, y, L, h=2.1, cold=False, seed=0):
     plan.rect(x, y, L / 2 + 0.05, 0.52, 0.0, tag="rack")
 
 
+AISLE_JOKES = (("AISLE 1", "SNACKS? NO."), ("AISLE 2", "IT WAS HERE"), ("AISLE 3", "ASK THE DRONE"),
+               ("AISLE 4", "FROZEN IN TIME"), ("AISLE 5", "NOT AISLE 4"))
+
+
+def aisle_end(plan, x, y, j, cold):
+    """A sign on a post at the end of rack row j, facing +X (the aisle ring), and the aisle number on the floor."""
+    import interior_props as PR
+    n = plan.n
+    if plan.dist(x, y) < 0.18:
+        return
+    lines = AISLE_JOKES[j % len(AISLE_JOKES)]
+    n.vcyl(x, y, F, F + 1.55, 0.03, seg=6, mat="Frame")
+    n.vcyl(x, y, F, F + 0.03, 0.16, seg=8, mat="Frame")
+    with n.at(T(x, y, 0.0)):
+        bbox(n, -0.02, 0.02, -0.34, 0.34, F + 1.55, F + 1.95, "L3Band" if cold else "Hazard")
+        for rot in (0.0, 180.0):
+            with n.at(RZ(rot)):
+                plate_x(n, 0.021, -0.32, 0.32, F + 1.57, F + 1.93, "HullDark")
+                PR.text(n, lines[0], 0.0, F + 1.84, 0.075, "Hull", x=0.022)
+                PR.text(n, lines[1], 0.0, F + 1.67, 0.045, "L3Band" if cold else "Hazard", x=0.022)
+    plan.circle(x, y, 0.17, tag="sign")
+    PR.floor_text(n, "%d" % (j + 1), x + 0.55, y, 90.0, 0.22, "L3Band" if cold else "Hazard")
+    PR.USED["aisle_sign"] = PR.USED.get("aisle_sign", 0) + 1
+
+
 def racks_room(rm, cold=False):
     import rooms_habitat as RH
     s = rm.size
@@ -299,6 +324,7 @@ def racks_room(rm, cold=False):
         if L < 1.4:
             continue
         pallet_rack(plan, 0.3, y, L, h=h, cold=cold, seed=j + 10 * s)
+        aisle_end(plan, 0.3 + L / 2 + 0.32, y, j, cold)               # critic 41: an aisle-end sign and number
         for sy in (-1, 1):
             FU.floor_line(n, 0.3 - L / 2, y + sy * 0.70, 0.3 + L / 2, y + sy * 0.70, w=0.06,
                           mat="L3Band" if cold else "Hazard")

@@ -43,7 +43,7 @@ func _init() -> void:
 			far = C4._drive_target(sim, v["pos"], 250.0)
 		legs[int(v["id"])] = [far, v["pos"]]
 	var dead_seen := {}
-	for w in 12:
+	for w in 45:
 		if w % 10 == 0:
 			H.fill_utilities(sim, 1.0, 0.8, true)
 		g.run(100)

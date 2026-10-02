@@ -1184,3 +1184,8 @@ clips). Export build/web_render pck 180.9 MB.
 **Not done:** long-frame trace; web fps / GPU perf with 130 people and all roofs off (machine fully loaded; CPU
 numbers above); stool / bunk / lounger / water clips; frost on structures at night (cold); minimap and title palette
 (UI); in4 < 3 mm.
+
+## 2026-10-02 (Opus, round 2) - PAUSED (user): half-done
+- Done, `check` 0 failed, build/web_render exported, not fully measured: corridor glazing near-opaque in the follow view (shot 200); markers hidden in the follow view (labels, rings, hazard words, satellite line); 0.8 m time-smooth body fade + moving dither; building near fade a clean cut at 0.45 m; v3 path check deterministic (rig and main driven at fixed DT, HUD/audio off: identical hashes, 0 of 66 bodies differ); seat fixes baked (`presentation/navgrid/seat_fix.res`, seat check 1 overlap left: academy_m Seat_0 shin, ART-HAB model); occluder grids now 0.15 m bands and loaded in the web build (sig check dropped: the web build had none before).
+- Half-done: the framing rule (`frame_fn`/`follow_frame_hit`, orbit + shorter boom search, probe `wall_centre_frames`/`off_screen_frames`, debug `framecheck`): the test still misses walls that the camera faces from outside a room (16-shot sheet scratch fc_sheet: 3-4 bad frames of 16); not proven, no 30-shot proof yet.
+- Not started: club lights/LED cap, planet patch/frost smooth/frost on structures, indoor night, ART-HAB PartTop/UnitBox reply, in4/out4/clip switches, long-frame trace, web perf.

@@ -188,6 +188,7 @@ func _process(delta: float) -> void:
 
 func _refresh(delta: float) -> void:
 	hint.frame()
+	_sync_follow()
 	_clock += delta
 	if _clock < 0.2:
 		return
@@ -244,10 +245,36 @@ func open_person(id: int, t: String = "") -> void:
 
 ## The follow view started (id) or ended (-1): the follow card shows, the rest of the HUD dims
 ## (time controls, toasts, the Rag, the personnel file and the banners stay bright).
+## One follow view whatever started it (critic round 41: a debug command that called view.follow_start showed the
+## full HUD and no card). Each frame: when the view follows somebody the HUD does not know, or no longer
+## follows somebody it shows, the HUD takes the same state as after V.
+var _follow_seen := -1
+var _follow_dock_saved := false
+var _follow_dock_min := false
+func _sync_follow() -> void:
+	if main == null or main.view == null or follow_hud == null:
+		return
+	var fid: int = int(main.view.follow_id) if main.in_follow() else -1
+	if fid == _follow_seen and follow_hud.visible == (fid >= 0):
+		return
+	if fid >= 0 and (main.view.selected_kind != "agent" or int(main.view.selected_id) != fid):
+		main.select("agent", fid)
+	follow_changed(fid)
+
 func follow_changed(id: int) -> void:
+	_follow_seen = id
 	load("res://ui/theme/bubble_style.gd").apply(main.view)
 	follow_hud.show_for(id)
-	var dim: float = 0.28 if id >= 0 else 1.0
+	# The left dock folds to its tabs while you follow (the follow card holds the top left) and comes back as it was.
+	if panels != null:
+		if id >= 0 and not _follow_dock_saved:
+			_follow_dock_saved = true
+			_follow_dock_min = bool(panels.minimised)
+			panels.minimise_dock(true)
+		elif id < 0 and _follow_dock_saved:
+			_follow_dock_saved = false
+			panels.minimise_dock(_follow_dock_min)
+	var dim: float = 0.35 if id >= 0 else 1.0
 	for m in [minimap, build_bar, nav, top_bar, inspector, panels._dock if panels != null else null]:
 		if m != null:
 			(m as CanvasItem).modulate.a = dim

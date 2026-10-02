@@ -1215,7 +1215,7 @@ func long_v5_perf_showcase(t) -> void:
 	sim.run_seconds(30.0)
 	var times: Array = []
 	var raw_times: Array = []
-	var pc = Pacer.new(false)
+	var pc = Pacer.new(false, 1.0)
 	pc.start()
 	for blk in 15:
 		var bsum := 0.0
@@ -1373,6 +1373,32 @@ func v5_planet_hazards(t) -> void:
 	t.eq(bad, [], "no atmospheric event runs on the airless planet")
 	t.eq(wind_max, 0.0, "no wind on the airless planet")
 	t.eq(s2.place.check_building("wind_turbine", s2.world.center + Vector2(60, 0), 0.0), "no_atmosphere", "a wind turbine is refused")
+	# An old airless save that already has a wind turbine (TEST SET-UP: the record as an old build made it): it
+	# stops, shows the block "no_atmosphere" and adds no power however hard the wind blows; on the dry planet the
+	# same turbine runs and adds power.
+	for planet in ["airless", "dry"]:
+		var gw = H.Game.new(1003, false)
+		var sw = gw.sim
+		sw.new_game(1003, "frontier", {"planet": planet, "hazards": "off"})
+		sw.state["flags"]["unlock_all"] = true
+		var wt: Dictionary = sw.build.spawn_active("wind_turbine", sw.world.center + Vector2(60, 0), 0.0)
+		var cable: Dictionary = H.link_now(sw, "cable", int(sw.state["lander_id"]), int(wt["id"]), [])
+		sw.topo.rebuild(true)
+		sw.run_seconds(3.0)
+		var comp: int = int(sw.topo.power_comp.get(int(wt["id"]), -1))
+		t.check(comp != -1, "%s: the turbine is on a network" % planet)
+		sw.state["env"]["wind"] = 0.0
+		sw.util.power_tick()
+		var gen0: int = int(sw.util.power_stats[comp]["gen"])
+		sw.state["env"]["wind"] = 6.0
+		sw.util.power_tick()
+		var gen6: int = int(sw.util.power_stats[comp]["gen"])
+		if planet == "airless":
+			t.check(String(wt["block"]) == "no_atmosphere" and not bool(wt["powered"]), "airless: the old wind turbine stops and shows no_atmosphere (block %s)" % String(wt["block"]))
+			t.eq(gen6, gen0, "airless: wind 6 adds no power (%d and %d)" % [gen0, gen6])
+		else:
+			t.check(String(wt["block"]) != "no_atmosphere" and gen6 > gen0, "dry planet: the wind turbine runs and adds power (%d to %d)" % [gen0, gen6])
+		gw.dispose()
 	t.eq(String(s2.place.lock_info("atmo_processor")["kind"]), "planet", "the atmosphere processor is locked by the planet")
 	t.check(s2.hazards.kinds_here().size() == 4 and not s2.hazards.kinds_here().has("dust_storm"), "kinds_here: %s" % str(s2.hazards.kinds_here()))
 	# An old save on airless with a pending dust storm (TEST SET-UP: the event written as an old build did).
