@@ -16,3 +16,5 @@ Do:
 3. Test: run each planet for N game days with all hazard rolls; count events per type; airless must have 0
    atmospheric events. Old saves on airless: drop pending atmospheric events at load.
 4. Tell UI (forecast, hazard texts, codex) and RENDER (no dust/haze/wind effects on airless).
+
+## 2026-10-02 — Paul: idle talk, innuendo, celebrations, parties, party drama → V5_DESIGN.md §16 (all of it)

@@ -69,3 +69,7 @@ out1 straight 0.071 px, 0.17 mm (OK). CSV build/web_v5preview_probe/in1.csv: sin
 after the springs (camera_rig.gd ~lines 334-358); the ceiling value steps between room and corridor.
 Fix so the final eye is continuous (springs after clamps, or clamps as soft constraints with a hard limit
 only for real penetration), keep roofs on and the wall rule, re-run in1/in4/out1/dome1.
+
+## 2026-10-02 — Paul: parties (V5_DESIGN.md §16): idle people walk to each other and talk (face each other,
+talk gestures, bubbles); party guests gather, dance (dance clips; robot dancers in the club), toast, stand in
+small groups; drama poses (slap, argue, fight, proposal kneel, hug) at the right spot. After SIM's API.

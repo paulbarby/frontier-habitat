@@ -72,3 +72,5 @@ this test fails when a neighbour runs). v4 (2.5) and v5 (3.0 median, 12 ms worst
 **Suite note.** The median tests pass when the machine is not shared and fail by 50-100 % when Blender or another
 Godot runs. For a stable suite on this machine: run it when the other agents are idle, or let the perf tests scale
 the budget by the calibration loop (time against 40 ms). I can add that factor if you approve it.
+
+**Paul, 2026-10-02: APPROVED option 1 (Quaternius CC0 + CMU mocap downloads).** Perf budgets: orchestrator decision, budgets unchanged; perf tests calibrated against tests/dev/sim_calib.gd.

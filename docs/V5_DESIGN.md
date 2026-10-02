@@ -522,3 +522,41 @@ Rules:
 8. **One panel manager (Paul, 2026-10-01).** Every alert, request, banner, toast and info card goes through one
    UI manager with one look: a tabbed left dock, minimise / close / pin / mute per type, a Notifications
    settings section, the centre zone free. Spec in docs/UI_PANELS.md (UI writes it first). Replaces §15.6.
+
+## 16. Idle talk, celebrations and party drama (Paul, 2026-10-02)
+
+Paul's words (summary): when a person is idle, they start a conversation with another idle person nearby;
+when the two connect and the attraction goes that way, the talk is adult innuendo, and fun. Make
+opportunities for events (goals reached, birthdays, promotions); such an event is a reason for a party. At
+parties people dance and talk, and drama happens: small drama often, big drama now and then but not too
+often (a relationship event or even a fight).
+
+Rules (SIM owns the mechanic and content; UI shows; RENDER draws):
+1. **Idle talk.** A person with no job, no urgent need and no plan for the next 20 s looks for another idle
+   person within about 8 m in the same room or venue (path-reachable), walks over and starts a talk session
+   (the existing §4.1 sessions). Not during alerts that need them, not in a suit outside, not while asleep.
+   Talk topic by relation and traits: small talk, gossip, work moan, joke, rivalry, flirt.
+2. **Connection and innuendo.** Two adults with mutual attraction (§2 `attraction`) and a good relation
+   score get flirt lines; at higher chemistry, cheeky adult innuendo: double meanings, teasing, suggestive
+   jokes. Never explicit; never with or about children; never with a person whose attraction does not match
+   or who is in a relationship and not interested (then it becomes awkward, a small drama). A setting
+   "Cheeky dialogue" (on by default) switches innuendo lines to mild flirt lines. Content: at least 120 new
+   innuendo lines and 80 flirt lines, original, funny, in the colony setting (air, suits, airlocks, rovers,
+   hydroponics, the AI-boom satire), each with a "heat" level.
+3. **Celebration events.** SIM raises events: a person's birthday (birth date in identity; one a few days
+   apart at random), a promotion (§5.1 rank up), a goal or chapter reached, a medal earned, a new structure
+   type finished (dome, academy), a wedding, a child adopted, a record (arcade). Each event can be a reason
+   for a party: the player gets a "Throw a party?" item in the Requests tab (cost in drinks/snacks as today,
+   place: bar, lounge, cantina, park, dome club), or an automatic small gathering if the player ignores it.
+4. **Parties.** Guests (friends of the honoured person, then others off duty) gather at the venue for a set
+   time (1-3 game hours). Activities: dance (dance clips, robot dancers in the club), talk in small groups,
+   toasts, music. Satisfaction and relations rise; attendance and fun scored; the Rag reports it next dawn.
+5. **Party drama.** During a party, small drama often (every party has 1-3): a spilled drink, an awkward flirt,
+   a bad joke, a dance-off, someone gets tipsy and sings, an ex arrives. Big drama rarely (about 1 party in 6,
+   never two parties in a row, a cooldown of several days): a public break-up, a jealous scene, an affair
+   revealed, a proposal, a fight (security reacts as §6.5). Big drama makes Rag headlines.
+6. **Player view.** Party and drama items go through the panel manager (News / Events tabs; big drama
+   may pop up once). Follow view: speech bubbles show the lines; the camera can follow a guest.
+7. **Tests:** idle pairs start talks; innuendo only between mutually attracted adults; setting off gives no
+   innuendo; each event type creates a party offer; party drama rates match (small 1-3 per party; big about
+   1 in 6 with cooldown) over a long run; determinism and perf budgets hold.

@@ -70,3 +70,7 @@ the dome, outdoor weather and wind sounds drop to a faint, low-passed hull rumbl
 about 400 Hz) or stop; interior room tone takes over. Outdoors full level. Fade over about 0.5 s on the
 transition. Follow view indoors uses this rule always. Test with tools/audio_probe.mjs (indoor vs outdoor
 level in a storm) and report the dB numbers.
+
+## 2026-10-02 — Paul: parties (V5_DESIGN.md §16): "Throw a party?" request rows (place, cost, guests, the reason),
+party and drama items in the dock (News/Events), a party card in the venue inspector, the "Cheeky dialogue"
+setting, Rag party reports, help text (STE). After SIM lands the API (SIM-to-UI.md).
