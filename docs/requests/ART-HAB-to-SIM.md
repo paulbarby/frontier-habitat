@@ -1,5 +1,11 @@
 # ART-HAB → SIM
 
+## 2026-10-02 17:25 — run 3: all room files rebuilt; door file: one lane width
+
+- `content/door_blocked.json`: one change, `storehouse_xl` `min_lane_m` 0.81 → 1.04 (no blocked angle; 360 deg free
+  as before). Every other room is unchanged.
+- Anchors: no name changes for Bed / Seat / Work / Stand / Cell / Unit / Class / Desk / Locker / Yard; only the
+  count of the path helpers `Anchor_Aisle_*` changed in 20 files. No content change is needed.
 
 ## 2026-10-01 — distillery built; jail bed anchors; door file changed
 

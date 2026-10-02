@@ -5,13 +5,72 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-02 v5 run 3 (Opus ART-HAB) — detail pass reviewed, size cut, all rooms rebuilt, renders
+
+**Art review of the prop kit** (showcase room with all 32 wall kinds, eye views of every room type):
+- Dark text on light boards was `HullDark` (#8a929c) on `Hull` (#d9dde2), contrast near 2: it did not read in the
+  follow view. `interior_props.INK` maps it to `Rubber` (#2b2d33) in every `text()` call (posters, boards, labels,
+  floor marks). The poster `CushionLight` background had the same fault and is fixed by the same map.
+- Repetition: an industry M room had 18 boards (two of each kind); every industry type showed the same set in the
+  same order. Now each kind stands once in S/M/L (twice in XL), the role's signature piece comes first (safety
+  board, still label, plant leaderboard ...) and the rest start at an offset from the room type, so two industry
+  rooms differ. The kettle station, agents screen, menu board and GPU shrine stand once in S/M, twice in L/XL
+  (`interior_kit.SAT_ONCE`); free-standing role decor once per room (plants, gnome, crates twice in XL).
+- Photo walls: frames 1.5 x larger (they were 0.2 m wide and did not read). Wanted posters: the names (the joke)
+  are short lines at 28 mm instead of 19 mm.
+- Residences: the table pendant lamp hung at 1.56-1.79 m (head height; it filled the follow camera): now
+  2.05-2.28 m (`interior_v5.pendant`).
+
+**Size rules** (all in code, documented at the constants):
+- `interior_props.text`: glyphs are the fewest non-overlapping rectangles (exact search, 15 % fewer quads); text
+  under `GREEK_H` 19 mm is one bar per word (a 2 mm font pixel is below one screen pixel in the follow view);
+  `keep=True` keeps desk plates readable.
+- `interior_roles.Enricher`: `QUOTA` (4, 7, 10, 13) role wall pieces by size, spread evenly round the 32 slots;
+  `KIND_CAP` (1, 1, 1, 2). The vending machine's snacks are cards behind the glass (-300 triangles).
+- Academy S: a lighter wall pattern and two library shelves (it was the last file over budget).
+- The build report records `_text_big/_mid/_greek` and `d_*` (free-standing decor) triangles in `props_tris`.
+
+**Numbers:**
+
+| | before (handover files) | after |
+|---|---|---|
+| room GLB total | 298.2 MB (pre-kit 227.6) | **264.6 MB** |
+| triangles | 4,062,025 | 3,562,874 |
+| files over budget | 19 | **0** (157 built, 0 flags) |
+| room models in the pck (imported .scn) | about 71 MB (est.) | **63.2 MB** |
+| pck `build/web_art_hab` | 160.5 MB (start of run) | **171.5 MB** (all agents; 170.3 MB at my first export, the +1.2 MB came from other agents' files; my files did not change between the two) |
+
+Detail-pass share of the pck: part 2/3 about +8.8 MB (GLB +37 MB x scn ratio 0.239), part 1 +3.2 MB (estimate of
+2026-10-01): about +12 MB for the whole pass. Not measured against a pre-kit export.
+
+**Checks:** RESULT `rooms_build` 157 built, 0 flags (all within budget; no density flag; academy M empty patch 1.56 m,
+retail L 2.11 m). RESULT `interior_desk_selftest` PASS. RESULT `godot.mjs import` done; `check` 298 scripts, 0 failed.
+RESULT `render_nav_bake` 157 grids, 157 room metas (after the last import). `content/door_blocked.json`: one change,
+storehouse_xl lane 0.81 -> 1.04 m (SIM told).
+
+**Renders** (`art/interiors/`, looked at): every room type (M file; residence L, executive L, apartment block)
+day, night, exterior and three follow views at 1.8 m over the shoulder (`<id>_eye0..2.png`); unit and penthouse
+follow views `residence_tube_l_unit_eye0..1`, `residence_tube_executive_l_unit_eye0..1`,
+`apartment_block_m_unit_eye0..1`; apartment floors `apartment_block_m_floor0..2`; paired desks
+`research_lab_m_spot0.png`. Notes: `docs/requests/ART-HAB-to-RENDER.md` (157 changed files, nav rebake done, a
+proposal), `ART-HAB-to-SIM.md`.
+
+**Open / not done:**
+- Residences in the follow view: 1.30 m unit partitions read as cubicles at eye height 1.8 m. Partition tops in
+  the Roof group are proposed to RENDER (needs their follow camera to stay on the person's side of a partition).
+- The 17 industry types still share one layout language at a distance (machine centre, consoles, crates); the role
+  props differ by type now but the silhouettes do not.
+- Not tested: in the game (RENDER's cut, path and seat checks on this build); `check_desk_seats` for the academy and
+  security desks (they use table footprints).
+
 ## 2026-10-02 v5 run 3 — HANDOVER (stopped by the coordinator; the Opus ART-HAB agent takes over visual work)
 
 **Changed (code, all in tools/blender):**
 - **Wall-piece depth rule** (the posters that sank into the panel): the wall facet is a chord, so its panel stands Ri*(1-cos 5.625 deg) = 0.5 % of Ri (3 cm at M, 6 cm at XL) in front of radius Ri; the old slot origin sat 2 cm behind Ri, and WALL_OFF 3.5 cm was too small on big rooms (jail, distillery, all XL). `interior_kit.wall_slot` now puts the slot origin ON the panel (x = 0), `Plan.wall_items` gives builders the depth `d - shift` so item fronts stay where the plan put them, and `Plan.check_piece` flags any flat wall face that lies behind the panel or is cut by the skirting (z < 0.29), the pipe run (z 0.345-0.475, 7 cm deep) or the cove light (z 1.255-1.335, 4 cm). Flat pieces live in z 0.50-1.24 (`interior_props.ZLO/ZHI`, `WALL_OFF = 0.004`). Back plates of racks, shelves, sample racks, mushroom shelves, toolwall, suit rack, bench brackets moved to 7.5-8 cm; wall screens (`wi_panel`, `wi_desk`) lowered. Result: 0 `piece` flags on all 158 files; jail_m and distillery_m posters render clear of the panel (`art/interiors/jail_m_props*.png`, `distillery_m_props*.png`).
 - **Prop kit part 2 and 3** (V5 15.3 in every room type): `interior_roles.py` (30 wall kinds by room role: safety board, foreman bot, roster, hard hats, gauges, extinguisher, AGI countdown, vending machine, time clock, whiteboard, seed rack, plant leaderboard, air board with duck, inventory screen, barcodes, eye chart, AI diagnosis, peer-review poster, wanted board, tally marks, blackboard, route signs, photo wall, shop signs, suit check, air fryer, jukebox, recipe screen, still label; one motto sign per room type in `MOTTOS`; `ROLE_OF` / `ROLE_KINDS` tables; `Enricher` replaces filler wall kinds inside `Plan.wall_items`, so every family gets them without a builder change) and `interior_roles_decor.py` (11 free-standing pieces: snack corner, whiteboard stand, server cabinet, tool trolley, crates with stencils, drone dock, gnome with VR headset, plant with a chat stake, ring light, three bins, kiosk; capped per kind by `cap_for`, registered into `interior_families.DECOR` and the `V4_KINDS` lists by `interior_rooms._register_v4_decor`). New poster kinds in `interior_props`: captcha, travel, wellness, cat (wall kind `vibeposter`). Also: painted floor texts on the walking ring (`interior_roles.floor_marks`, called from `interior_rooms.finish`), a joke label on every standing console (`interior_furniture.console`), airlock chamber notices and suit-check screen, residence unit walls use photo walls and the new posters (`interior_v5.wall_art`), `V4_MAX_PATCH` 2.5 -> 1.9 m. Build check: `rooms_build` flags a room with fewer than 4 prop kinds or no satire piece (`airlock_r28`: 1); the build report has `props` and `props_tris` per file; the interior triangle budget is now v3 x 1.8 for every room type.
 - **Tools:** `interior_render.py` modes `wall` (low look along the wall: `--angles a,b --span 5`), `eye` (the follow camera: 0.55 m right, 1.9 m behind, 1.8 m high, fov 50, a stand-in figure; `--eye auto` or `--eye "x,y,yaw[,floor];..."`, `--night` for lamps) and `spot` (`--spot "x,y,azimuth,elev,half"` with figures); env overrides `FH_MODEL_DIR`, `FH_THUMB_DIR`, `FH_REPORT_DIR`, `FH_ART_DIR`, `FH_DOOR_OUT` for scratch and parallel builds; `interior_roles_show.py` (empty room showing chosen wall kinds via `FH_ROLE_SHOW`); `interior_desk_selftest.py`.
-- **Desks (ORCH 2026-10-01):** `blender --background --factory-startup --python tools/blender/interior_desk_selftest.py` -> RESULT PASS: the real research lab M passes `check_desk_seats` (2 desk seats, 6 desk bodies), a seat moved inside a desk top is flagged, a seat with its screens behind it is flagged. Render of the paired desks (monitors at the divider, chairs and figures on the open sides, figures facing the screens) is in the old session scratchpad `...scratchpadartesearch_lab_m_spot0.png`; re-render it into `art/interiors` with `--only spot --spot "0,2.85,-60,28,2.4"`.
+- **Desks (ORCH 2026-10-01):** `blender --background --factory-startup --python tools/blender/interior_desk_selftest.py` -> RESULT PASS: the real research lab M passes `check_desk_seats` (2 desk seats, 6 desk bodies), a seat moved inside a desk top is flagged, a seat with its screens behind it is flagged. Render of the paired desks (monitors at the divider, chairs and figures on the open sides, figures facing the screens) is in the old session scratchpad `...scratchpadart
+esearch_lab_m_spot0.png`; re-render it into `art/interiors` with `--only spot --spot "0,2.85,-60,28,2.4"`.
 
 **Models on disk (valid, loadable; not yet imported into Godot):** all 158 room files rebuilt 15:49-15:57 by six parallel `rooms_build.py --only <group> --no-thumbs` runs (FH_REPORT_DIR and FH_DOOR_OUT per run, then merged into `tools/blender/build_report.json/.md`, `content/door_blocked.json` and `docs/requests/ART-HAB-door_blocked.json`). They were built BEFORE the last code edits (floor marks, console label, caps of role pieces, residence photo walls, size-dependent filler chance, triangle recording), so the code on disk and the files differ: **rebuild all once more.** Numbers of this build: GLB total 227.6 -> 298.2 MB (+70.6 MB; at the pck ratio 0.30 about +21 MB, measure with an export), triangles 3.03 M -> 4.06 M. 19 files over budget, nothing else flagged: 17 S files (S budget 18,000: 18,061 to 22,207) plus academy_m 27,256 / 27,000 and distillery_m 29,131 / 27,000; the edit `Enricher.FILLER_CHANCE` by size (0.5 / 0.7 / 0.8 / 0.85) and `HEAVY` skip in S is written but not yet built (a scratch test: lounge_s 18,200, academy_s 19,434 still over; academy_m 26,838 ok). Next: trim S further (fewer fills or cheaper pieces: wanted 1,022 tris, stilllabel 874, plantboard 862, vending 736, seedrack 712, whiteboard 684, foreman 640, fryer 638), rebuild, `door_blocked` is unchanged by this work except storehouse_xl (the baseline run of 15:47 rewrote it once with the depth rule; SIM has not been told).
 - **Not done:** the day / night / exterior renders of every changed room and the eye views for the critic (use `interior_render.py --file <id> --only beauty,night,exterior`, `--only props`, `--only eye --eye auto`); the residence / penthouse eye views (`--eye "x,y,yaw,floor"`); `node tools/godot.mjs import` and `check`; the list of changed models for RENDER in `docs/requests/ART-HAB-to-RENDER.md` (all 158 room files) and the nav rebake; the SIM note (door_blocked); `check_desk_seats` coverage of the academy and security desks (they use table footprints, not `sit_desk`); the S-size budget; the critic carry-over (academy M bare floor, retail L patches: the filler change should close them, measure `plan.v4_patch`); measuring the pck.

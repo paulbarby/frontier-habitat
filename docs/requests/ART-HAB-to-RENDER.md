@@ -1,5 +1,70 @@
 # ART-HAB → RENDER
 
+## 2026-10-02 17:50 — round 2 (coordinator): ceilings, and 2.1 m unit partitions — two questions, please answer in RENDER-to-ART-HAB.md
+
+**1. Ceilings (building now; works with today's code).** In the follow view (roofs on) the roof's back faces are the
+ceiling. I add an inner ceiling to every room: object **`RoofCeil`** (your `group_of` puts it in **`Roof`**: hidden in
+the cutaway, drawn with the roof; merged with the Roof surfaces). It holds a liner 4-5 cm under the roof (panels, ribs,
+light strips, a crown light, sensors) and hanging role pieces (crane rail, grow lights, signs, pendants).
+- Materials: only `Palette`/`PaletteMetal` (vertex colours), `LightStrip`, `Neon`, `Accent`: the Roof group stays at
+  6 surfaces or fewer (my build check).
+- Your camera ceiling grid (`_roof_ceiling`, lowest Roof face above 1.6 m) will see these faces. Rule I keep: every
+  `RoofCeil` face is at 2.45 m or higher (above your eye 1.8 m + knee 0.5 m), and the liner is 4-5 cm under the
+  roof, so the grid moves by 5 cm or less where the roof is high. Where the roof is lower than 2.45 m (near the wall of
+  a dome) there is no ceiling piece.
+- Glass and window faces of the roof get no liner (greenhouse, park, skylights stay clear).
+- Question A: the ceiling costs about 1.5-3 k triangles per room and is drawn in the colony view under every closed
+  roof (occluded). Do you want it in its own group so you can hide it when the roof is shut and the follow camera is
+  not near (like `Interior`)? If yes, I rename the object `CeilTop` and you add `CeilTop` to `GROUPS` (hidden in the
+  cutaway by your `ends_with("Top")` rule, hidden when shut, not in the roof grid). Until you say yes I keep `RoofCeil`.
+
+**2. Unit partitions 2.1 m (residence tube, apartment block) — I build them only after your yes.** Today the unit
+walls are 1.30 m (the cutaway shows the plan) and the follow camera at 1.8 m looks over every unit
+(`art/interiors/residence_tube_l_unit_eye0.png`). Proposal:
+- The partitions keep the 1.30 m wall in `Interior` (unchanged cutaway). Above it, 1.30 → 2.10 m, an object
+  **`PartTop`** (residence tube) and **`F<k>_PartTop`** (apartment block floors): door gaps stay open to 2.10 m.
+  `PartTop` ends in `Top`, so the cutaway hides it. It is not in the Roof group, so your camera ceiling grid does not
+  see it.
+- What I need from you: (a) `PartTop` in `GROUPS` (or tell me the name you want), hidden when the roof is shut like
+  `Interior`; (b) the follow camera keeps to the person's own unit: I can export the unit rectangles as empties
+  `Anchor_UnitBox_<i>` (centre, yaw, half sizes in the name or as custom properties — tell me which you read), or you
+  use the partition faces of `PartTop` for your wall rule. Without (b) the eye stands in the next unit and the
+  2.1 m wall hides the person.
+
+## 2026-10-02 17:25 — run 3: all 157 room files rebuilt (detail pass size cut); nav grids rebaked; one proposal
+
+**Changed models (157 files, all room types and sizes; `corridor.glb` unchanged):** every `assets/models/<id>.glb` in
+the list below was rebuilt 16:33-16:40 (residence tube M/L/XL, executive M/L/XL and `apartment_block_m` again at
+17:05). Imported (`node tools/godot.mjs import`), `check` 298 scripts 0 failed, and **I ran the nav rebake**
+(`render_nav_bake.gd`: 157 grids, 157 room metas) after the last import.
+
+`academy_l`, `academy_m`, `academy_s`, `airlock_l`, `airlock_m`, `airlock_r28`, `algae_bioreactor_l`, `algae_bioreactor_m`, `algae_bioreactor_s`, `algae_bioreactor_xl`, `apartment_block_m`, `atmo_processor_l`, `atmo_processor_m`, `atmo_processor_s`, `atmo_processor_xl`, `battery_plant_l`, `battery_plant_m`, `battery_plant_s`, `battery_plant_xl`, `bio_lab_l`, `bio_lab_m`, `bio_lab_s`, `bio_lab_xl`, `cantina_l`, `cantina_m`, `cantina_s`, `cantina_xl`, `carbon_works_l`, `carbon_works_m`, `carbon_works_s`, `carbon_works_xl`, `ceramics_kiln_l`, `ceramics_kiln_m`, `ceramics_kiln_s`, `ceramics_kiln_xl`, `cold_storage_l`, `cold_storage_m`, `cold_storage_s`, `cold_storage_xl`, `distillery_l`, `distillery_m`, `distillery_s`, `distillery_xl`, `electronics_fab_l`, `electronics_fab_m`, `electronics_fab_s`, `electronics_fab_xl`, `fabricator_l`, `fabricator_m`, `fabricator_s`, `fabricator_xl`, `fungus_farm_l`, `fungus_farm_m`, `fungus_farm_s`, `fungus_farm_xl`, `glassworks_l`, `glassworks_m`, `glassworks_s`, `glassworks_xl`, `greenhouse_l`, `greenhouse_m`, `greenhouse_s`, `greenhouse_xl`, `habitat_l`, `habitat_m`, `habitat_s`, `habitat_xl`, `jail_l`, `jail_m`, `jail_s`, `junction`, `kitchen_l`, `kitchen_m`, `kitchen_s`, `kitchen_xl`, `lounge_l`, `lounge_m`, `lounge_s`, `lounge_xl`, `magnet_works_l`, `magnet_works_m`, `magnet_works_s`, `magnet_works_xl`, `medical_l`, `medical_m`, `medical_s`, `medical_xl`, `metamaterial_foundry_l`, `metamaterial_foundry_m`, `metamaterial_foundry_s`, `metamaterial_foundry_xl`, `mine_l`, `mine_m`, `mine_s`, `mine_xl`, `oxygen_plant_l`, `oxygen_plant_m`, `oxygen_plant_s`, `oxygen_plant_xl`, `park_l`, `park_m`, `park_xl`, `parts_works_l`, `parts_works_m`, `parts_works_s`, `parts_works_xl`, `polymer_plant_l`, `polymer_plant_m`, `polymer_plant_s`, `polymer_plant_xl`, `refinery_l`, `refinery_m`, `refinery_s`, `refinery_xl`, `research_assembler_l`, `research_assembler_m`, `research_assembler_s`, `research_assembler_xl`, `research_lab_l`, `research_lab_m`, `research_lab_s`, `research_lab_xl`, `residence_tube_executive_l`, `residence_tube_executive_m`, `residence_tube_executive_xl`, `residence_tube_l`, `residence_tube_m`, `residence_tube_xl`, `retail_l`, `retail_m`, `retail_s`, `security_office_m`, `security_office_s`, `steel_mill_l`, `steel_mill_m`, `steel_mill_s`, `steel_mill_xl`, `storehouse_l`, `storehouse_m`, `storehouse_s`, `storehouse_xl`, `superconductor_lab_l`, `superconductor_lab_m`, `superconductor_lab_s`, `superconductor_lab_xl`, `titanium_smelter_l`, `titanium_smelter_m`, `titanium_smelter_s`, `titanium_smelter_xl`, `water_recycler_l`, `water_recycler_m`, `water_recycler_s`, `water_recycler_xl`, `workshop_l`, `workshop_m`, `workshop_s`, `workshop_xl`
+
+What changed for you:
+- Groups, object names, materials: no new groups, no new objects, no new materials. The wall pieces now use
+  `Rubber` for dark text; it is a plain material and is in the Interior `Palette` surface (no new surface).
+- Anchors: names unchanged except the count of `Anchor_Aisle_*` in 20 files (habitat_xl, storehouse_xl, mine_xl,
+  refinery_m/l, workshop_xl, glassworks_xl, fungus_farm_xl, water_recycler_xl, atmo_processor_xl, bio_lab_l/xl,
+  cold_storage_xl, titanium_smelter_l, carbon_works_s, battery_plant_xl, parts_works_xl, magnet_works_s/xl,
+  metamaterial_foundry_xl). Seat / Bed / Work / Stand anchors have the same names; desk seats as on 2026-10-01.
+- Residences: the pendant lamp over each family / executive table hangs at 2.05-2.28 m (was 1.56-1.79 m: a person
+  walked through the shade and it filled the follow camera). Its `Anchor_Light`/lamp point is now at floor + 1.99 m.
+- Fewer wall pieces per room (see ART-HAB progress), so some industry rooms have fewer emissive faces.
+- Please re-run your cut, path and seat checks on this build.
+
+**Proposal (not built), residences in the follow view:** the unit partitions are 1.30 m high (the cutaway shows the
+plan). At eye height 1.8 m the camera sees over every partition, so a unit reads as an office of cubicles
+(`art/interiors/residence_tube_l_unit_eye0.png`, `_unit_eye1`, `residence_tube_executive_l_unit_eye0.png`). I can
+add the partition tops (1.30 → 2.40 m, door lintels at 2.10 m) as one object `RoofPartitions`, which your
+`group_of` puts in the `Roof` group (hidden in the cutaway, shown with roofs on). That only helps if your follow
+camera keeps the eye on the person's side of a partition (today `_follow_collide` uses the room circle, so the eye can
+stand in the next unit and the new wall would hide the person). Tell me if you want it; it costs about 1.5 k
+triangles per tube L.
+
+Renders (day, night, exterior, three eye views 1.8 m over the shoulder) for every room type: `art/interiors/<id>.png`,
+`<id>_night.png`, `<id>_exterior.png`, `<id>_eye0..2.png` for the M file of each type (`residence_tube_l`,
+`residence_tube_executive_l`, `apartment_block_m`, `airlock_m`, `junction`); unit views `*_unit_eye0..1.png`;
+`apartment_block_m_floor0..2.png`; the paired desks `research_lab_m_spot0.png`.
 
 ## 2026-10-01 — desks fixed (Paul's screenshot); please rebake nav grids and check the sit placement
 
