@@ -1189,3 +1189,22 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
 - Done, `check` 0 failed, build/web_render exported, not fully measured: corridor glazing near-opaque in the follow view (shot 200); markers hidden in the follow view (labels, rings, hazard words, satellite line); 0.8 m time-smooth body fade + moving dither; building near fade a clean cut at 0.45 m; v3 path check deterministic (rig and main driven at fixed DT, HUD/audio off: identical hashes, 0 of 66 bodies differ); seat fixes baked (`presentation/navgrid/seat_fix.res`, seat check 1 overlap left: academy_m Seat_0 shin, ART-HAB model); occluder grids now 0.15 m bands and loaded in the web build (sig check dropped: the web build had none before).
 - Half-done: the framing rule (`frame_fn`/`follow_frame_hit`, orbit + shorter boom search, probe `wall_centre_frames`/`off_screen_frames`, debug `framecheck`): the test still misses walls that the camera faces from outside a room (16-shot sheet scratch fc_sheet: 3-4 bad frames of 16); not proven, no 30-shot proof yet.
 - Not started: club lights/LED cap, planet patch/frost smooth/frost on structures, indoor night, ART-HAB PartTop/UnitBox reply, in4/out4/clip switches, long-frame trace, web perf.
+
+## 2026-10-03 (Opus, round 2 resumed) - framing rule (item 1)
+- Root causes found with a mesh-triangle probe (`camprobe`, `tools/render_ray_probe.gd`, slice pictures `slice=T0,T1` in
+  `tools/render_follow_headless.gd`): (1) the occ grids mark a sloped wall's whole height along its edges: phantom
+  blocks 0.5-1 m inside the ring at 1.6-1.9 m, and they miss doorway frames, tubes, junction parts; (2) the masked
+  doorway wall segments (fx_doors) were walls to every test; (3) the camera volume used the OUTER room radius: panels
+  and consoles stand up to 0.7 m inside it; (4) the corridor capsule (1.15 m) was wider than a door opening (1.58 m);
+  (5) junctions: the dome starts at 1.0 m at the wall, the camera looked out through the near-faded shell; (6) a door
+  shut behind the person before the camera came through; (7) the search's short booms (0.32-0.55 x) put the lens
+  0.6-0.8 m from the person, looking over the head at a wall.
+- New `presentation/fx_cam_phys.gd`: static physics bodies (GodotPhysics3D, layer 20) of every instancer copy within
+  14 m of the person, one trimesh per group (and per wall segment for the masked walls), hidden groups disabled; the
+  occluder line, the frame test, the camera arm and the trail use real rays (11-20 a check, rig 1.35 ms a frame).
+- Camera: the arm (pivot -> lens kept clear of drawn geometry, eased in at 14 rad/s, out at 2); the trail heading
+  indoors (the farthest clear point 1.9/1.5/1.1 m back along the person's path); camera room radius from the drawn
+  geometry (`_room_cam_r`); tube camera radius 0.9 m; doors open for the camera; search booms >= 0.75; close-range aim.
+- Result: occluded frames in1 from 652-988 of 3,600 to 108-128 (headless); camera 3.4 mm (straight), off-screen 76.
+  Web 30-shot sheets: 3-7 bad of 30 per run (was 7-12). **Not proven (target 0 of 30).** The cover test (40 % of the
+  frame within 1.2 m) made the search worse when the rig used it; it is now a measurement only (in `wall_centre`).

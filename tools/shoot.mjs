@@ -55,7 +55,7 @@ const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--
   '--hide-scrollbars', '--mute-audio', '--no-first-run', '--no-default-browser-check', '--autoplay-policy=no-user-gesture-required', ...gl, 'about:blank'],
   { stdio: ['ignore', 'ignore', 'pipe'] });
 let wsUrl = '';
-for (let i = 0; i < 100 && !wsUrl; i++) {
+for (let i = 0; i < 600 && !wsUrl; i++) {   // up to 60 s: Chrome starts slowly when other agents load the CPU
   await new Promise(r => setTimeout(r, 100));
   const f = path.join(profile, 'DevToolsActivePort');
   if (fs.existsSync(f)) { const [p] = fs.readFileSync(f, 'utf8').split('\n'); wsUrl = p; }
