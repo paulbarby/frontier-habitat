@@ -12,6 +12,9 @@ static func load_all() -> Dictionary:
 	c["planets"] = sc["planets"]
 	c["scenarios"] = sc["scenarios"]
 	c["names"] = sc["names"]
+	var nm: Dictionary = _read("res://content/names.json")
+	c["first_names"] = nm["first"]
+	c["last_names"] = nm["last"]
 	var items_file: Dictionary = _read("res://content/items.json")
 	c["item_categories"] = items_file.get("categories", {})
 	c["items"] = items_file.get("items", {})

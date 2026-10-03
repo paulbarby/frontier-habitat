@@ -26,7 +26,16 @@ var ref := {}            # lib key -> [ankle L y, toe L y, ankle R y, toe R y]
 var hist := {}           # agent id -> [[t, clearance, key]]
 var res := {"windows": 0, "float": 0, "sink": 0, "by_key": {}, "worst_float": [], "worst_sink": [], "offset_hist": {}}
 var t := 0.0
-var vals := {}           # key@speed -> [window minimum mm]
+var vals := {}
+const CamPhys = preload("res://presentation/fx_cam_phys.gd")
+var cp
+## The floor under p from the drawn structures (a ray down from 0.6 m over the body to 0.8 m under it); INF = none
+## (outdoors on the terrain, which is not a structure shape).
+func _floor_ray(p: Vector3) -> float:
+	if cp == null:
+		return INF
+	var d: float = cp.ray(p + Vector3(0.0, 0.6, 0.0), p + Vector3(0.0, -0.8, 0.0))
+	return INF if d == INF else p.y + 0.6 - d           # key@speed -> [window minimum mm]
 
 func _initialize() -> void:
 	var a := OS.get_cmdline_user_args()
@@ -56,6 +65,12 @@ func _process(_d: float) -> bool:
 		main.rig._process(DT)
 	if f < 240:
 		return false
+	if cp == null:
+		# (the drawn floor under the feet: physics shapes of every structure copy, coordinator 2026-10-03: a window is
+		# skipped only where the FLOOR changes - stairs, ramps, lift platforms - never on the body's height over it)
+		cp = CamPhys.new(main.view.inst, main.view.get_world_3d())
+		cp.sync_all()
+		return false
 	t += DT
 	_sample()
 	if f >= 240 + int(secs / DT):
@@ -82,12 +97,29 @@ func _ref(lib: Dictionary) -> Array:
 	ref[k] = r
 	return r
 
+const FAR_TOL := 0.015
+func _min_pz(h: Array) -> String:
+	var best := INF
+	var out := ""
+	for e in h:
+		if float(e[1]) < best:
+			best = float(e[1])
+			out = String(e[5])
+	return out
+
 func _floor_under(rec: Dictionary, a: Dictionary) -> float:
 	var npc = main.view.npc
 	var p: Vector3 = Npc._dp(rec)
-	if String(a.get("where", "")) == "out" or String(rec.get("var", "")) == "suit":
-		return main.view.h(p.x, p.z)
 	var rid: int = npc._room_at(Vector2(p.x, p.z))
+	# (a suited body in an airlock stands on the airlock floor, 0.14 m over its origin, not on the terrain: the
+	# 284 "floats" of 2026-10-03 were suits in airlock chambers measured against the ground)
+	if rid < 0 and (String(a.get("where", "")) == "out" or String(rec.get("var", "")) == "suit"):
+		return main.view.h(p.x, p.z)
+	# (a suited body crossing an airlock threshold walks from the ground up to the floor: the nearer of the two)
+	if rid >= 0 and String(rec.get("var", "")) == "suit":
+		var fr: float = npc._floor_y(main.sim.state["buildings"][rid])
+		var ht: float = main.view.h(p.x, p.z)
+		return fr if absf(p.y - fr) <= absf(p.y - ht) else ht
 	if rid >= 0:
 		var b: Dictionary = main.sim.state["buildings"][rid]
 		var fy: float = npc._floor_y(b)
@@ -119,6 +151,9 @@ func _sample() -> void:
 		if lib.is_empty():
 			continue
 		var fl: float = _floor_under(rec, a)
+		var fr: float = _floor_ray(Npc._dp(rec))
+		if fr != INF:
+			fl = fr
 		if fl == INF:
 			hist.erase(id)
 			continue
@@ -136,6 +171,19 @@ func _sample() -> void:
 				print("SKIP id %d off %.2f pos %s %s floor %s key %s mode %s" % [int(id), off_raw, str(Npc._dp(rec).snapped(Vector3.ONE * 0.01)), rk, JSON.stringify(fa2), String(sm.cur), String(rec.get("mode", ""))])
 			fl = Npc._dp(rec).y
 		var pz: Dictionary = sm.pose()
+		# (the pose as drawn: far bodies draw the dominant clip, no CPU blend, fx_npc._write_mm)
+		if bool(rec.get("far", false)) and Npc.needs_cpu(pz):
+			pz = pz.duplicate()
+			if float(pz["wb"]) > 0.5:
+				pz["a"] = pz["b"]
+				pz["ta"] = pz["tb"]
+			pz["b"] = ""
+			pz["wb"] = 0.0
+			if float(pz["wc"]) < 0.5:
+				pz["c"] = ""
+				pz["wc"] = 0.0
+			else:
+				pz["wc"] = 1.0
 		var names: Array = lib["names"]
 		var r0: Array = _ref(lib)
 		var cl := INF
@@ -153,7 +201,7 @@ func _sample() -> void:
 		if not hist.has(id):
 			hist[id] = []
 		var h: Array = hist[id]
-		h.append([t, off + cl, key, off])
+		h.append([t, off + cl, key, off, fl, "%s far %s a %s %.2f b %s %.2f wb %.2f c %s" % ["", str(rec.get("far", false)), pz["a"], float(pz["ta"]), pz["b"], float(pz["tb"]), float(pz["wb"]), pz["c"]]])
 		while not h.is_empty() and t - float(h[0][0]) > WIN:
 			h.pop_front()
 		if t - float(h[0][0]) >= WIN - DT * 1.5 and int(Engine.get_process_frames()) % 6 == 0:
@@ -165,6 +213,16 @@ func _sample() -> void:
 					same = false
 			if not same:
 				continue
+			# (stairs, ramps and lift platforms: the FLOOR under the feet (the drawn floor, a ray down) changes by over 1 cm
+			# in the window; a planted-foot height is not defined there. Never on the body's height over the floor.)
+			var ylo := INF
+			var yhi := -INF
+			for e in h:
+				ylo = minf(ylo, float(e[4]))
+				yhi = maxf(yhi, float(e[4]))
+			if yhi - ylo > 0.01:
+				res["stairs_skipped"] = int(res.get("stairs_skipped", 0)) + 1
+				continue
 			res["windows"] = int(res["windows"]) + 1
 			var bk: Dictionary = res["by_key"].get_or_add(key, {"n": 0, "float": 0, "sink": 0, "max_mm": -999.0, "min_mm": 999.0})
 			bk["n"] = int(bk["n"]) + 1
@@ -173,16 +231,22 @@ func _sample() -> void:
 			bk["min_mm"] = minf(float(bk["min_mm"]), snappedf(mn * 1000.0, 0.1))
 			var ob: String = "%d" % int(round(off * 100.0))
 			res["offset_hist"][ob] = int(res["offset_hist"].get(ob, 0)) + 1
-			if mn > 0.01:
+			# (a far body moves every 3rd frame and one over 25 m from the camera every 2nd (fx_npc rates): the planted
+			# frame can fall between two updates, so its window minimum may miss it by up to about 1.2 cm; tolerance
+			# FAR_TOL for those)
+			var cpd: Vector3 = npc._cam_pos
+			var mid_rate: bool = cpd != Vector3.INF and Npc._dp(rec).distance_to(cpd) > 25.0
+			var tol: float = FAR_TOL if bool(rec.get("far", false)) or mid_rate else 0.01
+			if mn > tol:
 				res["float"] = int(res["float"]) + 1
 				bk["float"] = int(bk["float"]) + 1
 				if (res["worst_float"] as Array).size() < 40:
 					(res["worst_float"] as Array).append({"id": int(id), "key": key, "mm": snappedf(mn * 1000.0, 0.1), "off_mm": snappedf(off * 1000.0, 0.1), "speed": SPEEDS[speed_i], "lib": String(rec.get("dk", "")), "pos": str(Npc._dp(rec).snapped(Vector3.ONE * 0.01))})
-			elif mn < -0.01:
+			elif mn < -tol:
 				res["sink"] = int(res["sink"]) + 1
 				bk["sink"] = int(bk["sink"]) + 1
 				if (res["worst_sink"] as Array).size() < 40:
-					(res["worst_sink"] as Array).append({"id": int(id), "key": key, "mm": snappedf(mn * 1000.0, 0.1), "off_mm": snappedf(off * 1000.0, 0.1), "speed": SPEEDS[speed_i], "lib": String(rec.get("dk", "")), "pos": str(Npc._dp(rec).snapped(Vector3.ONE * 0.01))})
+					(res["worst_sink"] as Array).append({"id": int(id), "key": key, "mm": snappedf(mn * 1000.0, 0.1), "off_mm": snappedf(off * 1000.0, 0.1), "speed": SPEEDS[speed_i], "lib": String(rec.get("dk", "")), "pos": str(Npc._dp(rec).snapped(Vector3.ONE * 0.01)), "pz_min": _min_pz(h)})
 
 func _write() -> void:
 	res["save"] = save

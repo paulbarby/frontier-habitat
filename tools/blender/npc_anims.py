@@ -1414,16 +1414,24 @@ def cheer_keys():
     # both fists up (V), chest open, head up; feet stay on the ground
     UP = add(S0, hips__z=0.0, hips__ry=-2.0, spine__ry=-5.0, chest__ry=-6.0, neck__ry=-8.0, head__ry=-12.0)
     UP = Pose(UP)
-    sym(UP, **{"shoulder.rx": 2.0, "upper_arm.rx": 92.0,           # (2026-10-02: the shoulder rhythm lifts the clavicles) "upper_arm.ry": -22.0, "upper_arm.rz": 0.0,
-               "forearm.ry": -30.0, "forearm.rz": 10.0, "hand.ry": -10.0})
+    # (2026-10-03, RENDER / Paul's night shot: the arms 92 deg out and nearly straight read as a T-pose from behind)
+    # a high V: the upper arms 135 deg up and a little forward, the elbows bent 45 deg, the fists in over the head
+    sym(UP, **{"shoulder.rx": 2.0, "upper_arm.rx": 135.0, "upper_arm.ry": -18.0,
+               "forearm.ry": -45.0, "forearm.rz": 18.0, "hand.ry": -15.0})
     UP = fill_arm_targets(UP)
     PUMP = Pose(UP)
-    sym(PUMP, **{"forearm.ry": -75.0, "upper_arm.rx": 80.0})
+    sym(PUMP, **{"forearm.ry": -95.0, "upper_arm.rx": 118.0})      # the fist pump: the elbows bend, fists by the head
     PUMP["hips.z"] = -0.025
     PUMP = fill_arm_targets(PUMP)
     DOWN = fill_arm_targets(addsym(add(S0, hips__z=-0.015, spine__ry=2.0), upper_arm__ry=-6.0, forearm__ry=-10.0))
-    return [(0.0, S0, {"hold": True}), (0.30, C0), (0.78, UP), (1.08, PUMP), (1.36, UP), (1.64, PUMP), (1.94, UP),
-            (2.50, DOWN), (2.85, Pose(STAND), {"hold": True})]
+    # (2026-10-03) on the way up and down the arms pass in front, elbows bent hard, fists by the face: no straight
+    # arm crosses shoulder height (RENDER's T-pose scan: hands at shoulder height and over 0.55 m out)
+    MID = Pose(add(S0, hips__z=-0.03, spine__ry=-2.0, chest__ry=-3.0, head__ry=-6.0))
+    sym(MID, **{"upper_arm.rx": 55.0, "upper_arm.ry": -60.0, "forearm.ry": -115.0, "forearm.rz": 10.0,
+                "hand.ry": -10.0})
+    MID = fill_arm_targets(MID)
+    return [(0.0, S0, {"hold": True}), (0.30, C0), (0.56, MID), (0.84, UP), (1.14, PUMP), (1.42, UP), (1.70, PUMP),
+            (2.00, UP), (2.30, MID), (2.62, DOWN), (2.95, Pose(STAND), {"hold": True})]
 
 
 # --------------------------------------------------------------------------------------
@@ -1876,7 +1884,7 @@ def all_clips():
     fn, n = keyed_clip(collapse_keys())
     out.append(("collapse", "oneshot", "stand", "lie", False, n, on_floor(fn), dict(ends_on="dead")))
     out.append(("dead", "hold", "lie", "lie", True, 30, on_floor(lambda f: Pose(DEAD)), {}))
-    fn, n = keyed_clip(cheer_keys())
+    fn, n = keyed_clip(retime_world(cheer_keys())[0])      # (2026-10-03: the high V arms: retimed to < 15 deg/frame)
     out.append(("cheer", "oneshot", "stand", "stand", False, n, fn, {}))
     fn, n = keyed_clip(suit_swap_keys())
     out.append(("suit_swap", "oneshot", "stand", "stand", False, n, fn, dict(cut_frame=SWAP_CUT_FRAME)))

@@ -455,6 +455,8 @@ func room_path(rid: int, a: Vector3, b: Vector3) -> Array:
 		return npc._aisle_route(ai, a, b) if not ai.is_empty() else [b]
 	return r
 
+var _out_cache := {}        # "2 m cell a:2 m cell b" -> [ms until, path (world points) or [] when it failed]
+const OUT_CACHE_MS := 6000
 var _fail_cache := {}       # "room:cell a:cell b:clearance" -> ms until which the pair is known to fail
 const FAIL_TTL_MS := 8000
 func _room_path(rid: int, a: Vector3, b: Vector3, clear: float) -> Array:
@@ -473,7 +475,7 @@ func _room_path(rid: int, a: Vector3, b: Vector3, clear: float) -> Array:
 	# and the walker asked again every few frames, 2026-10-03 long-frame trace. A failed cell pair is not
 	# searched again for FAIL_TTL_MS.)
 	var fk: String = "%d:%d,%d:%d,%d:%.2f" % [rid, ca.x, ca.y, cb.x, cb.y, clear]
-	var now_ms: int = Time.get_ticks_msec()
+	var now_ms: int = int(float(view._time) * 1000.0)   # (view time: repeatable in fixed-step tests)
 	if _fail_cache.has(fk) and now_ms < int(_fail_cache[fk]):
 		stats["fail_cached"] = int(stats.get("fail_cached", 0)) + 1
 		return []
@@ -549,11 +551,26 @@ func out_path(a: Vector3, b: Vector3) -> Array:
 	if _los_out(qa, qb):
 		return [b]
 	stats["out_paths"] = int(stats["out_paths"]) + 1
+	# (SIM's path_out can take 20+ ms for one call; a pair of 2 m cells that failed, or a path found, is reused
+	# for OUT_CACHE_MS: the walkers re-plan the same leg every few frames, 2026-10-03 trace)
+	var ok_key: String = "%d,%d:%d,%d" % [int(floor(qa.x / 2.0)), int(floor(qa.y / 2.0)), int(floor(qb.x / 2.0)), int(floor(qb.y / 2.0))]
+	var now_o: int = int(float(view._time) * 1000.0)
+	if _out_cache.has(ok_key) and now_o < int(_out_cache[ok_key][0]):
+		stats["out_cached"] = int(stats.get("out_cached", 0)) + 1
+		var cr: Array = _out_cache[ok_key][1]
+		if cr.is_empty():
+			return [b]
+		var cw: Array = cr.duplicate()
+		cw[-1] = b
+		return cw
 	var tn0: int = Time.get_ticks_usec()
 	var r: Dictionary = sim.nav.path_out(qa, qb) if sim.get("nav") != null else {"ok": false}
 	stats["nav_out_ms"] = float(stats.get("nav_out_ms", 0.0)) + (Time.get_ticks_usec() - tn0) / 1000.0
 	stats["nav_out_max_ms"] = maxf(float(stats.get("nav_out_max_ms", 0.0)), (Time.get_ticks_usec() - tn0) / 1000.0)
+	if _out_cache.size() > 1000:
+		_out_cache.clear()
 	if not bool(r.get("ok", false)):
+		_out_cache[ok_key] = [now_o + OUT_CACHE_MS, []]
 		return [b]
 	var pts: Array = [qa]
 	for v in r["pts"]:
@@ -574,6 +591,7 @@ func out_path(a: Vector3, b: Vector3) -> Array:
 	for q in out:
 		w.append(Vector3(q.x, view.h(q.x, q.y), q.y))
 	w[-1] = b
+	_out_cache[ok_key] = [now_o + OUT_CACHE_MS, w.duplicate()]
 	stats["out_pull_max_ms"] = maxf(float(stats.get("out_pull_max_ms", 0.0)), (Time.get_ticks_usec() - tn0) / 1000.0)
 	return w
 

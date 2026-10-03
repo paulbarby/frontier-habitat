@@ -598,3 +598,37 @@ On the solver (all frames, 0.8 s windows) m1, m2, m3, f3, c2: walk -5.2 to +1.0 
 - The worst sinks with offset 0 are walk / idle / idle_look windows of -13 to -34 mm. The clip frames themselves
   never go lower than -2.1 mm. So these tails come from playback: blends between clips, phase changes or row
   interpolation. Please check them on your side, or tell me a clip pair and frame that shows the dip in the file.
+
+## 2026-10-03 (d) — answer to your T-pose note: cheer and dance_c reworked; clip coverage checked
+
+New consistent build 2026-10-03 14:15-14:25. `npc_verify` 604/0, your `npc_check` PASS 165/0, `check` 317/0, import
+done. Strips at follow distance: before `art/people/before/cheer_dance_c_before.png`, after
+`art/people/people_cheer_dance_c.png`.
+
+**cheer** (people and astronauts): was the arms 92 deg out and almost straight (a T from behind). Now: fists up past
+the face (elbows bent 115 deg), a high V over the head (upper arms 135 deg up, elbows bent 45 deg), two fist pumps,
+and back down past the face. **Frames 90 -> 114** (3.8 s, retimed to under 15 deg/frame). Re-read the frame count
+in `people_manifest.json` and `astronaut_anims.json`.
+
+**dance_c**: "both arms up" was 71 deg out and straight. Now the hands rise in front, elbows bent, into a high V over
+the head; frames unchanged (120).
+
+**Your `render_tpose_scan.gd` on the new files:** swim / swim_enter / swim_exit as before (the stroke). cheer: 4-6
+sampled frames in p_m1..m3, none in p_f1..f3 (was 4-5 everywhere). dance_c: 6-11 frames in p_m1..m3, p_f1, p_f3. These are
+the frames where the arms pass shoulder height on the way up or down. In the strips they are a bent "goal post"
+with the hands up, not straight arms. Your rule (hands within 0.15 m of shoulder height and over 0.55 m out) cannot
+tell a bent arm in transit from a T. If you still want zero hits, tell me and I make the rise shorter.
+
+**Clip coverage (every library):**
+- Every animation in every people and astronaut file has a rotation track for every joint (31 / 24). No bone is
+  left at the bind pose in any clip.
+- Every library has `idle`. Your `_row_f` (fx_npc.gd lines 927 and 964) uses `idle` for a clip that a library does
+  not have, so a missing clip draws idle, not the bind pose.
+- Adults (m1-m3, f1-f3): 75 clips, all except child_play / child_run.
+- Children (c1, c2): 57 clips. They do not have the 20 adult-only clips: argue, bunk_enter, bunk_exit, drink_bar,
+  escort_walk, fight_idle, flirt_lean, handcuffed_walk, hit_react, hug, kiss_brief, protest_fist, punch, shout,
+  sit_bar_stool, slap, sleep_cell, stool_enter, stool_exit, teach.
+- **Change:** bunk_enter / bunk_exit are now adult-only. The bunk's loop `sleep_cell` was already adult-only, so a
+  child could lie down on a bunk and then stand up in idle.
+- Astronaut files: 35 clips (the v3 set + vehicle and suit clips). The people social clips are not in them; your
+  `resolve_loop` maps those to near v3 loops.

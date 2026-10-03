@@ -17,3 +17,12 @@ coloured spot over each podium and a rim light, and capped the LED tile emission
 own copies at 0.9). The floor surface between the tiles stays black: its albedo is near black in
 `dome_floor1.glb`, so no light lifts it. Please give it a dark grey with some sheen (albedo about 0.08-0.12,
 roughness 0.35), or name the material so I can lift it in game. Evidence: scratch `club_dance.png` (RENDER).
+
+## 2026-10-03 (later) - Club floor: done in the presentation layer (RENDER, coordinator's go-ahead)
+
+ART-B is not active, so the Club floor between the LED tiles is lifted in game (`presentation/fx_robots.gd`,
+`_sync_floor`): the tiles and the floor are coplanar in `dome_floor1.glb` (`PaletteShell`, a near-black palette
+cell), so an opaque override plane cannot sit between them. A soft-edged additive dark-violet layer (0.075,
+0.065, 0.095) 4 mm over the floor covers the Club's dance and podium anchors + 2.5 m; it lifts the black floor
+and barely changes the bright tiles. If you come back: a dark grey palette cell with some sheen for the Club
+floor (albedo about 0.08-0.12, roughness 0.35) lets me remove the layer.

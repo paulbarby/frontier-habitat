@@ -79,3 +79,6 @@ setting, Rag party reports, help text (STE). After SIM lands the API (SIM-to-UI.
 
 ## 2026-10-03 — Paul: build palettes cover the centre while placing
 The category palette is a compact edge strip outside the centre zone; it folds while placing; placement info goes to a small edge panel; tests check the centre zone while building. (Sent to UI.)
+
+## 2026-10-03 — Paul: Colonists window, Priorities tab: check priorities work; layout must match the Colonists and Visitors tabs
+Evidence docs/requests/shots/paul_2026-10-03_priorities.webp.

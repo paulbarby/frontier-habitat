@@ -18,6 +18,7 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 const GlassFrame = preload("res://ui/theme/glass_frame.gd")
 
+const Quarter = preload("res://ui/wm/quarter.gd")
 const WIDTH := 400.0
 const MAX_ROWS := 40
 
@@ -58,7 +59,9 @@ func _ready() -> void:
 	var t: Label = Kit.head("FIND", P.TEXT, 16, "head_wide")
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(t)
-	_head.add_child(Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30))
+	var close_b: Button = Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30)
+	_head.add_child(close_b)
+	Quarter.thin(close_b)
 	v.add_child(Kit.gap(0, 6))
 	_edit = LineEdit.new()
 	_edit.placeholder_text = "Name or type: kitchen, lab, power, cave, wreck"
@@ -115,7 +118,7 @@ func _ready() -> void:
 			_edit.call_deferred("select_all"))
 
 func register_window(wm) -> void:
-	wm.register(self, "find", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.position.x + (wa.size.x - sz.x) * 0.5, wa.position.y + 40.0))
+	wm.register(self, "find", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.end.x - sz.x, wa.position.y + 40.0))
 
 func wm_close() -> void:
 	visible = false
@@ -181,6 +184,13 @@ func _match(q: String) -> Array:
 	return out + pois
 
 func refresh() -> void:
+	if visible:
+		Quarter.fit(self, hud, "find", WIDTH, _scroll, _list, 60.0)
+		# Narrow: the rows of the head share the width.
+		var nw: bool = float(get_meta("qw", WIDTH)) < WIDTH - 0.5
+		_count.custom_minimum_size.x = 60.0 if nw else 170.0
+		_mark.custom_minimum_size.x = 80.0 if nw else 150.0
+		_labels.custom_minimum_size.x = 90.0 if nw else 170.0
 	if not visible or hud == null or hud.main == null or hud.main.sim == null:
 		return
 	results = _match(_query) if _query.strip_edges() != "" else []

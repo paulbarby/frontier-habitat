@@ -87,7 +87,7 @@ def _samples(tris):
                        a[2] * w + b[2] * u + c[2] * v)
 
 
-def check(objs, Rw, blocked=None, junction=False, z_clear=Z_CLEAR):
+def check(objs, Rw, blocked=None, junction=False, z_clear=Z_CLEAR, structure=False):
     """objs: {name: blender object} (world transforms applied through matrix_world).
     Returns (flags, info): info = {object: [hit points, min z, door angles hit]}."""
     s_lo, s_hi = Rw - IN_FROM_WALL, Rw + OUT_FROM_WALL
@@ -98,7 +98,7 @@ def check(objs, Rw, blocked=None, junction=False, z_clear=Z_CLEAR):
     for nm, o in objs.items():
         if o.type != "MESH":
             continue
-        if nm.startswith("RoofChamber"):
+        if nm.startswith("RoofChamber") and not structure:
             continue                 # the airlock chamber walls (structure, door lanes)
         g = _group(nm)
         if g is None or not (g in ROOF_GROUPS or g in ("WallsUp", "Lights") or g.startswith("Decal")):

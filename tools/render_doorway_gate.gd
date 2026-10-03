@@ -8,7 +8,8 @@ extends SceneTree
 ##   beam: a ray from the lens to the person (head, chest) or to the upper door opening (1.7-2.1 m, three across)
 ##         meets roof, ceiling or band geometry (groups Roof, CeilTop, WallsUp, PartTop) in the door opening
 ##         (within 0.75 m of the door plane, between the jambs) -> a bad frame;
-##   gap:  a ray from the lens to the wall above the door head (2.30-2.58 m, three across) finds no surface
+##   gap:  a ray from the lens to the wall above the door head (2.30-2.58 m, three across; only rays at most 10 deg
+##         above the horizon, the top of the follow camera's frame) finds no surface
 ##         within 0.75 m past the door plane (sky or void above the door) -> a bad frame (the upper patch stands 0.32 m inside the ring).
 ## Target: 0 bad frames.
 ##   node tools/godot.mjs script res://tools/render_doorway_gate.gd [n=20]
@@ -157,6 +158,10 @@ func _test_door(d: Dictionary) -> void:
 					hit = INF
 				if hit < INF:
 					var g: String = String(cp.dbg_last).get_slice(":", String(cp.dbg_last).count(":"))
+					# (orchestrator 2026-10-03: an airlock's chamber walls and inner door frame are RoofChamber,
+					# which group_of files under Roof; they are walls a walker goes round, not roof beams)
+					if g == "Roof" and String(cp.dbg_last).begins_with("airlock"):
+						g = "RoofChamber"
 					for bg in BEAM_GROUPS:
 						if g == bg or g.begins_with(bg + "_") or g.ends_with("_" + bg):
 							why = "beam %s at %.2f m (%s)" % [cp.dbg_last, hit, str((t - p).snapped(Vector3.ONE * 0.01))]
@@ -169,6 +174,11 @@ func _test_door(d: Dictionary) -> void:
 					for lat2 in [-0.6, 0.0, 0.6]:
 						var t2: Vector3 = p + side * lat2 + Vector3(0.0, fy - p.y + h2, 0.0)
 						var dl: float = cam.distance_to(t2)
+						# (only what the follow camera can show: it looks along the walk, about 15 deg down, 50 deg
+						# frame; a point over 10 deg above the horizon is above the frame)
+						var tv: Vector3 = t2 - cam
+						if atan2(tv.y, Vector2(tv.x, tv.z).length()) > deg_to_rad(10.0):
+							continue
 						var hit2: float = cp.ray(cam, cam + (t2 - cam).normalized() * (dl + 0.75))
 						if hit2 == INF:
 							why = "gap at h %.2f lat %.1f cam %s target %s; along the ray: %s" % [h2, lat2, str(cam.snapped(Vector3.ONE * 0.01)), str(t2.snapped(Vector3.ONE * 0.01)), _hits_along(cam, cam + (t2 - cam).normalized() * (dl + 6.0))]
@@ -186,6 +196,25 @@ func _test_door(d: Dictionary) -> void:
 				if fails.size() < 60:
 					fails.append("%s %s (%s) %s cam off %.1f: %s" % [d["def"], d["key"], str(d["room"]), "in" if way > 0 else "out", off, why])
 	print("DOOR %-28s %-12s bad frames %d" % [d["key"], d["def"], bad_here])
+	if bad_here > 0 and String(d["def"]) == "junction":
+		var near := ""
+		for h in main.view.inst.handles:
+			var e: Dictionary = main.view.inst.handles[h]
+			var o: Vector3 = (e["xf"] as Transform3D).origin
+			if o.distance_to(p) < 3.0 and String(e["key"]).contains("upper"):
+				near += " %s@%s y%.2f sy%.2f%s" % [String(e["key"]).get_file().left(22), str((o - p).snapped(Vector3.ONE * 0.1)), o.y - p.y, (e["xf"] as Transform3D).basis.y.length(), "(body)" if cp._bodies.has(h) and (cp._bodies[h]["rid"] as RID).is_valid() else "(no body)"]
+		print("   near:", near)
+		# a ray from 1 m inside the junction to each upper patch centre: does physics see it?
+		for h in main.view.inst.handles:
+			var e2: Dictionary = main.view.inst.handles[h]
+			var o2: Vector3 = (e2["xf"] as Transform3D).origin
+			if o2.distance_to(p) < 3.0 and String(e2["key"]).contains("upper") and o2.y - p.y > 2.0:
+				var c2: Vector3 = (e2["xf"] as Transform3D) * Vector3(0.0, 0.5, 0.0)
+				var from: Vector3 = p + nin * 1.0 + Vector3(0, 1.8, 0)
+				var hh: float = cp.ray(from, c2 + (c2 - from).normalized() * 0.5)
+				print("   patch centre %s from %s: hit %s %s | basis %s" % [str((c2 - p).snapped(Vector3.ONE * 0.01)), str((from - p).snapped(Vector3.ONE * 0.01)), str(hh), cp.dbg_last if hh < INF else "", str((e2["xf"] as Transform3D).basis)])
+				break
+		print("   p %s in %s" % [str(p), str(nin)])
 
 func _hits_along(a: Vector3, b: Vector3) -> String:
 	var out := ""

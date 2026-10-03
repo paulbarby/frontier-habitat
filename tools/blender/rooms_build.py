@@ -558,8 +558,9 @@ def build_one(job):
             # Paul 2026-10-03 (follow view): no roof, ceiling or band part below the door top + 0.25 m inside any door
             # opening volume (+1.5 m into the room) at any free door angle
             import interior_doorclear as _DC
-            dcf, dci = _DC.check(objs, rm.R - 0.32, row["v3"].get("door_blocked") or [],
-                                 junction=job["tid"] == "junction")
+            # the old-save airlock (airlock_r28) has corridors at any angle (RENDER 2026-09-25): every angle is checked
+            dcb = [] if job["file"] == "airlock_r28" else (row["v3"].get("door_blocked") or [])
+            dcf, dci = _DC.check(objs, rm.R - 0.32, dcb, junction=job["tid"] == "junction")
             row["v3"]["door_headroom"] = dict(z_clear=round(_DC.Z_CLEAR, 3), hits=dci,
                                               eave=getattr(rm, "eave", None), lift=round(getattr(rm, "lift", 0.0), 3))
             flags += dcf

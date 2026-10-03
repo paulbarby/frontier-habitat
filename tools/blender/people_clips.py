@@ -56,7 +56,8 @@ PAIRS = {
 }
 
 ADULT_ONLY = {"stool_enter", "stool_exit", "kiss_brief", "flirt_lean", "slap", "punch", "hit_react", "fight_idle", "handcuffed_walk", "escort_walk",
-              "drink_bar", "sit_bar_stool", "shout", "protest_fist", "sleep_cell", "teach", "argue", "hug"}
+              "drink_bar", "sit_bar_stool", "shout", "protest_fist", "sleep_cell", "teach", "argue", "hug",
+              "bunk_enter", "bunk_exit"}   # (2026-10-03: the bunk's loop sleep_cell is adults only; its enter/exit too)
 CHILD_ONLY = {"child_play", "child_run"}
 LOUNGER_CLIPS = os.environ.get("NPC_LOUNGER", "1") != "0"   # lounger enter/exit (2026-10-03: thighs apart, on)
 
@@ -554,11 +555,16 @@ def dance_c_fn(n=120):
         P["hips.z"] = base.g("hips.z") - 0.040 * dip
         P["head.ry"] = -3.0 + 6.0 * dip
         P["chest.ry"] = 3.0 * dip
-        up = _win(beat, 2.2, 3.1, 3.4, 4.1) + _win(beat, 5.9, 6.8, 7.1, 7.9)      # (rises 0.9 beat: < 15 deg/f)
+        # (2026-10-03, RENDER: "arms up" was 71 deg out and straight, a T-pose from behind) both hands go up into a
+        # high V over the head, the elbows bent 40 deg; the rise takes 1.5 beats (< 15 deg/frame)
+        up = _win(beat, 1.5, 2.9, 3.2, 4.8) + _win(beat, 4.7, 6.2, 6.3, 7.99)
         for s, sg in (("L", 1.0), ("R", -1.0)):
-            P["upper_arm.%s.rx" % s] = base.g("upper_arm.%s.rx" % s) + sg * 95.0 * up
-            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 20.0 * up
-            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) + 40.0 * up
+            P["upper_arm.%s.rx" % s] = base.g("upper_arm.%s.rx" % s) + sg * 155.0 * up
+            # (through the rise the arms swing forward and the elbows stay bent: a straight arm out at shoulder
+            # height read as a T from behind)
+            P["upper_arm.%s.ry" % s] = base.g("upper_arm.%s.ry" % s) - 15.0 * up - 40.0 * sin(pi * up)
+            P["forearm.%s.ry" % s] = base.g("forearm.%s.ry" % s) + 20.0 * up - 25.0 * sin(pi * up)
+            P["forearm.%s.rz" % s] = base.g("forearm.%s.rz" % s) + sg * 15.0 * up
             # (2026-10-02: no shoulder key: the solver's shoulder rhythm lifts the clavicles with the arms)
             set_foot(P, s, (ANK.x, sg * 0.135, ANK.z + 0.008), yaw=8.0, knee_out=5.0)
             P["foot.%s.y" % s] = sg * 0.135

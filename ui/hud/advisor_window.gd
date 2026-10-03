@@ -11,6 +11,7 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const GlassFrame = preload("res://ui/theme/glass_frame.gd")
 const Advisor = preload("res://ui/advisor.gd")
 
+const Quarter = preload("res://ui/wm/quarter.gd")
 const WIDTH := 420.0
 const GROUPS := [["problem", "Biggest problems", "sev_warning", P.AMBER], ["next", "Next steps", "goals", P.CYAN], ["unused", "Unused potential", "advisor", P.VIOLET]]
 
@@ -45,7 +46,9 @@ func _ready() -> void:
 	var t: Label = Kit.head("ADVISOR", P.TEXT, 16, "head_wide")
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(t)
-	_head.add_child(Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30))
+	var close_b: Button = Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30)
+	_head.add_child(close_b)
+	Quarter.thin(close_b)
 	v.add_child(Kit.gap(0, 6))
 	var well: PanelContainer = Kit.panel("WellPanel", false)
 	v.add_child(well)
@@ -60,7 +63,7 @@ func _ready() -> void:
 			refresh(true))
 
 func register_window(wm) -> void:
-	wm.register(self, "advisor", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.position.x + 340.0, wa.position.y + 20.0))
+	wm.register(self, "advisor", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.end.x - sz.x, wa.position.y + 20.0))
 
 func wm_close() -> void:
 	visible = false
@@ -71,6 +74,7 @@ func toggle() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	Quarter.fit(self, hud, "advisor", WIDTH, get_meta("scroll"), _list, 60.0)
 	_t += delta
 	if _t >= 2.0:
 		_t = 0.0

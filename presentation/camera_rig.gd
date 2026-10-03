@@ -128,6 +128,9 @@ const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
 var solid_fn: Callable         # (p) -> true inside a solid cell at eye height (world_view.follow_solid)
 var arm_fn: Callable           # (a, b, r) -> clear length from a toward b for a sphere of radius r (world_view.follow_arm)
+var final_rate_p := 2.0        # the final offset spring is SH_W_FINAL / rate_k^p at 2x-4x (measurement switch)
+var indoor_side := 1.0         # the shoulder offset indoors (x SH_SIDE); measurement switch (0.6 and 0.3 tried 2026-10-03: no fewer wall frames, more head jitter)
+var _sh_side_k := 1.0
 var arm_on := 1.0              # measurement switch (rig.arm_on=0)
 var arm_slack := 1.0           # the hard limit's give (fraction of the arm): the spring alone inside it
 var arm_w_in := 14.0           # rad/s (SH_W_ARM_IN)
@@ -422,7 +425,11 @@ func _shoulder_process2(delta: float) -> bool:
 	var lift: float = maxf(0.0, 1.65 - _sh_eh) * 0.5
 	var pivot: Vector3 = _sh_p + Vector3(0.0, _sh_eh + SH_UP, 0.0)
 	# The shoulder offset shrinks with the zoom (a face close-up looks at the face, not past it).
-	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0)
+	# (indoors the shoulder offset eases to indoor_side x: a lens 0.55 m to the side of the person in a 2-3 m wide
+	# space faced the side wall in 4-6 of 30 shots, 2026-10-03)
+	var ind_t: float = indoor_side if ((s as Array).size() > 3 and bool(s[3])) else 1.0
+	_sh_side_k = move_toward(_sh_side_k, ind_t, dt * 0.8)
+	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0) * _sh_side_k
 	# Occluders on the sight line (orchestrator 2026-10-02: a dome pillar between the lens and the person):
 	# the camera first swings round the person by the smallest of +-15/30/45/60 deg that clears both lines
 	# (chest, head), eased; it swings back once the plain view has been clear for SH_OCC_HOLD s.
@@ -627,7 +634,7 @@ func _shoulder_process2(delta: float) -> bool:
 		_sh_finv = Vector3.ZERO
 	else:
 		for ax in 3:
-			var rf: Vector2 = _crit(_sh_fin[ax], _sh_finv[ax], rel_t[ax], SH_W_FINAL, dt)
+			var rf: Vector2 = _crit(_sh_fin[ax], _sh_finv[ax], rel_t[ax], SH_W_FINAL / pow(rate_k, final_rate_p), dt)
 			_sh_fin[ax] = rf.x
 			_sh_finv[ax] = rf.y
 	eye = pivot + _sh_fin
@@ -696,11 +703,15 @@ func _shoulder_process2(delta: float) -> bool:
 					if c2 >= 0.0 and c2 < l2 - ARM_CUT - 0.001:
 						k_thick = minf(k_thick, clampf((c2 + ARM_CUT - ARM_MARGIN) / l2, ARM_MIN / al, 1.0))
 		var k_t: float = minf(k_thin, k_thick)
+		# (a dead band: a surface grazing the thick lines toggled the target by 1-3 %, 2-6 cm of camera, and the
+		# fast spring turned that into 15-30 mm jerk spikes at 4x, 2026-10-03)
+		if k_t > 0.96:
+			k_t = 1.0
 		if _sh_new or dt <= 0.0:
 			_sh_arm = k_t
 			_sh_armv = 0.0
 		else:
-			var ra: Vector2 = _crit(_sh_arm, _sh_armv, k_t, arm_w_in if k_t < _sh_arm else SH_W_ARM_OUT, dt)
+			var ra: Vector2 = _crit(_sh_arm, _sh_armv, k_t, (arm_w_in / rate_k) if k_t < _sh_arm else SH_W_ARM_OUT, dt)
 			_sh_arm = ra.x
 			_sh_armv = ra.y
 		if _sh_arm > k_thin + arm_slack:

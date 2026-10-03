@@ -346,6 +346,7 @@ func default_immigration() -> Dictionary:
 ## save (boot params load= and debug=1). It is written into the state, so it is saved.
 func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	state = s
+	fix_numbered_names()
 	# The v5 people and social caches are derived from the old state.
 	people.reset()
 	social.reset()
@@ -491,14 +492,96 @@ func alive_changed() -> void:
 	if people != null:
 		people._bk_n = -1
 
-func next_name() -> String:
-	var names: Array = content["names"]
-	var n: int = int(state["names_used"])
-	state["names_used"] = n + 1
-	var name: String = names[n % names.size()]
-	if n >= names.size():
-		name += " %d" % (n / names.size() + 1)
-	return name
+## The next name for a person: unique among everybody in the game, never with a number. The first 40
+## are the opening names (scenarios.json); after them a first name and a last name from content/names.json
+## (192 x 174 pairs, in a fixed order). A child gets "last" (a parent's last name) and a first name
+## that is free with it.
+func next_name(last: String = "") -> String:
+	var opening: Array = content["names"]
+	var firsts: Array = content["first_names"]
+	var lasts: Array = content["last_names"]
+	var taken := {}
+	for aid in state["agents"]:
+		taken[String(state["agents"][aid]["name"])] = true
+	var name := ""
+	var guard := 0
+	while guard < 100000:
+		guard += 1
+		var n: int = int(state["names_used"])
+		state["names_used"] = n + 1
+		if last != "":
+			name = "%s %s" % [firsts[(n * 7 + n / firsts.size()) % firsts.size()], last]
+		elif n < opening.size():
+			name = String(opening[n])
+		else:
+			var k: int = n - opening.size()
+			var i: int = (k * 7) % firsts.size()
+			var j: int = (k / firsts.size() + i * 5) % lasts.size()
+			name = "%s %s" % [firsts[i], lasts[j]]
+		if not taken.has(name):
+			return name
+	return "%s %s" % [firsts[0], lasts[0]]
+
+## The last name in a full name ("Asha Verrin" -> "Verrin"); "" for a one-word name.
+static func last_name_of(full: String) -> String:
+	var p: int = full.rfind(" ")
+	return full.substr(p + 1) if p != -1 else ""
+
+## Old saves: a name with a number after it ("Asha Verrin 2", made when the name list ran out) gets a
+## new name. Only the numbered ones change; ids, relations and the Rag keep working by id, and the old
+## name in the log and the social log is replaced by the new one.
+func fix_numbered_names() -> void:
+	var ids: Array = state["agents"].keys()
+	ids.sort()
+	var renames := {}
+	for aid in ids:
+		var a: Dictionary = state["agents"][aid]
+		# A visitor's name is "Tourist 3" (a kind and a count): that is how visitors are told apart.
+		if String(a.get("kind", "")) == "visitor":
+			continue
+		var nm: String = String(a["name"])
+		var p: int = nm.rfind(" ")
+		if p == -1 or not nm.substr(p + 1).is_valid_int():
+			continue
+		var last := ""
+		if String(a.get("kind", "")) == "child" and not (a.get("parents", []) as Array).is_empty():
+			var par: Dictionary = state["agents"].get(int((a["parents"] as Array)[0]), {})
+			if not par.is_empty():
+				last = last_name_of(String(par["name"]))
+		var fresh: String = next_name(last)
+		renames[nm] = fresh
+		a["name"] = fresh
+	if renames.is_empty():
+		return
+	for e in state["log"]:
+		e["text"] = _rename_in(String(e["text"]), renames)
+	var v: Dictionary = state.get("v5", {})
+	for e in v.get("slog", []):
+		e["text"] = _rename_in(String(e["text"]), renames)
+	var rag: Dictionary = v.get("rag", {})
+	for k in rag:
+		var issue: Variant = rag[k]
+		if issue is Dictionary:
+			for f in ["headline", "text", "lead", "title"]:
+				if (issue as Dictionary).has(f) and (issue[f] is String):
+					issue[f] = _rename_in(String(issue[f]), renames)
+			for key in ["stories", "items", "briefs"]:
+				if (issue as Dictionary).has(key) and (issue[key] is Array):
+					for st in issue[key]:
+						if st is Dictionary:
+							for f2 in ["headline", "text"]:
+								if (st as Dictionary).has(f2) and (st[f2] is String):
+									st[f2] = _rename_in(String(st[f2]), renames)
+
+func _rename_in(text: String, renames: Dictionary) -> String:
+	var out: String = text
+	# The longest old name first: "Asha Verrin 2" is a part of "Asha Verrin 20".
+	var olds: Array = renames.keys()
+	olds.sort_custom(func(x, y): return String(x).length() > String(y).length() or (String(x).length() == String(y).length() and String(x) < String(y)))
+	for old in olds:
+		out = out.replace(String(old), String(renames[old]))
+		out = out.replace(String(old).to_upper(), String(renames[old]).to_upper())
+	return out
 
 ## extra: more fields for the entry (V4: "pos" [x, y] and "def" of an explosion).
 func log_event(code: String, text: String, entities: Array, sev: int = 1, extra: Dictionary = {}) -> void:

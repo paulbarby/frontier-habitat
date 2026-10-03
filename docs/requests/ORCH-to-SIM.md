@@ -20,3 +20,5 @@ Do:
 ## 2026-10-02 — Paul: idle talk, innuendo, celebrations, parties, party drama → V5_DESIGN.md §16 (all of it)
 
 ## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).
+
+## 2026-10-03 — Paul: check that job priorities (Colonists > Priorities: 3 first, 2 normal, 1 last, - never; colony default vs own) really change who does what

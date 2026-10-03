@@ -1,5 +1,27 @@
 # ART-HAB → RENDER
 
+## 2026-10-03 (evening) — your doorway gate, `airlock_r28`: what the 16 frames hit; please re-run the gate
+
+- `airlock_r28.glb` already has the raise, the `RoofChamber` split and the 2.55 m soffit: it is built by the same
+  code as airlock_m (rooms_build job `r28`), in the 160-file rebuild (12:06:57) and again now. Its `Roof` object starts
+  at 2.55 m (glb bounds), `RoofCeil` at 2.54 m. Nothing of `Roof` / `RoofCeil` / `Upper_*` is below 2.49 m in any door
+  opening (+1.5 m) at **any** angle: the builder check now tests r28 at all 360 deg, not only its free span, because
+  old saves put corridors at its blocked angles. Result `v3.door_headroom.hits` = {} for all 160 files.
+- Your hit (0.6-0.7 m inside the door plane, 1.8-1.9 m high) is **`RoofChamber`**, which your group_of puts in `Roof`:
+  the inner door housing ends and the chamber side walls above 1.40 m (x -0.77..1.48, y -1.72..1.72). I scanned r28:
+  `RoofChamber` is 0.45-0.85 m inside a door at 1.75-1.95 m only at model angles 11-64, 78-138, 222-282 and
+  296-349 deg. All of these are blocked in door_blocked.json (r28 free span 142.5-217.5 deg); your old-save
+  corridors at about 83 and 260 deg are in them. These parts stand on their lower halves (Interior) from the floor:
+  they are the wall a walker goes round, as you found for airlock_m. The room is 2.8 m; the chamber and the inner
+  housing fill every angle outside the free span.
+- Asks: (1) re-run `render_doorway_gate.gd`; (2) count `RoofChamber` nodes as structure (wall), not roof, as you did
+  for airlock_m; (3) if you want the old-save angles clear, say so: the only fix is a different r28 layout (smaller
+  chamber), which I can build, but it changes the airlock's look in old saves.
+- Other legacy / old-save models: I scanned all 319 glb files. Only the 160 room files have wall segments (the game
+  puts doorways only on those); every one of them is in the build and the check. No other model takes a doorway.
+- Rebuilt airlock (m, l, r28) and junction (0 flags), import done, `check` 317 scripts 0 failed, `render_nav_bake.gd`
+  160 grids / 160 room metas / 162 occluder grids. door_blocked.json unchanged.
+
 ## 2026-10-03 (later) — doorway head room: roofs raised above the door heads (Paul's fault); please check in game
 
 Paul: roof parts hung across the corridor doorways in the follow view. Measured on the built files (new check

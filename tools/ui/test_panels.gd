@@ -416,6 +416,84 @@ func _plan() -> void:
 	q(func():
 		root.size = Vector2i(1600, 900)
 		main._on_cmd("uiscale 1"), 6)
+	# ---- Every window opens outside the centre zone (the player may drag it anywhere).
+	for sz5 in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		for sc5 in [0.8, 1.0, 1.4]:
+			# (Not here: the Regolith Rag, the Codex and the Crew/HR screen are full-page readers: a broadsheet and tables that
+			# need the page, not a quarter of it. Open item for Paul.)
+			for wn in ["advisor", "find", "orders", "reactor", "person", "follow"]:
+				var szw: Vector2i = sz5
+				var scw: float = sc5
+				var wname: String = wn
+				q(func():
+					root.size = szw
+					root.content_scale_size = Vector2i.ZERO
+					main._on_cmd("uiscale %s" % str(scw))
+					_close_windows(), 8)
+				q(func(): _open_window(wname), 16)
+				q(func():
+					var v: Vector2 = vp()
+					var centre := Rect2(v * 0.25, v * 0.5)
+					var c: Control = _window_control(wname)
+					var r: Rect2 = c.get_global_rect()
+					var bad: Array = []
+					if not c.visible:
+						bad.append("not shown")
+					if r.grow(-0.5).intersects(centre):
+						bad.append("%s in the centre %s (min %s, qw %s)" % [str(r), str(centre), str(c.get_combined_minimum_size()), str(c.get_meta("qw", "-"))])
+					if wname != "follow":
+						var wa: Rect2 = main.hud.wm.work_area()
+						if r.position.y < wa.position.y - 0.5 or r.end.y > wa.end.y + 0.5 or r.end.x > wa.end.x + 0.5 or r.position.x < wa.position.x - 0.5:
+							bad.append("%s outside the work area %s" % [str(r), str(wa)])
+					check("%dx%d at %d%%, %s opens outside the centre zone" % [szw.x, szw.y, int(scw * 100.0), wname], bad.is_empty(), "; ".join(bad))
+					_close_windows(), 2)
+	q(func():
+		root.size = Vector2i(1600, 900)
+		main._on_cmd("uiscale 1"), 6)
+
+## Every window the game opens by default (Paul, 2026-10-03): outside the centre zone, inside the work area.
+func _open_window(name: String) -> void:
+	var hud = main.hud
+	match name:
+		"advisor":
+			hud.advisor.visible = true
+		"find":
+			hud.find.visible = true
+		"orders":
+			hud.orders.visible = true
+		"reactor":
+			hud.reactor_win.visible = true
+		"rag":
+			hud.rag.visible = true
+		"person":
+			var ids: Array = []
+			for r in hud.v5.people():
+				if String(r["kind"]) == "colonist":
+					ids.append(int(r["id"]))
+			hud.open_person(int(ids[0]), "file")
+		"follow":
+			var ids2: Array = []
+			for r in hud.v5.people():
+				if String(r["kind"]) == "colonist":
+					ids2.append(int(r["id"]))
+			for i in ids2:
+				if main.follow_person(int(i)):
+					break
+
+func _close_windows() -> void:
+	var hud = main.hud
+	main.follow_end()
+	hud.advisor.visible = false
+	hud.find.visible = false
+	hud.orders.visible = false
+	hud.reactor_win.visible = false
+	hud.rag.visible = false
+	hud.person.visible = false
+	main.select("", -1)
+
+func _window_control(name: String) -> Control:
+	var hud = main.hud
+	return {"advisor": hud.advisor, "find": hud.find, "orders": hud.orders, "reactor": hud.reactor_win, "rag": hud.rag, "person": hud.person, "follow": hud.follow_hud}[name]
 
 func _esc() -> InputEventKey:
 	var ev := InputEventKey.new()

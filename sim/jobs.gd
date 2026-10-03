@@ -1210,6 +1210,11 @@ func score(t: Dictionary, agent: Dictionary) -> float:
 			target = b["pos"]
 	var waiting: float = float(int(sim.state["tick"]) - int(t["created"])) / float(sim.bal["tick_hz"])
 	var travel: float = (agent["pos"] as Vector2).distance_to(target) / float(sim.bal["speed_outdoor"]) * 1.3
+	# One step of priority is 100 points. Waiting adds 0.1 point a second ON PURPOSE: a job at the colony
+	# default 1 (logistics) that waits 17 minutes ranks with a new job at 2, so the hauls that feed the
+	# kitchens are never starved by busier categories. A strict order (tried 2026-10-03: priority first,
+	# then waiting) starved them: the reference campaign ended with 46 deaths. Distance costs 0.74 points
+	# a metre; on foot no job is farther than about 100 m (suit range), so it never outweighs a step.
 	var s: float = 100.0 * prio + 50.0 * int(t["emergency"]) + 0.1 * waiting - 2.0 * travel
 	if t["role"] != "" and t["role"] == agent["role"]:
 		s += float(sim.bal.get("specialist_bonus", 30.0))

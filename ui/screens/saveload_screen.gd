@@ -46,7 +46,8 @@ func build() -> void:
 			if in_game:
 				hud.confirm("Load %s?" % slot.replace("_", " "), ["The current colony is lost unless you saved it."], func(): hud.main.load_game(slot), "Load")
 			else:
-				hud.main.load_game(slot), "", "", "load", 14))
+				hud.main.load_game(slot), "Load
+Opens this save. The current colony is lost unless you saved it.", "", "load", 14))
 		ld.add_child(row2)
 	var imp: HBoxContainer = Kit.hbox(8)
 	ld.add_child(imp)

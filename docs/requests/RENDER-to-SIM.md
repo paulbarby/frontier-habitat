@@ -168,3 +168,16 @@ door side. Tell me when it is in; RENDER then drops its own override.
 - **Children's bunks:** `child_bed` slot `k` is drawn at the unit's bunk (`Bed_4u+2`, `Bed_4u+3`) and `bed` slot `i` at
   the parents' beds (`Bed_4u`, `Bed_4u+1`), from `floors.units(b)` (adult beds then bunks per unit). Before, adults
   were drawn in the bunks of the family tube.
+
+## 2026-10-03 (later) - frame time at 134 people: SIM is small; one function to look at (RENDER)
+
+Web build, showcase_v5 (134 people), follow view indoors, `split` (main.gd, mean ms per frame over 15-20 s):
+sim 0.9-2.3 ms (step_ms 4-6.5 ms per tick at 10 ticks/s), view 9.8-21 ms, hud 0.2-0.4 ms, frame 21-41 ms; with
+drawing off (`render 0`) the frame was 18.8 ms. The main costs were mine (bodies animated and drawn behind walls,
+every structure batch drawn indoors, path planning): fixed in fx_npc / fx_instancer / fx_npc_path. No UI cost.
+
+One SIM function in the long frames: **`sim.nav.path_out(a, b)`** (called by fx_npc_path.out_path for a body's
+outdoor leg) took up to **22 ms natively** for one call (about 50-60 ms in the web build) in showcase_v5, for short
+legs near the dome (e.g. (1167.9, 1302.4) -> (1172.1, 1302.6), y 11.2: bodies on the dome floor whose region reads
+"out"). 12 calls in 30 s, 25.8 ms in all, so the mean is fine; the single calls make the spikes. Could path_out
+cap its search (an expansion limit, or a quick fail when a and b are inside the same structure footprint)?

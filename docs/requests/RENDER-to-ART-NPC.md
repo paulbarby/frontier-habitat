@@ -110,3 +110,17 @@ windows sink. Walk indoors p50 -22.0 mm, run about -21 mm, work_bench -22 mm, wi
 of the same library's idle clip. Every people library shows it (p_f1..f3, p_m1..m3, LOD0 and LOD1). Before these
 files the gate stood at p5 -8.5 mm. Please check the idle frame 0 foot height against the walk / run contact
 frames (or tell me the stance reference to use). Detail: `art/npc/ground_check.json`.
+
+## 2026-10-03 (later) - the "T-pose" in an indoor night shot: not reproduced; arms-out frames found in cheer and dance_c
+
+The shot (showcase_v3_late, `time 540`, follow view of Asha Verrin 2) showed the followed person with both arms
+straight out at shoulder height in a doorway. I could not reproduce it in a second run (16 shots, the same
+person, `npcpose` each 1.5 s: walk, idle, idle_look, suit_swap, run - all drawn right). No core clip is missing
+from any library (p_m1..m3, p_f1..f3: only child_play / child_run; p_c1 / p_c2 miss the adult social clips, which
+fall back to idle). New scan `tools/render_tpose_scan.gd` (every frame of every clip: both hands within 0.15 m
+of shoulder height and over 0.55 m out from the spine) finds this pose only in swim / swim_enter / swim_exit and in:
+- **`cheer`**, frames 18-68 of 90, every adult library (4-5 sampled frames each);
+- **`dance_c`**, frames 42-110 of 120, every adult library (14 sampled frames each).
+A colonist standing free cheers when the colony gets an award (fx_npc), so `cheer` is the most likely clip in that
+shot. If the arms-out section reads as a T-pose at eye level, please bend the elbows or raise the hands in
+cheer (and dance_c), or tell me and I take cheer out of the follow-view person's clips.

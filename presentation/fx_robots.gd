@@ -50,6 +50,64 @@ func _visible_in(b: Dictionary, meta: Dictionary, ay: float) -> bool:
 	return fl <= k
 
 var _fill: OmniLight3D
+var _floor: MeshInstance3D
+var _floor_bid := -1
+
+## The Club's dance floor between the LED tiles (critic round 41 "lift the floor from black"; ART-B's surface is
+## near black in the model and ART-B is not active): an additive dark-violet lift 4 mm over the floor, over the
+## Dance_club anchors' bounds + 0.8 m. RENDER-to-ART-B.md.
+func _sync_floor(cam: Camera3D) -> void:
+	var want_bid := -1
+	var lo := Vector3(INF, INF, INF)
+	var hi := Vector3(-INF, -INF, -INF)
+	for bid in view.bmeta:
+		var b: Dictionary = view.sim.state["buildings"].get(bid, {})
+		if b.is_empty() or String(b["def"]) != "super_dome":
+			continue
+		var meta: Dictionary = view.bmeta[bid]
+		for an in (meta.get("anchors", {}) as Dictionary):
+			if String(an).begins_with("Dance_club_") or String(an).begins_with("Dancer_club_"):
+				var o: Vector3 = (meta["anchors"][an] as Transform3D).origin
+				lo = lo.min(o)
+				hi = hi.max(o)
+				want_bid = int(bid)
+		if want_bid >= 0:
+			if not _visible_in(b, meta, lo.y):
+				want_bid = -1
+			break
+	if want_bid < 0 or lo.x == INF:
+		if _floor != null:
+			_floor.visible = false
+		return
+	if _floor == null:
+		_floor = MeshInstance3D.new()
+		_floor.name = "ClubFloor"
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(1, 1)
+		_floor.mesh = pm
+		# (an additive lift 4 mm over the floor: the tiles and the floor are coplanar in the model, so a plane
+		# under the tiles is hidden; added light lifts the black floor and barely changes the bright tiles)
+		var sh := Shader.new()
+		sh.code = "shader_type spatial;
+render_mode blend_add, unshaded, depth_draw_never, cull_back;
+uniform vec3 lift : source_color = vec3(0.075, 0.065, 0.095);
+void fragment() {
+	vec2 d = abs(UV - 0.5) * 2.0;
+	float e = (1.0 - smoothstep(0.55, 1.0, d.x)) * (1.0 - smoothstep(0.55, 1.0, d.y));
+	ALBEDO = lift * e;
+}
+"
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.resource_name = "ClubFloor"
+		_floor.material_override = m
+		_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(_floor)
+	var c: Vector3 = (lo + hi) * 0.5
+	var sz: Vector3 = hi - lo + Vector3(5.0, 0.0, 5.0)
+	# (the podium anchors stand 0.61 m higher: the floor is the lowest anchor's height)
+	_floor.global_transform = Transform3D(Basis.from_scale(Vector3(sz.x, 1.0, sz.z)), Vector3(c.x, lo.y + 0.004, c.z))
+	_floor.visible = cam == null or cam.global_position.distance_to(c) < FAR
 var force_open := false          # evidence only (__fhr "robots open"): dance whatever the Club's hours
 
 func _club_open(b: Dictionary) -> bool:
@@ -114,6 +172,7 @@ func sync(_delta: float) -> void:
 			(bots[key]["node"] as Node).queue_free()
 			bots.erase(key)
 	stats["robots"] = bots.size()
+	_sync_floor(cam)
 	# The floor fill (critic round 41: "lift the floor from black"): one soft omni over the dance floor, in front
 	# of the podiums, while any dancer is drawn and the camera is near.
 	var c_sum := Vector3.ZERO

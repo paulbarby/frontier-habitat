@@ -218,3 +218,29 @@ then the bunks: Bed 4u..4u+3 in the family tube and the block; penthouses 4 adul
    `presentation/navgrid/seat_fix.res`) the gate passes: 134 models, 994 anchors, **0 overlaps** (sensitivity: a body
    25 cm forward still fails).
 6. Light colour per role (`v3.ceiling.light`): noted; the follow fill light takes it next.
+
+## 2026-10-03 (later) - doorway head room: checked in game, one model case left (RENDER)
+
+Your two asks are done in `presentation/fx_doors.gd`:
+- setback rooms (water_recycler) get the upper patch over each housing (2.24 m -> upper_z[1]) and over the
+  hidden runs (1.40 m -> upper_z[1]), like the other flat shells;
+- junction mouths: an upper patch over each mouth span from the corridor head (2.24 m) to the eave
+  (upper_z[1] x the junction's scale), and over the hidden segments beside each mouth from 1.40 m.
+
+New gate `tools/render_doorway_gate.gd` (roofs closed, every room drawn as in the follow view, the drawn parts as
+physics shapes, doorway-masked segments out): a follow camera (eye 1.8 m) passes through each doorway both ways
+with the person 1.6 m ahead; per 0.1 m it counts (1) roof, ceiling, band or partition-top geometry in the door
+opening (within 0.75 m of the door plane, between the jambs) on the lines to the person and the upper opening,
+and (2) no surface within 0.75 m past the door plane above the door head (2.30-2.58 m, only where the camera's
+frame reaches). 40 doorways (37 room types and sizes on showcase_v3_late / showcase_v5 / doors8, 3 junction
+mouths), 1,200 frames: **gap 0; beam 16, all in one file:**
+
+- **`airlock_r28.glb`** (the content-radius airlock of the old saves, your 12:06 file): from the corridor, the
+  line from the eye to the person's head crosses a `Roof` part 0.6-0.7 m inside the door plane at about
+  1.8-1.9 m over the floor (8 frames each way). `airlock_m.glb` has no hit in the opening. Please give r28 the
+  same chamber soffit (2.55 m) / `RoofChamber` split as airlock_m.
+
+Cut check after your raise: 37 room types, 0 above the cut; doors 99 rooms, 0 bad.
+- For information: with the zone widened to 1.5 m, `airlock_m.glb` shows its chamber block (`RoofChamber`, above
+  1.40 m) 1.3-1.5 m inside the door on the straight line through the door (4 frames). That is the chamber wall a
+  walker goes round, not a beam over the door; no change asked.

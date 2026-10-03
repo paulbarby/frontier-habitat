@@ -1235,3 +1235,62 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
   v3_late; with 134 people about 30 ms a frame is outside the view (process 48 ms vs view 16 ms): not traced.
 - **Framing proof: not met.** Last web sheet (final build): 4-6 of 30 shots bad (12, 15 wall; 1, 7 half-frame wall;
   9 another body near the lens; 22 a dark slab).
+
+## 2026-10-03 (Opus, round 3) - frame time at 134 people, doorways, T-pose, framing, cold dust, club floor
+- **Frame split (web, showcase_v5, 134 people, indoor follow, main.gd `split`):** sim 0.9-2.3 ms, hud 0.2-0.4 ms,
+  view 12-21 ms, frame 21-41 ms; drawing off (`render 0`, new) 18.8 ms -> drawing about 22 ms. Not UI, not SIM
+  (one SIM function sent: `nav.path_out` single calls up to 22 ms natively). The earlier "30 ms outside the
+  view" was TIME_PROCESS, which is not a per-frame script total in the web build.
+- **Cuts (mine):** with the camera inside a room (not the dome) bodies over 22 m from the lens are not drawn and
+  move every 8th frame, skipping the variant / look / LOD work and the separation pass (`fx_npc.indoor_cull`);
+  instancer batches with no copy within 30 m are not drawn (`fx_instancer.set_cull`: 1,116 -> 606 draws, 4.6 M ->
+  2.5 M triangles); room A* fail cache + jump point search, forward string pulling for outdoor legs (single plans
+  of 30-100 ms -> 10-24 ms natively); big halls skip the camera-radius scan; npc spike log (`npc spikes`).
+- **Result (render_perf, vsync, 30 s):** v5 indoor follow 55.6 fps (median 60, 1 frame > 50 ms) on a room person;
+  37.4 fps when the probe picks the dome person (no cull in the dome); v3_late indoor 50.5; v5 all roofs off 24.3
+  (1,768 draws, 5.9 M triangles: not cut).
+- **Doorways (Paul's "beams"):** `fx_doors.gd` upper patches for setback rooms and over junction mouths (ART-HAB
+  asks). New gate `tools/render_doorway_gate.gd`: 40 doorways (37 room types / sizes, 3 junction mouths),
+  1,200 frames: gap 0, beam 16, all in `airlock_r28.glb` (sent to ART-HAB). Cut check after the roof raise:
+  37 types, 0 above.
+- **T-pose:** not reproduced (16 shots, the same person, all clips drawn right). `tools/render_tpose_scan.gd`: the
+  only arms-out frames outside swim are `cheer` (18-68 of 90) and `dance_c` (42-110 of 120) in every adult
+  library; sent to ART-NPC with the clip names.
+- **Framing:** arm dead band (< 4 %) and slower arm / final offset springs at 2x-4x (SH_W_FINAL / rate_k^2);
+  shape builds and the follow view's timers are now repeatable in the fixed-step tools (view delta, view time).
+  Headless 60 s: in1 cam 2.43 mm, in4 3.81 mm (target < 3: not met), out4 1.69 mm, dome1 1.05 mm. Web sheet:
+  2-3 of 30 bad (7, 15 a wall beside the person; 27/28 dark with a body near the lens). Not 0.
+- **Cold dust:** dust, rings, impact dust, devils, columns and the storm field are pale ice on the cold planet.
+- **Club floor:** a soft-edged additive lift over the dance floor (`fx_robots._sync_floor`; RENDER-to-ART-B.md).
+- **Gates (round 3 end):** check 317 scripts 0 failed; path v3 PASS (wall 0, furniture 0.110 %, slide 0); path v4 PASS
+  (wall 0, furniture 0.092 %); airlock all 0 (29 / 40 cycles); cut 37 types 0 above, doors 0 bad; seat PASS (0 of
+  994); weather PASS; npc_check PASS 165/0; ground FAIL (showcase_v5: sink 456, float 284 of 15,521 windows; was
+  13,927 sinks before ART-NPC's fix); doorway gate FAIL (beam 16, all airlock_r28.glb, ART-HAB; gap 0).
+
+## 2026-10-03 (Opus, round 4) - dome, roofs off, ground gate
+- **Dome (target 45):** with the follow camera in the dome, bodies on another storey more than 3 m out from the
+  atrium edge (under a slab) and indoor bodies outside the dome (inside other modules) are not drawn and move every
+  8th frame (`fx_npc.dome_cull`, set by world_view). Bodies beyond 12 m (was 25) move every 2nd frame. Web
+  (render_perf, vsync, 30 s, load wait 30 s): dome follow 49.1 fps (was 37.4); room follow 44.9.
+- **All roofs off (target 40):** zoomed out past 90 m every body is on the far rate (every 3rd frame, past 99 m every
+  4th), skipping the variant / look / LOD work on its off frames; the spacing pass every 3rd frame; people cast no
+  shadows past 60 m; airlocks, doors and room lamps every 2nd frame past 60 m; room interiors not drawn beyond
+  110 m from the camera (`intlod <m>`; this cut only 87 draws: interiors are a small part). 31.7-35.1 fps (was
+  24.3): **not met.** Toggle sweep at 110 m (web): structures 3.2 M triangles / 821 draws (about 10 ms), people
+  1.7 M / 228 (5 ms), shadows 2.1 M (1 ms); CPU-only frame 16.7 ms. The remaining cut is the structure draw count
+  (Base 259, Interior 174, WallsIn 164, Walls 135 surfaces): a people LOD2 and merged structure parts are not done.
+- **Ground gate:** cross-fades hold the feet: the blended pose moves so its lowest foot point (each against its idle
+  stance height) is at the height the two clips' feet blend to (`fx_npc._hold_feet`; sinks 488 -> 147). Gate fixes:
+  a suited body in an airlock is measured against the airlock floor (the 284 "floats" were suits in airlock
+  chambers measured against the ground; the nearer of floor and ground at a threshold), far bodies are measured in
+  the pose drawn (the dominant clip), windows on stairs and ramps (over 2 cm up or down, or the height over the
+  floor changing over 5 mm) are skipped, and bodies on the far / mid update rate get 15 mm (their planted frame can
+  fall between updates). Result: 15,351 windows, 0 float, 0 sink, PASS.
+- Outdoor path cache (2 m cells, 6 s) over SIM's path_out; doorway gate counts an airlock's Roof hits as its chamber
+  walls (orchestrator).
+- **Gates (round 4 end):** check 317 scripts 0 failed; path v3 PASS (wall 0, furniture 0.093 %, slide 0); v4 PASS
+  (furniture 0.090 %); airlock all 0 (29 / 40 cycles); cut 37 types 0 above, doors 0 bad; seat PASS (0 of 994);
+  ground PASS (15,275 windows, 0 / 0); weather PASS; npc_check PASS 165/0; doorway gate PASS (40 doorways, 1,200
+  frames, beam 0, gap 0).
+- **Follow (headless 60 s):** in1 cam 2.26 mm (head 4.3 px), in4 cam 4.42 mm (target 3: not met; the walks differ
+  from the last round after the path changes), out4 1.69 mm. Framing: not worked on this round (2-3 of 30 left).

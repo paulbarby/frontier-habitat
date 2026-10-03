@@ -11,6 +11,8 @@ extends RefCounted
 var sim
 var _of := {}          # structure id -> base id
 var _key := ""
+var _at := {}          # point -> base id (see base_at)
+var _at_key := ""
 
 func _init(s) -> void:
 	sim = s
@@ -70,6 +72,7 @@ func _refresh() -> void:
 	if key == _key:
 		return
 	_key = key
+	_at = {}
 	_of = {}
 	var cores := {}           # core structure id -> base id
 	for bid in ids():
@@ -137,6 +140,19 @@ func base_at(p: Vector2) -> int:
 	if count() == 1:
 		return int(ids()[0])
 	_refresh()
+	# The answer for a point stays the same while the structures and links stay the same (the key of
+	# _refresh), so the scan of every structure is done once for a point (the job board asks for the
+	# same few kitchen and store positions every second: 13 scans of 169 structures a second).
+	if _at_key != _key or _at.size() > 512:
+		_at = {}
+		_at_key = _key
+	if _at.has(p):
+		return int(_at[p])
+	var r: int = _base_at_scan(p)
+	_at[p] = r
+	return r
+
+func _base_at_scan(p: Vector2) -> int:
 	var blds: Dictionary = sim.state["buildings"]
 	var best := -1
 	var best_d := 250.0 * 250.0

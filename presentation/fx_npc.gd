@@ -100,8 +100,53 @@ var _plan_us := 0
 var _sep_dt := 0.016
 var forced_goto := {}            # test staging only (__fhr "runto"): agent id -> [Vector2, speed m/s]
 var force_cpu := false            # test only (__fhr "npccpu 1"): every near body on the CPU row path
+## Dome cull (2026-10-03, 37 fps following a person in the dome): with the follow camera inside the super dome,
+## a body on another storey and more than DOME_RAIL_M m out from the atrium edge is under a slab (not drawn,
+## moved every 8th frame). Set by world_view: {"c": Vector2, "y0": float, "atrium": float, "r": float, "lvl": int}
+## or {} (off).
+var dome_cull := {}
+const DOME_STOREYS := [0.0, 5.0, 9.2, 13.4, 17.6, 21.8]
+const DOME_RAIL_M := 3.0
+static func dome_level(y_rel: float) -> int:
+	var k := 0
+	for i in DOME_STOREYS.size():
+		if y_rel + 0.6 >= float(DOME_STOREYS[i]):
+			k = i
+	return k
+func _dome_hidden(rec: Dictionary) -> bool:
+	if dome_cull.is_empty():
+		return false
+	var p: Vector3 = rec["pos"]
+	var c: Vector2 = dome_cull["c"]
+	var rb: float = Vector2(p.x, p.z).distance_to(c)
+	# (outside the dome a body indoors is inside another module's walls: not seen from the dome)
+	if rb > float(dome_cull["r"]):
+		return String(rec.get("var", "")) != "suit"
+	if rb < float(dome_cull["atrium"]) + DOME_RAIL_M:
+		return false
+	return dome_level(p.y - float(dome_cull["y0"])) != int(dome_cull["lvl"])
 var indoor_cull := false         # set by world_view: the follow camera is inside a room (roof on, not the dome)
-const INDOOR_CULL_R := 22.0      # m: beyond this from the lens a body indoors is behind walls
+const INDOOR_CULL_R := 22.0
+var _sep_acc := 0.0
+## Zoomed out past SHADOW_OFF_D m (all roofs off, overviews) the people cast no shadows: a 15 px figure's shadow is
+## not seen, and the shadow pass drew the 134 bodies again (2 ms a frame in the web build, 2026-10-03).
+const SHADOW_OFF_D := 60.0
+var _ppl_shadow := true
+func _people_shadows(cam_d: float) -> void:
+	var want: bool = cam_d < SHADOW_OFF_D - (0.0 if _ppl_shadow else 5.0)
+	if want == _ppl_shadow:
+		return
+	_ppl_shadow = want
+	for v in mm:
+		for pt in (mm[v]["parts"] as Array):
+			var mi: MultiMeshInstance3D = pt["mmi"]
+			var c0: int = int(mi.get_meta("cast0", GeometryInstance3D.SHADOW_CASTING_SETTING_ON))
+			if c0 == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+				mi.visible = want
+			elif c0 == GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if want else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+const FAR_CAM_D := 90.0          # m camera distance: from here every body is updated at the far rate (was 160)
+const MID_R := 12.0              # m: bodies beyond this from the camera move every 2nd frame (was 25)      # m: beyond this from the lens a body indoors is behind walls
 var no_far := false               # measurement only (render_follow_headless): every body updated every frame, so the camera cannot change the walk
 var forced_use := {}             # test staging only (__fhr "use"): agent id -> use (view side)
 const DYN_ROWS := 128            # blended poses per frame (CPU slerp rows)
@@ -919,6 +964,7 @@ func _make_mm(variant: String, lib: Dictionary) -> void:
 		else:
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		add_child(mmi)
+		mmi.set_meta("cast0", mmi.cast_shadow)
 		list.append({"mm": m, "mmi": mmi, "head": int(part["head"]), "vis": int(part.get("vis", -1)), "vh": int(part.get("vh", 0)), "outfit": String(part.get("outfit", "")), "addon": String(part.get("addon", ""))})
 	mm[variant] = {"parts": list, "heads": int(lib["heads"]), "people": bool(lib.get("people", false))}
 
@@ -1043,7 +1089,10 @@ static func globals_of(lib: Dictionary, loc: Array) -> Array:
 ## frames, 1/30 s apart).
 static func pose_globals(lib: Dictionary, pz: Dictionary) -> Array:
 	if needs_cpu(pz):
-		return globals_of(lib, pose_locals(lib, pz))
+		var g: Array = globals_of(lib, pose_locals(lib, pz))
+		if String(pz["b"]) != "" and float(pz["wb"]) > 0.001:
+			_hold_feet(lib, pz, g)
+		return g
 	var q := pz.duplicate()
 	q["b"] = ""
 	q["wb"] = 0.0
@@ -1051,6 +1100,46 @@ static func pose_globals(lib: Dictionary, pz: Dictionary) -> Array:
 		q["c"] = ""
 		q["wc"] = 0.0
 	return globals_of(lib, pose_locals(lib, q))
+
+## Ground check (2026-10-03): a cross-fade slerps the LOCAL rotations, and bending knees and hips half-way
+## between two clips lowered the planted foot by 15-27 mm (456 sinking windows; the clip frames themselves are
+## within 2.1 mm, ART-NPC). The blended pose is moved up or down so its lowest foot point is at the height the
+## two clips' lowest feet blend to (the root height follows the feet, nothing else changes).
+static func _hold_feet(lib: Dictionary, pz: Dictionary, g: Array) -> void:
+	var fi: Array = lib.get("feet_idx", [])
+	if fi.is_empty():
+		var names: Array = lib["names"]
+		for bn in ["foot.L", "toe.L", "foot.R", "toe.R"]:
+			var i: int = names.find(bn)
+			if i >= 0:
+				fi.append(i)
+		lib["feet_idx"] = fi
+		if fi.is_empty():
+			return
+	var ra: int = int(_row_f(lib, pz["a"], pz["ta"]))
+	var rb: int = int(_row_f(lib, pz["b"], pz["tb"]))
+	# (each foot point against its own standing height, frame 0 of idle: the heel or the toe may be the planted one)
+	var fr: Array = lib.get("feet_ref", [])
+	if fr.size() != fi.size():
+		fr = []
+		var r0: int = int(_row_f(lib, "idle", 0.0))
+		for i in fi:
+			fr.append(bone_at(lib, r0, int(i)).origin.y)
+		lib["feet_ref"] = fr
+	var ma := INF
+	var mb := INF
+	var mg := INF
+	for j in fi.size():
+		var i: int = fi[j]
+		ma = minf(ma, bone_at(lib, ra, i).origin.y - float(fr[j]))
+		mb = minf(mb, bone_at(lib, rb, i).origin.y - float(fr[j]))
+		mg = minf(mg, (g[i] as Transform3D).origin.y - float(fr[j]))
+	var dy: float = lerpf(ma, mb, clampf(float(pz["wb"]), 0.0, 1.0)) - mg
+	if absf(dy) < 0.0005:
+		return
+	for k in g.size():
+		var t: Transform3D = g[k]
+		g[k] = Transform3D(t.basis, t.origin + Vector3(0.0, dy, 0.0))
 
 ## Largest local rotation change (degrees) of any deforming bone between two clip poses:
 ## sets the length of a cross-fade (V3 §3.4: angle / 300 deg/s, 0.25..0.6 s).
@@ -1628,7 +1717,7 @@ func sync(delta: float) -> bool:
 			continue
 		# (indoor cull, early: a body behind the walls skips the variant, look and LOD work below; it keeps its
 		# record and library and moves every 8th frame)
-		if indoor_cull and agents.has(id) and int(id) != _follow_id and _cam_pos != Vector3.INF and not dead 				and (agents[id]["pos"] as Vector3).distance_squared_to(_cam_pos) > INDOOR_CULL_R * INDOOR_CULL_R and libs.has(String(agents[id].get("dk", ""))):
+		if agents.has(id) and int(id) != _follow_id and _cam_pos != Vector3.INF and not dead and libs.has(String(agents[id].get("dk", ""))) 				and ((indoor_cull and (agents[id]["pos"] as Vector3).distance_squared_to(_cam_pos) > INDOOR_CULL_R * INDOOR_CULL_R) or _dome_hidden(agents[id])):
 			var rc: Dictionary = agents[id]
 			rc["far"] = true
 			rc["culled"] = true
@@ -1638,6 +1727,13 @@ func sync(delta: float) -> bool:
 			continue
 		if agents.has(id):
 			agents[id]["culled"] = false
+			# (a body on the far / mid rate whose frame this is not: drawn as it is, without the variant, look and LOD
+			# work below; 2026-10-03, 3 ms a frame for 134 people zoomed out)
+			var rk: Dictionary = agents[id]
+			var sk: int = int(rk.get("skip_k", 1))
+			if sk > 1 and (int(id) + _frame) % sk != 0 and int(id) != _follow_id and not dead and lists.has(String(rk.get("dk", ""))):
+				(lists[String(rk["dk"])] as Array).append([rk, libs[String(rk["dk"])]])
+				continue
 		var inside: bool = a["where"] == "in"
 		# A body on (or walking to, or getting up from) a room anchor is indoors.
 		if not inside and agents.has(id):
@@ -1688,7 +1784,7 @@ func sync(delta: float) -> bool:
 			_people_look(a, rec, lib)
 		# Far bodies (and everything when zoomed far out) update at a lower rate.
 		# Off-screen bodies (outside the camera frustum, 2 m margin) update at the far rate too.
-		var far: bool = (rec["pos"] as Vector3).distance_squared_to(focus) > 8100.0 or cam_d > 160.0 \
+		var far: bool = (rec["pos"] as Vector3).distance_squared_to(focus) > 8100.0 or cam_d > FAR_CAM_D \
 				or (cam3 != null and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + Vector3(0, 1.0, 0)) and not cam3.is_position_in_frustum((rec["pos"] as Vector3) + (cam3.global_position - (rec["pos"] as Vector3)).normalized() * 2.0))
 		# The person in the follow view is updated every frame (the frustum test uses the camera of the
 		# frame before: on a quick turn the body tested "off screen" and moved every 3rd frame).
@@ -1701,7 +1797,9 @@ func sync(delta: float) -> bool:
 		# off-screen bodies every 3rd as before.
 		# (and, 2026-10-02 at 134 people, every body over 25 m from the camera: the follow view and close
 		# overviews updated the whole colony every frame)
-		var mid: bool = not far and (cam_d > 70.0 or (_cam_pos != Vector3.INF and (rec["pos"] as Vector3).distance_squared_to(_cam_pos) > 625.0)) and int(id) != _follow_id
+		# (and 2026-10-03, the dome at 134 people: every body over MID_R m from the camera every 2nd frame, the LOD1
+		# distance; a 30 Hz pose there is not visible)
+		var mid: bool = not far and (cam_d > 70.0 or (_cam_pos != Vector3.INF and (rec["pos"] as Vector3).distance_squared_to(_cam_pos) > MID_R * MID_R)) and int(id) != _follow_id
 		# Follow camera inside a room (roof on, not the dome): a body over INDOOR_CULL_R m from the lens is behind
 		# walls. It is not drawn and is updated every 8th frame (2026-10-03, 134 people: 30 fps indoors; the
 		# bodies of the whole colony were animated and drawn behind the walls).
@@ -1712,19 +1810,29 @@ func sync(delta: float) -> bool:
 			stats_slots["indoor_culled"] = int(stats_slots.get("indoor_culled", 0)) + 1
 			continue
 		if far or mid:
-			var k: int = 3 if far else 2
+			# (zoomed out past FAR_CAM_D every body is far; past 1.1 x that, every 4th frame: all roofs off at 110-150 m
+			# drew the colony's 134 people at 22 fps, 2026-10-03)
+			var k: int = (4 if cam_d > FAR_CAM_D * 1.1 else 3) if far else 2
+			rec["skip_k"] = k
 			if (int(id) + _frame) % k != 0:
 				(lists[dk] as Array).append([rec, lib])
 				continue
 			step = delta * k
+		else:
+			rec["skip_k"] = 1
 		var tb0: int = Time.get_ticks_usec()
 		_update_body(a, rec, lib, step, dead)
 		_t_body += Time.get_ticks_usec() - tb0
 		_n_body += 1
 		(lists[dk] as Array).append([rec, lib])
+	_people_shadows(cam_d)
 	var ts1: int = Time.get_ticks_usec()
-	_sep_dt = delta
-	_separate()
+	# (zoomed out past FAR_CAM_D the spacing pass runs every 3rd frame: the bodies move every 3rd-4th frame there)
+	_sep_acc += delta
+	if float(view.camera_distance) <= FAR_CAM_D or _frame % 3 == 0:
+		_sep_dt = _sep_acc
+		_sep_acc = 0.0
+		_separate()
 	stats_slots["sep_ms"] = snappedf(lerpf(float(stats_slots.get("sep_ms", 0.0)), (Time.get_ticks_usec() - ts1) / 1000.0, 0.1), 0.01)
 	var tw0: int = Time.get_ticks_usec()
 	for variant in lists:

@@ -301,3 +301,16 @@ m:ss" (from `traffic_row(ship).t_s` while landed); `shared_home` — "They stay 
 Deadline: none". In sim/relations.gd a `leave_with_ship` request is never removed when the ship has gone (it waits
 for an answer; `allow` then says "The ship has gone."). Please either drop it when its ship leaves (and log the
 outcome), or tell me the rule you prefer; the UI will show it.
+
+## 2026-10-03 — job priorities: the effect on job choice (SIM test), and one question
+
+The Colonists window, Priorities tab (Paul asked for a check that priorities work) now has: a gold "Colony default"
+row (click: `set_priority {cat, value}`), one cell per colonist and category (click: `set_jobs {agent, jobs:{cat: v}}`),
+and Reset (`set_jobs {agent, clear:true}`). UI test: `tools/ui/test_priorities.gd` (a real mouse click; SIM state
+`agents[id].jobs`, `policies.priority`). It also calls `sim.jobs.score(task, agent)` on a made-up task: own 0 gives
+-1e9 although the colony default is 2; own 3 scores above colony 2.
+Please test the effect on job choice in SIM: (1) a colonist with own `construction = 0` never takes a construction
+task, with the colony default 3; (2) own 3 beats colony 2 for the same two tasks; (3) own value stays when the colony
+default changes; (4) after `clear`, the colony default decides again; (5) a colonist with own `food = 0` still eats
+and drinks (needs come first). Question: `jobs.score` returned 300 / 200 for priorities 3 / 2 in my test, not
+`100 * prio * PRIORITY_SCALE` as the file says. Is PRIORITY_SCALE 1 now, or is another function the one that picks?

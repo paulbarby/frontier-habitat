@@ -221,7 +221,7 @@ func sync(p: Vector3, now: float) -> void:
 			continue
 		var e: Dictionary = inst.handles[h]
 		var o: Vector3 = (e["xf"] as Transform3D).origin
-		if absf(o.x - p.x) > REACH or absf(o.z - p.z) > REACH:
+		if not _reach_all and (absf(o.x - p.x) > REACH or absf(o.z - p.z) > REACH):
 			continue
 		var bt: Dictionary = inst.batches.get(e["key"], {})
 		if bt.is_empty():
@@ -333,6 +333,25 @@ func sweep(a: Vector3, b: Vector3, r: float) -> float:
 		var t: float = ray(a, b)
 		return l if t == INF else t
 	return l * res[0]
+
+## Tests only (render_ground_check): bodies for EVERY instancer copy, shapes built at once (seconds natively).
+func sync_all() -> void:
+	for h in inst.handles:
+		var bt: Dictionary = inst.batches.get(inst.handles[h]["key"], {})
+		if not bt.is_empty():
+			_shapes_of(bt["tpl"])
+	while not _order.is_empty():
+		step(1 << 30)
+	var big := REACH
+	_cand = inst.handles.keys()
+	_cand_at = Vector3.ZERO
+	_cand_t = 1e12
+	_cand_probe = _cand[0] if not _cand.is_empty() else -1
+	_reach_all = true
+	_at = Vector3.INF
+	sync(Vector3.ZERO, 1e12)
+
+var _reach_all := false
 
 func body_count() -> int:
 	return _bodies.size()

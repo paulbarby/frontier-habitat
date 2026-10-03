@@ -14,7 +14,9 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const GlassFrame = preload("res://ui/theme/glass_frame.gd")
 const V4 = preload("res://ui/v4_data.gd")
 
+const Quarter = preload("res://ui/wm/quarter.gd")
 const WIDTH := 430.0
+var _scroll: ScrollContainer
 
 var hud
 var group: Array = []            # agent ids
@@ -53,13 +55,17 @@ func _ready() -> void:
 	var t: Label = Kit.head("ORDERS", P.TEXT, 16, "head_wide")
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(t)
-	_head.add_child(Kit.icon_button("close", func(): visible = false, "Close\nEsc. The orders go on.", "GhostButton", 16, 30))
+	var close_b: Button = Kit.icon_button("close", func(): visible = false, "Close\nEsc. The orders go on.", "GhostButton", 16, 30)
+	_head.add_child(close_b)
+	Quarter.thin(close_b)
 	v.add_child(Kit.gap(0, 6))
 	_na = Kit.wrap("Orders are not available in this game.", 14, P.TEXT_2)
 	_na.custom_minimum_size.x = 360
 	v.add_child(_na)
 	_body = Kit.vbox(8)
-	v.add_child(_body)
+	_scroll = Kit.scroll(_body)   # a narrow window scrolls its form (the right quarter of a small view)
+	_scroll.custom_minimum_size = Vector2(WIDTH - 42, 220)
+	v.add_child(_scroll)
 	var gh: HBoxContainer = Kit.hbox(8)
 	_body.add_child(gh)
 	var gl: Label = Kit.head("Colonists", P.CYAN, 12)
@@ -108,7 +114,7 @@ func _ready() -> void:
 			refresh(true))
 
 func register_window(wm) -> void:
-	wm.register(self, "orders", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.position.x + 340.0, wa.position.y + 60.0))
+	wm.register(self, "orders", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.end.x - sz.x, wa.position.y + 60.0))
 
 func wm_close() -> void:
 	visible = false
@@ -125,6 +131,8 @@ func add_selected() -> void:
 	refresh(true)
 
 func refresh(force: bool = false) -> void:
+	if visible:
+		Quarter.fit(self, hud, "orders", WIDTH, _scroll, _body, 42.0)
 	if not visible:
 		return
 	var ok: bool = hud.v4.available("orders") or hud.v4.live("vehicles")

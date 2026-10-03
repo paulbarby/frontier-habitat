@@ -75,6 +75,7 @@ func _process(_d: float) -> bool:
 			if nd != null and nd is Node:
 				(nd as Node).process_mode = Node.PROCESS_MODE_DISABLED
 		main.view.npc.plan_budget_us = 1 << 30
+		main.view.cam_step_us = 1 << 30
 		main.view.npc.no_far = true
 		main.step_cap_us = 1 << 30
 		main.set_speed(int(c[2]))

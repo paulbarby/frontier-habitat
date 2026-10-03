@@ -55,7 +55,29 @@ const HUGE_AABB := AABB(Vector3(-900, -200, -900), Vector3(4400, 700, 4400))   #
 var field_on := true        # the camera dust motes (off for critic stills: `toggle dust 0`)
 ## Planet (Paul 2026-10-01, V5 15.7): "airless" = no dust in the air, no devils, no storm sheets, no drift;
 ## "cold" = the camera motes are ice glitter (pale blue-white). world_view sets it on load.
-var planet := "dry"
+var planet := "dry":
+	set(v):
+		if v == planet:
+			return
+		planet = v
+		_planet_colours()
+## Cold planet (critic round 41 follow-up: the dust stayed orange): the ground and storm dust kinds are pale ice
+## and snow, keeping each kind's alpha.
+const ICE_KINDS := ["dust", "dust_ring", "impact_dust", "devil", "dust_column", "site_dust"]
+func _kind_cols(kind: String) -> Array:
+	var k: Dictionary = KINDS[kind]
+	if planet == "cold" and kind in ICE_KINDS:
+		return [Color(0.80, 0.85, 0.92, (k["c0"] as Color).a), Color(0.90, 0.93, 0.97, (k["c1"] as Color).a)]
+	return [k["c0"], k["c1"]]
+func _planet_colours() -> void:
+	for kind in pools:
+		var cc: Array = _kind_cols(kind)
+		(pools[kind]["mat"] as ShaderMaterial).set_shader_parameter("color0", cc[0])
+		(pools[kind]["mat"] as ShaderMaterial).set_shader_parameter("color1", cc[1])
+	if _storm != null and _storm.material_override is ShaderMaterial:
+		var sc: Color = Color(0.86, 0.9, 0.96, 0.55) if planet == "cold" else Color(0.72, 0.5, 0.34, 0.55)
+		(_storm.material_override as ShaderMaterial).set_shader_parameter("color0", sc)
+		(_storm.material_override as ShaderMaterial).set_shader_parameter("color1", sc)
 const AIRLESS_NO := ["devil", "dust_column"]          # never on an airless planet
 const AIRLESS_LOW := ["dust", "site_dust", "dust_ring", "impact_dust"]   # ballistic only: a third, no drift
 var field_light := 1.0      # V4: motes dim in a shadowed crater (no bright streaks on a dark floor)
@@ -94,6 +116,7 @@ func setup(v) -> void:
 	_field = _make_field(900, Color(0.78, 0.6, 0.45, 0.35), 0.035, 0.06, 0.0)
 	_field_mat = _field.material_override
 	_storm = _make_field(1800, Color(0.72, 0.5, 0.34, 0.55), 0.1, 0.1, 6.0)
+	_planet_colours()
 	_storm_mat = _storm.material_override
 	_storm_mat.set_shader_parameter("field_size", Vector3(90, 24, 90))
 	_glow = MultiMeshInstance3D.new()
@@ -181,8 +204,9 @@ func _pool(kind: String) -> Dictionary:
 	m.set_shader_parameter("gravity", k["gravity"])
 	m.set_shader_parameter("size0", k["size"][0])
 	m.set_shader_parameter("size1", k["size"][1])
-	m.set_shader_parameter("color0", k["c0"])
-	m.set_shader_parameter("color1", k["c1"])
+	var cc: Array = _kind_cols(kind)
+	m.set_shader_parameter("color0", cc[0])
+	m.set_shader_parameter("color1", cc[1])
 	m.set_shader_parameter("spawn", int(k.get("spawn", 0)))
 	m.set_shader_parameter("stretch", float(k.get("stretch", 0.0)))
 	m.set_shader_parameter("radial", float(k.get("radial", 0.0)))

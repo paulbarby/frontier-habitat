@@ -4,6 +4,7 @@ extends RefCounted
 ## These take about a minute each, so they live in their own suite.
 
 const H = preload("res://tests/helpers.gd")
+const Pacer = preload("res://tests/pacer.gd")
 
 func tests() -> Array:
 	return [
@@ -45,9 +46,16 @@ func long_perf(t) -> void:
 	g.run(600)
 	var pop: int = sim.alive_count()
 	var n: int = sim.state["buildings"].size()
-	var t0: int = Time.get_ticks_usec()
-	g.run(3000)
-	var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0 / 3000.0
+	# The same calibration as the other perf tests (tests/pacer.gd): blocks of 100 ticks, each scaled by the
+	# fixed workload read beside it, one rule for all (docs/progress/SIM.md, 2026-10-03).
+	var pc = Pacer.new(true)
+	pc.start()
+	for b in 30:
+		var t0: int = Time.get_ticks_usec()
+		g.run(100)
+		pc.block(float(Time.get_ticks_usec() - t0) / 1000.0, 100)
+	var ms: float = pc.per_tick(0, 30)
+	var raw_ms: float = pc.raw_per_tick(0, 30)
 	t.check(pop >= 60 and n >= 150, "the colony has the size of the budget (%d people, %d structures)" % [pop, n])
 	var causes := {}
 	for ag in sim.state["agents"].values():
@@ -55,9 +63,9 @@ func long_perf(t) -> void:
 			causes[ag["cause"]] = int(causes.get(ag["cause"], 0)) + 1
 	t.note("deaths %s" % str(causes))
 	t.eq(causes, {}, "nobody died while the colony was built and measured")
-	t.check(ms < 3.0, "a tick takes less than 3 ms on this machine (%.3f ms)" % ms)
+	t.check(ms < 3.0, "a tick takes less than 3 ms (scaled %.3f ms; raw %.3f, calibration %s, mean factor %.3f)" % [ms, raw_ms, pc.reading_text(), pc.mean_factor()])
 	t.eq(sim.inv.audit(), {}, "ledger")
-	t.note("%.3f ms per tick with %d colonists and %d structures (%s)" % [ms, pop, n, OS.get_processor_name()])
+	t.note("%.3f ms per tick scaled (raw %.3f, mean factor %.3f) with %d colonists and %d structures (%s)" % [ms, raw_ms, pc.mean_factor(), pop, n, OS.get_processor_name()])
 	t.done()
 
 # ---------------------------------------------------------------- version 2 campaign

@@ -17,6 +17,7 @@ const Icons = preload("res://ui/theme/icons.gd")
 const RagPhoto = preload("res://ui/widgets/rag_photo.gd")
 const V5 = preload("res://ui/v5_data.gd")
 
+const Quarter = preload("res://ui/wm/quarter.gd")
 const WIDTH := 520.0
 const COMP_NAME := {"needs": "Needs", "food": "Food", "housing": "Housing", "comfort": "Leisure", "social": "Friends", "work": "Work",
 	"fairness": "Fairness", "safety": "Safety", "freedom": "Freedom"}
@@ -28,7 +29,7 @@ var tab := "file"
 var _head: HBoxContainer
 var _title: Label
 var _sub: Label
-var _tabs: HBoxContainer
+var _tabs: HFlowContainer
 var _body: VBoxContainer
 var _scroll: ScrollContainer
 var _sig := ""
@@ -66,10 +67,21 @@ func _ready() -> void:
 	tv.add_child(_title)
 	_sub = Kit.label("", "SmallLabel", 12, P.TEXT_2)
 	tv.add_child(_sub)
-	_head.add_child(Kit.icon_button("follow", func(): hud.main.follow_person(agent_id), "Follow\nThe camera goes behind this person (key V). Esc ends it.", "GhostButton", 16, 30))
-	_head.add_child(Kit.icon_button("target", func(): _show_person(), "Show\nMoves the camera to this person.", "GhostButton", 16, 30))
-	_head.add_child(Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30))
-	_tabs = Kit.hbox(4)
+	for hl in [_title, _sub]:   # one line each: cut, not wrapped (a narrow window)
+		(hl as Label).clip_text = true
+		(hl as Label).text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var ib1: Button = Kit.icon_button("follow", func(): hud.main.follow_person(agent_id), "Follow\nThe camera goes behind this person (key V). Esc ends it.", "GhostButton", 16, 30)
+	_head.add_child(ib1)
+	Quarter.thin(ib1)
+	var ib2: Button = Kit.icon_button("target", func(): _show_person(), "Show\nMoves the camera to this person.", "GhostButton", 16, 30)
+	_head.add_child(ib2)
+	Quarter.thin(ib2)
+	var ib3: Button = Kit.icon_button("close", func(): visible = false, "Close\nEsc.", "GhostButton", 16, 30)
+	_head.add_child(ib3)
+	Quarter.thin(ib3)
+	_tabs = HFlowContainer.new()   # the tabs wrap in a narrow window
+	_tabs.add_theme_constant_override("h_separation", 4)
+	_tabs.add_theme_constant_override("v_separation", 4)
 	v.add_child(_tabs)
 	for t in [["file", "File"], ["social", "Social"], ["review", "Review"]]:
 		var id: String = t[0]
@@ -121,6 +133,7 @@ func _show_person() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	Quarter.fit(self, hud, "person", WIDTH, _scroll, _body, 40.0)
 	_t += delta
 	if _t >= 1.0:
 		_t = 0.0

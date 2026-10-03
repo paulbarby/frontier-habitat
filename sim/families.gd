@@ -175,7 +175,13 @@ func child_bed(a: Dictionary) -> int:
 # ---------------------------------------------------------------- children
 ## Spawns a child of these parents at pos in building bld (-1 outside).
 func spawn_child(parents: Array, pos: Vector2, bld: int) -> Dictionary:
-	var a: Dictionary = sim.agents.spawn("child", sim.next_name(), pos, bld)
+	# A child takes a parent's last name (and a first name that is free with it).
+	var plast := ""
+	if not parents.is_empty():
+		var par0: Dictionary = sim.state["agents"].get(int(parents[0]), {})
+		if not par0.is_empty():
+			plast = sim.last_name_of(String(par0["name"]))
+	var a: Dictionary = sim.agents.spawn("child", sim.next_name(plast), pos, bld)
 	a["kind"] = "child"
 	a["parents"] = parents.duplicate()
 	a["family"] = int(parents[0]) if not parents.is_empty() else int(a["id"])

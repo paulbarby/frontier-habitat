@@ -183,7 +183,7 @@ func _process(_d: float) -> bool:
 			if cell != null:
 				cell.pressed.emit()
 			var want: int = {3: 2, 2: 1, 1: 0, 0: 3}.get(before, 2)
-			check("a click sets the colonist's own value (set_jobs)", cell != null and v4.priority(aid, "construction") == want and v4.is_own(aid, "construction") and cell.text == ("–" if want == 0 else str(want)),
+			check("a click sets the colonist's own value (set_jobs)", cell != null and v4.priority(aid, "construction") == want and v4.is_own(aid, "construction") and cell.text == ({3: "3 First", 2: "2 Normal", 1: "1 Last", 0: "– Never"}[want]),
 				"before %d after %d own %s" % [before, v4.priority(aid, "construction"), v4.is_own(aid, "construction")])
 			v4.command("reset_priority", {"agent": aid})
 			check("Colony (set_jobs clear) goes back to the colony priorities", not v4.is_own(aid, "construction") and not sim.state["agents"][aid].has("jobs"))

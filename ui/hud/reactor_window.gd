@@ -14,7 +14,9 @@ const Glass = preload("res://ui/widgets/glass.gd")
 const GlassFrame = preload("res://ui/theme/glass_frame.gd")
 const V4 = preload("res://ui/v4_data.gd")
 
+const Quarter = preload("res://ui/wm/quarter.gd")
 const WIDTH := 440.0
+var _scroll: ScrollContainer
 const PHASE_WORD := {"normal": "NORMAL", "warning": "WARNING", "critical": "CRITICAL", "breach": "BREACH"}
 
 ## Core heat gauge: the heat as a bar, with ticks at the warning and critical heat.
@@ -74,19 +76,23 @@ func _ready() -> void:
 	var t: Label = Kit.head("REACTORS", P.TEXT, 16, "head_wide")
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(t)
-	_head.add_child(Kit.icon_button("close", func(): visible = false, "Close\nEsc. The warnings stay on the banner.", "GhostButton", 16, 30))
+	var close_b: Button = Kit.icon_button("close", func(): visible = false, "Close\nEsc. The warnings stay on the banner.", "GhostButton", 16, 30)
+	_head.add_child(close_b)
+	Quarter.thin(close_b)
 	v.add_child(Kit.gap(0, 6))
 	_na = Kit.wrap("No reactor. A fission reactor needs the research Fission Reactor, uranium fuel rods and coolant.", 14, P.TEXT_2)
 	_na.custom_minimum_size.x = 360
 	v.add_child(_na)
 	_list = Kit.vbox(10)
-	v.add_child(_list)
+	_scroll = Kit.scroll(_list)   # a narrow window scrolls its cards
+	_scroll.custom_minimum_size = Vector2(WIDTH - 42, 240)
+	v.add_child(_scroll)
 	visibility_changed.connect(func():
 		if visible:
 			refresh(true))
 
 func register_window(wm) -> void:
-	wm.register(self, "reactor", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.position.x + (wa.size.x - sz.x) * 0.5, wa.position.y + 150.0))
+	wm.register(self, "reactor", _head, func(sz: Vector2, wa: Rect2): return Vector2(wa.end.x - sz.x, wa.position.y + 100.0))
 
 func wm_close() -> void:
 	visible = false
@@ -94,6 +100,7 @@ func wm_close() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	Quarter.fit(self, hud, "reactor", WIDTH, _scroll, _list, 42.0)
 	_t += delta
 	if _t >= 0.5:
 		_t = 0.0

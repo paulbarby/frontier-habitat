@@ -104,7 +104,14 @@ func _finish(c: String) -> void:
 	print("PERF %s: frame %.1f ms (p95 %.1f) | view %.1f (p95 %.1f) | sim %.1f (p95 %.1f) | npc %.1f | bodies %d" % [c, rep["total_med"], rep["total_p95"], rep["view_med"], rep["view_p95"], rep["sim_med"], rep["sim_p95"], rep["npc_med"], int(rep["bodies"])])
 	for sp in main.view.npc.slow_plans.slice(0, 12):
 		print("   SLOW ", sp)
-	print("   slots ", JSON.stringify(main.view.npc.stats_slots).left(600))
+	print("   slots ", JSON.stringify(main.view.npc.stats_slots).left(600), " dome ", str(main.view.npc.dome_cull))
+	var lv := {}
+	for aid in main.view.npc.agents:
+		var pp: Vector3 = main.view.npc.agents[aid]["pos"]
+		if not main.view.npc.dome_cull.is_empty():
+			var kk: String = "%d/%s" % [main.view.npc.dome_level(pp.y - float(main.view.npc.dome_cull["y0"])), "in" if Vector2(pp.x, pp.z).distance_to(main.view.npc.dome_cull["c"]) < float(main.view.npc.dome_cull["r"]) else "out"]
+			lv[kk] = int(lv.get(kk, 0)) + 1
+	print("   levels ", lv)
 	print("   prof ", JSON.stringify(rep["prof"]), " indoor %.2f cull %s batches culled %d open %s" % [float(main.view._indoor), str(main.view.npc.indoor_cull), int(main.view.cull_stats), str(main.view._follow_open.keys().map(func(k): return String(main.sim.state["buildings"][k]["def"]) + ":" + str(snappedf((main.sim.state["buildings"][k]["pos"] as Vector2).distance_to(Vector2(main.rig.camera.global_position.x, main.rig.camera.global_position.z)), 0.1)) + "/" + str(main.sim.state["buildings"][k]["radius"])))])
 	var pu: Dictionary = main.rig.prof_us
 	var fr: float = maxf(1.0, float(pu.get("frames", 1)))

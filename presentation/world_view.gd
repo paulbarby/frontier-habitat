@@ -108,6 +108,8 @@ var time_override := -1.0
 var heightmap: ImageTexture
 var decal_mat_cache := {}
 var _time := 0.0
+var _half_acc := 0.0
+var _sync_dt := 0.016     # this frame's delta (sync), so the follow view is repeatable in fixed-step tests
 var _sim_seconds := -1.0
 var _sel_ring: MeshInstance3D
 var _outline: Node3D
@@ -427,7 +429,10 @@ var bubbles
 var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
 var _follow_open := {}      # building id -> true: interior drawn under the closed roof (follow view)
-var force_show_in := false  # measurement only (render_doorway_gate): every room drawn as in the follow view
+var cam_step_us := 1500      # physics shape build budget a frame (tests: 1 << 30, so a run is repeatable)
+var force_show_in := false
+var INTERIOR_LOD_D := 110.0     # m from the camera: beyond this a room's interior is not drawn (roofs off, cutaway); `intlod <m>`
+var _cam_now := Vector3.INF  # measurement only (render_doorway_gate): every room drawn as in the follow view
 var _cull_clock := 0.0
 var _cull_on := false
 var cull_stats := 0         # measurement: batches culled indoors
@@ -552,7 +557,7 @@ func _trail_yaw(id: int, p: Vector3, body_yaw: float) -> float:
 		_trail.clear()
 		_trail_id = id
 		_trail_still = 0.0
-	var dtf: float = get_process_delta_time()
+	var dtf: float = _sync_dt
 	if _trail.is_empty() or (_trail[-1] as Vector3).distance_to(p) > 0.1:
 		_trail.append(p)
 		if _trail.size() > 50:
@@ -1585,7 +1590,7 @@ func _follow_indoor(cam: Vector3) -> void:
 		var fb = agent_world_pos(follow_id)
 		if fb != null and follow_ceiling(fb as Vector3, cam) < INF:
 			want = 1.0
-	_indoor = move_toward(_indoor, want, get_process_delta_time() * 2.0)
+	_indoor = move_toward(_indoor, want, _sync_dt * 2.0)
 	sky.indoor = _indoor
 	Models.set_fill_k(lerpf(1.0, 0.45, _indoor))
 	# (bodies behind the walls are not drawn while the camera is inside a room; not in the dome: it is open)
@@ -1596,7 +1601,21 @@ func _follow_indoor(cam: Vector3) -> void:
 			in_dome = true
 			break
 	npc.indoor_cull = _indoor > 0.5 and not in_dome and cull_on_k > 0.5
-	_cull_clock -= get_process_delta_time()
+	# (inside the dome: the bodies under the other storeys' slabs, fx_npc.dome_cull)
+	var dc := {}
+	if in_dome and follow_id >= 0 and cull_on_k > 0.5 and cam != Vector3.INF:
+		for oid in _follow_open:
+			var ob2: Dictionary = sim.state["buildings"].get(oid, {})
+			if not ob2.is_empty() and String(ob2.get("def", "")) == "super_dome" and bmeta.has(oid):
+				var dyo: float = (bmeta[oid]["xf"] as Transform3D).origin.y
+				var dr: float = float(ob2["radius"])
+				var dsc: float = dr / 48.0
+				var dcen: Vector2 = ob2["pos"]
+				if Vector2(cam.x, cam.z).distance_to(dcen) < dr:
+					dc = {"c": dcen, "y0": dyo, "atrium": float(sim.bdef("super_dome").get("atrium_radius", 20)) * dsc, "r": dr, "lvl": npc.dome_level(cam.y - dyo - 1.6)}
+				break
+	npc.dome_cull = dc
+	_cull_clock -= _sync_dt
 	if _cull_clock <= 0.0 or (npc.indoor_cull != _cull_on):
 		_cull_clock = 0.5
 		_cull_on = npc.indoor_cull
@@ -1865,6 +1884,7 @@ func sync(delta: float) -> void:
 		return
 	var t_frame: int = Time.get_ticks_usec()
 	_time += delta
+	_sync_dt = delta
 	var secs: float = sim.seconds()
 	var sim_dt: float = 0.0 if _sim_seconds < 0.0 else clampf(secs - _sim_seconds, 0.0, 30.0)
 	_sim_seconds = secs
@@ -1887,6 +1907,7 @@ func sync(delta: float) -> void:
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	var focus: Vector3 = _focus()
 	_focus_now = focus
+	_cam_now = cam.global_position if cam != null else Vector3.INF
 	_frame += 1
 	# Time of day (visual) and weather.
 	var day_len: float = float(sim.bal["day_length"])
@@ -1922,7 +1943,15 @@ func sync(delta: float) -> void:
 	if _made_now >= 20:
 		_boot_prewarm(cam)
 		tp = _prof("boot", tp)
-	if not _skip.has("airlock"): airlock.sync(delta)
+	# (zoomed out past 60 m the airlocks, doors and room lamps update every 2nd frame with the summed time: their
+	# motion is not seen from there; 2-3 ms a frame in the web build with all roofs off, 2026-10-03)
+	var half_rate: bool = camera_distance > 60.0 and follow_id < 0
+	_half_acc += delta
+	var do_half: bool = not half_rate or _frame % 2 == 0
+	var hdt: float = _half_acc if do_half else 0.0
+	if do_half:
+		_half_acc = 0.0
+	if not _skip.has("airlock") and do_half: airlock.sync(hdt)
 	tp = _prof("airlock", tp)
 	if npc.sync(delta):
 		if not ameta.is_empty():
@@ -1939,8 +1968,9 @@ func sync(delta: float) -> void:
 		if follow_id >= 0 and rf != null and rf.in_shoulder():
 			var cpos: Vector3 = rf.camera.global_position
 			bpts.append(Vector3(cpos.x, cpos.y - 1.6, cpos.z))
-		doors.sync(delta, bpts)
-	if not _skip.has("interior"): interior.sync(delta, focus, sky.night)
+		if do_half:
+			doors.sync(hdt, bpts)
+	if not _skip.has("interior") and do_half: interior.sync(hdt, focus, sky.night)
 	tp = _prof("doors", tp)
 	if not _skip.has("hazards"): hazards.sync(delta, focus)
 	tp = _prof("hazards", tp)
@@ -1950,11 +1980,15 @@ func sync(delta: float) -> void:
 	if not _skip.has("vehicles"): vehicles.sync(delta)
 	if not _skip.has("reactor"): reactor.sync(delta)
 	if not _skip.has("explore"): explore.sync(delta)
+	tp = _prof("misc_world", tp)
 	_follow_sync()
+	tp = _prof("follow", tp)
 	# (the follow camera's physics shapes are built a few ms a frame, fx_cam_phys.step)
 	if camphys != null and follow_id >= 0:
-		CamPhys.step(1500)
+		CamPhys.step(cam_step_us)
+	tp = _prof("camphys", tp)
 	bubbles.sync(delta)
+	tp = _prof("bubbles", tp)
 	if robots != null and not _skip.has("robots"):
 		robots.sync(delta)
 	photos.sync(delta)
@@ -2633,7 +2667,7 @@ func _apply_roof(b: Dictionary, meta: Dictionary) -> void:
 			inst.set_hidden(hnd, gs, o > 0.0 or lvl < int(gs.substr(6)))
 	if not bool(meta["glass_roof"]):
 		# (closed roof: the interior is not drawn, unless the follow camera is in or next to the room)
-		var shut: bool = o <= 0.0 and not bool(meta.get("show_in", false))
+		var shut: bool = (o <= 0.0 and not bool(meta.get("show_in", false))) or bool(meta.get("int_far", false))
 		inst.set_hidden(hnd, "Interior", shut)
 		inst.set_hidden(hnd, "Tall", shut)
 		inst.set_hidden(hnd, "WallsIn", shut)
@@ -2676,6 +2710,14 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			if follow_id >= 0:
 				want = 0.0
 			var show_in: bool = (follow_id >= 0 and _follow_open.has(id) and not fv_no_interior) or force_show_in
+			# Interior LOD (2026-10-03, all roofs off at 24 fps with 5.9 M triangles): a room's furniture and stock are
+			# not drawn beyond INTERIOR_LOD_D m from the camera (the floor and walls stay), with 8 m of hysteresis.
+			var cdist: float = (meta["xf"] as Transform3D).origin.distance_to(_cam_now) if _cam_now != Vector3.INF else 0.0
+			var was_far: bool = bool(meta.get("int_far", false))
+			var int_far: bool = follow_id < 0 and not force_show_in and cdist > INTERIOR_LOD_D + (-8.0 if was_far else 0.0)
+			if int_far != was_far:
+				meta["int_far"] = int_far
+				_apply_roof(b, meta)
 			if show_in != bool(meta.get("show_in", false)):
 				meta["show_in"] = show_in
 				_apply_roof(b, meta)
@@ -3938,6 +3980,10 @@ func debug_cmd(text: String) -> String:
 			# the CPU's alone; the difference to drawing on is the GPU / driver share.
 			RenderingServer.render_loop_enabled = not (w.size() > 1 and w[1] == "0")
 			return "render %s" % str(RenderingServer.render_loop_enabled)
+		"intlod":
+			# intlod <m>: the room-interior draw distance (measurement)
+			INTERIOR_LOD_D = float(w[1]) if w.size() > 1 else 110.0
+			return "intlod %.0f" % INTERIOR_LOD_D
 		"stageview":
 			# stageview [dist m]: the Club's stage view (critic round 41): the camera on the dance floor in front of
 			# the robot podiums, facing them (the dancers' anchors' mean +X turned round), the dome's L2 cut open.
@@ -4452,7 +4498,10 @@ func debug_cmd(text: String) -> String:
 					return "no room"
 				var rm2 = bmeta.get(rr)
 				return "room %d %s aisles %d slots %d" % [rr, sim.state["buildings"][rr]["def"], npc._aisles_of(rm2).size() if rm2 != null else -1, npc._slots_of(rm2).size() if rm2 != null else -1]
-			return "var=%s mode=%s speed=%.2f pos=%s off=%s pose=%s gr=%.3f" % [nr["var"], nr["mode"], float(nr["speed"]), str(nr["pos"]), str(nr.get("off", Vector3.ZERO)), str(nr["sm"].pose()), npc.game_rate]
+			var lb: Dictionary = npc.libs.get(String(nr.get("dk", "")), {})
+			var cur_c: String = String(nr["sm"].cur)
+			var has_c: bool = lb.get("clips") is Dictionary and (lb["clips"] as Dictionary).has(cur_c)
+			return "dk=%s clip=%s phase=%s in_lib=%s culled=%s | var=%s mode=%s speed=%.2f pos=%s off=%s pose=%s gr=%.3f" % [String(nr.get("dk", "")), cur_c, String(nr["sm"].phase), str(has_c), str(nr.get("culled", false)), nr["var"], nr["mode"], float(nr["speed"]), str(nr["pos"]), str(nr.get("off", Vector3.ZERO)), str(nr["sm"].pose()), npc.game_rate]
 		"npccpu":
 			npc.force_cpu = w.size() > 1 and w[1] == "1"
 			return "ok"

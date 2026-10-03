@@ -494,3 +494,10 @@ Cause: the captured idle began with the left heel up (ankle +23 mm); RENDER's ga
 run, work_bench, talk_idle and idle_look within -2.1..+0.3 mm of idle frame 0 (m2, f3). RENDER's gate on
 showcase_v5: p50 -22 -> about 0 mm, sinks 13,927 -> 443. Its tails (to -34 mm) do not appear in the clip frames;
 asked RENDER to check its blends (RENDER note 2026-10-03 (c)).
+
+## v5.0 — 2026-10-03 (d) (Opus ART-NPC) — T-pose report: cheer and dance_c; clip coverage
+cheer (npc_anims, people + astronauts): fists past the face, a high V with bent elbows, two pumps; 90 -> 114 frames.
+dance_c: the arms rise in front, bent, into a high V (frames unchanged). bunk_enter/exit adult-only (sleep_cell is).
+Every clip of every file has tracks for all joints; every library has idle (RENDER falls back to idle). Build
+14:15-14:25: `npc_verify` 604/0, `npc_check` PASS 165/0, `check` 317/0, import done. RENDER's T-pose scan: cheer 4-6 and dance_c
+6-11 sampled frames left (arms passing shoulder height, bent); strips `art/people/people_cheer_dance_c.png`.

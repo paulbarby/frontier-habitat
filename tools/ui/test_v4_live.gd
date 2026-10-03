@@ -228,7 +228,7 @@ func _process(_d: float) -> bool:
 			var top = hud.screens.top_screen()
 			var fr: Rect2 = top.frame.get_global_rect()
 			var vp: Vector2 = root.get_viewport().get_visible_rect().size
-			check("Priorities: sized to its content", top._fit_on and fr.size.x < vp.x - 100.0, str(fr))
+			check("Priorities: full screen like the other tabs (Paul, 2026-10-03: one window size on every tab)", not top._fit_on and fr.size.x > vp.x - 100.0, str(fr))
 			top.set_tab("colonists")
 			_step = 10
 			_n = 0

@@ -9,8 +9,8 @@ Per clip: faults (targets: planted feet 0 +- 1 cm, slide < 1 cm, no bone step ov
 | argue | ok | ok | ok | ok | ok | ok | - | - | - | - |
 | board | - | - | - | - | - | - | - | - | snap 7.6 deg/f (forearm.R f5) | snap 7.6 deg/f (forearm.R f5) |
 | board_r | - | - | - | - | - | - | - | - | snap 7.6 deg/f (forearm.L f5) | snap 7.6 deg/f (forearm.L f5) |
-| bunk_enter | ok | ok | ok | ok | ok | ok | ok | ok | - | - |
-| bunk_exit | ok | ok | ok | ok | ok | ok | ok | ok | - | - |
+| bunk_enter | ok | ok | ok | ok | ok | ok | - | - | - | - |
+| bunk_exit | ok | ok | ok | ok | ok | ok | - | - | - | - |
 | carry_idle | ok | ok | ok | ok | ok | ok | ok | ok | ok | ok |
 | carry_walk | ok | ok | ok | ok | ok | ok | ok | ok | ok | ok |
 | cheer | ok | ok | ok | ok | ok | ok | ok | ok | ok | ok |

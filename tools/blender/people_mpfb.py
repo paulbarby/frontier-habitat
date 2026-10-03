@@ -1062,8 +1062,11 @@ def build_variant(m, v, outfits, stop=None):
     print("  %s: %d images to %s/ (%d bytes out of the GLB)" % (v, n_img, SHARED_TEX, saved))
     lod1 = export_lod1(v, rig)
     tris.update({"LOD1_" + k: n for k, n in lod1.items()})
+    lod2, lod2_slots = export_lod2(v, rig, list(garments))
+    tris.update({"LOD2_" + k: n for k, n in lod2.items()})
     print("  %s: %s  %.1f s" % (v, tris, time.time() - t0))
     return dict(tris=tris, clips=meta, scale=s_, path=path, outfits=list(garments), addons=sorted(tris_addons(tris)),
+                lod2_slots=lod2_slots,
                 sources=dict(skin=spec["skin"], hair=spec["hair"], brows=spec["brows"], eyes=spec["eye_mat"],
                              outfits={o: [g[0] for g in garments_of(v, o)] for o in garments}))
 
@@ -1398,10 +1401,152 @@ def externalize_images(glb_path):
 
 
 def tris_addons(tris):
-    return [n for n in tris if n.startswith("Addon_")]
+    return [n for n in tris if n.startswith("Addon_") and not n.startswith(("LOD1_", "LOD2_"))]
 
 
 LOD1 = dict(outfit=1900, hair=520, head=160, addon=340, coat=420)
+
+# (2026-10-03) LOD2, the far model (RENDER: the all-roofs-off view, people beyond about 40 m): ONE mesh per outfit
+# (body + garments + add-ons + hair; no head part: eyes and brows do not read at 40 m), about 300-600 triangles,
+# ONE material (People_LOD2), the colours in the vertex colour COLOR_0, constant per face:
+#   RGB = the mean base colour of the LOD0 material (texture mean x base colour), linear;
+#   A   = (mode * 16 + slot) / 255: mode = the LOD0 tint mode of that material (0 plain, 1 SuitAccent, 2 Skin,
+#         3 Hair, 5 ClothTint, 6 UniformBase); slot = the index of its ClothTint_<garment> material in the outfit's
+#         `lod2.cloth_slots` list (manifest), else 0.  A shader multiplies RGB by the tint of that mode, as on LOD0.
+LOD2_TRIS = 480
+LOD2_MODES = (("SuitAccent", 1), ("Skin", 2), ("Hair", 3), ("ClothTint", 5), ("UniformBase", 6))
+_MEAN_CACHE = {}
+
+
+def _mean_rgb(mat):
+    """The mean base colour of a material: its base colour input, or the mean of the image behind it."""
+    import numpy as np
+    if mat is None:
+        return (0.6, 0.6, 0.6)
+    if mat.name in _MEAN_CACHE:
+        return _MEAN_CACHE[mat.name]
+    rgb = [0.6, 0.6, 0.6]
+    if mat.use_nodes:
+        bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        if bsdf is not None:
+            inp = bsdf.inputs["Base Color"]
+            rgb = list(inp.default_value[:3])
+            seen, stack, img, const = set(), [l.from_node for l in inp.links], None, None
+            while stack:
+                nd = stack.pop()
+                if nd in seen:
+                    continue
+                seen.add(nd)
+                if nd.type == "TEX_IMAGE" and nd.image is not None and img is None:
+                    img = nd.image
+                if nd.type == "RGB" and const is None:
+                    const = list(nd.outputs[0].default_value[:3])
+                for i in nd.inputs:
+                    stack.extend(l.from_node for l in i.links)
+            if const is not None:
+                rgb = const
+            if img is not None:
+                try:
+                    im = img.copy()
+                    im.scale(48, 48)
+                    px = np.array(im.pixels[:], dtype=np.float32).reshape(-1, 4)
+                    bpy.data.images.remove(im)
+                    w = px[:, 3] if px[:, 3].max() > 0 else np.ones(len(px))
+                    m = (px[:, :3] * w[:, None]).sum(0) / max(1e-6, w.sum())
+                    if img.colorspace_settings.name.lower().startswith("srgb"):
+                        m = np.where(m <= 0.04045, m / 12.92, ((m + 0.055) / 1.055) ** 2.4)
+                    rgb = [a * b for a, b in zip(const, m)] if const is not None else list(m)
+                except Exception as e:
+                    print("  LOD2 mean colour of %s failed: %s" % (mat.name, e))
+    _MEAN_CACHE[mat.name] = tuple(float(c) for c in rgb)
+    return _MEAN_CACHE[mat.name]
+
+
+def _lod2_mode(mat):
+    nm = mat.name.split(".")[0] if mat else ""
+    for pre, mode in LOD2_MODES:
+        if nm.startswith(pre):
+            return mode, nm
+    return 0, nm
+
+
+def export_lod2(v, rig, outfits):
+    """people_<v>_lod2.glb: LOD2_<outfit> meshes on the same skeleton (no clips: use the LOD0 file's clips).
+    Called after export_lod1 (it starts from the LOD1 meshes)."""
+    by = {}
+    for o in bpy.data.objects:
+        if o.type == "MESH":
+            by.setdefault(o.name.split(".")[0], o)
+    keys = []
+    for oid in outfits:
+        if OUTFITS.get(oid, {}).get("generator") == "coverall":
+            for dept, d in PU.DEPARTMENTS.items():
+                # (rank boards are left out: 3 cm bars do not read at 40 m and their small parts stop the decimation)
+                keys.append((dept, "Outfit_%s" % oid, ["Addon_%s" % a for a in d["addons"] if not a.startswith("rank")]))
+        else:
+            keys.append((oid, "Outfit_%s" % oid, []))
+    lod_mat = bpy.data.materials.get("People_LOD2") or bpy.data.materials.new("People_LOD2")
+    lod_mat.use_nodes = True
+    nt = lod_mat.node_tree
+    bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    if bsdf is not None and not bsdf.inputs["Base Color"].links:
+        ca = nt.nodes.new("ShaderNodeVertexColor")
+        ca.layer_name = "Col"
+        nt.links.new(ca.outputs["Color"], bsdf.inputs["Base Color"])
+        bsdf.inputs["Roughness"].default_value = 0.8
+    out, slots, made = {}, {}, []
+    for key, mesh, addons in keys:
+        if by.get(mesh) is None:
+            continue
+        parts = [by.get(mesh)] + [by.get(a) for a in addons] + [by.get("Hair_%s" % v)]
+        parts = [p_ for p_ in parts if p_ is not None]
+        dups = []
+        for p_ in parts:
+            d = p_.copy()
+            d.data = p_.data.copy()
+            bpy.context.scene.collection.objects.link(d)
+            dups.append(d)
+        if len(dups) > 1:
+            with bpy.context.temp_override(active_object=dups[0], object=dups[0], selected_objects=dups,
+                                           selected_editable_objects=dups):
+                bpy.ops.object.join()
+        ob = dups[0]
+        ob.name = ob.data.name = "LOD2_%s" % key
+        ob.data.validate(clean_customdata=False)
+        for _ in range(4):                            # separate parts (pouches, straps) need more than one pass
+            n_ = decimate(ob, LOD2_TRIS, edges=False)
+            if n_ <= LOD2_TRIS * 1.08:
+                break
+        ob.data.validate(clean_customdata=False)
+        me = ob.data
+        cloth, info = [], []
+        for m in me.materials:
+            mode, nm = _lod2_mode(m)
+            if mode == 5 and nm not in cloth:
+                cloth.append(nm)
+            info.append((mode, nm, _mean_rgb(m)))
+        col = me.color_attributes.get("Col") or me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
+        for poly in me.polygons:
+            mode, nm, rgb = info[poly.material_index] if poly.material_index < len(info) else (0, "", (0.6, 0.6, 0.6))
+            slot = cloth.index(nm) if mode == 5 else 0
+            a = (mode * 16 + slot) / 255.0
+            for li in poly.loop_indices:
+                col.data[li].color = (rgb[0], rgb[1], rgb[2], a)
+        me.color_attributes.active_color = col
+        for uv in list(me.uv_layers):
+            me.uv_layers.remove(uv)
+        me.materials.clear()
+        me.materials.append(lod_mat)
+        out[key] = sum(len(pp.vertices) - 2 for pp in me.polygons)
+        slots[key] = cloth
+        made.append(ob)
+    path = os.path.join(N.MODEL_DIR, "people_%s_lod2.glb" % v)
+    N.reset_pose(rig)
+    N.export_glb_skinned(path, animations=False, only=[rig] + made)
+    print("  %s LOD2: %s" % (v, out))
+    for ob in made:
+        bpy.data.objects.remove(ob, do_unlink=True)
+    return out, slots
 
 
 def export_lod1(v, rig):
@@ -1788,9 +1933,15 @@ def write_manifest(results):
         variants[v] = dict(sex=spec["sex"], child=bool(spec.get("child")), height_m=spec["height"],
                            scale=round(r["scale"], 4), file="people_%s.glb" % v, lod1_file="people_%s_lod1.glb" % v,
                            head="Head_%s" % v, hair="Hair_%s" % v, outfits=outs, addons=r["addons"],
-                           triangles={k: n for k, n in T.items() if not k.startswith("LOD1_")},
+                           triangles={k: n for k, n in T.items() if not k.startswith(("LOD1_", "LOD2_"))},
                            triangles_lod1={k[5:]: n for k, n in T.items() if k.startswith("LOD1_")},
-                           triangles_on_screen=on_screen, triangles_on_screen_lod1=lod1, clips=sorted(r["clips"]),
+                           triangles_on_screen=on_screen, triangles_on_screen_lod1=lod1,
+                           lod2=dict(file="people_%s_lod2.glb" % v,
+                                     meshes={o: "LOD2_%s" % o for o in outs if ("LOD2_" + o) in T},
+                                     triangles={o: T["LOD2_" + o] for o in outs if ("LOD2_" + o) in T},
+                                     cloth_slots={o: r.get("lod2_slots", {}).get(o, []) for o in outs
+                                                  if ("LOD2_" + o) in T}),
+                           clips=sorted(r["clips"]),
                            look=dict(skin_tone_hint=LOOK_HINT.get(v)), source="MPFB 2.0.17 + CC0 MakeHuman assets",
                            assets=r["sources"])
     doc["variants"] = {k: variants[k] for k in VARIANTS if k in variants}
@@ -1825,7 +1976,16 @@ def write_manifest(results):
         "School*": "plain (school uniform colours baked)", "Eye": "plain, textured", "Teeth": "plain",
         "Cloth_*": "plain, textured (the garment's own look)"}
     draw["lod"] = ("LOD0 (people_<v>.glb): outfit + add-ons <= 14k triangles; head + hair about 4-6k more.  LOD1 "
-                   "(people_<v>_lod1.glb, beyond 12 m): <= 3k per person including head and hair.")
+                   "(people_<v>_lod1.glb, beyond 12 m): <= 3k per person including head and hair.  LOD2 "
+                   "(people_<v>_lod2.glb, beyond about 40 m): ONE mesh per outfit, LOD2_<outfit> (body, garments, "
+                   "add-ons and hair, no head part), about 480 triangles, ONE material People_LOD2; the same skeleton "
+                   "and bind, no clips (use the LOD0 file's clips).")
+    draw["lod2_colour"] = ("LOD2 colours are in COLOR_0, constant per face.  RGB: the mean base colour of the LOD0 "
+                           "material (linear).  A = (mode * 16 + slot) / 255, mode = the LOD0 tint mode of that "
+                           "material: 0 plain (use RGB), 1 SuitAccent, 2 Skin, 3 Hair, 5 ClothTint, 6 UniformBase; "
+                           "slot = the index in variants.<v>.lod2.cloth_slots.<outfit> of the ClothTint_<garment> "
+                           "material (give it that material's per-person colour).  Multiply RGB by the tint of the "
+                           "mode, as on LOD0.")
     doc["draw"] = draw
     clips = {}
     for v, r in results.items():

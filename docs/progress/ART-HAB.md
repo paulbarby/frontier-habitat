@@ -5,6 +5,10 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-03 airlock_r28 (RENDER doorway gate: 16 beam frames)
+- r28 already had the raise + RoofChamber + soffit (Roof min z 2.55). The gate's hits are RoofChamber (inner housing ends, chamber walls) at old-save angles 78-138 / 222-282 deg, all blocked; builder check now tests r28 at all 360 deg: 0 hits. 319 glb scanned: no other model takes doorways.
+- RESULT airlock m/l/r28 + junction rebuilt 0 flags; import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids. RENDER asked to re-run the gate and count RoofChamber as structure, or order a new r28 layout.
+
 ## 2026-10-03 doorway head room (Paul's fault: roof beams across the corridor doors in the follow view)
 - Check `tools/blender/interior_doorclear.py` (in rooms_build, report v3.door_headroom): no roof / ceiling / band part below 2.49 m (door top 2.24 + 0.25) inside a door opening + 1.5 m at any free angle. Before: 122 of 160 files hit (lowest 1.32 m). After: 0.
 - Fix (Paul: raise, not cut): `interior_eave.py` lifts dome and setback roofs 1.20 m on a drum (1.40 -> eave 2.60, Upper_<seg>, upper_z [1.40, 2.65]) in 47 files; podium decks min 2.60 (10 types); ceiling MIN_Z 2.52, LINER_MIN 2.55; airlock RoofChamber object + skirts to 2.55; porch lamps, kitchen chimney, wall-line level bolts.

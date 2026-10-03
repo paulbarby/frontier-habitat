@@ -225,8 +225,8 @@
    "loop": true
   },
   "cheer": {
-   "frames": 90,
-   "duration_s": 3.0,
+   "frames": 114,
+   "duration_s": 3.8,
    "kind": "oneshot",
    "pose_from": "stand",
    "pose_to": "stand",

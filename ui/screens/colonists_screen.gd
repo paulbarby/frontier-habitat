@@ -223,6 +223,8 @@ func refresh() -> void:
 	if _clock % 3 == 0:
 		_update()
 		_update_visitors()
+		if tab == "priorities":
+			_prio_update()
 
 func _update() -> void:
 	var s = hud.main.sim
@@ -339,9 +341,9 @@ static func _cut_name(l: Label) -> Label:
 ## this does not feed back. Steps of 5 % keep a drag-resize from resizing every frame.
 func fit_view(vp: Vector2) -> void:
 	super.fit_view(vp)
-	if tab == "priorities" or _scroll == null or _scroll.size.x <= 0.0 or _col_ctl.is_empty():
+	if _scroll == null or _scroll.size.x <= 0.0 or _col_ctl.is_empty():
 		return
-	var cols: Array = VCOLS if tab == "visitors" else COLS
+	var cols: Array = VCOLS if tab == "visitors" else (_pcols() if tab == "priorities" else COLS)
 	var full: float = 10.0 * float(cols.size() - 1)
 	var least: float = full
 	for c in cols:
@@ -375,85 +377,245 @@ static func visitor_info(h, a: Dictionary) -> Dictionary:
 
 # ---------------------------------------------------------------- job priorities (version 4, SIM milestone 4)
 ## One row per colonist, one column per job category (SIM: construction, food, industry, logistics,
-## repair): 3 = first, 2 = normal, 1 = last, – = not allowed. A cell in grey follows the colony
-## priority; a bright one is the colonist's own. Click a cell to step 3 → 2 → 1 → – → 3 (SIM
-## set_jobs); Colony on the row goes back to the colony priorities (set_jobs clear).
-## Critic round 22: the Priorities tab is sized to its content (the other tabs fill the view).
-func fits_content() -> bool:
-	return tab == "priorities"
+## repair): 3 First, 2 Normal, 1 Last, - Never. Paul, 2026-10-03: this tab has the table of the other two tabs
+## (the same rows, header, well and side card; the window keeps its size on every tab).
+## A dim cell follows the colony default; a cell with a cyan frame is the colonist's own value (SIM set_jobs);
+## the pinned top row is the colony default (gold; SIM set_priority) that the dim cells show.
+## Click a cell: 3 -> 2 -> 1 -> never -> 3. Reset (a row button) removes the colonist's own values (set_jobs clear).
+const PCOLS_HEAD := [["Name", 214, 150, "name"], ["Role", 110, 88, "role"]]
+const PCELL := [120, 104]          # a job cell: full, least width
+const PRESET := [90, 60]          # the Reset column
+const PAD := 13                  # rows sit 13 px right of the header (the well margin and the row inset)
+const PRIO_WORD := {3: "3 First", 2: "2 Normal", 1: "1 Last", 0: "– Never"}
+const PRIO_LONG := {3: "First: does this work before other work.", 2: "Normal.", 1: "Last: does this work only when no other work is open.", 0: "Never: does not do this work."}
+var _psort := "name"
+var _prows := {}                  # colonist id -> {cells: Array[Button], reset: Button, row: Button}
+var _pcolony: Array = []          # the colony default cells (Button, meta "job")
+
+func _pcols() -> Array:
+	var cols: Array = [["Name", int(PCOLS_HEAD[0][1]) + PAD, int(PCOLS_HEAD[0][2]) + PAD, "name"], PCOLS_HEAD[1]]
+	for j in hud.v4.job_categories():
+		cols.append([hud.v4.job_name(String(j)), PCELL[0], PCELL[1], ""])
+	cols.append(["Reset", PRESET[0], PRESET[1], ""])
+	return cols
 
 func _priorities(box: VBoxContainer) -> void:
 	var v4 = hud.v4
+	_prows = {}
+	_pcolony = []
 	if not v4.available("orders"):
 		box.add_child(Kit.wrap("Job priorities are not available in this game.", 15, P.TEXT_2))
 		return
-	box.add_child(Kit.wrap("Click a cell: 3 = does this first, 2 = normal, 1 = last, – = never. Grey = the colony priority; bright = this colonist's own. Thirst, hunger, exhaustion and orders still come first.", 14, P.TEXT_2, 900.0))
-	var cats: Array = v4.job_categories()
-	var head: HBoxContainer = Kit.hbox(6)
-	var nl: Label = Kit.head("Colonist", P.TEXT_2, 11)
-	nl.custom_minimum_size.x = 214
-	head.add_child(nl)
-	for j in cats:
-		var jl: Label = Kit.head(v4.job_name(String(j)), P.TEXT_2, 11)
-		jl.custom_minimum_size.x = 110
-		jl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		head.add_child(jl)
-	box.add_child(Kit.margin(head, 8, 0, 0, 0))
-	var list: VBoxContainer = Kit.seam_list(2)
-	var pwell: PanelContainer = Kit.well_scroll(list)
-	box.add_child(pwell)
-	(func(): if is_instance_valid(pwell): fit_scroll(pwell, 600.0)).call_deferred()
 	var s = hud.main.sim
+	var cats: Array = v4.job_categories()
+	var cols: Array = _pcols()
+	var body: HBoxContainer = Kit.hbox(16)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(body)
+	var left: VBoxContainer = Kit.vbox(4)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(left)
+	# Header: the same row as the Colonists tab (sort buttons on Name and Role, plain headings).
+	var head: HBoxContainer = Kit.hbox(10)
+	for c in cols:
+		var key: String = c[3]
+		if key != "":
+			var b: Button = Kit.button(String(c[0]).to_upper(), func():
+				_psort = key
+				_prio_fill(), "Sort by %s" % String(c[0]).to_lower(), "GhostButton")
+			b.custom_minimum_size.y = 26
+			b.clip_text = true
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.add_theme_font_size_override("font_size", 11)
+			head.add_child(_sized(b, c[1], c[2]))
+		else:
+			var hl: Label = Kit.head(c[0], P.TEXT_3, 10)
+			hl.clip_text = true
+			hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			head.add_child(_sized(hl, c[1], c[2]))
+	left.add_child(head)
+	# The colony default: pinned under the header, so it stays in view while the list scrolls.
+	var crow: HBoxContainer = Kit.hbox(10)
+	crow.custom_minimum_size.y = 34
+	var cn: HBoxContainer = Kit.hbox(8)
+	cn.add_child(Kit.icon("colonists", 18, P.GOLD))
+	cn.add_child(_cut_name(Kit.label("Colony default", "", 14, P.GOLD)))
+	cn.tooltip_text = "Colony default\nThe priority of every colonist who has no own value. Click a gold cell to change it."
+	cn.mouse_filter = Control.MOUSE_FILTER_PASS
+	crow.add_child(_sized(cn, int(PCOLS_HEAD[0][1]) + PAD, int(PCOLS_HEAD[0][2]) + PAD))
+	var cr: Label = _cut(Kit.label("All colonists", "", 13, P.TEXT_2))
+	crow.add_child(_sized(cr, PCOLS_HEAD[1][1], PCOLS_HEAD[1][2]))
+	for j in cats:
+		var jj: String = String(j)
+		var cb: Button = Kit.button("", Callable(), "", "ChipButton")
+		cb.custom_minimum_size.y = 26
+		cb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cb.clip_text = true
+		cb.set_meta("job", jj)
+		cb.pressed.connect(func():
+			var cur: int = int(s.state["policies"]["priority"].get(jj, 2))
+			hud.main.submit("set_priority", {"cat": jj, "value": {3: 2, 2: 1, 1: 0, 0: 3}.get(cur, 2)})
+			_prio_update())
+		crow.add_child(_sized(cb, PCELL[0], PCELL[1]))
+		_pcolony.append(cb)
+	crow.add_child(_sized(Control.new(), PRESET[0], PRESET[1]))
+	left.add_child(crow)
+	var list: VBoxContainer = Kit.seam_list(2)
+	list.name = "PList"
+	left.add_child(Kit.well_scroll(list))
+	# The side card: how to read the table (the Colonists tab has the Settlers card here).
+	var right: VBoxContainer = card("Priorities", "orders", P.CYAN)
+	body.add_child(_sized(card_panel(right), SIDE_W[0], SIDE_W[1]))
+	right.add_child(Kit.wrap("Each colonist has one priority for each kind of work. Click a cell to change it.", 12, P.TEXT_2))
+	for v in [3, 2, 1, 0]:
+		var lr: HBoxContainer = Kit.hbox(8)
+		var key: Button = Kit.button(String(PRIO_WORD[v]).get_slice(" ", 0), Callable(), "", "ChipButton")
+		key.custom_minimum_size = Vector2(26, 22)
+		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		key.focus_mode = Control.FOCUS_NONE
+		lr.add_child(key)
+		var ll: Label = Kit.wrap(String(PRIO_LONG[v]), 12, P.TEXT_2)
+		ll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lr.add_child(ll)
+		right.add_child(lr)
+	right.add_child(Kit.dim("How a cell looks", 12))
+	for kind in ["colony", "own", "follow"]:
+		var kr: HBoxContainer = Kit.hbox(8)
+		var kb: Button = Kit.button("2", Callable(), "", "ChipButton")
+		kb.custom_minimum_size = Vector2(26, 22)
+		kb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		kb.focus_mode = Control.FOCUS_NONE
+		_prio_style(kb, kind)
+		kr.add_child(kb)
+		var kl: Label = Kit.wrap({"colony": "Colony default (top row).", "own": "Own value of this colonist.", "follow": "Follows the colony default."}[kind], 12, P.TEXT_2)
+		kl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		kr.add_child(kl)
+		right.add_child(kr)
+	right.add_child(Kit.wrap("Reset removes the own values of one colonist. Thirst, hunger, exhaustion and orders come first.", 12, P.TEXT_2))
+	_prio_fill()
+
+## The cell look: "colony" gold frame, "own" cyan frame, "follow" no frame and dim text.
+static func _prio_style(b: Button, kind: String) -> void:
+	var col: Color = P.GOLD if kind == "colony" else P.CYAN
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var st := StyleBoxFlat.new()
+		st.set_corner_radius_all(4)
+		st.content_margin_left = 4.0
+		st.content_margin_right = 4.0
+		st.content_margin_top = 3.0
+		st.content_margin_bottom = 3.0
+		if kind == "follow":
+			st.bg_color = Color(1, 1, 1, 0.07 if state == "hover" else 0.0)
+		else:
+			st.bg_color = Color(col, 0.26 if state in ["hover", "pressed"] else 0.14)
+			st.set_border_width_all(1)
+			st.border_color = Color(col, 0.85)
+		b.add_theme_stylebox_override(state, st)
+	b.add_theme_color_override("font_color", P.TEXT_3 if kind == "follow" else col)
+	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
+	b.add_theme_font_size_override("font_size", 12)
+
+func _prio_fill() -> void:
+	var list: VBoxContainer = find_child("PList", true, false)
+	if list == null:
+		return
+	var v4 = hud.v4
+	var s = hud.main.sim
+	Kit.clear(list)
+	_prows = {}
+	_col_ctl = _col_ctl.filter(func(e): return is_instance_valid(e[0]) and not (e[0] as Node).is_queued_for_deletion())
+	var cats: Array = v4.job_categories()
 	var ids: Array = []
 	for aid in s.state["agents"]:
 		var a: Dictionary = s.state["agents"][aid]
 		if String(a.get("state", "")) == "alive" and not hud.data.is_visitor(a):
 			ids.append(int(aid))
-	ids.sort_custom(func(x, y): return String(s.state["agents"][x]["name"]).naturalnocasecmp_to(String(s.state["agents"][y]["name"])) < 0)
+	ids.sort_custom(func(x, y):
+		var ax: Dictionary = s.state["agents"][x]
+		var ay: Dictionary = s.state["agents"][y]
+		if _psort == "role" and ax["role"] != ay["role"]:
+			return String(ax["role"]) < String(ay["role"])
+		return String(ax["name"]).naturalnocasecmp_to(String(ay["name"])) < 0)
+	set_subtitle("%s  ·  colony default and own values" % Kit.plural(ids.size(), "colonist"))
 	for aid in ids:
 		var a: Dictionary = s.state["agents"][aid]
-		var row: HBoxContainer = Kit.hbox(6)
-		var nh: HBoxContainer = Kit.hbox(6)
-		nh.custom_minimum_size.x = 214
+		var id: int = aid
 		var role: String = String(a.get("role", ""))
-		nh.add_child(Kit.icon(Icons.role(role), 14, P.ROLE.get(role, P.CYAN)))
-		var nm: Label = Kit.label(String(a["name"]), "", 13, P.TEXT)
-		nm.clip_text = true
-		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nm.tooltip_text = "%s\n%s" % [String(a["name"]), String(s.bal["role_names"].get(role, role))]
-		nm.mouse_filter = Control.MOUSE_FILTER_PASS
-		nh.add_child(nm)
-		row.add_child(nh)
+		var b: Button = Kit.button("", func():
+			# Only the name and role area selects: a click beside a cell must not close the table.
+			var rb: Button = _prows[id]["row"]
+			if rb.get_local_mouse_position().x <= _prio_name_w():
+				host.close(self)
+				hud.main.select("agent", id)
+				hud.main.focus_on(hud.main.sim.state["agents"][id]["pos"]),
+			"%s\nClick the name: close this screen, select the colonist and move the camera there." % String(a["name"]), "ListButton")
+		b.custom_minimum_size.y = 34
+		var h: HBoxContainer = Kit.hbox(10)
+		h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		h.offset_left = 8
+		b.add_child(h)
+		var nb: HBoxContainer = Kit.hbox(8)
+		nb.add_child(Kit.icon(Icons.role(role), 18, P.ROLE.get(role, P.CYAN)))
+		nb.add_child(_cut_name(Kit.label(String(a["name"]), "", 14, P.TEXT)))
+		h.add_child(_sized(nb, PCOLS_HEAD[0][1] - 4, PCOLS_HEAD[0][2] - 4))
+		var rl: Label = _cut(Kit.label(String(s.bal["role_names"].get(role, role)), "", 13, P.TEXT_2))
+		h.add_child(_sized(rl, PCOLS_HEAD[1][1], PCOLS_HEAD[1][2]))
 		var cells: Array = []
 		for j in cats:
 			var jj: String = String(j)
-			var id2: int = aid
-			var c: Button = Kit.button("", Callable(), "%s: %s\nClick: 3 first, 2 normal, 1 last, – never." % [String(a["name"]), v4.job_name(jj)], "ChipButton")
-			c.custom_minimum_size = Vector2(110, 26)
+			var c: Button = Kit.button("", Callable(), "", "ChipButton")
+			c.custom_minimum_size.y = 26
+			c.clip_text = true
+			c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			c.set_meta("job", jj)
+			c.set_meta("agent", id)
 			c.pressed.connect(func():
-				var cur: int = v4.priority(id2, jj)
-				var nxt: int = {3: 2, 2: 1, 1: 0, 0: 3}.get(cur, 2)
-				v4.command("set_priority", {"agent": id2, "job": jj, "value": nxt})
-				_prio_cells(id2, cells))
-			row.add_child(c)
+				var cur: int = v4.priority(id, jj)
+				v4.command("set_priority", {"agent": id, "job": jj, "value": {3: 2, 2: 1, 1: 0, 0: 3}.get(cur, 2)})
+				_prio_update())
+			h.add_child(_sized(c, PCELL[0], PCELL[1]))
 			cells.append(c)
-		var rid: int = aid
-		row.add_child(Kit.button("Colony", func():
-			v4.command("reset_priority", {"agent": rid})
-			_prio_cells(rid, cells), "Colony priorities\nThis colonist follows the colony priorities again.", "GhostButton", "", 14))
-		_prio_cells(aid, cells)
-		list.add_child(row)
+		var rs: Button = Kit.button("Reset", func():
+			v4.command("reset_priority", {"agent": id})
+			_prio_update(), "Reset\nRemove the own values of this colonist. The colonist follows the colony default again.", "GhostButton")
+		rs.custom_minimum_size.y = 26
+		rs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rs.clip_text = true
+		rs.add_theme_color_override("font_disabled_color", Color(P.TEXT_3, 0.35))
+		h.add_child(_sized(rs, PRESET[0], PRESET[1]))
+		list.add_child(b)
+		_prows[id] = {"cells": cells, "reset": rs, "row": b}
+	_prio_update()
 
-func _prio_cells(aid: int, cells: Array) -> void:
+## Width (px) of the name and role cells at now: the part of a row that selects the colonist.
+func _prio_name_w() -> float:
+	return 8.0 + lerpf(float(PCOLS_HEAD[0][1]) + float(PCOLS_HEAD[1][1]), float(PCOLS_HEAD[0][2]) + float(PCOLS_HEAD[1][2]), _k) + 10.0
+
+## Text, look and tooltip of every cell from SIM's state (called after a click and every third refresh).
+func _prio_update() -> void:
 	var v4 = hud.v4
-	for c in cells:
-		var j: String = String((c as Button).get_meta("job"))
-		var v: int = v4.priority(aid, j)
-		(c as Button).text = _prio_text(v)
-		var own: bool = v4.is_own(aid, j)
-		(c as Button).add_theme_color_override("font_color", P.TEXT if own else P.TEXT_3)
-
-static func _prio_text(v: int) -> String:
-	return "–" if v <= 0 else str(v)
+	var s = hud.main.sim
+	for cb in _pcolony:
+		var j: String = String((cb as Button).get_meta("job"))
+		var cv: int = int(s.state["policies"]["priority"].get(j, 2))
+		(cb as Button).text = String(PRIO_WORD[cv])
+		_prio_style(cb, "colony")
+		(cb as Button).tooltip_text = "Colony default: %s\n%s Click: 3 first, 2 normal, 1 last, never. It applies to every colonist without an own value." % [v4.job_name(j), String(PRIO_LONG[cv])]
+	for id in _prows:
+		var a: Dictionary = s.state["agents"].get(id, {})
+		if a.is_empty():
+			continue
+		var r: Dictionary = _prows[id]
+		var any_own := false
+		for c in r["cells"]:
+			var j: String = String((c as Button).get_meta("job"))
+			var val: int = v4.priority(id, j)
+			var own: bool = v4.is_own(id, j)
+			any_own = any_own or own
+			(c as Button).text = String(PRIO_WORD[val])
+			_prio_style(c, "own" if own else "follow")
+			var cv2: int = int(s.state["policies"]["priority"].get(j, 2))
+			(c as Button).tooltip_text = "%s: %s\n%s\n%s Click: 3 first, 2 normal, 1 last, never." % [String(a["name"]), v4.job_name(j), String(PRIO_LONG[val]),
+				("Own value (the colony default is %d)." % cv2) if own else "Follows the colony default."]
+		(r["reset"] as Button).disabled = not any_own

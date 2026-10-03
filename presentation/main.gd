@@ -658,6 +658,14 @@ func _on_cmd(text: String) -> String:
 				return "no screen"
 			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
 			return str(ts._scroll.scroll_vertical)
+		"prio":
+			# prio <agent id> <job> <0..3> | prio colony <job> <0..3>: debug only (changes the colony): an own
+			# job priority of a colonist (set_jobs) or the colony default (set_priority), for the Priorities shots.
+			if not debug_mode() or w.size() < 4:
+				return "debug only"
+			if w[1] == "colony":
+				return str(submit("set_priority", {"cat": w[2], "value": int(w[3])}))
+			return str(hud.v4.command("set_priority", {"agent": int(w[1]), "job": w[2], "value": int(w[3])}))
 		"partydemo":
 			# partydemo [throw]: debug only (changes the colony): a birthday party offer for the first adult; with
 			# "throw" the offer is answered at once (the first place, 2 hours). For screenshots of the Requests tab,

@@ -1309,8 +1309,9 @@ func act_tick() -> void:
 
 func _act_all(dt: float) -> void:
 	var walk_rev: int = int(sim.state["rev"]["walk"])
-	for aid in sim.state["agents"]:
-		var a: Dictionary = sim.state["agents"][aid]
+	var all: Dictionary = sim.state["agents"]
+	for aid in all:
+		var a: Dictionary = all[aid]
 		if a["state"] != "alive" or a["where"] == "lock":
 			continue
 		var plan: Array = a["plan"]
@@ -1396,8 +1397,10 @@ func _do_go(a: Dictionary, step: Dictionary, dt: float) -> void:
 		a["route"] = route
 		a["li"] = 0
 		a["wi"] = 0
-	var legs: Array = a["route"]["legs"]
-	if int(a["li"]) >= legs.size():
+	var route_now: Dictionary = a["route"]
+	var legs: Array = route_now["legs"]
+	var li: int = int(a["li"])
+	if li >= legs.size():
 		var to: Dictionary = step["to"]
 		if int(to["b"]) != -1:
 			a["where"] = "in"
@@ -1407,32 +1410,41 @@ func _do_go(a: Dictionary, step: Dictionary, dt: float) -> void:
 			a["bld"] = -1
 		_next_step(a)
 		return
-	var leg: Dictionary = legs[a["li"]]
-	if leg["m"] == "lock":
+	var leg: Dictionary = legs[li]
+	var mode: String = leg["m"]
+	if mode == "lock":
 		_enqueue(a, leg["b"], leg["dir"])
 		return
-	if leg["m"] == "in":
+	var indoor: bool = mode == "in"
+	if indoor:
 		a["where"] = "in"
 		a["bld"] = int(leg["b"])
 	else:
 		a["where"] = "out"
 		a["bld"] = -1
-	var speed: float = float(sim.bal["speed_indoor"]) if leg["m"] == "in" else float(sim.bal["speed_outdoor"]) * float(sim.state["env"].get("speed_mult", 1.0))
+	var speed: float = float(sim.bal["speed_indoor"]) if indoor else float(sim.bal["speed_outdoor"]) * float(sim.state["env"].get("speed_mult", 1.0))
 	var dist: float = speed * dt
 	var pts: Array = leg["pts"]
-	while dist > 0.0 and int(a["wi"]) < pts.size():
-		var target: Vector2 = pts[a["wi"]]
-		var d: float = (a["pos"] as Vector2).distance_to(target)
+	var wi: int = int(a["wi"])
+	var pos: Vector2 = a["pos"]
+	var moved := false
+	while dist > 0.0 and wi < pts.size():
+		var target: Vector2 = pts[wi]
+		var d: float = pos.distance_to(target)
+		moved = true
 		if d <= dist:
-			a["pos"] = target
+			pos = target
 			dist -= d
-			a["wi"] = int(a["wi"]) + 1
+			wi += 1
 		else:
-			var dirv: Vector2 = (target - (a["pos"] as Vector2)) / d
-			a["pos"] = (a["pos"] as Vector2) + dirv * dist
+			var dirv: Vector2 = (target - pos) / d
+			pos = pos + dirv * dist
 			a["facing"] = dirv.angle()
 			dist = 0.0
-	if leg["m"] == "in":
+	if moved:
+		a["pos"] = pos
+		a["wi"] = wi
+	if indoor:
 		var rms = leg.get("rooms")
 		var k: int = clampi(int(a["wi"]) - 1, 0, pts.size() - 1)
 		if rms != null and k < (rms as Array).size():

@@ -11,6 +11,8 @@ const Kit = preload("res://ui/kit.gd")
 const Glass = preload("res://ui/widgets/glass.gd")
 const Icons = preload("res://ui/theme/icons.gd")
 const V5 = preload("res://ui/v5_data.gd")
+const Quarter = preload("res://ui/wm/quarter.gd")
+const WIDTH := 340.0
 
 const MOOD_ICON := V5.MOOD_ICON
 const MOOD_COL := V5.MOOD_COL
@@ -40,7 +42,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	offset_left = 8
 	offset_top = 76
-	custom_minimum_size.x = 340
+	custom_minimum_size.x = WIDTH
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var v: VBoxContainer = Kit.vbox(6)
@@ -56,6 +58,9 @@ func _ready() -> void:
 	tv.add_child(_name)
 	_title = Kit.label("", "SmallLabel", 12, P.TEXT_2)
 	tv.add_child(_title)
+	for hl in [_name, _title]:   # one line each: a long name or rank is cut, not wrapped (a narrow card)
+		(hl as Label).clip_text = true
+		(hl as Label).text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_mood = Kit.icon("morale", 26, P.GREEN)
 	top.add_child(_mood)
 	var sr: HBoxContainer = Kit.hbox(8)
@@ -70,8 +75,8 @@ func _ready() -> void:
 	_needs.name = "Needs"
 	v.add_child(_needs)
 	for n in NEEDS:
-		var r: HBoxContainer = Kit.bar_row(String(n[0]), 1.0, "", P.GREEN, 52.0)
-		r.custom_minimum_size.x = 150
+		var r: HBoxContainer = Kit.bar_row(String(n[0]), 1.0, "", P.GREEN, 46.0)
+		r.custom_minimum_size.x = 120
 		r.set_meta("key", n[1])
 		r.set_meta("inv", n[2])
 		_needs.add_child(r)
@@ -82,7 +87,9 @@ func _ready() -> void:
 	v.add_child(_love)
 	_lines = Kit.vbox(2)
 	v.add_child(_lines)
-	var btn: HBoxContainer = Kit.hbox(4)
+	var btn := HFlowContainer.new()   # the buttons wrap in a narrow card
+	btn.add_theme_constant_override("h_separation", 4)
+	btn.add_theme_constant_override("v_separation", 4)
 	v.add_child(btn)
 	btn.add_child(Kit.button("File", func(): hud.open_person(agent_id, "review"), "Personnel file\nReview, discipline, skills and relationships of this person.", "", "colonists", 14))
 	btn.add_child(Kit.button("Next", func(): hud.main.follow_next_person(), "Next person\nFollow the next person. Key Tab.", "", "chevron_right", 14))
@@ -103,6 +110,17 @@ func _switch_to() -> void:
 func _process(delta: float) -> void:
 	if not visible:
 		return
+	# Never past the left quarter of the view (Paul, 2026-10-03: the centre zone stays free).
+	var vp: Vector2 = get_viewport_rect().size
+	var w: float = clampf(floorf(vp.x * 0.25) - 12.0, 250.0, WIDTH)
+	if absf(w - custom_minimum_size.x) > 0.5:
+		custom_minimum_size.x = w
+		reset_size()
+	_needs.columns = 1 if w < WIDTH - 0.5 else 2   # a narrow card stacks the four needs
+	if size.x > w + 0.5:
+		reset_size()   # (a width left over from a wider moment)
+	if w < WIDTH - 0.5:
+		Quarter.relax(self, w - 28.0, int(w))
 	_t += delta
 	if _t >= 0.5:
 		_t = 0.0
