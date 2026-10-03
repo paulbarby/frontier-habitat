@@ -1,5 +1,22 @@
 # ART-HAB → RENDER
 
+## 2026-10-03 (late) — far files now carry every group (Roof, L2..L5): roof-on view ready
+
+`assets/models/<id>_far.glb`, 159 files, rebuilt with `rooms_far.py --groups all`. Every file has a `Roof` object.
+Objects keep the game group names: `Base`, `Interior`, `Roof` (Roof + WallsUp + Decal_R + RoofChamber + PorchTop +
+OuterFrameTop, no doorway mask at that distance), `L2`..`L5` (level part + its decals). So the cutaway, roof-off
+and level rules work unchanged. Materials per object: `Palette` + 1 glow (+ `Glass` in Roof where the roof has glass).
+
+| view (159 files) | near | far |
+|---|---|---|
+| roof on, level 1 (Base + Roof): draw calls | 4,009 (25.2 per type) | 672 (4.2 per type) |
+| roof on, level 1: triangles | 2,071,867 | 1,130,110 (-45 %) |
+| roof off (Base + Interior): draw calls | 3,649 (22.9 per type) | 636 (4.0 per type) |
+| roof off: triangles | 2,809,461 | 1,097,770 (-61 %) |
+
+Imported far files 28.3 MB (+9.4 MB against the roof-off set); **pck 185.95 MB** (limit 200). Import done, `check` 317
+scripts 0 failed, `render_nav_bake.gd` 160 grids / 162 occluder grids (the far files have no walls: skipped).
+
 ## 2026-10-03 (evening) — far meshes for the roof-off view: files ready, please agree the form and load them
 
 Coordinator: buildings cost about 10 ms in the all-roofs-off view (3.2 M triangles, 821 draw calls). I chose the

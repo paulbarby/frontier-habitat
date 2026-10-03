@@ -53,6 +53,7 @@ const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a"
 const CAM_FADE_R := 1.0         # m: another body this close to the follow camera fades out (critic round 41; 0.8 left a
                                 # shoulder filling a third of the frame)
 const CAM_LINE_R := 0.4         # m: another body this close (plan) to the line from the lens to the followed person fades
+var force_lod := -1             # >= 0: every person (not the followed one) at this LOD (world_view `npclod`, checks)
 const LOD2_DIST := 40.0         # m: people_<v>_lod2.glb beyond this when present (ART-NPC, asked 2026-10-03)
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
 const FPS := 30.0
@@ -305,6 +306,9 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 	if people and bool(lib.get("ok", false)):
 		lib["pvariant"] = variant.substr(2).trim_suffix("_lod1").trim_suffix("_lod2")
 		lib["lod1"] = variant.ends_with("_lod1") or variant.ends_with("_lod2")
+		if variant.ends_with("_lod2") and share != null:
+			# (LOD2 has no Outfit_ parts: the outfit ids, indexes and base colours are the LOD0 library's)
+			lib["outfit_table"] = outfit_table(share)
 		# UniformBase colour per outfit (mode 6), indexed by the outfit's idx.
 		var ub := PackedColorArray()
 		ub.resize(16)
@@ -776,6 +780,10 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 		# (eyes, brows, lashes, teeth) and Hair_<v> for everyone, with no shadow of their own.
 		if nm.begins_with("Outfit_"):
 			pt["outfit"] = nm.substr(7)
+		elif nm.begins_with("LOD2_"):
+			# (ART-NPC LOD2: one mesh per OUTFIT ID - body, garments, add-ons and hair - one material, colours in
+			# COLOR_0; drawn for the people wearing that outfit, casts its own shadow: no proxy needed)
+			pt["outfit2"] = nm.substr(5)
 		elif nm.begins_with("Addon_"):
 			pt["addon"] = nm.substr(6)
 			pt["face"] = true
@@ -790,7 +798,7 @@ static func bake(root: Node, meta: Dictionary, share = null) -> Dictionary:
 	# shadow (the body shadow covers them). If the mesh data cannot be read, the body casts
 	# its own shadow as before.
 	for p in parts.duplicate():
-		if int(p["head"]) < 0 and not p.has("vis") and not p.has("face"):
+		if int(p["head"]) < 0 and not p.has("vis") and not p.has("face") and not p.has("outfit2"):
 			var pm: ArrayMesh = _skin_shadow_mesh(p["mesh"])
 			if pm != null:
 				p["proxied"] = true
@@ -945,6 +953,8 @@ static func _skin_material(src: Material, mname: String, tex: Texture2D, info: D
 	elif mname.begins_with("UniformBase"):
 		mode = 6
 	m.set_shader_parameter("mode", mode)
+	# (LOD2 people: the colour and the tint mode per face come from COLOR_0, ART-NPC 2026-10-03)
+	m.set_shader_parameter("lod2", mname.begins_with("People_LOD2"))
 	return m
 
 func _make_mm(variant: String, lib: Dictionary) -> void:
@@ -969,7 +979,7 @@ func _make_mm(variant: String, lib: Dictionary) -> void:
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		add_child(mmi)
 		mmi.set_meta("cast0", mmi.cast_shadow)
-		list.append({"mm": m, "mmi": mmi, "head": int(part["head"]), "vis": int(part.get("vis", -1)), "vh": int(part.get("vh", 0)), "outfit": String(part.get("outfit", "")), "addon": String(part.get("addon", ""))})
+		list.append({"mm": m, "mmi": mmi, "head": int(part["head"]), "vis": int(part.get("vis", -1)), "vh": int(part.get("vh", 0)), "outfit": String(part.get("outfit", "")), "outfit2": String(part.get("outfit2", "")), "addon": String(part.get("addon", ""))})
 	mm[variant] = {"parts": list, "heads": int(lib["heads"]), "people": bool(lib.get("people", false))}
 
 ## Frame row of clip `c` at time t (with the fraction to the next row).
@@ -1292,20 +1302,63 @@ const DOOR_SILL := 0.012         # m: the doorway kit's floor plate over the roo
 func _door_floor_z() -> float:
 	return FLOOR_Z + DOOR_SILL
 const TUBE_FLOOR_Z := 0.143      # m: the corridor model's floor top over its axis line + 0.05 (corridor.glb, rays down: flat)
-func _tube_floor(p: Vector3) -> float:
+## (x: the tube floor under p, INF when p is not in a corridor; y: its weight, 0 at a corridor end, 1 from 0.8 m in)
+func _tube_floor(p: Vector3) -> Vector2:
 	if planner == null:
-		return INF
+		return Vector2(INF, 0.0)
 	var rg: Dictionary = planner.region_of(p, true)
 	if String(rg["k"]) != "tube":
-		return INF
+		return Vector2(INF, 0.0)
 	var l: Dictionary = sim.state["buildings"].get(int(rg["id"]), {})
 	if l.is_empty() or not l.has("p0"):
-		return INF
+		return Vector2(INF, 0.0)
 	var a: Vector2 = l["p0"]
 	var b2: Vector2 = l["p1"]
 	var ab: Vector2 = b2 - a
 	var t: float = clampf((Vector2(p.x, p.z) - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
-	return lerpf(view.h(a.x, a.y), view.h(b2.x, b2.y), t) + 0.05 + TUBE_FLOOR_Z
+	var de: float = minf(t, 1.0 - t) * ab.length()
+	return Vector2(lerpf(view.h(a.x, a.y), view.h(b2.x, b2.y), t) + 0.05 + TUBE_FLOOR_Z, smoothstep(0.1, 0.8, de))
+
+## Airlock floors (airlock_m / _l / _r28, measured from the models 2026-10-03, model units from the inner door leaf
+## x = ix and the outer door leaf x = ox): the suit room 0.140; from ix - 0.43 to ox + 0.42 the sill plates (0.152)
+## and the chamber grating (0.144 with 0.160 ribs: 0.152 is within 8 mm of both); the porch deck (0.100 with 0.112
+## ribs: 0.106) from 0.85 m inside to 0.65 m outside Anchor_Porch_0, |z| <= 1.0. Returns the world floor height under
+## p, or -INF when p is over no airlock. The list is rebuilt when the number of drawn buildings changes.
+var _lock_list: Array = []
+var _lock_key := -1
+func _lock_floor(p: Vector3) -> float:
+	var key: int = view.bmeta.size() * 7919 + sim.state["buildings"].size()
+	if key != _lock_key:
+		_lock_key = key
+		_lock_list = []
+		for bid in sim.state["buildings"]:
+			var b: Dictionary = sim.state["buildings"][bid]
+			if not String(b.get("def", "")).begins_with("airlock") or not view.bmeta.has(bid) or view.airlock == null:
+				continue
+			var meta: Dictionary = view.bmeta[bid]
+			var g: Dictionary = view.airlock._geo(int(bid), meta)
+			if not bool(g.get("kit", false)):
+				continue
+			var xs: Transform3D = g["xs"]
+			var inv: Transform3D = xs.affine_inverse()
+			var an: Dictionary = meta.get("anchors", {})
+			var ax: float = (inv * (an["Porch_0"] as Transform3D).origin).x if an.has("Porch_0") else INF
+			var sy: float = xs.basis.y.length()
+			var reach: float = maxf(float(b.get("radius", 3.0)), absf(float(g["outer_x"])) * xs.basis.x.length() + 2.2)
+			_lock_list.append([inv, float(g["inner_x"]), float(g["outer_x"]), ax, (meta["xf"] as Transform3D).origin.y, sy, b["pos"], reach, float(b.get("radius", 3.0))])
+	var p2 := Vector2(p.x, p.z)
+	for e in _lock_list:
+		if p2.distance_to(e[6]) > float(e[7]):
+			continue
+		var q: Vector3 = (e[0] as Transform3D) * Vector3(p.x, float(e[4]), p.z)
+		var ax: float = e[3]
+		if ax != INF and q.x >= ax - 0.85 and q.x <= ax + 0.65 and absf(q.z) <= 1.0:
+			return float(e[4]) + 0.106 * float(e[5])
+		if p2.distance_to(e[6]) > float(e[8]):
+			continue
+		var fm: float = 0.152 if q.x >= float(e[1]) - 0.43 and q.x <= float(e[2]) + 0.42 else 0.140
+		return float(e[4]) + fm * float(e[5])
+	return -INF
 
 func _floor_y(b: Dictionary) -> float:
 	var meta = view.bmeta.get(int(b["id"]))
@@ -1824,7 +1877,9 @@ func sync(delta: float) -> bool:
 			var cdl: float = (agents[id]["pos"] as Vector3).distance_to(_cam_pos)
 			var was: bool = String(agents[id].get("dk", "")).ends_with("_lod1")
 			var was2: bool = String(agents[id].get("dk", "")).ends_with("_lod2")
-			if libs.has(dk + "_lod2") and cdl > LOD2_DIST + (-2.0 if was2 else 2.0):
+			if force_lod >= 0:
+				dk += ("_lod2" if libs.has(dk + "_lod2") else "_lod1") if force_lod == 2 else ("_lod1" if force_lod == 1 else "")
+			elif libs.has(dk + "_lod2") and cdl > LOD2_DIST + (-2.0 if was2 else 2.0):
 				dk += "_lod2"
 			elif cdl > LOD1_DIST + (-1.0 if was else 1.0):
 				dk += "_lod1"
@@ -1889,7 +1944,8 @@ func sync(delta: float) -> bool:
 	# (zoomed out past FAR_CAM_D the spacing pass runs every 3rd frame: the bodies move every 3rd-4th frame there)
 	_sep_acc += delta
 	if float(view.camera_distance) <= FAR_CAM_D or _frame % 3 == 0:
-		_sep_dt = _sep_acc
+		# (one frame's time, not the summed: a push 3 x as long in one frame read as a slide, path check 2026-10-03)
+		_sep_dt = delta
 		_sep_acc = 0.0
 		_separate()
 	stats_slots["sep_ms"] = snappedf(lerpf(float(stats_slots.get("sep_ms", 0.0)), (Time.get_ticks_usec() - ts1) / 1000.0, 0.1), 0.01)
@@ -2327,18 +2383,40 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 		elif not dead and bool(a.get("sleeping", false)) and not inside:
 			goal = ["lie", "sleep"]
 	_prof_mark("move")
+	# (a body starting off from a stand waits one frame for its walk clip: it moved 5 cm in idle on the first
+	# frame of a new plan, a slide in the path check, 2026-10-03)
+	if not dead and not rec["sm"].loco and float(rec.get("speed", 0.0)) < 0.05 and Vector2(now.x - before.x, now.z - before.z).length() > 0.003 \
+			and not bool(rec.get("start_hold", false)) and String(rec["sm"].pose_state) == "stand":
+		rec["start_hold"] = true
+		now = Vector3(before.x, now.y, before.z)
+	else:
+		rec["start_hold"] = false
 	# (in a corridor the body walks on the tube's drawn floor: the line between the corridor's end heights + 0.05
 	# + TUBE_FLOOR_Z; it walked 3.3 cm into it at the terrain height + 0.19, ground check 2026-10-03)
 	if inside and not dead and _room_at(Vector2(now.x, now.z)) < 0:
-		var tf: float = _tube_floor(now)
-		if tf != INF:
-			now.y = tf
+		var tf: Vector2 = _tube_floor(now)
+		# (a body standing still keeps its height: one idling on the corridor / room boundary flipped 3 cm up and down
+		# as the spacing pass nudged it, a slide in the path check, 2026-10-03)
+		if tf.x != INF and Vector2(now.x - before.x, now.z - before.z).length() < 0.004:
+			tf.x = before.y
+		if tf.x != INF:
+			# (a 3 cm step onto the tube floor at the doorway; easing it over 0.8 m sank 228 windows in the ground gate)
+			now.y = tf.x
+	# (an airlock's floors from the model: sill plates, chamber grating, porch deck - inside or outside, any mode; the
+	# porch places put three bodies 12 cm into the porch deck and the chamber riders walked 12 mm into the inner door's
+	# sill plate on the anchors' 0.14 m, ground check 2026-10-03)
+	if not dead:
+		var lf: float = _lock_floor(now)
+		if lf != -INF:
+			now.y = lf
 	# (the doorway kit's floor plate stands DOOR_SILL over the room floor: a body crossing it walks on it)
 	if inside and not dead and view.doors != null:
 		var dq: Vector2 = Vector2(now.x, now.z)
 		for dd in _doors_near(dq):
-			if Vector2((dd as Vector3).x, (dd as Vector3).z).distance_to(dq) < 0.45:
-				now.y = maxf(now.y, (dd as Vector3).y + _door_floor_z())
+			var ddist: float = Vector2((dd as Vector3).x, (dd as Vector3).z).distance_to(dq)
+			if ddist < 0.55:
+				var ks: float = 1.0 - smoothstep(0.30, 0.55, ddist)
+				now.y = maxf(now.y, (dd as Vector3).y + FLOOR_Z + DOOR_SILL * ks)
 				break
 	rec["pos"] = now
 	rec["seen"] = true
@@ -3587,10 +3665,12 @@ func _write_mm(variant: String, list: Array) -> void:
 	# V5 people: the look code of the people shader, the outfit shown and the clothes colour.
 	var people: bool = bool(e.get("people", false))
 	var outfit_of: Array = []
+	var oid_of: Array = []
 	var addons_of: Array = []
 	var cloth := PackedFloat32Array()
 	if people:
 		outfit_of.resize(list.size())
+		oid_of.resize(list.size())
 		cloth.resize(list.size())
 	var k := 0
 	var n := 0
@@ -3628,6 +3708,7 @@ func _write_mm(variant: String, list: Array) -> void:
 		if people:
 			look_v = float(rec.get("plook", rec["look"]))
 			outfit_of[n] = String(rec.get("omesh", ""))
+			oid_of[n] = String(rec.get("outfit", ""))
 			addons_of.append(rec.get("addons", []))
 			# INSTANCE_CUSTOM.w = clothes colour (0..7) + 8 x outfit index (UniformBase colour).
 			cloth[n] = float(int(rec.get("cloth", 0)) % 8 + 8 * int(rec.get("oidx", 0)))
@@ -3735,6 +3816,14 @@ func _write_mm(variant: String, list: Array) -> void:
 			cnt = 0
 			for i in n:
 				if (addons_of[i] as Array).has(ad):
+					buf.append_array(all.slice(i * 20, i * 20 + 20))
+					cnt += 1
+		elif people and String(part.get("outfit2", "")) != "":
+			var o2: String = part["outfit2"]
+			buf = PackedFloat32Array()
+			cnt = 0
+			for i in n:
+				if oid_of[i] == o2:
 					buf.append_array(all.slice(i * 20, i * 20 + 20))
 					cnt += 1
 		elif people and String(part.get("outfit", "")) != "":

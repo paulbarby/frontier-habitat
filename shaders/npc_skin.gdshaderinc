@@ -35,10 +35,14 @@ uniform vec4 roles[8];   // linear role colours
 uniform float ao_amount = 1.0;
 uniform int bind_slot[64];     // skin bind index -> matrix slot
 uniform int head_id = -1;      // >= 0: this mesh is head variant n (only those instances draw it)
+// LOD2 people (ART-NPC 2026-10-03, manifest draw.lod2_colour): COLOR_0 per face, RGB = the LOD0 material's mean
+// colour (linear), A = (mode * 16 + slot) / 255; the tint of that mode multiplies RGB. No AO in COLOR.
+uniform bool lod2 = false;
 
 varying vec3 v_tint;
 varying float v_ao;
-varying float v_fade;   // INSTANCE_CUSTOM.y: 1 drawn .. 0 gone (dithered fade, V3_1 §4.3)
+varying float v_fade;
+varying vec3 v_base;   // INSTANCE_CUSTOM.y: 1 drawn .. 0 gone (dithered fade, V3_1 §4.3)
 
 ivec2 tx(int row, int texel) {
 	int col = row / rows_per_col;
@@ -124,6 +128,15 @@ void vertex() {
 	int head = (look / 8) % 8;
 	int tone = look % 8;
 	v_ao = mix(1.0, COLOR.r, ao_amount);
+	int md = mode;
+	vec3 alb = albedo.rgb;
+	v_base = vec3(1.0);
+	if (lod2) {
+		md = int(COLOR.a * 255.0 + 0.5) / 16;
+		alb = vec3(1.0);
+		v_base = COLOR.rgb;
+		v_ao = 1.0;
+	}
 	if (head_id >= 0 && head_id != head) {
 		// Another head variant: collapse the vertex (nothing is drawn).
 		VERTEX = vec3(0.0);
@@ -154,24 +167,24 @@ void vertex() {
 		NORMAL = normalize(na);
 	}
 	v_tint = vec3(1.0);
-	if ((mode == 1 || mode == 4) && role >= 8) {
+	if ((md == 1 || md == 4) && role >= 8 && !lod2) {
 		vec4 vc = vis_cols[clamp(role - 8, 0, 6)];
-		v_tint = vc.r >= 0.0 ? vc.rgb / max(albedo.rgb, vec3(0.04)) : vec3(1.0);
-	} else if (mode == 1) {
-		v_tint = (people ? stripe_cols[clamp(role, 0, 7)].rgb : roles[clamp(role, 0, 7)].rgb) / max(albedo.rgb, vec3(0.04));
-	} else if (mode == 2) {
+		v_tint = vc.r >= 0.0 ? vc.rgb / max(alb, vec3(0.04)) : vec3(1.0);
+	} else if (md == 1) {
+		v_tint = (people ? stripe_cols[clamp(role, 0, 7)].rgb : roles[clamp(role, 0, 7)].rgb) / max(alb, vec3(0.04));
+	} else if (md == 2) {
 		// Six skin tones (linear), dark to light: replace the albedo.
-		v_tint = palette6(float(tone), vec3(0.21, 0.09, 0.04), vec3(0.37, 0.17, 0.07), vec3(0.55, 0.3, 0.15), vec3(0.72, 0.44, 0.26), vec3(0.85, 0.57, 0.38), vec3(0.91, 0.60, 0.42)) / max(albedo.rgb, vec3(0.04));
-	} else if (mode == 3) {
+		v_tint = palette6(float(tone), vec3(0.21, 0.09, 0.04), vec3(0.37, 0.17, 0.07), vec3(0.55, 0.3, 0.15), vec3(0.72, 0.44, 0.26), vec3(0.85, 0.57, 0.38), vec3(0.91, 0.60, 0.42)) / max(alb, vec3(0.04));
+	} else if (md == 3) {
 		// Four hair colours (linear): black, dark brown, auburn, dark blonde. Critic round 8: auburn
 		// (sRGB about #9E4C22) and dark blonde (#C7AA73) made clearly different from the browns.
 		int hc = people ? head : (tone + head * 3) % 4;
 		vec3 hair = hc == 0 ? vec3(0.010, 0.008, 0.007) : (hc == 1 ? vec3(0.075, 0.035, 0.015) : (hc == 2 ? vec3(0.34, 0.075, 0.018) : (hc == 3 ? vec3(0.58, 0.40, 0.17) : vec3(0.42, 0.41, 0.40))));
-		v_tint = hair / max(albedo.rgb, vec3(0.04));
-	} else if (mode == 5) {
-		v_tint = cloth_cols[int(INSTANCE_CUSTOM.w + 0.5) % 8].rgb / max(albedo.rgb, vec3(0.04));
-	} else if (mode == 6) {
-		v_tint = ubase_cols[clamp(int(INSTANCE_CUSTOM.w + 0.5) / 8, 0, 15)].rgb / max(albedo.rgb, vec3(0.04));
+		v_tint = hair / max(alb, vec3(0.04));
+	} else if (md == 5) {
+		v_tint = cloth_cols[int(INSTANCE_CUSTOM.w + 0.5) % 8].rgb / max(alb, vec3(0.04));
+	} else if (md == 6) {
+		v_tint = ubase_cols[clamp(int(INSTANCE_CUSTOM.w + 0.5) / 8, 0, 15)].rgb / max(alb, vec3(0.04));
 	}
 }
 
@@ -184,7 +197,7 @@ void fragment() {
 			discard;
 		}
 	}
-	vec3 base = albedo.rgb;
+	vec3 base = lod2 ? v_base : albedo.rgb;
 	if (use_tex) {
 		vec4 tx4 = texture(albedo_tex, UV);
 		if (alpha_clip && tx4.a < 0.5) {

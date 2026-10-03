@@ -79,7 +79,9 @@ func _geo(bid: int, meta: Dictionary) -> Dictionary:
 			var t: Transform3D = meta["anchors"]["%s_%d" % [kind, i]]
 			var q: Vector3 = t.origin
 			if kind == "Porch":
-				q.y = view.h(q.x, q.z)
+				# (on the porch deck: the anchor's own height, 0.10 m over the model origin; the terrain put three
+				# bodies 12 cm into the deck, ground check 2026-10-03)
+				q.y = maxf(view.h(q.x, q.z), q.y)
 			lst.append({"pos": q, "yaw": _yaw_of(t.basis.x)})
 			i += 1
 		g[kind] = lst
@@ -203,7 +205,7 @@ func sync(delta: float) -> void:
 		for m in 6:
 			for pq0 in porch:
 				var pp0: Vector3 = (pq0["pos"] as Vector3) + (g["fwd"] as Vector3) * (QUEUE_GAP * float(m))
-				pp0.y = view.h(pp0.x, pp0.z)
+				pp0.y = view.h(pp0.x, pp0.z) if m > 0 else (pq0["pos"] as Vector3).y
 				porch_pts.append({"pos": pp0, "yaw": pq0["yaw"], "kind": "porch"})
 		var pick := func(pts: Array, start: int, suit_only: bool) -> Dictionary:
 			for i in pts.size():

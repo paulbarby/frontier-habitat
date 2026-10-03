@@ -5,6 +5,9 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-03 far files, all groups (coordinator: roof-on overview 33.8 fps)
+- RESULT `rooms_far.py --groups all`: 159 files with Base, Interior, Roof, L2..L5; roof-on draw calls 4,009 -> 672 (25.2 -> 4.2 per type), triangles -45 %; roof-off 3,649 -> 636. Far files 28.3 MB imported; pck 185.95 MB. Import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids. RENDER told.
+
 ## 2026-10-03 far meshes (roof-off view: 10 ms, 821 draw calls)
 - `tools/blender/rooms_far.py` -> `assets/models/<id>_far.glb` (159 files): objects Base + Interior (game group names), Palette (colour in COLOR_0) + 1 glow; down-facing and < 14 cm faces removed; no decimate (smeared colours).
 - RESULT roof-off groups: draw calls 3,649 -> 636 (22.9 -> 4.0 per type), triangles 2,809,461 -> 1,097,770 (-61 %); pck +18.9 MB (175.8 MB). Option "all groups" measured: +28 MB. Import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids (far files skipped). RENDER asked to agree the form and load beyond 80 m.

@@ -6,8 +6,8 @@
   {
    "id": "academy_l",
    "src_tris": 35892,
-   "far_tris": 11487,
-   "draws": 4,
+   "far_tris": 15423,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3586,
@@ -22,15 +22,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3936,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 779040
+   "file_size": 980696
   },
   {
    "id": "academy_m",
    "src_tris": 26000,
-   "far_tris": 8429,
-   "draws": 4,
+   "far_tris": 11739,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3610,
@@ -45,15 +52,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3310,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 572116
+   "file_size": 740752
   },
   {
    "id": "academy_s",
    "src_tris": 19062,
-   "far_tris": 5921,
-   "draws": 4,
+   "far_tris": 8935,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3192,
@@ -68,15 +82,22 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3014,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 396992
+   "file_size": 552608
   },
   {
    "id": "airlock_l",
    "src_tris": 11788,
-   "far_tris": 3732,
-   "draws": 4,
+   "far_tris": 5550,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2520,
@@ -91,15 +112,23 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 1818,
+     "mats": [
+      "Glass",
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 244892
+   "file_size": 339236
   },
   {
    "id": "airlock_m",
    "src_tris": 10598,
-   "far_tris": 3294,
-   "draws": 4,
+   "far_tris": 4981,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2398,
@@ -114,15 +143,23 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 1687,
+     "mats": [
+      "Glass",
+      "Light",
+      "Palette"
+     ]
     }
    },
-   "file_size": 214192
+   "file_size": 302288
   },
   {
    "id": "airlock_r28",
    "src_tris": 8442,
-   "far_tris": 2926,
-   "draws": 4,
+   "far_tris": 4563,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2084,
@@ -137,20 +174,56 @@
       "Neon",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 1637,
+     "mats": [
+      "Glass",
+      "Light",
+      "Palette"
+     ]
     }
    },
-   "file_size": 188468
+   "file_size": 275792
   },
   {
    "id": "algae_bioreactor_l",
    "src_tris": 25467,
-   "far_tris": 7968,
-   "draws": 4,
+   "far_tris": 12961,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3346,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 276,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -160,20 +233,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3991,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 432844
+   "file_size": 697484
   },
   {
    "id": "algae_bioreactor_m",
    "src_tris": 18248,
-   "far_tris": 5486,
-   "draws": 4,
+   "far_tris": 9423,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3230,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 260,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -183,20 +291,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3031,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 323100
+   "file_size": 529376
   },
   {
    "id": "algae_bioreactor_s",
    "src_tris": 13863,
-   "far_tris": 4712,
-   "draws": 4,
+   "far_tris": 7305,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3060,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 116,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 250,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 256,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -206,20 +349,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 1821,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 284152
+   "file_size": 440184
   },
   {
    "id": "algae_bioreactor_xl",
    "src_tris": 36409,
-   "far_tris": 11302,
-   "draws": 4,
+   "far_tris": 17376,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3386,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -229,20 +407,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5023,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 575808
+   "file_size": 908144
   },
   {
    "id": "atmo_processor_l",
    "src_tris": 23899,
-   "far_tris": 6824,
-   "draws": 4,
+   "far_tris": 11962,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -252,20 +465,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 4089,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 414664
+   "file_size": 683312
   },
   {
    "id": "atmo_processor_m",
    "src_tris": 20138,
-   "far_tris": 5404,
-   "draws": 4,
+   "far_tris": 10144,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3196,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 268,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 298,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -275,20 +523,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 3796,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 330752
+   "file_size": 582900
   },
   {
    "id": "atmo_processor_s",
    "src_tris": 13969,
-   "far_tris": 4206,
-   "draws": 4,
+   "far_tris": 7466,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 2878,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 240,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 280,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -298,20 +581,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 2410,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 267056
+   "file_size": 443416
   },
   {
    "id": "atmo_processor_xl",
    "src_tris": 33134,
-   "far_tris": 9306,
-   "draws": 4,
+   "far_tris": 16042,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3206,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -321,20 +639,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 5684,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 553184
+   "file_size": 913124
   },
   {
    "id": "battery_plant_l",
    "src_tris": 22828,
-   "far_tris": 6710,
-   "draws": 4,
+   "far_tris": 11317,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -344,20 +697,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3555,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 462368
+   "file_size": 757888
   },
   {
    "id": "battery_plant_m",
    "src_tris": 16677,
-   "far_tris": 5220,
-   "draws": 4,
+   "far_tris": 8803,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3716,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 155,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -367,20 +755,54 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2742,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 358072
+   "file_size": 587868
   },
   {
    "id": "battery_plant_s",
    "src_tris": 13978,
-   "far_tris": 4690,
-   "draws": 4,
+   "far_tris": 7474,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 64,
+     "mats": [
+      "L4Band"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -390,20 +812,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2108,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 323352
+   "file_size": 491496
   },
   {
    "id": "battery_plant_xl",
    "src_tris": 32582,
-   "far_tris": 9584,
-   "draws": 4,
+   "far_tris": 14523,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -413,20 +870,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3888,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 668040
+   "file_size": 981440
   },
   {
    "id": "bio_lab_l",
    "src_tris": 21855,
-   "far_tris": 5500,
-   "draws": 4,
+   "far_tris": 9560,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3182,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 276,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -436,20 +928,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3058,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 373768
+   "file_size": 586180
   },
   {
    "id": "bio_lab_m",
    "src_tris": 16656,
-   "far_tris": 4489,
-   "draws": 4,
+   "far_tris": 7941,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3198,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 262,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -459,20 +986,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2544,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 301876
+   "file_size": 485004
   },
   {
    "id": "bio_lab_s",
    "src_tris": 12920,
-   "far_tris": 3800,
-   "draws": 4,
+   "far_tris": 6482,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 2972,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 156,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 230,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 266,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -482,20 +1044,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 1880,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 255536
+   "file_size": 401092
   },
   {
    "id": "bio_lab_xl",
    "src_tris": 28031,
-   "far_tris": 6558,
-   "draws": 4,
+   "far_tris": 11144,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3248,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -505,20 +1102,41 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3534,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 449312
+   "file_size": 686876
   },
   {
    "id": "cantina_l",
    "src_tris": 30915,
-   "far_tris": 7322,
-   "draws": 4,
+   "far_tris": 12210,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3604,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3908,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -528,20 +1146,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 268,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 489868
+   "file_size": 783084
   },
   {
    "id": "cantina_m",
    "src_tris": 22109,
-   "far_tris": 5090,
-   "draws": 4,
+   "far_tris": 9061,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3468,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3116,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -551,20 +1204,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 257,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 220,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 342936
+   "file_size": 585820
   },
   {
    "id": "cantina_s",
    "src_tris": 17299,
-   "far_tris": 3805,
-   "draws": 4,
+   "far_tris": 6984,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 2592,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2398,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -574,20 +1262,48 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 241,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 210,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 256016
+   "file_size": 437772
   },
   {
    "id": "cantina_xl",
    "src_tris": 39215,
-   "far_tris": 9460,
-   "draws": 4,
+   "far_tris": 14744,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3384,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4302,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -597,20 +1313,76 @@
       "Palette",
       "Window"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 272,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 634616
+   "file_size": 953892
   },
   {
    "id": "carbon_works_l",
    "src_tris": 24524,
-   "far_tris": 6544,
-   "draws": 4,
+   "far_tris": 11622,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 282,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -620,20 +1392,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4030,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 441400
+   "file_size": 752088
   },
   {
    "id": "carbon_works_m",
    "src_tris": 17758,
-   "far_tris": 5066,
-   "draws": 4,
+   "far_tris": 9046,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 268,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -643,20 +1450,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3026,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 341908
+   "file_size": 584288
   },
   {
    "id": "carbon_works_s",
    "src_tris": 14850,
-   "far_tris": 4672,
-   "draws": 4,
+   "far_tris": 7783,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3480,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 164,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -666,20 +1508,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2335,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 316884
+   "file_size": 496004
   },
   {
    "id": "carbon_works_xl",
    "src_tris": 32548,
-   "far_tris": 9502,
-   "draws": 4,
+   "far_tris": 14726,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3696,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -689,20 +1566,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4174,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 653528
+   "file_size": 972408
   },
   {
    "id": "ceramics_kiln_l",
    "src_tris": 22687,
-   "far_tris": 6362,
-   "draws": 4,
+   "far_tris": 11635,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -712,20 +1624,55 @@
       "Ember",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4223,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 438892
+   "file_size": 778480
   },
   {
    "id": "ceramics_kiln_m",
    "src_tris": 16969,
-   "far_tris": 5250,
-   "draws": 4,
+   "far_tris": 9382,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 266,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -735,20 +1682,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3180,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 360148
+   "file_size": 622308
   },
   {
    "id": "ceramics_kiln_s",
    "src_tris": 13874,
-   "far_tris": 4418,
-   "draws": 4,
+   "far_tris": 7565,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 64,
+     "mats": [
+      "L4Band"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -758,20 +1739,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2471,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 303192
+   "file_size": 494616
   },
   {
    "id": "ceramics_kiln_xl",
    "src_tris": 30877,
-   "far_tris": 9443,
-   "draws": 4,
+   "far_tris": 15123,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -781,20 +1797,48 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4630,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 658892
+   "file_size": 1023436
   },
   {
    "id": "cold_storage_l",
    "src_tris": 24518,
-   "far_tris": 8428,
-   "draws": 4,
+   "far_tris": 12889,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3482,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 276,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -804,20 +1848,62 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3459,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 581412
+   "file_size": 847308
   },
   {
    "id": "cold_storage_m",
    "src_tris": 17897,
-   "far_tris": 6288,
-   "draws": 4,
+   "far_tris": 9819,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3426,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 262,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -827,20 +1913,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2623,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 435252
+   "file_size": 640820
   },
   {
    "id": "cold_storage_s",
    "src_tris": 13132,
-   "far_tris": 4928,
-   "draws": 4,
+   "far_tris": 7745,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3196,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 156,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 230,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 266,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -850,20 +1971,48 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2015,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 339800
+   "file_size": 506060
   },
   {
    "id": "cold_storage_xl",
    "src_tris": 32788,
-   "far_tris": 10788,
-   "draws": 4,
+   "far_tris": 15777,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -873,20 +2022,62 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3937,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 749756
+   "file_size": 1050736
   },
   {
    "id": "distillery_l",
    "src_tris": 33264,
-   "far_tris": 6235,
-   "draws": 4,
+   "far_tris": 13931,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3596,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -896,20 +2087,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 6647,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 392268
+   "file_size": 751972
   },
   {
    "id": "distillery_m",
    "src_tris": 25875,
-   "far_tris": 5006,
-   "draws": 4,
+   "far_tris": 11017,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3714,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 158,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -919,20 +2146,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 5167,
+     "mats": [
+      "Glass",
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 327260
+   "file_size": 622660
   },
   {
    "id": "distillery_s",
    "src_tris": 18095,
-   "far_tris": 4534,
-   "draws": 4,
+   "far_tris": 9370,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 64,
+     "mats": [
+      "L4Band"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -942,20 +2203,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4260,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 301452
+   "file_size": 539432
   },
   {
    "id": "distillery_xl",
    "src_tris": 46257,
-   "far_tris": 7513,
-   "draws": 4,
+   "far_tris": 15587,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -965,20 +2262,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 7022,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 485284
+   "file_size": 872672
   },
   {
    "id": "electronics_fab_l",
    "src_tris": 24160,
-   "far_tris": 6342,
-   "draws": 4,
+   "far_tris": 11616,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -988,20 +2321,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4222,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 431812
+   "file_size": 741568
   },
   {
    "id": "electronics_fab_m",
    "src_tris": 16674,
-   "far_tris": 5074,
-   "draws": 4,
+   "far_tris": 8858,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3716,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 268,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1011,20 +2379,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2830,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 346076
+   "file_size": 561224
   },
   {
    "id": "electronics_fab_s",
    "src_tris": 15233,
-   "far_tris": 4640,
-   "draws": 4,
+   "far_tris": 7935,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 141,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1034,20 +2436,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2642,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 318276
+   "file_size": 508512
   },
   {
    "id": "electronics_fab_xl",
    "src_tris": 34112,
-   "far_tris": 9014,
-   "draws": 4,
+   "far_tris": 14892,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1057,20 +2494,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4828,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 625900
+   "file_size": 972704
   },
   {
    "id": "fabricator_l",
    "src_tris": 26421,
-   "far_tris": 7368,
-   "draws": 4,
+   "far_tris": 12916,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3598,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1080,20 +2552,55 @@
       "Palette",
       "Plasma"
      ]
+    },
+    "Roof": {
+     "tris": 4498,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 508212
+   "file_size": 852336
   },
   {
    "id": "fabricator_m",
    "src_tris": 19037,
-   "far_tris": 5468,
-   "draws": 4,
+   "far_tris": 9723,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3754,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 277,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1103,20 +2610,55 @@
       "Palette",
       "Plasma"
      ]
+    },
+    "Roof": {
+     "tris": 3252,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 371112
+   "file_size": 613376
   },
   {
    "id": "fabricator_s",
    "src_tris": 15068,
-   "far_tris": 4610,
-   "draws": 4,
+   "far_tris": 8276,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3490,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 150,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 298,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1126,20 +2668,55 @@
       "Palette",
       "Plasma"
      ]
+    },
+    "Roof": {
+     "tris": 2864,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 314832
+   "file_size": 528856
   },
   {
    "id": "fabricator_xl",
    "src_tris": 34967,
-   "far_tris": 9920,
-   "draws": 4,
+   "far_tris": 15742,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3686,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1149,20 +2726,34 @@
       "Palette",
       "Plasma"
      ]
+    },
+    "Roof": {
+     "tris": 4772,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 682516
+   "file_size": 1038772
   },
   {
    "id": "fungus_farm_l",
    "src_tris": 23334,
-   "far_tris": 5868,
-   "draws": 4,
+   "far_tris": 11025,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3734,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4123,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1172,20 +2763,62 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 386412
+   "file_size": 669332
   },
   {
    "id": "fungus_farm_m",
    "src_tris": 19025,
-   "far_tris": 4892,
-   "draws": 4,
+   "far_tris": 9113,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3710,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3285,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1195,20 +2828,55 @@
       "L4Band",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 266,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 334104
+   "file_size": 558652
   },
   {
    "id": "fungus_farm_s",
    "src_tris": 15537,
-   "far_tris": 4238,
-   "draws": 4,
+   "far_tris": 7492,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3424,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2483,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1218,20 +2886,48 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 239,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 202,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 279344
+   "file_size": 456120
   },
   {
    "id": "fungus_farm_xl",
    "src_tris": 30635,
-   "far_tris": 8238,
-   "draws": 4,
+   "far_tris": 13945,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3568,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4673,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1241,20 +2937,76 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 547840
+   "file_size": 855388
   },
   {
    "id": "glassworks_l",
    "src_tris": 21120,
-   "far_tris": 6082,
-   "draws": 4,
+   "far_tris": 11163,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1264,20 +3016,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4030,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 404176
+   "file_size": 701232
   },
   {
    "id": "glassworks_m",
    "src_tris": 16332,
-   "far_tris": 5214,
-   "draws": 4,
+   "far_tris": 8844,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "Neon",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 268,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1287,20 +3075,56 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2676,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 352712
+   "file_size": 555556
   },
   {
    "id": "glassworks_s",
    "src_tris": 13178,
-   "far_tris": 4444,
-   "draws": 4,
+   "far_tris": 7536,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 242,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1310,20 +3134,56 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2238,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 299820
+   "file_size": 480244
   },
   {
    "id": "glassworks_xl",
    "src_tris": 28787,
-   "far_tris": 8824,
-   "draws": 4,
+   "far_tris": 14490,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1333,20 +3193,57 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4616,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 598368
+   "file_size": 933216
   },
   {
    "id": "greenhouse_l",
    "src_tris": 23248,
-   "far_tris": 7182,
-   "draws": 4,
+   "far_tris": 11407,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3348,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 256,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3283,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1356,20 +3253,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 172,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 481656
+   "file_size": 775160
   },
   {
    "id": "greenhouse_m",
    "src_tris": 19488,
-   "far_tris": 5284,
-   "draws": 4,
+   "far_tris": 8765,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3376,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 256,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 273,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2550,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1379,20 +3312,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 172,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 347436
+   "file_size": 579360
   },
   {
    "id": "greenhouse_s",
    "src_tris": 13330,
-   "far_tris": 3958,
-   "draws": 4,
+   "far_tris": 6582,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3136,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 224,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 241,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 1815,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1402,20 +3371,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 178,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 264924
+   "file_size": 428668
   },
   {
    "id": "greenhouse_xl",
    "src_tris": 28324,
-   "far_tris": 8646,
-   "draws": 4,
+   "far_tris": 13413,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3390,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 256,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3825,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1425,20 +3430,35 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 172,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 581084
+   "file_size": 924088
   },
   {
    "id": "habitat_l",
    "src_tris": 33123,
-   "far_tris": 10787,
-   "draws": 4,
+   "far_tris": 15844,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4641,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4000,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1448,20 +3468,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 200,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 295,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 332,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 701276
+   "file_size": 940312
   },
   {
    "id": "habitat_m",
    "src_tris": 24990,
-   "far_tris": 8215,
-   "draws": 4,
+   "far_tris": 11235,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 4353,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3020,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1473,18 +3528,25 @@
      ]
     }
    },
-   "file_size": 535048
+   "file_size": 712716
   },
   {
    "id": "habitat_s",
    "src_tris": 15406,
-   "far_tris": 4878,
-   "draws": 4,
+   "far_tris": 7126,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3509,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2248,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -1496,18 +3558,26 @@
      ]
     }
    },
-   "file_size": 317732
+   "file_size": 457988
   },
   {
    "id": "habitat_xl",
    "src_tris": 43714,
-   "far_tris": 14350,
-   "draws": 4,
+   "far_tris": 20010,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 5097,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4604,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1517,18 +3587,53 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 200,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 294,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 332,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 942924
+   "file_size": 1227172
   },
   {
    "id": "hr_office_l",
    "src_tris": 33001,
-   "far_tris": 9615,
-   "draws": 4,
+   "far_tris": 13519,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 4072,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3904,
      "mats": [
       "LightStrip",
       "Palette"
@@ -1542,16 +3647,23 @@
      ]
     }
    },
-   "file_size": 630352
+   "file_size": 853692
   },
   {
    "id": "hr_office_m",
    "src_tris": 24487,
-   "far_tris": 6773,
-   "draws": 4,
+   "far_tris": 10018,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3646,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3245,
      "mats": [
       "LightStrip",
       "Palette"
@@ -1565,16 +3677,23 @@
      ]
     }
    },
-   "file_size": 446408
+   "file_size": 631724
   },
   {
    "id": "hr_office_s",
    "src_tris": 19115,
-   "far_tris": 4807,
-   "draws": 4,
+   "far_tris": 7632,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3202,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2825,
      "mats": [
       "LightStrip",
       "Palette"
@@ -1588,13 +3707,13 @@
      ]
     }
    },
-   "file_size": 313096
+   "file_size": 466900
   },
   {
    "id": "jail_l",
    "src_tris": 21595,
-   "far_tris": 7602,
-   "draws": 4,
+   "far_tris": 12791,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3210,
@@ -1609,15 +3728,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5189,
+     "mats": [
+      "Palette",
+      "PrisonOrangeGlow"
+     ]
     }
    },
-   "file_size": 510252
+   "file_size": 820184
   },
   {
    "id": "jail_m",
    "src_tris": 15754,
-   "far_tris": 5093,
-   "draws": 4,
+   "far_tris": 9388,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 2992,
@@ -1632,15 +3758,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4295,
+     "mats": [
+      "Palette",
+      "PrisonOrangeGlow"
+     ]
     }
    },
-   "file_size": 341344
+   "file_size": 597732
   },
   {
    "id": "jail_s",
    "src_tris": 13051,
-   "far_tris": 4052,
-   "draws": 4,
+   "far_tris": 7746,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 2736,
@@ -1655,15 +3788,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3694,
+     "mats": [
+      "Palette",
+      "PrisonOrangeGlow"
+     ]
     }
    },
-   "file_size": 271792
+   "file_size": 487344
   },
   {
    "id": "junction",
    "src_tris": 8654,
-   "far_tris": 2548,
-   "draws": 4,
+   "far_tris": 3788,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 2414,
@@ -1678,20 +3818,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 1240,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 169092
+   "file_size": 238028
   },
   {
    "id": "kitchen_l",
    "src_tris": 29275,
-   "far_tris": 8290,
-   "draws": 4,
+   "far_tris": 13289,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4134,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1701,20 +3876,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3948,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 553360
+   "file_size": 862904
   },
   {
    "id": "kitchen_m",
    "src_tris": 22275,
-   "far_tris": 6394,
-   "draws": 4,
+   "far_tris": 10384,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4050,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 261,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1724,20 +3935,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3083,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 434356
+   "file_size": 677812
   },
   {
    "id": "kitchen_s",
    "src_tris": 16076,
-   "far_tris": 4638,
-   "draws": 4,
+   "far_tris": 7875,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3178,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 156,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 130,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 266,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1747,20 +3994,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2535,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 314288
+   "file_size": 514692
   },
   {
    "id": "kitchen_xl",
    "src_tris": 36452,
-   "far_tris": 9768,
-   "draws": 4,
+   "far_tris": 15263,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3850,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1770,20 +4053,43 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4444,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 656192
+   "file_size": 998072
   },
   {
    "id": "lounge_l",
    "src_tris": 30394,
-   "far_tris": 8997,
-   "draws": 4,
+   "far_tris": 13865,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4506,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3834,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1793,20 +4099,56 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 573264
+   "file_size": 842624
   },
   {
    "id": "lounge_m",
    "src_tris": 22758,
-   "far_tris": 6388,
-   "draws": 4,
+   "far_tris": 10404,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3998,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3080,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1816,20 +4158,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 266,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 411644
+   "file_size": 645756
   },
   {
    "id": "lounge_s",
    "src_tris": 17838,
-   "far_tris": 4942,
-   "draws": 4,
+   "far_tris": 8154,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3234,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2438,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1839,20 +4217,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 242,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 202,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 320940
+   "file_size": 500688
   },
   {
    "id": "lounge_xl",
    "src_tris": 38877,
-   "far_tris": 11956,
-   "draws": 4,
+   "far_tris": 17045,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4916,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4055,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -1862,20 +4276,69 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 757460
+   "file_size": 1066924
   },
   {
    "id": "magnet_works_l",
    "src_tris": 24784,
-   "far_tris": 6761,
-   "draws": 4,
+   "far_tris": 11526,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3534,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1885,20 +4348,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3714,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 455772
+   "file_size": 746404
   },
   {
    "id": "magnet_works_m",
    "src_tris": 17848,
-   "far_tris": 5261,
-   "draws": 4,
+   "far_tris": 9162,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 267,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1908,20 +4406,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2948,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 359564
+   "file_size": 592320
   },
   {
    "id": "magnet_works_s",
    "src_tris": 14383,
-   "far_tris": 4743,
-   "draws": 4,
+   "far_tris": 7886,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 141,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1931,20 +4464,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2390,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 324752
+   "file_size": 502488
   },
   {
    "id": "magnet_works_xl",
    "src_tris": 34943,
-   "far_tris": 10254,
-   "draws": 4,
+   "far_tris": 15198,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3698,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -1954,18 +4522,32 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3894,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 697224
+   "file_size": 998256
   },
   {
    "id": "medical_l",
    "src_tris": 22866,
-   "far_tris": 6434,
-   "draws": 4,
+   "far_tris": 9751,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
      "mats": [
       "LightStrip",
       "Palette"
@@ -1977,18 +4559,53 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 275,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2332,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 434220
+   "file_size": 594268
   },
   {
    "id": "medical_m",
    "src_tris": 17916,
-   "far_tris": 5082,
-   "draws": 4,
+   "far_tris": 7570,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3734,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
      "mats": [
       "LightStrip",
       "Palette"
@@ -2000,18 +4617,53 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 262,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 276,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 1596,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 340668
+   "file_size": 469804
   },
   {
    "id": "medical_s",
    "src_tris": 13850,
-   "far_tris": 4076,
-   "draws": 4,
+   "far_tris": 6082,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3210,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
      "mats": [
       "LightStrip",
       "Palette"
@@ -2023,15 +4675,43 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 156,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 230,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 194,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 1276,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 271268
+   "file_size": 387380
   },
   {
    "id": "medical_xl",
    "src_tris": 30427,
-   "far_tris": 7902,
-   "draws": 4,
+   "far_tris": 11863,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3564,
@@ -2046,20 +4726,83 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2928,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
     }
    },
-   "file_size": 538528
+   "file_size": 716344
   },
   {
    "id": "metamaterial_foundry_l",
    "src_tris": 24155,
-   "far_tris": 7038,
-   "draws": 4,
+   "far_tris": 12045,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2069,20 +4812,55 @@
       "L4Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3956,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 460132
+   "file_size": 765712
   },
   {
    "id": "metamaterial_foundry_m",
    "src_tris": 18014,
-   "far_tris": 5318,
-   "draws": 4,
+   "far_tris": 9420,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 270,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2092,20 +4870,54 @@
       "L4Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3146,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 350228
+   "file_size": 596044
   },
   {
    "id": "metamaterial_foundry_s",
    "src_tris": 15045,
-   "far_tris": 4808,
-   "draws": 4,
+   "far_tris": 8076,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3480,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 142,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2115,20 +4927,55 @@
       "L4Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2614,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
     }
    },
-   "file_size": 326748
+   "file_size": 511876
   },
   {
    "id": "metamaterial_foundry_xl",
    "src_tris": 32552,
-   "far_tris": 9649,
-   "draws": 4,
+   "far_tris": 14917,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3696,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2138,20 +4985,41 @@
       "L4Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4218,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 636772
+   "file_size": 957024
   },
   {
    "id": "mine_l",
    "src_tris": 22988,
-   "far_tris": 6316,
-   "draws": 4,
+   "far_tris": 12093,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3616,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4744,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2161,20 +5029,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 420896
+   "file_size": 754740
   },
   {
    "id": "mine_m",
    "src_tris": 19089,
-   "far_tris": 5548,
-   "draws": 4,
+   "far_tris": 10197,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3712,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2184,20 +5087,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 267,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 375600
+   "file_size": 638804
   },
   {
    "id": "mine_s",
    "src_tris": 14090,
-   "far_tris": 4447,
-   "draws": 4,
+   "far_tris": 7879,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3488,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2658,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2207,20 +5145,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 242,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 202,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 298820
+   "file_size": 491396
   },
   {
    "id": "mine_xl",
    "src_tris": 29986,
-   "far_tris": 8550,
-   "draws": 4,
+   "far_tris": 14416,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4834,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2230,20 +5203,56 @@
       "Glow",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 282,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 574896
+   "file_size": 916680
   },
   {
    "id": "oxygen_plant_l",
    "src_tris": 20986,
-   "far_tris": 5748,
-   "draws": 4,
+   "far_tris": 9965,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3172,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3345,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -2253,19 +5262,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 250,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 276,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 350668
+   "file_size": 568796
   },
   {
    "id": "oxygen_plant_m",
    "src_tris": 15913,
-   "far_tris": 4288,
-   "draws": 4,
+   "far_tris": 7595,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3234,
      "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2539,
+     "mats": [
+      "Glass",
       "LightStrip",
       "Palette"
      ]
@@ -2276,20 +5321,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 148,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 226,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 244,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 276136
+   "file_size": 449148
   },
   {
    "id": "oxygen_plant_s",
    "src_tris": 12049,
-   "far_tris": 3422,
-   "draws": 4,
+   "far_tris": 6144,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 2974,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 134,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 204,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -2299,20 +5379,57 @@
       "Palette",
       "Screen"
      ]
+    },
+    "L3": {
+     "tris": 140,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 180,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2064,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 231504
+   "file_size": 384440
   },
   {
    "id": "oxygen_plant_xl",
    "src_tris": 28148,
-   "far_tris": 7586,
-   "draws": 4,
+   "far_tris": 12897,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3248,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4293,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -2322,20 +5439,49 @@
       "Palette",
       "Screen"
      ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 276,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 425756
+   "file_size": 686132
   },
   {
    "id": "park_l",
    "src_tris": 31845,
-   "far_tris": 12486,
-   "draws": 4,
+   "far_tris": 16305,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 4560,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3819,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -2347,18 +5493,26 @@
      ]
     }
    },
-   "file_size": 545952
+   "file_size": 823088
   },
   {
    "id": "park_m",
    "src_tris": 22055,
-   "far_tris": 8582,
-   "draws": 4,
+   "far_tris": 11553,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 4054,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2971,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -2370,18 +5524,26 @@
      ]
     }
    },
-   "file_size": 403664
+   "file_size": 612084
   },
   {
    "id": "park_xl",
    "src_tris": 48057,
-   "far_tris": 18256,
-   "draws": 4,
+   "far_tris": 24828,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 4996,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 6572,
+     "mats": [
+      "Glass",
+      "Neon",
       "Palette"
      ]
     },
@@ -2393,18 +5555,46 @@
      ]
     }
    },
-   "file_size": 741120
+   "file_size": 1272572
   },
   {
    "id": "parts_works_l",
    "src_tris": 23213,
-   "far_tris": 6458,
-   "draws": 4,
+   "far_tris": 11085,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3616,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2414,20 +5604,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3576,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 442272
+   "file_size": 729804
   },
   {
    "id": "parts_works_m",
    "src_tris": 18257,
-   "far_tris": 5294,
-   "draws": 4,
+   "far_tris": 9006,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 158,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2437,20 +5662,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2868,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 363352
+   "file_size": 592284
   },
   {
    "id": "parts_works_s",
    "src_tris": 13350,
-   "far_tris": 4485,
-   "draws": 4,
+   "far_tris": 7470,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3488,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 142,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2460,20 +5719,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 2331,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 307604
+   "file_size": 480248
   },
   {
    "id": "parts_works_xl",
    "src_tris": 31324,
-   "far_tris": 9638,
-   "draws": 4,
+   "far_tris": 14398,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2483,20 +5777,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3710,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 672820
+   "file_size": 968048
   },
   {
    "id": "polymer_plant_l",
    "src_tris": 24195,
-   "far_tris": 6875,
-   "draws": 4,
+   "far_tris": 12261,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2506,20 +5835,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4337,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 436812
+   "file_size": 747528
   },
   {
    "id": "polymer_plant_m",
    "src_tris": 16498,
-   "far_tris": 5395,
-   "draws": 4,
+   "far_tris": 9121,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "Neon",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 270,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2529,20 +5893,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2770,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 353784
+   "file_size": 556668
   },
   {
    "id": "polymer_plant_s",
    "src_tris": 14910,
-   "far_tris": 4802,
-   "draws": 4,
+   "far_tris": 8016,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 240,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2552,20 +5951,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2362,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 321296
+   "file_size": 503360
   },
   {
    "id": "polymer_plant_xl",
    "src_tris": 31716,
-   "far_tris": 9630,
-   "draws": 4,
+   "far_tris": 15420,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2575,20 +6009,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4740,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 609188
+   "file_size": 936136
   },
   {
    "id": "refinery_l",
    "src_tris": 23921,
-   "far_tris": 6762,
-   "draws": 4,
+   "far_tris": 11579,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3608,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2598,20 +6067,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3768,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 443144
+   "file_size": 728592
   },
   {
    "id": "refinery_m",
    "src_tris": 17570,
-   "far_tris": 5294,
-   "draws": 4,
+   "far_tris": 8850,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3630,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 156,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2621,20 +6125,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2714,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 352960
+   "file_size": 561584
   },
   {
    "id": "refinery_s",
    "src_tris": 14512,
-   "far_tris": 4926,
-   "draws": 4,
+   "far_tris": 8015,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 141,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2644,20 +6182,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2436,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 331036
+   "file_size": 508332
   },
   {
    "id": "refinery_xl",
    "src_tris": 33205,
-   "far_tris": 9420,
-   "draws": 4,
+   "far_tris": 15090,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2667,20 +6240,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4620,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 629792
+   "file_size": 976204
   },
   {
    "id": "research_assembler_l",
    "src_tris": 27365,
-   "far_tris": 6784,
-   "draws": 4,
+   "far_tris": 12452,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3670,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 277,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2690,20 +6298,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4665,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 463008
+   "file_size": 815540
   },
   {
    "id": "research_assembler_m",
    "src_tris": 23012,
-   "far_tris": 5618,
-   "draws": 4,
+   "far_tris": 10534,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3862,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 172,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 262,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 292,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2713,20 +6357,56 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4008,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 377316
+   "file_size": 682780
   },
   {
    "id": "research_assembler_s",
    "src_tris": 16144,
-   "far_tris": 4158,
-   "draws": 4,
+   "far_tris": 8190,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3178,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 150,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 156,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 156,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 266,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2736,20 +6416,56 @@
       "Palette",
       "Plasma"
      ]
+    },
+    "Roof": {
+     "tris": 3304,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 282172
+   "file_size": 534296
   },
   {
    "id": "research_assembler_xl",
    "src_tris": 40305,
-   "far_tris": 9476,
-   "draws": 4,
+   "far_tris": 17344,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4184,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -2759,20 +6475,35 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 6816,
+     "mats": [
+      "Glass",
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 650636
+   "file_size": 1169208
   },
   {
    "id": "research_lab_l",
    "src_tris": 36569,
-   "far_tris": 9236,
-   "draws": 4,
+   "far_tris": 15478,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 5128,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 5212,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2782,20 +6513,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 320,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 592156
+   "file_size": 992620
   },
   {
    "id": "research_lab_m",
    "src_tris": 26894,
-   "far_tris": 6624,
-   "draws": 4,
+   "far_tris": 11782,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 4526,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4226,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2805,20 +6571,62 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 266,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 288,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 429288
+   "file_size": 765028
   },
   {
    "id": "research_lab_s",
    "src_tris": 18882,
-   "far_tris": 4632,
-   "draws": 4,
+   "far_tris": 8631,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3374,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3232,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2828,20 +6636,48 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 239,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 198,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 303088
+   "file_size": 567228
   },
   {
    "id": "research_lab_xl",
    "src_tris": 45286,
-   "far_tris": 12476,
-   "draws": 4,
+   "far_tris": 19433,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 6062,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 5928,
+     "mats": [
+      "Neon",
       "Palette"
      ]
     },
@@ -2851,15 +6687,43 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 320,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
     }
    },
-   "file_size": 816420
+   "file_size": 1274776
   },
   {
    "id": "residence_tube_executive_l",
    "src_tris": 35531,
-   "far_tris": 10150,
-   "draws": 4,
+   "far_tris": 15924,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3204,
@@ -2874,15 +6738,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5774,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 682900
+   "file_size": 1063592
   },
   {
    "id": "residence_tube_executive_m",
    "src_tris": 26520,
-   "far_tris": 6952,
-   "draws": 4,
+   "far_tris": 12344,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3206,
@@ -2897,15 +6768,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5392,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 466280
+   "file_size": 821760
   },
   {
    "id": "residence_tube_executive_xl",
    "src_tris": 44779,
-   "far_tris": 12077,
-   "draws": 4,
+   "far_tris": 18425,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3188,
@@ -2920,15 +6798,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 6348,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 817096
+   "file_size": 1241048
   },
   {
    "id": "residence_tube_l",
    "src_tris": 39396,
-   "far_tris": 11530,
-   "draws": 4,
+   "far_tris": 16578,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3204,
@@ -2943,15 +6828,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5048,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 785036
+   "file_size": 1112860
   },
   {
    "id": "residence_tube_m",
    "src_tris": 27844,
-   "far_tris": 7848,
-   "draws": 4,
+   "far_tris": 12620,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3206,
@@ -2966,15 +6858,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4772,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 531720
+   "file_size": 842264
   },
   {
    "id": "residence_tube_xl",
    "src_tris": 46482,
-   "far_tris": 13368,
-   "draws": 4,
+   "far_tris": 18982,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3188,
@@ -2989,20 +6888,34 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 5614,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 916616
+   "file_size": 1285792
   },
   {
    "id": "retail_l",
    "src_tris": 30723,
-   "far_tris": 10222,
-   "draws": 4,
+   "far_tris": 14197,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3620,
      "mats": [
       "Glow",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3975,
+     "mats": [
+      "LightStrip",
       "Palette"
      ]
     },
@@ -3014,18 +6927,25 @@
      ]
     }
    },
-   "file_size": 690684
+   "file_size": 925480
   },
   {
    "id": "retail_m",
    "src_tris": 21608,
-   "far_tris": 7354,
-   "draws": 4,
+   "far_tris": 10768,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3660,
      "mats": [
       "Glow",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3414,
+     "mats": [
+      "LightStrip",
       "Palette"
      ]
     },
@@ -3037,18 +6957,25 @@
      ]
     }
    },
-   "file_size": 497980
+   "file_size": 711360
   },
   {
    "id": "retail_s",
    "src_tris": 15704,
-   "far_tris": 5094,
-   "draws": 4,
+   "far_tris": 8210,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3278,
      "mats": [
       "Glow",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3116,
+     "mats": [
+      "LightStrip",
       "Palette"
      ]
     },
@@ -3060,13 +6987,13 @@
      ]
     }
    },
-   "file_size": 346816
+   "file_size": 537416
   },
   {
    "id": "security_office_m",
    "src_tris": 19373,
-   "far_tris": 6181,
-   "draws": 4,
+   "far_tris": 9454,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3414,
@@ -3081,15 +7008,22 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3273,
+     "mats": [
+      "Palette",
+      "SignalRedGlow"
+     ]
     }
    },
-   "file_size": 416292
+   "file_size": 593688
   },
   {
    "id": "security_office_s",
    "src_tris": 15195,
-   "far_tris": 4870,
-   "draws": 4,
+   "far_tris": 7837,
+   "draws": 6,
    "groups": {
     "Base": {
      "tris": 3096,
@@ -3104,20 +7038,55 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2967,
+     "mats": [
+      "Palette",
+      "SignalRedGlow"
+     ]
     }
    },
-   "file_size": 328124
+   "file_size": 486528
   },
   {
    "id": "steel_mill_l",
    "src_tris": 22962,
-   "far_tris": 6707,
-   "draws": 4,
+   "far_tris": 11220,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3596,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3127,20 +7096,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3462,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 449852
+   "file_size": 732924
   },
   {
    "id": "steel_mill_m",
    "src_tris": 17899,
-   "far_tris": 5176,
-   "draws": 4,
+   "far_tris": 8844,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 266,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3150,20 +7154,54 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2716,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 348920
+   "file_size": 575600
   },
   {
    "id": "steel_mill_s",
    "src_tris": 13285,
-   "far_tris": 4730,
-   "draws": 4,
+   "far_tris": 7556,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 64,
+     "mats": [
+      "L4Band"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3173,20 +7211,55 @@
       "Ember",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2150,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 318912
+   "file_size": 484392
   },
   {
    "id": "steel_mill_xl",
    "src_tris": 33237,
-   "far_tris": 9806,
-   "draws": 4,
+   "far_tris": 14496,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3196,20 +7269,48 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3640,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 673416
+   "file_size": 965472
   },
   {
    "id": "storehouse_l",
    "src_tris": 34040,
-   "far_tris": 12078,
-   "draws": 4,
+   "far_tris": 16812,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 4008,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -3219,20 +7320,55 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3685,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 835956
+   "file_size": 1117800
   },
   {
    "id": "storehouse_m",
    "src_tris": 24760,
-   "far_tris": 9872,
-   "draws": 4,
+   "far_tris": 13241,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 4056,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 214,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 188,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 276,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -3242,20 +7378,62 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "L5": {
+     "tris": 324,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2367,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 680568
+   "file_size": 871040
   },
   {
    "id": "storehouse_s",
    "src_tris": 16578,
-   "far_tris": 6036,
-   "draws": 4,
+   "far_tris": 9075,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3776,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 242,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3265,20 +7443,48 @@
       "LightStrip",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 2185,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 417040
+   "file_size": 596808
   },
   {
    "id": "storehouse_xl",
    "src_tris": 43361,
-   "far_tris": 15471,
-   "draws": 4,
+   "far_tris": 20868,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3994,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
       "Palette"
      ]
     },
@@ -3288,20 +7494,62 @@
       "Palette",
       "Window"
      ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 4347,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 1079140
+   "file_size": 1392028
   },
   {
    "id": "superconductor_lab_l",
    "src_tris": 24567,
-   "far_tris": 6598,
-   "draws": 4,
+   "far_tris": 11723,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 283,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3311,20 +7559,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4076,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 438124
+   "file_size": 742216
   },
   {
    "id": "superconductor_lab_m",
    "src_tris": 18876,
-   "far_tris": 5490,
-   "draws": 4,
+   "far_tris": 9452,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "Neon",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 157,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3334,20 +7617,54 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3119,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 369484
+   "file_size": 604868
   },
   {
    "id": "superconductor_lab_s",
    "src_tris": 14293,
-   "far_tris": 4586,
-   "draws": 4,
+   "far_tris": 7604,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 142,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3357,20 +7674,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2364,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 306496
+   "file_size": 478240
   },
   {
    "id": "superconductor_lab_xl",
    "src_tris": 34214,
-   "far_tris": 9998,
-   "draws": 4,
+   "far_tris": 15299,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3380,20 +7732,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 4249,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 679588
+   "file_size": 992368
   },
   {
    "id": "titanium_smelter_l",
    "src_tris": 23350,
-   "far_tris": 6702,
-   "draws": 4,
+   "far_tris": 11491,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3403,20 +7790,55 @@
       "Glow",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3738,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 445404
+   "file_size": 742196
   },
   {
    "id": "titanium_smelter_m",
    "src_tris": 17462,
-   "far_tris": 5392,
-   "draws": 4,
+   "far_tris": 9387,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
       "Neon",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 269,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3426,20 +7848,55 @@
       "Ember",
       "Palette"
      ]
+    },
+    "Roof": {
+     "tris": 3040,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 362344
+   "file_size": 604932
   },
   {
    "id": "titanium_smelter_s",
    "src_tris": 13522,
-   "far_tris": 4590,
-   "draws": 4,
+   "far_tris": 7854,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 164,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3449,20 +7906,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 2488,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 306876
+   "file_size": 493688
   },
   {
    "id": "titanium_smelter_xl",
    "src_tris": 33839,
-   "far_tris": 9791,
-   "draws": 4,
+   "far_tris": 14731,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3472,18 +7964,32 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3890,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 655092
+   "file_size": 960388
   },
   {
    "id": "water_recycler_l",
    "src_tris": 20618,
-   "far_tris": 4833,
-   "draws": 4,
+   "far_tris": 9342,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3244,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
      "mats": [
       "LightStrip",
       "Palette"
@@ -3495,18 +8001,53 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 270,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3553,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 305984
+   "file_size": 543676
   },
   {
    "id": "water_recycler_m",
    "src_tris": 17198,
-   "far_tris": 4304,
-   "draws": 4,
+   "far_tris": 8150,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3324,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
      "mats": [
       "LightStrip",
       "Palette"
@@ -3518,18 +8059,53 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 164,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 250,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 276,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2990,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 283380
+   "file_size": 485704
   },
   {
    "id": "water_recycler_s",
    "src_tris": 13195,
-   "far_tris": 3598,
-   "draws": 4,
+   "far_tris": 6468,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 2984,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 134,
      "mats": [
       "LightStrip",
       "Palette"
@@ -3541,18 +8117,53 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 148,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 222,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 234,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 2132,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 240436
+   "file_size": 400396
   },
   {
    "id": "water_recycler_xl",
    "src_tris": 26015,
-   "far_tris": 5971,
-   "draws": 4,
+   "far_tris": 10912,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3348,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
      "mats": [
       "LightStrip",
       "Palette"
@@ -3564,20 +8175,76 @@
       "L3Band",
       "Palette"
      ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 286,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
+      "Palette"
+     ]
+    },
+    "Roof": {
+     "tris": 3889,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 380840
+   "file_size": 637288
   },
   {
    "id": "workshop_l",
    "src_tris": 23070,
-   "far_tris": 6542,
-   "draws": 4,
+   "far_tris": 11568,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3592,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 284,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3587,20 +8254,55 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3976,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 445392
+   "file_size": 759672
   },
   {
    "id": "workshop_m",
    "src_tris": 18038,
-   "far_tris": 5290,
-   "draws": 4,
+   "far_tris": 9359,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3710,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 180,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 155,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 308,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3610,20 +8312,53 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 3228,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 361912
+   "file_size": 616616
   },
   {
    "id": "workshop_s",
    "src_tris": 13220,
-   "far_tris": 4462,
-   "draws": 4,
+   "far_tris": 7606,
+   "draws": 12,
    "groups": {
     "Base": {
      "tris": 3474,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 166,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 64,
+     "mats": [
+      "L3Band"
+     ]
+    },
+    "L4": {
+     "tris": 64,
+     "mats": [
+      "L4Band"
+     ]
+    },
+    "L5": {
+     "tris": 282,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3633,20 +8368,55 @@
       "Palette",
       "Screen"
      ]
+    },
+    "Roof": {
+     "tris": 2568,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 305824
+   "file_size": 489632
   },
   {
    "id": "workshop_xl",
    "src_tris": 32217,
-   "far_tris": 9962,
-   "draws": 4,
+   "far_tris": 15371,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
       "LightStrip",
+      "Palette"
+     ]
+    },
+    "L2": {
+     "tris": 230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "L3": {
+     "tris": 196,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
+    "L4": {
+     "tris": 285,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    },
+    "L5": {
+     "tris": 340,
+     "mats": [
+      "L5Gold",
       "Palette"
      ]
     },
@@ -3656,13 +8426,25 @@
       "Palette",
       "Window"
      ]
+    },
+    "Roof": {
+     "tris": 4358,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
     }
    },
-   "file_size": 687880
+   "file_size": 1025828
   }
  ],
  "groups": [
   "Base",
-  "Interior"
+  "Interior",
+  "Roof",
+  "L2",
+  "L3",
+  "L4",
+  "L5"
  ]
 }

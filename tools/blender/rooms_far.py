@@ -7,7 +7,7 @@ Run from the project root, after rooms_build.py:
       --python tools/blender/rooms_far.py -- [--only habitat_m,lounge] [--report path]
 
 For every room file assets/models/<id>.glb it writes assets/models/<id>_far.glb: the same building with few objects
-and few materials, for distances beyond about 80 m.  By default only Base and Interior (GROUPS): the roof-off view.  The objects carry the GAME GROUP names, so RENDER's group rules
+and few materials, for distances beyond about 80 m (GROUPS: every group by default).  The objects carry the GAME GROUP names, so RENDER's group rules
 work unchanged on the far template (roof on / off, cutaway, upgrade levels):
     Base      Base, Wall_* (no doorway mask at that distance), Decal_<seg>_Base/Lights/Wall*, Porch, the airlock's
               static door frames (OuterFrame, *FrameCap), ChamberLight
@@ -44,9 +44,9 @@ DOWN_Z = -0.5                      # faces whose normal points this far down go
 RATIO = 1.0                        # collapse decimation smears the corner colours (tested 0.3 / 0.45): off
 MAX_GLOW = 1
 SKIP_FILES = ("apartment_block",)
-# 2026-10-03: the far file is for the roof-off (cutaway) view, where buildings cost 10 ms: Base + Interior only
-# (17 MB of pck).  "--groups all" adds Roof and L2..L5 for the roof-on view too (28 MB of pck, measured).
-GROUPS = ("Base", "Interior")
+# 2026-10-03: every group (roof-off and roof-on views; 28.3 MB of pck, measured).  "--groups Base,Interior" gives
+# the roof-off set only (18.9 MB).
+GROUPS = ("Base", "Interior", "Roof", "L2", "L3", "L4", "L5")   # coordinator 2026-10-03: all groups
 ALL_GROUPS = ("Base", "Interior", "Roof", "L2", "L3", "L4", "L5")
 REPORT = os.path.join(HERE, "far_report.json")
 

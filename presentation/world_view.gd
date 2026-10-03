@@ -4048,6 +4048,12 @@ func debug_cmd(text: String) -> String:
 			# farlod 0|1: the far meshes of rooms beyond FAR_LOD_D m with the roof open (measurement)
 			far_lod_on = not (w.size() > 1 and w[1] == "0")
 			return "farlod %s" % str(far_lod_on)
+		"npclod":
+			# npclod -1|0|1|2: every person (not the followed one) drawn at this LOD; -1 = by distance (checks)
+			if npc != null:
+				npc.force_lod = int(w[1]) if w.size() > 1 else -1
+				return "npclod %d" % int(npc.force_lod)
+			return "no npc"
 		"intlod":
 			# intlod <m>: the room-interior draw distance (measurement)
 			INTERIOR_LOD_D = float(w[1]) if w.size() > 1 else 110.0
