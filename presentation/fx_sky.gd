@@ -236,7 +236,9 @@ func update(t: float, day_len: float, daylight: float, delta: float, focus: Vect
 	var zen: Color = k["zen"]
 	var hor: Color = k["hor"]
 	if st > 0.0:
-		var dust := Color("b87a4a").lerp(Color("3a2418"), night)
+		# (the cold planet's storm is a blizzard: pale blue-white, not orange dust; it kept the dry planet's
+		# orange sky over the frost, 2026-10-03)
+		var dust := Color("b87a4a").lerp(Color("3a2418"), night) if planet_name != "cold" else Color("c9d3df").lerp(Color("2a3240"), night)
 		zen = zen.lerp(dust.darkened(0.2), st * 0.9)
 		hor = hor.lerp(dust, st * 0.9)
 	# The sky (and its reflection map) is redrawn at most 15 times a second.
@@ -304,7 +306,7 @@ func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void
 	key.directional_shadow_max_distance = clampf(cam_dist * (2.0 if quality < 3 else 2.4), 45.0, 520.0)
 
 func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) -> void:
-	env.ambient_light_color = k["amb"] if st <= 0.0 else (k["amb"] as Color).lerp(Color("c08a5e"), st * 0.6)
+	env.ambient_light_color = k["amb"] if st <= 0.0 else (k["amb"] as Color).lerp(Color("c08a5e") if planet_name != "cold" else Color("aebccd"), st * 0.6)
 	env.ambient_light_energy = k["ae"]
 	env.fog_light_color = hor.lerp(zen, 0.18).darkened(0.05)
 	var fog_d: float = lerpf(0.0026, 0.0019, night)
@@ -324,8 +326,11 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 	# and a brighter neutral ambient so the interior reads with the roof on.
 	if indoor > 0.0:
 		env.fog_density *= 1.0 - 0.92 * indoor
-		env.ambient_light_color = (env.ambient_light_color as Color).lerp(Color("d9d2c8"), 0.6 * indoor)
-		env.ambient_light_energy = float(env.ambient_light_energy) + 0.45 * indoor
+		# Indoor night (critic round 41: `time 540` did not change the indoor light): by night the room's ambient
+		# is warm lamplight and lower, so the lamp pools and screens carry the room; by day neutral and brighter.
+		var warm: Color = Color("d9d2c8").lerp(Color("d8ab7a"), night)
+		env.ambient_light_color = (env.ambient_light_color as Color).lerp(warm, (0.6 + 0.3 * night) * indoor)
+		env.ambient_light_energy = float(env.ambient_light_energy) + lerpf(0.45, 0.05, night) * indoor
 	if airless():
 		# no air: no haze at any distance (the far map stays sharp; the sky is black)
 		env.fog_density = 0.0

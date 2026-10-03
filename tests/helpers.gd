@@ -23,8 +23,10 @@ const DAY_TICKS := 6000
 ## median tick: v5) and the MEAN slice (for a test that checks the mean of 1,000-tick windows: v3, v4; preemptions
 ## count in a window mean and in the slice mean). Measured on this machine (neighbours: Blender, other Godot runs),
 ## the sim slows down less than the calibration under load, by a different amount for each test, so the ratio is
-## damped by a power: factor = min(1, (quiet / reading) ^ power). The powers (fitted to runs at 20-100 % neighbour
-## load; tests/pacer.gd takes it as an argument): v3 0.55, v4 0.95, v5 1.0; CALIB_POWER is the default. A first
+## damped by ONE power for every test: factor = min(1, (quiet / reading) ^ CALIB_POWER). Fit (2026-10-03, 30 test
+## windows of the 4 perf tests at 1 to 4 times the quiet reading; log raw time = test constant + p x log(reading /
+## quiet), one p for all): p = 0.854, rounded to 0.85; the scatter of a scaled result is 6-15 % (rms) around the test's
+## own constant. Readings above 4 times the quiet one are outside the fit (docs/progress/SIM.md). A first
 ## version, the minimum of 7 small loops, read 40 ms under any load while the sim cost rose 30-50 %. A reading
 ## below the quiet one never scales a test up.
 const CALIB_QUIET_MEDIAN_MS := 0.78
@@ -143,6 +145,14 @@ static func empty_game(seed_value: int = 1001) -> Game:
 	return Game.new(seed_value, false)
 
 ## A second simulation that continues from a save of `sim` (encode -> decode -> load).
+## Agents that are dead in the state (every long and perf test asserts that none died while it ran).
+static func dead_count(sim) -> int:
+	var n := 0
+	for a in sim.state["agents"].values():
+		if a["state"] == "dead":
+			n += 1
+	return n
+
 static func clone_by_save(sim) -> Dictionary:
 	var bytes: PackedByteArray = sim.save_bytes()
 	var dec: Dictionary = Persistence.decode(bytes)

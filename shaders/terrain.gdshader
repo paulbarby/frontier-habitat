@@ -27,6 +27,8 @@ uniform vec3 tint : source_color = vec3(1.0, 1.0, 1.0);
 // Planets (Paul 2026-10-01, V5 15.7): airless = grey regolith (desaturate), cold = frost and ice on the ground.
 uniform float grey_k = 0.0;
 uniform float frost = 0.0;
+uniform float fog_rim = 0.22;   // the warm rim along the explored ground (0 on airless and cold: over grey regolith it
+                                // read as a yellow-green patch, critic round 41)
 uniform float streak_k = 1.0;   // wind-blown sand streaks (0 on the airless planet: no wind)
 uniform vec2 wind_dir = vec2(0.83, 0.55);
 uniform float overlay = 0.0;
@@ -246,15 +248,17 @@ void fragment() {
 		alb = mix(alb, vec3(gl) * vec3(0.98, 0.99, 1.02), grey_k);
 	}
 	if (frost > 0.0) {
-		// Frost on the up-facing ground and rime in the hollows; bare rock on the steep faces.
-		float fup = smoothstep(0.62, 0.92, n.y);
-		float fn = vnoise3(wpos * 0.31) * 0.55 + vnoise3(wpos * 1.45) * 0.3 + vnoise3(wpos * 5.2) * 0.15;
-		float fk = fup * smoothstep(0.45, 0.7, fn + 0.12 * frost) * frost;
-		// a thin rime everywhere flat, thicker frost patches in the noise; ice glints (low roughness)
-		fk = max(fk, smoothstep(0.8, 0.98, n.y) * 0.22 * frost);
-		alb = mix(alb, vec3(0.80, 0.86, 0.93), clamp(fk, 0.0, 0.8));
-		rough = mix(rough, 0.42, fk * 0.6);
-		nxy *= 1.0 - fk * 0.55;
+		// Critic round 41: a smooth frost cover over a grey-blue base, not a blotchy camouflage over pink. The
+		// base first goes grey-blue (cold regolith); the frost is a broad, soft cover (low-frequency noise,
+		// wide edges) on the up-facing ground, thin in places, bare rock on the steep faces.
+		vec3 gb = vec3(dot(alb, vec3(0.3, 0.59, 0.11))) * vec3(0.86, 0.92, 1.02);
+		alb = mix(alb, gb, clamp(frost * 1.4, 0.0, 0.9));
+		float fup = smoothstep(0.55, 0.9, n.y);
+		float fn = vnoise3(wpos * 0.045) * 0.6 + vnoise3(wpos * 0.17) * 0.3 + vnoise3(wpos * 0.9) * 0.1;
+		float fk = fup * mix(0.45, 1.0, smoothstep(0.25, 0.75, fn)) * clamp(frost * 1.4, 0.0, 1.0);
+		alb = mix(alb, vec3(0.84, 0.89, 0.95), clamp(fk, 0.0, 0.85));
+		rough = mix(rough, 0.45, fk * 0.6);
+		nxy *= 1.0 - fk * 0.5;
 	}
 
 	// Walk overlay: crisp one-metre cells.
@@ -329,7 +333,7 @@ void fragment() {
 		alb = mix(fogged, alb, ek);
 		// A warm rim along the edge of the explored ground.
 		float rim = smoothstep(0.08, 0.45, ex) * (1.0 - smoothstep(0.45, 0.85, ex));
-		alb += vec3(1.0, 0.58, 0.28) * rim * 0.22;
+		alb += vec3(1.0, 0.58, 0.28) * rim * fog_rim;
 	}
 
 	// Hazard zones (V3 1): meteor red, wind cyan, quake violet; only above-average risk

@@ -87,6 +87,9 @@ func _setup(c: String) -> void:
 			main.view.debug_cmd("fprobe start 600 in")
 		"follow_dome":
 			main.view.debug_cmd("fprobe start 600 b:super_dome")
+		_:
+			if c.begins_with("follow_id:"):
+				main.view.debug_cmd("follow " + c.substr(10))
 
 func _finish(c: String) -> void:
 	var tot: Array = rows.map(func(r): return float(r[0]))
@@ -99,10 +102,13 @@ func _finish(c: String) -> void:
 		"bodies": (st.get("npc", {}) as Dictionary).get("bodies", 0), "instances": st.get("instances", 0)}
 	report[c] = rep
 	print("PERF %s: frame %.1f ms (p95 %.1f) | view %.1f (p95 %.1f) | sim %.1f (p95 %.1f) | npc %.1f | bodies %d" % [c, rep["total_med"], rep["total_p95"], rep["view_med"], rep["view_p95"], rep["sim_med"], rep["sim_p95"], rep["npc_med"], int(rep["bodies"])])
-	print("   prof ", JSON.stringify(rep["prof"]))
+	for sp in main.view.npc.slow_plans.slice(0, 12):
+		print("   SLOW ", sp)
+	print("   slots ", JSON.stringify(main.view.npc.stats_slots).left(600))
+	print("   prof ", JSON.stringify(rep["prof"]), " indoor %.2f cull %s batches culled %d open %s" % [float(main.view._indoor), str(main.view.npc.indoor_cull), int(main.view.cull_stats), str(main.view._follow_open.keys().map(func(k): return String(main.sim.state["buildings"][k]["def"]) + ":" + str(snappedf((main.sim.state["buildings"][k]["pos"] as Vector2).distance_to(Vector2(main.rig.camera.global_position.x, main.rig.camera.global_position.z)), 0.1)) + "/" + str(main.sim.state["buildings"][k]["radius"])))])
 	var pu: Dictionary = main.rig.prof_us
 	var fr: float = maxf(1.0, float(pu.get("frames", 1)))
-	print("   rig ms/frame: total %.2f framing %.2f viewok %.2f (%d calls) probe %.2f" % [float(pu.get("total", 0)) / fr / 1000.0, float(pu.get("framing", 0)) / fr / 1000.0, float(pu.get("viewok", 0)) / fr / 1000.0, int(pu.get("viewok_n", 0)), float(pu.get("probe", 0)) / fr / 1000.0])
+	print("   rig ms/frame: total %.2f framing %.2f viewok %.2f (%d calls) probe %.2f body_fn %.2f arm %.2f" % [float(pu.get("total", 0)) / fr / 1000.0, float(pu.get("framing", 0)) / fr / 1000.0, float(pu.get("viewok", 0)) / fr / 1000.0, int(pu.get("viewok_n", 0)), float(pu.get("probe", 0)) / fr / 1000.0, float(pu.get("body_fn", 0)) / fr / 1000.0, float(pu.get("arm", 0)) / fr / 1000.0])
 	main.rig.prof_us = {}
 	var ns: Dictionary = st.get("npc", {})
 	print("   npc ", JSON.stringify(rep["npc"]), " body %s write %s lamps %s walk %s bodies/frame %s dyn %s why %s" % [ns.get("body_ms"), ns.get("write_ms"), ns.get("lamps_ms"), ns.get("walk_ms"), ns.get("bodies_per_frame"), ns.get("dyn_rows"), JSON.stringify(ns.get("blend_why_per_frame"))])

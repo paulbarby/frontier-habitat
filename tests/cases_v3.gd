@@ -944,6 +944,7 @@ func long_v3_determinism(t) -> void:
 	for k in dc:
 		total += int(dc[k])
 	t.check(total >= 3, "hazards happened (%s)" % str(dc))
+	t.eq(H.dead_count(ga.sim), 0, "nobody died in ten days of hard hazards")
 	var cl: Dictionary = H.clone_by_save(ga.sim)
 	var gc = H.Game.new(1001, false)
 	gc.sim.dispose()
@@ -992,7 +993,7 @@ func long_v3_perf(t) -> void:
 	# single windows down; every window is on the result line).
 	var wins: Array = []
 	var raw_w: Array = []
-	var pc = Pacer.new(true, 0.55)
+	var pc = Pacer.new(true)
 	pc.start()
 	for w in 3:
 		for b in 10:
@@ -1008,6 +1009,7 @@ func long_v3_perf(t) -> void:
 	var ms: float = float(sorted_w[1])
 	t.check(pop >= 70 and n >= 150, "the colony has the size of the budget (%d people, %d structures)" % [pop, n])
 	t.check(sim.alive_count() >= 68, "they are still alive while it is measured (%d)" % sim.alive_count())
+	t.eq(H.dead_count(sim), 0, "nobody died while the colony was built and measured")
 	t.check(ms <= 2.0, "a tick takes at most 2.0 ms (scaled median %.3f ms of %s; raw %s, calibration %s, mean factor %.3f)" % [ms, str(wins), str(raw_w), cal, factor])
 	t.eq(sim.inv.audit(), {}, "ledger")
 	t.note("%.3f ms per tick scaled (windows %.3f / %.3f / %.3f; raw %.3f / %.3f / %.3f; calibration %s, mean factor %.3f) with %d colonists and %d structures, hazards normal (%s)" % [ms, wins[0], wins[1], wins[2], raw_w[0], raw_w[1], raw_w[2], cal, factor, pop, n, OS.get_processor_name()])

@@ -459,8 +459,8 @@ func _plan() -> void:
 			main.select("building", bid)
 		key(KEY_DELETE), 8)
 	q(func():
-		check("Delete asks before it removes a structure", hud.is_modal_open(), hud.screen_name())
-		hud.screens.close_all()
+		check("Delete asks before it removes a structure (the question is in the bottom hint, no window)", hud.hint.has_pending() and hud.hint.visible and not hud.is_modal_open(), hud.screen_name())
+		hud.hint.cancel_pending()
 		main.select("", -1), 4)
 	# ---- PgUp, PgDn step the floor of a multi-floor structure
 	q(func():

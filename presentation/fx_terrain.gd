@@ -129,6 +129,7 @@ func apply_planet(name: String) -> void:
 		mat.set_shader_parameter("grey_k", 0.85 if name == "airless" else (0.45 if name == "cold" else 0.0))
 		mat.set_shader_parameter("frost", 0.6 if name == "cold" else 0.0)
 		mat.set_shader_parameter("streak_k", 0.0 if name == "airless" else 1.0)
+		mat.set_shader_parameter("fog_rim", 0.0 if name in ["airless", "cold"] else 0.22)
 	Models.tint_rocks(name)
 
 func _planet_tint() -> Color:

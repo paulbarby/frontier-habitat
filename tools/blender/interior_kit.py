@@ -952,6 +952,7 @@ def check_standpoints(rm, free=STAND_FREE):
 # --------------------------------------------------------------------------------------
 DECAL_MATS = ("Accent", "Window", "Neon", "L3Band", "L4Band", "L5Gold", "Trim", "Light", "LightStrip", "Hazard",
               "Screen", "Glow", "Plasma", "Visor", "Rubber", "Solar")
+DOOR_CLEAR_Z = 2.49        # Paul 2026-10-03: door opening top 2.24 + 0.25; no roof part below it at a door
 DECAL_ZMAX = 3.0            # the door housing top is 2.56; decals above 3.0 m never meet a doorway
 UPPER_SHELLS = ("podium", "drum", "setback")
 NAME_SIGN_DEG = 22.5        # default angle of the room-name sign (middle of segment 2)
@@ -1020,6 +1021,9 @@ def split_decals(rm):
     shell = getattr(rm, "shell", None)
     if shell in ("podium", "drum") and getattr(rm, "D", None):
         upper_z = (WALL_TOP, float(rm.D) + 0.05)
+    lift = float(getattr(rm, "lift", 0.0) or 0.0)
+    if lift > 0.0:
+        upper_z = (WALL_TOP, WALL_TOP + lift + 0.05)   # 5.0 (Paul 2026-10-03): the raised eave's drum (interior_eave)
     band = None
     sources = [rm.base, rm.roof, rm.lights] + ([rm.L[n] for n in (2, 3, 4, 5)] if rm.levels else [])
     out = {}
@@ -1036,15 +1040,18 @@ def split_decals(rm):
             if upper_z and src is rm.roof and mat == "Accent" and abs(r - Rw) < 0.12 and                     upper_z[0] < cz < upper_z[1]:
                 zs_ = [src.verts[i].z for i in idx]
                 band = (min(zs_), max(zs_)) if band is None else (min(band[0], min(zs_)), max(band[1], max(zs_)))
-            if shell == "setback" and src is rm.roof and r >= Rw - 0.60 and WALL_TOP < cz < 3.2 and                     not (abs(_face_normal(src, idx).z) > 0.9 and cz < 1.6):
-                target = "Upper_%02d" % seg           # things on the setback deck near the wall (tanks, rails)
-            elif upper_z and src is rm.roof and abs(r - Rw) < 0.16 and upper_z[0] - 0.01 <= cz <= upper_z[1] \
+            if upper_z and src is rm.roof and abs(r - Rw) < 0.16 and upper_z[0] - 0.01 <= cz <= upper_z[1] \
                     and abs(_face_normal(src, idx).z) < 0.4:
                 target = "Upper_%02d" % seg           # the upper wall skin and its band hide with the wall rule
                 skin = True                           # cut at the segment lines (the skin faces are wider)
+            elif shell == "setback" and src is rm.roof and r >= Rw - 0.60 and WALL_TOP < cz < 3.2 + lift and \
+                    not (abs(_face_normal(src, idx).z) > 0.9 and cz < 1.6 + lift):
+                target = "Upper_%02d" % seg           # things on the setback deck near the wall (tanks, rails)
             elif r >= Rw - 0.45 and 0.05 <= cz <= DECAL_ZMAX:
                 if mat in DECAL_MATS or src is rm.lights:
                     target = "Decal_%02d_%s" % (seg, src.name)
+                elif src is not rm.roof and src is not rm.base and cz <= DOOR_CLEAR_Z + 0.10:
+                    target = "Decal_%02d_%s" % (seg, src.name)   # level parts at the wall line (bolts): hide at a door
             if target is None:
                 keep_f.append(idx)
                 keep_m.append(mat)

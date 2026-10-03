@@ -69,7 +69,8 @@ func _process(_d: float) -> bool:
 	return false
 
 func _ref(lib: Dictionary) -> Array:
-	var k: String = String(lib.get("pvariant", "")) + String(lib.get("status", ""))
+	# (per library: a LOD1 library shares the LOD0 clips but has its own skeleton rest, 2026-10-03)
+	var k: String = String(lib.get("pvariant", "")) + String(lib.get("status", "")) + (":lod1" if bool(lib.get("lod1", false)) else "")
 	if ref.has(k):
 		return ref[k]
 	var names: Array = lib["names"]

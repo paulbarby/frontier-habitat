@@ -13,6 +13,11 @@ const Sections = preload("res://ui/hud/inspector_sections.gd")
 const GlassFrame = preload("res://ui/theme/glass_frame.gd")
 
 const WIDTH := 392.0
+## At narrow views the window is as wide as the right quarter allows (Paul, 2026-10-03: no window in the centre zone, the
+## middle half of the view): its left edge stays at or right of 75 % of the width. Never narrower than MIN_WIDTH.
+const MIN_WIDTH := 236.0
+var width := WIDTH
+var _last_scroll_h := -1.0
 
 var hud
 var tab := "overview"
@@ -22,7 +27,7 @@ var _sig := ""
 var _title: Label
 var _sub: Label
 var _icon: TextureRect
-var _badges: HBoxContainer
+var _badges: HFlowContainer
 var _tabs: HFlowContainer
 var _body: VBoxContainer
 var _scroll: ScrollContainer
@@ -58,7 +63,7 @@ func _ready() -> void:
 	sections = Sections.new(self)
 	var v: VBoxContainer = Kit.vbox(8)
 	add_child(v)
-	var head: HBoxContainer = Kit.hbox(10)
+	var head: HBoxContainer = Kit.hbox(6)
 	head.custom_minimum_size.y = 34
 	_head = head
 	v.add_child(head)
@@ -70,15 +75,30 @@ func _ready() -> void:
 	head.add_child(tv)
 	_title = Kit.head("", P.TEXT, 16, "head_wide")
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
-	_title.custom_minimum_size.x = 150
+	_title.custom_minimum_size.x = 60
 	tv.add_child(_title)
 	_sub = Kit.label("", "SmallLabel", 12, P.TEXT_2)
 	_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # wraps in a small window (was clipped)
-	_sub.custom_minimum_size.x = 150
+	_sub.custom_minimum_size.x = 60
 	tv.add_child(_sub)
-	head.add_child(Kit.icon_button("target", func(): _focus(), "Show\nMoves the camera here.", "GhostButton", 16, 30))
-	head.add_child(Kit.icon_button("close", func(): hud.main.select("", -1), "Close\nRight click on the ground or Esc clears the selection.", "GhostButton", 16, 30))
-	_badges = Kit.hbox(6)
+	var show_b: Button = Kit.icon_button("target", func(): _focus(), "Show\nMoves the camera here.", "GhostButton", 16, 26)
+	head.add_child(show_b)
+	var close_b: Button = Kit.icon_button("close", func(): hud.main.select("", -1), "Close\nRight click on the ground or Esc clears the selection.", "GhostButton", 16, 26)
+	head.add_child(close_b)
+	for hb in [show_b, close_b]:   # thin margins: the header row is no wider than 26 px a button (a narrow window)
+		for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+			var st: StyleBox = (hb as Button).get_theme_stylebox(state)
+			if st != null:
+				var d: StyleBox = st.duplicate()
+				d.content_margin_left = 4.0
+				d.content_margin_right = 4.0
+				d.content_margin_top = 4.0
+				d.content_margin_bottom = 4.0
+				(hb as Button).add_theme_stylebox_override(state, d)
+		(hb as Button).custom_minimum_size = Vector2(26, 26)
+	_badges = HFlowContainer.new()   # badges wrap in a narrow window
+	_badges.add_theme_constant_override("h_separation", 6)
+	_badges.add_theme_constant_override("v_separation", 4)
 	v.add_child(_badges)
 	# Tabs flow onto a second row when their names do not fit (text floor, critic round 21): never clipped.
 	_tabs = HFlowContainer.new()
@@ -145,7 +165,71 @@ func _focus() -> void:
 	elif _kind == "agent" and st["agents"].has(_id):
 		hud.main.focus_on(st["agents"][_id]["pos"])
 
+## The width the right quarter allows: the work area's right edge less 75 % of the view.
+func fit_width() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var right: float = hud.wm.work_area().end.x if hud != null and hud.wm != null else vp.x - 78.0
+	var w: float = clampf(floorf(right - vp.x * 0.75) - 1.0, MIN_WIDTH, WIDTH)
+	if absf(w - width) > 0.5:
+		width = w
+		custom_minimum_size.x = w
+		_scroll.custom_minimum_size.x = w - 42.0
+		# Narrow: a row that cannot shrink scrolls sideways; it never widens the window into the centre zone.
+		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if w < WIDTH - 0.5 else ScrollContainer.SCROLL_MODE_DISABLED
+		# The title and the line under it keep to one line in a narrow window (the tooltip has all of it).
+		var narrow: bool = w < WIDTH - 0.5
+		for hl in [_title, _sub]:
+			(hl as Label).autowrap_mode = TextServer.AUTOWRAP_OFF if narrow else TextServer.AUTOWRAP_WORD_SMART
+			(hl as Label).clip_text = narrow
+			(hl as Label).text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if narrow else TextServer.OVERRUN_NO_TRIMMING
+		reset_size()
+
+## In a narrow window (the right quarter of a small view) nothing may be wider than the content: a long
+## one-line label wraps, a long button text is cut (the tooltip has it), a fixed minimum width is the content width.
+func _relax(n: Node, avail: float) -> void:
+	for c in n.get_children():
+		if not (c is Control):
+			continue
+		var ctl: Control = c
+		if int(ctl.get_meta("narrow", -1)) != int(width):
+			ctl.set_meta("narrow", int(width))
+			if ctl.custom_minimum_size.x > avail:
+				ctl.custom_minimum_size.x = avail
+			if ctl is Label:
+				var lb: Label = ctl
+				if lb.autowrap_mode == TextServer.AUTOWRAP_OFF and not lb.clip_text and lb.text.length() > 14:
+					if n is VBoxContainer:
+						lb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+					else:
+						lb.clip_text = true
+						lb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+						if lb.tooltip_text == "":
+							lb.tooltip_text = lb.text
+			elif ctl is OptionButton:
+				(ctl as OptionButton).fit_to_longest_item = false
+				(ctl as Button).clip_text = true
+				ctl.custom_minimum_size.x = minf(ctl.custom_minimum_size.x, avail * 0.8)
+			elif ctl is Button and (ctl as Button).text.length() > 10:
+				(ctl as Button).clip_text = true
+				(ctl as Button).text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				if (ctl as Button).tooltip_text == "":
+					(ctl as Button).tooltip_text = (ctl as Button).text
+		_relax(c, avail)
+
 func refresh() -> void:
+	fit_width()
+	_refresh_inner()
+	# After the content is rebuilt: in a narrow window nothing may be wider than the content.
+	if width < WIDTH - 0.5 and _body != null:
+		_relax(_body, width - 42.0)
+		_relax(_footer, width - 42.0)
+		_title.tooltip_text = _title.text
+		_sub.tooltip_text = _sub.text
+		# A narrow window is taller (its header, tabs and footer wrap): the scroll area takes what is left of the work area.
+		if visible:
+			_fit_height()
+
+func _refresh_inner() -> void:
 	var st: Dictionary = hud.main.sim.state
 	var kind: String = hud.main.view.selected_kind
 	var id: int = hud.main.view.selected_id
@@ -185,9 +269,34 @@ func refresh() -> void:
 
 func _fit_height() -> void:
 	var bottom: float = hud.build_bar.tabs_top() - 10.0 if hud.build_bar != null else get_viewport_rect().size.y - 90.0
-	var room: float = bottom - global_position.y - 190.0
+	# What the window needs besides the scroll area (header, badges, tabs, footer): measured, since a narrow window
+	# wraps its header and footer onto more lines.
+	var chrome: float = 190.0
+	var col: Node = get_child(0)
+	if col is VBoxContainer:
+		var hsum := 0.0
+		var cnt := 0
+		for c in col.get_children():
+			if c is Control and (c as Control).visible and c != _scroll:
+				hsum += (c as Control).get_combined_minimum_size().y
+				cnt += 1
+		chrome = maxf(190.0, hsum + float(cnt) * 8.0 + 27.0 + 30.0)   # (+30: the rows wrap a frame after the width changed)
+	var room: float = bottom - global_position.y - chrome
 	var need: float = _body.get_combined_minimum_size().y + 4.0
 	_scroll.custom_minimum_size.y = clampf(minf(need, room), 60.0, 560.0)
+	# Measured: when the whole window is still taller than the work area (the header, tabs and footer wrap in a
+	# narrow window), the scroll area gives up the difference (it converges in a refresh or two).
+	if hud.wm != null and width < WIDTH - 0.5:
+		var excess: float = get_combined_minimum_size().y - hud.wm.work_area().size.y
+		if excess > 0.0:
+			_scroll.custom_minimum_size.y = maxf(60.0, _scroll.custom_minimum_size.y - excess - 2.0)
+		# At its default place (never dragged) the window goes back to the top of the work area once its height settles
+		# (a tall first frame had pushed it up over the top bar).
+		var rec: Dictionary = hud.wm._wins.get("inspector", {})
+		if not rec.is_empty() and bool(rec.get("auto", false)) and absf(_scroll.custom_minimum_size.y - _last_scroll_h) > 0.5:
+			_last_scroll_h = _scroll.custom_minimum_size.y
+			reset_size()
+			hud.wm.place("inspector")
 
 func _rebuild_content(kind: String, rec: Dictionary) -> void:
 	_binds = []

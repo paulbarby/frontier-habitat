@@ -569,7 +569,7 @@ def build_bio_lab(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(lamps=(160.0, 200.0), bolts=s >= 2)
-    D = 2.25
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.25)
     rm.build_podium(D, ribs=(6, 10, 12, 14)[s], band=None, parapet=0.10, deck="HullDark")
     ro = rm.roof
     # pods: (dist, angle, radius)

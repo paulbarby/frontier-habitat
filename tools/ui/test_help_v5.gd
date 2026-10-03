@@ -20,7 +20,7 @@ var _wait := 0
 
 const FEATURES := ["dock", "roofs", "floors", "settings", "sound_in", "follow", "bubbles", "rag", "unrest", "responses", "lockdown", "security",
 	"jail", "love", "requests", "tourism", "secrets", "file", "discipline", "families", "ranks", "skills", "academy", "housing", "giants",
-	"venues", "dome", "planets", "chat", "parties", "hr", "complaints", "hr_officer"]
+	"venues", "dome", "planets", "chat", "parties", "hr", "complaints", "hr_officer", "build"]
 
 func _init() -> void:
 	main = load("res://main.tscn").instantiate()

@@ -37,6 +37,7 @@ from interior_kit import F, Plan, bbox, plate_x, plate_y, plate_z, furniture_of
 from interior_rooms import at, wall_set, DEPTHS
 
 CH_HW = 1.05                 # chamber inner half width (side walls at |y| 1.05 .. 1.15)
+SOFFIT_Z = 2.55              # Paul 2026-10-03: the lowest block skirt / soffit (door top 2.24 + 0.25 + 6 cm)
 CH_TOP = 2.60                # chamber wall height (above 1.40 in Roof: hidden with the roof in the cutaway)
 SUIT_MIN = 1.55              # the suit room keeps at least this depth behind the inner partition
 
@@ -118,6 +119,7 @@ def exterior(rm):
         keep_m.append(mat)
         keep_s.append(sm)
     ro.faces, ro.fmat, ro.fsmooth = keep_f, keep_m, keep_s
+    rm.airlock_cut = (x0b, hw)                     # interior_eave: the drum skin is cut here too
     # the outer door kit (own objects), hazard stripes round the opening on the outside face
     of, oft = P("OuterFrame"), P("OuterFrameTop")
     door_kit(rm, XO, of, oft, "Outer", sill_x1=L.HX[1] + 0.12)
@@ -136,11 +138,20 @@ def exterior(rm):
     # the block top clears the door housings and meets the dome along its edges (no hole, no step)
     edge = [rm.dome_z(x0b + (x1b - x0b) * t / 10.0, hw) for t in range(11)] + [rm.dome_z(x0b, 0.0)]
     zt = max(3.05, L.HT + 0.45, max(edge) + 0.05)
+    v_blk0 = len(ro.verts)                         # interior_eave: the block stretches (bottom stays, top moves up)
+    fair = []                                      # the fairing's dome-side vertices move with the dome
     ro.box0(0.5 * (x0b + x1b), 0.0, CH_TOP, x1b - x0b, 2 * hw + 0.06, zt - CH_TOP, "Hull", bevel=0.04,
             mats={"-z": None})
     for sy in (-1, 1):
-        ro.box0(0.5 * (x0b + x1b), sy * (hw + 0.04), WALL_TOP + 0.02, x1b - x0b, 0.06, zt - WALL_TOP - 0.02, "Hull",
+        # Paul 2026-10-03 (follow view): the block's side skirts end at SOFFIT_Z, over the door head + 0.25 m (they
+        # hung to 1.42 m), with a soffit under the block's edge strip out to the chamber wall
+        ro.box0(0.5 * (x0b + x1b), sy * (hw + 0.04), SOFFIT_Z, x1b - x0b, 0.06, zt - SOFFIT_Z, "Hull",
                 mats={"-z": None})
+        y_in, y_out = sy * (CH_HW + 0.10), sy * (hw + 0.07)
+        q_ = [(x0b, y_in, SOFFIT_Z), (x0b, y_out, SOFFIT_Z), (x1b, y_out, SOFFIT_Z), (x1b, y_in, SOFFIT_Z)]
+        if sy < 0:
+            q_.reverse()
+        ro.quad(*q_, "HullDark")                   # faces down (checked: normal -z)
         ro.box((0.5 * (x0b + x1b), sy * (hw + 0.075), zt - 0.22), (x1b - x0b - 0.1, 0.012, 0.12), "Hazard",
                mats={"-y" if sy > 0 else "+y": None})
         # fairing: a sloped shoulder from the block side down onto the dome (no step)
@@ -158,12 +169,15 @@ def exterior(rm):
             if sy < 0:
                 q.reverse()
             ro.quad(*q, "Hull", smooth=True)
+            nv = len(ro.verts)
+            fair += [nv - 2, nv - 1] if sy > 0 else [nv - 4, nv - 3]
     ro.box0(0.5 * (x0b + x1b), 0.0, zt, x1b - x0b - 0.2, 2 * hw - 0.2, 0.06, "Frame", mats={"-z": None})
     for sy in (-0.50, 0.50):
         capsule(ro, (x0b + 0.35, sy, zt + 0.28), (x1b - 0.55, sy, zt + 0.28), 0.18, mat="Metal", seg=8, rings=2)
         for x in (x0b + 0.5, x1b - 0.7):
             ro.box0(x, sy, zt + 0.06, 0.10, 0.34, 0.10, "Frame", mats={"-z": None})
     fan_unit(ro, x0b + 0.40, 0.0, zt + 0.06, 0.22)
+    rm.airlock_block = dict(v0=v_blk0, v1=len(ro.verts), fair=set(fair), z0=CH_TOP, z1=zt - 0.30)
     bc = P("Beacon")
     bx = x1b - 0.30
     bc.vcyl(bx, 0.0, zt + 0.06, zt + 0.20, 0.14, seg=10, mat="Frame")
@@ -349,7 +363,10 @@ def airlock(rm):
     plan = Plan(rm, clear=0.40, item_depth=0.40)
     IK.build_floor_v3(rm, "panel", "grid", grid=0.8)
     n = plan.n
-    ro = rm.roof
+    # Paul 2026-10-03: the chamber walls and the inner housing above 1.40 m are their own object RoofChamber (game group
+    # Roof: hidden in the cutaway as before); they are walls, not roof parts, for the doorway head-room check
+    ro = P("RoofChamber")
+    rm.extra_parts = list(getattr(rm, "extra_parts", [])) + [ro]
     Rw, Ri = rm.Rw, rm.Ri
     xa, xb = XI + L.HX[1], XO + L.HX[0]               # the chamber floor
     # ---- the inner door kit in its partition, the pressure lights over it

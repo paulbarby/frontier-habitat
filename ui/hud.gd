@@ -401,14 +401,15 @@ func ask_demolish(id: int) -> void:
 	if b.is_empty():
 		return
 	if not chk["ok"]:
-		screens.confirm("%s cannot be removed" % b["name"], chk["warnings"], Callable(), "", false)
+		hint.ask("%s cannot be removed" % b["name"], chk["warnings"], Callable(), "", false)
 		return
 	if chk["code"] == "cancel":
 		main.submit("cancel", {"id": id})
 		return
 	var w: Array = (chk["warnings"] as Array).duplicate()
 	w.append("Half of its materials come back. Stock inside is put on the ground.")
-	screens.confirm("Remove %s?" % b["name"], w, func(): main.submit("demolish", {"id": id}), "Remove", true)
+	# At the bottom edge, in the placement hint: no window over the view (Paul, 2026-10-03).
+	hint.ask("Remove %s?" % b["name"], w, func(): main.submit("demolish", {"id": id}), "Remove", true)
 
 func confirm(title: String, lines: Array, on_yes: Callable, yes_text: String = "Yes", danger: bool = false) -> void:
 	screens.confirm(title, lines, on_yes, yes_text, danger)

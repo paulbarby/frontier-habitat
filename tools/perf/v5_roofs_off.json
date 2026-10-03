@@ -1,0 +1,32 @@
+[
+ {
+  "eval": "window.__fhr.cmd('loadurl showcase_v5.fhsave')"
+ },
+ {
+  "wait": 20
+ },
+ {
+  "cmd": "speed 1"
+ },
+ {
+  "eval": "window.__fhr.cmd('follow next')"
+ },
+ {
+  "wait": 3
+ },
+ {
+  "eval": "window.__fhr.cmd('follow off')"
+ },
+ {
+  "wait": 2
+ },
+ {
+  "cmd": "zoom 110"
+ },
+ {
+  "cmd": "pitch 50"
+ },
+ {
+  "eval": "window.__fhr.cmd('roofs off')"
+ }
+]

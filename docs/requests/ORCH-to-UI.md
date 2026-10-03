@@ -76,3 +76,6 @@ party and drama items in the dock (News/Events), a party card in the venue inspe
 setting, Rag party reports, help text (STE). After SIM lands the API (SIM-to-UI.md).
 
 ## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).
+
+## 2026-10-03 — Paul: build palettes cover the centre while placing
+The category palette is a compact edge strip outside the centre zone; it folds while placing; placement info goes to a small edge panel; tests check the centre zone while building. (Sent to UI.)

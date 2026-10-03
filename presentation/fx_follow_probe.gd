@@ -118,10 +118,15 @@ func record(rig, delta: float) -> void:
 	if meas and view.has_method("follow_occluder"):
 		view.follow_occluder(cam.global_position)
 		occ = int(view.follow_occ_n)
+		if occ > 0:
+			why_n["OCC " + String(view.get("follow_occ_why")).get_slice(" d", 0)] = int(why_n.get("OCC " + String(view.get("follow_occ_why")).get_slice(" d", 0), 0)) + 1
 	# critic round 41: a surface within 0.8 m across the frame centre; the head or chest off screen
 	var fbad := 0
 	if meas and view.has_method("follow_frame_hit"):
+		# (the cover test, 40 % of the frame within 1.2 m, is measured here though the camera does not use it)
+		view.set("frame_cover_on", true)
 		fbad = int(view.follow_frame_hit(cam.global_position, -cam.global_transform.basis.z) != INF)
+		view.set("frame_cover_on", false)
 		if fbad > 0:
 			why_n[view.frame_why] = int(why_n.get(view.frame_why, 0)) + 1
 	var vp: Vector2 = view.get_viewport().get_visible_rect().size
@@ -137,7 +142,7 @@ func record(rig, delta: float) -> void:
 	if meas:
 		var k2: String = "%s_%s" % ["ok" if bool(rig.get("dbg_cur_ok")) else "bad", "hit" if fbad > 0 else "clear"]
 		why_n[k2] = int(why_n.get(k2, 0)) + 1
-	rows.append({"fbad": fbad, "offs": offs, "occ": occ, "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
+	rows.append({"fbad": fbad, "offs": offs, "occ": occ, "meas": int(meas), "okc": int(bool(rig.get("dbg_cur_ok"))), "od": float(rig.get("_sh_od")), "arm": float(rig.get("_sh_arm")) if rig.get("_sh_arm") != null else 1.0, "oo": float(rig.get("_sh_oo")), "fwhy": (String(view.frame_why) if fbad > 0 else "") + (" ARM " + String(view.get("arm_why")) if float(rig.get("_sh_arm")) < 0.99 else ""), "t": t, "dt": delta, "gr": float(view.game_rate), "bp": bp, "yaw": float(rec["yaw"]), "key": key,
 		"mode": String(rec["mode"]), "v": float(rec.get("v", 0.0)), "cam": cam.global_position, "cyaw": atan2(-f.z, f.x),
 		"cpitch": asin(clampf(f.y, -1.0, 1.0)), "scr": sp, "pull": float(rig.get("_sh_pull")), "eye": float(rig.get("_sh_eyeh")),
 		"cut": cut_left > 0.0, "tick": int(view.sim.state["tick"]), "where": String(a.get("where", "")), "off": (rec.get("off", Vector3.ZERO) as Vector3).length(),
@@ -289,13 +294,13 @@ func report() -> Dictionary:
 
 ## Raw samples as CSV (analysis outside the game).
 func csv(max_rows: int = 3000) -> String:
-	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu,fx,fz,tx,tz,hd,win,occ"]
+	var lines: PackedStringArray = ["t,dt,gr,bx,by,bz,yaw,key,mode,v,cx,cy,cz,cyaw,cpitch,sx,sy,pull,eye,cut,tick,where,off,id,left,wb,far,rspd,smspd,yld,vcap,gu,fx,fz,tx,tz,hd,win,occ,meas,fbad,offs,okc,od,oo,fwhy,arm"]
 	for i in mini(rows.size(), max_rows):
 		var r: Dictionary = rows[i]
 		var b: Vector3 = r["bp"]
 		var c: Vector3 = r["cam"]
 		var s: Vector2 = r["scr"]
-		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f,%.4f,%.4f,%.4f,%.4f,%.3f,%s,%d" % [
+		lines.append("%.4f,%.5f,%.4f,%.4f,%.4f,%.4f,%.5f,%s,%s,%.4f,%.4f,%.4f,%.4f,%.5f,%.5f,%.2f,%.2f,%.4f,%.3f,%d,%d,%s,%.3f,%d,%.2f,%.3f,%d,%.3f,%.3f,%d,%.2f,%.3f,%.4f,%.4f,%.4f,%.4f,%.3f,%s,%d,%d,%d,%d,%d,%.3f,%.3f,%s,%.3f" % [
 			float(r["t"]), float(r["dt"]), float(r["gr"]), b.x, b.y, b.z, float(r["yaw"]), r["key"], r["mode"], float(r["v"]),
-			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"]), float(r["fx"]), float(r["fz"]), float(r["tx"]), float(r["tz"]), float(r["hd"]), r["win"], int(r.get("occ", 0))])
+			c.x, c.y, c.z, float(r["cyaw"]), float(r["cpitch"]), s.x, s.y, float(r["pull"]), float(r["eye"]), int(bool(r["cut"])), int(r["tick"]), r["where"], float(r["off"]), int(r["id"]), float(r["left"]), float(r["wb"]), int(r["far"]), float(r["rspd"]), float(r["smspd"]), int(r["yld"]), float(r["vcap"]), float(r["gu"]), float(r["fx"]), float(r["fz"]), float(r["tx"]), float(r["tz"]), float(r["hd"]), r["win"], int(r.get("occ", 0)), int(r.get("meas", 0)), int(r.get("fbad", 0)), int(r.get("offs", 0)), int(r.get("okc", 1)), float(r.get("od", 1.0)), float(r.get("oo", 0.0)), String(r.get("fwhy", "")).replace(",", ";"), float(r.get("arm", 1.0))])
 	return "\n".join(lines)

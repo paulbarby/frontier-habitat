@@ -7,6 +7,8 @@ const CATEGORIES := ["Interface", "Society", "People", "Structures", "World"]
 const TOPICS := [
 	["dock", "The left dock and messages", "dock", "Interface",
 		"Everything the game tells you by itself goes to the left: an urgent line, new messages and the dock. The dock has tabs: Goals, Alerts, Events, Traffic, Requests and News. A number on a tab counts its items; its colour shows the most urgent one. Each card can be minimised, pinned or closed. The dock can be minimised, pinned or closed; key L opens and closes it. A pinned dock stays open when a window covers it. The middle of the view stays free. Settings, Notifications: for each kind of message choose Pop up, Badge only or Off."],
+	["build", "The build bar", "build", "Interface",
+		"The build bar at the bottom has the tabs Life, Food, Habitat, Industry, Power, Logistics, Science and Civic. A tab opens a strip of cards above it. The strip stays low, so the middle of the view stays free. The mouse wheel moves the strip sideways. Pick a card: the strip folds to the tabs, and a small panel at the bottom shows the cost, the size, the keys and why you cannot place there. Left click places the structure. The strip comes back after one placement, or when you press Esc or the right mouse button. Shift and click keeps the tool, and the strip stays folded. Remove asks you in the same small panel."],
 	["roofs", "Roofs off", "roof_off", "Interface",
 		"Key Y or the roof button on the right takes every roof and upper wall away, so you see into every building at once. Press it again to put the roofs back. The game keeps your choice. In the over-the-shoulder view the roofs always stay on, and the button waits."],
 	["floors", "Floor selector", "overlay", "Interface",

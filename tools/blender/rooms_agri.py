@@ -196,7 +196,7 @@ def build_algae_bioreactor(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(lamps=(160.0, 200.0), bolts=s >= 2)
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=(0, 10, 12, 14)[s], band="Accent" if s else None, band_z=1.75, parapet=0.12,
                     deck="HullDark")
     ro = rm.roof
@@ -310,7 +310,7 @@ def build_kitchen_v4(rm):
     rm.rooms_hi = list(rm.rooms_hi)
     cook_a = 180.0
     x, y, _ = polar(Ri - 1.15, cook_a)
-    top = max(top, chimney(ro, x, y, D - 0.3, D + 2.2 + 0.2 * s, r=0.34 + 0.03 * s))
+    top = max(top, chimney(ro, x, y, D - 0.05, D + 2.2 + 0.2 * s, r=0.34 + 0.03 * s))   # 2026-10-03: no stub under the deck
     rm.anchor("Smoke", (x, y, D + 2.2 + 0.2 * s + 0.35))
     obst.append((x, y, 0.8))
     bx, by, br = 0.0, -0.42 * Rw, 0.36 * Rw

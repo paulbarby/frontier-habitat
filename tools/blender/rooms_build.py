@@ -365,6 +365,8 @@ def build_one(job):
     if not built_v3:
         BUILDERS[job["tid"]](rm)
     if getattr(rm, "v3", False):
+        import interior_eave as _IE          # 5.0 (Paul 2026-10-03): dome / setback roofs start above the door heads
+        _IE.raise_eave(rm)
         import interior_surfaces as _IS      # 5.0 round 2: work mats, dance floor, wait spots
         _IS.floor_detail(rm)
         import interior_ceiling as _IC       # 5.0 round 2 (coordinator 2026-10-02): the inner ceiling, object RoofCeil
@@ -414,7 +416,7 @@ def build_one(job):
         # Roof, L2..L5, groups ending in Top / Status, PressureLight_*, Beacon, DecalR)
         def cut_hidden(g):
             return (g == "Roof" or (len(g) == 2 and g[0] == "L") or g.endswith(("Top", "Status"))
-                    or g.startswith("PressureLight") or g in ("Beacon", "DecalR") or g.startswith("DecalL"))
+                    or g.startswith("PressureLight") or g in ("Beacon", "DecalR", "WallsUp") or g.startswith("DecalL"))
         tall = sorted(n for n, s_ in stats.items() if s_["hi"][2] > K.WALL_TOP + 0.015
                       and not cut_hidden(K.game_group(n)))
         if tall:
@@ -552,6 +554,15 @@ def build_one(job):
                 flags.append("door slots: %d < %d for size %s (spacing %.1f deg); blocked by %s"
                              % (slots, need, job["key"] or "m", step, row["v3"]["door_lane_hits"]))
             row["v3"]["door_free_deg"] = round(360.0 - sum(b1 - b0 for b0, b1 in spans), 1)
+        if job["tid"] != "corridor":
+            # Paul 2026-10-03 (follow view): no roof, ceiling or band part below the door top + 0.25 m inside any door
+            # opening volume (+1.5 m into the room) at any free door angle
+            import interior_doorclear as _DC
+            dcf, dci = _DC.check(objs, rm.R - 0.32, row["v3"].get("door_blocked") or [],
+                                 junction=job["tid"] == "junction")
+            row["v3"]["door_headroom"] = dict(z_clear=round(_DC.Z_CLEAR, 3), hits=dci,
+                                              eave=getattr(rm, "eave", None), lift=round(getattr(rm, "lift", 0.0), 3))
+            flags += dcf
     print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s%s" % (job["file"], tris, budget, radius, job["R"],
                                                               row["seconds"], "; ".join(flags) or "ok",
                                                               "  [v3]" if rm.v3 else ""))

@@ -9,3 +9,11 @@
 - Venue and unit surfaces under the slabs get the room interior fill light (they were dark).
 - Build stages: from the build progress (9 stages) until SIM gives a stage field. Evidence `art/critic_input/render/151`, `152`.
 - Draw calls at 250 m: showcase_v4 + dome **1,309 (day) / 1,364 (night)**, 53-58 fps, 0 frames over 50 ms in 20 s.
+
+## 2026-10-03 - the Club floor between the LED tiles is black (RENDER)
+
+Critic round 41 asks to "lift the floor from black" in the Club. In game I added a soft floor fill light, a
+coloured spot over each podium and a rim light, and capped the LED tile emission (`Sign*` on the dome floors,
+own copies at 0.9). The floor surface between the tiles stays black: its albedo is near black in
+`dome_floor1.glb`, so no light lifts it. Please give it a dark grey with some sheen (albedo about 0.08-0.12,
+roughness 0.35), or name the material so I can lift it in game. Evidence: scratch `club_dance.png` (RENDER).

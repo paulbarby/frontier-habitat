@@ -107,7 +107,7 @@ def _porch(rm, D, B, a, Rc, th_c, sg, exe):
         _face(ro, [p0, p1, p1 - Vector((0, 0, 0.12)), p0 - Vector((0, 0, 0.12))], "Frame", want=(sg, 0, 0))
     for yy in (-0.28 * B, 0.28 * B):
         x = sg * (sqrt(max(0.0, Rc * Rc - yy * yy)) - 0.35)
-        lamp(ro, rm.porch, (x, yy, D + 0.02), (0, 0, -1), up=(sg, 0, 0), w=0.42, h=0.14, d=0.08, lens="Light")
+        lamp(ro, rm.porch, (x, yy, D + 0.10), (0, 0, -1), up=(sg, 0, 0), w=0.42, h=0.14, d=0.08, lens="Light")   # 2026-10-03: above door top + 0.25
 
 
 def _ribs(a, B, badge_r, sign_skip=False):

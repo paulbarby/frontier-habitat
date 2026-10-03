@@ -1,7 +1,12 @@
 extends Control
 ## Bottom build bar: category tabs (always shown) and a drawer of building cards for the
-## open tab. The drawer stays open while you build; the same tab or Esc closes it.
-## Tools on the right: corridor, cable, remove.
+## open tab. Tools on the right: corridor, cable, remove.
+## Paul, 2026-10-03: "the palettes cover the centre of the view ... I cannot place objects with a clear view".
+##  - The drawer is one strip of compact cards, scrolling sideways, along the bottom edge: it never rises
+##    into the centre zone (the middle half of the view). The tab row is under it.
+##  - While a structure is picked (the tool follows the mouse) the drawer folds to the tab row; the placement
+##    hint (ui/hud/place_hint.gd) is the one small panel at the bottom. The drawer comes back when the tool
+##    ends: after one placement, Esc or a right click. Shift + click keeps placing, so it stays folded.
 
 const P = preload("res://ui/theme/palette.gd")
 const Kit = preload("res://ui/kit.gd")
@@ -30,7 +35,7 @@ var _tab_panel: PanelContainer
 var _tab_buttons := {}
 var _tool_buttons := {}
 var _drawer: PanelContainer
-var _cards_box: VBoxContainer
+var _cards_box: HBoxContainer
 var tier_rows := {}         # tier -> HBoxContainer of cards (tests read this)
 var _cards_scroll: ScrollContainer
 var _drawer_left := 0.0     # left edge the drawer keeps clear of (minimap, goals, alerts)
@@ -45,6 +50,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tab_panel = Kit.panel("HudPanel")
+	# A low bar: the bottom 25 % of the view holds the palette, the tab row and the hint, under the centre zone.
+	var tst = load("res://ui/theme/ui_theme.gd").panel_style("hud")
+	tst.content_margin_top = 5
+	tst.content_margin_bottom = 5
+	_tab_panel.add_theme_stylebox_override("panel", tst)
 	_tab_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_tab_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_tab_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -85,7 +95,10 @@ func _ready() -> void:
 		_tool_buttons[kind] = b
 	# Drawer
 	_drawer = Kit.panel("HudPanel")
-	_drawer.add_theme_stylebox_override("panel", load("res://ui/theme/ui_theme.gd").panel_style("reading_hud"))   # critic round 30
+	var dst = load("res://ui/theme/ui_theme.gd").panel_style("reading_hud")   # critic round 30
+	dst.content_margin_top = 6
+	dst.content_margin_bottom = 6
+	_drawer.add_theme_stylebox_override("panel", dst)
 	_drawer.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_drawer.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_drawer.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -95,6 +108,7 @@ func _ready() -> void:
 	var dv: VBoxContainer = Kit.vbox(8)
 	_drawer.add_child(dv)
 	var dh: HBoxContainer = Kit.hbox(8)
+	dh.visible = false   # no header row: the pressed tab names the category, Esc or the tab closes it
 	dv.add_child(dh)
 	_drawer_title = Kit.head("", P.TEXT, 13, "head_wide")
 	dh.add_child(_drawer_title)
@@ -102,25 +116,40 @@ func _ready() -> void:
 	_drawer_sub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dh.add_child(_drawer_sub)
 	dh.add_child(Kit.icon_button("close", func(): close_drawer(), "Close\nEsc closes the drawer too.", "GhostButton", 14, 26))
-	_cards_box = Kit.vbox(6)
+	_cards_box = Kit.hbox(8)
 	_cards_scroll = ScrollContainer.new()
 	_cards_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_cards_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_cards_scroll.add_child(_cards_box)
+	# The wheel moves the strip sideways (the strip has no vertical scroll).
+	_cards_scroll.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and (ev.button_index == MOUSE_BUTTON_WHEEL_UP or ev.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			_cards_scroll.scroll_horizontal += (-140 if ev.button_index == MOUSE_BUTTON_WHEEL_UP else 140)
+			_cards_scroll.accept_event())
 	dv.add_child(_cards_scroll)
 
 func toggle_tab(id: String) -> void:
-	if open_tab == id:
+	if hud.main.tool != "select":
+		# The drawer is folded while a tool is on: a tab ends the tool and opens its drawer.
+		hud.main.cancel_tool()
+		if open_tab == id:
+			refresh()
+			return
+	elif open_tab == id:
 		close_drawer()
 		return
 	open_tab = id
 	_fill()
-	_drawer.visible = true
+	_drawer.visible = not _placing()
 	_drawer.modulate.a = 0.0
 	var tw := _drawer.create_tween()
 	tw.tween_property(_drawer, "modulate:a", 1.0, 0.16)
 	Kit.sfx("open")
 	refresh()
+
+## A tool is on (a structure follows the mouse, a corridor, a cable, remove): the drawer is folded.
+func _placing() -> bool:
+	return hud != null and hud.main != null and hud.main.tool != "select"
 
 func close_drawer() -> void:
 	open_tab = ""
@@ -167,12 +196,17 @@ func _fill() -> void:
 	tiers.sort()
 	tier_rows = {}
 	var D = load("res://ui/data.gd")
+	var first_group := true
 	for tr in tiers:
-		var row: HBoxContainer = Kit.hbox(8)
-		_cards_box.add_child(row)
+		if not first_group:
+			_cards_box.add_child(Kit.vsep())
+		first_group = false
+		var group: HBoxContainer = Kit.hbox(8)
+		_cards_box.add_child(group)
 		if tiers.size() > 1:
 			var tag: VBoxContainer = Kit.vbox(2)
 			tag.custom_minimum_size.x = 62
+			tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			var stripe := ColorRect.new()
 			stripe.color = D.TIER_COLOR.get(tr, P.TEXT_2)
 			stripe.custom_minimum_size = Vector2(28, 3)
@@ -184,9 +218,9 @@ func _fill() -> void:
 			tag.add_child(Kit.label(str(by_tier[tr].size()), "SmallLabel", 11, P.TEXT_3))
 			tag.tooltip_text = "%s tier\n%s" % [String(D.TIER_NAME.get(tr, "")), ["", "Makes basic materials from local resources.", "Makes mid materials: alloys, titanium, ceramics, parts.", "Makes high-end materials: magnets, fuel rods, metamaterials."][clampi(tr, 0, 3)]]
 			tag.mouse_filter = Control.MOUSE_FILTER_STOP
-			row.add_child(tag)
-		var cards: HBoxContainer = Kit.hbox(8)
-		row.add_child(cards)
+			group.add_child(tag)
+		var cards: HBoxContainer = Kit.hbox(6)
+		group.add_child(cards)
 		tier_rows[tr] = cards
 		for id in by_tier[tr]:
 			var card = BuildCard.new()
@@ -197,36 +231,23 @@ func _fill() -> void:
 	_fit_drawer()
 	call_deferred("_fit_drawer")
 
-## Shrink the drawer to its cards (a tab with fewer rows must not keep the old height) and
-## keep its bottom edge above the tab bar.
+## The drawer is one strip as tall as its cards, above the tab row and under the centre zone (the middle
+## half of the view): its top never goes above 75 % of the view height. It scrolls sideways.
 func _fit_drawer() -> void:
 	var vr: Vector2 = get_viewport_rect().size
 	var lr: Vector2 = _free_x()
 	var pad: Vector2 = _drawer.get_theme_stylebox("panel").get_minimum_size() if _drawer.has_theme_stylebox("panel") else Vector2(24, 24)
-	var head_h: float = _drawer_title.get_parent().get_combined_minimum_size().y + 8.0
-	var top_min: float = 64.0
-	if hud != null and hud.top_bar != null:
-		top_min = hud.top_bar.get_global_rect().end.y + 8.0
-	var content: Vector2 = _cards_box.get_combined_minimum_size()
-	var max_h: float = maxf(200.0, (vr.y + _drawer.offset_bottom) - top_min - head_h - pad.y)
-	# A tall drawer (several tier rows) keeps clear of the left panels (goals, alerts, hazards)
-	# when it reaches their height.
-	var top_y: float = (vr.y + _drawer.offset_bottom) - minf(content.y, max_h) - head_h - pad.y
-	if hud != null:
-		for pn in [hud.goals, hud.alerts, hud.hazard]:
-			if pn != null and pn is Control and (pn as Control).is_visible_in_tree():
-				var pr: Rect2 = (pn as Control).get_global_rect()
-				if pr.end.y > top_y and pr.get_center().x < vr.x * 0.4:
-					lr.x = maxf(lr.x, pr.end.x + 8.0)
 	_drawer_left = lr.x
+	var content: Vector2 = _cards_box.get_combined_minimum_size()
+	# The bottom edge of the drawer: 6 px above the tab row.
+	_drawer.offset_bottom = -(8.0 + _tab_panel.get_combined_minimum_size().y + 6.0)
+	var bottom_y: float = vr.y + _drawer.offset_bottom
+	var max_h: float = maxf(60.0, bottom_y - vr.y * 0.75 - pad.y)
 	var max_w: float = maxf(300.0, (lr.y - lr.x) - pad.x)
-	var sb := 14.0     # room for a scroll bar
-	var w: float = content.x if content.x <= max_w else max_w
-	var h: float = content.y if content.y <= max_h else max_h
-	if content.x > max_w:
-		h = minf(h + sb, max_h)
-	if content.y > max_h:
-		w = minf(w + sb, max_w)
+	var sb := 12.0     # room for the scroll bar
+	var w: float = minf(content.x, max_w)
+	var h: float = content.y + (sb if content.x > max_w else 0.0)
+	h = minf(h, max_h)
 	_cards_scroll.custom_minimum_size = Vector2(w, h)
 	var ms: Vector2 = _drawer.get_combined_minimum_size()
 	_drawer.offset_top = _drawer.offset_bottom - ms.y
@@ -273,6 +294,7 @@ func refresh() -> void:
 		card.set_pressed_no_signal(m.tool == "place" and m.tool_def == id)
 		if card.locked:
 			locked += 1
+	_drawer.tooltip_text = ""
 	_drawer_sub.text = ("%s, %d locked (the card says what unlocks it; hover for all of it). Red costs are not in storage." % [Kit.plural(_cards.size(), "structure"), locked]) if locked > 0 else ("%s. Red costs are not in storage." % Kit.plural(_cards.size(), "structure"))
 
 func tabs_top() -> float:
@@ -282,6 +304,14 @@ func tabs_top() -> float:
 func _process(_delta: float) -> void:
 	if hud == null:
 		return
+	# Folded while a tool is on; back when it ends.
+	var want_open: bool = open_tab != "" and not _placing()
+	if _drawer.visible != want_open:
+		_drawer.visible = want_open
+		if want_open:
+			_fit_drawer()
+			_drawer.modulate.a = 0.0
+			_drawer.create_tween().tween_property(_drawer, "modulate:a", 1.0, 0.16)
 	var vw: float = get_viewport_rect().size.x
 	# Critic round 21, fix 1: the bottom row never overlaps. The bar starts right of the minimap
 	# at every interface scale; when it does not fit, the tab names hide (icons stay, the names

@@ -161,13 +161,11 @@ func _idle_list(bld: int) -> Array:
 ## another idle person in the same room within near_m and starts a talk session with them (the two
 ## stand and talk for the whole talk). Returns true when a talk started.
 func idle_seek(a: Dictionary) -> bool:
-	if not _is_idle(a) or sim.relations.in_talk(int(a["id"])):
-		return false
 	var c: Dictionary = cfg()["idle"]
 	var now: int = int(sim.state["tick"])
-	if now - int(a.get("chat_t", -1000000)) < int(c["gap_s"]) * _hz():
+	if now - int(a.get("chat_t", -1000000)) < int(c["gap_s"]) * _hz() or _h(int(a["id"]), now) >= float(c["chance"]):
 		return false
-	if _h(int(a["id"]), now) >= float(c["chance"]):
+	if not _is_idle(a) or sim.relations.in_talk(int(a["id"])):
 		return false
 	var list: Array = _idle_list(int(a["bld"]))
 	if list.size() < 2 or _crisis():

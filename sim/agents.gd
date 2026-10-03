@@ -306,6 +306,10 @@ func locks_tick() -> void:
 					if not agents.has(aid) or agents[aid]["state"] != "alive":
 						continue
 					var a: Dictionary = agents[aid]
+					# A person who is no longer in the lock (put in a vehicle or somewhere else while the cycle
+					# ran) is left where they are: the cycle used to put them out or in (the v4 rider death).
+					if a["where"] != "lock":
+						continue
 					if cyc["dir"] == "in":
 						a["where"] = "in"
 						a["bld"] = id
@@ -1754,10 +1758,25 @@ func morale_second(part: int = -1) -> void:
 	var day_ticks: float = float(bal["day_length"]) * hz()
 	var beds := 0
 	var blds: Dictionary = sim.state["buildings"]
-	for bid in blds:
-		if blds[bid]["state"] == "active" and blds[bid]["kind"] != "link":
-			# V5: bunks count for the children (who are part of the population).
-			beds += int(sim.bd(blds[bid]).get("beds", 0)) + int(sim.bd(blds[bid]).get("child_beds", 0))
+	# The bunk count of this game second is made by the first half of the people and kept in the state for the
+	# second half (a scan of every structure; both halves run on ticks of the same second).
+	var sec: int = tick / int(hz())
+	# The count is only compared with the population: the scan stops once it is enough (the kept number is then a
+	# lower bound; the second half uses it only while it still covers its own population, else it scans).
+	var pop0: int = sim.alive_count()
+	var kept = sim.state.get("morale_beds")
+	if part == 1 and kept != null and int((kept as Array)[0]) == sec and int((kept as Array)[1]) >= pop0:
+		beds = int((kept as Array)[1])
+	else:
+		for bid in blds:
+			if blds[bid]["state"] == "active" and blds[bid]["kind"] != "link":
+				# V5: bunks count for the children (who are part of the population).
+				var bdf: Dictionary = sim.bd(blds[bid])
+				beds += int(bdf.get("beds", 0)) + int(bdf.get("child_beds", 0))
+				if beds >= pop0:
+					break
+		if part != 1:
+			sim.state["morale_beds"] = [sec, beds]
 	var pop: int = sim.alive_count()
 	var pr: Dictionary = sim.state["progress"]
 	var recent_death: bool = int(pr["last_death_tick"]) >= 0 and float(tick - int(pr["last_death_tick"])) < float(bal["morale_death_memory_days"]) * day_ticks
@@ -1966,6 +1985,20 @@ func _sleep_any(a: Dictionary) -> bool:
 		abort_plan(a, "need_sleep")
 		_start_plan(a, "sleep", [{"op": "sleep"}], "Sleeping on the floor (no free bed)")
 		return true
+	# Outside with no free bed (two settlers died of exhaustion in long_perf_60 while they worked outside
+	# at fatigue 100): go to the nearest room with air and sleep on its floor.
+	if a["where"] == "out" and float(a["fatigue"]) >= float(sim.bal["need_critical"]):
+		var blds: Dictionary = sim.state["buildings"]
+		var cands: Array = []
+		for bid in sim.topo.atmo_comp:
+			var b: Dictionary = blds[bid]
+			if b["state"] != "active" or bool(b["demolish"]):
+				continue
+			cands.append([(b["pos"] as Vector2).distance_to(a["pos"]), bid])
+		cands.sort_custom(func(x, y): return x[0] < y[0] if x[0] != y[0] else x[1] < y[1])
+		for c in cands.slice(0, 3):
+			if _start_personal(a, "sleep", c[1], [{"op": "sleep"}], "Going in to sleep on the floor (no free bed)", -1):
+				return true
 	return false
 
 ## A visitor's day (docs/V3_1_DESIGN.md section 6.1): needs first, then back to the ship

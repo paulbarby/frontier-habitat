@@ -163,7 +163,7 @@ def part_top_pieces(plan, A, ang, L, pieces, cuts, h, thick=0.045):
                               round(z0 + F + PART_H, 3), round(0.5 * (t1 - t0), 3), 0.06, round(ang % 360.0, 2)])
 
 
-UNIT_CEIL = 2.40          # round 2 (critic 41): each tube unit has a ceiling at 2.40 m (PorchTop: hidden in the cutaway)
+UNIT_CEIL = 2.46          # round 2 (critic 41): each tube unit has a ceiling at 2.40 m (PorchTop: hidden in the cutaway)
 
 
 def unit_ceiling(plan, c):

@@ -74,6 +74,7 @@ if V4PILOT:
 
 FLOOR_Z = 0.14          # top of the floor (same as v1 and the corridor)
 WALL_TOP = 1.40         # the round wall (Base) stops here; everything above is Roof
+DECK_MIN = 2.60         # Paul 2026-10-03: a flat deck stays above the door opening top (2.24) + 0.25 + the liner
 WALL_T = 0.20
 SOIL_Z = 0.55           # greenhouse / fungus tray soil top
 MARGIN = 0.10           # model stays this far inside the footprint circle
@@ -460,6 +461,7 @@ class Room:
         self.door_half = 0.0
         self.door_top = WALL_TOP
         self.top_z = WALL_TOP
+        self.lift = 0.0                   # 5.0 (Paul 2026-10-03): interior_eave.raise_eave moves the roof up by this
         self.sc = min(1.0, max(0.62, R / 6.0))     # detail scale for level parts
         # 3.0 (docs/V3_DESIGN.md section 7): the round wall as 32 objects Wall_00..Wall_31 (interior_kit.py)
         self.v3 = False
@@ -664,10 +666,11 @@ class Room:
 
     # ---- dome ---------------------------------------------------------------------------------
     def dome_rz(self, t):
-        return self.Rw * cos(radians(t)), WALL_TOP + (self.H - WALL_TOP) * sin(radians(t))
+        zb = WALL_TOP + self.lift
+        return self.Rw * cos(radians(t)), zb + (self.H - zb) * sin(radians(t))
 
     def dome_nrz(self, t):
-        a, b = self.Rw, self.H - WALL_TOP
+        a, b = self.Rw, self.H - WALL_TOP - self.lift
         tr = radians(t)
         nr, nz = b * cos(tr), a * sin(tr)
         ln = hypot(nr, nz)
@@ -682,7 +685,8 @@ class Room:
 
     def dome_z(self, x, y):
         r = min(hypot(x, y), self.Rw)
-        return WALL_TOP + (self.H - WALL_TOP) * sqrt(max(0.0, 1.0 - (r / self.Rw) ** 2))
+        zb = WALL_TOP + self.lift
+        return zb + (self.H - zb) * sqrt(max(0.0, 1.0 - (r / self.Rw) ** 2))
 
     def t_at_r(self, r):
         return degrees(acos(max(-1.0, min(1.0, r / self.Rw))))

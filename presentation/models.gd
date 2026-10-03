@@ -292,6 +292,19 @@ static func dome_template(merged: bool = false) -> Dictionary:
 				# Venues, galleries and units under the ring roof: the interior fill light of the rooms
 				# (they were dark in the web build, the sun does not reach under the slabs).
 				(mesh as ArrayMesh).surface_set_material(s, interior_material(m))
+			elif String(p["group"]).begins_with("D_Floor") and m is StandardMaterial3D and nm.begins_with("Sign") and (m as StandardMaterial3D).emission_enabled:
+				# Critic round 41: the Club's LED floor tiles blew out to white (Sign family x 1.6 at night, plus
+				# glow). Under the ring roof a Sign surface is a fixed-level LED: its own copy at LED_CAP x the
+				# base, saturated, not in the night list.
+				var key2: String = "led:" + nm
+				if not _led_mats.has(key2):
+					var lm: StandardMaterial3D = (m as StandardMaterial3D).duplicate()
+					lm.emission_energy_multiplier = minf((m as StandardMaterial3D).emission_energy_multiplier, LED_CAP)
+					var ec: Color = lm.emission
+					lm.emission = Color.from_hsv(ec.h, maxf(ec.s, 0.55), minf(ec.v, 0.9))
+					lm.resource_name = nm + "_LED"
+					_led_mats[key2] = lm
+				(mesh as ArrayMesh).surface_set_material(s, _led_mats[key2])
 			elif nm == "ArcadeScreen":
 				if amat == null:
 					amat = ShaderMaterial.new()
@@ -1035,6 +1048,8 @@ static func _merge_walls(list: Array, shell = null) -> Array:
 	return [{"group": "Walls", "mesh": merged, "xf": Transform3D.IDENTITY, "pivot": Transform3D.IDENTITY, "local": Transform3D.IDENTITY,
 		"shadow": true, "mask": true, "wall_r": rmax, "segments": list.size(), "seg_pos": seg_pos}]
 
+static var _led_mats := {}
+const LED_CAP := 0.9            # emission multiplier of the dome floors' Sign surfaces (LED tiles)
 static var _wall_mats := {}
 static var _wall_shader: Shader
 static var _wall_shader_a: Shader
@@ -1246,6 +1261,18 @@ static func near_fade(mn: float, mx: float) -> void:
 ## storm 0..1 (critic round 34): lit windows, signs and neon brighten in a dust storm, so a lit base
 ## (the dome) still glitters through the storm grade instead of going dim and brown.
 static var _storm_f := 0.0
+## The interior fill's factor while the follow camera is inside (1 = as in the overview). Indoor night (critic
+## round 41): the night fill (0.36 x albedo, so the rooms read from the overview) made the room glow evenly by
+## night in the follow view; inside, the lamps and the warm ambient carry it.
+static var _fill_k := 1.0
+static func set_fill_k(k: float) -> void:
+	if absf(k - _fill_k) < 0.01:
+		return
+	_fill_k = k
+	var fill: float = lerpf(FILL_DAY, FILL_NIGHT, maxf(_night_f, 0.0)) * _fill_k
+	for m in _fill_mats:
+		(m as ShaderMaterial).set_shader_parameter("fill", fill)
+
 static func set_night(f: float, storm: float = 0.0) -> void:
 	if absf(f - _night_f) < 0.01 and absf(storm - _storm_f) < 0.02:
 		return
@@ -1262,7 +1289,7 @@ static func set_night(f: float, storm: float = 0.0) -> void:
 			(m as ShaderMaterial).set_shader_parameter(String(e.get("param", "emission_energy")), float(e["base"]) * k)
 	for e in _night_sm:
 		(e["mat"] as ShaderMaterial).set_shader_parameter("emission_energy", float(e["base"]) * _night_k(String(e["name"]), f))
-	var fill: float = lerpf(FILL_DAY, FILL_NIGHT, f)
+	var fill: float = lerpf(FILL_DAY, FILL_NIGHT, f) * _fill_k
 	for m in _fill_mats:
 		(m as ShaderMaterial).set_shader_parameter("fill", fill)
 

@@ -1,5 +1,41 @@
 # ART-HAB → RENDER
 
+## 2026-10-03 (later) — doorway head room: roofs raised above the door heads (Paul's fault); please check in game
+
+Paul: roof parts hung across the corridor doorways in the follow view. Measured on the built files (new check
+`tools/blender/interior_doorclear.py`: roof, ceiling, band and their lights inside the door opening, |t| <= 0.75 m,
+from the wall line to 1.5 m in from the inner jamb, below 2.24 + 0.25 = 2.49 m, at every free door angle):
+**122 of 160 room files had roof geometry there before (lowest 1.32 m), 0 now.** The builder flags any hit
+(`v3.door_headroom` in the build report: `z_clear`, `hits`, `eave`, `lift`).
+
+What changed (Paul's choice: raise, not cut):
+1. **Dome and setback rooms** (habitat, greenhouse, park, oxygen_plant, research_lab, mine, medical, lounge, cantina,
+   fungus_farm, airlock, junction, water_recycler; 47 files): the whole roof moved up 1.20 m on a new vertical drum
+   at the wall line from 1.40 m to the eave at **2.60 m** (`tools/blender/interior_eave.py`). The drum skin and its
+   ribs are in `Upper_<seg>` (WallsUp, masked per segment at a doorway, hidden in the cutaway, as the podium drum).
+   `v3.decals.upper_z` is now **[1.40, 2.65]** for these files, so your `has_upper` is true: the flat door kit and
+   the upper patch from 2.24 m to 2.65 m over each housing. Building tops are 1.20 m higher (habitat_m 4.84 -> 6.04).
+   Anchors on or above the roof (Beacon, Vent, Smoke, ...) moved up with it.
+2. **Podium decks** under 2.60 m raised to 2.60 m (algae_bioreactor, atmo_processor, bio_lab, electronics_fab,
+   fabricator, glassworks, polymer_plant, refinery, research_assembler, workshop; was 2.25 - 2.50).
+3. Ceiling: hanging parts at 2.52 m or higher (was 2.45), liner only where it is 2.55 m or higher; tube porch lamps
+   and the kitchen chimney stub moved above 2.49 m; level-part bolts at the wall line are Decal_<seg>_L<n> now.
+4. Airlock: the chamber walls and inner housing above 1.40 m are their own object **`RoofChamber`** (your group_of
+   gives `Roof`, as before); the chamber block's side skirts end at 2.55 m with a soffit (they hung to 1.42 m).
+
+Three asks:
+- **Setback (water_recycler):** `fx_doors.gd` skips the upper patch when the shell is `setback` (`not setback`).
+  The drum is masked at a door now, so please give setback rooms the upper patch too (2.24 -> upper_z[1]).
+- **Junction:** the junction drum (Upper_<seg>, 1.40 - 2.60 m) hides with the mouth segments. Please cover each
+  mouth span above the corridor (2.24 -> 2.65 m) with `wall_patch_upper` pieces, as for the door housings.
+- **Check in game:** the follow view through a doorway in both directions (my renders, roof on, doors open:
+  `art/interiors/<file>_doorview_in.png` / `_doorview_out.png` for habitat_m, lounge_m, water_recycler_m,
+  electronics_fab_m, airlock_m, junction - no part crosses the opening in any of them). Your camera ceiling grid
+  now reads 2.55 m or higher near every wall.
+
+Rebuilt all 160 room files (0 flags), import done, `check` 314 scripts 0 failed, `render_nav_bake.gd` 160 grids /
+160 room metas / 162 occluder grids. door_blocked.json unchanged. Triangles 3,920,127 -> 3,934,588 (+0.4 %).
+
 ## 2026-10-03 — indoor fps: my numbers since 325d0af, the cuts I made, three asks; all room files rebuilt
 
 All 160 room files rebuilt 2026-10-03 (+ hr_office), imported, `check` 0 failed, and I ran `render_nav_bake.gd`

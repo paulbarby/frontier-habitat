@@ -127,6 +127,19 @@ var _sh_finv := Vector3.ZERO
 const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
 var solid_fn: Callable         # (p) -> true inside a solid cell at eye height (world_view.follow_solid)
+var arm_fn: Callable           # (a, b, r) -> clear length from a toward b for a sphere of radius r (world_view.follow_arm)
+var arm_on := 1.0              # measurement switch (rig.arm_on=0)
+var arm_slack := 1.0           # the hard limit's give (fraction of the arm): the spring alone inside it
+var arm_w_in := 14.0           # rad/s (SH_W_ARM_IN)
+var _sh_arm := 1.0             # the arm's length factor (fraction of the eye's offset from the pivot), eased out
+var _sh_armv := 0.0
+var dbg_arm := [0, 0, 0.0]     # measurement: [frames the thin arm clamped, frames pulled in, metres clamped]
+const ARM_R := 0.22            # m: the thick arm (eased in, so the pull starts before the sight line is cut)
+const ARM_MARGIN := 0.12       # m: the eye stays this far before a surface on the thin arm
+const ARM_CUT := 0.47          # m: Models.near_fade cuts structure surfaces nearer the lens (they hide nothing)
+const ARM_MIN := 1.05         # m: the shortest arm (closer: fx_npc fades the body within 0.8 m of the lens and the frame shows only what is behind it)
+const SH_W_ARM_IN := 10.0      # rad/s: in, to the thick arm's length
+const SH_W_ARM_OUT := 2.0      # rad/s: back out
 var frame_fn: Callable         # (eye, look dir) -> true when no surface is within 0.8 m across the frame centre
 var occ_fn: Callable           # (eye) -> how far from the chest the eye may stand (world_view.follow_occluder)
 var _sh_occ := 1.0             # eased occluder pull (fraction of the eye's distance from the pivot)
@@ -155,9 +168,11 @@ var collide_smooth := false   # set by collide_fn each call: the indoor wall rul
 var _sh_chk_clock := 0.0
 var _sh_search_i := 0
 const SH_SEARCH_STEP := 6
+# (no boom under 0.75 x: a camera 0.6-0.8 m from the person looked over the head at a wall or the ceiling, or lost
+# the person under the frame; the arm, not a short boom, keeps the sight line, 2026-10-03)
 const SEARCH_CANDS := [[0.0, 1.0], [0.0, 0.75], [15.0, 1.0], [-15.0, 1.0], [30.0, 1.0], [-30.0, 1.0], [15.0, 0.75], [-15.0, 0.75],
-	[45.0, 1.0], [-45.0, 1.0], [0.0, 0.55], [30.0, 0.75], [-30.0, 0.75], [60.0, 1.0], [-60.0, 1.0], [45.0, 0.75], [-45.0, 0.75],
-	[90.0, 1.0], [-90.0, 1.0], [15.0, 0.55], [-15.0, 0.55], [60.0, 0.75], [-60.0, 0.75], [90.0, 0.75], [-90.0, 0.75], [0.0, 0.4]]
+	[45.0, 1.0], [-45.0, 1.0], [30.0, 0.75], [-30.0, 0.75], [60.0, 1.0], [-60.0, 1.0], [45.0, 0.75], [-45.0, 0.75],
+	[90.0, 1.0], [-90.0, 1.0], [60.0, 0.75], [-60.0, 0.75], [90.0, 0.75], [-90.0, 0.75]]
 var dbg_search := [0, 0]
 var dbg_cur_ok := true
 var _sh_fr_cool := 0.0
@@ -306,7 +321,9 @@ func _shoulder_process(delta: float) -> bool:
 	return r
 
 func _shoulder_process2(delta: float) -> bool:
+	var _tsf: int = Time.get_ticks_usec()
 	var s = shoulder_fn.call()
+	prof_us["body_fn"] = int(prof_us.get("body_fn", 0)) + Time.get_ticks_usec() - _tsf
 	if s == null:
 		shoulder_stop()
 		return false
@@ -477,10 +494,10 @@ func _shoulder_process2(delta: float) -> bool:
 							break
 					if found or _sh_search_i >= SEARCH_CANDS.size():
 						if not found:
-							# (nothing predicted good: the shortest boom behind the shoulder)
+							# (nothing predicted good: a 0.75 x boom behind the shoulder; the arm keeps the sight line)
 							_sh_bar[cur_key] = 3.0
 							_sh_oo_t = 0.0
-							_sh_od_t = 0.32
+							_sh_od_t = 0.75
 						_sh_search_i = 0
 						dbg_search[1 if found else 0] += 1
 						_sh_fr_cool = 0.5
@@ -627,6 +644,11 @@ func _shoulder_process2(delta: float) -> bool:
 			# into before the camera reaches the doorway, 2026-10-01)
 			for k in [0.5, 1.0]:
 				cy_soft = minf(cy_soft, float(ceil_fn.call(pos, eye + tw * k)))
+		if cy == INF and _sh_cy != INF and not _sh_new and dt > 0.0 and _sh_cy < pivot.y + 1.2:
+			# (no ceiling here (a doorway, out of the roof grid): the eased ceiling rises away instead of the limit
+			# vanishing in one frame, a 0.1-0.15 m camera jump, 2026-10-03)
+			cy = pivot.y + 1.5
+			cy_soft = cy
 		if cy < INF:
 			if _sh_cy == INF or _sh_new:
 				_sh_cy = cy_soft
@@ -645,6 +667,52 @@ func _shoulder_process2(delta: float) -> bool:
 	eye.y = maxf(eye.y, pos.y + 0.25)
 	if height_fn.is_valid():
 		eye.y = maxf(eye.y, float(height_fn.call(eye.x, eye.z)) + 0.35)
+	# The arm (2026-10-03, critic round 41: the person hidden behind a doorway frame, a roof edge, a shelf):
+	# nothing DRAWN lies between the point over the person's head (the pivot) and the lens. A sphere swept
+	# from the pivot to the eye gives the eased target (in at SH_W_ARM_IN before the thin line is cut); the
+	# thin line itself is a hard limit (never a frame with the line cut). Out slowly (SH_W_ARM_OUT). Applied after
+	# the final eased offset (before it, the aim took the unsmoothed eye: 88 px head jitter, 2026-10-03).
+	var eye_pre: Vector3 = eye
+	var _tar: int = Time.get_ticks_usec()
+	if arm_fn.is_valid() and arm_on > 0.5:
+		var av: Vector3 = eye - pivot
+		var al: float = av.length()
+		var k_thin := 1.0
+		var k_thick := 1.0
+		if al > ARM_MIN + ARM_CUT:
+			var u: Vector3 = av / al
+			# (a surface within ARM_CUT of the lens is cut by the near fade: it hides nothing)
+			var c_thin: float = float(arm_fn.call(pivot, eye - u * ARM_CUT, 0.0))
+			if c_thin >= 0.0:
+				if c_thin < al - ARM_CUT - 0.001:
+					k_thin = clampf((c_thin + ARM_CUT - ARM_MARGIN) / al, ARM_MIN / al, 1.0)
+				# (the thick arm: two more lines from beside the pivot, ARM_R to each side, converging on the eye; a
+				# sphere sweep touched the ceiling and the walls the eye is kept 0.25 m off, all the time)
+				var sd: Vector3 = u.cross(Vector3.UP).normalized() * ARM_R
+				for sp in [sd, -sd]:
+					var a2: Vector3 = pivot + sp
+					var l2: float = a2.distance_to(eye)
+					var c2: float = float(arm_fn.call(a2, a2.lerp(eye, (l2 - ARM_CUT) / l2), 0.0))
+					if c2 >= 0.0 and c2 < l2 - ARM_CUT - 0.001:
+						k_thick = minf(k_thick, clampf((c2 + ARM_CUT - ARM_MARGIN) / l2, ARM_MIN / al, 1.0))
+		var k_t: float = minf(k_thin, k_thick)
+		if _sh_new or dt <= 0.0:
+			_sh_arm = k_t
+			_sh_armv = 0.0
+		else:
+			var ra: Vector2 = _crit(_sh_arm, _sh_armv, k_t, arm_w_in if k_t < _sh_arm else SH_W_ARM_OUT, dt)
+			_sh_arm = ra.x
+			_sh_armv = ra.y
+		if _sh_arm > k_thin + arm_slack:
+			dbg_arm[0] += 1
+			dbg_arm[2] += (_sh_arm - k_thin) * al
+			_sh_arm = k_thin + arm_slack
+			_sh_armv = 0.0
+		if _sh_arm < 0.999:
+			dbg_arm[1] += 1
+		if _sh_arm < 0.999:
+			eye = pivot + av * _sh_arm
+	prof_us["arm"] = int(prof_us.get("arm", 0)) + Time.get_ticks_usec() - _tar
 	_sh_pull = _sh_f
 	_sh_eyeh = _sh_eh
 	_sh_new = false
@@ -654,10 +722,21 @@ func _shoulder_process2(delta: float) -> bool:
 	# then by the free-look offsets.
 	# (from the eye; from the FREE camera point when the eye is pressed close to the head: from beside the
 	# head the line to the person swung the aim by up to 1300 deg/s, 2026-10-01)
-	var src: Vector3 = eye.lerp(free, clampf((1.2 - eye.distance_to(pivot)) / 0.6, 0.0, 1.0))
+	# (the arm pulls the eye along its line to the pivot: the aim of the unpulled eye keeps the person framed)
+	# (the free point only within 0.9 m of the pivot: from 1.2 m the aim from the free point lost the person off
+	# the frame's left edge whenever the wall rule held the eye 0.6-1.0 m from the head, 2026-10-03)
+	var src: Vector3 = eye_pre.lerp(free, clampf((0.9 - eye_pre.distance_to(pivot)) / 0.45, 0.0, 1.0))
 	var to_p: Vector3 = pivot - src
 	var yaw_p: float = atan2(-to_p.z, to_p.x)
 	var pit_p: float = atan2(to_p.y, Vector2(to_p.x, to_p.z).length())
+	var dp: float = eye.distance_to(pivot)
+	if dp < 1.6:
+		# (an eye close to the pivot, drawn in by the arm or held in by the walls, looks down at the person from
+		# its own place: from the unpulled eye's pitch the chest was below the frame, 2026-10-03)
+		var tp: Vector3 = pivot - Vector3(0.0, 0.3 * clampf((1.6 - dp) / 1.0, 0.0, 1.0), 0.0) - eye
+		var wa: float = clampf((1.6 - dp) / 0.4, 0.0, 1.0)
+		# (the 10 deg drop below the line to the pivot is taken back as well: aimed at the upper chest)
+		pit_p = lerpf(pit_p, atan2(tp.y, Vector2(tp.x, tp.z).length()) + deg_to_rad(10.0), wa)
 	var off_yaw: float = atan2(side, maxf(_sh_d * cos(_sh_pt), 0.05))
 	var ay: float = yaw_p - off_yaw + _sh_ly
 	var ap: float = clampf(pit_p - deg_to_rad(10.0) - lift * 0.25 + _sh_lp, -1.45, 1.3)

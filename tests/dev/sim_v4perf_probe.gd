@@ -36,16 +36,39 @@ func _init() -> void:
 		var v: Dictionary = sim.vehicles.get_v(int(g.cmd("spawn_vehicle", {"kind": kind, "x": p.x, "y": p.y})["id"]))
 		v["charge"] = 1e6
 		v["fuel"] = 1e6
+		crew[k]["fatigue"] = minf(float(crew[k]["fatigue"]), 50.0)
+		crew[k]["hunger"] = minf(float(crew[k]["hunger"]), 50.0)
+		crew[k]["thirst"] = minf(float(crew[k]["thirst"]), 50.0)
 		H.put_outside(sim, crew[k], v["pos"] + Vector2(2, 0), sim.agents.suit_cap())
 		sim.vehicles.board(crew[k], int(v["id"]))
 		var far: Vector2 = C4._drive_target(sim, v["pos"], 450.0) if kind != "hopper" else v["pos"] + (c - v["pos"]).normalized() * 500.0
 		if far.x < 0.0:
 			far = C4._drive_target(sim, v["pos"], 250.0)
 		legs[int(v["id"])] = [far, v["pos"]]
+	for k2 in 6:
+		var cc: Dictionary = crew[k2]
+		print("CREW %d %s where %s veh %s plan %s fat %.0f" % [k2, cc["name"], cc["where"], str(cc.get("veh", -1)), cc["plan_kind"], float(cc["fatigue"])])
+	g.run(60)
+	for tk2 in 30:
+		var ln2: Dictionary = sim.state["agents"][88]
+		print("T2 %d where %s plan %s n %d pi %s act_t %s queued %s li %s route %s" % [tk2, ln2["where"], ln2["plan_kind"], (ln2["plan"] as Array).size(), str(ln2["pi"]), str(ln2["act_t"]), str(ln2["queued"]), str(ln2["li"]), str((ln2["route"] as Dictionary).keys())])
+		g.run(1)
+	for tk in 0:
+		var lv: Dictionary = sim.vehicles.get_v(4985)
+		var ln: Dictionary = sim.state["agents"][88]
+		if tk % 3 == 0 or ln["where"] != "vehicle":
+			print("TK %d Lin where %s plan %s goal %s | veh state %s block %s crew %s pos %s" % [tk, ln["where"], ln["plan_kind"], ln["goal"], lv["state"], str(lv.get("block", "")), str(lv["crew"]), str(lv["pos"])])
+		if ln["where"] != "vehicle":
+			break
+		g.run(10)
 	var dead_seen := {}
-	for w in 45:
-		if w % 10 == 0:
+	for w in 24:
+		if w % 10 == 0 or w % 10 == 5:
 			H.fill_utilities(sim, 1.0, 0.8, true)
+		for cw in crew:
+			cw["fatigue"] = minf(float(cw["fatigue"]), 50.0)
+			cw["hunger"] = minf(float(cw["hunger"]), 50.0)
+			cw["thirst"] = minf(float(cw["thirst"]), 50.0)
 		g.run(100)
 		for vid in legs:
 			var v2: Dictionary = sim.vehicles.get_v(vid)
@@ -53,6 +76,9 @@ func _init() -> void:
 				var l: Array = legs[vid]
 				l.reverse()
 				sim.vehicles.drive_to(v2, l[0])
+		var la: Dictionary = sim.state["agents"][88]
+		if w < 24:
+			print("  w%d Lin where %s veh %s state %s plan %s goal %s suit %.0f grace %.1f hp %.0f" % [w, la["where"], str(la.get("veh", -1)), la["state"], la["plan_kind"], la["goal"], float(la["suit"]), float(la["o2_grace"]), float(la["health"])])
 		for aid in sim.state["agents"]:
 			var a: Dictionary = sim.state["agents"][aid]
 			if a["state"] == "dead" and not dead_seen.has(aid):

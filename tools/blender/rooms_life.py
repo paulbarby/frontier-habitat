@@ -195,7 +195,7 @@ def build_atmo_processor(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(lamps=(160.0, 200.0), bolts=s >= 2, pilasters=(8, 12, 14, 16)[s], floor="grate")
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=0, band="Accent" if s else None, band_z=D - 0.45, windows=(1.55, 1.80), win_mat="Rubber",
                     win_seams=(8, 24, 32, 40)[s], parapet=0.12)
     ro = rm.roof

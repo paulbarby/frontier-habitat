@@ -144,7 +144,8 @@ func tick_second() -> void:
 		for k in ids:
 			if f.has(k):
 				_fight_second(f[k], now)
-	_releases()
+	if (now / int(sim.bal["tick_hz"])) % 5 == 0:
+		_releases()                                                                   # a release is a few seconds late at most (cost: a scan of all people)
 	_talk_fights(now)
 	if sim.get("unrest") != null:
 		for b in sim.unrest._bases():

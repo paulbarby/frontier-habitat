@@ -33,8 +33,8 @@ import rooms_kit as K
 from rooms_kit import T, RZ, P
 import interior_props as PR
 
-MIN_Z = 2.45            # the lowest HANGING face (m, absolute)
-LINER_MIN = 2.20        # the lowest liner (flush, GAP under the roof): low flat roofs (2.32 m decks) get a liner too
+MIN_Z = 2.52            # the lowest HANGING face (m, absolute); Paul 2026-10-03: door top 2.24 + 0.25 + 3 cm
+LINER_MIN = 2.55        # the lowest liner (flush, GAP under the roof): low flat roofs (2.32 m decks) get a liner too
 GAP = 0.05              # liner under the roof
 NAME = "RoofCeil"
 SKIP = ("apartment_block", "corridor")

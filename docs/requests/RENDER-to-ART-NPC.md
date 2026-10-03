@@ -101,3 +101,12 @@ jog. Robot dancers dance at the Club's anchors (cycle a/b/c/pole, idle when clos
 4. Same shot: "the far arm looks missing" - it was hidden by the dithered pillar in front (fixed on my side: the
    camera now swings round sight-line occluders, and the near fade is a narrow 0.5-0.7 m ring). Tell me if you see an
    arm missing in an open view.
+
+## 2026-10-03 - ground check: the people walk 2 cm under their idle stance (RENDER)
+
+`tools/render_ground_check.gd` on showcase_v5 (people_*.glb of 08:54-08:58 today): FAIL, 13,927 of 15,592
+windows sink. Walk indoors p50 -22.0 mm, run about -21 mm, work_bench -22 mm, with the body's ground offset 0
+(the body is drawn on the floor): the lowest foot of the walk / run cycle is about 22 mm below the foot at frame 0
+of the same library's idle clip. Every people library shows it (p_f1..f3, p_m1..m3, LOD0 and LOD1). Before these
+files the gate stood at p5 -8.5 mm. Please check the idle frame 0 foot height against the walk / run contact
+frames (or tell me the stance reference to use). Detail: `art/npc/ground_check.json`.

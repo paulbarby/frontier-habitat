@@ -904,6 +904,34 @@ MOCAP_ADULTS = {"idle"}      # captures that stay hand-keyed on the children (c2
 MOCAP_CHILD_SMOOTH = {"walk": 3}
 
 
+# (2026-10-03 c, RENDER ground gate) RENDER measures every planted foot against frame 0 of the library's idle clip.
+# The captured idle began with the left heel up (pitch 11 deg, ankle +23 mm), so walk, run and every standing clip
+# read 22 mm under the stance.  A standing capture loop now starts on a frame with both feet flat on the floor
+# (foot z, pitch, roll and toe as the stand pose), the flat frame nearest the hand-keyed frame 0.
+MOCAP_FLAT_START = {"idle", "talk_idle"}
+
+
+def flat_start(fn, n, ref):
+    def flat_cost(P):
+        c = 0.0
+        for sd in ("L", "R"):
+            c += abs(P.g("foot.%s.z" % sd) - STAND.g("foot.%s.z" % sd)) * 100.0
+            c += (abs(P.g("foot.%s.pitch" % sd)) + abs(P.g("foot.%s.roll" % sd)) + abs(P.g("toe.%s.ry" % sd))) / 10.0
+        return c
+
+    def near_cost(P):
+        c = sum(abs(P.g(k) - ref.g(k)) for k in ("hips.x", "hips.y", "hips.z")) * 10.0
+        for sd in ("L", "R"):
+            c += abs(P.g("foot.%s.x" % sd) - ref.g("foot.%s.x" % sd)) + abs(P.g("foot.%s.y" % sd) - ref.g("foot.%s.y" % sd))
+        return c
+    poses = [fn(f) for f in range(n)]
+    flat = [f for f in range(n) if flat_cost(poses[f]) < 0.01]
+    if not flat or 0 in flat:
+        return fn
+    k = min(flat, key=lambda f: near_cost(poses[f]))
+    return lambda f: fn((int(f) + k) % n)
+
+
 def mocap_override(clips, jaws):
     out = []
     for c in clips:
@@ -913,6 +941,8 @@ def mocap_override(clips, jaws):
             out.append(c)
             continue
         mfn, mn, mmeta = m
+        if loop and name in MOCAP_FLAT_START:
+            mfn = flat_start(mfn, mn, fn(0))
         if IS_CHILD and name in MOCAP_CHILD_SMOOTH:
             mfn = A.smooth_params(mfn, mn, loop, MOCAP_CHILD_SMOOTH[name])
         meta = dict(meta)

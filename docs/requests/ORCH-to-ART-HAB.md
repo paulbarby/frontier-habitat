@@ -37,3 +37,6 @@ screens with content, cables, signs, plants, clutter by role), wall and floor de
 Keep the triangle and pck budgets; reuse a shared prop kit.
 
 ## 2026-10-02 — Paul: HR department → V5_DESIGN.md §17 (your parts as listed there).
+
+## 2026-10-03 — Paul: roof/ceiling frames hang across corridor doorways in the follow view (roofs on)
+Every roof/ceiling/band part stays at or above door head + 0.25 m within 1.5 m of a door, or is cut at the door; builder check (0 flags); renders through doorways. RENDER adds an in-game doorway gate.

@@ -1194,6 +1194,8 @@ func start_demolish() -> void:
 	Sfx.play("select")
 
 func cancel_tool() -> void:
+	if hud != null and hud.hint != null:
+		hud.hint.cancel_pending()
 	tool = "select"
 	tool_def = ""
 	link_from = -1
@@ -1379,6 +1381,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					follow_end()
 				elif k.shift_pressed:
 					close_all_windows()
+				elif hud.hint.has_pending():
+					hud.hint.cancel_pending()
 				elif tool != "select":
 					cancel_tool()
 				elif hud.is_modal_open():

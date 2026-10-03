@@ -209,6 +209,8 @@ func _new_batch(tpl: Dictionary) -> void:
 	for p in parts:
 		vis[p["part"]["group"]] = 0
 	batches[tpl["key"]] = {"tpl": tpl, "parts": parts, "cap": 8, "used": 0, "free": [], "slots": {}, "vis": vis}
+	if _frost > 0.0:
+		_frost_batch(batches[tpl["key"]])
 	for p in parts:
 		(p["mmi"] as MultiMeshInstance3D).visible = false
 
@@ -252,7 +254,56 @@ func _vis_delta(bt: Dictionary, group: String, d: int) -> void:
 	bt["vis"][group] = v
 	for p in bt["parts"]:
 		if p["part"]["group"] == group:
-			(p["mmi"] as MultiMeshInstance3D).visible = v > 0 and not far_hidden.has(group)
+			(p["mmi"] as MultiMeshInstance3D).visible = v > 0 and not far_hidden.has(group) and not bool(bt.get("culled", false))
+
+## Frost on structures (cold planet at night, critic round 41): a material_overlay pass on the roof and upper
+## wall parts of every batch; amount 0 removes the pass (no draw cost by day or on other planets).
+const FROST_GROUPS := ["Roof", "WallsUp", "Walls"]
+var _frost_mat: ShaderMaterial
+var _frost := 0.0
+func set_frost(amount: float) -> void:
+	amount = clampf(amount, 0.0, 1.0)
+	if absf(amount - _frost) < 0.01 and (amount > 0.0) == (_frost > 0.0):
+		return
+	var was_on: bool = _frost > 0.0
+	_frost = amount
+	if _frost_mat == null:
+		_frost_mat = ShaderMaterial.new()
+		_frost_mat.shader = load("res://shaders/frost_overlay.gdshader")
+	_frost_mat.set_shader_parameter("amount", amount)
+	if (amount > 0.0) != was_on:
+		for key in batches:
+			_frost_batch(batches[key])
+
+func _frost_batch(bt: Dictionary) -> void:
+	for p in bt["parts"]:
+		var g: String = String(p["part"]["group"])
+		if g in FROST_GROUPS and not bool(p["part"].get("shadow_only", false)):
+			(p["mmi"] as MultiMeshInstance3D).material_overlay = _frost_mat if _frost > 0.0 else null
+
+## Indoor cull (2026-10-03, 134 people at 30 fps indoors): a MultiMesh is culled as a whole, so a batch draws every
+## copy in the colony whenever one is on screen. With the follow camera inside a room the batches with no copy
+## within r m of the camera are not drawn at all (walls hide them). r <= 0 draws everything again.
+func set_cull(center: Vector3, r: float) -> int:
+	var near := {}
+	if r > 0.0:
+		for h in handles:
+			var o: Vector3 = (handles[h]["xf"] as Transform3D).origin
+			if absf(o.x - center.x) < r and absf(o.z - center.z) < r:
+				near[handles[h]["key"]] = true
+	var n := 0
+	for key in batches:
+		var bt: Dictionary = batches[key]
+		var c: bool = r > 0.0 and not near.has(key)
+		if c:
+			n += 1
+		if c == bool(bt.get("culled", false)):
+			continue
+		bt["culled"] = c
+		for p in bt["parts"]:
+			var g2: String = p["part"]["group"]
+			(p["mmi"] as MultiMeshInstance3D).visible = int(bt["vis"].get(g2, 0)) > 0 and not far_hidden.has(g2) and not c
+	return n
 
 ## Groups not drawn at all while the camera is far (small wall signs): draw calls.
 var far_hidden := {}
@@ -272,7 +323,7 @@ func set_far_hidden(groups: Array, on: bool) -> void:
 		for p in bt["parts"]:
 			var g2: String = p["part"]["group"]
 			if g2 in groups:
-				(p["mmi"] as MultiMeshInstance3D).visible = int(bt["vis"].get(g2, 0)) > 0 and not far_hidden.has(g2)
+				(p["mmi"] as MultiMeshInstance3D).visible = int(bt["vis"].get(g2, 0)) > 0 and not far_hidden.has(g2) and not bool(bt.get("culled", false))
 
 func _zero(at: Vector3) -> Transform3D:
 	return Transform3D(Basis.from_scale(Vector3(0.0001, 0.0001, 0.0001)), at)

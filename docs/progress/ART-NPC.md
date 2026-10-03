@@ -486,3 +486,11 @@ npc_anims; `SUIT_SMOOTH` in npc_build (suit_swap excluded: its cut frame must st
 **Not done:** snaps left on talk (8.7-9.1 deg/f2, all bodies), swim / swim_enter / swim_exit (7-12), drink_bar,
 stool_enter/exit on f1/f2 (10); slides 1.1-1.6 cm at the start of stool_enter / lounger_enter; floats 38 (kneel
 1.2-1.6 cm, dance lifts); elbow 8, neck 8 (swim), wrist 1; trouser hems show a small notch on the inner side (m2).
+
+## v5.0 — 2026-10-03 (c) (Opus ART-NPC) — RENDER ground gate: people 22 mm under the idle stance
+Cause: the captured idle began with the left heel up (ankle +23 mm); RENDER's gate takes the stance from idle frame
+0. Fix: `people_anims.flat_start` starts captured standing loops on a frame with both feet flat. Build 11:27-11:35:
+`npc_verify` 604/0, `npc_check` PASS 165/0, `check` 314/0, import done. Exported files: every frame of idle, walk,
+run, work_bench, talk_idle and idle_look within -2.1..+0.3 mm of idle frame 0 (m2, f3). RENDER's gate on
+showcase_v5: p50 -22 -> about 0 mm, sinks 13,927 -> 443. Its tails (to -34 mm) do not appear in the clip frames;
+asked RENDER to check its blends (RENDER note 2026-10-03 (c)).

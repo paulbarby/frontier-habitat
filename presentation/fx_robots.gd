@@ -10,6 +10,7 @@ extends Node3D
 const FILE := "res://assets/models/robot_dancer.glb"
 const DANCES := ["robot_dance_a", "robot_dance_b", "robot_dance_c", "robot_pole"]
 const COLS := [Color(1.0, 0.25, 0.85), Color(0.2, 0.85, 1.0), Color(1.0, 0.75, 0.2), Color(0.45, 1.0, 0.35), Color(0.6, 0.4, 1.0), Color(1.0, 0.35, 0.3)]
+const LIGHT_FAR := 40.0         # m: the podium spot and rim lights only this close (light cost)
 const FAR := 90.0               # m: beyond this the robots are hidden (they are inside a closed venue)
 
 var view
@@ -48,6 +49,7 @@ func _visible_in(b: Dictionary, meta: Dictionary, ay: float) -> bool:
 			fl = i + 1
 	return fl <= k
 
+var _fill: OmniLight3D
 var force_open := false          # evidence only (__fhr "robots open"): dance whatever the Club's hours
 
 func _club_open(b: Dictionary) -> bool:
@@ -102,11 +104,42 @@ func sync(_delta: float) -> void:
 			for m in r["lights"]:
 				(m as StandardMaterial3D).emission = COLS[int(r["k"]) % COLS.size()]
 				(m as StandardMaterial3D).emission_energy_multiplier = (3.0 * pulse) if open else 0.8
+			var near_l: bool = cam != null and cam.global_position.distance_to(ax.origin) < LIGHT_FAR
+			(r["spot"] as Light3D).visible = near_l
+			(r["rim"] as Light3D).visible = near_l
+			(r["spot"] as Light3D).light_energy = (2.6 + 0.8 * pulse) if open else 0.9
+			(r["rim"] as Light3D).light_energy = 1.6 if open else 0.5
 	for key in bots.keys():
 		if not seen.has(key):
 			(bots[key]["node"] as Node).queue_free()
 			bots.erase(key)
 	stats["robots"] = bots.size()
+	# The floor fill (critic round 41: "lift the floor from black"): one soft omni over the dance floor, in front
+	# of the podiums, while any dancer is drawn and the camera is near.
+	var c_sum := Vector3.ZERO
+	var f_sum := Vector3.ZERO
+	var nv := 0
+	var any_open := false
+	for key in bots:
+		var nd: Node3D = bots[key]["node"]
+		if nd.visible:
+			c_sum += nd.global_position
+			f_sum += nd.global_transform.basis.x
+			nv += 1
+			any_open = any_open or bool(bots[key]["open"])
+	if _fill == null:
+		_fill = OmniLight3D.new()
+		_fill.name = "ClubFloorFill"
+		_fill.light_color = Color(0.95, 0.55, 1.0)
+		_fill.omni_range = 8.0
+		_fill.omni_attenuation = 0.9
+		_fill.shadow_enabled = false
+		add_child(_fill)
+	_fill.visible = nv > 0 and cam != null and cam.global_position.distance_to(c_sum / maxf(nv, 1)) < LIGHT_FAR
+	if nv > 0:
+		var fd: Vector3 = Vector3(f_sum.x, 0.0, f_sum.z).normalized()
+		_fill.global_position = c_sum / nv + fd * 3.0 + Vector3(0.0, 2.2, 0.0)
+		_fill.light_energy = 0.9 if any_open else 0.4
 
 func _make(key: String, ax: Transform3D, k: int) -> Dictionary:
 	var node: Node3D = _scene.instantiate()
@@ -146,7 +179,27 @@ func _make(key: String, ax: Transform3D, k: int) -> Dictionary:
 				cm.rim = 0.55
 				cm.rim_tint = 0.4
 				m3.set_surface_override_material(si, cm)
-	var r := {"node": node, "player": ap, "lights": lights, "k": k, "seq": k, "open": false}
+	# Critic round 41: a coloured spot from above per podium and a cool rim light from behind, so the dancer reads
+	# against the dark club (no shadows: the Compatibility renderer's light budget).
+	var spot := SpotLight3D.new()
+	spot.name = "PodiumSpot"
+	spot.light_color = COLS[k % COLS.size()].lerp(Color.WHITE, 0.35)
+	spot.spot_range = 5.0
+	spot.spot_angle = 24.0
+	spot.spot_attenuation = 0.8
+	spot.shadow_enabled = false
+	spot.position = Vector3(0.0, 3.2, 0.0)
+	spot.rotation = Vector3(-PI * 0.5, 0.0, 0.0)
+	node.add_child(spot)
+	var rim := OmniLight3D.new()
+	rim.name = "RimLight"
+	rim.light_color = Color(0.65, 0.8, 1.0)
+	rim.omni_range = 1.8
+	rim.omni_attenuation = 1.2
+	rim.shadow_enabled = false
+	rim.position = Vector3(-0.7, 1.7, 0.0)   # behind the dancer (the anchor faces +X)
+	node.add_child(rim)
+	var r := {"node": node, "player": ap, "lights": lights, "k": k, "seq": k, "open": false, "spot": spot, "rim": rim}
 	if ap != null:
 		ap.animation_finished.connect(func(_n): _next(r))
 	return r

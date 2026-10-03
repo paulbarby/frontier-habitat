@@ -34,7 +34,7 @@ Per clip: faults (targets: planted feet 0 +- 1 cm, slide < 1 cm, no bone step ov
 | hold_hands_walk | ok | ok | ok | ok | ok | ok | ok | ok | - | - |
 | hold_hands_walk_r | ok | ok | ok | ok | ok | ok | ok | ok | - | - |
 | hug | ok | ok | ok | ok | ok | ok | - | - | - | - |
-| idle | ok | ok | ok | ok | ok | snap 6.1 deg/f (shin.L f100) | ok | ok | ok | ok |
+| idle | ok | ok | ok | ok | ok | snap 6.1 deg/f (shin.L f67) | ok | ok | ok | ok |
 | idle_look | ok | ok | ok | ok | ok | ok | ok | ok | ok | ok |
 | injured_walk | ok | ok | ok | snap 16.5 deg/f (shin.R f20) | snap 16.9 deg/f (shin.R f20) | ok | ok | ok | ok | ok |
 | jog | ok | ok | ok | ok | ok | ok | ok | ok | - | - |

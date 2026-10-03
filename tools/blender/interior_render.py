@@ -647,6 +647,7 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
                           flat_roof=meta.get("shell") in ("podium", "drum", "setback"),
                           upper_band=None if cutaway else meta.get("upper_band"))
         hide_match(objs, {"Wall_%02d" % k for k in plan["hide"]} | {"Upper_%02d" % k for k in plan["hide"]})
+        hide_prefix(objs, ["Upper_%02d_" % k for k in plan["hide"]])      # the band / sign objects of those segments
         hide_prefix(objs, ["Decal_%02d_" % k for k in decal_hide(R, th)])
         extra.append(Vector(((R + 2.6) * cos(radians(th)), (R + 2.6) * sin(radians(th)), 0.0)))
     # 3.1 decals follow their source object: Decal_<seg>_L3 shows with L3, Decal_<seg>_Roof with the roof
@@ -954,6 +955,17 @@ def main():
             shot_room(file, R, base + "_eye%d.png" % j, size=(1500, 840), cutaway=False, night=("--night" in argv),
                       floor=efl, cam_fn=eye_camera(ex, ey, eyaw, dist=edist, side=min(0.55, 0.3 * edist),
                                                    floor_z=3.6 * (efl or 0)))
+    if "doorview" in only:
+        # Paul 2026-10-03 (roof parts over the door openings): the follow camera through a doorway, roof on, doors
+        # open: from the corridor into the room (_doorview_in) and from the room out to the corridor (_doorview_out)
+        th = links[0]
+        Rw = R - 0.32
+        u = Vector((cos(radians(th)), sin(radians(th)), 0.0))
+        for tag, pr, yaw in (("in", R + 1.3, th + 180.0), ("out", Rw - 1.7, th)):
+            p_ = u * pr
+            shot_room(file, R, base + "_doorview_%s.png" % tag, size=(1500, 840), cutaway=False, links=[th],
+                      open_doors=True, night=("--night" in argv),
+                      cam_fn=eye_camera(p_.x, p_.y, yaw, dist=1.9, side=0.3 if tag == "in" else 0.55))
     if "cutproof" in only:
         # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
         # the cutaway may stand above the ring

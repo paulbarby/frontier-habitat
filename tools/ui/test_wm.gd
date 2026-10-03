@@ -43,9 +43,11 @@ func _process(_d: float) -> bool:
 			var wa: Rect2 = wm.work_area()
 			check("opens at its default place: top right of the work area", insp().visible and absf(r.end.x - wa.end.x) < 2.0 and absf(r.position.y - wa.position.y) < 2.0, "%s in %s" % [str(r), str(wa)])
 			# Drag near the left work-area edge: it snaps onto the edge.
-			main._on_cmd("drag inspector %d 300" % int(wa.position.x + 9.0))
+			# (A narrow inspector is taller: it keeps to the work area, so the drag stays near the top.)
+			var drag_y: float = wa.position.y + 20.0
+			main._on_cmd("drag inspector %d %d" % [int(wa.position.x + 9.0), int(drag_y)])
 			r = insp().get_global_rect()
-			check("snaps to a work-area edge within 14 px", absf(r.position.x - wa.position.x) < 0.5 and absf(r.position.y - 300.0) < 0.5, str(r))
+			check("snaps to a work-area edge within 14 px", absf(r.position.x - wa.position.x) < 0.5 and absf(r.position.y - drag_y) < 0.5, str(r))
 			main._on_cmd("drag inspector 500 260")
 			var placed: Vector2 = insp().global_position
 			check("Esc closes the last window", main._on_cmd("esc") == "window" and not insp().visible and wm.open_ids().is_empty())

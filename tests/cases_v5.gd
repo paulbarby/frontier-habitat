@@ -1215,9 +1215,10 @@ func long_v5_perf_showcase(t) -> void:
 	var sim = H.Sim.new()
 	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes(path))["state"])
 	sim.run_seconds(30.0)
+	var dead0: int = H.dead_count(sim)
 	var times: Array = []
 	var raw_times: Array = []
-	var pc = Pacer.new(false, 1.0)
+	var pc = Pacer.new(false)
 	pc.start()
 	for blk in 15:
 		var bsum := 0.0
@@ -1248,6 +1249,7 @@ func long_v5_perf_showcase(t) -> void:
 		mean += float(x)
 	mean /= float(times.size())
 	t.note("%d people, scaled: median %.3f ms, mean %.3f ms, p99 %.2f ms, worst %.2f ms (raw median %.3f, raw worst %.2f; calibration %s, mean factor %.3f)" % [sim.state["agents"].size(), med, mean, p99, worst, raw_med, raw_worst, cal, factor])
+	t.eq(H.dead_count(sim) - dead0, 0, "nobody died while it is measured")
 	t.check(med <= 3.0, "scaled median tick %.3f ms (budget 3.0; raw %.3f, factor %.3f)" % [med, raw_med, factor])
 	t.check(worst <= 30.0, "scaled worst tick %.2f ms (budget 12; fails over 30)" % worst)
 	sim.dispose()
@@ -1479,6 +1481,7 @@ func v5_flee_privilege_skills(t) -> void:
 	var p: Dictionary = _colonists(sim)[0]
 	var rec: Dictionary = sim.people.rec_w(p)
 	rec["worked"] = int(sim.state["tick"]) - 5 * 6000
+	sim.agents.abort_plan(p, "test")                                                   # test set-up: not working now
 	var mine3: Array = sim.content["people"]["role_skills"].get(String(p["role"]), [])
 	var x0: float = float(rec["xp"].get(mine3[0], 0.0))
 	sim.people._grow(p, rec, int(sim.state["tick"]))

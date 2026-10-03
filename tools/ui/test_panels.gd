@@ -281,3 +281,145 @@ func _plan() -> void:
 				bad.append("%s over the inspector %s" % [str(fs.get_global_rect()), str(insp.get_global_rect())])
 			check("%dx%d: the floor selector is not under the inspector" % [szg.x, szg.y], bad.is_empty(), "; ".join(bad))
 			main.select("", -1), 4)
+	# ---- The build palette keeps the centre of the view free (Paul, 2026-10-03): every category open, and while placing.
+	var BB = load("res://ui/hud/build_bar.gd")
+	for sz3 in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		for sc3 in [0.8, 1.0, 1.4]:
+			var szh: Vector2i = sz3
+			var sch: float = sc3
+			q(func():
+				root.size = szh
+				root.content_scale_size = Vector2i.ZERO
+				main._on_cmd("uiscale %s" % str(sch))
+				main.cancel_tool()
+				main.hud.build_bar.close_drawer(), 14)
+			for t3 in BB.TABS:
+				var tid: String = t3[0]
+				q(func(): main.hud.build_bar.toggle_tab(tid), 8)
+				q(func():
+					var bb = main.hud.build_bar
+					var v: Vector2 = vp()
+					var centre := Rect2(v * 0.25, v * 0.5)
+					var r: Rect2 = bb._drawer.get_global_rect()
+					var bad: Array = []
+					if not bb._drawer.visible:
+						bad.append("drawer not shown")
+					if r.grow(-0.5).intersects(centre):
+						bad.append("drawer %s in the centre %s" % [str(r), str(centre)])
+					if not Rect2(Vector2.ZERO, v).grow(0.5).encloses(r):
+						bad.append("drawer %s outside the view %s" % [str(r), str(v)])
+					if r.grow(-0.5).intersects(bb._tab_panel.get_global_rect()):
+						bad.append("drawer over the tab row")
+					if r.grow(-0.5).intersects(main.hud.minimap.get_global_rect()):
+						bad.append("drawer over the minimap")
+					var cut := false
+					for c in bb._cards.values():
+						if (c as Control).size.y < (c as Control).get_combined_minimum_size().y - 0.5:
+							cut = true
+					if cut:
+						bad.append("a card is cut off (the drawer is lower than its cards)")
+					check("%dx%d at %d%%, palette %s: under the centre zone, in the view, off the tab row and the map" % [szh.x, szh.y, int(sch * 100.0), tid], bad.is_empty(), "; ".join(bad)), 1)
+			# Placing: the drawer folds; the hint is a small panel at the bottom, under the centre.
+			q(func():
+				main.hud.build_bar.toggle_tab("habitat"), 8)
+			q(func():
+				main.start_place("habitat", 1), 10)
+			q(func():
+				var bb = main.hud.build_bar
+				var v: Vector2 = vp()
+				var centre := Rect2(v * 0.25, v * 0.5)
+				var hint: Control = main.hud.hint
+				var bad: Array = []
+				if bb._drawer.visible:
+					bad.append("the drawer stays open while placing")
+				if not hint.visible:
+					bad.append("no placement hint")
+				elif hint.get_global_rect().grow(-0.5).intersects(centre):
+					bad.append("hint %s in the centre %s" % [str(hint.get_global_rect()), str(centre)])
+				elif not Rect2(Vector2.ZERO, v).grow(0.5).encloses(hint.get_global_rect()):
+					bad.append("hint %s outside the view" % str(hint.get_global_rect()))
+				elif hint.get_global_rect().has_point(v * 0.5):
+					bad.append("hint over the middle of the view")
+				check("%dx%d at %d%%, placing: the palette folds, the hint is a bottom panel under the centre" % [szh.x, szh.y, int(sch * 100.0)], bad.is_empty(), "; ".join(bad))
+				# The link tool and remove: the same panel.
+				main.start_link("corridor"), 8)
+			q(func():
+				var v: Vector2 = vp()
+				var centre := Rect2(v * 0.25, v * 0.5)
+				var hint: Control = main.hud.hint
+				check("%dx%d at %d%%, corridor tool: palette folded, hint under the centre" % [szh.x, szh.y, int(sch * 100.0)], not main.hud.build_bar._drawer.visible and hint.visible and not hint.get_global_rect().grow(-0.5).intersects(centre), str(hint.get_global_rect()))
+				main.start_demolish()
+				# The remove question is in the hint too (no window over the view).
+				var bid: int = -1
+				for id in main.sim.state["buildings"]:
+					if String(main.sim.state["buildings"][id]["def"]) == "habitat":
+						bid = int(id)
+						break
+				main.hud.ask_demolish(bid), 8)
+			q(func():
+				var v: Vector2 = vp()
+				var centre := Rect2(v * 0.25, v * 0.5)
+				var hint: Control = main.hud.hint
+				check("%dx%d at %d%%, remove question: in the hint under the centre, no modal window" % [szh.x, szh.y, int(sch * 100.0)], hint.has_pending() and hint.visible and not main.hud.is_modal_open() and not hint.get_global_rect().grow(-0.5).intersects(centre), "%s %s" % [str(hint.has_pending()), str(hint.get_global_rect())])
+				# Esc: the question goes first, then the tool; the palette comes back.
+				main._unhandled_input(_esc()), 6)
+			q(func():
+				check("Esc ends the question and keeps the tool", not main.hud.hint.has_pending() and main.tool == "demolish")
+				main._unhandled_input(_esc()), 8)
+			q(func():
+				check("Esc ends the tool: the palette is back", main.tool == "select" and main.hud.build_bar._drawer.visible)
+				main.cancel_tool()
+				main.hud.build_bar.close_drawer(), 4)
+	# The wheel moves the palette strip sideways.
+	q(func():
+		root.size = Vector2i(1280, 720)
+		main._on_cmd("uiscale 1")
+		main.hud.build_bar.close_drawer(), 10)
+	q(func(): main.hud.build_bar.toggle_tab("industry"), 10)
+	q(func():
+		var sc: ScrollContainer = main.hud.build_bar._cards_scroll
+		var ev := InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_WHEEL_DOWN
+		ev.pressed = true
+		var before: int = sc.scroll_horizontal
+		sc.gui_input.emit(ev)
+		check("the mouse wheel moves the palette strip sideways", sc.scroll_horizontal > before, "%d -> %d" % [before, sc.scroll_horizontal])
+		main.hud.build_bar.close_drawer(), 4)
+	# The inspector (the Upgrade tab and the others) keeps out of the centre zone: it is as wide as the right quarter
+	# allows (Paul, 2026-10-03), at every size and scale, and it stays inside the work area (not over the top bar).
+	for sz4 in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		for sc4 in [0.8, 1.0, 1.4]:
+			for pick in [["research_lab", "upgrade"], ["kitchen", "menu"], ["super_dome", "venues"], ["super_dome", "party"], ["habitat", "stats"]]:
+				var szi: Vector2i = sz4
+				var sci: float = sc4
+				var pk: Array = pick
+				q(func():
+					root.size = szi
+					root.content_scale_size = Vector2i.ZERO
+					main._on_cmd("uiscale %s" % str(sci))
+					main._on_cmd("select %s %s" % [pk[0], pk[1]]), 14)
+				q(func():
+					var v: Vector2 = vp()
+					var centre := Rect2(v * 0.25, v * 0.5)
+					var ins: Control = main.hud.inspector
+					var r: Rect2 = ins.get_global_rect()
+					var wa: Rect2 = main.hud.wm.work_area()
+					var bad: Array = []
+					if not ins.visible:
+						bad.append("not shown")
+					if r.grow(-0.5).intersects(centre):
+						bad.append("%s in the centre %s" % [str(r), str(centre)])
+					if r.position.y < wa.position.y - 0.5 or r.end.y > wa.end.y + 0.5:
+						bad.append("%s outside the work area %s (over the top bar or the build bar)" % [str(r), str(wa)])
+					check("%dx%d at %d%%, inspector %s/%s: outside the centre zone, inside the work area" % [szi.x, szi.y, int(sci * 100.0), pk[0], pk[1]], bad.is_empty(), "; ".join(bad))
+					main.select("", -1), 2)
+	q(func():
+		root.size = Vector2i(1600, 900)
+		main._on_cmd("uiscale 1"), 6)
+
+func _esc() -> InputEventKey:
+	var ev := InputEventKey.new()
+	ev.physical_keycode = KEY_ESCAPE
+	ev.keycode = KEY_ESCAPE
+	ev.pressed = true
+	return ev

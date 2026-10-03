@@ -59,44 +59,51 @@ func setup(d, id: String, size: int) -> void:
 	theme_type_variation = "CardButton"
 	focus_mode = Control.FOCUS_NONE
 	toggle_mode = true
-	custom_minimum_size = Vector2(122, 180)
+	custom_minimum_size = Vector2(260, 80)   # a strip card (2026-10-03: the palette stays under the centre of the view)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	tooltip_text = " "
 	clip_contents = false
-	var v: VBoxContainer = Kit.vbox(3)
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 6
-	v.offset_right = -6
-	v.offset_top = 6
-	v.offset_bottom = -6
-	add_child(v)
+	# Thumbnail on the left; name, cost chips, then the output and the size chips on the right.
+	var h: HBoxContainer = Kit.hbox(6)
+	h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	h.offset_left = 6
+	h.offset_right = -6
+	h.offset_top = 6
+	h.offset_bottom = -4
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(h)
 	_thumb = TextureRect.new()
-	_thumb.custom_minimum_size = Vector2(110, 64)
+	_thumb.custom_minimum_size = Vector2(56, 56)
+	_thumb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_thumb.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(_thumb)
+	h.add_child(_thumb)
+	var v: VBoxContainer = Kit.vbox(2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(v)
 	_name = Kit.label(String(def.get("name", id)), "BodyStrong", 12)
-	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name.max_lines_visible = 2
-	_name.custom_minimum_size = Vector2(110, 30)
-	_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name.clip_text = true
+	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_name.custom_minimum_size = Vector2(0, 16)
+	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(_name)
-	_costs = Kit.hbox(6, BoxContainer.ALIGNMENT_CENTER)
+	_costs = Kit.hbox(5, BoxContainer.ALIGNMENT_BEGIN)
 	v.add_child(_costs)
-	_stat = Kit.hbox(6, BoxContainer.ALIGNMENT_CENTER)
-	v.add_child(_stat)
-	var chips: HBoxContainer = Kit.hbox(3, BoxContainer.ALIGNMENT_CENTER)
-	v.add_child(chips)
+	var bottom: HBoxContainer = Kit.hbox(4, BoxContainer.ALIGNMENT_BEGIN)
+	v.add_child(bottom)
+	_stat = Kit.hbox(4, BoxContainer.ALIGNMENT_BEGIN)
+	bottom.add_child(_stat)
+	var chips: HBoxContainer = Kit.hbox(3, BoxContainer.ALIGNMENT_BEGIN)
+	bottom.add_child(chips)
 	_chip_row = chips
 	# Locked: the reason in place of the output and the size chips (two lines at most).
-	_reason = Kit.label("", "SmallLabel", 11, P.AMBER)
+	_reason = Kit.label("", "SmallLabel", 10, P.AMBER)
 	_reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_reason.max_lines_visible = 2
-	_reason.custom_minimum_size = Vector2(110, 38)   # two lines (an autowrap label measures no height of its own)
-	_reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reason.custom_minimum_size = Vector2(150, 26)   # two lines (an autowrap label measures no height of its own)
 	_reason.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_reason.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_reason.visible = false
@@ -113,7 +120,7 @@ func setup(d, id: String, size: int) -> void:
 	else:
 		# Version 5 giants have a size label of their own (XXL apartment block, XXXXL super dome).
 		var lbl: String = String(d.bdef(id).get("size_label", ""))
-		var one: Label = Kit.label(lbl if lbl != "" else "ONE SIZE", "SmallLabel", 12 if lbl != "" else 10, P.GOLD if lbl != "" else P.TEXT_3)
+		var one: Label = Kit.label(lbl if lbl != "" else "ONE SIZE", "SmallLabel", 11 if lbl != "" else 9, P.GOLD if lbl != "" else P.TEXT_3)
 		if lbl != "":
 			one.tooltip_text = "Size %s\nOne giant size only: radius %s m%s." % [lbl, Kit.fmt(float(d.bdef(id).get("radius", 0.0))), (", %d floors" % int(d.bdef(id).get("floors", 1))) if int(d.bdef(id).get("floors", 1)) > 1 else ""]
 			one.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -162,8 +169,26 @@ static func thumb(id: String, size: int) -> Texture2D:
 	_thumbs[key] = t
 	return t
 
+## The size chips with narrow margins (a strip card has about 160 px for the output and four chips).
+var _chips_tight := false
+func _tighten_chips() -> void:
+	_chips_tight = true
+	for c in _chips:
+		for state in ["normal", "hover", "pressed", "disabled", "focus", "hover_pressed"]:
+			var st: StyleBox = (c as Button).get_theme_stylebox(state)
+			if st != null:
+				var d: StyleBox = st.duplicate()
+				d.content_margin_left = 3.0
+				d.content_margin_right = 3.0
+				d.content_margin_top = 1.0
+				d.content_margin_bottom = 1.0
+				(c as Button).add_theme_stylebox_override(state, d)
+		(c as Button).custom_minimum_size = Vector2(22, 18)
+
 ## Lock state, affordability and the numbers of the selected size.
 func refresh_state(totals: Dictionary) -> void:
+	if not _chips_tight and is_inside_tree():
+		_tighten_chips()
 	var u: Dictionary = data.building_unlocked(def_id)
 	locked = not bool(u["ok"])
 	lock_text = String(u.get("reason", ""))
@@ -191,11 +216,21 @@ func refresh_state(totals: Dictionary) -> void:
 func refresh_numbers() -> void:
 	_costs_update(data.totals())
 
+var _cost_sig := ""
 func _costs_update(totals: Dictionary) -> void:
 	var def: Dictionary = data.size_def(def_id, size_sel)
+	var cost: Dictionary = def.get("cost", {})
+	# Rebuilt only when something shows differently (a rebuild each refresh left the output chip full width
+	# for a frame, and made the card flicker).
+	var sig := "%d:%s" % [size_sel, str(cost)]
+	for res in cost:
+		var r0: Dictionary = totals.get(res, {})
+		sig += ":%d" % (int(r0.get("total", 0)) - int(r0.get("reserved", 0)) - int(r0.get("carried", 0)) >= int(cost[res]))
+	if sig == _cost_sig:
+		return
+	_cost_sig = sig
 	Kit.clear(_costs)
 	Kit.clear(_stat)
-	var cost: Dictionary = def.get("cost", {})
 	var n := 0
 	for res in cost:
 		if n >= 3:
@@ -212,15 +247,34 @@ func _costs_update(totals: Dictionary) -> void:
 	var pw: float = float(def.get("power", 0.0))
 	if pw > 0.0:
 		_stat.add_child(Kit.chip("power", "-" + Kit.fmt(pw), P.AMBER, "", true, 13))
-	# Long output names (milestone 5: "crystal lattice", "superconductor") do not fit the card:
-	# the output shows as its icon only; the tooltip names it.
-	if not ks.is_empty() and _stat.get_combined_minimum_size().x > 110.0:
+	# Long output names (milestone 5: "crystal lattice", "superconductor") do not fit the card: the output
+	# shows as its icon only; the tooltip names it. (Measured a frame later: a container's minimum size is cached.)
+	call_deferred("_fit_stat", ks)
+
+func _stat_w() -> float:
+	var w := 0.0
+	for c in _stat.get_children():
+		w += (c as Control).get_combined_minimum_size().x + 4.0
+	return w
+
+func _fit_stat(ks: Array) -> void:
+	if ks.is_empty() or _stat == null or not is_instance_valid(_stat) or _stat.get_child_count() == 0:
+		return
+	# The right column of a strip card is about 186 px: the size chips take their part of it.
+	var allow: float = 186.0 - (_chip_row.get_combined_minimum_size().x + 4.0 if _chip_row != null and _chip_row.visible else 0.0)
+	if _stat_w() > allow:
 		var first: Control = _stat.get_child(0)
 		_stat.remove_child(first)
 		first.queue_free()
-		var only: Control = Kit.chip(ks[0], "", ks[2], String(ks[1]).capitalize(), true, 16)
+		var only: Control = Kit.icon(String(ks[0]), 16, ks[2])
+		only.tooltip_text = String(ks[1]).capitalize()
+		only.mouse_filter = Control.MOUSE_FILTER_PASS
 		_stat.add_child(only)
 		_stat.move_child(only, 0)
+	while _stat_w() > allow and _stat.get_child_count() > 1:
+		var last: Node = _stat.get_child(_stat.get_child_count() - 1)   # the power use: the tooltip has it
+		_stat.remove_child(last)
+		last.queue_free()
 
 ## The main output of a structure: [icon, text, colour] (empty when it has none).
 static func key_stat(d, def: Dictionary) -> Array:
@@ -393,7 +447,7 @@ func _draw() -> void:
 		var pts := PackedVector2Array()
 		for i in 6:
 			var a: float = TAU * float(i) / 6.0
-			pts.append(c + Vector2(cos(a), sin(a)) * 31.0)
+			pts.append(c + Vector2(cos(a), sin(a)) * 26.0)
 		if PG.ok(pts, "build_card.gd:354"):
 			draw_colored_polygon(pts, Color(_col.r, _col.g, _col.b, 0.14))
 		pts.append(pts[0])

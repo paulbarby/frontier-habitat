@@ -50,7 +50,9 @@ const CLOTH_COLS := ["2b3a55", "7a2e35", "55603a", "3a3d42", "2f6f6a", "b08a2e",
 const STRIPES := ["amber", "blue", "green", "red", "", "gold"]
 const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a", "c9d3e0", "c9d3e0"]
 
-const CAM_FADE_R := 0.8         # m: another body this close to the follow camera fades out (critic round 41)
+const CAM_FADE_R := 1.0         # m: another body this close to the follow camera fades out (critic round 41; 0.8 left a
+                                # shoulder filling a third of the frame)
+const CAM_LINE_R := 0.4         # m: another body this close (plan) to the line from the lens to the followed person fades
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
 const FPS := 30.0
 const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
@@ -98,6 +100,8 @@ var _plan_us := 0
 var _sep_dt := 0.016
 var forced_goto := {}            # test staging only (__fhr "runto"): agent id -> [Vector2, speed m/s]
 var force_cpu := false            # test only (__fhr "npccpu 1"): every near body on the CPU row path
+var indoor_cull := false         # set by world_view: the follow camera is inside a room (roof on, not the dome)
+const INDOOR_CULL_R := 22.0      # m: beyond this from the lens a body indoors is behind walls
 var no_far := false               # measurement only (render_follow_headless): every body updated every frame, so the camera cannot change the walk
 var forced_use := {}             # test staging only (__fhr "use"): agent id -> use (view side)
 const DYN_ROWS := 128            # blended poses per frame (CPU slerp rows)
@@ -1428,7 +1432,12 @@ func _people_key(a: Dictionary) -> String:
 
 ## A body that changes library (suit <-> person at an airlock) keeps its clip state; the clip
 ## table and the pose-angle function follow the new library.
+var slow_plans: Array = []       # measurement: single plans over 8 ms
+var spike_log: Array = []        # measurement: npc frames over 30 ms (`npc spikes`)
+var _n_rebind := 0
+var _n_newrec := 0
 func _rebind(rec: Dictionary, lib: Dictionary) -> void:
+	_n_rebind += 1
 	rec["sm"].clips = lib["clips"]
 	rec["sm"].angle_fn = func(ca, ta, cb, tb): return pose_angle(lib, ca, ta, cb, tb)
 	rec.erase("g_frame")
@@ -1536,6 +1545,7 @@ func _people_look(a: Dictionary, rec: Dictionary, lib: Dictionary) -> void:
 	rec["cloth"] = int(Rng.hash2(id, 41, 13) * 8.0) % 8
 
 func _new_rec(a: Dictionary, lib: Dictionary) -> Dictionary:
+	_n_newrec += 1
 	var p: Vector2 = a["pos"]
 	var sm = Pose.new(lib["clips"])
 	sm.angle_fn = func(ca, ta, cb, tb): return pose_angle(lib, ca, ta, cb, tb)
@@ -1551,6 +1561,7 @@ func sync(delta: float) -> bool:
 		return false
 	var t0: int = Time.get_ticks_usec()
 	_frame += 1
+	var _sp0 := [_t_body, _t_write, _t_walk, _n_rebind, _n_newrec]
 	var all: Dictionary = sim.state["agents"]
 	var tick: int = int(sim.state["tick"])
 	for id in agents.keys():
@@ -1568,9 +1579,11 @@ func sync(delta: float) -> bool:
 	var lists := {}
 	for lk in libs:
 		lists[lk] = []
+	var _tg: int = Time.get_ticks_usec()
 	_walk_ghosts(delta, lists)
 	_sync_puppets(delta, lists)
 	_build_occ()
+	var _pre_us: int = Time.get_ticks_usec() - _tg
 	var focus: Vector3 = view._focus_now
 	var cam_d: float = float(view.camera_distance)
 	var cam3: Camera3D = view.get_viewport().get_camera_3d() if view.is_inside_tree() else null
@@ -1613,6 +1626,18 @@ func sync(delta: float) -> bool:
 				rv["seen"] = false
 				rv["wp"] = []
 			continue
+		# (indoor cull, early: a body behind the walls skips the variant, look and LOD work below; it keeps its
+		# record and library and moves every 8th frame)
+		if indoor_cull and agents.has(id) and int(id) != _follow_id and _cam_pos != Vector3.INF and not dead 				and (agents[id]["pos"] as Vector3).distance_squared_to(_cam_pos) > INDOOR_CULL_R * INDOOR_CULL_R and libs.has(String(agents[id].get("dk", ""))):
+			var rc: Dictionary = agents[id]
+			rc["far"] = true
+			rc["culled"] = true
+			if (int(id) + _frame) % 8 == 0:
+				_update_body(a, rc, libs[String(rc["dk"])], delta * 8.0, dead)
+			stats_slots["indoor_culled"] = int(stats_slots.get("indoor_culled", 0)) + 1
+			continue
+		if agents.has(id):
+			agents[id]["culled"] = false
 		var inside: bool = a["where"] == "in"
 		# A body on (or walking to, or getting up from) a room anchor is indoors.
 		if not inside and agents.has(id):
@@ -1677,6 +1702,15 @@ func sync(delta: float) -> bool:
 		# (and, 2026-10-02 at 134 people, every body over 25 m from the camera: the follow view and close
 		# overviews updated the whole colony every frame)
 		var mid: bool = not far and (cam_d > 70.0 or (_cam_pos != Vector3.INF and (rec["pos"] as Vector3).distance_squared_to(_cam_pos) > 625.0)) and int(id) != _follow_id
+		# Follow camera inside a room (roof on, not the dome): a body over INDOOR_CULL_R m from the lens is behind
+		# walls. It is not drawn and is updated every 8th frame (2026-10-03, 134 people: 30 fps indoors; the
+		# bodies of the whole colony were animated and drawn behind the walls).
+		if indoor_cull and int(id) != _follow_id and _cam_pos != Vector3.INF and (rec["pos"] as Vector3).distance_squared_to(_cam_pos) > INDOOR_CULL_R * INDOOR_CULL_R:
+			rec["far"] = true
+			if (int(id) + _frame) % 8 == 0:
+				_update_body(a, rec, lib, delta * 8.0, dead)
+			stats_slots["indoor_culled"] = int(stats_slots.get("indoor_culled", 0)) + 1
+			continue
 		if far or mid:
 			var k: int = 3 if far else 2
 			if (int(id) + _frame) % k != 0:
@@ -1708,6 +1742,11 @@ func sync(delta: float) -> bool:
 	_t_lamps += Time.get_ticks_usec() - tl0
 	_prof_frames += 1
 	npc_ms = lerpf(npc_ms, (Time.get_ticks_usec() - t0) / 1000.0, 0.05)
+	# (frame spike log: a frame over 30 ms with its parts, `npc spikes`)
+	var tot_us: int = Time.get_ticks_usec() - t0
+	if tot_us > 30000 and spike_log.size() < 30:
+		spike_log.append("%.1fs %.0f ms: body %.0f write %.0f walk %.0f pre %.0f plans %d rebind %d new %d" % [Time.get_ticks_msec() / 1000.0, tot_us / 1000.0,
+			(_t_body - int(_sp0[0])) / 1000.0, (_t_write - int(_sp0[1])) / 1000.0, (_t_walk - int(_sp0[2])) / 1000.0, _pre_us / 1000.0, _plans_frame, _n_rebind - int(_sp0[3]), _n_newrec - int(_sp0[4])])
 	return true
 
 # ---------------------------------------------------------------- helmet lamps
@@ -2466,6 +2505,8 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			var tq0: int = Time.get_ticks_usec()
 			wp = _round_corners(before, _trim_start(rec, before, planner.plan(before, goal, inside), inside))
 			_plan_us += Time.get_ticks_usec() - tq0
+			if Time.get_ticks_usec() - tq0 > 8000 and slow_plans.size() < 40:
+				slow_plans.append("%.0f ms %s -> %s in %s stats %s" % [(Time.get_ticks_usec() - tq0) / 1000.0, str(before.snapped(Vector3.ONE * 0.1)), str(goal.snapped(Vector3.ONE * 0.1)), str(inside), JSON.stringify(planner.stats)])
 			rec["wp_goal"] = goal
 			rec["wpq"] = planner.quality
 		elif wp.is_empty():
@@ -2483,6 +2524,8 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 			var tq1: int = Time.get_ticks_usec()
 			wp = _round_corners(before, _trim_start(rec, before, planner.plan(before, goal, inside), inside))
 			_plan_us += Time.get_ticks_usec() - tq1
+			if Time.get_ticks_usec() - tq1 > 8000 and slow_plans.size() < 40:
+				slow_plans.append("%.0f ms %s -> %s in %s stats %s" % [(Time.get_ticks_usec() - tq1) / 1000.0, str(before.snapped(Vector3.ONE * 0.1)), str(goal.snapped(Vector3.ONE * 0.1)), str(inside), JSON.stringify(planner.stats)])
 			rec["wp_goal"] = goal
 			rec["wpq"] = planner.quality
 	rec["wp"] = wp
@@ -3234,7 +3277,8 @@ func _assign_slots(all: Dictionary) -> void:
 ## a body that is seated, lying or at its anchor does not move; the others are pushed
 ## apart (up to 5 passes). The logical position is not changed, so no walk plays in place.
 func _separate() -> void:
-	var ids: Array = agents.keys()
+	# (bodies culled behind the walls, indoor follow view, are left out: nobody sees their spacing)
+	var ids: Array = agents.keys().filter(func(k): return not bool(agents[k].get("culled", false))) if indoor_cull else agents.keys()
 	var P := {}
 	var fixed := {}
 	for id in ids:
@@ -3370,6 +3414,10 @@ func _write_mm(variant: String, list: Array) -> void:
 		cloth.resize(list.size())
 	var k := 0
 	var n := 0
+	# (the followed person's chest: a body on the sight line to it fades too, 2026-10-03)
+	var f_chest := Vector3.INF
+	if _follow_id >= 0 and agents.has(_follow_id):
+		f_chest = _dp(agents[_follow_id]) + Vector3(0.0, 1.25, 0.0)
 	for it in list:
 		var rec: Dictionary = it[0]
 		var lib: Dictionary = it[1]
@@ -3384,7 +3432,13 @@ func _write_mm(variant: String, list: Array) -> void:
 		if _follow_id >= 0 and int(rec.get("id", -1)) != _follow_id:
 			var qa: Vector3 = Geometry3D.get_closest_point_to_segment(_cam_pos, p + Vector3(0, 0.1, 0), p + Vector3(0, 1.75, 0))
 			var cd: float = qa.distance_to(_cam_pos)
-			if cd < CAM_FADE_R:
+			# (and a body standing in the line from the lens to the followed person, nearer than that person: it
+			# hid the person or filled a third of the frame from 1 m, critic round 41)
+			var on_line := false
+			if f_chest != Vector3.INF and cd < _cam_pos.distance_to(f_chest):
+				var sa: Vector3 = Geometry3D.get_closest_point_to_segment(p + Vector3(0, 1.2, 0), _cam_pos, f_chest)
+				on_line = Vector2(sa.x - p.x, sa.z - p.z).length() < CAM_LINE_R and sa.distance_to(f_chest) > 0.35
+			if cd < CAM_FADE_R or on_line:
 				cwant = 0.0
 				stats_slots["cam_faded"] = int(stats_slots.get("cam_faded", 0)) + 1
 		cf = move_toward(cf, cwant, _sep_dt / 0.25)

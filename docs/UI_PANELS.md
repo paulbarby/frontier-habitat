@@ -61,3 +61,13 @@ For each type the player picks: **Pop up** (pop-up, badge, flash), **Badge only*
 Goals tracker, alerts panel, hazard forecast, hazard countdown banner, traffic panel, reactor banner,
 unrest banner (and lockdown), request card, toasts, medal pop-ups, chapter banners, follow-view toasts,
 life-event messages, order answers.
+
+## 8. The build palette (Paul, 2026-10-03)
+"When building, the palettes cover the centre of the view." Rules:
+1. The open category is one strip of compact cards along the bottom edge, above the tab row. It scrolls sideways
+   (wheel or bar). Its top stays under the centre zone (75 % of the view height) at 80, 100 and 140 % scale.
+2. While a structure is picked, or the corridor, cable or remove tool is on, the strip folds to the tab row. One small
+   panel at the bottom (`ui/hud/place_hint.gd`) shows the cost, the size, the keys and the reason. The strip returns after
+   one placement, on Esc or on a right click. Shift + click keeps the tool, so the strip stays folded. A tab ends the tool.
+3. The remove question is in the same panel (no window). The inspector (Upgrade tab) is a side window at the right edge.
+Test: `tools/ui/test_panels.gd` (every category open, placing, corridor tool, remove question: nothing in the centre).

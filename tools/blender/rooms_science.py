@@ -80,7 +80,7 @@ def build_research_lab(rm):
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(windows=(0.50, 0.84) if s else None, win_seams=(10, 14, 16, 20)[s], lamps=(160.0, 200.0),
                   bolts=s >= 2)
-    D = 2.4
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.4)
     rm.build_podium(D, ribs=(8, 12, 14, 16)[s], band="Accent", band_z=D - 0.5, parapet=0.14)
     ro = rm.roof
     lay = {0: dict(obs=(-1.25, -0.55, 1.30), pods=[(1.30, 1.0, 1.10, 1)]),
@@ -154,7 +154,7 @@ def build_research_assembler(rm):
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(windows=(0.50, 0.84) if s else None, win_seams=(10, 12, 16, 20)[s], win_mat="Plasma",
                   lamps=(160.0, 200.0), bolts=s >= 2)
-    D = 2.4
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.4)
     rm.build_podium(D, ribs=(8, 12, 14, 16)[s], band="Accent", band_z=D - 0.5, parapet=0.14)
     ro = rm.roof
     # the clean-room hall: flat roof, blue window band, filter units and fans on top

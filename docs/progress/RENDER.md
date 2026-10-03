@@ -1208,3 +1208,30 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
 - Result: occluded frames in1 from 652-988 of 3,600 to 108-128 (headless); camera 3.4 mm (straight), off-screen 76.
   Web 30-shot sheets: 3-7 bad of 30 per run (was 7-12). **Not proven (target 0 of 30).** The cover test (40 % of the
   frame within 1.2 m) made the search worse when the rig used it; it is now a measurement only (in `wall_centre`).
+- Shape builds are spread over frames (`fx_cam_phys.step`, 700-triangle jobs, 1.5 ms a frame; the first web trace
+  had 233 frames over 50 ms while 30-65 ms shape builds ran per template). Candidate handles are listed every 2 s;
+  room camera radii come from the baked occ grids at once (from the bodies they came late and shrank the volume
+  mid-walk). The eased ceiling rises away where there is no ceiling (was a 0.1-0.15 m one-frame jump).
+- Critic 41, other items: club podium spot + rim lights, a floor fill, LED tiles capped (`Models.LED_CAP` 0.9, own
+  material copies), `stageview [m]` command (robots verified in the export: 3 robots, `robot_pole`); bodies on
+  the lens-to-person line fade (and within 1.0 m); planets: fog-of-war rim off on airless/cold (the yellow-green
+  patch), frost = smooth low-frequency cover over a grey-blue base, cold storms blizzard-pale (sky, ambient),
+  structure frost at night on cold (`frost_overlay.gdshader` as material_overlay on Roof/WallsUp/Walls, off by day);
+  indoor night: warm low ambient, warmer lower camera fill, interior fill x0.45 inside (`Models.set_fill_k`).
+- Long-frame trace (web, v3_late indoor follow, 60 s, after the fixes): 2 frames over 50 ms of 2,720 (max 71 ms,
+  view max 24 ms, 0 view frames over 25 ms); both had view 12-22 ms and process 38-40 ms outside the view.
+- Seen, not yet traced: a T-pose body in an indoor night shot (`in_night2`, Astra Varrin 2, follow view); dust
+  particles stay orange on the cold planet (fx_particles colours; small).
+- **Gates (2026-10-03, end of round):** `check` 313 scripts 0 failed; path v3 PASS (wall 0, furniture 0.064 %, slide 0);
+  path v4 PASS (wall 0, furniture 0.106 %, slide 0); airlock all 0 (v31 31 cycles, v3_late 43); cut 37 types, 0
+  above; doors 99 rooms 0 bad; seat PASS (994 anchors, 0 overlaps); weather PASS; npc_check PASS 165/0; ground FAIL
+  (showcase_v5: walk p50 -22 mm on every people library, ground offset 0: the new people files' walk / run feet sit
+  22 mm under the idle stance; asked ART-NPC).
+- **Follow probe headless (60 s):** in1 straight head 2.41 px / cam 2.81 mm, occluded 140, wall_centre (incl. cover)
+  676, off-screen 200 of 3,600; in4 cam ~5 mm (not met); out1 0.31 mm; dome1 1.05 mm, occluded 0.
+- **Web perf (vsync, 30 s, showcase_v5, 134 people, CPU 20 %):** follow indoor 32.2 fps (median 30, 21 frames > 50 ms,
+  1,481 draws, view 16.1 ms, process 48.7 ms); all roofs off 29.4 fps (46 > 50 ms, 1,796 draws, view 18.1 ms);
+  overview 32.4 fps (2,020 draws). v3_late indoor follow (66 people): about 45 fps. Target >= 45 indoors met only on
+  v3_late; with 134 people about 30 ms a frame is outside the view (process 48 ms vs view 16 ms): not traced.
+- **Framing proof: not met.** Last web sheet (final build): 4-6 of 30 shots bad (12, 15 wall; 1, 7 half-frame wall;
+  9 another body near the lens; 22 a dark slab).

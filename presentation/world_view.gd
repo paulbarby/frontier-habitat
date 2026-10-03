@@ -427,6 +427,12 @@ var bubbles
 var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
 var _follow_open := {}      # building id -> true: interior drawn under the closed roof (follow view)
+var force_show_in := false  # measurement only (render_doorway_gate): every room drawn as in the follow view
+var _cull_clock := 0.0
+var _cull_on := false
+var cull_stats := 0         # measurement: batches culled indoors
+var cull_on_k := 1.0        # measurement switch (fvtest cull 0|1)
+const INDOOR_CULL_R := 30.0 # m: with the follow camera in a room, structures beyond this are not drawn
 var roofs_off := false      # Paul 2026-10-01: every roof and upper wall cut away (normal view only)
 var fprobe                   # fx_follow_probe (measurement only, debug "fprobe")
 
@@ -449,6 +455,7 @@ func follow_start(id: int) -> bool:
 		r.frame_fn = follow_frame_clear
 	if "solid_fn" in r:
 		r.solid_fn = follow_solid
+		r.arm_fn = follow_arm
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
 	return true
@@ -521,7 +528,69 @@ func _follow_body(id: int):
 		elif clip.begins_with("kneel") or clip == "repair_kneel":
 			eye = 1.05
 	var indoor: bool = String(sim.state["agents"][id].get("where", "")) != "out"
+	if indoor and eye > 1.5 and trail_on > 0.5:
+		yaw = _trail_yaw(id, p as Vector3, yaw)
+	else:
+		_trail.clear()
 	return [p, yaw, eye, indoor, game_rate]
+
+## The trail camera indoors (2026-10-03, critic round 41). Behind the body's heading the camera cut every
+## corner: through a doorway and a turn, the line from the lens to the person crossed the jamb or the wall
+## beside the door for 1-3 s (most "occluded" frames). The camera's heading is instead the direction from a
+## point on the path the person just walked to the person: the path is open space, so the line from it
+## follows the person through the doorway. The point is the farthest of 1.9 / 1.5 / 1.1 m back along the path
+## whose lines to the head and the chest are clear of drawn geometry; standing still (a console, a bed) the
+## heading eases back to the body's own after TRAIL_IDLE s.
+var trail_on := 1.0      # measurement switch (view.trail_on=0)
+var _trail: Array = []
+var _trail_id := -1
+var _trail_still := 0.0
+var _trail_last := Vector3.INF
+const TRAIL_IDLE := 1.5
+func _trail_yaw(id: int, p: Vector3, body_yaw: float) -> float:
+	if id != _trail_id or (not _trail.is_empty() and (_trail[-1] as Vector3).distance_to(p) > 2.0):
+		_trail.clear()
+		_trail_id = id
+		_trail_still = 0.0
+	var dtf: float = get_process_delta_time()
+	if _trail.is_empty() or (_trail[-1] as Vector3).distance_to(p) > 0.1:
+		_trail.append(p)
+		if _trail.size() > 50:
+			_trail.pop_front()
+	_trail_still = _trail_still + dtf if _trail_last.distance_to(p) < 0.002 * maxf(1.0, game_rate) else 0.0
+	_trail_last = p
+	if _trail_still > TRAIL_IDLE or _trail.size() < 4:
+		return body_yaw
+	var cph = _camphys_at(p)
+	var head: Vector3 = p + Vector3(0.0, 1.6, 0.0)
+	var chest: Vector3 = p + Vector3(0.0, 1.25, 0.0)
+	var pick := Vector3.INF
+	for want in [1.9, 1.5, 1.1]:
+		# (the point want m back along the path)
+		var acc := 0.0
+		var q: Vector3 = _trail[-1]
+		var found := false
+		for i in range(_trail.size() - 2, -1, -1):
+			var a: Vector3 = _trail[i]
+			var sl: float = a.distance_to(q)
+			if acc + sl >= want:
+				q = q.lerp(a, (want - acc) / maxf(sl, 0.001))
+				found = true
+				break
+			acc += sl
+			q = a
+		if not found:
+			continue
+		var e: Vector3 = q + Vector3(0.0, 1.8, 0.0)
+		if cph == null or (cph.ray(head, e) == INF and cph.ray(chest, e) == INF):
+			pick = q
+			break
+		if pick == Vector3.INF:
+			pick = q
+	if pick == Vector3.INF or Vector2(p.x - pick.x, p.z - pick.z).length() < 0.4:
+		return body_yaw
+	var d: Vector3 = p - pick
+	return atan2(-d.z, d.x)
 
 ## The rooms and exteriors whose walls a point or a segment meets (xz circles).
 func _follow_circles(center: Vector3, reach: float) -> Array:
@@ -722,8 +791,20 @@ const FOLLOW_OCC_GAP := 0.25
 const SLIDE_M := 0.25          # m: the slide keeps the eye this far inside the room circle / tube
 const FOLLOW_OCC_NEAR := 0.5   # m: the person's own space (a kiosk canopy over them, a shelf beside them) is not tested
 const Occ = preload("res://presentation/fx_occ.gd")
+const CamPhys = preload("res://presentation/fx_cam_phys.gd")
+const NEAR_CUT := 0.47      # m: Models.near_fade(0.45, 0.47) cuts every structure surface nearer the lens
+var camphys                 # fx_cam_phys: sight rays against the drawn geometry (null = occ grids only)
+var cam_phys_on := true     # measurement switch (fvtest phys 0|1)
+func _camphys_at(body: Vector3):
+	if not cam_phys_on or inst == null or not is_inside_tree():
+		return null
+	if camphys == null:
+		camphys = CamPhys.new(inst, get_world_3d())
+	camphys.sync(body, _time)
+	return camphys
 var follow_occ_n := 0        # measurement: occluded lines in the last call
 var follow_occ_at := Vector3.ZERO  # measurement: the last occluder point (world)
+var follow_occ_why := ""           # measurement: what it is and how far from the lens
 func follow_occluder(eye: Vector3) -> float:
 	follow_occ_n = 0
 	if follow_id < 0:
@@ -732,8 +813,30 @@ func follow_occluder(eye: Vector3) -> float:
 	if fb == null:
 		return INF
 	var body: Vector3 = fb
-	var blds: Array = _occ_grids_near(body)
 	var best := INF
+	var cph = _camphys_at(body)
+	if cph != null:
+		# The drawn geometry (fx_cam_phys, 2026-10-03). The occ grids mark a sloped wall's whole height along
+		# each of its edges: phantom blocks 0.5-1 m inside the wall ring at 1.6-1.9 m (where most "occluded"
+		# frames came from), and they miss doorway frames and tubes, which are not room models.
+		for hgt in [1.25, 1.6]:
+			var a: Vector3 = body + Vector3(0.0, hgt, 0.0)
+			var d: Vector3 = eye - a
+			var l: float = d.length()
+			if l <= FOLLOW_OCC_NEAR:
+				continue
+			var u: Vector3 = d / l
+			# (surfaces within NEAR_CUT of the lens are not drawn: Models.near_fade cuts them)
+			if l <= FOLLOW_OCC_NEAR + NEAR_CUT:
+				continue
+			var hp: float = cph.ray(a + u * FOLLOW_OCC_NEAR, eye - u * NEAR_CUT)
+			if hp < INF:
+				follow_occ_n += 1
+				follow_occ_why = "%s d%.2f" % [cph.dbg_last, l - FOLLOW_OCC_NEAR - hp]
+				follow_occ_at = a + u * (FOLLOW_OCC_NEAR + hp)
+				best = minf(best, FOLLOW_OCC_NEAR + hp - FOLLOW_OCC_GAP)
+		return best
+	var blds: Array = _occ_grids_near(body)
 	# (the room wall between a corridor camera and a person in the room)
 	if follow_wall_cross(body + Vector3(0.0, 1.25, 0.0), eye):
 		follow_occ_n += 1
@@ -766,6 +869,11 @@ func follow_occluder(eye: Vector3) -> float:
 ## 9 rays (+-12 deg across, +-7 deg up and down round `look`) are walked from the eye in 0.1 m steps: a step
 ## outside the rooms and corridors (indoors) or in an occluder cell (fx_occ) is a surface.
 const FRAME_CLEAR := 0.8
+const FRAME_COVER_D := 1.2   # m: the cover test's depth
+const FRAME_COVER_N := 6     # of 15 rays (40 % of the frame)
+var frame_cover := 0         # measurement: the last cover count
+var frame_cover_on := false  # the cover test in the camera's own framing rule: OFF (on, the search swung the camera
+                             # round the person into worse places: 7 bad of 30 against 3-5, 2026-10-03); measured only
 var frame_why := ""   # measurement: what the last frame test met
 func follow_frame_clear(eye: Vector3, look: Vector3) -> bool:
 	return follow_frame_hit(eye, look) == INF
@@ -787,11 +895,41 @@ func follow_frame_hit(eye: Vector3, look: Vector3) -> float:
 	# (only the space between the lens and the person counts: what the person stands at, a console or a desk
 	# just in front of them, is not a wall in the camera's face; a close-up camera met it within 0.8 m)
 	var reach: float = minf(FRAME_CLEAR, eye.distance_to((fb as Vector3) + Vector3(0.0, 1.3, 0.0)) - 0.35)
+	var cph = _camphys_at(fb as Vector3)
+	var deep: float = eye.distance_to((fb as Vector3) + Vector3(0.0, 1.3, 0.0)) - 0.3
+	if cph != null and frame_cover_on:
+		# Cover (2026-10-03): a 5 x 3 grid of rays over the whole frame; when FRAME_COVER_N or more meet a drawn
+		# surface within FRAME_COVER_D, a wall fills a large part of the frame (half the frame beside the person,
+		# the person facing the lens in a corner): the view is bad. The 9 centre rays alone passed those.
+		var nc := 0
+		var why_c := ""
+		for cy2 in [-0.55, -0.27, 0.0, 0.27, 0.55]:
+			for cp2 in [-0.3, 0.0, 0.3]:
+				var dc: Vector3 = (f + rt * tan(cy2) + up * tan(cp2)).normalized()
+				var hc: float = cph.ray(eye + dc * NEAR_CUT, eye + dc * FRAME_COVER_D)
+				if hc < INF:
+					nc += 1
+					why_c = cph.dbg_last
+		frame_cover = nc
+		if nc >= FRAME_COVER_N:
+			frame_why = "cover %d %s" % [nc, why_c]
+			best = FRAME_COVER_D
 	if reach < 0.1:
-		return INF
+		return best
 	for ay in [-0.21, 0.0, 0.21]:
 		for ap in [-0.12, 0.0, 0.12]:
 			var d: Vector3 = (f + rt * tan(ay) + up * tan(ap)).normalized()
+			if cph != null:
+				# (from NEAR_CUT: nearer surfaces are cut by the near fade, not drawn. The centre ray must also see
+				# past the person's depth, less 0.3 m: a wall level with the person, 1-1.5 m off, filled 60 % of the
+				# frame and passed the 0.8 m rule, web sheet 2026-10-03; a doorway's jambs beside the centre do not)
+				var rch: float = maxf(reach, deep) if ay == 0.0 and ap == 0.0 else reach
+				if rch > NEAR_CUT:
+					var hp: float = cph.ray(eye + d * NEAR_CUT, eye + d * rch)
+					if hp < INF:
+						best = minf(best, hp + NEAR_CUT)
+						frame_why = "phys %s t%.2f" % [cph.dbg_last, hp + NEAR_CUT]
+				continue
 			var t := 0.1
 			while t <= reach:
 				var q: Vector3 = eye + d * t
@@ -870,8 +1008,26 @@ func _doors_of_room(rid: int) -> Array:
 	return _door_cache.get(rid, [])
 
 ## Is p in a solid cell (fx_occ) at its height or 0.3 m below (the lens inside a shelf or a partition)?
-func follow_solid(p: Vector3) -> bool:
+## The camera arm (camera_rig): how far from `a` (over the person's head) toward `b` (the eye) a sphere of
+## radius r is clear of every drawn surface; -1 = no drawn-geometry rays (the occ grids only).
+func follow_arm(a: Vector3, b: Vector3, r: float) -> float:
 	if follow_id < 0:
+		return -1.0
+	var fb = agent_world_pos(follow_id)
+	if fb == null:
+		return -1.0
+	var cph = _camphys_at(fb as Vector3)
+	if cph == null:
+		return -1.0
+	var c: float = cph.ray(a, b) if r <= 0.0 else cph.sweep(a, b, r)
+	if c != INF and c < a.distance_to(b) - 0.001:
+		arm_why = "%s at %s" % [cph.dbg_last, str((a + (b - a).normalized() * c).snapped(Vector3.ONE * 0.01))]
+	return a.distance_to(b) if c == INF else c
+var arm_why := ""   # measurement: what the camera arm last met
+
+func follow_solid(p: Vector3) -> bool:
+	if follow_id < 0 or (cam_phys_on and camphys != null):
+		# (with the drawn-geometry rays an eye inside a wall is caught by the chest line, follow_occluder)
 		return false
 	var fb = agent_world_pos(follow_id)
 	if fb == null:
@@ -1059,7 +1215,9 @@ func _fc_note(t: String) -> void:
 	fc_dbg.append(t)
 	if fc_dbg.size() > 2 * FC_DBG_MAX:
 		fc_dbg = fc_dbg.slice(fc_dbg.size() - FC_DBG_MAX)
-const FOLLOW_TUBE_R := 1.15   # m: corridor inside radius for the camera (fx_npc_path.TUBE_R)
+const FOLLOW_TUBE_R := 0.9    # m: corridor radius for the camera. The tube is 1.15 inside (fx_npc_path.TUBE_R) but a doorway
+                              # opening is 1.58 m wide: a camera 0.9 m off the axis met the jamb filling half the frame
+                              # (web sheet 2026-10-03); the slide keeps the eye SLIDE_M inside this.
 ## Rooms (xz circles) and corridors (xz capsules) within `reach` of p: [["room", centre, r, id] | ["tube", p0, p1, r, id]].
 func _follow_volumes(p: Vector3, reach: float) -> Array:
 	var out: Array = []
@@ -1083,7 +1241,7 @@ func _follow_volumes(p: Vector3, reach: float) -> Array:
 					_vc_list.append(b0)
 	for b in _vc_list:
 		if b["kind"] == "room":
-			var r: float = float(b["radius"])
+			var r: float = _room_cam_r(b)
 			if (b["pos"] as Vector2).distance_to(q) < r + reach:
 				out.append(["room", b["pos"], r, int(b["id"])])
 		else:
@@ -1091,6 +1249,54 @@ func _follow_volumes(p: Vector3, reach: float) -> Array:
 			if c.distance_to(q) < FOLLOW_TUBE_R + reach:
 				out.append(["tube", b["p0"], b["p1"], FOLLOW_TUBE_R, int(b["id"])])
 	return out
+## The radius the follow camera may use in a room (2026-10-03): the inside of what is drawn along the wall, not
+## the structure's outer radius. Wall panels, consoles and shelves stand up to 0.7 m inside the outer ring
+## (cold_storage: Interior to 0.89 r); a camera kept 0.25 m inside the outer ring stood behind them and saw the
+## back of a panel. Rays from 0.55 r outward at 1.6 m and 2.1 m over the floor in 24 directions against the
+## drawn geometry (fx_cam_phys); the 30th percentile of the hits (the doorways let rays out). Cached per
+## structure; the outer radius until the drawn geometry is there.
+var _room_r := {}
+var _room_r_retry := {}   # structure id -> time of the next try while its drawn geometry is not there yet
+func _room_cam_r(b: Dictionary) -> float:
+	var r: float = float(b["radius"])
+	var bid: int = int(b["id"])
+	if _room_r.has(bid):
+		return _room_r[bid]
+	if not bmeta.has(bid):
+		return r
+	var meta: Dictionary = bmeta[bid]
+	var tpl: Dictionary = meta.get("tpl", {})
+	if tpl.is_empty() or r > 15.0:
+		# (the dome and other big halls keep their radius: 24 x 3 marches over 48 m cost a 50-100 ms frame)
+		_room_r[bid] = r
+		return r
+	# (from the structure's baked occluder grid, in model space, at once: from the drawn bodies it came late, and
+	# the camera volume then shrank mid-walk, a 0.3-0.8 m jump of the wall rule, 2026-10-03)
+	var g: Dictionary = Occ.grid_of(tpl)
+	if g.is_empty():
+		_room_r[bid] = r
+		return r
+	var s3: Vector3 = Models.scale3(tpl)
+	var rm: float = r / maxf(s3.x, 0.001)
+	var r0: float = 0.1 if String(b["def"]) in ["junction", "airlock"] else 0.55
+	var ds: Array = []
+	for k in 24:
+		var a: float = TAU * float(k) / 24.0
+		var dv := Vector3(cos(a), 0.0, sin(a))
+		var best := rm
+		for hh in [1.6, 1.85, 2.1]:
+			var t: float = r0 * rm
+			while t < rm:
+				if Occ.blocked(g, dv * t + Vector3(0.0, 0.14 + hh / maxf(s3.y, 0.001), 0.0)):
+					best = minf(best, t)
+					break
+				t += 0.1
+		ds.append(best)
+	ds.sort()
+	var ri: float = clampf(float(ds[7]) * s3.x, (0.35 if r0 < 0.5 else 0.6) * r, r)
+	_room_r[bid] = ri
+	return ri
+
 var _vc_pos := Vector2(INF, INF)
 var _vc_t := -99.0
 var _vc_n := -1
@@ -1381,6 +1587,20 @@ func _follow_indoor(cam: Vector3) -> void:
 			want = 1.0
 	_indoor = move_toward(_indoor, want, get_process_delta_time() * 2.0)
 	sky.indoor = _indoor
+	Models.set_fill_k(lerpf(1.0, 0.45, _indoor))
+	# (bodies behind the walls are not drawn while the camera is inside a room; not in the dome: it is open)
+	var in_dome := false
+	for oid in _follow_open:
+		var ob: Dictionary = sim.state["buildings"].get(oid, {})
+		if not ob.is_empty() and String(ob.get("def", "")) == "super_dome":
+			in_dome = true
+			break
+	npc.indoor_cull = _indoor > 0.5 and not in_dome and cull_on_k > 0.5
+	_cull_clock -= get_process_delta_time()
+	if _cull_clock <= 0.0 or (npc.indoor_cull != _cull_on):
+		_cull_clock = 0.5
+		_cull_on = npc.indoor_cull
+		cull_stats = inst.set_cull(cam if cam != Vector3.INF else Vector3.ZERO, INDOOR_CULL_R if _cull_on and cull_on_k > 0.5 else 0.0)
 	if _indoor <= 0.0:
 		if _fill != null:
 			_fill.visible = false
@@ -1394,7 +1614,10 @@ func _follow_indoor(cam: Vector3) -> void:
 		_fill.light_color = Color("ffe9d2")
 		add_child(_fill)
 	_fill.visible = true
-	_fill.light_energy = 0.0 if fv_no_fill else 0.9 * _indoor
+	# (indoor night: the camera fill warmer and lower, critic round 41)
+	var nf: float = clampf(float(sky.night), 0.0, 1.0)
+	_fill.light_energy = 0.0 if fv_no_fill else 0.9 * _indoor * lerpf(1.0, 0.6, nf)
+	_fill.light_color = Color("ffe9d2").lerp(Color("ffc48a"), nf)
 	if cam != Vector3.INF:
 		_fill.global_position = cam + Vector3(0.0, 0.25, 0.0)
 
@@ -1680,6 +1903,10 @@ func sync(delta: float) -> void:
 	_v4_light(focus)
 	post.apply(sky.grade, delta)
 	Models.set_night(maxf(sky.night, v4_dark * 0.85), float(sky.storm))
+	# (frost on the structures at night on the cold planet, critic round 41)
+	if inst != null:
+		var pl_now: String = planet_look if planet_look != "" else String(sim.state.get("planet", "dry"))
+		inst.set_frost(smoothstep(0.35, 0.9, float(sky.night)) * 0.8 if pl_now == "cold" else 0.0)
 	Models.animate(_time)
 	tp = _prof("sky", tp)
 	_camera_range()
@@ -1704,7 +1931,15 @@ func sync(delta: float) -> void:
 	else:
 		_sync_agents(delta)
 	tp = _prof("agents", tp)
-	if not _skip.has("doors"): doors.sync(delta, _body_points())
+	if not _skip.has("doors"):
+		var bpts: Array = _body_points()
+		# (the follow camera opens doors like a body: a door that shut behind the person, before the camera
+		# 1.5 m behind came through, filled the frame with its leaf, web sheet 2026-10-03)
+		var rf = rig()
+		if follow_id >= 0 and rf != null and rf.in_shoulder():
+			var cpos: Vector3 = rf.camera.global_position
+			bpts.append(Vector3(cpos.x, cpos.y - 1.6, cpos.z))
+		doors.sync(delta, bpts)
 	if not _skip.has("interior"): interior.sync(delta, focus, sky.night)
 	tp = _prof("doors", tp)
 	if not _skip.has("hazards"): hazards.sync(delta, focus)
@@ -1716,6 +1951,9 @@ func sync(delta: float) -> void:
 	if not _skip.has("reactor"): reactor.sync(delta)
 	if not _skip.has("explore"): explore.sync(delta)
 	_follow_sync()
+	# (the follow camera's physics shapes are built a few ms a frame, fx_cam_phys.step)
+	if camphys != null and follow_id >= 0:
+		CamPhys.step(1500)
 	bubbles.sync(delta)
 	if robots != null and not _skip.has("robots"):
 		robots.sync(delta)
@@ -2437,7 +2675,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			# The "all roofs off" toggle does not apply there.
 			if follow_id >= 0:
 				want = 0.0
-			var show_in: bool = follow_id >= 0 and _follow_open.has(id) and not fv_no_interior
+			var show_in: bool = (follow_id >= 0 and _follow_open.has(id) and not fv_no_interior) or force_show_in
 			if show_in != bool(meta.get("show_in", false)):
 				meta["show_in"] = show_in
 				_apply_roof(b, meta)
@@ -3470,6 +3708,11 @@ func debug_cmd(text: String) -> String:
 		"stats":
 			return JSON.stringify(stats())
 		"npc":
+			# npc spikes: the fx_npc frames over 30 ms with their parts (then cleared).
+			if w.size() > 1 and w[1] == "spikes":
+				var sl: String = JSON.stringify(npc.spike_log)
+				npc.spike_log = []
+				return sl
 			# npc fixture | glb : the procedural test rig or the real GLBs (test only).
 			npc_fixture = w.size() > 1 and w[1] == "fixture"
 			npc.setup(self, npc_fixture)
@@ -3690,6 +3933,41 @@ func debug_cmd(text: String) -> String:
 							rr.ceil_fn = Callable()
 						return "%s at %s" % [an2, str(ax.origin.snapped(Vector3.ONE * 0.1))]
 			return "not found"
+		"render":
+			# render 0|1: measurement only: drawing off (RenderingServer.render_loop_enabled), so the frame time is
+			# the CPU's alone; the difference to drawing on is the GPU / driver share.
+			RenderingServer.render_loop_enabled = not (w.size() > 1 and w[1] == "0")
+			return "render %s" % str(RenderingServer.render_loop_enabled)
+		"stageview":
+			# stageview [dist m]: the Club's stage view (critic round 41): the camera on the dance floor in front of
+			# the robot podiums, facing them (the dancers' anchors' mean +X turned round), the dome's L2 cut open.
+			var sum := Vector3.ZERO
+			var fsum := Vector3.ZERO
+			var n_d := 0
+			var bid_s := -1
+			for bid4 in bmeta:
+				for an3 in (bmeta[bid4].get("anchors", {}) as Dictionary):
+					if String(an3).begins_with("Dancer_club_"):
+						var axd: Transform3D = bmeta[bid4]["anchors"][an3]
+						sum += axd.origin
+						fsum += axd.basis.x.normalized()
+						n_d += 1
+						bid_s = int(bid4)
+			if n_d == 0:
+				return "no club"
+			var c_s: Vector3 = sum / n_d
+			var f_s: Vector3 = Vector3(fsum.x, 0.0, fsum.z).normalized()
+			var dist_s: float = float(w[1]) if w.size() > 1 else 3.0
+			var at_s: Vector3 = c_s + f_s * dist_s
+			at_s.y = c_s.y - 0.6
+			var yaw_s: float = atan2(f_s.z, -f_s.x)
+			set_view_floor(bid_s, 2)
+			var rs2 = rig()
+			if rs2 != null:
+				rs2.shoulder_start(func(): return [at_s, yaw_s, 1.65, true])
+				rs2.collide_fn = Callable()
+				rs2.ceil_fn = Callable()
+			return "stage view at %s facing %s (%d dancers)" % [str(at_s.snapped(Vector3.ONE * 0.1)), str((-f_s).snapped(Vector3.ONE * 0.01)), n_d]
 		"viewfloor":
 			# viewfloor <building id> <floor 1..5 | 0 = off>: the floor cutaway (UI's floor selector calls set_view_floor)
 			set_view_floor(int(w[1]), int(w[2]))
@@ -3738,6 +4016,11 @@ func debug_cmd(text: String) -> String:
 					fv_no_interior = not on
 					for id in bmeta:
 						bmeta[id]["show_in"] = not on
+				"phys":
+					cam_phys_on = on
+				"cull":
+					cull_on_k = 1.0 if on else 0.0
+					npc.set("indoor_cull", false)
 			return "%s %s" % [w[1], str(on)]
 		"framecheck":
 			# framecheck: the follow camera's framing test now (nearest surface across the frame centre, what).
@@ -3745,7 +4028,9 @@ func debug_cmd(text: String) -> String:
 			if rr == null or follow_id < 0:
 				return "no follow"
 			frame_why = ""
+			frame_cover_on = true
 			var hh: float = follow_frame_hit(rr.camera.global_position, -rr.camera.global_transform.basis.z)
+			frame_cover_on = false
 			var fbp = agent_world_pos(follow_id)
 			var gl: Array = _occ_grids_near(fbp as Vector3) if fbp != null else []
 			var cells := 0
@@ -3757,6 +4042,86 @@ func debug_cmd(text: String) -> String:
 			var bp: Vector3 = fbp if fbp != null else Vector3.ZERO
 			return "%s %s | grids %d cells %d vols %d eye_in %s where %s | occ %s cam (%.2f,%.2f,%.2f) body (%.2f,%.2f,%.2f) d %.2f od %.2f oo %.2f cur_ok %s" % ["clear" if hh == INF else "hit %.1f" % hh, frame_why, gl.size(), cells, vl.size(), str(_vol_inside(vl, cp, 0.0)), String(sim.state["agents"].get(follow_id, {}).get("where", "?")),
 				"clear" if oc == INF else "%.2f" % oc, cp.x, cp.y, cp.z, bp.x, bp.y, bp.z, Vector2(cp.x - bp.x, cp.z - bp.z).length(), float(rr._sh_od), float(rr._sh_oo), str(rr.dbg_cur_ok)]
+		"camprobe":
+			# camprobe: the follow camera's 9 centre rays to 3 m: the physics hit (fx_cam_phys) and the nearest
+			# drawn triangle of every instancer copy within 4 m (group, material, hidden), for a wrong framecheck.
+			var rr = rig()
+			if rr == null or follow_id < 0 or camphys == null:
+				return "no follow"
+			var cp: Vector3 = rr.camera.global_position
+			var fw: Vector3 = -rr.camera.global_transform.basis.z
+			var rt: Vector3 = fw.cross(Vector3.UP).normalized()
+			var up: Vector3 = rt.cross(fw).normalized()
+			var outs: PackedStringArray = []
+			for ay in [-0.21, 0.0, 0.21]:
+				for ap in [-0.12, 0.0, 0.12]:
+					var d: Vector3 = (fw + rt * tan(ay) + up * tan(ap)).normalized()
+					var tp: float = camphys.ray(cp, cp + d * 3.0)
+					var pw: String = camphys.dbg_last if tp < INF else ""
+					var best := INF
+					var who := ""
+					for h in inst.handles:
+						var e: Dictionary = inst.handles[h]
+						if (e["xf"] as Transform3D).origin.distance_to(cp) > 12.0:
+							continue
+						var bt: Dictionary = inst.batches[e["key"]]
+						for pp in bt["parts"]:
+							var part: Dictionary = pp["part"]
+							var px: Transform3D = (e["xf"] as Transform3D) * (part["xf"] as Transform3D)
+							var mesh: Mesh = part["mesh"]
+							if not (px * mesh.get_aabb()).grow(0.1).intersects(AABB(cp - Vector3.ONE * 3.0, Vector3.ONE * 6.0)):
+								continue
+							var inv: Transform3D = px.affine_inverse()
+							var o: Vector3 = inv * cp
+							var dl: Vector3 = inv.basis * d
+							for si in mesh.get_surface_count():
+								var arr: Array = mesh.surface_get_arrays(si)
+								var vv: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+								var ix = arr[Mesh.ARRAY_INDEX]
+								var n3: int = (ix as PackedInt32Array).size() if ix is PackedInt32Array and (ix as PackedInt32Array).size() > 0 else vv.size()
+								var k := 0
+								while k + 2 < n3:
+									var a0: Vector3 = vv[ix[k]] if n3 != vv.size() or ix is PackedInt32Array else vv[k]
+									var a1: Vector3 = vv[ix[k + 1]] if n3 != vv.size() or ix is PackedInt32Array else vv[k + 1]
+									var a2: Vector3 = vv[ix[k + 2]] if n3 != vv.size() or ix is PackedInt32Array else vv[k + 2]
+									var hit = Geometry3D.ray_intersects_triangle(o, dl, a0, a1, a2)
+									if hit != null:
+										var t: float = (px * (hit as Vector3)).distance_to(cp)
+										if t < best:
+											best = t
+											var mt: Material = mesh.surface_get_material(si)
+											who = "%s:%s mat %s%s" % [String(e["key"]).get_file(), part["group"], mt.resource_name if mt != null else "-", " HIDDEN" if (e["hidden"] as Dictionary).has(part["group"]) else ""]
+									k += 3
+					# (and every MeshInstance3D node in the scene within 3 m: node-drawn structures, bodies, props)
+					var nbest := INF
+					var nwho := ""
+					var stack: Array = [get_tree().root]
+					while not stack.is_empty():
+						var nd: Node = stack.pop_back()
+						for ch in nd.get_children():
+							stack.append(ch)
+						if not (nd is MeshInstance3D) or (nd as MeshInstance3D).mesh == null or not (nd as Node3D).is_visible_in_tree():
+							continue
+						var mi: MeshInstance3D = nd
+						var gx: Transform3D = mi.global_transform
+						if not (gx * mi.mesh.get_aabb()).grow(0.1).intersects(AABB(cp - Vector3.ONE * 3.0, Vector3.ONE * 6.0)):
+							continue
+						var inv2: Transform3D = gx.affine_inverse()
+						var fs: PackedVector3Array = mi.mesh.get_faces()
+						var o2: Vector3 = inv2 * cp
+						var dl2: Vector3 = inv2.basis * d
+						var k2 := 0
+						while k2 + 2 < fs.size():
+							var hit2 = Geometry3D.ray_intersects_triangle(o2, dl2, fs[k2], fs[k2 + 1], fs[k2 + 2])
+							if hit2 != null:
+								var t2: float = (gx * (hit2 as Vector3)).distance_to(cp)
+								if t2 < nbest:
+									nbest = t2
+									nwho = str(mi.get_path()).right(60)
+							k2 += 3
+					outs.append("y%+.2f p%+.2f phys %s %s | mesh %s %s | node %s %s" % [ay, ap, "%.2f" % tp if tp < INF else "-", pw, "%.2f" % best if best < INF else "-", who, "%.2f" % nbest if nbest < INF else "-", nwho])
+			return "
+".join(outs)
 		"robots":
 			# robots open|auto: the Club's robot dancers dance whatever its hours (evidence shots).
 			if robots != null:

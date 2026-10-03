@@ -306,7 +306,8 @@ func _rebuild() -> void:
 						var cz: float = 0.5 * (float(ub[0]) + float(ub[1])) - 1.07   # ART-HAB 4.0 V2 (band 0.88-1.26 m)
 						patches.append(inst.add(cap_tpl, room_xf * Transform3D(cxf.basis, cxf.origin + Vector3(0, cz, 0)), accent))
 			# The upper patch over the housing (R3/F2): from 2.24 m to the deck.
-			if has_upper and not setback and deck > 2.24 and not upper_tpl.is_empty():
+			# (setback rooms too since ART-HAB 2026-10-03: their drum is masked at a door now, a 2.24-2.65 m gap)
+			if has_upper and deck > 2.24 and not upper_tpl.is_empty():
 				var hb0: float = float(d["beta"]) - phi2
 				var hb1: float = float(d["beta"]) + phi2
 				_patch_pieces(hb0, hb1, rw, func(mid: float, ch: float, r: float):
@@ -350,7 +351,7 @@ func _rebuild() -> void:
 					var ptpl: Dictionary = plain_tpl if near_door and not plain_tpl.is_empty() else patch_tpl
 					_patch_pieces(s0, s1, rw, func(mid: float, ch: float, r: float):
 						patches.append(inst.add(ptpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, 1, ch)), Vector3(r * cos(mid), 0.0, -r * sin(mid))), accent))
-						if has_upper and not setback and deck > 1.40 and not upper_tpl.is_empty():
+						if has_upper and deck > 1.40 and not upper_tpl.is_empty():
 							patches.append(inst.add(upper_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck - 1.40, ch)), Vector3(r * cos(mid), 1.40, -r * sin(mid))), accent))
 						if not near_door and ub is Array and (ub as Array).size() > 1 and not uband_tpl.is_empty():
 							patches.append(inst.add(uband_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, float(ub[1]) - float(ub[0]), ch)), Vector3(r * cos(mid), float(ub[0]), -r * sin(mid))), accent)))
@@ -448,6 +449,20 @@ func _junction(rid: int, meta: Dictionary, room: Dictionary, links: Array, seg: 
 				patches.append(inst.add(sill_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, 1, ch)), Vector3(r * cos(mid), 0.0, -r * sin(mid))), accent))
 	for a in posts:
 		patches.append(inst.add(post_tpl, room_xf * Transform3D(Basis(Vector3.UP, a), Vector3(rw * cos(a), 0.0, -rw * sin(a))), accent))
+	# The drum (Upper_<seg>, 1.40 m to the eave, ART-HAB 2026-10-03) hides with the mouth segments: over each
+	# mouth an upper patch from the corridor head (2.24 m) to the eave; over the hidden segments beside the mouths
+	# (the plain patch below) from 1.40 m to the eave. World heights: the eave is upper_z[1] x the junction's scale.
+	var rmeta_j: Dictionary = Nav.room_meta(_room_id(meta))
+	var uz_j = rmeta_j.get("upper_z")
+	var deck_j: float = float(uz_j[1]) if uz_j is Array and (uz_j as Array).size() > 1 else 0.0
+	var upper_j: Dictionary = _prop_tpl("wall_patch_upper", false)
+	var sy: Vector3 = Models.scale3(meta["tpl"])
+	if deck_j * sy.y > 2.24 and not upper_j.is_empty():
+		for sp in spans:
+			var a0u: float = float(sp[0]) if not full else 0.0
+			var a1u: float = float(sp[1]) if not full else TAU
+			_patch_pieces(a0u, a1u, rw, func(mid: float, ch: float, r: float):
+				patches.append(inst.add(upper_j, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck_j * sy.y - 2.24, ch)), Vector3(r * cos(mid), 2.24, -r * sin(mid))), accent)))
 	# Patches: the hidden segments outside the open spans.
 	if not full and not patch_tpl.is_empty():
 		for sp in spans:
@@ -466,6 +481,8 @@ func _junction(rid: int, meta: Dictionary, room: Dictionary, links: Array, seg: 
 					var ch: float = 2.0 * rw * sin(dd * 0.5) + 0.01
 					var r: float = rw * cos(dd * 0.5)
 					patches.append(inst.add(patch_tpl, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, 1, ch)), Vector3(r * cos(mid), 0.0, -r * sin(mid))), accent))
+					if deck_j * sy.y > 1.40 and not upper_j.is_empty():
+						patches.append(inst.add(upper_j, room_xf * Transform3D(Basis(Vector3.UP, mid) * Basis.from_scale(Vector3(1, deck_j * sy.y - 1.40, ch)), Vector3(r * cos(mid), 1.40, -r * sin(mid))), accent))
 	var mask := 0
 	for k in hidden:
 		mask |= 1 << int(k)

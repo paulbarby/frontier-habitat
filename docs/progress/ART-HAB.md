@@ -5,6 +5,11 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-03 doorway head room (Paul's fault: roof beams across the corridor doors in the follow view)
+- Check `tools/blender/interior_doorclear.py` (in rooms_build, report v3.door_headroom): no roof / ceiling / band part below 2.49 m (door top 2.24 + 0.25) inside a door opening + 1.5 m at any free angle. Before: 122 of 160 files hit (lowest 1.32 m). After: 0.
+- Fix (Paul: raise, not cut): `interior_eave.py` lifts dome and setback roofs 1.20 m on a drum (1.40 -> eave 2.60, Upper_<seg>, upper_z [1.40, 2.65]) in 47 files; podium decks min 2.60 (10 types); ceiling MIN_Z 2.52, LINER_MIN 2.55; airlock RoofChamber object + skirts to 2.55; porch lamps, kitchen chimney, wall-line level bolts.
+- RESULT 160 files rebuilt 0 flags; import done; check 314 scripts 0 failed; nav bake 160 grids / 160 room metas / 162 occluder grids; door_blocked unchanged; tris +0.4 %. Doorway follow renders (in/out) for habitat_m, lounge_m, water_recycler_m, electronics_fab_m, airlock_m, junction: opening clear. RENDER asked: setback upper patch, junction mouth upper patch, in-game check.
+
 ## 2026-10-03 v5 run 3 RESUME — indoor fps numbers + cuts, industry layouts, eye views re-rendered
 - Perf vs 325d0af (157 files): tris 3.563 M -> 3.843 M (+7.9 %; critic-41 build was 3.912 M), mesh nodes 24,679 -> 29,315, draw groups (group x material) 6,746 -> 7,222, materials 2,560 -> 2,617. Ceiling + band 221 k tris, partitions 12.6 k. Cuts: liner about half the faces, ribs every 4th line, 4 band rows (was 6), fewer sensors/vents, signs merged into their `Upper_<seg>_Band` (-454 nodes), partition tops in their own `PorchTop_Part`. Asks to RENDER (ART-HAB-to-RENDER.md 2026-10-03): draw RoofCeil / Band / PorchTop_Part only near the camera room, no shadows, check occluder cost.
 - Industry: control line per type (straight / arc round the machine / staggered); Work anchors moved, names unchanged. Academy class chairs moved (x - 0.38). Light colour per role in v3.ceiling.light; texture atlas proposed to RENDER, not built (needs UVs + a RENDER material).

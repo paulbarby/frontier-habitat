@@ -277,6 +277,9 @@ func coarse(rid: int, clear: float = CLEAR):
 	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	# (jump point search: an open room or the dome floor is searched in far fewer steps; an unreachable goal
+	# in the dome cost 30-100 ms a plan without it, 2026-10-03)
+	astar.jumping_enabled = true
 	astar.update()
 	var lim2: float = (wr - 0.55) * (wr - 0.55)
 	for j in n:
@@ -452,6 +455,8 @@ func room_path(rid: int, a: Vector3, b: Vector3) -> Array:
 		return npc._aisle_route(ai, a, b) if not ai.is_empty() else [b]
 	return r
 
+var _fail_cache := {}       # "room:cell a:cell b:clearance" -> ms until which the pair is known to fail
+const FAIL_TTL_MS := 8000
 func _room_path(rid: int, a: Vector3, b: Vector3, clear: float) -> Array:
 	var cg = coarse(rid, clear)
 	var fy: float = b.y
@@ -464,9 +469,20 @@ func _room_path(rid: int, a: Vector3, b: Vector3, clear: float) -> Array:
 	var ca: Vector2i = _nearest_free(cg, _cell(cg, la))
 	var cb: Vector2i = _nearest_free(cg, _cell(cg, lb))
 	var astar: AStarGrid2D = cg["astar"]
+	# (a goal that cannot be reached makes A* search the whole room grid: 30-70 ms in the dome (240 x 240 cells),
+	# and the walker asked again every few frames, 2026-10-03 long-frame trace. A failed cell pair is not
+	# searched again for FAIL_TTL_MS.)
+	var fk: String = "%d:%d,%d:%d,%d:%.2f" % [rid, ca.x, ca.y, cb.x, cb.y, clear]
+	var now_ms: int = Time.get_ticks_msec()
+	if _fail_cache.has(fk) and now_ms < int(_fail_cache[fk]):
+		stats["fail_cached"] = int(stats.get("fail_cached", 0)) + 1
+		return []
 	stats["room_astar"] = int(stats["room_astar"]) + 1
 	var raw: PackedVector2Array = astar.get_point_path(ca, cb)
 	if raw.is_empty():
+		if _fail_cache.size() > 2000:
+			_fail_cache.clear()
+		_fail_cache[fk] = now_ms + FAIL_TTL_MS
 		return []
 	var half: float = cg["half"]
 	var pts: Array = [la]
@@ -533,25 +549,32 @@ func out_path(a: Vector3, b: Vector3) -> Array:
 	if _los_out(qa, qb):
 		return [b]
 	stats["out_paths"] = int(stats["out_paths"]) + 1
+	var tn0: int = Time.get_ticks_usec()
 	var r: Dictionary = sim.nav.path_out(qa, qb) if sim.get("nav") != null else {"ok": false}
+	stats["nav_out_ms"] = float(stats.get("nav_out_ms", 0.0)) + (Time.get_ticks_usec() - tn0) / 1000.0
+	stats["nav_out_max_ms"] = maxf(float(stats.get("nav_out_max_ms", 0.0)), (Time.get_ticks_usec() - tn0) / 1000.0)
 	if not bool(r.get("ok", false)):
 		return [b]
 	var pts: Array = [qa]
 	for v in r["pts"]:
 		pts.append(v)
 	pts.append(qb)
+	# (string pulling forward: from each kept point, on while the next point is still in sight. The old pull
+	# tested from the far end back, O(n^2) sight tests over a long outdoor path: 30-50 ms single plans,
+	# 2026-10-03 long-frame trace)
 	var out: Array = []
 	var i := 0
 	while i < pts.size() - 1:
-		var j: int = pts.size() - 1
-		while j > i + 1 and not _los_out(pts[i], pts[j]):
-			j -= 1
+		var j: int = i + 1
+		while j + 1 < pts.size() and _los_out(pts[i], pts[j + 1]):
+			j += 1
 		out.append(pts[j])
 		i = j
 	var w: Array = []
 	for q in out:
 		w.append(Vector3(q.x, view.h(q.x, q.y), q.y))
 	w[-1] = b
+	stats["out_pull_max_ms"] = maxf(float(stats.get("out_pull_max_ms", 0.0)), (Time.get_ticks_usec() - tn0) / 1000.0)
 	return w
 
 ## True when a and b (world) are in the same region and b is in straight sight of a there.

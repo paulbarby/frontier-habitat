@@ -187,7 +187,7 @@ def build_refinery(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
-    D = 2.5
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.5)
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - (0.62 if K.V4STYLE else 0.5),
                     parapet=0.14, wall="HullDark", deck="Frame")
     ro = rm.roof
@@ -280,7 +280,7 @@ def build_polymer_plant(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.5, parapet=0.14, wall="HullDark",
                     deck="Frame")
     ro = rm.roof
@@ -348,7 +348,7 @@ def build_workshop(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
-    D = 2.4
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.4)
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.5, parapet=0.14, wall="HullDark",
                     deck="Frame")
     ro = rm.roof
@@ -462,7 +462,7 @@ def build_glassworks(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.5, parapet=0.14, wall="HullDark",
                     deck="Frame")
     ro = rm.roof
@@ -512,7 +512,7 @@ def build_electronics_fab(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm, windows=None)
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=(8, 14, 16, 20)[s], band=None, windows=(1.62, 1.92), win_mat="Plasma",
                     win_seams=(10, 16, 20, 24)[s], parapet=0.14)
     ro = rm.roof
@@ -580,7 +580,7 @@ def build_fabricator(rm):
     s = rm.size
     Rw, Ri = rm.Rw, rm.Ri
     industrial_base(rm)
-    D = 2.3
+    D = K.DECK_MIN     # Paul 2026-10-03: deck >= door top + 0.25 (was 2.3)
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.5, parapet=0.14, wall="HullDark",
                     deck="Frame")
     ro = rm.roof

@@ -15,7 +15,7 @@ var readings: Array = []      # ms, one more than blocks
 var raw: Array = []           # raw ms of each block
 var ticks: Array = []         # ticks of each block
 
-func _init(mean_of_slices_: bool = true, power_: float = 0.85, slices_: int = 60) -> void:
+func _init(mean_of_slices_: bool = true, power_: float = H.CALIB_POWER, slices_: int = 60) -> void:
 	mean_of_slices = mean_of_slices_
 	power = power_
 	slices = slices_

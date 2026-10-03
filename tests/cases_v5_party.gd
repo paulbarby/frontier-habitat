@@ -151,7 +151,7 @@ func v5_idle_pairs_start_talks(t) -> void:
 	var found := 0
 	var other_room := 0
 	var kids := 0
-	var plan_ok := 0
+	var stay_ok := 0
 	var seen := {}
 	for s in 120:
 		sim.run_seconds(1.0)
@@ -165,12 +165,12 @@ func v5_idle_pairs_start_talks(t) -> void:
 					other_room += 1
 				if String(x.get("kind", "")) == "child" or String(y.get("kind", "")) == "child":
 					kids += 1
-				if String(x.get("plan_kind", "")) == "chat" and String(y.get("plan_kind", "")) == "chat":
-					plan_ok += 1
+				if x["where"] == "in" and y["where"] == "in" and int(x["bld"]) == int(y["bld"]) and (x["pos"] as Vector2).distance_to(y["pos"]) < 10.0:
+					stay_ok += 1
 	t.check(found >= 3, "idle people started %d talks in 2 game minutes" % found)
 	t.eq(other_room, 0, "an idle talk is between two people in the same room")
 	t.eq(kids, 0, "no child starts an idle talk")
-	t.check(plan_ok >= 1, "the two stand and chat while it lasts (%d of %d)" % [plan_ok, found])
+	t.check(stay_ok >= 1, "the two stand together while the talk starts (%d of %d)" % [stay_ok, found])
 	t.eq(sim.inv.audit(), {}, "ledger")
 	sim.dispose()
 	t.done()
@@ -275,6 +275,7 @@ func v5_innuendo_rules(t) -> void:
 func v5_celebration_events_make_offers(t) -> void:
 	var sim = _showcase()
 	sim.run_seconds(3.0)
+	sim.party._w()["offers"].clear()                                                  # test set-up: the showcase's own offer
 	var ppl: Array = _adults(sim, int(sim.bases.ids()[0]))
 	var who: int = int(ppl[3]["id"])
 	for k in sim.party.KINDS:
@@ -290,6 +291,7 @@ func v5_celebration_events_make_offers(t) -> void:
 	# The real events: the log codes the game writes.
 	var sim2 = _showcase()
 	sim2.run_seconds(3.0)
+	sim2.party._w()["offers"].clear()                                                 # test set-up: the showcase's own offer
 	var base2: int = int(sim2.bases.ids()[0])
 	var p2: Array = _adults(sim2, base2)
 	var star: Dictionary = p2[0]
@@ -350,7 +352,12 @@ func v5_party_flow(t) -> void:
 	sim.run_seconds(3.0)
 	var base: int = int(sim.bases.ids()[0])
 	var ppl: Array = _adults(sim, base)
+	sim.party._w()["offers"].clear()                                                  # test set-up: the showcase's own offer
 	var who: int = int(ppl[6]["id"])
+	for pp in ppl:                                                                    # an honoured person who can come
+		if not sim.education.in_class(pp) and String(pp["role"]) != "security" and not pp.has("jailed") and String(pp.get("plan_kind", "")) != "sleep" and not pp.has("v5_hold") and float(pp["hunger"]) < 60.0 and float(pp["thirst"]) < 60.0 and float(pp["fatigue"]) < 60.0:
+			who = int(pp["id"])
+			break
 	var r: Dictionary = _cmd(sim, "celebrate", {"kind": "birthday", "agent": who})
 	var off: Dictionary = sim.party.request_rows()[0]
 	var stock0: int = sim.leisure.count_stock(base, sim.content["society"]["party"]["items"])

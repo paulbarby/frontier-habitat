@@ -453,13 +453,37 @@ const NUTRIENT_HINTS := {
 }
 
 func _nutrition_issues(found: Dictionary) -> void:
-	var counts: Dictionary = sim.nutrition.shortage_counts()
+	# One pass over the people (it was three: shortage_counts, the starved count and the variety count; the same
+	# counts, the same filter: alive and not a visitor).
+	var counts := {}
 	var starved := 0
-	for aid in sim.state["agents"]:
-		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] == "alive" and a["kind"] != "visitor" and sim.nutrition.starved(a):
-			starved += 1
-	for k in sim.nutrition.nutrients():
+	var mono := 0
+	var pop := 0
+	var nl: Array = sim.nutrition.nutrients()
+	var lim_def: float = float(sim.nutrition._cfg["deficient_below"])
+	var lim_sta: float = float(sim.nutrition._cfg["starved_below"])
+	var agents: Dictionary = sim.state["agents"]
+	for aid in agents:
+		var a: Dictionary = agents[aid]
+		if a["state"] != "alive" or a["kind"] == "visitor":
+			continue
+		pop += 1
+		var nu: Dictionary = a.get("nutrition", {})
+		for k in nl:
+			if float(nu.get(k, 100.0)) < lim_def:
+				counts[k] = int(counts.get(k, 0)) + 1
+		for k in nu:
+			if float(nu[k]) < lim_sta:
+				starved += 1
+				break
+		var diet: Array = a.get("diet", [])
+		if diet.size() >= 3:
+			var seen := {}
+			for d in diet:
+				seen[d] = true
+			if seen.size() == 1:
+				mono += 1
+	for k in nl:
 		var n: int = int(counts.get(k, 0))
 		if n <= 0:
 			continue
@@ -468,21 +492,7 @@ func _nutrition_issues(found: Dictionary) -> void:
 		if starved > 0:
 			text += " %s health." % [Text.n(starved, "colonist") + " " + Text.s(starved, "lose")]
 		_add(found, "low_%s" % k, "low_nutrient", sev, text, String(NUTRIENT_HINTS.get(k, "Cook different dishes.")), [], "", -1.0, n)
-	# Variety: most colonists eat the same dish again and again.
-	var mono := 0
-	var pop := 0
-	for aid in sim.state["agents"]:
-		var a: Dictionary = sim.state["agents"][aid]
-		if a["state"] != "alive" or a["kind"] == "visitor":
-			continue
-		pop += 1
-		var diet: Array = a.get("diet", [])
-		if diet.size() >= 3:
-			var seen := {}
-			for d in diet:
-				seen[d] = true
-			if seen.size() == 1:
-				mono += 1
+	# Variety: most colonists eat the same dish again and again (counted above).
 	if pop > 0 and mono * 2 > pop:
 		_add(found, "variety", "food_variety", 1, "%s %s the same dish every time. Morale falls." % [Text.n(mono, "colonist"), Text.s(mono, "eat")],
 			"Grow more kinds of crops. The kitchen cooks what its ingredients allow.", [], "", -1.0, mono)

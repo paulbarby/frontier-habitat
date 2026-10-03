@@ -35,8 +35,13 @@ func long_perf(t) -> void:
 					sim.build.spawn_active(def_id, pos, 0.0)   # test set-up
 			x += 9
 		y += 9
-	for i in 4:
-		g.cmd("admit_settlers", {"count": 12})
+	# Settlers come in small groups, so that the airlocks take them in before their suits run out (48 at once
+	# queued outside one airlock and 19 died: that is not what the budget measures).
+	var guard := 0
+	while sim.alive_count() < 70 and guard < 30:
+		guard += 1
+		g.cmd("admit_settlers", {"count": mini(6, 74 - sim.alive_count())})
+		g.run(450)
 	g.run(600)
 	var pop: int = sim.alive_count()
 	var n: int = sim.state["buildings"].size()
@@ -44,6 +49,12 @@ func long_perf(t) -> void:
 	g.run(3000)
 	var ms: float = float(Time.get_ticks_usec() - t0) / 1000.0 / 3000.0
 	t.check(pop >= 60 and n >= 150, "the colony has the size of the budget (%d people, %d structures)" % [pop, n])
+	var causes := {}
+	for ag in sim.state["agents"].values():
+		if ag["state"] == "dead":
+			causes[ag["cause"]] = int(causes.get(ag["cause"], 0)) + 1
+	t.note("deaths %s" % str(causes))
+	t.eq(causes, {}, "nobody died while the colony was built and measured")
 	t.check(ms < 3.0, "a tick takes less than 3 ms on this machine (%.3f ms)" % ms)
 	t.eq(sim.inv.audit(), {}, "ledger")
 	t.note("%.3f ms per tick with %d colonists and %d structures (%s)" % [ms, pop, n, OS.get_processor_name()])
@@ -92,7 +103,7 @@ func long_campaign(t) -> void:
 		if a["state"] == "dead":
 			causes[a["cause"]] = int(causes.get(a["cause"], 0)) + 1
 	t.eq(bad_days, [], "ledger, reservations and utility stocks sound every day")
-	t.check(not causes.has("starvation") and not causes.has("dehydration"), "no death from starvation or thirst: %s" % str(causes))
+	t.eq(causes, {}, "no death at all in the campaign")
 	t.check(sim.goals.chapter() >= 3, "chapter 4 (the Meridian) is open (chapter %d)" % (sim.goals.chapter() + 1))
 	t.check(goal_day.has("ship_survey"), "the wreck was surveyed")
 	t.check(hull_day > 0.0 and hull_day <= 27.0, "the hull was patched by about day 25 (day %.1f)" % hull_day)

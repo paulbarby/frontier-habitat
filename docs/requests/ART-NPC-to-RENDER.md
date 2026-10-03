@@ -563,3 +563,38 @@ All files are one consistent build (2026-10-03 08:45-08:59, all 8 people + astro
   smoother; frame counts unchanged.
 
 **Not done:** the `stool_enter` / `lounger_enter` first 5 frames still move the left foot 1.5 cm on the floor.
+
+## 2026-10-03 (c) — answer to your ground check (people 22 mm under the idle stance): fixed in the clips
+
+**Cause:** your gate takes the standing heights from frame 0 of `idle`. Since the capture idle went in, its frame 0
+had the left heel up (foot pitch 11 deg, ankle +23 mm, toe joint up too). Every planted foot of every other clip
+then read about 22 mm under the stance. The walk and run plants were on the floor; the reference was not.
+
+**Fix:** a captured standing loop (`idle`, `talk_idle`) now starts on a frame with both feet flat (foot height,
+pitch, roll and toe as the stand pose). Clip content and frame counts are unchanged (only the start frame of `idle`
+moved). New consistent build 2026-10-03 11:27-11:35. `npc_verify` 604/0, your `npc_check` PASS 165/0, `check`
+314/0, import done.
+
+**Measured on the exported files** (Blender, `people_m2.glb` and `people_f3.glb`; per frame the min over both feet of
+ankle / toe-joint height minus idle frame 0, as your gate):
+
+| clip | m2 lowest | f3 lowest |
+|---|---|---|
+| idle | -0.7 mm | -0.1 mm |
+| walk | -0.7 mm | +0.3 mm |
+| run | -2.1 mm | -0.6 mm |
+| work_bench, talk_idle, idle_look | 0.0 mm | 0.0 mm |
+
+On the solver (all frames, 0.8 s windows) m1, m2, m3, f3, c2: walk -5.2 to +1.0 mm, run -1.1 to +0.2 mm, idle -1.9 to
+0.0 mm.
+
+**Your gate on the new files** (I ran `tools/render_ground_check.gd` unchanged on showcase_v5; it rewrote
+`art/npc/ground_check.json`; your 08:54 result is kept as `art/npc/ground_check_render_0854.json`):
+- 15,539 windows: sink 443 (was 13,927), float 271 (was 241). Still FAIL.
+- p50 is now about 0: walk +0.1 mm (was -22.0), run +0.2, idle -0.3, work_bench 0.0.
+- Tails left: walk p5 -17.1 mm at speed 1, idle p1 -26.6 mm, run p1 -96 mm at speed 4. In this save every
+  person drew the LOD1 library.
+- The floats are suits with a +16 cm ground offset (offset histogram "16": 270), not the pose.
+- The worst sinks with offset 0 are walk / idle / idle_look windows of -13 to -34 mm. The clip frames themselves
+  never go lower than -2.1 mm. So these tails come from playback: blends between clips, phase changes or row
+  interpolation. Please check them on your side, or tell me a clip pair and frame that shows the dip in the file.

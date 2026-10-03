@@ -101,13 +101,16 @@ func tick() -> void:
 	# rooms of this tick's slice are collected first; only people in those rooms are checked.)
 	var slice: Array = []
 	var rooms := {}
-	# New talks are looked for on every second tick, for two buckets of people at once (each
-	# person still once a second; cost: the room scan below runs half as often).
+	# New talks are looked for on every second tick, for two buckets of people at once (each person once a
+	# second). (Looking every 4th tick was tried: it cut 0.04 ms a tick but a pair is then met together at a
+	# check less often, the talk rate fell, and the campaign test lost 2 days: gameplay, not cost.)
 	if now % 2 == 1:
 		_day_pass(now)
 		return
 	# (now + id) % hz == 0  <=>  id % hz == -now mod hz (people.ids_mod keeps the buckets).
-	for aid in sim.people.ids_mod(hz, -now) + sim.people.ids_mod(hz, -now - 1):
+	var due: Array = sim.people.ids_mod(hz, -now) + sim.people.ids_mod(hz, -now - 1)
+	due.sort()                                                                    # native sort of ids (the slice is in id order)                                                                    # native sort of ids (the slice is in id order)
+	for aid in due:
 		if busy.has(int(aid)):
 			continue
 		var a0: Dictionary = agents[aid]
@@ -125,17 +128,25 @@ func tick() -> void:
 			continue
 		if not by_bld.has(b):
 			by_bld[b] = []
-		by_bld[b].append(a)
-	slice.sort_custom(func(p, q): return int(p["id"]) < int(q["id"]))
-	for b in by_bld:
-		(by_bld[b] as Array).sort_custom(func(p, q): return int(p["id"]) < int(q["id"]))
+		by_bld[b].append(int(aid))
+	# Room lists: ids sorted natively, then the people (rooms with one person are dropped: nobody to talk to).
+	for b in by_bld.keys():
+		var ids_b: Array = by_bld[b]
+		if ids_b.size() < 2:
+			by_bld.erase(b)
+			continue
+		ids_b.sort()
+		var list_b: Array = []
+		for idb in ids_b:
+			list_b.append(agents[idb])
+		by_bld[b] = list_b
 	var window: int = int(c["talk_window_s"]) * hz
 	var w: int = now / window
 	var done: Dictionary = v["done"]
 	for x in slice:
 		if busy.has(int(x["id"])):
 			continue
-		var room: Array = by_bld[int(x["bld"])]
+		var room: Array = by_bld.get(int(x["bld"]), [])
 		if room.size() < 2:
 			continue
 		var chance: float = float(c["talk_chance_social"]) if social_room(int(x["bld"])) else float(c["talk_chance"])
@@ -172,7 +183,7 @@ func next_request_id() -> int:
 
 ## Is this person in a talk now?
 func in_talk(id: int) -> bool:
-	var talks: Dictionary = _w()["talks"]
+	var talks: Dictionary = sim.state.get("v5", {}).get("talks", {})
 	for key in talks:
 		var t: Dictionary = talks[key]
 		if int(t["a"]) == id or int(t["b"]) == id:
@@ -202,10 +213,8 @@ func start_talk_now(x: Dictionary, y: Dictionary, idle: bool) -> bool:
 	var lines: int = int(ic["lines_min"]) + int(_h(key % 2147483647, w + 7) * float(int(ic["lines_max"]) - int(ic["lines_min"]) + 1)) % (int(ic["lines_max"]) - int(ic["lines_min"]) + 1)
 	talks[key] = {"a": int(x["id"]), "b": int(y["id"]), "start": now, "lines": lines, "topic": topic, "bld": int(x["bld"]), "w": w, "heat": int(plan["heat"]), "idle": idle}
 	_talked(x, y, topic, now)
-	if idle:
-		var secs: float = float(lines * int(sim.social.LINE_TICKS)) / float(hz)
-		sim.agents._start_plan(x, "chat", [{"op": "wait", "t": secs}], "Chatting")
-		sim.agents._start_plan(y, "chat", [{"op": "wait", "t": secs}], "Chatting")
+	# No plan is made for the two: they are idle and stay where they are. (A "chat" plan was tried: people
+	# with a plan of that kind were not counted as free hands, and the campaign test lost its food supply.)
 	return true
 
 # ---------------------------------------------------------------- relationships

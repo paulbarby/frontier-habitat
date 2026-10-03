@@ -52,10 +52,14 @@ func tick() -> void:
 	var now: int = int(sim.state["tick"])
 	# Each base on its own tick of the period, all on tick 2 of a second (a light phase) and 3 s apart (the
 	# worst tick budget: the update costs 5 ms; the base id used to choose the tick, and it met other work).
+	# Nothing to do on the ticks that no base owns (a base's tick is 2 + 30 i of the period).
+	var phase_i: int = posmod(now - 2, every)
+	if phase_i % 30 != 0:
+		return
 	var bl: Array = _bases()
-	for i in bl.size():
-		if posmod(now - 2 - i * 30, every) == 0:
-			_update(int(bl[i]), float(every) / float(hz))
+	var i: int = phase_i / 30
+	if i < bl.size():
+		_update(int(bl[i]), float(every) / float(hz))
 
 func _update(base_id: int, dt_s: float) -> void:
 	var c: Dictionary = cfg()
