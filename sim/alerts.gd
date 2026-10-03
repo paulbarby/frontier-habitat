@@ -23,6 +23,7 @@ func tick_second() -> void:
 	_supply_issues(found)
 	_nutrition_issues(found)
 	sim.chains.issues(found, self)
+	sim.transport.issues(found, self)
 	_progress_issues(found)
 	_hazard_issues(found)
 	sim.reactors.issues(found, self)

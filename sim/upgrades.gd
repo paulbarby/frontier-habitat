@@ -85,6 +85,17 @@ func start(bid: int) -> Dictionary:
 	sim.log_event("upgrade_planned", "%s: upgrade to level %d planned." % [b["name"], int(chk["to"])], [bid], 0)
 	return {"ok": true, "code": "ok"}
 
+## V5 18.5: a feature upgrade (a transport hub or tube) is made like a level upgrade, with its own cost and work.
+func start_feature(b: Dictionary, feature: String, cost: Dictionary, work: float) -> Dictionary:
+	var units := 0
+	for r in cost:
+		units += int(cost[r])
+	var bid: int = int(b["id"])
+	var inv: int = sim.inv.create_inv("b", bid, "upg", maxi(1, units))
+	b["upgrade"] = {"to": int(b.get("level", 1)), "feature": feature, "cost": cost.duplicate(), "inv": inv, "progress": 0.0, "work_total": work, "state": "deliver", "block": ""}
+	sim.log_event("upgrade_planned", "%s: a transport %s is planned." % [b["name"], feature], [bid], 0)
+	return {"ok": true, "code": "ok", "feature": feature}
+
 ## Command "cancel_upgrade". Delivered materials stay on the ground; built-in materials
 ## come back by half, like a cancelled construction.
 func cancel(bid: int) -> Dictionary:
@@ -152,12 +163,19 @@ func _finish(b: Dictionary) -> void:
 	var to: int = int(u["to"])
 	if int(u.get("inv", -1)) != -1 and sim.inv.exists(u["inv"]):
 		sim.inv.dissolve_to_pile(u["inv"], sim.build.drop_point(b))
-	b["level"] = to
+	var feature: String = String(u.get("feature", ""))
 	b["upgrade"] = {}
-	apply_capacities(b)
-	sim.util.invalidate()
 	sim.jobs.cancel_upgrade_tasks(b["id"], -1)
 	sim.stat_add("upgrades", "", 1)
+	if feature != "":
+		# A transport hub or tube (V5 18.5): the level does not change.
+		b[feature] = true
+		sim.transport.installed(b)
+		sim.log_event("upgraded", "%s has a transport %s now." % [b["name"], feature], [b["id"]], 1)
+		return
+	b["level"] = to
+	apply_capacities(b)
+	sim.util.invalidate()
 	sim.log_event("upgraded", "%s is now level %d." % [b["name"], to], [b["id"]], 1)
 
 ## Inventories follow the effective definition after a level or size change.

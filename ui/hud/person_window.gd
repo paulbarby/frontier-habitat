@@ -180,7 +180,8 @@ func _file(p: Dictionary) -> void:
 	var top: HBoxContainer = Kit.hbox(14)
 	_body.add_child(top)
 	var ph = RagPhoto.new()
-	ph.custom_minimum_size = Vector2(150, 150)
+	var narrow_p: bool = Quarter.width_for(hud, WIDTH) < 460.0   # the right quarter of a small view: a smaller portrait and shorter text cells
+	ph.custom_minimum_size = Vector2(110, 110) if narrow_p else Vector2(150, 150)
 	ph.pose = "portrait"
 	ph.texture = hud.v5.photo([agent_id], "portrait", "portrait")
 	top.add_child(ph)
@@ -196,7 +197,7 @@ func _file(p: Dictionary) -> void:
 			["Doing", String(p["activity"])], ["Wears", V5.outfit_name(String(p["outfit"]))]]:
 		g.add_child(Kit.dim(row[0], 13))
 		var l: Label = Kit.wrap(String(row[1]), 13, P.TEXT)
-		l.custom_minimum_size.x = 200
+		l.custom_minimum_size.x = 120 if narrow_p else 200
 		g.add_child(l)
 	if String(idn.get("kind", "")) == "child":
 		_school()

@@ -69,6 +69,7 @@ const Party = preload("res://sim/party.gd")
 const HR = preload("res://sim/hr.gd")
 const Workq = preload("res://sim/workq.gd")
 const Chains = preload("res://sim/chains.gd")
+const Transport = preload("res://sim/transport.gd")
 const Text = preload("res://sim/text.gd")
 
 static var _content_cache := {}
@@ -126,6 +127,7 @@ var party
 var hr
 var workq
 var chains
+var transport
 var pending: Array = []
 var _cmd_seq := 0
 var _alive_tick := -1
@@ -184,11 +186,12 @@ func _init() -> void:
 	hr = HR.new(self)
 	workq = Workq.new(self)
 	chains = Chains.new(self)
+	transport = Transport.new(self)
 
 ## Breaks the reference cycles between the systems and this object.
 func dispose() -> void:
 	for s in [inv, topo, nav, place, build, util, prod, jobs, agents, alerts, metrics, cmds,
-			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations, security, leisure, families, rag, eggs, party, hr, workq, chains]:
+			items, sizes, upgrades, research, nutrition, goals, awards, ship, events, hazards, traffic, bases, vehicles, orders, debug, reactors, explore, people, social, floors, ranks, discipline, unrest, education, housing, relations, security, leisure, families, rag, eggs, party, hr, workq, chains, transport]:
 		if s != null:
 			s.sim = null
 	inv = null
@@ -360,6 +363,7 @@ func load_state(s: Dictionary, opts: Dictionary = {}) -> void:
 	relations.reset()
 	workq.reset()
 	chains.reset()
+	transport.reset()
 	security.reset()
 	leisure.reset()
 	if bool(opts.get("debug", false)):
@@ -648,6 +652,7 @@ func step() -> void:
 		party.tick_second()
 		hr.tick_second()
 		workq.tick_second()
+		transport.tick_second()
 	if phase == _phase_of(3, hz):
 		explore.tick_second()
 		ship.tick_second()

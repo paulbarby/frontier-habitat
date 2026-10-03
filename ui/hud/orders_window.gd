@@ -29,6 +29,7 @@ var _msg: Label
 var _force: Button
 var _board: OptionButton
 var _haul_item: OptionButton
+var _verbs: GridContainer
 var _haul_qty: SpinBox
 var _body: VBoxContainer
 var _na: Label
@@ -83,6 +84,7 @@ func _ready() -> void:
 	well.add_child(_list)
 	_body.add_child(Kit.head("Give an order", P.CYAN, 12))
 	var g := GridContainer.new()
+	_verbs = g
 	g.columns = 2
 	g.add_theme_constant_override("h_separation", 6)
 	g.add_theme_constant_override("v_separation", 6)
@@ -153,6 +155,7 @@ func add_selected() -> void:
 func refresh(force: bool = false) -> void:
 	if visible:
 		Quarter.fit(self, hud, "orders", WIDTH, _scroll, _body, 42.0)
+		_verbs.columns = 1 if Quarter.width_for(hud, WIDTH) < 400.0 else 2   # a narrow quarter: one verb in each row
 	if not visible:
 		return
 	var ok: bool = hud.v4.available("orders") or hud.v4.live("vehicles")

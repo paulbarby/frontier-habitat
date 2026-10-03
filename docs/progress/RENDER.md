@@ -1336,3 +1336,12 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
   person in all 30 (3 with a wall beside the person). Not proven at 0.
 - New tools: `tools/render_cmd.gd` (headless commands at set frames), `drawcount` debug command (visible surfaces by
   owner, frustum-tested in the web build), far counts in `stats.far`.
+- **Gates (final code, 2026-10-04):** check 0 failed; weather PASS; npc_check PASS 165/0; doorway gate PASS (40
+  doorways, beam 0, gap 0; the gate now draws near models as the follow view does: with far LOD on it read 1,020 false
+  beams from the far roofs); path v3 PASS (slide 0), v4 PASS; airlock 0; cut 0 / doors 0; seat PASS; ground PASS
+  (15,479 windows, 0 / 0; plate ramps centred on the edge, porch ramp 0.12 m). Final export build/web_render 186.3 MB.
+- **Not proven:** overview >= 45 fps and in4 < 3 mm in the web (machine load 56-93 % all day: overview 28.1 fps at 71 %,
+  in4 web run at 16 fps); framing 0 of 30 (two sheets: 4 and 0 shots without the person). Needs the quiet-machine run.
+- **Paused (2026-10-04), half-done 1:** overview >= 45 fps not proven: draw calls 1,317 -> 1,029 and npc/view CPU -30 % / -20 % (headless A/B), but every web run today was on a machine at 56-93 % load (overview 28.1 fps at 71 %); needs the orchestrator's quiet-machine run.
+- **Half-done 2:** framing: door-axis heading + 0 shoulder offset at doorways (headless in1 wall-centre 516 -> 244); web sheets 4/30 and 0/30 without the person, so 0/30 not proven. in4: 2.63 mm headless (followed person's 2x-4x speed changes 4.5 m/s^2 on screen); the web in4 run under load (16 fps) is not usable.
+- **Half-done 3:** §18.5 package capsules not started (waits for SIM's API). Gates all PASS on the final code; the doorway gate now draws near models (far LOD off). The Godot processes still running (run_tests.gd, tools/ui/test_v5_people.gd) belong to other agents, not RENDER.

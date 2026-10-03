@@ -1389,6 +1389,8 @@ func _fit_y(b: Dictionary, p: Vector3) -> float:
 ## and the chamber grating (0.144 with 0.160 ribs: 0.152 is within 8 mm of both); the porch deck (0.100 with 0.112
 ## ribs: 0.106) from 0.85 m inside to 0.65 m outside Anchor_Porch_0, |z| <= 1.0. Returns the world floor height under
 ## p, or -INF when p is over no airlock. The list is rebuilt when the number of drawn buildings changes.
+const PORCH_RAMP := 0.12   # m: the porch deck (10 cm, a real step) eases down to the ground this far out; the
+						  # first outdoor queue place stands 0.15 m off the deck
 var _lock_list: Array = []
 var _lock_key := -1
 func _lock_floor(p: Vector3) -> float:
@@ -1421,10 +1423,11 @@ func _lock_floor(p: Vector3) -> float:
 		var ox: float = e[2]
 		var oy: float = e[4]
 		var sy: float = e[5]
-		# (every change of height is a 0.3 m ramp on the lower side: orchestrator 2026-10-03)
+		# (every change of height is a ramp (orchestrator 2026-10-03): 0.3 m centred on a plate edge (at most 6 mm off),
+		# PORCH_RAMP off the porch deck)
 		if ax != INF and q.x >= ax - 0.85:
 			var e_out: float = maxf(q.x - (ax + 0.65), absf(q.z) - 1.0)
-			if e_out <= 0.3:
+			if e_out <= PORCH_RAMP:
 				var deck: float = 0.106
 				if q.x < ax - 0.55:
 					# the outer frame's plate (0.152) down to the deck
@@ -1433,15 +1436,16 @@ func _lock_floor(p: Vector3) -> float:
 				if e_out <= 0.0:
 					return yd
 				# off the deck's open sides: down to the ground over 0.3 m
-				return lerpf(yd, view.h(p.x, p.z), smoothstep(0.0, 0.3, e_out))
+				return lerpf(yd, view.h(p.x, p.z), smoothstep(0.0, PORCH_RAMP, e_out))
 			continue
 		if p2.distance_to(e[6]) > float(e[8]):
 			continue
 		var fm: float = 0.140
-		if q.x >= ix - 0.43:
+		if q.x >= ix - 0.28:
 			fm = 0.152
-		elif q.x > ix - 0.73:
-			fm = lerpf(0.140, 0.152, smoothstep(ix - 0.73, ix - 0.43, q.x))
+		elif q.x > ix - 0.58:
+			# (centred on the plate's edge: at most 6 mm off on either side)
+			fm = lerpf(0.140, 0.152, smoothstep(ix - 0.58, ix - 0.28, q.x))
 		return oy + fm * sy
 	return -INF
 
@@ -2511,7 +2515,8 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 	# (the doorway, measured along the door axis with rays (tools/render_door_profile.gd, 2026-10-03; sd = metres from
 	# the door point outward, x the room's scale): room floor to sd -0.67, the kit's plate +12 mm to sd +0.08, the
 	# corridor floor (+33 mm on flat ground) beyond. The body's height follows ramps, never a step (orchestrator
-	# 2026-10-03: "ramp them over 0.3 m"), each on the lower side so the body never goes under a floor it walks onto.)
+	# 2026-10-03: "ramp them over 0.3 m"): the plate edge ramp is centred (at most 6 mm off), the corridor step ramp lies
+	# on the plate side (the body never goes under the corridor floor).)
 	if not dead and view.doors != null and (dbg_floor_off & 2) == 0:
 		var dq: Vector2 = Vector2(now.x, now.z)
 		for de in _doors_near(dq):
@@ -2529,15 +2534,17 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 			var ks: float = r_off / 0.32
 			var sd: float = rel.dot(od) / ks
 			var lat: float = absf(rel.cross(od))
-			if lat > 0.8 * ks or sd < -0.97 or sd > r_off / ks + 0.02:
+			if lat > 0.8 * ks or sd < -0.82 or sd > r_off / ks + 0.02:
 				continue
 			var rf: float = _floor_y(blds[drid])
 			if absf(now.y - rf) > 0.5:
 				continue
 			var plate: float = rf + DOOR_SILL * ks
 			var yk: float
-			if sd <= -0.67:
-				yk = lerpf(rf, plate, smoothstep(-0.97, -0.67, sd))
+			# (the room -> plate ramp is centred on the plate's edge (sd -0.67): at most 6 mm off on either side; on the
+			# room side alone a body walking along the wall past a door floated 8-11 mm, ground gate 2026-10-04)
+			if sd <= -0.52:
+				yk = lerpf(rf, plate, smoothstep(-0.82, -0.52, sd))
 			elif sd <= -0.22:
 				yk = plate
 			else:

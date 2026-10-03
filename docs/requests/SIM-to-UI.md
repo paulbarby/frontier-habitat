@@ -969,3 +969,13 @@ the `materials:<item>` alerts now carry `chain` too; `unreach:<item>` (code `unr
 Sources of "needed": a site or an upgrade waiting for materials, a broken structure with no part, a worn structure (health under 70) with no part, a machine with no input, an order that cannot get an item.
 
 **Package transport (18.5):** stub, see the next entry.
+
+## 2026-10-04 - section 18.5: package transport (tests: tests/cases_v5_transport.gd)
+
+- **Research:** `log_transport` "Package Transport" (branch space, tier 4, requires `log_1`, `eng_3`). It unlocks two upgrades. Until it is done `install_transport` answers `locked_research`.
+- **Command `install_transport {id}`:** id = a storehouse or cold storage (a transport hub) or a corridor (a transport tube). Result `{ok, code, feature ("hub"|"tube"), cost}`; codes: `locked_research`, `not_storage`, `not_corridor`, `have`, `not_active`, `busy`, `demolish`, `unknown`.
+  Read what the button shows with `sim.transport.check(building)` = `{ok, code, feature, cost {item: n}, research, work}` (cost: hub 10 steel + 5 polymer + 4 electronics; a tube 3/2/1 plus 2/1/1 for each 10 m of corridor; content `transport`).
+  The upgrade is built like a level upgrade: carriers bring the materials (`building.upgrade = {feature, cost, state "deliver"|"work", progress, work_total, block}`), technicians work (the corridor from outside, so the suit range applies). `cancel_upgrade {id}` cancels it. The log says "has a transport hub/tube now".
+- **State:** `building.hub`, `building.tube` (bool). A structure with a hub, or joined to one by a tubed corridor, uses the network: a haul between two such structures that are joined by a path of working tubes is not given to a colonist; goods go in capsules. If a tube would keep a haul waiting over 30 s, or no tube path works, the colonists carry it as before.
+- **Overlay and inspector:** `sim.transport.overview()` (hubs, tubes with `ok` and `busy_s`, networks, flow of the last 5 minutes by item, totals) and `sim.transport.info(id)` (for a hub or a tube: `{hub, tube, check, ok, in_transit [{res, qty, dir "in"|"out"|"through", eta_s, stuck}]}`); `capsules_view()` for the moving capsules.
+- **Alert:** `transport:<corridor id>` (code `transport_down`, severity 2): "The transport tube between A and B does not work. N capsules wait for it." Action: repair the corridor (a breach is patched as usual).

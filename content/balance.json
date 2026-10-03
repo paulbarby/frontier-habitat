@@ -175,7 +175,7 @@
     "capsule_speed": 8.0,
     "hub_seconds": 1.5,
     "max_wait_s": 30,
-    "hub_power": 1.0
+    "hub_defs": ["storehouse", "cold_storage"]
   },
   "default_priority": {
     "construction": 2,

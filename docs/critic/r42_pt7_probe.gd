@@ -28,7 +28,7 @@ func _report(sim, label: String, verbose: bool) -> void:
 	print("--- %s tick=%d day=%.2f alive=%d meals=%d deaths=%d issues=%s" % [label, tick, float(tick) / 6000.0, sim.alive_count(), int(f["meals"]), int(sim.state["progress"]["deaths"]), str(keys)])
 	for k in keys:
 		var it: Dictionary = iss[k]
-		print("   ISSUE %s: %s | ents=%s" % [k, String(it.get("text", "")), str(it.get("entities", []))])
+		print("   ISSUE %s live=%s: %s | ents=%s" % [k, str(it.get("live", true)), String(it.get("text", "")), str(it.get("entities", []))])
 		if k == "starving" or k == "rescue":
 			for aid in it.get("entities", []):
 				if sim.state["agents"].has(aid):
@@ -88,7 +88,7 @@ func _initialize() -> void:
 		for k in iss:
 			if String(k).begins_with("lockjam"):
 				jam = true
-				min_suit = minf(min_suit, float(iss[k].get("value", 1e9)))
+				min_suit = minf(min_suit, float(iss[k].get("forecast", 1e9)))
 				max_q = maxi(max_q, int(iss[k].get("count", 0)))
 		if jam:
 			jam_samples += 1

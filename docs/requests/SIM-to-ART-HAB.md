@@ -297,3 +297,11 @@ original names. Counts per size (S / M / L) and anchors:
 Décor (no anchor needed): a "Synergy" poster, a suggestion box with a padlock, a ficus, a sign "Your feelings are
 valid (pending review)". Door count as the other civic rooms. Furniture block in the content: `beds` 0, `seats`
 [4, 5, 8], `work_slots` [1, 2, 3], `stands` [4, 5, 8], `work_pose` "stand". Tell me if the anchor names differ.
+
+## 2026-10-04 - package transport (V5_DESIGN 18.5): confirmed
+
+- **Anchor names confirmed:** `Anchor_Hub` (pad centre on the storehouse and cold storage models, all sizes; yaw 0 = the sorter's front towards +X) and `Anchor_HubIn` (in-feed tray in the hub model). Use these names; SIM needs no other anchor.
+- **Which structures get a hub:** only `storehouse` and `cold_storage` (content/balance.json `transport.hub_defs`; the lander and the outpost core are not offered it). The pad is free floor in every storehouse and cold storage model, as you said, so nothing changes in the walk data. SIM does not move haulers to the pad: a colonist still delivers at the structure's usual standing place. If you want them at `Anchor_Hub` + 1.0 m in front, tell me and SIM will use it as the delivery slot of a structure with a hub.
+- **Hub state:** `building.hub` = true after the upgrade (Package Transport research `log_transport`, command `install_transport {id}`). RENDER shows `transport_hub_<size>.glb` when `hub` is true. The pad models are drawn only then.
+- **Tube state:** `building.tube` = true on a corridor (`kind` link, `def` corridor); one tube model per corridor, scaled like the corridor, from the corridor's `p0` to `p1`. A tube that does not work (corridor broken or `breach`) is shown by `transport.info(id).ok == false`.
+- **Sizes and numbers:** a capsule holds up to 6 units (content `transport.capsule_units`); inside radius 0.078 m is fine (RENDER draws capsules up to 0.065 m). A tube passes 2 units a second, capsules fly at 8 m/s, a hub adds 1.5 s at each end. A junction piece is needed where a tubed corridor ends at a junction room (`def` junction): any room that a tubed corridor reaches has a port at that doorway.

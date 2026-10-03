@@ -658,6 +658,9 @@ func _on_cmd(text: String) -> String:
 				return "no screen"
 			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
 			return str(ts._scroll.scroll_vertical)
+		"deselect":
+			select("", -1)
+			return "ok"
 		"repairnow":
 			# repairnow: the Who window for the selected structure (what the Repair now button does; screenshots).
 			if view.selected_kind != "building":
@@ -728,6 +731,7 @@ func _on_cmd(text: String) -> String:
 			var hubs: Array = []
 			var transit: Array = []
 			var broken_ids: Array = []
+			var used_tubes: Array = []
 			for i in stores.size():
 				hubs.append({"b": stores[i], "ok": true, "items": {"metal": 12, "spare_parts": 4}})
 			for i in stores.size() - 1:
@@ -738,16 +742,19 @@ func _on_cmd(text: String) -> String:
 				var td := 1e9
 				for bid in ids_b:
 					var cb: Dictionary = sim.state["buildings"][bid]
-					if String(cb["def"]) == "corridor" and (cb["pos"] as Vector2).distance_to(mid) < td:
+					if String(cb["def"]) == "corridor" and not used_tubes.has(int(bid)) and (cb["pos"] as Vector2).distance_to(mid) < td:
 						td = (cb["pos"] as Vector2).distance_to(mid)
 						tb = int(bid)
-				var bad: bool = w.size() > 1 and w[1] == "broken" and i == 1
+				used_tubes.append(tb)
+				var bad: bool = w.size() > 2 and w[2] == "broken" and i == 1
 				if bad:
 					broken_ids.append(tb)
 				tubes.append({"b": tb, "a": stores[i], "c": stores[i + 1], "ok": not bad, "load": 0.35 + 0.5 * float(i)})
 				transit.append({"id": i * 2, "res": "metal", "qty": 4, "from": stores[i], "to": stores[i + 1], "t": 0.3})
 				transit.append({"id": i * 2 + 1, "res": "spare_parts", "qty": 2, "from": stores[i + 1], "to": stores[i], "t": 0.6})
 			hud.v18.demo_transport = {"hubs": hubs, "tubes": tubes, "flows": [], "transit": transit, "broken": broken_ids}
+			focus_on(sim.state["buildings"][stores[1]]["pos"])
+			select("building", stores[0])
 			return "demo network: %d hubs, %d tubes" % [hubs.size(), tubes.size()]
 		"prio":
 			# prio <agent id> <job> <0..3> | prio colony <job> <0..3>: debug only (changes the colony): an own

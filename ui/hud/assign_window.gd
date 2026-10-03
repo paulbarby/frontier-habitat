@@ -87,6 +87,9 @@ func _ready() -> void:
 	_msg = Kit.wrap("", 13, P.TEXT_2)
 	v.add_child(_msg)
 	visibility_changed.connect(func():
+		# The inspector under this window is dimmed while it shows (both sit in the right quarter; their text would run together).
+		if hud.inspector != null:
+			hud.inspector.modulate.a = 0.12 if visible else 1.0
 		if visible:
 			_fill())
 

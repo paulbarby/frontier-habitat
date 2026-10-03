@@ -168,6 +168,8 @@ func _new_task(kind: String, cat: String, bld: int, extra: Dictionary) -> Dictio
 	_count[key] = int(_count.get(key, 0)) + 1
 	return t
 
+var no_divert := false   # set while an order makes its haul: the colonist carries it
+
 func _make_haul(cat: String, src: int, dst: int, res: String, qty: int, bld: int, emergency: int) -> bool:
 	var t: Dictionary = _new_task("haul", cat, bld, {"src": src, "dst": dst, "res": res, "qty": qty, "emergency": emergency})
 	var ho: int = sim.inv.hold_out(src, res, qty, t["id"])
@@ -181,6 +183,9 @@ func _make_haul(cat: String, src: int, dst: int, res: String, qty: int, bld: int
 	t["hold_in"] = hi
 	var k := "%d:%s" % [dst, res]
 	_inbound[k] = int(_inbound.get(k, 0)) + qty
+	# V5 18.5: goods between structures with transport hubs go by tube, not by hand (not an ordered haul).
+	if not no_divert and sim.transport.divert(t):
+		return true
 	_open_hauls[dst] = int(_open_hauls.get(dst, 0)) + 1
 	return true
 
@@ -1015,7 +1020,10 @@ func order_haul(res: String, qty: int, bid: int) -> Dictionary:
 	q = mini(q, sim.inv.free_space(dst))
 	if q <= 0:
 		return {"full": true}
-	if not _make_haul("logistics", src, dst, res, q, bid, 0):
+	no_divert = true
+	var made: bool = _make_haul("logistics", src, dst, res, q, bid, 0)
+	no_divert = false
+	if not made:
 		return {"full": true}
 	var last: Dictionary = {}
 	for tid in sim.state["tasks"]:

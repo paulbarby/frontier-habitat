@@ -241,7 +241,9 @@ func building(b: Dictionary) -> void:
 		"satellite": _pad(b)
 		"venues": _venues(b)
 		"party": _party(b)
-		"storage": _storage(b)
+		"storage":
+			_storage(b)
+			_transport_section(b)
 		_: _overview(b, def)
 	if insp.tab != "storage" and not store_first and b["state"] == "active" and insp.tab in ["", "overview"]:
 		_storage(b)
