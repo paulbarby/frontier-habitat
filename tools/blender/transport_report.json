@@ -1,0 +1,166 @@
+{
+ "generator": "interior_transport.py",
+ "models": [
+  {
+   "id": "transport_tube",
+   "tris": 36,
+   "budget": 200,
+   "tris_by_object": {
+    "Roof": 36
+   },
+   "materials": [
+    "Glass",
+    "LightStrip",
+    "PaletteMetal"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 4980,
+   "seconds": 0.6
+  },
+  {
+   "id": "transport_bracket",
+   "tris": 164,
+   "budget": 300,
+   "tris_by_object": {
+    "Roof": 164
+   },
+   "materials": [
+    "PaletteMetal",
+    "StatusGreen"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 9932,
+   "seconds": 0.1
+  },
+  {
+   "id": "transport_junction",
+   "tris": 398,
+   "budget": 500,
+   "tris_by_object": {
+    "Roof": 398
+   },
+   "materials": [
+    "Glass",
+    "LightStrip",
+    "Palette",
+    "PaletteMetal",
+    "Screen",
+    "Wood"
+   ],
+   "empties": [],
+   "flags": [],
+   "file_size": 23768,
+   "seconds": 0.1
+  },
+  {
+   "id": "transport_port",
+   "tris": 210,
+   "budget": 700,
+   "tris_by_object": {
+    "PortTop": 210
+   },
+   "materials": [
+    "Glass",
+    "Palette",
+    "PaletteMetal",
+    "StatusGreen"
+   ],
+   "empties": [
+    "Anchor_Port"
+   ],
+   "flags": [],
+   "file_size": 17160,
+   "seconds": 0.1
+  },
+  {
+   "id": "transport_hub_s",
+   "tris": 1462,
+   "budget": 3200,
+   "tris_by_object": {
+    "Interior": 1462
+   },
+   "materials": [
+    "Accent",
+    "Glass",
+    "LightStrip",
+    "Palette",
+    "PaletteMetal",
+    "Screen"
+   ],
+   "empties": [
+    "Anchor_HubIn"
+   ],
+   "flags": [],
+   "file_size": 86612,
+   "seconds": 0.3
+  },
+  {
+   "id": "transport_hub_m",
+   "tris": 1462,
+   "budget": 3200,
+   "tris_by_object": {
+    "Interior": 1462
+   },
+   "materials": [
+    "Accent",
+    "Glass",
+    "LightStrip",
+    "Palette",
+    "PaletteMetal",
+    "Screen"
+   ],
+   "empties": [
+    "Anchor_HubIn"
+   ],
+   "flags": [],
+   "file_size": 86612,
+   "seconds": 0.3
+  },
+  {
+   "id": "transport_hub_l",
+   "tris": 1462,
+   "budget": 3200,
+   "tris_by_object": {
+    "Interior": 1462
+   },
+   "materials": [
+    "Accent",
+    "Glass",
+    "LightStrip",
+    "Palette",
+    "PaletteMetal",
+    "Screen"
+   ],
+   "empties": [
+    "Anchor_HubIn"
+   ],
+   "flags": [],
+   "file_size": 86612,
+   "seconds": 0.3
+  },
+  {
+   "id": "transport_hub_xl",
+   "tris": 1462,
+   "budget": 3200,
+   "tris_by_object": {
+    "Interior": 1462
+   },
+   "materials": [
+    "Accent",
+    "Glass",
+    "LightStrip",
+    "Palette",
+    "PaletteMetal",
+    "Screen"
+   ],
+   "empties": [
+    "Anchor_HubIn"
+   ],
+   "flags": [],
+   "file_size": 86612,
+   "seconds": 0.3
+  }
+ ]
+}

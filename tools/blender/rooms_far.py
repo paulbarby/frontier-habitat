@@ -43,6 +43,7 @@ MIN_AREA_SHELL = 0.0050            # m2 (7 x 7 cm): Roof, L2..L5 (the badge, the
 DOWN_Z = -0.5                      # faces whose normal points this far down go
 RATIO = 1.0                        # collapse decimation smears the corner colours (tested 0.3 / 0.45): off
 MAX_GLOW = 1
+MAX_GLOW_HARD = 1                  # (2 tested: +313 draw calls over 159 files; a non-matching glow becomes Palette)
 SKIP_FILES = ("apartment_block",)
 # 2026-10-03: every group (roof-off and roof-on views; 28.3 MB of pck, measured).  "--groups Base,Interior" gives
 # the roof-off set only (18.9 MB).
@@ -89,10 +90,26 @@ def _kind(mset, nm):
     return "opaque"
 
 
-def convert(o, mset, glow_keep, glass=True):
+FLOOR_SRC = ("Floor", "FloorDark", "Wood", "Cushion", "Fabric")    # presentation/models.gd INTERIOR_ONLY (not Screen)
+_WHITE_FLOOR = {}
+
+
+def white_floor():
+    """critic r42 PE-01: the game lights INTERIOR_ONLY materials (Floor ...) with the interior shader and its fill;
+    a far floor in Palette lost that fill and drew at half the brightness.  Far Base floors keep the material NAME
+    "Floor" with a white base colour: their colour is in COLOR_0 like the palette."""
+    m = _WHITE_FLOOR.get("m")
+    if m is None:
+        m = BA.make_material("Floor", dict(color="#ffffff", rough=0.65))
+        _WHITE_FLOOR["m"] = m
+    return m
+
+
+def convert(o, mset, glow_keep, glass=True, floor=False):
     """Corner colours *= material colour on opaque faces; material slots -> Palette / glow / Glass."""
     me = o.data
-    names = [m.name.split(".")[0] if m else "Palette" for m in me.materials] or ["Palette"]
+    names = [(m.name[5:] if m.name.startswith("_imp_") else m.name).split(".")[0] if m else "Palette"
+             for m in me.materials] or ["Palette"]
     attr = me.color_attributes.active_color or (me.color_attributes[0] if me.color_attributes else None)
     if attr is None:
         attr = me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
@@ -116,11 +133,13 @@ def convert(o, mset, glow_keep, glass=True):
             targets[nm] = "Palette"            # wall windows and vitrines: opaque, tinted, at 80 m
         elif k == "glow":
             targets[nm] = nm if nm in glow_keep else nearest_glow(mset, nm, glow_keep)
+        elif floor and nm in FLOOR_SRC:
+            targets[nm] = "Floor"
         else:
             targets[nm] = "Palette"
     for p in me.polygons:
         src = names[min(p.material_index, len(names) - 1)]
-        if targets[src] == "Palette" and src not in ("Palette", "PaletteMetal"):
+        if targets[src] in ("Palette", "Floor") and src not in ("Palette", "PaletteMetal"):
             sp_ = _spec(mset, src)
             r, g, b = BA.hex_to_linear(sp_.get("emit", sp_.get("color", "#ffffff")) if sp_.get("emit")
                                        else sp_.get("color", "#ffffff"))
@@ -141,13 +160,24 @@ def convert(o, mset, glow_keep, glass=True):
     me.materials.clear()
     slot = {}
     for nm in order:
-        me.materials.append(mset.get(nm) if nm != "Palette" else mset.get("Palette"))
+        me.materials.append(white_floor() if nm == "Floor" else mset.get(nm))
         slot[nm] = len(me.materials) - 1
     for p, oi in zip(me.polygons, orig):
         p.material_index = slot[targets[names[oi]]]
 
 
+def _glow(mset, nm):
+    sp = _spec(mset, nm)
+    return BA.hex_to_linear(sp.get("emit", sp.get("color", "#ffffff"))), float(sp.get("emit_strength", 1.0))
+
+
+def compatible(mset, a, b):
+    (ca, sa), (cb, sb) = _glow(mset, a), _glow(mset, b)
+    return 0.6 <= sa / max(1e-3, sb) <= 1.67 and sum((x - y) ** 2 for x, y in zip(ca, cb)) < 0.12
+
+
 def nearest_glow(mset, nm, keep):
+    keep = [q for q in keep if compatible(mset, nm, q)]
     if not keep:
         return "Palette"
     c = BA.hex_to_linear(_spec(mset, nm).get("emit", _spec(mset, nm).get("color", "#ffffff")))
@@ -188,8 +218,14 @@ def tris_of(o):
 
 def build(fid, tid, cat, out_dir=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    _WHITE_FLOOR.clear()
     src = os.path.join(K.MODEL_DIR, fid + ".glb")
     bpy.ops.import_scene.gltf(filepath=src)
+    # critic r42 PE-01: the imported materials keep their names ("Palette"), so MatSet's new ones came out as
+    # "Palette.001" and the game did not treat them as its palette (far rooms half as bright).  Rename the imported
+    # ones first; the far file's materials carry the exact contract names.
+    for m in list(bpy.data.materials):
+        m.name = "_imp_" + m.name
     mset = K.MatSet(K.ACCENTS[cat])
     groups = {}
     t0 = 0
@@ -208,14 +244,23 @@ def build(fid, tid, cat, out_dir=None):
         # the glow materials this group keeps: the most used emissive ones
         use = {}
         for o in objs:
-            names = [m.name.split(".")[0] if m else "" for m in o.data.materials]
+            names = [(m.name[5:] if m.name.startswith("_imp_") else m.name).split(".")[0] if m else ""
+                     for m in o.data.materials]
             for p in o.data.polygons:
                 nm = names[p.material_index] if names else ""
                 if nm and _kind(mset, nm) == "glow":
-                    use[nm] = use.get(nm, 0) + 1
-        keep = sorted(use, key=lambda k: -use[k])[:MAX_GLOW]
+                    use[nm] = use.get(nm, 0) + p.area          # by area: the large panes win, not the many thin strips
+        # RENDER 2026-10-03: a window glow folded into a 3x neon was much brighter.  A glow folds only into a kept glow
+        # of near the same brightness and colour (compatible); otherwise it is kept too (at most MAX_GLOW_HARD), or it
+        # becomes plain Palette (its colour baked, no glow)
+        keep = []
+        for k in sorted(use, key=lambda k_: -use[k_]):
+            if any(compatible(mset, k, q) for q in keep):
+                continue
+            if len(keep) < (MAX_GLOW if not keep else MAX_GLOW_HARD):
+                keep.append(k)
         for o in objs:
-            convert(o, mset, keep, glass=(g == "Roof"))
+            convert(o, mset, keep, glass=(g == "Roof"), floor=(g == "Base"))
         bpy.ops.object.select_all(action="DESELECT")
         for o in objs:
             o.select_set(True)

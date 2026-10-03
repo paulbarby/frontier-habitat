@@ -38,13 +38,34 @@ var masks := {}              # room id -> int mask
 var hb_masks := {}           # room id -> int mask of hidden headboards
 var ribs := {}               # link id -> [handles]
 var patches: Array = []      # wall_patch handles (close the hidden span beside a doorway)
+var room_patches := {}       # room id -> its patch handles (a room drawn from its far mesh hides them)
+var far_rooms := {}          # room id -> true: drawn from its far mesh (world_view._far_lod)
 ## Paul 2026-09-26: patch pieces that stand above the 1.40 m cut (upper patches, upper band,
 ## upper band caps), by room: hidden whole while that room's roof is open.
 var cut_patches := {}        # room id -> [handles]
 var _cut_shown := {}         # room id -> true while its tall patches are drawn
 const CUT_H := 1.42
 
+## A room drawn from its far mesh (ART-HAB `<id>_far.glb`, solid walls, beyond 80 m) does not draw its doorway kits
+## and wall patches: the far walls close the openings (overview: 120 kit surfaces, round 5).
+func set_room_far(rid: int, on: bool) -> void:
+	if on:
+		far_rooms[rid] = true
+	else:
+		far_rooms.erase(rid)
+	_apply_far(rid, on)
+
+func _apply_far(rid: int, on: bool) -> void:
+	var hs: Array = (room_patches.get(rid, []) as Array).duplicate()
+	for d in doors:
+		if int(d["room"]) == rid:
+			hs.append(int(d["h"]))
+	for h in hs:
+		if view.inst.handles.has(h):
+			view.inst.set_suppressed(h, on)
+
 func _flush_cut(rid: int, start: int) -> void:
+	room_patches[rid] = patches.slice(start, patches.size())
 	if not view.bmeta.has(rid):
 		return
 	var fy: float = (view.bmeta[rid]["xf"] as Transform3D).origin.y
@@ -160,6 +181,7 @@ func _clear() -> void:
 	for hh in patches:
 		inst.remove(hh)
 	patches = []
+	room_patches = {}
 	for rid in masks:
 		if view.bmeta.has(rid) and int(view.bmeta[rid]["h"]) != -1:
 			inst.set_group_custom(view.bmeta[rid]["h"], "Walls", Color(0, 0, 0, 0))
@@ -371,6 +393,9 @@ func _rebuild() -> void:
 	for rid in hb_masks:
 		var m2: int = hb_masks[rid]
 		inst.set_group_custom(view.bmeta[rid]["h"], "Tall", Color(float(m2 & 0xFFFF), float((m2 >> 16) & 0xFFFF), 0, 0))
+	# (rooms drawn from their far mesh keep their kits hidden across a rebuild)
+	for frid in far_rooms.keys():
+		_apply_far(int(frid), true)
 	var jn: int = int(stats.get("junctions", 0))
 	var jp: int = int(stats.get("junction_posts", 0))
 	stats = {"doors": doors.size(), "rooms_cut": masks.size(), "ribs": ribs.size(), "patches": patches.size(), "junctions": jn, "junction_posts": jp, "rebuilds": int(stats.get("rebuilds", 0)), "tall": tall_stats}

@@ -153,6 +153,9 @@ func refresh() -> void:
 	if not t.is_empty():
 		talk_with = int(t["b"]) if int(t["a"]) == agent_id else int(t["a"])
 		doing = "Talking with %s (%s)" % [hud.v5.agent_name(talk_with).get_slice(" ", 0), String(t.get("topic", "")).replace("_", " ")]
+	var oi: Dictionary = hud.v18.order_info(agent_id)
+	if bool(oi.get("has", false)):
+		doing = "Order: %s%s. %s" % [String(oi["name"]).to_lower(), (" " + String(oi["target"])) if String(oi["target"]) != "" else "", String(oi["text"])]
 	_doing.text = doing
 	_switch.disabled = talk_with < 0
 	# Partner and a known crush.

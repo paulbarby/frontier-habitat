@@ -314,3 +314,46 @@ task, with the colony default 3; (2) own 3 beats colony 2 for the same two tasks
 default changes; (4) after `clear`, the colony default decides again; (5) a colonist with own `food = 0` still eats
 and drinks (needs come first). Question: `jobs.score` returned 300 / 200 for priorities 3 / 2 in my test, not
 `100 * prio * PRIORITY_SCALE` as the file says. Is PRIORITY_SCALE 1 now, or is another function the one that picks?
+
+## 2026-10-04 - section 18: the data the UI reads and writes (PROPOSAL; the UI is built on it, with stubs until SIM's entry in SIM-to-UI.md)
+
+If you choose other names, write them in SIM-to-UI.md; the UI has one adapter (`ui/v18_data.gd`) and changes there only.
+Every list below is plain data (no Object), every command answers `{ok, code, text}`.
+
+**Orders (18.1, 18.2)**
+- `agent.order` gets the kinds `repair` (b), `maintain` (b), `build` (b or site), `haul` (res, to). New fields: `text` (what the colonist does now for it,
+  STE: "Fetching 1 spare part from Storehouse 2." / "Repairing Refinery 1."), `state` ("going" | "fetching" | "working" | "blocked"), `missing` (item id or ""), `by` (head id when a team order gave it, else -1).
+- Command `order` as now: `{agents:[ids], kind:"repair", b:<id>}`; `sim.orders.check(agent, payload)` answers as now.
+- Command `order_team` `{head: id, kind, b}` -> `{ok, code, text, assigned:[ids], head}`. `text` = "Chief Engineer Asha assigned Bram and Lin." Also a log event kind `team_order` (the dock shows it).
+- `sim.people.captain_of(dep, base)` is what the UI uses for the heads (department, base); say if the rank rule for heads is another one.
+
+**Work queue (18.3)**
+- `sim.work.departments()` -> Array of department keys (content people.departments). The window adds "All".
+- `sim.work.items(dept)` ("all" = every department) -> Array in queue order of `{id, dept, kind (build|repair|maintain|haul|produce|research|security|medical|order), b (structure id or -1), label, reason, prio (0..3), urgent (bool), assignee (agent id or -1), team ([agent ids]), head (agent id or -1), state (open|assigned|working|blocked), blocked (text or ""), waited (seconds)}`.
+- `sim.work.urgent_unassigned()` -> int (the dock count).
+- Commands: `work_move {id, to:"top"|"up"|"down"|"bottom"}` or `{id, before: other id}`; `work_assign {id, agent}` or `{id, head}`; `work_cancel {id}`.
+
+**Chains (18.4)**
+- `sim.chains.of(item)` -> `{item, name, ok (the colony can make it now), steps:[{kind ("resource"|"building"|"item"), id, name, state ("done"|"missing"|"unpowered"|"research"|"no_worker"), text (one STE line), def (building def id), research (tech id or ""), can_place (bool)}]}`, in order raw resource -> ... -> item.
+- `sim.chains.all()` -> Array of the same (the codex page "Production chains").
+- An alert issue made by a missing item carries `item` (item id). The UI shows "Show chain" on any issue that has `item`. (Today the UI also derives the item from the keys `materials:<res>` and `deadlock:<res>` and from a `broken` issue with block `no_spares`.)
+
+**Package transport (18.5)**
+- `sim.transport.network()` -> `{hubs:[{b, ok, items:{res:qty}}], tubes:[{b (corridor id), a (hub or room id), c (other end id), ok, load (0..1)}], flows:[{from (hub b), to (hub b), res, rate (items per minute)}], transit:[{id, res, qty, from, to, t (0..1)}], broken:[ids]}`.
+- `sim.transport.in_transit(b)` -> `[{res, qty, to, eta_s}]` for the inspector.
+- The upgrades are ordinary upgrades (`sim.upgrades`): ids `transport_hub` (storage habitat) and `transport_tube` (corridor).
+- Alert code `transport_broken` with `entities` = the broken link ids.
+
+## 2026-10-04 (later) - section 18: what the UI found with SIM's modules (sim.orders, sim.workq, sim.chains)
+The UI is built on them (`ui/v18_data.gd`, tests `tools/ui/test_work.gd`: repair orders, a team order to a captain, work queue moves, assign,
+cancel and release, the chain window, the codex page). Findings for SIM:
+1. `chains.chain_for("spare_parts")` on showcase_v5 (no Workshop): the first gap is the raw step "Derelict parts" (building "", status missing), so `text`
+   reads "Spare parts needed: build a ." (empty building name). Also `_pick` chose the `salvage` recipe (1 input, derelict parts) over `spares` (steel + polymer):
+   when the structure is missing, the recipe whose inputs the colony can make is the better answer. Please make `text` use the first gap that has a building,
+   and prefer a recipe whose inputs are available or makeable.
+2. `workq.cmd_move` only accepts a department key (not "all"); the UI sends the row's own `dept`. A drag in the Work window is a few "up"/"down" moves (one command each).
+   A `move_to {key, dept, index}` command would be one step; optional.
+3. The dashboard card Maintenance and the structure inspector now show `free / total` of the repair item and whether a free unit is reachable. The UI asks
+   `jobs.find_source(item, structure pos)` for "reachable". If you have a cheaper or truer answer (the unreachable pile list), name it.
+4. Package transport (18.5): not in SIM yet. The UI reads `sim.transport.network()` / `in_transit(b)` as in the 2026-10-04 entry above; `transport()` answers an empty
+   network until then, and the debug command `transport demo` fills a demo network for the overlay.

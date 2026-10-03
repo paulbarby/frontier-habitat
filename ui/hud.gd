@@ -67,6 +67,7 @@ var text_floor  # ui/text_floor.gd
 var advisor     # Advisor window (version 4, §6)
 var v4          # ui/v4_data.gd: orders, vehicles, reactors (SIM when live, else the mock)
 var v5          # ui/v5_data.gd: people, social, the Rag (SIM when live, else preview data)
+var v18         # ui/v18_data.gd: repair orders, the chain of command, work queues, production chains, package transport (V5 §18)
 var rag         # "The Regolith Rag" window (version 5, §4.3)
 var person      # personnel file window (version 5, §6.2)
 var follow_hud  # follow view card (version 5, §3)
@@ -75,6 +76,11 @@ var party_card    # parties now (version 5, §16): Events tab
 var request_card  # a person asks the player (leave with a ship; version 5, §4.2)
 var floor_sel   # floor selector of a multi-storey building (version 5, §7)
 var orders      # Orders window (version 4, §5)
+var work        # Work window: the queues of every department (version 5, §18.3)
+var assign      # Who? window: Repair now and Assign to... (version 5, §18.1)
+var work_card   # the dock card of the work queue
+var chain       # production chain window (version 5, §18.4)
+var transport_marks  # the package transport network on the map (version 5, §18.5)
 var reactor_win # Reactor controls window (version 4, §4.2)
 var reactor_banner
 var find_marks  # marks of one structure type on the map, set from Find
@@ -94,6 +100,7 @@ func _ready() -> void:
 	data = Data.new(main)
 	v4 = load("res://ui/v4_data.gd").new(self)
 	v5 = load("res://ui/v5_data.gd").new(self)
+	v18 = load("res://ui/v18_data.gd").new(self)
 	root = Control.new()
 	root.name = "UiRoot"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -118,6 +125,7 @@ func _ready() -> void:
 	sectors = _add(SectorOverlay.new())   # door sectors while placing rooms and corridors; under every panel
 	find_marks = _add(FindMarks.new())    # Find: marks of one type on the map; under every panel
 	poi_marks = _add(PoiMarks.new())      # points of interest tags; under every panel
+	transport_marks = _add(load("res://ui/hud/transport_marks.gd").new())   # package transport network; under every panel
 	minimap = _add(Minimap.new())
 	build_bar = _add(BuildBar.new())
 	hint = _add(PlaceHint.new())
@@ -132,6 +140,10 @@ func _ready() -> void:
 	find = _add(FindWindow.new())
 	advisor = _add(load("res://ui/hud/advisor_window.gd").new())
 	orders = _add(load("res://ui/hud/orders_window.gd").new())
+	assign = _add(load("res://ui/hud/assign_window.gd").new())
+	work = _add(load("res://ui/hud/work_window.gd").new())
+	work_card = _add(load("res://ui/hud/work_card.gd").new())
+	chain = _add(load("res://ui/hud/chain_window.gd").new())
 	reactor_win = _add(load("res://ui/hud/reactor_window.gd").new())
 	rag = _add(load("res://ui/hud/rag_window.gd").new())
 	person = _add(load("res://ui/hud/person_window.gd").new())
@@ -158,6 +170,9 @@ func _ready() -> void:
 	find.register_window(wm)
 	advisor.register_window(wm)
 	orders.register_window(wm)
+	assign.register_window(wm)
+	work.register_window(wm)
+	chain.register_window(wm)
 	reactor_win.register_window(wm)
 	rag.register_window(wm)
 	person.register_window(wm)
@@ -165,6 +180,7 @@ func _ready() -> void:
 	# Every module the game shows by itself goes into the panel manager's dock (docs/UI_PANELS.md §7).
 	panels.host("goals", goals, "Mission", "goals", func(): return String(goals._head.text))
 	panels.host("alerts", alerts, "Alerts", "sev_warning", func(): return String(alerts._summary.text))
+	panels.host("alerts", work_card, "Work", "queue", func(): return String(work_card._line.text))
 	panels.host("events", hazard_banner, "Countdown", "hazard", func(): return String(hazard_banner._title.text))
 	panels.host("events", reactor_banner, "Reactor", "reactor", func(): return String(reactor_banner._text.text))
 	panels.host("events", unrest_banner, "Unrest", "people", func(): return String(unrest_banner._text.text))
@@ -202,12 +218,16 @@ func _refresh(delta: float) -> void:
 		inspector.refresh()
 		find.refresh()
 		orders.refresh()
+		work.refresh()
+		assign.refresh()
+		chain.refresh()
 		hazard.refresh()
 		hazard_banner.refresh()
 		traffic.refresh()
 		if _beat % 2 == 0:
 			goals.refresh()
 			alerts.refresh()
+			work_card.refresh()
 		else:
 			nav.refresh()
 			build_bar.refresh()
@@ -310,6 +330,14 @@ func eggs_found() -> Dictionary:
 func toggle_rag() -> void:
 	rag.toggle()
 
+## The Work window (key M, or the nav rail).
+func toggle_work() -> void:
+	work.toggle()
+
+## The chain window for an item (the alert's Show chain button, the codex).
+func open_chain(item: String) -> void:
+	chain.open_item(item)
+
 func toggle_find() -> void:
 	find.toggle()
 
@@ -383,13 +411,19 @@ func toggle_screen(name: String) -> void:
 	else:
 		screens.open(name)
 
+## The overlay step of key O: the 3D view's overlays, then "transport" (the package transport network, drawn by the HUD).
 func cycle_overlay() -> void:
-	var i: int = (OVERLAYS.find(main.view.overlay) + 1) % OVERLAYS.size()
-	set_overlay(OVERLAYS[i])
+	var all: Array = OVERLAYS + ["transport"]
+	var cur: String = "transport" if transport_marks.on else String(main.view.overlay)
+	set_overlay(all[(all.find(cur) + 1) % all.size()])
 
 func set_overlay(name: String) -> void:
-	main.view.set_overlay(name)
+	transport_marks.set_on(name == "transport")
+	main.view.set_overlay("" if name == "transport" else name)
 	minimap.overlay_changed()
+
+func overlay_name() -> String:
+	return "transport" if transport_marks.on else String(main.view.overlay)
 
 func selection_changed() -> void:
 	if inspector != null:

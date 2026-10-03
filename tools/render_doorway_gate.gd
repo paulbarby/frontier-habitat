@@ -51,6 +51,9 @@ func _process(_d: float) -> bool:
 				si += 1
 				return false
 			main._import_bytes(FileAccess.get_file_as_bytes(SAVES[si]))
+			# (the follow view never draws far meshes (world_view._far_lod: follow_id < 0 only); the gate's camera
+			# is not a follow camera, so far copies with roofs came in from 80 m: 1,020 false beams, 2026-10-04)
+			main.view.far_lod_on = false
 			wait = 240
 			phase = 1
 		1:

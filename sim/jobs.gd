@@ -69,6 +69,7 @@ func tick_part(part: int) -> void:
 ## full = false: no item-source index (_src_index); part 2 never calls find_source, so it skips the biggest
 ## part of the rebuild (about a third of it).
 func _index(full: bool = true) -> void:
+	_free_cache = {}
 	_inbound = {}
 	_open_hauls = {}
 	_count = {}
@@ -206,7 +207,9 @@ func _fill(dst: int, wants: Dictionary, cat: String, bld: int, emergency: int, n
 	return missing
 
 ## Best place to fetch `res` from. Ground piles first, then machine outputs, then stores.
-func find_source(res: String, near: Vector2, skip_inv: int = -1) -> int:
+## scan: look at every inventory instead of the index of this second (the index is only whole between the
+## second's job parts; an order or an alert asks at any tick).
+func find_source(res: String, near: Vector2, skip_inv: int = -1, scan: bool = false) -> int:
 	var best := -1
 	var best_key := 1e18
 	var invs: Dictionary = sim.state["inventories"]
@@ -217,7 +220,13 @@ func find_source(res: String, near: Vector2, skip_inv: int = -1) -> int:
 	# kitchen's dishes were held for another base's dining room while its own people starved).
 	var here: int = sim.bases.base_at(near) if sim.bases.count() > 1 else -1
 	# Only inventories that held this item when the board was indexed this second.
-	for inv_id in _src_index.get(res, []):
+	var candidates: Array = _src_index.get(res, [])
+	if scan:
+		candidates = []
+		for iid in invs:
+			if int(invs[iid]["items"].get(res, 0)) > 0:
+				candidates.append(iid)
+	for inv_id in candidates:
 		if inv_id == skip_inv or not invs.has(inv_id):
 			continue
 		var inv: Dictionary = invs[inv_id]
@@ -805,15 +814,27 @@ func _gen_tend() -> void:
 func _gen_repair() -> void:
 	var blds: Dictionary = sim.state["buildings"]
 	var trigger: float = float(sim.bal["repair_trigger_health"])
+	var cand: Array = []
 	for id in blds:
-		var b: Dictionary = blds[id]
-		if b["kind"] == "special" or bool(b["demolish"]):
+		var b0: Dictionary = blds[id]
+		if b0["kind"] == "special" or bool(b0["demolish"]):
 			continue
-		if b["state"] != "active" and b["state"] != "broken":
+		if b0["state"] != "active" and b0["state"] != "broken":
 			continue
-		if float(b["health"]) >= trigger and b["state"] != "broken":
+		if float(b0["health"]) >= trigger and b0["state"] != "broken":
 			continue
 		if int(_count.get("repair:%d" % id, 0)) > 0:
+			continue
+		cand.append(id)
+	if cand.is_empty():
+		return
+	# V5 18.1 (diagnosis RC6): with fewer free parts than structures that need one, the parts go to the most
+	# urgent first (a broken life-support structure, a broken one, then the lowest health), not to the lowest id;
+	# one part stays for the maintenance of a machine that is at risk. With enough parts nothing changes.
+	var allowed: Dictionary = _allot_parts(cand)
+	for id in cand:
+		var b: Dictionary = blds[id]
+		if not allowed.is_empty() and not allowed.has(id):
 			continue
 		# A wear breakdown needs the item of its fault (V3): spare parts, electronics or polymer.
 		var item: String = sim.hazards.repair_item(b)
@@ -831,6 +852,249 @@ func _gen_repair() -> void:
 			sim.state["tasks"].erase(t["id"])
 		else:
 			t["hold_out"] = ho
+
+# ---------------------------------------------------------------- orders (V5 section 18.1)
+## The task that carries out a repair order on structure bid. what: "repair" | "maintain" | "patch" | "clean".
+## Returns {task} (an open task is taken, a task another colonist has only started to walk to is taken from them,
+## or a new one is made), {missing: item, qty, reason: "none" | "reserved" | "unreachable", where} (no part can
+## be had; a part that other repairs only hold is taken from the least urgent of them first), or {busy: true}.
+func order_task(bid: int, what: String, agent_id: int) -> Dictionary:
+	var tasks: Dictionary = sim.state["tasks"]
+	var b: Dictionary = sim.state["buildings"].get(bid, {})
+	if b.is_empty():
+		return {"busy": true}
+	for tid in tasks:
+		var t: Dictionary = tasks[tid]
+		if int(t["bld"]) != bid or t["kind"] != what:
+			continue
+		var owner: int = int(t["owner"])
+		if owner == -1 or owner == agent_id:
+			return {"task": t}
+		if bool(t["picked"]):
+			return {"busy": true}
+		# Another colonist has only started to walk to it: the order takes it (agents.begin_task).
+		return {"task": t}
+	var hz = sim.hazards
+	match what:
+		"clean":
+			return {"task": _new_task("clean", "repair", bid, {})}
+		"repair", "maintain", "patch":
+			var item: String
+			var qty := 1
+			var emergency := 0
+			if what == "repair":
+				item = hz.repair_item(b)
+				if b["state"] == "broken":
+					emergency = 8 if sim.bdef(b["def"]).get("category", "") == "life_support" else 3
+			elif what == "maintain":
+				item = hz.fault_item(String(hz.wear_of(bid)["fault"]))
+				emergency = 6
+			else:
+				var bc: Dictionary = sim.bal["hazards"]["breach"]
+				item = String(bc["item"])
+				emergency = 5
+				if find_source(item, b["pos"], -1, true) == -1 and part_stock(item)["free"] <= 0:
+					item = String(bc["alt_item"])
+					qty = int(bc["alt_qty"])
+			var src: int = find_source(item, b["pos"], -1, true)
+			# Every free unit is held by another repair: the order takes one from the least urgent of them.
+			if src == -1 or sim.inv.available(src, item) < qty:
+				if _take_reserved(item, qty):
+					src = find_source(item, b["pos"], -1, true)
+			if src == -1 or sim.inv.available(src, item) < qty:
+				var st: Dictionary = part_stock(item)
+				return {"missing": item, "qty": qty, "reason": _why_missing(st), "where": st["where"]}
+			var t2: Dictionary = _new_task(what, "repair", bid, {"role": "technician", "src": src, "res": item, "qty": qty, "emergency": emergency})
+			var ho: int = sim.inv.hold_out(src, item, qty, t2["id"])
+			if ho == -1:
+				tasks.erase(t2["id"])
+				return {"missing": item, "qty": qty, "reason": "reserved", "where": Vector2.ZERO}
+			t2["hold_out"] = ho
+			return {"task": t2}
+	return {"busy": true}
+
+## Why an item cannot be had: "elsewhere" (free stock exists, but at another base), "reserved" (other tasks hold it),
+## "unreachable" (nobody can walk to it) or "none" (the colony has none).
+func _why_missing(st: Dictionary) -> String:
+	if int(st["free"]) > 0:
+		return "elsewhere"
+	if int(st["reserved"]) > 0:
+		return "reserved"
+	if int(st["unreachable"]) > 0:
+		return "unreachable"
+	return "none"
+
+## What the colony has of an item, by where it is: {free (can be taken now), reserved (held by tasks), unreachable
+## (in a store or pile that nobody can walk to), where (position of the unreachable stock)}.
+func part_stock(item: String) -> Dictionary:
+	var free := 0
+	var reserved := 0
+	var unreach := 0
+	var where := Vector2.ZERO
+	for inv_id in sim.state["inventories"]:
+		var inv: Dictionary = sim.state["inventories"][inv_id]
+		var role: String = inv["role"]
+		if role != "pile" and role != "out" and role != "store":
+			continue
+		var n: int = int(inv["items"].get(item, 0))
+		if n <= 0:
+			continue
+		if _source_resting(int(inv_id)):
+			unreach += n
+			where = sim.inv.position_of(int(inv_id))
+			continue
+		var held: int = int(inv["held_out"].get(item, 0))
+		free += n - held
+		reserved += held
+	return {"free": free, "reserved": reserved, "unreachable": unreach, "where": where}
+
+## Releases the hold of one unowned repair task that holds `item` (the least urgent: lowest emergency, then the
+## highest structure id) and ends the task, so that an order can take the unit. Returns true when one was freed.
+func _take_reserved(item: String, qty: int) -> bool:
+	var best_tid := -1
+	var best_key := Vector2(1e9, 0.0)
+	for tid in sim.state["tasks"]:
+		var t: Dictionary = sim.state["tasks"][tid]
+		if t["kind"] != "repair" and t["kind"] != "maintain" and t["kind"] != "patch":
+			continue
+		if int(t["owner"]) != -1 or bool(t["picked"]) or int(t["hold_out"]) == -1 or String(t["res"]) != item or int(t["qty"]) < qty:
+			continue
+		var key := Vector2(float(t["emergency"]), -float(t["bld"]))
+		if key.x < best_key.x or (key.x == best_key.x and key.y < best_key.y):
+			best_key = key
+			best_tid = int(tid)
+	if best_tid == -1:
+		return false
+	fail(best_tid, "part_taken")
+	return true
+
+## The open task of any kind at structure bid that the colonist can work at (the best score first; no role gate:
+## an order decides, not the role).
+func best_task_at(bid: int, agent: Dictionary) -> Dictionary:
+	var best: Dictionary = {}
+	var best_s := -1e18
+	for tid in sim.state["tasks"]:
+		var t: Dictionary = sim.state["tasks"][tid]
+		if int(t["bld"]) != bid or int(t["owner"]) != -1 or t["state"] != "open":
+			continue
+		var s: float = 100.0 * float(int(sim.state["policies"]["priority"].get(t["cat"], 1))) + 50.0 * float(t["emergency"]) - float(t["id"]) * 0.000001
+		if s > best_s:
+			best_s = s
+			best = t
+	return best
+
+## Tasks (any state) at a structure: the order check asks if there is work.
+func tasks_at(bid: int) -> int:
+	var n := 0
+	for tid in sim.state["tasks"]:
+		if int(sim.state["tasks"][tid]["bld"]) == bid:
+			n += 1
+	return n
+
+## The inventory a haul order fills at structure b (the site of a plan, a machine's input, else its store).
+func order_inv(b: Dictionary) -> int:
+	if b["state"] == "blueprint" and int(b["inv_site"]) != -1:
+		return int(b["inv_site"])
+	if int(b["inv_in"]) != -1:
+		return int(b["inv_in"])
+	return int(b["inv_out"])
+
+## One trip of a haul order: carry up to `qty` of res to structure bid. Returns {task, qty}, {missing: res}
+## (no store has it) or {full: true} (the place has no room).
+func order_haul(res: String, qty: int, bid: int) -> Dictionary:
+	var b: Dictionary = sim.state["buildings"].get(bid, {})
+	if b.is_empty():
+		return {"full": true}
+	var dst: int = order_inv(b)
+	if dst == -1:
+		return {"full": true}
+	var src: int = find_source(res, b["pos"], dst, true)
+	if src == -1:
+		return {"missing": res, "reason": _why_missing(part_stock(res))}
+	var q: int = mini(int(sim.bal["carry_human"]), mini(qty, sim.inv.available(src, res)))
+	q = mini(q, sim.inv.free_space(dst))
+	if q <= 0:
+		return {"full": true}
+	if not _make_haul("logistics", src, dst, res, q, bid, 0):
+		return {"full": true}
+	var last: Dictionary = {}
+	for tid in sim.state["tasks"]:
+		last = sim.state["tasks"][tid]
+	return {"task": last, "qty": q}
+
+## The open task of kind `kind` at structure bid with the lowest id (a build order takes site work).
+func open_task_at(bid: int, kind: String) -> Dictionary:
+	for tid in sim.state["tasks"]:
+		var t: Dictionary = sim.state["tasks"][tid]
+		if int(t["bld"]) == bid and t["kind"] == kind and int(t["owner"]) == -1 and t["state"] == "open":
+			t["retry"] = 0
+			return t
+	return {}
+
+## Free units of an item, counted once for each pass of the board (the index resets it).
+var _free_cache := {}
+func free_parts(item: String) -> int:
+	if not _free_cache.has(item):
+		_free_cache[item] = int(part_stock(item)["free"])
+	return int(_free_cache[item])
+
+## The structures that get a part now ({id: true}), or {} when there are enough parts for all of them.
+func _allot_parts(cand: Array) -> Dictionary:
+	if cand.size() < 2:
+		return {}
+	var blds: Dictionary = sim.state["buildings"]
+	var by_item := {}
+	for id in cand:
+		var item: String = sim.hazards.repair_item(blds[id])
+		if not by_item.has(item):
+			by_item[item] = []
+		by_item[item].append(id)
+	var limited := false
+	var allowed := {}
+	var items: Array = by_item.keys()
+	items.sort()
+	for item in items:
+		var ids: Array = by_item[item]
+		var free: int = free_parts(item)
+		if ids.size() <= free:
+			for id in ids:
+				allowed[id] = true
+			continue
+		limited = true
+		ids.sort_custom(func(x, y):
+			var kx: Array = _repair_rank(blds[x])
+			var ky: Array = _repair_rank(blds[y])
+			if kx[0] != ky[0]:
+				return kx[0] > ky[0]
+			if kx[1] != ky[1]:
+				return kx[1] < ky[1]
+			return int(x) < int(y))
+		var keep: int = 1 if _machine_at_risk() else 0
+		var n: int = free
+		for id in ids:
+			if n <= 0:
+				break
+			if blds[id]["state"] != "broken" and n <= keep:
+				continue
+			allowed[id] = true
+			n -= 1
+	return allowed if limited else {}
+
+## [urgency, health] of a structure that needs a repair (higher urgency first, then the lowest health).
+func _repair_rank(b: Dictionary) -> Array:
+	var u := 0
+	if b["state"] == "broken":
+		u = 2 if sim.bdef(b["def"]).get("category", "") == "life_support" else 1
+	return [u, float(b["health"])]
+
+## True when a machine wants maintenance and no maintenance task serves it yet.
+func _machine_at_risk() -> bool:
+	var wear: Dictionary = sim.hazards.hs()["wear"]
+	for id in wear:
+		var mb: Dictionary = sim.state["buildings"].get(id, {})
+		if not mb.is_empty() and int(_count.get("maintain:%d" % id, 0)) == 0 and sim.hazards.wants_maintenance(mb):
+			return true
+	return false
 
 ## V3.1 trade: goods the player sold are carried to the ship's hold on the pad.
 func _gen_trade() -> void:
@@ -1218,4 +1482,7 @@ func score(t: Dictionary, agent: Dictionary) -> float:
 	var s: float = 100.0 * prio + 50.0 * int(t["emergency"]) + 0.1 * waiting - 2.0 * travel
 	if t["role"] != "" and t["role"] == agent["role"]:
 		s += float(sim.bal.get("specialist_bonus", 30.0))
+	# V5 section 18.3: the order of the department queue (pins and holds the player set).
+	if sim.workq.busy or sim.workq._dirty:
+		s = sim.workq.adjust(t, s, 100.0 * prio + 50.0 * int(t["emergency"]))
 	return s

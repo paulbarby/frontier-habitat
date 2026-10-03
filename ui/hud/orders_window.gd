@@ -28,6 +28,8 @@ var _list: VBoxContainer
 var _msg: Label
 var _force: Button
 var _board: OptionButton
+var _haul_item: OptionButton
+var _haul_qty: SpinBox
 var _body: VBoxContainer
 var _na: Label
 var _sig := ""
@@ -89,12 +91,30 @@ func _ready() -> void:
 			["stay_at", "Stay at…", "target", "Stay at\nClick a place. They walk there and stay until the order is cleared."],
 			["stay", "Stay here", "pause", "Stay here\nThey stop and stay where they are (thirst, hunger and exhaustion still come first)."],
 			["survey", "Survey…", "search", "Survey\nClick a point of interest (a cave, a wreck…) or a hazard site. They go there. Some points need somebody on foot or a scientist."],
-			["work_at", "Work at…", "build", "Work at\nClick a structure. They take only its tasks (any role) until the order is cleared."],
+			["work_at", "Work at…", "build", "Work at\nClick a structure. They take its tasks (any role) until none is left there. Then the order ends."],
+			["repair", "Repair…", "wrench", "Repair\nClick a structure. They stop what they do, bring a spare part and repair it. It works from health 99 down. The colony repairs by itself only below health 70."],
+			["maintain", "Keep in repair…", "wrench", "Keep in repair\nClick a machine. A standing order: they come back to it each time it wears. Cancel the order to end it."],
+			["build", "Help build…", "build", "Help build\nClick a planned structure or a site. They carry its materials and build it."],
+			["haul", "Haul…", "cat_logistics", "Haul\nChoose the item and the amount below, then click the structure that gets it. They fetch it from the nearest store."],
 			["return", "Return to base", "home", "Return to base\nThey walk to the core of their home base."]]:
 		var kind: String = spec[0]
 		var b: Button = Kit.button(String(spec[1]), func(): _give(kind), String(spec[3]), "", String(spec[2]), 15)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		g.add_child(b)
+	var hr: HBoxContainer = Kit.hbox(8)   # Haul: the item and the amount
+	_body.add_child(hr)
+	_haul_item = OptionButton.new()
+	_haul_item.tooltip_text = "Item\nThe item to carry. Only items that are in a store are listed."
+	_haul_item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_haul_item.clip_text = true
+	hr.add_child(_haul_item)
+	_haul_qty = SpinBox.new()
+	_haul_qty.min_value = 1
+	_haul_qty.max_value = 99
+	_haul_qty.value = 2
+	_haul_qty.tooltip_text = "Amount\nHow many units to carry."
+	_haul_qty.get_line_edit().tooltip_text = _haul_qty.tooltip_text
+	hr.add_child(_haul_qty)
 	var br: HBoxContainer = Kit.hbox(8)
 	_body.add_child(br)
 	_board = OptionButton.new()
@@ -156,6 +176,18 @@ func refresh(force: bool = false) -> void:
 		_list.add_child(_row(int(aid)))
 	if group.is_empty():
 		_list.add_child(Kit.wrap("Select a colonist, then Add. Or use Orders in the colonist's panel.", 13, P.TEXT_2))
+	var keep_item: String = String(_haul_item.get_item_metadata(_haul_item.selected)) if _haul_item.selected >= 0 else ""
+	_haul_item.clear()
+	var tot: Dictionary = hud.main.sim.inv.totals()
+	var names: Array = tot.keys()
+	names.sort_custom(func(x, y): return hud.data.item_name(String(x)) < hud.data.item_name(String(y)))
+	for it in names:
+		var free: int = int(tot[it].get("total", 0)) - int(tot[it].get("reserved", 0)) - int(tot[it].get("carried", 0))
+		if free > 0 and String(hud.data.item_cat(String(it))) != "dish":
+			_haul_item.add_item("%s (%d)" % [hud.data.item_name(String(it)), free])
+			_haul_item.set_item_metadata(_haul_item.item_count - 1, String(it))
+			if String(it) == keep_item:
+				_haul_item.select(_haul_item.item_count - 1)
 	_board.clear()
 	for vv in hud.v4.vehicles():
 		if String(vv["kind"]) != "satellite":
@@ -180,8 +212,13 @@ func _row(aid: int) -> Control:
 		line = "Refused: %s %s" % [String(V4.ORDER_NAME.get(o["kind"], o["kind"])).to_lower(), hud.v4.refusal_text(String(o.get("reason", "")))]
 		col = P.AMBER
 	else:
-		line = "Order: " + String(V4.ORDER_NAME.get(o["kind"], o["kind"])).to_lower() + ("" if String(o.get("status", "")) == "active" else " (" + String(o.get("status", "")) + ")") + (" (risk accepted)" if bool(o.get("confirm", false)) else "")
-		col = P.CYAN
+		var oi: Dictionary = hud.v18.order_info(aid)
+		line = "Order: %s%s" % [String(oi.get("name", V4.ORDER_NAME.get(o["kind"], o["kind"]))).to_lower(), (" " + String(oi["target"])) if String(oi.get("target", "")) != "" else ""]
+		if String(oi.get("text", "")) != "":
+			line += ". " + String(oi["text"])
+		if bool(o.get("confirm", false)):
+			line += " (risk accepted)"
+		col = P.AMBER if String(oi.get("blocked", "")) != "" else P.CYAN
 	var l: Label = Kit.wrap(line, 12, col)
 	l.custom_minimum_size.x = 260
 	tv.add_child(l)
@@ -213,12 +250,29 @@ func _give(kind: String) -> void:
 					hud.toast("Survey: no point of interest or hazard site there.", "warn")
 					return
 				_send(kind, ids, site))
-		"work_at":
-			hud.main.pick_point("Work at: click a structure. Right click cancels.", func(_p: Vector2, pick: Dictionary):
-				if String(pick.get("kind", "")) != "building":
-					hud.toast("Work at: that is not a structure.", "warn")
+		"work_at", "repair", "maintain", "build":
+			var verb: String = String(V4.ORDER_NAME.get(kind, kind))
+			hud.main.pick_point("%s: click a structure. Right click cancels." % verb, func(_p: Vector2, pick: Dictionary):
+				# The structure under the click, also when a colonist stands on it (main.structure_at).
+				var sid: int = int(pick.get("struct", -1))
+				if sid < 0 and String(pick.get("kind", "")) == "building":
+					sid = int(pick["id"])
+				if sid < 0:
+					hud.toast("%s: that is not a structure." % verb, "warn")
 					return
-				_send(kind, ids, int(pick["id"])))
+				_send(kind, ids, sid))
+		"haul":
+			if _haul_item.selected < 0:
+				_msg.text = "No item to carry: no store holds anything."
+				return
+			var res: String = String(_haul_item.get_item_metadata(_haul_item.selected))
+			var qty: int = int(_haul_qty.value)
+			hud.main.pick_point("Haul %d %s: click the structure that gets it. Right click cancels." % [qty, hud.data.item_name(res).to_lower()], func(_p: Vector2, pick: Dictionary):
+				var sid: int = int(pick.get("struct", -1))
+				if sid < 0:
+					hud.toast("Haul: that is not a structure.", "warn")
+					return
+				_send(kind, ids, {"b": sid, "res": res, "qty": qty}))
 		"board":
 			if _board.selected < 0:
 				_msg.text = "No vehicle to board."

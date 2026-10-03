@@ -70,6 +70,7 @@ func _ready() -> void:
 	_seam()
 	_add("advisor", "advisor", "Advisor\nWhat to do next: the biggest problems, the next goal steps, unused potential. Key N.", func(): hud.toggle_advisor())
 	_add("rag", "newspaper", "The Regolith Rag\nThe colony's tabloid: who is in love, who is feuding, and the serious news. A new issue every dawn. Key J.", func(): hud.toggle_rag())
+	_add("work", "queue", "Work\nThe open work of every department, in queue order: change the order, assign, cancel. A number marks urgent items nobody has. Key M.", func(): hud.toggle_work())
 	_add("find", "search", "Find\nType a name or a type: the list shows every match; click one to go there. Key /.", func(): hud.toggle_find())
 	_add("overlay", "overlay", "Overlay\nShows the power, water, air or walking network. Key O. Right click turns it off.", func(): hud.cycle_overlay())
 	(_buttons["overlay"] as Button).gui_input.connect(func(ev):
@@ -145,7 +146,7 @@ func rebuild() -> void:
 func refresh() -> void:
 	var open: String = hud.screen_name()
 	for n in _buttons:
-		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.main.view.overlay != "") or (n == "roofs" and bool(load("res://ui/settings.gd").get_value("roofs_off"))) or (n == "dock" and hud.panels != null and hud.panels.dock_open) or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible) or (n == "rag" and hud.rag != null and hud.rag.visible))
+		(_buttons[n] as Button).set_pressed_no_signal(n == open or (n == "overlay" and hud.overlay_name() != "") or (n == "roofs" and bool(load("res://ui/settings.gd").get_value("roofs_off"))) or (n == "dock" and hud.panels != null and hud.panels.dock_open) or (n == "find" and hud.find != null and hud.find.visible) or (n == "advisor" and hud.advisor != null and hud.advisor.visible) or (n == "rag" and hud.rag != null and hud.rag.visible) or (n == "work" and hud.work != null and hud.work.visible))
 	var d = hud.data
 	# Research: an idle lab (no active project while research exists).
 	var r: Dictionary = d.research()
@@ -153,12 +154,15 @@ func refresh() -> void:
 	# Awards: medals earned since the gallery was last opened.
 	var new_awards: int = hud.watchers.unseen_awards() if hud.watchers.has_method("unseen_awards") else 0
 	_badge("awards", new_awards > 0, str(new_awards), P.GOLD)
+	# Work: urgent items that nobody has (V5 §18.3).
+	var wu: int = int(hud.work_card.urgent) if hud.work_card != null else 0
+	_badge("work", wu > 0, str(wu), P.RED)
 	var rb: Button = _buttons["roofs"]
 	rb.disabled = hud.main.in_follow()
 	rb.tooltip_text = ("Roofs off: %s
 See into every building: every roof and upper wall goes. Key Y." % ("on" if rb.button_pressed else "off")) if not rb.disabled else "Roofs off
 Not in the over-the-shoulder view: the roofs stay on there."
-	var ov: String = hud.main.view.overlay
+	var ov: String = hud.overlay_name()
 	(_buttons["overlay"] as Button).tooltip_text = "Overlay: %s\nShows the power, water, air or walking network. Key O. Right click turns it off." % ("off" if ov == "" else ov)
 
 func _badge(name: String, on: bool, text: String, col: Color) -> void:

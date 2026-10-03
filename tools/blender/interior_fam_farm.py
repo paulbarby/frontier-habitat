@@ -306,6 +306,31 @@ def aisle_end(plan, x, y, j, cold):
     PR.USED["aisle_sign"] = PR.USED.get("aisle_sign", 0) + 1
 
 
+HUB_PAD = (0.95, 0.62)        # half sizes of the Transport hub pad (the sorter is 1.70 x 1.00 m with its in-feed tray)
+HUB_BAY = 1.0                 # free floor between the pad's front (+X, the in-feed tray) and the shortened rack
+
+
+def hub_pad(plan, x, y, cold):
+    """V5_DESIGN 18.5: the reserved pad for the Transport hub sorter (interior_transport.build_hub): a low marked plinth,
+    Anchor_Hub at its centre on the room ground, local +X = the sorter's front (towards +X, along the aisle)."""
+    import interior_props as PR
+    n = plan.n
+    hx, hy = HUB_PAD
+    bbox(n, x - hx, x + hx, y - hy, y + hy, F, F + 0.03, "HullDark", mats={"-z": None})
+    for sy in (-1, 1):
+        bbox(n, x - hx, x + hx, y + sy * (hy - 0.04) - 0.04, y + sy * (hy - 0.04) + 0.04, F + 0.03, F + 0.034, "Hazard",
+             mats={"-z": None})
+    for sx in (-1, 1):
+        bbox(n, x + sx * (hx - 0.04) - 0.04, x + sx * (hx - 0.04) + 0.04, y - hy, y + hy, F + 0.03, F + 0.034, "Hazard",
+             mats={"-z": None})
+    with n.at(T(0.0, 0.0, 0.030)):                     # on the plinth top
+        PR.floor_text(n, "HUB PAD", x - 0.10, y, 90.0, 0.16, "L3Band" if cold else "Hazard")
+        PR.floor_text(n, "(SOON)", x + 0.25, y, 90.0, 0.08, "Hull")
+    plan.rect(x, y, hx, hy, 0.0, tag="hubpad")
+    plan.rm.anchor("Hub", (x, y, 0.0), 0.0)
+    PR.USED["hub_pad"] = PR.USED.get("hub_pad", 0) + 1
+
+
 def racks_room(rm, cold=False):
     import rooms_habitat as RH
     s = rm.size
@@ -319,14 +344,23 @@ def racks_room(rm, cold=False):
     pitch = 2.7
     nrows = max(1, int((2 * rmax - 1.6) // pitch))
     ys = [(j - (nrows - 1) / 2) * pitch for j in range(nrows)]
+    lens = [min(6.8, 2 * chord_x(plan, abs(y) + 0.55, 0.1) - 1.4) for y in ys]
+    j_hub = max(range(nrows), key=lambda j_: (lens[j_], -abs(ys[j_])))
     for j, y in enumerate(ys):
-        L = min(6.8, 2 * chord_x(plan, abs(y) + 0.55, 0.1) - 1.4)
+        L = lens[j]
+        xc = 0.3
+        if j == j_hub:
+            # 2026-10-04 (V5_DESIGN 18.5): the Transport hub pad at the -X end of the longest row; the rack is shorter
+            x0 = xc - L / 2
+            hub_pad(plan, x0 + HUB_PAD[0], y, cold)
+            L -= 2 * HUB_PAD[0] + HUB_BAY
+            xc = x0 + 2 * HUB_PAD[0] + HUB_BAY + L / 2
         if L < 1.4:
             continue
-        pallet_rack(plan, 0.3, y, L, h=h, cold=cold, seed=j + 10 * s)
-        aisle_end(plan, 0.3 + L / 2 + 0.32, y, j, cold)               # critic 41: an aisle-end sign and number
+        pallet_rack(plan, xc, y, L, h=h, cold=cold, seed=j + 10 * s)
+        aisle_end(plan, xc + L / 2 + 0.32, y, j, cold)               # critic 41: an aisle-end sign and number
         for sy in (-1, 1):
-            FU.floor_line(n, 0.3 - L / 2, y + sy * 0.70, 0.3 + L / 2, y + sy * 0.70, w=0.06,
+            FU.floor_line(n, xc - L / 2, y + sy * 0.70, xc + L / 2, y + sy * 0.70, w=0.06,
                           mat="L3Band" if cold else "Hazard")
     gaps = [y + pitch / 2 for y in ys[:-1]] or [ys[0] - 1.4]
     if cold:

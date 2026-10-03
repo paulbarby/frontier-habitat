@@ -930,3 +930,42 @@ Everything in the stub note above works with real data. Details the UI needs:
 
 - **`jobs.score`:** `PRIORITY_SCALE` does not exist in the final code. For one hour of the work I tried a strict order (priority first, then waiting and distance) with a scale of 100000; with it the campaign colony starved (46 deaths), because the colony default for logistics is 1 and its hauls never ran. I removed it. `sim.jobs.score(task, agent)` is `100 * prio + 50 * emergency + 0.1 * seconds_waited - 2 * travel_seconds (+ role bonus)`; 3 / 2 / 1 give 300 / 200 / 100 plus the same small terms, and 0 gives -1e9. Test: `v5_job_priorities` (42 checks), see the entry above. If you read the file again, read it fresh.
 - **Names:** `next_name` gives "First Last" from a pool of 192 first and 174 last names (content/names.json); no number is ever added, every full name in a colony is its own, a child takes a parent's last name (`families.spawn_child`). A save with numbered names ("Asha Verrin 2") is renamed when it loads (only the numbered ones; ids, relations and Rag links stay; the old name in the log, the social log and the Rag issues is replaced). showcase_v5.fhsave was built again (134 people, no duplicates, 8 children with a parent's last name). Screenshots made before this change show the old names.
+
+## 2026-10-04 - section 18: orders, chain of command, work queues, missing items (API; tests: tests/cases_v5_orders.gd)
+
+**Orders (18.1).** Command `order {agents, kind, ...}`. New kinds: `repair {b}`, `maintain {b}` (a standing order), `build {b}`,
+`haul {res, qty, b}`, `task {tid}` (the Work window's Assign); `work_at {b}` now makes the colonist do the open work at that
+structure and ends when there is none (refused with `no_work` when there is none). Result: `{ok, code, text, accepted [ids], refused {id: {code, text}}}`;
+new codes: `no_work`, `not_site`, `no_item`, `no_task`, `no_one`. Pass `direct: true` to give the order to one colonist even when that
+colonist is a head of a department (otherwise a work order to a head is a team order, below).
+- An order interrupts every plan (party, sleep, leisure, talk, work, idle) as soon as it has work to start; only an imminent need
+  (suit air, a drink or a meal under way, exhaustion at critical, health under 30) comes first, and the order resumes after it.
+- `agent.order` = `{kind, b?, res?, left?, text, blocked ("" | "no_item" | "busy" | "full" | "wait" | a way code), missing {item, qty, reason}, tid, team?, standing?}`.
+  `order.text` is the line for the person window ("Repairing Solar Array 3", "Waiting for spare parts to repair X (order)", "The spare parts for X lies where nobody can reach it (order)").
+  A **blocked** order does not hold the colonist: the colonist works as usual and the order is looked at again every 5 s.
+  `missing.reason`: `none` (the colony has none: the alert asks for a chain), `reserved` (other repairs hold it: the order takes one at once, you never see this
+  as blocked), `unreachable` (the stock cannot be walked to: alert `unreach:<item>`), `elsewhere` (free stock at another base).
+- `order_clear {agents}` also ends the colonist's standing orders and stops the work the order started.
+- Command `maintain {id}` ("Maintain now") is now a real order: it returns `{ok, code, order: <the order result of the maintenance department's team order>}` and accepts a
+  broken machine (as a repair order). `hazards.at_risk()` is unchanged (active machines only); show a broken machine with the structure state.
+- Parts: when fewer parts are free than structures need one, the automatic repairs go to the most urgent first (broken life support, broken, lowest health), one part stays for maintenance.
+
+**Chain of command (18.2).** `order` with one agent who is a head (`sim.workq.is_head(agent)`: Base Commander or Captain; `people.rank`) and a work kind
+(`repair`, `maintain`, `build`, `haul`, `work_at`) is a TEAM order: the result has `team` (id), `head`, `assigned [ids]`, `report` ("Captain of Maintenance Oren assigned Rosa and Ayaan to repair Solar Array 10.")
+and the log has `team_order` and, when the last member is done, `team_done`. `count` (default 2) sets how many people. The best free people of the department are chosen by engineering skill and distance;
+the head works too only when nobody else is free or the department has fewer than two people. Reassign with `workq_assign {key: "team:<id>", agents}`.
+
+**Work queues (18.3).** Read: `sim.workq.rows(dept)` (dept "" = all; one of `maintenance`, `industry`, `food`, `science`, `logistics`, `security`) =
+`[{key, id (task id or -1), kind, type (build|repair|maintain|haul|produce|research), dept, b, text, prio, emergency, assignee, assignee_name, waiting_s, state ("open"|"assigned"|"working"|"held"|"blocked"|"team"|"standing"), reason, urgent, team, pinned, low, res}]`
+in the order the job choice follows. `sim.workq.summary()` = `{urgent (count of urgent rows nobody has, for the dock), by_dept {dept: n}, teams, standing, reports [{tick, text}]}`.
+Commands: `workq_move {key, dept, how: "top"|"up"|"down"|"bottom"}`, `workq_assign {tid or key, agents}` (a task order; `key` "repair:<bid>" for a worn structure with no task yet makes a repair order),
+`workq_cancel {key}` (a task is held for 10 minutes; a team or standing order ends), `workq_release {key}`.
+Orders and team orders are rows too (`state` "team" / "standing"). A worn or broken structure that waits for a part is a row (`state "blocked"`, `reason "no spare parts in store"`).
+Job choice follows the queue (pinned rows first, in your order) after orders and critical needs; the Priorities tab still decides which kinds of work a colonist serves (priority steps are 100 points).
+
+**Missing items and chains (18.4).** `sim.chains.chain_for(item)` = `{item, name, ok, steps [{item, item_name, kind, recipe, building, building_name, status ("done"|"missing"|"building"|"broken"|"unpowered"|"no_worker"|"needs_research"), tech, tech_name, inputs [ids], text, place (bool: can be placed now), count}], gaps [steps], text}`
+(steps in the order of work: raw first). `sim.chains.all_chains()` = a chain for every item the colony can make (codex page "Production chains"). Alerts: `chain:<item>` (code `chain`, severity 1; fields `chain`, `item`, `qty`, `place` = the def id to place or "") when a needed item has a gap in its chain;
+the `materials:<item>` alerts now carry `chain` too; `unreach:<item>` (code `unreachable_stock`; field `where`) when the only stock cannot be reached. Show chain = draw `chain.steps`; Place = `place_building {def: alert.place}`.
+Sources of "needed": a site or an upgrade waiting for materials, a broken structure with no part, a worn structure (health under 70) with no part, a machine with no input, an order that cannot get an item.
+
+**Package transport (18.5):** stub, see the next entry.

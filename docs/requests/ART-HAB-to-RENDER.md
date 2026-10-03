@@ -1,5 +1,54 @@
 # ART-HAB → RENDER
 
+## 2026-10-04 (later) — critic r42 PE-01 (far rooms half as bright): cause found on my side, far files rebuilt
+
+Cause, checked in Godot with `tools/arthab_farcheck.gd` (loads near and far through `Models._template_from_file`):
+the near floors are `Floor` / `FloorDark` (your INTERIOR_ONLY), so they get `interior.gdshader` and its fill light; in
+the far file I had baked them into `Palette` in `Base`, which stays a StandardMaterial3D without the fill. Also the
+far materials came out as `Palette.001` / `LightStrip.001` (Blender name clash).
+
+Fix (all 159 far files rebuilt): far `Base` floors keep the material NAME `Floor` (white base colour, the colour in
+COLOR_0 like the palette), so your INTERIOR_ONLY rule gives them the interior shader as on the near model; every far
+material now has its exact contract name (`Palette`, `Floor`, `LightStrip`, `Window`, ...). The probe now shows the
+far Base floor surfaces on the same shader path as the near ones. Cost: +1 draw call per far building.
+
+| 159 files | near | far before | far now |
+|---|---|---|---|
+| roof off (Base + Interior) draw calls | 3,649 | 636 | 795 |
+| roof on (Base + Roof) draw calls | 4,009 | 672 | 831 |
+
+pck 186.22 MB. Import done, `check` 347 scripts 0 failed, nav bake 160 grids / 162 occluder grids. Please re-measure
+the far / near floor luminance in your gate (critic target: far mean within 10 % of near). The cross-fade over 0.5 s
+in PE-01 is yours.
+
+## 2026-10-04 — package transport models (V5_DESIGN 18.5): sizes and placement; and the far window glow
+
+Built by `tools/blender/interior_transport.py` (contract in its header). Capsules are yours. Heights are over the room
+ground (room floor top 0.14 m) unless the piece is in the corridor frame. Please confirm or tell me what to change.
+
+| file | placed | objects / groups | key numbers |
+|---|---|---|---|
+| `transport_tube.glb` | like `corridor.glb`: 1 m on X, scaled on X, the corridor's transform (5 cm up) | `Roof` (hides in the cutaway with the corridor roof) | clear tube under the glass ridge: centre y 0, z 2.255 in the corridor frame (2.305 over the ground); outer r 0.09, inside r 0.078 (capsule r <= 0.065); a lit strip under it |
+| `transport_bracket.glb` | not scaled, one with every `corridor_rib` (1.25 m from the start, every 2.5 m) | `Roof` | coupling sleeve + hanger to the ridge, green lamp |
+| `transport_junction.glb` | junction centre, scaled with the junction | `Roof` | manifold on the totem, z 2.14-2.47, r 0.30; socket band at z 2.305. Draw a `transport_tube` (scaled on X) from each mouth (Rw) to r 0.31 along the mouth direction |
+| `transport_port.glb` | at each doorway of a room with a hub, with the doorway's transform | `PortTop`: please hide it in the cutaway like `FrameTop` | room side over the housing: x -0.47..-0.21, y +-0.34, z 2.60-2.90 (door top 2.24 + 0.25 m: the doorway gate rule holds); `Anchor_Port` (-0.48, 0, 2.73), facing into the room |
+| `transport_hub_{s,m,l,xl}.glb` | at `Anchor_Hub` of `storehouse_*` / `cold_storage_*` (origin = room ground, +X = front) | `Interior` (drawn in the cutaway like furniture) | footprint x -0.70..1.00 (in-feed tray), y +-0.50; machine 1.80 m, two clear risers to the deck; `Anchor_HubIn` (0.85, 0, 0.95) |
+
+- The corridor tube plugs into the doorway collar and header at a room end (tube bottom 2.215 m over the ground, the
+  collar's inside top is 2.20 m, the opening top 2.24 m) and goes through your junction upper patch at a junction mouth.
+  Inside the room the network is abstract: the tube enters the wall above the door and comes out at the port; the hub's
+  risers go into the deck. No tube crosses a door opening or a walking aisle.
+- Storage rooms rebuilt: a marked hub pad (1.90 x 1.24 m, 3 cm plinth, "HUB PAD (SOON)") at the -X end of the longest
+  rack row with 1.0 m free in front of it, `Anchor_Hub` at its centre; decks now 2.90 / 2.90 / 3.10 / 3.30 m for both
+  storehouse and cold storage (S was 2.7 / 2.5), so the hub risers and the port fit. Nav grids rebaked.
+- Renders: `art/interiors/transport/` (storehouse_m and cold_storage_s cutaway, hub views, the port from the room,
+  the tube from the corridor; the junction with three tubes; flag `--transport` in `interior_render.py`).
+- Sizes in the pck: 102 KB for the 8 transport files. pck 186.18 MB.
+- **Far window glow (your 2026-10-03 note):** fixed. The glow a far object keeps is now the one with the largest
+  AREA (habitat roofs keep `Window`, not the thin `Neon` strips), and a glow folds only into one of near the same
+  brightness and colour; any other becomes plain Palette (its colour baked). Draw calls unchanged (roof off 636, roof
+  on 672 over 159 files). All 159 far files rebuilt.
+
 ## 2026-10-03 (late) — far files now carry every group (Roof, L2..L5): roof-on view ready
 
 `assets/models/<id>_far.glb`, 159 files, rebuilt with `rooms_far.py --groups all`. Every file has a `Roof` object.

@@ -64,6 +64,12 @@ var sh_pitch := 0.0           # rad, tilt from the drag (SH_PMIN near the floor 
 var sh_look_yaw := 0.0        # rad, free-look: the aim only (middle drag)
 var sh_look_pitch := 0.0
 var ceil_fn: Callable         # (feet, eye) -> ceiling y over the eye, INF outdoors (world_view.follow_ceiling)
+var door_fn: Callable         # (p) -> horizontal distance to the nearest doorway point, INF none (world_view.follow_door_d)
+var door_side := 0.0          # the shoulder offset at a doorway (x SH_SIDE); 1 = off (measurement: 0.2 -> 133 bad probe frames, 0 -> 119, none -> 160)
+var door_r0 := 1.5            # m from a doorway point: the offset is door_side inside this, full beyond door_r1
+var door_r1 := 3.0
+var _sh_door_k := 1.0
+var _sh_door_kv := 0.0
 var _sh_o := 0.0
 var _sh_ov := 0.0
 var _sh_pt := 0.0
@@ -128,6 +134,7 @@ const SH_W_FINAL := 14.0        # rad/s
 var occ_on := 1.0             # measurement switch (render_follow_headless rig.occ_on=0)
 var solid_fn: Callable         # (p) -> true inside a solid cell at eye height (world_view.follow_solid)
 var arm_fn: Callable           # (a, b, r) -> clear length from a toward b for a sphere of radius r (world_view.follow_arm)
+var push_rate_p := 1.0         # the indoor wall push spring is SH_W_SMOOTH x rate_k^p at 2x-4x (measurement switch)
 var final_rate_p := 2.0        # the final offset spring is SH_W_FINAL / rate_k^p at 2x-4x (measurement switch)
 var indoor_side := 1.0         # the shoulder offset indoors (x SH_SIDE); measurement switch (0.6 and 0.3 tried 2026-10-03: no fewer wall frames, more head jitter)
 var _sh_side_k := 1.0
@@ -429,7 +436,17 @@ func _shoulder_process2(delta: float) -> bool:
 	# space faced the side wall in 4-6 of 30 shots, 2026-10-03)
 	var ind_t: float = indoor_side if ((s as Array).size() > 3 and bool(s[3])) else 1.0
 	_sh_side_k = move_toward(_sh_side_k, ind_t, dt * 0.8)
-	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0) * _sh_side_k
+	# (at a doorway the lens comes in behind the person on the door's line: the 0.55 m shoulder offset put the frame
+	# centre on the door housing beside the opening in 2-3 of 30 shots and most bad probe frames, round 5)
+	var door_t := 1.0
+	if door_fn.is_valid() and door_side < 0.999:
+		var ddp: float = minf(float(door_fn.call(_sh_p)), float(door_fn.call(_sh_eye if _sh_eye != Vector3.ZERO else _sh_p)))
+		door_t = lerpf(door_side, 1.0, smoothstep(door_r0, door_r1, ddp))
+	if dt > 0.0:
+		var rdk: Vector2 = _crit(_sh_door_k, _sh_door_kv, door_t, 4.0, dt)
+		_sh_door_k = rdk.x
+		_sh_door_kv = rdk.y
+	var side: float = SH_SIDE * _sh_side_s * clampf(_sh_d / 1.9, 0.25, 1.0) * _sh_side_k * _sh_door_k
 	# Occluders on the sight line (orchestrator 2026-10-02: a dome pillar between the lens and the person):
 	# the camera first swings round the person by the smallest of +-15/30/45/60 deg that clears both lines
 	# (chest, head), eased; it swings back once the plain view has been clear for SH_OCC_HOLD s.
@@ -552,7 +569,7 @@ func _shoulder_process2(delta: float) -> bool:
 			_sh_pushv = Vector3.ZERO
 		elif dt > 0.0:
 			for ax in 3:
-				var rq2: Vector2 = _crit(_sh_push[ax], _sh_pushv[ax], push_t[ax], SH_W_SMOOTH * rate_k, dt)
+				var rq2: Vector2 = _crit(_sh_push[ax], _sh_pushv[ax], push_t[ax], SH_W_SMOOTH * pow(rate_k, push_rate_p), dt)
 				_sh_push[ax] = rq2.x
 				_sh_pushv[ax] = rq2.y
 	elif _sh_new:

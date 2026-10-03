@@ -658,6 +658,97 @@ func _on_cmd(text: String) -> String:
 				return "no screen"
 			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
 			return str(ts._scroll.scroll_vertical)
+		"repairnow":
+			# repairnow: the Who window for the selected structure (what the Repair now button does; screenshots).
+			if view.selected_kind != "building":
+				return "select a structure"
+			hud.assign.open_repair(int(view.selected_id))
+			return "ok"
+		"work":
+			# work [department]: the Work window, on a tab (screenshots and tests).
+			hud.work.open_tab(w[1] if w.size() > 1 else "all")
+			return "ok"
+		"chain":
+			# chain <item>: the chain window for an item (what Show chain does; screenshots).
+			hud.open_chain(w[1] if w.size() > 1 else "spare_parts")
+			return "ok"
+		"giverepair":
+			# giverepair [captain]: debug only: orders the Captain of Maintenance (a team order) or the first free technician to repair the
+			# selected structure; the answer of the simulation is returned (screenshots of the personnel file and the dock report).
+			if not debug_mode() or view.selected_kind != "building":
+				return "debug only, select a structure"
+			var bid_g: int = int(view.selected_id)
+			var pick_g := -1
+			if w.size() > 1 and w[1] == "captain":
+				for hrow in hud.v18.heads(bid_g):
+					if String(hrow["dept"]) == "maintenance":
+						pick_g = int(hrow["id"])
+			else:
+				for crow in hud.v18.candidates(bid_g, 40, true):
+					if not bool(crow["order"]):
+						pick_g = int(crow["id"])
+						break
+			if pick_g < 0:
+				return "nobody"
+			var rg: Dictionary = hud.v18.repair_order(pick_g, bid_g, false)
+			select("agent", int(rg["assigned"][0]) if not (rg["assigned"] as Array).is_empty() else pick_g)
+			return "%s %s" % [str(rg.get("ok", false)), String(rg.get("text", ""))]
+		"worn":
+			# worn <def> [health]: debug only (changes the colony): wears down the first structure of that type (health 40) and selects it,
+			# for the screenshots of Repair now (V5 section 18).
+			if not debug_mode() or w.size() < 2:
+				return "debug only"
+			for id in sim.state["buildings"]:
+				if sim.state["buildings"][id]["def"] == w[1] and String(sim.state["buildings"][id]["state"]) == "active":
+					sim.state["buildings"][id]["health"] = float(w[2]) if w.size() > 2 else 40.0
+					select("building", id)
+					focus_on(sim.state["buildings"][id]["pos"])
+					return "ok %d" % int(id)
+			return "not found"
+		"transport":
+			# transport demo [broken] | transport off: debug only: a made-up package transport network (the first three stores joined by
+			# tubes along the nearest corridors, capsules on the way) for screenshots and tests, while SIM has no transport (V5 §18.5).
+			if not debug_mode():
+				return "debug only"
+			if w.size() > 1 and w[1] == "off":
+				hud.v18.demo_transport = {}
+				hud.transport_marks.set_on(false)
+				return "off"
+			var stores: Array = []
+			var ids_b: Array = sim.state["buildings"].keys()
+			ids_b.sort()
+			for bid in ids_b:
+				var sb: Dictionary = sim.state["buildings"][bid]
+				if String(sb["state"]) == "active" and String(sb["kind"]) == "room" and hud.inspector.sections._is_store(sb):
+					stores.append(int(bid))
+			if stores.size() < 2:
+				return "fewer than two stores"
+			stores = stores.slice(0, 3)
+			var tubes: Array = []
+			var hubs: Array = []
+			var transit: Array = []
+			var broken_ids: Array = []
+			for i in stores.size():
+				hubs.append({"b": stores[i], "ok": true, "items": {"metal": 12, "spare_parts": 4}})
+			for i in stores.size() - 1:
+				var pa: Vector2 = sim.state["buildings"][stores[i]]["pos"]
+				var pc: Vector2 = sim.state["buildings"][stores[i + 1]]["pos"]
+				var mid: Vector2 = (pa + pc) * 0.5
+				var tb := -1
+				var td := 1e9
+				for bid in ids_b:
+					var cb: Dictionary = sim.state["buildings"][bid]
+					if String(cb["def"]) == "corridor" and (cb["pos"] as Vector2).distance_to(mid) < td:
+						td = (cb["pos"] as Vector2).distance_to(mid)
+						tb = int(bid)
+				var bad: bool = w.size() > 1 and w[1] == "broken" and i == 1
+				if bad:
+					broken_ids.append(tb)
+				tubes.append({"b": tb, "a": stores[i], "c": stores[i + 1], "ok": not bad, "load": 0.35 + 0.5 * float(i)})
+				transit.append({"id": i * 2, "res": "metal", "qty": 4, "from": stores[i], "to": stores[i + 1], "t": 0.3})
+				transit.append({"id": i * 2 + 1, "res": "spare_parts", "qty": 2, "from": stores[i + 1], "to": stores[i], "t": 0.6})
+			hud.v18.demo_transport = {"hubs": hubs, "tubes": tubes, "flows": [], "transit": transit, "broken": broken_ids}
+			return "demo network: %d hubs, %d tubes" % [hubs.size(), tubes.size()]
 		"prio":
 			# prio <agent id> <job> <0..3> | prio colony <job> <0..3>: debug only (changes the colony): an own
 			# job priority of a colonist (set_jobs) or the colony default (set_priority), for the Priorities shots.
@@ -1356,6 +1447,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_SLASH: hud.toggle_find()
 			KEY_N: hud.toggle_advisor()   # version 4 advisor (V4_DESIGN §6)
 			KEY_J: hud.toggle_rag()       # version 5 "The Regolith Rag" (V5_DESIGN §4.3)
+			KEY_M: hud.toggle_work()      # version 5 §18.3: the Work window (queues of every department)
 			KEY_K: hud.toggle_screen("codex")   # version 4 codex (V4_DESIGN §6)
 			KEY_O: hud.cycle_overlay()
 			KEY_G: hud.toggle_screen("goals")
@@ -1427,7 +1519,10 @@ func _left_click(shift: bool) -> void:
 	if pick_cb.is_valid():
 		var cb: Callable = pick_cb
 		pick_cb = Callable()
-		cb.call(hover_point, hover_pick)
+		# The order pick wants the structure under the click, also when a colonist stands there (the pick prefers a colonist within 1.6 m).
+		var pk: Dictionary = hover_pick.duplicate()
+		pk["struct"] = structure_at(hover_point)
+		cb.call(hover_point, pk)
 		return
 	match tool:
 		"select":
@@ -1675,3 +1770,17 @@ func _take_shots() -> void:
 	img.save_png("%s/shot_%05d.png" % [s["dir"], int(s["at"])])
 	if _shots.is_empty():
 		get_tree().quit()
+
+## The structure (not a link) that holds the point p, else the nearest one within 4 m, else -1 (the pick of an order, V5 section 18).
+func structure_at(p: Vector2) -> int:
+	var best := -1
+	var best_d := 1e9
+	for id in sim.state["buildings"]:
+		var b: Dictionary = sim.state["buildings"][id]
+		if String(b["kind"]) == "link":
+			continue
+		var d: float = (b["pos"] as Vector2).distance_to(p) - float(b.get("radius", 3.0))
+		if d < best_d:
+			best_d = d
+			best = int(id)
+	return best if best_d <= 4.0 else -1

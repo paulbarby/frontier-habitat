@@ -276,9 +276,32 @@ func alight(id: int) -> void:
 			c["t"] = 0.0
 
 # ---------------------------------------------------------------- per frame
+## Zoomed out past SHADOW_OFF_D (not following), vehicles cast no shadows, like the people (overview: two rovers
+## drew 50 shadow surfaces, round 5); each mesh's own setting comes back when the camera comes in.
+const SHADOW_OFF_D := 60.0
+var _sh_far := false
+var _sh_key := -1
+func _vehicle_shadows() -> void:
+	var fid = view.get("follow_id")
+	var far: bool = float(view.camera_distance) > SHADOW_OFF_D and (fid == null or int(fid) < 0)
+	if far == _sh_far and vehicles.size() == _sh_key:
+		return
+	_sh_far = far
+	_sh_key = vehicles.size()
+	for id in vehicles:
+		var nd = vehicles[id].get("node")
+		if not (nd is Node3D):
+			continue
+		for g in (nd as Node3D).find_children("*", "GeometryInstance3D", true, false):
+			var gi: GeometryInstance3D = g
+			if not gi.has_meta("cast0"):
+				gi.set_meta("cast0", gi.cast_shadow)
+			gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if far else int(gi.get_meta("cast0"))
+
 func sync(delta: float) -> void:
 	var t0: int = Time.get_ticks_usec()
 	var dt: float = delta * maxf(float(view.game_rate), float(view.demo_rate))
+	_vehicle_shadows()
 	_sync_sim(delta)
 	if not test_off.has("builds"):
 		_sync_builds(delta)

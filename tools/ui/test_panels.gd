@@ -421,7 +421,7 @@ func _plan() -> void:
 		for sc5 in [0.8, 1.0, 1.4]:
 			# (Not here: the Regolith Rag, the Codex and the Crew/HR screen are full-page readers: a broadsheet and tables that
 			# need the page, not a quarter of it. Open item for Paul.)
-			for wn in ["advisor", "find", "orders", "reactor", "person", "follow"]:
+			for wn in ["advisor", "find", "orders", "reactor", "person", "follow", "work", "assign", "chain"]:
 				var szw: Vector2i = sz5
 				var scw: float = sc5
 				var wname: String = wn
@@ -465,6 +465,17 @@ func _open_window(name: String) -> void:
 			hud.reactor_win.visible = true
 		"rag":
 			hud.rag.visible = true
+		"work":
+			hud.work.open_tab("all")
+		"assign":
+			var bid_a := -1
+			for id_a in main.sim.state["buildings"]:
+				if String(main.sim.state["buildings"][id_a]["state"]) == "active" and String(main.sim.state["buildings"][id_a]["kind"]) == "room":
+					bid_a = int(id_a)
+					break
+			hud.assign.open_repair(bid_a)
+		"chain":
+			hud.open_chain("spare_parts")
 		"person":
 			var ids: Array = []
 			for r in hud.v5.people():
@@ -489,11 +500,14 @@ func _close_windows() -> void:
 	hud.reactor_win.visible = false
 	hud.rag.visible = false
 	hud.person.visible = false
+	hud.work.visible = false
+	hud.assign.visible = false
+	hud.chain.visible = false
 	main.select("", -1)
 
 func _window_control(name: String) -> Control:
 	var hud = main.hud
-	return {"advisor": hud.advisor, "find": hud.find, "orders": hud.orders, "reactor": hud.reactor_win, "rag": hud.rag, "person": hud.person, "follow": hud.follow_hud}[name]
+	return {"advisor": hud.advisor, "find": hud.find, "orders": hud.orders, "reactor": hud.reactor_win, "rag": hud.rag, "person": hud.person, "follow": hud.follow_hud, "work": hud.work, "assign": hud.assign, "chain": hud.chain}[name]
 
 func _esc() -> InputEventKey:
 	var ev := InputEventKey.new()

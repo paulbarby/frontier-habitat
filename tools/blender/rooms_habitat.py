@@ -672,7 +672,7 @@ def build_storehouse(rm):
     Rw, Ri = rm.Rw, rm.Ri
     rm.build_base(pilasters=(10, 14, 16, 20)[s], lamps=(160.0, 200.0), bolts=s >= 2, door_w=1.8, floor="grate",
                   floor_mat="HullDark")
-    D = (2.7, 2.9, 3.1, 3.3)[s]
+    D = (2.9, 2.9, 3.1, 3.3)[s]     # 2026-10-04: the transport hub decks (interior_transport.DECKS), S was 2.7
     rm.build_podium(D, ribs=(10, 14, 16, 20)[s], band="Accent", band_z=D - 0.6, parapet=0.14)
     ro = rm.roof
     # roller shutter look on the door (v2 only: 3.0 rooms have no fake door)
@@ -758,7 +758,7 @@ def build_cold_storage(rm):
         for sy in (-1, 1):
             for zz in (0.45, 1.05):
                 b.box((x1 + 0.01, sy * 0.66, zz), (0.08, 0.10, 0.16), "Metal", mats={"-x": None})
-    D = (2.5, 2.7, 3.0, 3.2)[s]
+    D = (2.9, 2.9, 3.1, 3.3)[s]     # 2026-10-04: the transport hub decks (interior_transport.DECKS), was 2.5-3.2
     rm.build_podium(D, wall="Frost", ribs=(10, 12, 16, 18)[s], rib_mat="Trim", band="Accent", band_z=D - 0.55,
                     parapet=0.12, deck="HullDark")
     ro = rm.roof

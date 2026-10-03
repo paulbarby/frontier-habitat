@@ -119,6 +119,16 @@ func entries(kind: String) -> Array:
 				var br: String = String(t.get("branch", ""))
 				out.append({"id": String(tid), "kind": kind, "name": String(t.get("name", tid)), "cat": "Tier %d · %s" % [int(t.get("tier", 1)), String(branches.get(br, {}).get("name", br.capitalize()) if typeof(branches.get(br)) == TYPE_DICTIONARY else br.capitalize())],
 					"desc": String(t.get("desc", "")), "icon": "research", "fallback_icon": "research", "color": P.VIOLET})
+		"chain":
+			# Version 5 §18.4: one page for each item that has a production chain (SIM's sim.chains when it is there).
+			for ch in hud.v18.all_chains():
+				var iid: String = String(ch["item"])
+				var n_done := 0
+				for st in ch["steps"]:
+					if String(st["status"]) == "done":
+						n_done += 1
+				out.append({"id": iid, "kind": kind, "name": String(ch["name"]), "cat": "%d of %d steps done" % [n_done, (ch["steps"] as Array).size()],
+					"desc": "", "icon": load("res://ui/theme/icons.gd").item(iid), "fallback_icon": "route", "color": P.GREEN if bool(ch["ok"]) else P.AMBER})
 		"society":
 			# Version 5 (V5 §5, §6, §10): ranks, skills, discipline, unrest, traits, and the Easter eggs
 			# that were found (hidden until then).

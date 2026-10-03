@@ -463,6 +463,7 @@ func follow_start(id: int) -> bool:
 		r.arm_fn = follow_arm
 	if "ceil_fn" in r:
 		r.ceil_fn = follow_ceiling
+		r.door_fn = follow_door_d
 	return true
 
 ## The speaker of the speech bubble under a screen point in the follow view, or -1 (UI-to-RENDER
@@ -535,9 +536,44 @@ func _follow_body(id: int):
 	var indoor: bool = String(sim.state["agents"][id].get("where", "")) != "out"
 	if indoor and eye > 1.5 and trail_on > 0.5:
 		yaw = _trail_yaw(id, p as Vector3, yaw)
+		if door_axis_on > 0.5:
+			yaw = _door_axis_yaw(p as Vector3, yaw)
 	else:
 		_trail.clear()
 	return [p, yaw, eye, indoor, game_rate]
+
+## In a doorway the camera heading turns onto the door's axis, in the direction the person goes (round 5: a person
+## turning into a door from the side left the lens beside the opening, 0.5 m from the housing, in 1 of 30 shots
+## and most bad probe frames). Weight 1 within 0.6 m of the door point, 0 from 1.4 m.
+var door_axis_on := 1.0   # measurement switch
+func _door_axis_yaw(p: Vector3, yaw: float) -> float:
+	if npc == null or doors == null:
+		return yaw
+	var best := INF
+	var bd: Vector3 = Vector3.INF
+	var brid := -1
+	for de in npc._doors_near(Vector2(p.x, p.z)):
+		var dp: Vector3 = de[0]
+		if absf(p.y - dp.y) > 2.0:
+			continue
+		var d: float = Vector2(p.x - dp.x, p.z - dp.z).length()
+		if d < best:
+			best = d
+			bd = dp
+			brid = int(de[1])
+	if best >= 1.4 or not sim.state["buildings"].has(brid):
+		return yaw
+	var rc: Vector2 = sim.state["buildings"][brid]["pos"]
+	var od := Vector2(bd.x - rc.x, bd.z - rc.y)
+	if od.length() < 0.01:
+		return yaw
+	od = od.normalized()
+	# the way the person goes: the heading so far (trail / body) against the door's outward direction
+	var hv := Vector2(cos(yaw), -sin(yaw))
+	var ax: Vector2 = od if hv.dot(od) >= 0.0 else -od
+	var ayaw: float = atan2(-ax.y, ax.x)
+	var w: float = 1.0 - smoothstep(0.6, 1.4, best)
+	return yaw + angle_difference(yaw, ayaw) * w
 
 ## The trail camera indoors (2026-10-03, critic round 41). Behind the body's heading the camera cut every
 ## corner: through a doorway and a turn, the line from the lens to the person crossed the jamb or the wall
@@ -1322,6 +1358,36 @@ static func _vol_inside(vols: Array, p: Vector3, margin: float) -> bool:
 ## The ceiling (world y) over a camera point p for a person standing at `feet` (Paul 2026-10-01: the
 ## camera stays under the ceiling): a room's from its model height, a corridor 2.3 m over its floor, a
 ## floor of a multi-storey building (super dome, apartment block) 3.4 m over the person's feet. INF outdoors.
+var door_ceil_on := false   # measurement: a doorway lowers the camera ceiling (tried round 5: more bad frames, 174 vs 152)
+## The ceiling a doorway puts over point p: the door's base + 2.04 m within 0.9 m of the door point (the eye eases
+## to about 1.45 m over the floor under the soft limit), rising to + 3.0 m at 1.8 m; INF elsewhere.
+func _door_ceiling(p: Vector3) -> float:
+	if npc == null or doors == null:
+		return INF
+	var best := INF
+	for de in npc._doors_near(Vector2(p.x, p.z)):
+		var dp: Vector3 = de[0]
+		if absf(p.y - dp.y) > 4.0:
+			continue
+		var d: float = Vector2(p.x - dp.x, p.z - dp.z).length()
+		if d >= 1.8:
+			continue
+		best = minf(best, dp.y + lerpf(2.04, 3.0, smoothstep(0.9, 1.8, d)))
+	return best
+
+## Horizontal distance from p to the nearest doorway point on its level (INF beyond 2.5 m): the follow rig brings
+## the lens behind the person at a doorway.
+func follow_door_d(p: Vector3) -> float:
+	if npc == null or doors == null:
+		return INF
+	var best := INF
+	for de in npc._doors_near(Vector2(p.x, p.z)):
+		var dp: Vector3 = de[0]
+		if absf(p.y - dp.y) > 2.5:
+			continue
+		best = minf(best, Vector2(p.x - dp.x, p.z - dp.z).length())
+	return best if best < 3.5 else INF
+
 func follow_ceiling(feet: Vector3, p: Vector3) -> float:
 	if follow_id >= 0 and String(sim.state["agents"].get(follow_id, {}).get("where", "out")) == "out":
 		return INF
@@ -1353,6 +1419,8 @@ func follow_ceiling(feet: Vector3, p: Vector3) -> float:
 		var pf := Vector3(feet.x, p.y, feet.z)
 		if not _follow_volumes(pf, 0.0).is_empty():
 			return follow_ceiling(feet, pf)
+	if door_ceil_on:
+		best = minf(best, _door_ceiling(p))
 	return best
 
 ## Paul 2026-10-01 (roofs on in the follow view): the roof shell is drawn single-sided (from outside), so
@@ -2611,9 +2679,11 @@ var _far_loads := 0
 static var _far_tpls := {}
 func _far_tpl(tpl: Dictionary) -> Dictionary:
 	var key: String = String(tpl.get("key", ""))
-	var base_path: String = key.get_slice("@", 0)
-	if not base_path.ends_with(".glb"):
+	# (the key may carry variant suffixes after the file: "airlock_m.glb:status", "x.glb@0.667+h")
+	var gi: int = key.find(".glb")
+	if gi < 0:
 		return {}
+	var base_path: String = key.substr(0, gi + 4)
 	var fp: String = base_path.trim_suffix(".glb") + "_far.glb"
 	var fk: String = fp + "|" + key
 	if _far_tpls.has(fk):
@@ -2630,6 +2700,11 @@ func _far_tpl(tpl: Dictionary) -> Dictionary:
 	ft["key"] = fp + "@" + key.get_slice("@", 1) if key.contains("@") else fp
 	_far_tpls[fk] = ft
 	return ft
+
+## Groups the near copy keeps drawing when its far mesh is drawn: the far files leave out door leaves, status and
+## pressure lights, the beacon, the name sign and the porch post (ART-HAB), and those move or change colour.
+const FAR_KEEP := ["OuterDoorL", "OuterDoorR", "OuterDoorLTop", "OuterDoorRTop", "OuterStatus", "OuterLights", "Beacon",
+	"Status", "NameSign", "PorchTop", "PressureLight_0", "PressureLight_1", "PressureLight_2", "DoorL", "DoorR", "DoorLTop", "DoorRTop", "Sign"]
 
 func _far_lod(b: Dictionary, meta: Dictionary, o: float, cdist: float) -> void:
 	if String(b["kind"]) != "room" or int(meta["h"]) < 0 or bool(meta.get("far_none", false)):
@@ -2665,9 +2740,11 @@ func _far_lod(b: Dictionary, meta: Dictionary, o: float, cdist: float) -> void:
 	if want == was:
 		return
 	meta["far_on"] = want
-	inst.set_suppressed(meta["h"], want)
+	inst.set_suppressed(meta["h"], want, FAR_KEEP)
 	if meta.has("h_far"):
 		inst.set_suppressed(meta["h_far"], not want)
+	if doors != null:
+		doors.set_room_far(int(b["id"]), want)
 
 func _drop_building(id: int) -> void:
 	var meta: Dictionary = bmeta[id]
@@ -2858,6 +2935,15 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 				(m as ShaderMaterial).set_shader_parameter("tint_dark", dark)
 			if meta.get("holo") != null:
 				(meta["holo"] as ShaderMaterial).set_shader_parameter("holo_min_y", holo_y)
+		# (a broken building beyond FAR_LOD_D m: its red hologram overlay (a second copy of every mesh) is not drawn;
+		# the darkened model, the smoke and the sparks stay. Overview: 2 broken greenhouses drew about 90 overlay
+		# surfaces, round 5)
+		var cdn: float = (meta["xf"] as Transform3D).origin.distance_to(_cam_now) if _cam_now != Vector3.INF else 0.0
+		var holo_far: bool = state == "broken" and follow_id < 0 and cdn > FAR_LOD_D + (-8.0 if bool(meta.get("holo_far", false)) else 0.0) 				and not (selected_kind == "building" and selected_id == id)
+		if holo_far != bool(meta.get("holo_far", false)) and node != null:
+			meta["holo_far"] = holo_far
+			for hm in node.find_children("Holo", "MeshInstance3D", true, false):
+				(hm as MeshInstance3D).visible = not holo_far
 		if state == "broken":
 			fx.emitter_set("b%d" % id, "smoke_dark", (meta["xf"] as Transform3D).origin + Vector3(0, top * 0.7, 0), 0.6)
 			fx.emitter_set("b%d_sp" % id, "sparks_idle", (meta["xf"] as Transform3D).origin + Vector3(0, top * 0.5, 0), 0.5)
@@ -3724,7 +3810,32 @@ func stats() -> Dictionary:
 		"hazards": hazards.stats if hazards != null else {},
 		"robots": robots.stats if robots != null else {},
 		"lod": terrain.lod_counts if terrain != null else [],
+		"far": _far_counts(),
 	}
+
+## Rooms drawn from their far file now / rooms that have one loaded / rooms without one (evidence).
+func _far_counts() -> Dictionary:
+	var on := 0
+	var loaded := 0
+	var none := 0
+	var near_rooms := 0
+	var near_defs := {}
+	for id in bmeta:
+		var m: Dictionary = bmeta[id]
+		if bool(m.get("far_on", false)):
+			on += 1
+		if m.has("h_far"):
+			loaded += 1
+		if bool(m.get("far_none", false)):
+			none += 1
+		elif not bool(m.get("far_on", false)) and sim.state["buildings"].has(id) and String(sim.state["buildings"][id].get("kind", "")) == "room":
+			near_rooms += 1
+			var nk: String = String(sim.state["buildings"][id]["def"])
+			near_defs[nk] = int(near_defs.get(nk, 0)) + 1
+			if near_defs.size() <= 9:
+				var ftq: Dictionary = _far_tpl(m["tpl"]) if m.has("tpl") else {}
+				near_defs[nk + "#%d" % int(id)] = "open %.2f d %.0f h %d mode %s far %s" % [float(m.get("open", -1)), (m["xf"] as Transform3D).origin.distance_to(_cam_now) if _cam_now != Vector3.INF else -1.0, int(m.get("h", -9)), String(m.get("mode", "")), "none" if ftq.is_empty() else ("wait" if ftq.has("wait") else str((ftq.get("groups", {}) as Dictionary).keys()))]
+	return {"on": on, "loaded": loaded, "none": none, "near_rooms": near_rooms, "near_defs": near_defs}
 
 func _prof_snapshot() -> Dictionary:
 	var out := {}
@@ -4055,6 +4166,58 @@ func debug_cmd(text: String) -> String:
 			# farlod 0|1: the far meshes of rooms beyond FAR_LOD_D m with the roof open (measurement)
 			far_lod_on = not (w.size() > 1 and w[1] == "0")
 			return "farlod %s" % str(far_lod_on)
+		"drawcount":
+			# drawcount: visible mesh surfaces by owner (MultiMesh with instances > 0), with shadow casting (measurement)
+			var tally := {}
+			var stack: Array = [self]
+			while not stack.is_empty():
+				var nd: Node = stack.pop_back()
+				for ch in nd.get_children():
+					stack.append(ch)
+				if not (nd is GeometryInstance3D) or not (nd as Node3D).is_visible_in_tree():
+					continue
+				var gi: GeometryInstance3D = nd
+				var camx: Camera3D = get_viewport().get_camera_3d()
+				if camx != null:
+					var wab: AABB = gi.global_transform * gi.get_aabb()
+					var inside_f := true
+					for pl in camx.get_frustum():
+						var pp: Plane = pl
+						# the AABB's corner farthest along the plane normal is outside -> the box is out
+						var corner := Vector3(wab.position.x + (wab.size.x if pp.normal.x < 0.0 else 0.0), wab.position.y + (wab.size.y if pp.normal.y < 0.0 else 0.0), wab.position.z + (wab.size.z if pp.normal.z < 0.0 else 0.0))
+						if pp.distance_to(corner) > 0.0:
+							inside_f = false
+							break
+					if not inside_f:
+						continue
+				var surf := 0
+				if gi is MultiMeshInstance3D:
+					var mmx: MultiMesh = (gi as MultiMeshInstance3D).multimesh
+					if mmx == null or mmx.mesh == null or (mmx.visible_instance_count == 0) or (mmx.visible_instance_count < 0 and mmx.instance_count == 0):
+						continue
+					surf = mmx.mesh.get_surface_count()
+				elif gi is MeshInstance3D:
+					if (gi as MeshInstance3D).mesh == null:
+						continue
+					surf = (gi as MeshInstance3D).mesh.get_surface_count()
+				else:
+					surf = 1
+				var owner_name: String = String(gi.get_parent().name).left(18) + "/" + String(gi.name).get_slice("_", 0).left(14)
+				var e: Array = tally.get_or_add(owner_name, [0, 0])
+				e[0] = int(e[0]) + surf
+				if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+					e[1] = int(e[1]) + surf
+			var keys: Array = tally.keys()
+			keys.sort_custom(func(x, y): return int(tally[x][0]) > int(tally[y][0]))
+			var tot := 0
+			var tsh := 0
+			var lines: PackedStringArray = []
+			for k in keys:
+				tot += int(tally[k][0])
+				tsh += int(tally[k][1])
+				if lines.size() < 30:
+					lines.append("%s %d (sh %d)" % [k, int(tally[k][0]), int(tally[k][1])])
+			return "surfaces %d, shadow casters %d | %s" % [tot, tsh, " ; ".join(lines)]
 		"npclod":
 			# npclod -1|0|1|2: every person (not the followed one) drawn at this LOD; -1 = by distance (checks)
 			if npc != null:

@@ -616,15 +616,15 @@ func _hazards(body: VBoxContainer) -> void:
 			row.add_child(leak)
 			br_list.add_child(row))
 	# Maintenance
-	var mt: VBoxContainer = card("Maintenance: machines near failure", "wrench", P.CYAN)
+	var mt: VBoxContainer = card("Maintenance: machines near failure or broken", "wrench", P.CYAN)
 	body.add_child(card_panel(mt))
-	mt.add_child(Kit.wrap("Every machine wears while it works. It breaks when its wear reaches its failure point. Maintenance by a technician (1 part of the fault's item) sets wear to 0. Maintain now puts the job first.", 13, P.TEXT_2))
+	mt.add_child(Kit.wrap("Every machine wears while it works. It breaks when its wear reaches its failure point. Maintenance by a technician (1 part of the fault's item) sets wear to 0. Maintain now or Repair now: you choose who does it, one colonist or a department head.", 13, P.TEXT_2))
 	var grid: GridContainer = Kit.grid(7, 14, 6)
 	mt.add_child(grid)
 	var mt_sig := ["-"]
 	var mt_binds: Array = []
 	_updaters.append(func():
-		var risk: Array = d.at_risk()
+		var risk: Array = hud.v18.maintenance_rows()   # machines near failure and broken machines
 		var sig := ""
 		for r in risk:
 			sig += "%d|" % int(r.get("id", -1))
@@ -635,7 +635,7 @@ func _hazards(body: VBoxContainer) -> void:
 			for h in ["Machine", "Wear", "", "Fails in", "Fault", "Uses (stock)", ""]:
 				grid.add_child(Kit.head(h, P.TEXT_3, 11))
 			if risk.is_empty():
-				grid.add_child(Kit.label("No machine is near failure." if d.has_helper("hazards", "at_risk") or d.mock.has("at_risk") else "Wear data is not available in this version.", "", 13, P.GREEN))
+				grid.add_child(Kit.label("No machine is near failure and none is broken." if d.has_helper("hazards", "at_risk") or d.mock.has("at_risk") else "Wear data is not available in this version.", "", 13, P.GREEN))
 			for r in risk:
 				mt_binds.append(_risk_row(grid, r))
 		for k in mini(risk.size(), mt_binds.size()):
@@ -706,22 +706,32 @@ func _risk_row(grid: GridContainer, r: Dictionary) -> Callable:
 	var fault: String = String(r.get("fault", ""))
 	grid.add_child(Kit.label(String(d.FAULT_NAME.get(fault, fault.capitalize() if fault != "" else "-")), "", 13, P.TEXT))
 	var item: String = String(d.FAULT_ITEM.get(fault, ""))
+	if bool(r.get("broken", false)) and item == "":
+		item = String(s.hazards.repair_item(b)) if not b.is_empty() else ""
 	if item != "":
-		var have: int = d.total_of(item)
-		grid.add_child(Kit.chip(Icons.item(item), "1 of %d" % have, d.item_color(item), "Maintenance uses 1 %s. %d in the colony." % [d.item_name(item).to_lower(), have], have >= 1, 16))
+		# Paul, 2026-10-04 (orders diagnosis): free and reachable parts, not the colony total. Parts that other repairs hold, or that
+		# nobody can walk to, are not parts for this job.
+		var stk: Dictionary = hud.v18.stock(item, id)
+		var ok_stock: bool = bool(stk["reachable"])
+		var tip: String = "%s: %d in the colony, %d free, %d held by other jobs, %d carried." % [d.item_name(item), int(stk["total"]), int(stk["free"]), int(stk["reserved"]), int(stk["carried"])]
+		tip += " A colonist can reach one now." if ok_stock else (" Nobody can reach a free one now." if int(stk["free"]) > 0 else " None is free.")
+		grid.add_child(Kit.chip(Icons.item(item), "%d free of %d" % [int(stk["free"]), int(stk["total"])], d.item_color(item), "Repair uses 1 %s.\n%s" % [d.item_name(item).to_lower(), tip], ok_stock, 16))
 	else:
 		grid.add_child(Kit.label("-", "", 13, P.TEXT_3))
-	var mb: Button = Kit.button("Maintain now", func():
-		hud.main.submit("maintain", {"id": id})
-		hud.toast("Maintenance of %s is the next technician job." % String(b.get("name", "")), "info", "wrench"),
-		"Maintain now\nA technician does this job first. Wear goes back to 0.", "PrimaryButton", "wrench", 14)
+	var broken: bool = bool(r.get("broken", false))
+	var mb: Button = Kit.button("Repair now" if broken else "Maintain now", func():
+		host.close(self)
+		hud.main.focus_on(b["pos"])
+		hud.main.select("building", id)
+		hud.assign.open_repair(id),
+		"%s\nChoose who does it: one colonist, who goes at once, or a department head, who gets the team to do it. The answer of the simulation shows in the window." % ("Repair now" if broken else "Maintain now"), "PrimaryButton", "wrench", 14)
 	mb.custom_minimum_size.y = 28
 	grid.add_child(mb)
 	return func(rr: Dictionary):
 		var w: float = float(rr.get("wear", 0.0))
 		var fa: float = maxf(1.0, float(rr.get("fail_at", 100.0)))
 		bar.value = clampf(w / fa, 0.0, 1.0)
-		bar.color = P.RED if w / fa >= 0.9 else P.AMBER
-		pct.text = "%d%% of %d%%" % [int(w), int(fa)]
+		bar.color = P.RED if w / fa >= 0.9 or bool(rr.get("broken", false)) else P.AMBER
+		pct.text = "BROKEN" if bool(rr.get("broken", false)) else "%d%% of %d%%" % [int(w), int(fa)]
 		var e: float = float(rr.get("eta_s", -1.0))
-		eta.text = Kit.clock(e) if e >= 0.0 else "-"
+		eta.text = "now" if bool(rr.get("broken", false)) else (Kit.clock(e) if e >= 0.0 else "-")

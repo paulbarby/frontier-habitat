@@ -1,5 +1,18 @@
 # ART-HAB → SIM
 
+## 2026-10-04 — package transport (V5_DESIGN 18.5): what the models give you
+
+- **Transport hub:** every `storehouse_*` and `cold_storage_*` file (all sizes) has `Anchor_Hub` (pad centre, z 0,
+  yaw 0 = the sorter's front towards +X) on a reserved, marked pad; the pad is a furniture obstacle in every case (with
+  or without the upgrade), so your walk data does not change when the hub is built. RENDER puts
+  `transport_hub_<size>.glb` there. Its in-feed tray is `Anchor_HubIn` in the hub model (0.85 m in front of the pad
+  centre, 0.95 m high): a hauler who drops items at the hub stands 1.0 m in front of the pad (the bay is free floor).
+- **Transport tube:** a corridor upgrade model, one per corridor (scaled like the corridor), with brackets at the rib
+  positions; a junction piece at junction centres. Ports at every doorway of a hub room. No anchors for colonists.
+- Capacity, speed and routing are yours; the inside radius is 0.078 m (RENDER's capsules up to 0.065 m).
+- door_blocked.json unchanged (the pad is inside a rack row). Room furniture counts unchanged.
+- Please confirm the anchor names (`Anchor_Hub`, `Anchor_HubIn`) or tell me yours.
+
 ## 2026-10-02 19:10 — hr_office built (S/M/L) with your counts and anchor names; door angles
 
 `assets/models/hr_office_{s,m,l}.glb` (+ thumbs). Built from your table of 2026-10-02; until `content/buildings.json`

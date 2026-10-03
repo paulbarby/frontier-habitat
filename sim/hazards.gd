@@ -1110,11 +1110,17 @@ func cmd_maintain(bid: int) -> Dictionary:
 	var b: Dictionary = sim.state["buildings"].get(bid, {})
 	if b.is_empty() or not is_machine(b):
 		return {"ok": false, "code": "invalid"}
-	if b["state"] != "active":
+	if b["state"] != "active" and b["state"] != "broken":
 		return {"ok": false, "code": "not_active"}
 	wear_of(bid)
 	b["maint_first"] = true
-	return {"ok": true, "code": "ok"}
+	# V5 18.1: "maintain now" is an order, not only a flag: the maintenance department's head (or its best free
+	# colonist) allocates it to the team, which makes or takes the task and brings the part. A broken machine
+	# gets a repair order.
+	var base: int = sim.bases.base_of(bid) if sim.bases.count() > 1 else -1
+	var p := {"kind": "maintain" if b["state"] == "active" else "repair", "b": bid, "count": 2}
+	var r: Dictionary = sim.workq.assign_department("maintenance", base, p)
+	return {"ok": true, "code": "ok", "order": r}
 
 ## "survey_site" {id}: a scientist surveys this fragment site first.
 func cmd_survey(site_id: int) -> Dictionary:

@@ -150,7 +150,7 @@ func refresh(force: bool = false) -> void:
 		_body.add_child(Kit.wrap("No person. Select a colonist and open the file (the Personnel file button).", 14, P.TEXT_2))
 		_fit()
 		return
-	var sig: String = "%s:%d:%d:%d:%s" % [tab, agent_id, int(p["satisfaction"]["value"]), int(p["attitude"]["value"]), p["activity"]]
+	var sig: String = "%s:%d:%d:%d:%s:%s" % [tab, agent_id, int(p["satisfaction"]["value"]), int(p["attitude"]["value"]), p["activity"], str(hud.v18.order_info(agent_id)).hash()]
 	if sig == _sig and not force:
 		return
 	_sig = sig
@@ -200,6 +200,7 @@ func _file(p: Dictionary) -> void:
 		g.add_child(l)
 	if String(idn.get("kind", "")) == "child":
 		_school()
+	_order_block()
 	# Satisfaction
 	var sat: Dictionary = p["satisfaction"]
 	var sv: float = float(sat["value"])
@@ -260,6 +261,35 @@ func _file(p: Dictionary) -> void:
 		for ln in lines:
 			sec4.add_child(Kit.wrap("\"%s\"" % String(ln.get("text", "")), 13, P.TEXT_2))
 	_history()
+
+## V5 §18.1: the order this person has and what they do for it now (an order comes before a party, sleep or routine).
+func _order_block() -> void:
+	var o: Dictionary = hud.v18.order_info(agent_id)
+	if not bool(o.get("has", false)):
+		return
+	var sec: VBoxContainer = _section("Order", "orders")
+	sec.name = "OrderBlock"
+	var head: String = String(o["name"]) + ((": " + String(o["target"])) if String(o["target"]) != "" else "")
+	var hl: Label = Kit.wrap(head, 14, P.CYAN)
+	sec.add_child(hl)
+	if String(o["text"]) != "":
+		var tl: Label = Kit.wrap(String(o["text"]), 13, P.TEXT)
+		tl.name = "OrderText"
+		sec.add_child(tl)
+	if int(o["head"]) >= 0:
+		sec.add_child(Kit.wrap("A team order: %s, the head of the department, gave it." % hud.v5.agent_name(int(o["head"])), 12, P.TEXT_2))
+	if bool(o["standing"]):
+		sec.add_child(Kit.wrap("A standing order: they come back when it wears again.", 12, P.TEXT_2))
+	var miss: Dictionary = o["missing"]
+	if not miss.is_empty():
+		var it: String = String(miss.get("item", ""))
+		sec.add_child(Kit.wrap("Missing: %d %s. The colonist cannot finish without it." % [int(miss.get("qty", 1)), hud.data.item_name(it).to_lower()], 13, P.AMBER))
+		var cb: Button = Kit.button("Show chain", func(): hud.open_chain(it), "Show chain\nHow this item is made, step by step.", "ChipButton", "route", 12)
+		sec.add_child(cb)
+	var cn: Button = Kit.button("Cancel order", func():
+		hud.v4.command("order_cancel", {"agents": [agent_id]})
+		refresh(true), "Cancel order\nThe colonist goes back to the routine.", "ChipButton", "close", 12)
+	sec.add_child(cn)
 
 ## A child's school (V5 §5.3; SIM sim/families.gd): the school points by subject (they are added to the
 ## skills when the child grows up), the academy, when the child grows up and the job the best subject

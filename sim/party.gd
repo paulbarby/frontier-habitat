@@ -499,6 +499,9 @@ func _recruit(base: int, reason: Dictionary, cap: int, auto: bool) -> Array:
 			continue
 		if sim.education.in_class(a):
 			continue
+		# A colonist who has an order that can be carried out is busy with it (docs/V5_DESIGN.md 18.1).
+		if a.has("order") and not sim.orders.is_blocked(a):
+			continue
 		var rank := 2
 		if hon.has(int(aid)):
 			rank = 0

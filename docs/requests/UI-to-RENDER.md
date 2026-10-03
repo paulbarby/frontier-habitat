@@ -199,3 +199,10 @@ Requests:
    Rag lead photo and the personnel file portrait. The UI draws a placeholder silhouette until it exists
    (`ui/v5_data.gd photo()` calls it if present).
 4. Optional: the speaker under a screen point in `view.bubbles`, so a click on a bubble switches the follow.
+
+## 2026-10-04 - the WORN badge threshold (orders diagnosis, ORCH-to-SIM-orders-diagnosis.md RC8)
+`presentation/world_view.gd` (about line 3203) draws the WORN tag at wear >= 0.75 of the failure point. SIM uses `sim.hazards.risk_frac()`
+(research can change it). Please read `risk_frac()` there. The inspector badge (ui/v18_data.gd `wear_state`) already does, and it also
+says WORN when the health is under `balance.repair_trigger_health`. Also: the world pick prefers a colonist within 1.6 m of the click
+(`world_view.gd` about line 3593). The UI now reads the structure under the click itself (`main.structure_at`), so no change is needed
+for the orders; for the plain left click a colonist standing on a structure still wins, as before.

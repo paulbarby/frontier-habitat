@@ -84,6 +84,14 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 				return sim.research.cmd_focus(blds[int(p["id"])], String(p.get("branch", "")))
 		"maintain":
 			return sim.hazards.cmd_maintain(int(p.get("id", -1)))
+		"workq_move":
+			return sim.workq.cmd_move(p)
+		"workq_assign":
+			return sim.workq.cmd_assign(p)
+		"workq_cancel":
+			return sim.workq.cmd_cancel(p)
+		"workq_release":
+			return sim.workq.cmd_release(p)
 		"shelter":
 			return sim.hazards.cmd_shelter(bool(p.get("on", true)))
 		"hazard_now":

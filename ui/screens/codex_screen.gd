@@ -29,7 +29,7 @@ func _init() -> void:
 	title = "Codex"
 	subtitle = "Every structure, item, research project and hazard, and a guide to people, society and the planets."
 	accent = P.CYAN
-	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"], ["society", "Guide", "people"]]
+	tabs = [["item", "Items", "inventory"], ["structure", "Structures", "build"], ["chain", "Chains", "route"], ["tech", "Research", "research"], ["hazard", "Hazards", "hazard"], ["society", "Guide", "people"]]
 
 func _ready() -> void:
 	if typeof(arg) == TYPE_STRING and String(arg).contains(":"):
@@ -154,6 +154,7 @@ func _show(kind: String, id: String) -> void:
 		"item": _item(id)
 		"structure": _structure(id)
 		"tech": _tech(id)
+		"chain": _chain(id)
 		"hazard": pass
 
 ## Wide view: the entry list hides so the detail (and its crafting tree) gets the full width.
@@ -284,6 +285,21 @@ func _item(id: String) -> void:
 				sc.scroll_horizontal = int(maxf(0.0, tree.custom_minimum_size.x - sc.size.x))
 		sc.resized.connect(fit)
 		fit.call_deferred()
+
+## V5 §18.4: a production chain, from the raw resource to the item, with the state of each step in this colony.
+func _chain(id: String) -> void:
+	var c: Dictionary = hud.v18.chain_of(id)
+	var sec: VBoxContainer = _section("The chain", "route")
+	var ChainView = load("res://ui/widgets/chain_view.gd")
+	var sl: Label = Kit.wrap(ChainView.summary(c), 14, P.GREEN if bool(c.get("ok", false)) else P.AMBER)
+	sec.add_child(sl)
+	sec.add_child(ChainView.build(hud, c, func(def_id: String):
+		host.close(self)
+		hud.main.start_place(def_id), func(_tech: String):
+		host.close(self)
+		hud.open_screen("research")))
+	var s2: VBoxContainer = _section("The item", "inventory")
+	_links(s2, "", [[hud.data.item_name(id), "item", id]])
 
 func _structure(id: String) -> void:
 	var b: Dictionary = hud.data.bdef(id)

@@ -1316,3 +1316,23 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
 - **Round 5 part 2 (stopped for the night, 2026-10-03):** indoor walker ripple FIXED (the polyline walk now uses horizontal distances; web in1 straight speed ripple 6.84 % -> 0.88 %, last run 2.22 % at 34 fps from acceleration only, drawn speed = intended speed); floor heights are now 0.3 m ramps (doorway profile from rays, airlock zones, porch deck) plus baked dome level plates (`presentation/navgrid/floor_fit.res`); LOD2 people wired (vertex-colour shader, `npclod`); roof-on far files used.
 - **Gates run on the final code:** check 317/0; path v3 PASS (slide 0), v4 PASS; airlock 0; cut 0 / doors 0; seat PASS; ground PASS (15,457 windows, sink 0, float 0; feet now measured against the near models, far LOD off in the gate). NOT run (stopped): weather, npc_check, doorway gate, web in4 re-check.
 - **Half-done / not met:** web fps this evening is 25 % under round 5 on every case (machine load; in1 56 -> 34 fps between two runs of the same code): overview 30.1, roofs off 33.0, room follow 37.6, dome 36.7 (headless CPU 13.7-17.8 ms, not worse); framing 2 of 30 (doorway frames, shots 8 and 12); in4 cam 4.06 mm headless (target 3); one dome stairs window (-175 mm) seen once, not reproduced in the last gate.
+
+## 2026-10-04 (Opus, final day) - overview cost, framing, in4
+- **Overview (roofs on, 110 m):** the far files with roofs were not used by 4 airlocks (template key `airlock_m.glb:status`
+  was not parsed); fixed (`_far_tpl` takes the file up to `.glb`). A far room keeps drawing its door leaves, status and
+  pressure lights, beacon, name sign and porch post from the near copy (`fx_instancer.set_suppressed(h, on, keep)`,
+  `world_view.FAR_KEEP`). A far room hides its doorway kits and wall patches (`fx_doors.set_room_far`; the far walls
+  are closed). Broken buildings beyond 80 m do not draw their red hologram overlay (a second copy of every mesh).
+  Vehicles cast no shadow past 60 m (`fx_vehicles._vehicle_shadows`). People past 105 m update every 6th frame (was 4th)
+  and the instance buffers are written every 2nd frame past 90 m (`npc.overview_k`, `npc.write_half`).
+  Draw calls at the overview: 1,317 -> 1,016; roofs off 1,127 -> 905. Headless A/B (same load): npc 13.2-14.6 ->
+  9.3-9.5 ms, view 20.5-23.3 -> 16.8 ms. Web fps NOT measured on a quiet machine (machine load 56-93 % all day).
+- **Framing / in4:** at a doorway the camera heading turns onto the door axis (`world_view._door_axis_yaw`) and the
+  shoulder offset goes to 0 (`camera_rig.door_side`, 1.5-3.0 m ramp); the followed person's speed changes at 2x-4x are
+  at most 4.5 m/s^2 on screen, decel too (`npc.follow_accel`, `follow_decel_k`). Headless 60 s: in1 wall-centre frames
+  516 -> 244, occluded 76 -> 48, bad probe frames 160 -> 89, cam 2.36 mm, head 1.89 px; in4 straight cam 4.06 -> 2.63 mm,
+  head 2.94 px. Tried and left off: a low ceiling at doorways (more bad frames), softer final / push springs at 4x.
+  Web 30-shot sheets on the same build: run 1, 4 shots without the person (closed door leaf, shelf, door jamb); run 2,
+  person in all 30 (3 with a wall beside the person). Not proven at 0.
+- New tools: `tools/render_cmd.gd` (headless commands at set frames), `drawcount` debug command (visible surfaces by
+  owner, frustum-tested in the web build), far counts in `stats.far`.

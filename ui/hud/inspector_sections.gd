@@ -54,7 +54,7 @@ func signature(kind: String, rec: Dictionary, tab: String) -> String:
 		trays += String(t.get("crop", "")) + ","
 	# Version 3: wear known, fault, breach, lab focus, the cargo choice change the layout too.
 	var wv: Dictionary = _d().wear_of(b)
-	var v3: String = "%s:%s:%s:%s:%s" % [wv.get("known", false), wv.get("broken", false), _d().breach_of(b).is_empty(),
+	var v3: String = "%s:%s:%s:%s:%s:%s:%s" % [wv.get("known", false), wv.get("broken", false), _d().breach_of(b).is_empty(), insp.hud.v18.wear_state(b)["state"], str(insp.hud.v18.is_hub(int(b["id"]))) + str(insp.hud.v18.is_tube(int(b["id"]))),
 		b.get("focus", _d().lab_info(int(b["id"])).get("focus", "") if bool(_def(b).get("research_lab", false)) else ""), insp.hud.get("cargo_choice")]
 	return "b:%d:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%s:%s:%s:%s:%s" % [b["id"], b["state"], b["def"], tab, b.get("demolish", false), b.get("enabled", true),
 		_sim().prod.has_batch(b), b.get("door_open", true), int(b.get("level", 1)), int(b.get("size", 1)), up.get("state", ""), trays,
@@ -174,7 +174,16 @@ func building(b: Dictionary) -> void:
 		var rr: Dictionary = load("res://ui/why.gd").reach(insp.hud, b)
 		stb.tooltip_text = "%s\n%s\nFix: %s" % [String(st[0]), " ".join(rr.why), " ".join(rr.fix)]
 		stb.mouse_filter = Control.MOUSE_FILTER_PASS
+	# V5 §18.1: the BROKEN badge and a WORN badge are buttons: click one to choose who repairs the structure now.
+	var wst: Dictionary = insp.hud.v18.wear_state(b)
+	var bid0: int = int(b["id"])
+	if String(wst["state"]) == "broken":
+		_repair_badge(stb, bid0)
 	insp.add_badge(stb)
+	if String(wst["state"]) == "worn":
+		var wb: Control = Kit.badge("WORN %d%%" % int(float(wst["wear"])), P.AMBER)
+		_repair_badge(wb, bid0)
+		insp.add_badge(wb)
 	if d.can_level(String(b["def"])):
 		insp.add_badge(Kit.badge("LEVEL %d" % d.level_of(b), P.GOLD if d.level_of(b) >= 5 else P.VIOLET))
 	if d.size_word(String(b["def"]), d.size_of(b)) != "":
@@ -578,6 +587,8 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 		if bool(b.get("demolish", false)):
 			body.add_child(Kit.wrap("Marked for removal.", 13, P.RED))
 		_wear_breach(b, def)
+		_repair_status(b)
+		_transport_section(b)
 		_turret(b, def)
 		var status := Kit.wrap("", 13, P.TEXT)
 		body.add_child(status)
@@ -593,6 +604,103 @@ func _overview(b: Dictionary, def: Dictionary) -> void:
 	var g: GridContainer = _grid()
 	body.add_child(g)
 	_network_facts(g, b, def)
+
+## V5 §18.1 (orders diagnosis): who is on this structure now, and what the work waits for. A repair that waits for a part says so.
+## One line that updates in place; hidden when the structure needs nothing and nobody is on it.
+func _repair_status(b: Dictionary) -> void:
+	if String(b.get("kind", "")) == "link" or not (String(b["state"]) in ["active", "broken"]):
+		return
+	var s = _sim()
+	var id: int = b["id"]
+	var v18 = insp.hud.v18
+	var lbl: Label = Kit.wrap("", 13, P.TEXT)
+	lbl.name = "RepairStatus"
+	insp.body().add_child(lbl)
+	insp.bind(func():
+		var bb: Dictionary = s.state["buildings"].get(id, {})
+		if bb.is_empty():
+			return
+		var need: String = v18.repair_need(bb)
+		var on: Array = v18.work_on(id)
+		lbl.visible = need != "" or not on.is_empty()
+		if not lbl.visible:
+			return
+		if on.is_empty():
+			var blk: String = String(bb.get("block", ""))
+			lbl.text = "Needs a repair. Nobody is on it yet." + (" No spare part is free." if blk == "no_spares" else " A technician takes it, or you order one: Repair now.")
+			lbl.add_theme_color_override("font_color", P.AMBER)
+			return
+		var parts: Array = []
+		for r in on:
+			var st: String = {"going": "on the way", "working": "working", "waiting": "waiting"}.get(String(r["state"]), "")
+			parts.append("%s (%s%s)" % [String(r["name"]), st, ": " + String(r["text"]) if String(r["state"]) == "waiting" and String(r["text"]) != "" else ""])
+		lbl.text = "On it: " + ", ".join(parts) + "."
+		lbl.add_theme_color_override("font_color", P.CYAN if not on.any(func(r): return String(r["state"]) == "waiting") else P.AMBER))
+
+## V5 §18.5: the package transport of a storage habitat (a hub) and of a corridor (a tube): what it is, the load, the items in transit
+## (SIM sim.transport.in_transit) and the button that shows the network on the map. Shown when the structure is a hub or a tube, or
+## when SIM has the transport and the structure can be one (then the line says what is missing).
+func _transport_section(b: Dictionary) -> void:
+	var v18 = insp.hud.v18
+	var id: int = b["id"]
+	var is_hub: bool = v18.is_hub(id)
+	var is_tube: bool = v18.is_tube(id)
+	var store: bool = _is_store(b) and String(b["state"]) == "active"
+	var corridor: bool = String(b["def"]) == "corridor"
+	if not (is_hub or is_tube) and not (v18.transport_live() and (store or corridor)):
+		return
+	var sec: VBoxContainer = _section("Package transport", "route", P.GOLD)
+	sec.name = "TransportSection"
+	if not (is_hub or is_tube):
+		sec.add_child(Kit.wrap("%s Research Package Transport, then upgrade this structure (tab Upgrade): items then move to other hubs in capsules, with no colonist hauling." % ("Not a transport hub." if store else "Not a transport tube."), 13, P.TEXT_2))
+		return
+	var g: GridContainer = _grid()
+	sec.add_child(g)
+	_fact(g, "Role", func(): return "Transport hub" if v18.is_hub(id) else "Transport tube", P.GOLD)
+	_fact(g, "State", func():
+		for h in v18.transport().get("hubs", []):
+			if int(h["b"]) == id:
+				return "working" if bool(h.get("ok", true)) else "no link"
+		for t in v18.transport().get("tubes", []):
+			if int(t["b"]) == id:
+				return "working" if bool(t.get("ok", true)) else "broken"
+		return "-", P.GREEN)
+	if is_tube:
+		_fact(g, "Load", func():
+			for t in v18.transport().get("tubes", []):
+				if int(t["b"]) == id:
+					return "%d %%" % int(float(t.get("load", 0.0)) * 100.0)
+			return "-")
+	var tl: Label = Kit.wrap("", 13, P.TEXT)
+	tl.name = "InTransit"
+	sec.add_child(tl)
+	insp.bind(func():
+		var rows: Array = v18.in_transit(id)
+		if rows.is_empty():
+			tl.text = "Nothing in transit now."
+			tl.add_theme_color_override("font_color", P.TEXT_3)
+			return
+		var parts: Array = []
+		for r in rows.slice(0, 5):
+			var dest: String = String(_sim().state["buildings"].get(int(r["to"]), {}).get("name", "a hub"))
+			parts.append("%d %s to %s (%s)" % [int(r["qty"]), _d().item_name(String(r["res"])).to_lower(), dest, Kit.clock(float(r["eta_s"]))])
+		tl.text = "In transit: " + ", ".join(parts) + ("." if rows.size() <= 5 else ", and %d more." % (rows.size() - 5))
+		tl.add_theme_color_override("font_color", P.TEXT))
+	var nb: Button = Kit.button("Show the network", func(): insp.hud.set_overlay("transport"), "Show the network\nThe package transport network on the map: hubs, tubes and the capsules that move. Key O steps through the overlays; the last one is the transport network.", "ChipButton", "route", 12)
+	nb.name = "ShowNetwork"
+	sec.add_child(nb)
+
+## A badge that opens the "Who repairs it?" window (V5 §18.1).
+func _repair_badge(badge: Control, bid: int) -> void:
+	badge.mouse_filter = Control.MOUSE_FILTER_STOP
+	badge.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	badge.tooltip_text = "Repair now\nClick: choose who repairs it, one colonist or a department head."
+	badge.set_meta("act", "repair_now")
+	badge.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+			badge.accept_event()
+			if not ev.pressed:
+				insp.hud.assign.open_repair(bid))
 
 ## Version 3 (V3_DESIGN §4): wear and the time to failure, the fault of a broken machine, a
 ## hull breach. Numbers update in place.
@@ -1283,11 +1391,18 @@ func _footer_building(b: Dictionary, base: Dictionary) -> void:
 		if b["def"] == "corridor":
 			var open: bool = bool(b.get("door_open", true))
 			f.add_child(Kit.button("Close door" if open else "Open door", func(): m.submit("set_door", {"id": id, "open": not bool(m.sim.state["buildings"][id].get("door_open", true))}), "Isolation door\nA closed door separates the air of the two sides.", "", "door", 14))
-		if bool(_d().wear_of(b).get("known", false)) and state == "active":
-			f.add_child(Kit.button("Maintain now", func():
-				m.submit("maintain", {"id": id})
-				insp.hud.toast("Maintenance of %s is the next technician job." % String(b.get("name", "")), "info", "wrench"),
-				"Maintain now\nA technician does this job first: wear goes back to 0 and a new failure point is set. It uses 1 part of the fault's item.", "", "wrench", 14))
+		var wst2: Dictionary = insp.hud.v18.wear_state(b)
+		if String(wst2["state"]) != "":
+			var rn: Button = Kit.button("Repair now", func(): insp.hud.assign.open_repair(id),
+				"Repair now\nChoose who repairs it: one colonist, who goes at once, or a department head, who gets the team to do it.", "PrimaryButton", "wrench", 14)
+			rn.set_meta("act", "repair_now")
+			f.add_child(rn)
+		elif bool(_d().wear_of(b).get("known", false)) and state == "active":
+			# No toast before the simulation answers: the window shows its answer (accepted, refused, or waiting for a part).
+			var mn: Button = Kit.button("Maintain now", func(): insp.hud.assign.open_repair(id),
+				"Maintain now\nChoose who does it: one colonist, who goes at once, or a department head, who gets the team to do it. Wear goes back to 0 and a new failure point is set. It uses 1 part of the fault item.", "", "wrench", 14)
+			mn.set_meta("act", "repair_now")
+			f.add_child(mn)
 		if bool(b.get("demolish", false)):
 			f.add_child(Kit.button("Keep it", func(): m.submit("undo_demolish", {"id": id}), "Stop the removal.", "", "check", 14))
 		elif b["def"] != "lander":
@@ -1297,7 +1412,7 @@ func _footer_building(b: Dictionary, base: Dictionary) -> void:
 	pr.add_child(Kit.icon_button("minus", func(): m.submit("set_building_priority", {"id": id, "value": int(m.sim.state["buildings"][id]["priority"]) - 1}), "Lower work priority", "GhostButton", 12, 26))
 	var pl: Label = Kit.num("%d" % int(b.get("priority", 1)), 14, P.TEXT, true)
 	pr.add_child(pl)
-	pr.add_child(Kit.icon_button("plus", func(): m.submit("set_building_priority", {"id": id, "value": int(m.sim.state["buildings"][id]["priority"]) + 1}), "Raise work priority\n3 is first. 0 is never.", "GhostButton", 12, 26))
+	pr.add_child(Kit.icon_button("plus", func(): m.submit("set_building_priority", {"id": id, "value": int(m.sim.state["buildings"][id]["priority"]) + 1}), "Raise work priority\nPriority 1 is last. 3 is first. It moves the jobs of this structure up or down; it never stops a job.", "GhostButton", 12, 26))
 	f.add_child(pr)
 	insp.bind(func(): pl.text = "%d" % int(m.sim.state["buildings"].get(id, {}).get("priority", 1)))
 
@@ -1422,6 +1537,11 @@ func _needs(a: Dictionary) -> void:
 	var g: GridContainer = _grid()
 	body.add_child(g)
 	_fact(g, "Doing", func(): return String(s.state["agents"].get(id, {}).get("goal", "")), P.CYAN)
+	_fact(g, "Order", func():
+		var oi: Dictionary = insp.hud.v18.order_info(id)
+		if not bool(oi.get("has", false)):
+			return "none"
+		return "%s%s" % [String(oi["name"]), (" " + String(oi["target"])) if String(oi["target"]) != "" else ""] + (" (waiting)" if String(oi["blocked"]) != "" else ""), P.CYAN)
 	_fact(g, "Radiation now", func():
 		var aa: Dictionary = s.state["agents"].get(id, {})
 		if aa.is_empty():

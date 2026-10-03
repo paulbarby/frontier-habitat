@@ -9,7 +9,7 @@ extends RefCounted
 ##   poi      sim.explore.pois() + pos, name, desc, finds, rp, deposit, need_text, need_short (found ones)
 ## Commands go through main.submit; when the game is paused the result is read at once (_submit).
 
-const ORDER_NAME := {"goto": "Go to", "board": "Board vehicle", "drive": "Drive to", "explore": "Explore area", "survey": "Survey",
+const ORDER_NAME := {"goto": "Go to", "board": "Board vehicle", "drive": "Drive to", "explore": "Explore area", "survey": "Survey", "repair": "Repair", "maintain": "Maintain", "build": "Help build", "haul": "Haul",
 	"work_at": "Work at", "stay": "Stay", "return": "Return to base"}
 const VEHICLE_NAME := {"small_rover": "Small rover", "medium_rover": "Medium rover", "hopper": "Hopper", "satellite": "Satellite"}
 const PHASES := ["normal", "warning", "critical", "breach"]
@@ -130,8 +130,8 @@ func vehicle_name(kind: String) -> String:
 
 # ---------------------------------------------------------------- orders and priorities
 ## UI order kinds -> SIM kinds (SIM-to-UI 2026-09-27, milestone 4).
-const SIM_KIND := {"goto": "go", "stay": "stay", "return": "return", "board": "board", "work_at": "work_at", "survey": "survey"}
-const UI_KIND := {"go": "goto", "stay": "stay", "return": "return", "board": "board", "work_at": "work_at", "survey": "survey"}
+const SIM_KIND := {"goto": "go", "stay": "stay", "return": "return", "board": "board", "work_at": "work_at", "survey": "survey", "repair": "repair", "maintain": "maintain", "build": "build", "haul": "haul"}
+const UI_KIND := {"go": "goto", "stay": "stay", "return": "return", "board": "board", "work_at": "work_at", "survey": "survey", "repair": "repair", "maintain": "maintain", "build": "build", "haul": "haul"}
 const CAT_NAME := {"construction": "Construction", "food": "Food", "industry": "Industry", "logistics": "Logistics", "repair": "Repair"}
 
 ## The order a colonist is carrying out now: {kind (UI kind), target, status, reason, since}, or {}.
@@ -180,7 +180,13 @@ func _order_payload(kind: String, agents: Array, target, confirm: bool) -> Dicti
 				p["x"] = (target as Vector2).x
 				p["y"] = (target as Vector2).y
 		"board": p["v"] = int(target)
-		"work_at": p["b"] = int(target)
+		"work_at", "repair", "maintain", "build": p["b"] = int(target)
+		"haul":
+			# V5 section 18: {b: structure, res: item, qty: units}
+			if typeof(target) == TYPE_DICTIONARY:
+				p["b"] = int(target["b"])
+				p["res"] = String(target["res"])
+				p["qty"] = int(target.get("qty", 1))
 		"survey":
 			# A point of interest (milestone 7) or a hazard site: {"poi": id} / {"site": id} / an int (site).
 			if typeof(target) == TYPE_DICTIONARY and (target as Dictionary).has("poi"):

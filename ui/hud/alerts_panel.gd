@@ -155,6 +155,14 @@ func _make_card(i: Dictionary) -> Dictionary:
 	v.add_child(text)
 	var act: Label = Kit.wrap("Do: " + String(issue["action"]), 12, P.TEXT_2)
 	v.add_child(act)
+	# V5 §18.4: an alert about a missing item has Show chain: the chain from the raw resource to the item.
+	var chain_item: String = hud.v18.issue_item(issue)
+	if chain_item != "":
+		var cb: Button = Kit.button("Show chain", func(): hud.open_chain(chain_item), "Show chain\nHow %s is made, step by step: what is done, what is missing and what to build." % hud.data.item_name(chain_item).to_lower(), "ChipButton", "route", 12)
+		cb.custom_minimum_size.y = 24
+		cb.set_meta("chain_item", chain_item)
+		cb.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		v.add_child(cb)
 	var cons: Array = i["consequences"]
 	var cons_box: VBoxContainer = Kit.vbox(2)
 	v.add_child(cons_box)

@@ -54,6 +54,12 @@ const CAM_FADE_R := 1.0         # m: another body this close to the follow camer
                                 # shoulder filling a third of the frame)
 const CAM_LINE_R := 0.4         # m: another body this close (plan) to the line from the lens to the followed person fades
 var dbg_floor_off := 0          # measurement: 1 airlock floors, 2 doorway profile, 4 level plates, 8 tube floor off
+# (in4 follow camera, headless 60 s, round 5: accel 9 / decel 64 m/s^2 on screen -> 4.0 mm; 6 / 6 -> 3.23 mm;
+# 4.5 / 4.5 -> 2.98 mm, head 3.4 px, fewer clip switches)
+var follow_accel := 4.5          # m/s^2 on screen: the followed person's speed-up at 2x-4x (was FOLLOW_VIEW_ACCEL 9)
+var follow_decel_k := 1.0        # its slow-down at 2x-4x: x follow_accel on screen (99 = off)
+var overview_k := 6             # update every k-th frame past 105 m camera distance (measurement switch; was 4)
+var write_half := true          # zoomed out: instance buffers every 2nd frame (measurement switch)
 var force_lod := -1             # >= 0: every person (not the followed one) at this LOD (world_view `npclod`, checks)
 const LOD2_DIST := 40.0         # m: people_<v>_lod2.glb beyond this when present (ART-NPC, asked 2026-10-03)
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
@@ -2005,7 +2011,8 @@ func sync(delta: float) -> bool:
 		if far or mid:
 			# (zoomed out past FAR_CAM_D every body is far; past 1.1 x that, every 4th frame: all roofs off at 110-150 m
 			# drew the colony's 134 people at 22 fps, 2026-10-03)
-			var k: int = (4 if cam_d > FAR_CAM_D * 1.1 else 3) if far else 2
+			# (and past 105 m, the overview, every 6th frame: 150 us a body, 4.9 ms a frame at k = 4, round 5)
+			var k: int = ((overview_k if cam_d > 105.0 else 4) if cam_d > FAR_CAM_D * 1.1 else 3) if far else 2
 			rec["skip_k"] = k
 			if (int(id) + _frame) % k != 0:
 				(lists[dk] as Array).append([rec, lib])
@@ -2029,14 +2036,19 @@ func sync(delta: float) -> bool:
 		_separate()
 	stats_slots["sep_ms"] = snappedf(lerpf(float(stats_slots.get("sep_ms", 0.0)), (Time.get_ticks_usec() - ts1) / 1000.0, 0.1), 0.01)
 	var tw0: int = Time.get_ticks_usec()
-	for variant in lists:
-		if mm.has(variant):
-			_write_mm(variant, lists[variant])
+	# (zoomed out past FAR_CAM_D, not following: the instance buffers and pose textures are written every 2nd
+	# frame; the bodies move every 4th-6th frame there, so a body's new pose shows at most one frame late.
+	# Overview at 110 m: 2.3 ms a frame for the writes, round 5)
+	var write_now: bool = not (write_half and cam_d > FAR_CAM_D and _follow_id < 0 and _frame % 2 == 1)
+	if write_now:
+		for variant in lists:
+			if mm.has(variant):
+				_write_mm(variant, lists[variant])
 	_t_write += Time.get_ticks_usec() - tw0
-	if _dyn_used > 0 and _dyn_img != null:
+	if write_now and _dyn_used > 0 and _dyn_img != null:
 		_dyn_img.set_data(_dyn_w, DYN_ROWS, false, Image.FORMAT_RGBAF, _dyn_buf.to_byte_array())
 		_dyn_tex.update(_dyn_img)
-	if _bd_used > 0 and _bd_img != null:
+	if write_now and _bd_used > 0 and _bd_img != null:
 		_bd_img.set_data(1, BD_ROWS, false, Image.FORMAT_RGBAF, _bd_buf.to_byte_array())
 		_bd_tex.update(_bd_img)
 	var tl0: int = Time.get_ticks_usec()
@@ -2947,7 +2959,7 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	# Speed changes: ACCEL (game time); for the followed person at 2x-4x at most FOLLOW_VIEW_ACCEL on screen.
 	var acc: float = ACCEL
 	if pri and gr > 1.0:
-		acc = minf(ACCEL, FOLLOW_VIEW_ACCEL / (gr * gr))
+		acc = minf(ACCEL, follow_accel / (gr * gr))
 	var vdes: float = minf(vmax, sqrt(2.0 * acc * rem_eff) + 0.05)
 	# Bends ahead (2026-10-02): at most sqrt(A_LAT x radius) on each bend, braking at `acc` before it.
 	# A runner took a 0.4 m corner at 3.4 m/s (3 g sideways; at 4x the follow camera swung through the body).
@@ -2957,7 +2969,12 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	else:
 		# Slow down at DECEL at most (a new slower top speed near an anchor dropped 3.4 -> 1.1 m/s in
 		# one frame), but always fast enough to stop on the path's end.
-		v = maxf(vdes, v - DECEL * dtg)
+		# (the followed person at 2x-4x: at most follow_decel_k x FOLLOW_VIEW_ACCEL on screen; DECEL is 64 m/s^2 on
+		# screen at 4x, a 18 mm step in the follow camera's motion, round 5; the stop on the path's end stays exact)
+		var dec: float = DECEL
+		if pri and gr > 1.0:
+			dec = minf(DECEL, follow_decel_k * follow_accel / (gr * gr))
+		v = maxf(vdes, v - dec * dtg)
 		v = minf(v, sqrt(2.0 * DECEL * remaining) + 0.05)
 	rec["v"] = v
 	# Move exactly along the (corner-rounded) polyline: a long frame step never cuts a corner.

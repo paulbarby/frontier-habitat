@@ -163,6 +163,20 @@
     "logistics",
     "repair"
   ],
+  "transport": {
+    "_note": "V5 section 18.5, package transport. Two upgrades: a hub on a storage structure and a tube on a corridor (research log_transport). A capsule holds capsule_units; a tube passes tube_units_per_s; it flies at capsule_speed m/s; each hub adds hub_seconds. A haul that would wait more than max_wait_s for a tube is left to the colonists.",
+    "hub_cost": {"metal": 10, "polymer": 5, "electronics": 4},
+    "tube_cost_base": {"metal": 3, "polymer": 2, "electronics": 1},
+    "tube_cost_per_10m": {"metal": 2, "polymer": 1, "electronics": 1},
+    "hub_work": 60,
+    "tube_work": 40,
+    "capsule_units": 6,
+    "tube_units_per_s": 2.0,
+    "capsule_speed": 8.0,
+    "hub_seconds": 1.5,
+    "max_wait_s": 30,
+    "hub_power": 1.0
+  },
   "default_priority": {
     "construction": 2,
     "food": 2,

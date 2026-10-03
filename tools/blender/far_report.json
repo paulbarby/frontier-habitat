@@ -7,11 +7,12 @@
    "id": "academy_l",
    "src_tris": 35892,
    "far_tris": 15423,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3586,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -19,29 +20,30 @@
     "Interior": {
      "tris": 7901,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3936,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 980696
+   "file_size": 981776
   },
   {
    "id": "academy_m",
    "src_tris": 26000,
    "far_tris": 11739,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3610,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -49,29 +51,30 @@
     "Interior": {
      "tris": 4819,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3310,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 740752
+   "file_size": 741828
   },
   {
    "id": "academy_s",
    "src_tris": 19062,
    "far_tris": 8935,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3192,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -79,29 +82,30 @@
     "Interior": {
      "tris": 2729,
      "mats": [
-      "L3Band",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3014,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 552608
+   "file_size": 553368
   },
   {
    "id": "airlock_l",
    "src_tris": 11788,
    "far_tris": 5550,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 2520,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -109,8 +113,8 @@
     "Interior": {
      "tris": 1212,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -122,17 +126,18 @@
      ]
     }
    },
-   "file_size": 339236
+   "file_size": 340160
   },
   {
    "id": "airlock_m",
    "src_tris": 10598,
    "far_tris": 4981,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 2398,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -140,8 +145,8 @@
     "Interior": {
      "tris": 896,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -153,17 +158,18 @@
      ]
     }
    },
-   "file_size": 302288
+   "file_size": 303244
   },
   {
    "id": "airlock_r28",
    "src_tris": 8442,
    "far_tris": 4563,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 2084,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -171,8 +177,8 @@
     "Interior": {
      "tris": 842,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -184,17 +190,18 @@
      ]
     }
    },
-   "file_size": 275792
+   "file_size": 276512
   },
   {
    "id": "algae_bioreactor_l",
    "src_tris": 25467,
    "far_tris": 12961,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3346,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -237,22 +244,23 @@
     "Roof": {
      "tris": 3991,
      "mats": [
-      "Neon",
+      "Glow",
       "Palette"
      ]
     }
    },
-   "file_size": 697484
+   "file_size": 697992
   },
   {
    "id": "algae_bioreactor_m",
    "src_tris": 18248,
    "far_tris": 9423,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3230,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -295,22 +303,23 @@
     "Roof": {
      "tris": 3031,
      "mats": [
-      "Neon",
+      "Glow",
       "Palette"
      ]
     }
    },
-   "file_size": 529376
+   "file_size": 529868
   },
   {
    "id": "algae_bioreactor_s",
    "src_tris": 13863,
    "far_tris": 7305,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3060,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -353,22 +362,23 @@
     "Roof": {
      "tris": 1821,
      "mats": [
-      "Neon",
+      "Glow",
       "Palette"
      ]
     }
    },
-   "file_size": 440184
+   "file_size": 440660
   },
   {
    "id": "algae_bioreactor_xl",
    "src_tris": 36409,
    "far_tris": 17376,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3386,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -411,22 +421,23 @@
     "Roof": {
      "tris": 5023,
      "mats": [
-      "Neon",
+      "Glow",
       "Palette"
      ]
     }
    },
-   "file_size": 908144
+   "file_size": 908588
   },
   {
    "id": "atmo_processor_l",
    "src_tris": 23899,
    "far_tris": 11962,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -474,17 +485,18 @@
      ]
     }
    },
-   "file_size": 683312
+   "file_size": 684124
   },
   {
    "id": "atmo_processor_m",
    "src_tris": 20138,
    "far_tris": 10144,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3196,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -532,17 +544,18 @@
      ]
     }
    },
-   "file_size": 582900
+   "file_size": 583708
   },
   {
    "id": "atmo_processor_s",
    "src_tris": 13969,
    "far_tris": 7466,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 2878,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -590,17 +603,18 @@
      ]
     }
    },
-   "file_size": 443416
+   "file_size": 444224
   },
   {
    "id": "atmo_processor_xl",
    "src_tris": 33134,
    "far_tris": 16042,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3206,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -648,17 +662,18 @@
      ]
     }
    },
-   "file_size": 913124
+   "file_size": 913944
   },
   {
    "id": "battery_plant_l",
    "src_tris": 22828,
    "far_tris": 11317,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -701,22 +716,23 @@
     "Roof": {
      "tris": 3555,
      "mats": [
-      "Neon",
+      "L3Band",
       "Palette"
      ]
     }
    },
-   "file_size": 757888
+   "file_size": 758376
   },
   {
    "id": "battery_plant_m",
    "src_tris": 16677,
    "far_tris": 8803,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3716,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -759,22 +775,23 @@
     "Roof": {
      "tris": 2742,
      "mats": [
-      "Neon",
+      "L3Band",
       "Palette"
      ]
     }
    },
-   "file_size": 587868
+   "file_size": 588352
   },
   {
    "id": "battery_plant_s",
    "src_tris": 13978,
    "far_tris": 7474,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -816,22 +833,23 @@
     "Roof": {
      "tris": 2108,
      "mats": [
-      "Neon",
+      "L3Band",
       "Palette"
      ]
     }
    },
-   "file_size": 491496
+   "file_size": 491980
   },
   {
    "id": "battery_plant_xl",
    "src_tris": 32582,
    "far_tris": 14523,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -874,22 +892,23 @@
     "Roof": {
      "tris": 3888,
      "mats": [
-      "Neon",
+      "L3Band",
       "Palette"
      ]
     }
    },
-   "file_size": 981440
+   "file_size": 981928
   },
   {
    "id": "bio_lab_l",
    "src_tris": 21855,
    "far_tris": 9560,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3182,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -925,7 +944,7 @@
     "Interior": {
      "tris": 2318,
      "mats": [
-      "LightStrip",
+      "Glow",
       "Palette"
      ]
     },
@@ -937,17 +956,18 @@
      ]
     }
    },
-   "file_size": 586180
+   "file_size": 587300
   },
   {
    "id": "bio_lab_m",
    "src_tris": 16656,
    "far_tris": 7941,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3198,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -983,7 +1003,7 @@
     "Interior": {
      "tris": 1291,
      "mats": [
-      "LightStrip",
+      "Glow",
       "Palette"
      ]
     },
@@ -995,17 +1015,18 @@
      ]
     }
    },
-   "file_size": 485004
+   "file_size": 486132
   },
   {
    "id": "bio_lab_s",
    "src_tris": 12920,
    "far_tris": 6482,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 2972,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1041,29 +1062,30 @@
     "Interior": {
      "tris": 828,
      "mats": [
-      "LightStrip",
+      "Glow",
       "Palette"
      ]
     },
     "Roof": {
      "tris": 1880,
      "mats": [
-      "LightStrip",
+      "Glow",
       "Palette"
      ]
     }
    },
-   "file_size": 401092
+   "file_size": 402200
   },
   {
    "id": "bio_lab_xl",
    "src_tris": 28031,
    "far_tris": 11144,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3248,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1099,7 +1121,7 @@
     "Interior": {
      "tris": 3310,
      "mats": [
-      "LightStrip",
+      "Glow",
       "Palette"
      ]
     },
@@ -1111,19 +1133,20 @@
      ]
     }
    },
-   "file_size": 686876
+   "file_size": 687952
   },
   {
    "id": "cantina_l",
    "src_tris": 30915,
    "far_tris": 12210,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3604,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -1143,8 +1166,8 @@
     "Interior": {
      "tris": 3718,
      "mats": [
-      "Palette",
-      "Window"
+      "Neon",
+      "Palette"
      ]
     },
     "L3": {
@@ -1169,19 +1192,20 @@
      ]
     }
    },
-   "file_size": 783084
+   "file_size": 783608
   },
   {
    "id": "cantina_m",
    "src_tris": 22109,
    "far_tris": 9061,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3468,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -1201,8 +1225,8 @@
     "Interior": {
      "tris": 1622,
      "mats": [
-      "Palette",
-      "Window"
+      "Neon",
+      "Palette"
      ]
     },
     "L3": {
@@ -1227,17 +1251,18 @@
      ]
     }
    },
-   "file_size": 585820
+   "file_size": 586336
   },
   {
    "id": "cantina_s",
    "src_tris": 17299,
    "far_tris": 6984,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 2592,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1259,8 +1284,8 @@
     "Interior": {
      "tris": 1213,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "L3": {
@@ -1285,19 +1310,20 @@
      ]
     }
    },
-   "file_size": 437772
+   "file_size": 438884
   },
   {
    "id": "cantina_xl",
    "src_tris": 39215,
    "far_tris": 14744,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3384,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
@@ -1310,8 +1336,8 @@
     "Interior": {
      "tris": 6076,
      "mats": [
-      "Palette",
-      "Window"
+      "Neon",
+      "Palette"
      ]
     },
     "L2": {
@@ -1343,17 +1369,18 @@
      ]
     }
    },
-   "file_size": 953892
+   "file_size": 954420
   },
   {
    "id": "carbon_works_l",
    "src_tris": 24524,
    "far_tris": 11622,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1389,8 +1416,8 @@
     "Interior": {
      "tris": 2930,
      "mats": [
-      "L3Band",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -1401,17 +1428,18 @@
      ]
     }
    },
-   "file_size": 752088
+   "file_size": 753156
   },
   {
    "id": "carbon_works_m",
    "src_tris": 17758,
    "far_tris": 9046,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1459,17 +1487,18 @@
      ]
     }
    },
-   "file_size": 584288
+   "file_size": 584360
   },
   {
    "id": "carbon_works_s",
    "src_tris": 14850,
    "far_tris": 7783,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3480,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1517,17 +1546,18 @@
      ]
     }
    },
-   "file_size": 496004
+   "file_size": 496080
   },
   {
    "id": "carbon_works_xl",
    "src_tris": 32548,
    "far_tris": 14726,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3696,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1563,8 +1593,8 @@
     "Interior": {
      "tris": 5806,
      "mats": [
-      "L3Band",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -1575,17 +1605,18 @@
      ]
     }
    },
-   "file_size": 972408
+   "file_size": 973476
   },
   {
    "id": "ceramics_kiln_l",
    "src_tris": 22687,
    "far_tris": 11635,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1633,17 +1664,18 @@
      ]
     }
    },
-   "file_size": 778480
+   "file_size": 779304
   },
   {
    "id": "ceramics_kiln_m",
    "src_tris": 16969,
    "far_tris": 9382,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1691,17 +1723,18 @@
      ]
     }
    },
-   "file_size": 622308
+   "file_size": 623136
   },
   {
    "id": "ceramics_kiln_s",
    "src_tris": 13874,
    "far_tris": 7565,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1748,17 +1781,18 @@
      ]
     }
    },
-   "file_size": 494616
+   "file_size": 495440
   },
   {
    "id": "ceramics_kiln_xl",
    "src_tris": 30877,
    "far_tris": 15123,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1794,8 +1828,8 @@
     "Interior": {
      "tris": 5751,
      "mats": [
-      "Palette",
-      "Window"
+      "Ember",
+      "Palette"
      ]
     },
     "Roof": {
@@ -1806,17 +1840,18 @@
      ]
     }
    },
-   "file_size": 1023436
+   "file_size": 1024272
   },
   {
    "id": "cold_storage_l",
-   "src_tris": 24518,
-   "far_tris": 12889,
-   "draws": 14,
+   "src_tris": 23564,
+   "far_tris": 12171,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3482,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1836,14 +1871,14 @@
      ]
     },
     "L4": {
-     "tris": 276,
+     "tris": 274,
      "mats": [
       "L4Band",
       "Palette"
      ]
     },
     "Interior": {
-     "tris": 4946,
+     "tris": 4230,
      "mats": [
       "L3Band",
       "Palette"
@@ -1864,17 +1899,18 @@
      ]
     }
    },
-   "file_size": 847308
+   "file_size": 798236
   },
   {
    "id": "cold_storage_m",
-   "src_tris": 17897,
-   "far_tris": 9819,
-   "draws": 14,
+   "src_tris": 17355,
+   "far_tris": 9347,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3426,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1900,6 +1936,13 @@
       "Palette"
      ]
     },
+    "Interior": {
+     "tris": 2374,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
     "L5": {
      "tris": 292,
      "mats": [
@@ -1907,32 +1950,26 @@
       "Palette"
      ]
     },
-    "Interior": {
-     "tris": 2862,
-     "mats": [
-      "L3Band",
-      "Palette"
-     ]
-    },
     "Roof": {
-     "tris": 2623,
+     "tris": 2639,
      "mats": [
       "Neon",
       "Palette"
      ]
     }
    },
-   "file_size": 640820
+   "file_size": 604760
   },
   {
    "id": "cold_storage_s",
-   "src_tris": 13132,
-   "far_tris": 7745,
-   "draws": 14,
+   "src_tris": 13222,
+   "far_tris": 7583,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3196,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -1958,6 +1995,13 @@
       "Palette"
      ]
     },
+    "Interior": {
+     "tris": 1266,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    },
     "L5": {
      "tris": 266,
      "mats": [
@@ -1965,32 +2009,26 @@
       "Palette"
      ]
     },
-    "Interior": {
-     "tris": 1732,
-     "mats": [
-      "L3Band",
-      "Palette"
-     ]
-    },
     "Roof": {
-     "tris": 2015,
+     "tris": 2319,
      "mats": [
       "Neon",
       "Palette"
      ]
     }
    },
-   "file_size": 506060
+   "file_size": 491988
   },
   {
    "id": "cold_storage_xl",
-   "src_tris": 32788,
-   "far_tris": 15777,
-   "draws": 14,
+   "src_tris": 32222,
+   "far_tris": 15349,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2010,14 +2048,14 @@
      ]
     },
     "L4": {
-     "tris": 286,
+     "tris": 282,
      "mats": [
       "L4Band",
       "Palette"
      ]
     },
     "Interior": {
-     "tris": 7310,
+     "tris": 6822,
      "mats": [
       "L3Band",
       "Palette"
@@ -2031,24 +2069,25 @@
      ]
     },
     "Roof": {
-     "tris": 3937,
+     "tris": 4001,
      "mats": [
       "Neon",
       "Palette"
      ]
     }
    },
-   "file_size": 1050736
+   "file_size": 1021868
   },
   {
    "id": "distillery_l",
    "src_tris": 33264,
    "far_tris": 13931,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3596,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2085,7 +2124,7 @@
      "tris": 2639,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -2097,17 +2136,18 @@
      ]
     }
    },
-   "file_size": 751972
+   "file_size": 752732
   },
   {
    "id": "distillery_m",
    "src_tris": 25875,
    "far_tris": 11017,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3714,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2144,29 +2184,30 @@
      "tris": 1292,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 5167,
      "mats": [
       "Glass",
-      "LightStrip",
+      "Neon",
       "Palette"
      ]
     }
    },
-   "file_size": 622660
+   "file_size": 623740
   },
   {
    "id": "distillery_s",
    "src_tris": 18095,
    "far_tris": 9370,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2201,29 +2242,30 @@
      "tris": 1048,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 4260,
      "mats": [
       "Glass",
-      "Neon",
+      "LightStrip",
       "Palette"
      ]
     }
    },
-   "file_size": 539432
+   "file_size": 539856
   },
   {
    "id": "distillery_xl",
    "src_tris": 46257,
    "far_tris": 15587,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2260,7 +2302,7 @@
      "tris": 3813,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -2272,17 +2314,18 @@
      ]
     }
    },
-   "file_size": 872672
+   "file_size": 873432
   },
   {
    "id": "electronics_fab_l",
    "src_tris": 24160,
    "far_tris": 11616,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2325,22 +2368,23 @@
     "Roof": {
      "tris": 4222,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Plasma"
      ]
     }
    },
-   "file_size": 741568
+   "file_size": 742336
   },
   {
    "id": "electronics_fab_m",
    "src_tris": 16674,
    "far_tris": 8858,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3716,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2377,28 +2421,29 @@
      "tris": 1358,
      "mats": [
       "Palette",
-      "Window"
+      "Plasma"
      ]
     },
     "Roof": {
      "tris": 2830,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Plasma"
      ]
     }
    },
-   "file_size": 561224
+   "file_size": 561704
   },
   {
    "id": "electronics_fab_s",
    "src_tris": 15233,
    "far_tris": 7935,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3478,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2440,22 +2485,23 @@
     "Roof": {
      "tris": 2642,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Plasma"
      ]
     }
    },
-   "file_size": 508512
+   "file_size": 509284
   },
   {
    "id": "electronics_fab_xl",
    "src_tris": 34112,
    "far_tris": 14892,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2498,22 +2544,23 @@
     "Roof": {
      "tris": 4828,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Plasma"
      ]
     }
    },
-   "file_size": 972704
+   "file_size": 973480
   },
   {
    "id": "fabricator_l",
    "src_tris": 26421,
    "far_tris": 12916,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3598,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2550,7 +2597,7 @@
      "tris": 3770,
      "mats": [
       "Palette",
-      "Plasma"
+      "Screen"
      ]
     },
     "Roof": {
@@ -2561,17 +2608,18 @@
      ]
     }
    },
-   "file_size": 852336
+   "file_size": 853104
   },
   {
    "id": "fabricator_m",
    "src_tris": 19037,
    "far_tris": 9723,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3754,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2608,28 +2656,29 @@
      "tris": 1714,
      "mats": [
       "Palette",
-      "Plasma"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3252,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 613376
+   "file_size": 614100
   },
   {
    "id": "fabricator_s",
    "src_tris": 15068,
    "far_tris": 8276,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3490,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2666,28 +2715,29 @@
      "tris": 1120,
      "mats": [
       "Palette",
-      "Plasma"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 2864,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 528856
+   "file_size": 529580
   },
   {
    "id": "fabricator_xl",
    "src_tris": 34967,
    "far_tris": 15742,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3686,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2724,28 +2774,29 @@
      "tris": 6234,
      "mats": [
       "Palette",
-      "Plasma"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 4772,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1038772
+   "file_size": 1039504
   },
   {
    "id": "fungus_farm_l",
    "src_tris": 23334,
    "far_tris": 11025,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3734,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2760,7 +2811,7 @@
     "Interior": {
      "tris": 2134,
      "mats": [
-      "LightStrip",
+      "L4Band",
       "Palette"
      ]
     },
@@ -2793,17 +2844,18 @@
      ]
     }
    },
-   "file_size": 669332
+   "file_size": 670160
   },
   {
    "id": "fungus_farm_m",
    "src_tris": 19025,
    "far_tris": 9113,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3710,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2851,17 +2903,18 @@
      ]
     }
    },
-   "file_size": 558652
+   "file_size": 559480
   },
   {
    "id": "fungus_farm_s",
    "src_tris": 15537,
    "far_tris": 7492,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3424,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2883,7 +2936,7 @@
     "Interior": {
      "tris": 814,
      "mats": [
-      "LightStrip",
+      "L4Band",
       "Palette"
      ]
     },
@@ -2909,17 +2962,18 @@
      ]
     }
    },
-   "file_size": 456120
+   "file_size": 456940
   },
   {
    "id": "fungus_farm_xl",
    "src_tris": 30635,
    "far_tris": 13945,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3568,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -2934,7 +2988,7 @@
     "Interior": {
      "tris": 4670,
      "mats": [
-      "LightStrip",
+      "L4Band",
       "Palette"
      ]
     },
@@ -2967,17 +3021,18 @@
      ]
     }
    },
-   "file_size": 855388
+   "file_size": 856224
   },
   {
    "id": "glassworks_l",
    "src_tris": 21120,
    "far_tris": 11163,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3026,18 +3081,19 @@
      ]
     }
    },
-   "file_size": 701232
+   "file_size": 702048
   },
   {
    "id": "glassworks_m",
    "src_tris": 16332,
    "far_tris": 8844,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
-      "Neon",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
@@ -3072,8 +3128,8 @@
     "Interior": {
      "tris": 1502,
      "mats": [
-      "L3Band",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
@@ -3085,17 +3141,18 @@
      ]
     }
    },
-   "file_size": 555556
+   "file_size": 556960
   },
   {
    "id": "glassworks_s",
    "src_tris": 13178,
    "far_tris": 7536,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3131,8 +3188,8 @@
     "Interior": {
      "tris": 958,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
@@ -3144,17 +3201,18 @@
      ]
     }
    },
-   "file_size": 480244
+   "file_size": 481048
   },
   {
    "id": "glassworks_xl",
    "src_tris": 28787,
    "far_tris": 14490,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3203,17 +3261,18 @@
      ]
     }
    },
-   "file_size": 933216
+   "file_size": 934028
   },
   {
    "id": "greenhouse_l",
    "src_tris": 23248,
    "far_tris": 11407,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3348,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3262,17 +3321,18 @@
      ]
     }
    },
-   "file_size": 775160
+   "file_size": 775984
   },
   {
    "id": "greenhouse_m",
    "src_tris": 19488,
    "far_tris": 8765,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3376,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3321,17 +3381,18 @@
      ]
     }
    },
-   "file_size": 579360
+   "file_size": 580180
   },
   {
    "id": "greenhouse_s",
    "src_tris": 13330,
    "far_tris": 6582,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3136,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3380,17 +3441,18 @@
      ]
     }
    },
-   "file_size": 428668
+   "file_size": 429484
   },
   {
    "id": "greenhouse_xl",
    "src_tris": 28324,
    "far_tris": 13413,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3390,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3439,17 +3501,18 @@
      ]
     }
    },
-   "file_size": 924088
+   "file_size": 924956
   },
   {
    "id": "habitat_l",
    "src_tris": 33123,
    "far_tris": 15844,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4641,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3458,15 +3521,15 @@
      "tris": 4000,
      "mats": [
       "Glass",
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 6146,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -3498,17 +3561,18 @@
      ]
     }
    },
-   "file_size": 940312
+   "file_size": 940364
   },
   {
    "id": "habitat_m",
    "src_tris": 24990,
    "far_tris": 11235,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 4353,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3516,29 +3580,30 @@
     "Roof": {
      "tris": 3020,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 3862,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 712716
+   "file_size": 712776
   },
   {
    "id": "habitat_s",
    "src_tris": 15406,
    "far_tris": 7126,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3509,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3546,8 +3611,8 @@
     "Roof": {
      "tris": 2248,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
@@ -3558,17 +3623,18 @@
      ]
     }
    },
-   "file_size": 457988
+   "file_size": 458500
   },
   {
    "id": "habitat_xl",
    "src_tris": 43714,
    "far_tris": 20010,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 5097,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3577,15 +3643,15 @@
      "tris": 4604,
      "mats": [
       "Glass",
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 9253,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -3617,17 +3683,18 @@
      ]
     }
    },
-   "file_size": 1227172
+   "file_size": 1227216
   },
   {
    "id": "hr_office_l",
    "src_tris": 33001,
    "far_tris": 13519,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 4072,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3635,29 +3702,30 @@
     "Roof": {
      "tris": 3904,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 5543,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     }
    },
-   "file_size": 853692
+   "file_size": 855060
   },
   {
    "id": "hr_office_m",
    "src_tris": 24487,
    "far_tris": 10018,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3646,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3665,29 +3733,30 @@
     "Roof": {
      "tris": 3245,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 3127,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     }
    },
-   "file_size": 631724
+   "file_size": 633092
   },
   {
    "id": "hr_office_s",
    "src_tris": 19115,
    "far_tris": 7632,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3202,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3695,29 +3764,30 @@
     "Roof": {
      "tris": 2825,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
      "tris": 1605,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     }
    },
-   "file_size": 466900
+   "file_size": 468276
   },
   {
    "id": "jail_l",
    "src_tris": 21595,
    "far_tris": 12791,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3210,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3725,29 +3795,30 @@
     "Interior": {
      "tris": 4392,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 5189,
      "mats": [
       "Palette",
-      "PrisonOrangeGlow"
+      "Window"
      ]
     }
    },
-   "file_size": 820184
+   "file_size": 821204
   },
   {
    "id": "jail_m",
    "src_tris": 15754,
    "far_tris": 9388,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2992,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3755,29 +3826,30 @@
     "Interior": {
      "tris": 2101,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 4295,
      "mats": [
       "Palette",
-      "PrisonOrangeGlow"
+      "Window"
      ]
     }
    },
-   "file_size": 597732
+   "file_size": 598748
   },
   {
    "id": "jail_s",
    "src_tris": 13051,
    "far_tris": 7746,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2736,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3785,29 +3857,30 @@
     "Interior": {
      "tris": 1316,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3694,
      "mats": [
       "Palette",
-      "PrisonOrangeGlow"
+      "Window"
      ]
     }
    },
-   "file_size": 487344
+   "file_size": 488372
   },
   {
    "id": "junction",
    "src_tris": 8654,
    "far_tris": 3788,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 2414,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3827,19 +3900,20 @@
      ]
     }
    },
-   "file_size": 238028
+   "file_size": 238864
   },
   {
    "id": "kitchen_l",
    "src_tris": 29275,
    "far_tris": 13289,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4134,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -3873,8 +3947,8 @@
     "Interior": {
      "tris": 4156,
      "mats": [
-      "Palette",
-      "Window"
+      "LightStrip",
+      "Palette"
      ]
     },
     "Roof": {
@@ -3886,19 +3960,20 @@
      ]
     }
    },
-   "file_size": 862904
+   "file_size": 863716
   },
   {
    "id": "kitchen_m",
    "src_tris": 22275,
    "far_tris": 10384,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4050,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -3932,8 +4007,8 @@
     "Interior": {
      "tris": 2344,
      "mats": [
-      "Palette",
-      "Window"
+      "LightStrip",
+      "Palette"
      ]
     },
     "Roof": {
@@ -3945,17 +4020,18 @@
      ]
     }
    },
-   "file_size": 677812
+   "file_size": 678680
   },
   {
    "id": "kitchen_s",
    "src_tris": 16076,
    "far_tris": 7875,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3178,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -3991,8 +4067,8 @@
     "Interior": {
      "tris": 1460,
      "mats": [
-      "Palette",
-      "Window"
+      "LightStrip",
+      "Palette"
      ]
     },
     "Roof": {
@@ -4004,19 +4080,20 @@
      ]
     }
    },
-   "file_size": 514692
+   "file_size": 515216
   },
   {
    "id": "kitchen_xl",
    "src_tris": 36452,
    "far_tris": 15263,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3850,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "L2": {
@@ -4050,8 +4127,8 @@
     "Interior": {
      "tris": 5918,
      "mats": [
-      "Palette",
-      "Window"
+      "LightStrip",
+      "Palette"
      ]
     },
     "Roof": {
@@ -4063,17 +4140,18 @@
      ]
     }
    },
-   "file_size": 998072
+   "file_size": 998900
   },
   {
    "id": "lounge_l",
    "src_tris": 30394,
    "far_tris": 13865,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4506,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4122,17 +4200,18 @@
      ]
     }
    },
-   "file_size": 842624
+   "file_size": 843456
   },
   {
    "id": "lounge_m",
    "src_tris": 22758,
    "far_tris": 10404,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3998,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4155,8 +4234,8 @@
     "Interior": {
      "tris": 2390,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "L3": {
@@ -4181,17 +4260,18 @@
      ]
     }
    },
-   "file_size": 645756
+   "file_size": 646884
   },
   {
    "id": "lounge_s",
    "src_tris": 17838,
    "far_tris": 8154,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3234,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4214,8 +4294,8 @@
     "Interior": {
      "tris": 1708,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -4240,17 +4320,18 @@
      ]
     }
    },
-   "file_size": 500688
+   "file_size": 501748
   },
   {
    "id": "lounge_xl",
    "src_tris": 38877,
    "far_tris": 17045,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4916,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4299,17 +4380,18 @@
      ]
     }
    },
-   "file_size": 1066924
+   "file_size": 1067764
   },
   {
    "id": "magnet_works_l",
    "src_tris": 24784,
    "far_tris": 11526,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3534,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4346,28 +4428,29 @@
      "tris": 3227,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3714,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 746404
+   "file_size": 747120
   },
   {
    "id": "magnet_works_m",
    "src_tris": 17848,
    "far_tris": 9162,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4403,8 +4486,8 @@
     "Interior": {
      "tris": 1625,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -4415,17 +4498,18 @@
      ]
     }
    },
-   "file_size": 592320
+   "file_size": 593384
   },
   {
    "id": "magnet_works_s",
    "src_tris": 14383,
    "far_tris": 7886,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4462,7 +4546,7 @@
      "tris": 1273,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -4473,17 +4557,18 @@
      ]
     }
    },
-   "file_size": 502488
+   "file_size": 503256
   },
   {
    "id": "magnet_works_xl",
    "src_tris": 34943,
    "far_tris": 15198,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3698,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4520,28 +4605,29 @@
      "tris": 6556,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3894,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 998256
+   "file_size": 998964
   },
   {
    "id": "medical_l",
    "src_tris": 22866,
    "far_tris": 9751,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4556,8 +4642,8 @@
     "Interior": {
      "tris": 2722,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -4584,22 +4670,23 @@
     "Roof": {
      "tris": 2332,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 594268
+   "file_size": 595628
   },
   {
    "id": "medical_m",
    "src_tris": 17916,
    "far_tris": 7570,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3734,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4614,8 +4701,8 @@
     "Interior": {
      "tris": 1348,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -4647,17 +4734,18 @@
      ]
     }
    },
-   "file_size": 469804
+   "file_size": 470876
   },
   {
    "id": "medical_s",
    "src_tris": 13850,
    "far_tris": 6082,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3210,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4672,8 +4760,8 @@
     "Interior": {
      "tris": 866,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -4705,17 +4793,18 @@
      ]
     }
    },
-   "file_size": 387380
+   "file_size": 388444
   },
   {
    "id": "medical_xl",
    "src_tris": 30427,
    "far_tris": 11863,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3564,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4723,8 +4812,8 @@
     "Interior": {
      "tris": 4338,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L2": {
@@ -4758,22 +4847,23 @@
     "Roof": {
      "tris": 2928,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 716344
+   "file_size": 717648
   },
   {
    "id": "metamaterial_foundry_l",
    "src_tris": 24155,
    "far_tris": 12045,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4816,22 +4906,23 @@
     "Roof": {
      "tris": 3956,
      "mats": [
-      "Neon",
+      "L4Band",
       "Palette"
      ]
     }
    },
-   "file_size": 765712
+   "file_size": 766196
   },
   {
    "id": "metamaterial_foundry_m",
    "src_tris": 18014,
    "far_tris": 9420,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3636,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4874,22 +4965,23 @@
     "Roof": {
      "tris": 3146,
      "mats": [
-      "Neon",
+      "L4Band",
       "Palette"
      ]
     }
    },
-   "file_size": 596044
+   "file_size": 596532
   },
   {
    "id": "metamaterial_foundry_s",
    "src_tris": 15045,
    "far_tris": 8076,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3480,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4936,17 +5028,18 @@
      ]
     }
    },
-   "file_size": 511876
+   "file_size": 512692
   },
   {
    "id": "metamaterial_foundry_xl",
    "src_tris": 32552,
    "far_tris": 14917,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3696,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -4989,22 +5082,23 @@
     "Roof": {
      "tris": 4218,
      "mats": [
-      "Neon",
+      "L4Band",
       "Palette"
      ]
     }
    },
-   "file_size": 957024
+   "file_size": 957504
   },
   {
    "id": "mine_l",
    "src_tris": 22988,
    "far_tris": 12093,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3616,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5052,17 +5146,18 @@
      ]
     }
    },
-   "file_size": 754740
+   "file_size": 755552
   },
   {
    "id": "mine_m",
    "src_tris": 19089,
    "far_tris": 10197,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5085,7 +5180,7 @@
      "tris": 1836,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "L3": {
@@ -5110,17 +5205,18 @@
      ]
     }
    },
-   "file_size": 638804
+   "file_size": 639576
   },
   {
    "id": "mine_s",
    "src_tris": 14090,
    "far_tris": 7879,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3488,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5143,7 +5239,7 @@
      "tris": 959,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "L3": {
@@ -5168,17 +5264,18 @@
      ]
     }
    },
-   "file_size": 491396
+   "file_size": 492152
   },
   {
    "id": "mine_xl",
    "src_tris": 29986,
    "far_tris": 14416,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5200,8 +5297,8 @@
     "Interior": {
      "tris": 4850,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -5226,17 +5323,18 @@
      ]
     }
    },
-   "file_size": 916680
+   "file_size": 917448
   },
   {
    "id": "oxygen_plant_l",
    "src_tris": 20986,
    "far_tris": 9965,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3172,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5285,17 +5383,18 @@
      ]
     }
    },
-   "file_size": 568796
+   "file_size": 569608
   },
   {
    "id": "oxygen_plant_m",
    "src_tris": 15913,
    "far_tris": 7595,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3234,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5311,15 +5410,15 @@
      "tris": 2539,
      "mats": [
       "Glass",
-      "LightStrip",
+      "Neon",
       "Palette"
      ]
     },
     "Interior": {
      "tris": 1054,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -5344,17 +5443,18 @@
      ]
     }
    },
-   "file_size": 449148
+   "file_size": 450584
   },
   {
    "id": "oxygen_plant_s",
    "src_tris": 12049,
    "far_tris": 6144,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 2974,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5403,17 +5503,18 @@
      ]
     }
    },
-   "file_size": 384440
+   "file_size": 385248
   },
   {
    "id": "oxygen_plant_xl",
    "src_tris": 28148,
    "far_tris": 12897,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3248,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5462,17 +5563,18 @@
      ]
     }
    },
-   "file_size": 686132
+   "file_size": 686944
   },
   {
    "id": "park_l",
    "src_tris": 31845,
    "far_tris": 16305,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 4560,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5493,17 +5595,18 @@
      ]
     }
    },
-   "file_size": 823088
+   "file_size": 823932
   },
   {
    "id": "park_m",
    "src_tris": 22055,
    "far_tris": 11553,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 4054,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5524,17 +5627,18 @@
      ]
     }
    },
-   "file_size": 612084
+   "file_size": 612928
   },
   {
    "id": "park_xl",
    "src_tris": 48057,
    "far_tris": 24828,
-   "draws": 7,
+   "draws": 8,
    "groups": {
     "Base": {
      "tris": 4996,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5555,17 +5659,18 @@
      ]
     }
    },
-   "file_size": 1272572
+   "file_size": 1273412
   },
   {
    "id": "parts_works_l",
    "src_tris": 23213,
    "far_tris": 11085,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3616,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5602,7 +5707,7 @@
      "tris": 2842,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -5613,17 +5718,18 @@
      ]
     }
    },
-   "file_size": 729804
+   "file_size": 730576
   },
   {
    "id": "parts_works_m",
    "src_tris": 18257,
    "far_tris": 9006,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5660,7 +5766,7 @@
      "tris": 1582,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -5671,17 +5777,18 @@
      ]
     }
    },
-   "file_size": 592284
+   "file_size": 593044
   },
   {
    "id": "parts_works_s",
    "src_tris": 13350,
    "far_tris": 7470,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3488,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5728,17 +5835,18 @@
      ]
     }
    },
-   "file_size": 480248
+   "file_size": 481052
   },
   {
    "id": "parts_works_xl",
    "src_tris": 31324,
    "far_tris": 14398,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5774,8 +5882,8 @@
     "Interior": {
      "tris": 5938,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -5786,17 +5894,18 @@
      ]
     }
    },
-   "file_size": 968048
+   "file_size": 968820
   },
   {
    "id": "polymer_plant_l",
    "src_tris": 24195,
    "far_tris": 12261,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5833,7 +5942,7 @@
      "tris": 3261,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -5844,18 +5953,19 @@
      ]
     }
    },
-   "file_size": 747528
+   "file_size": 748292
   },
   {
    "id": "polymer_plant_m",
    "src_tris": 16498,
    "far_tris": 9121,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
-      "Neon",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
@@ -5891,7 +6001,7 @@
      "tris": 1683,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -5902,17 +6012,18 @@
      ]
     }
    },
-   "file_size": 556668
+   "file_size": 557732
   },
   {
    "id": "polymer_plant_s",
    "src_tris": 14910,
    "far_tris": 8016,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -5948,8 +6059,8 @@
     "Interior": {
      "tris": 1316,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -5960,17 +6071,18 @@
      ]
     }
    },
-   "file_size": 503360
+   "file_size": 504128
   },
   {
    "id": "polymer_plant_xl",
    "src_tris": 31716,
    "far_tris": 15420,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6006,8 +6118,8 @@
     "Interior": {
      "tris": 5938,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -6018,17 +6130,18 @@
      ]
     }
    },
-   "file_size": 936136
+   "file_size": 936904
   },
   {
    "id": "refinery_l",
    "src_tris": 23921,
    "far_tris": 11579,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3608,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6071,22 +6184,23 @@
     "Roof": {
      "tris": 3768,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 728592
+   "file_size": 729068
   },
   {
    "id": "refinery_m",
    "src_tris": 17570,
    "far_tris": 8850,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3630,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6129,22 +6243,23 @@
     "Roof": {
      "tris": 2714,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 561584
+   "file_size": 562064
   },
   {
    "id": "refinery_s",
    "src_tris": 14512,
    "far_tris": 8015,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6186,22 +6301,23 @@
     "Roof": {
      "tris": 2436,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 508332
+   "file_size": 508808
   },
   {
    "id": "refinery_xl",
    "src_tris": 33205,
    "far_tris": 15090,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6249,19 +6365,20 @@
      ]
     }
    },
-   "file_size": 976204
+   "file_size": 977020
   },
   {
    "id": "research_assembler_l",
    "src_tris": 27365,
    "far_tris": 12452,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3670,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Plasma"
      ]
     },
     "L2": {
@@ -6295,8 +6412,8 @@
     "Interior": {
      "tris": 3114,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -6308,19 +6425,20 @@
      ]
     }
    },
-   "file_size": 815540
+   "file_size": 816576
   },
   {
    "id": "research_assembler_m",
    "src_tris": 23012,
    "far_tris": 10534,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3862,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Plasma"
      ]
     },
     "L2": {
@@ -6354,8 +6472,8 @@
     "Interior": {
      "tris": 1756,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -6367,17 +6485,18 @@
      ]
     }
    },
-   "file_size": 682780
+   "file_size": 683872
   },
   {
    "id": "research_assembler_s",
    "src_tris": 16144,
    "far_tris": 8190,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 3178,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6414,7 +6533,7 @@
      "tris": 980,
      "mats": [
       "Palette",
-      "Plasma"
+      "Screen"
      ]
     },
     "Roof": {
@@ -6426,19 +6545,20 @@
      ]
     }
    },
-   "file_size": 534296
+   "file_size": 535060
   },
   {
    "id": "research_assembler_xl",
    "src_tris": 40305,
    "far_tris": 17344,
-   "draws": 15,
+   "draws": 16,
    "groups": {
     "Base": {
      "tris": 4184,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Plasma"
      ]
     },
     "L2": {
@@ -6472,8 +6592,8 @@
     "Interior": {
      "tris": 5292,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -6485,33 +6605,34 @@
      ]
     }
    },
-   "file_size": 1169208
+   "file_size": 1170248
   },
   {
    "id": "research_lab_l",
    "src_tris": 36569,
    "far_tris": 15478,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 5128,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
      "tris": 5212,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Interior": {
      "tris": 4108,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L2": {
@@ -6543,33 +6664,34 @@
      ]
     }
    },
-   "file_size": 992620
+   "file_size": 993384
   },
   {
    "id": "research_lab_m",
    "src_tris": 26894,
    "far_tris": 11782,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4526,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
      "tris": 4226,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Interior": {
      "tris": 2098,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L2": {
@@ -6601,17 +6723,18 @@
      ]
     }
    },
-   "file_size": 765028
+   "file_size": 765780
   },
   {
    "id": "research_lab_s",
    "src_tris": 18882,
    "far_tris": 8631,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3374,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6626,15 +6749,15 @@
     "Roof": {
      "tris": 3232,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Interior": {
      "tris": 1258,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L3": {
@@ -6659,33 +6782,34 @@
      ]
     }
    },
-   "file_size": 567228
+   "file_size": 567992
   },
   {
    "id": "research_lab_xl",
    "src_tris": 45286,
    "far_tris": 19433,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 6062,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Floor",
+      "Palette",
+      "Window"
      ]
     },
     "Roof": {
      "tris": 5928,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Interior": {
      "tris": 6414,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L2": {
@@ -6717,17 +6841,18 @@
      ]
     }
    },
-   "file_size": 1274776
+   "file_size": 1275556
   },
   {
    "id": "residence_tube_executive_l",
    "src_tris": 35531,
    "far_tris": 15924,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3204,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6742,22 +6867,23 @@
     "Roof": {
      "tris": 5774,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1063592
+   "file_size": 1064392
   },
   {
    "id": "residence_tube_executive_m",
    "src_tris": 26520,
    "far_tris": 12344,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3206,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6772,22 +6898,23 @@
     "Roof": {
      "tris": 5392,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 821760
+   "file_size": 822556
   },
   {
    "id": "residence_tube_executive_xl",
    "src_tris": 44779,
    "far_tris": 18425,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3188,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6802,22 +6929,23 @@
     "Roof": {
      "tris": 6348,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1241048
+   "file_size": 1241852
   },
   {
    "id": "residence_tube_l",
    "src_tris": 39396,
    "far_tris": 16578,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3204,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6832,22 +6960,23 @@
     "Roof": {
      "tris": 5048,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1112860
+   "file_size": 1113660
   },
   {
    "id": "residence_tube_m",
    "src_tris": 27844,
    "far_tris": 12620,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3206,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6862,22 +6991,23 @@
     "Roof": {
      "tris": 4772,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 842264
+   "file_size": 843064
   },
   {
    "id": "residence_tube_xl",
    "src_tris": 46482,
    "far_tris": 18982,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3188,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -6892,31 +7022,32 @@
     "Roof": {
      "tris": 5614,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1285792
+   "file_size": 1286596
   },
   {
    "id": "retail_l",
    "src_tris": 30723,
    "far_tris": 14197,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3620,
      "mats": [
-      "Glow",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
     "Roof": {
      "tris": 3975,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
@@ -6927,26 +7058,27 @@
      ]
     }
    },
-   "file_size": 925480
+   "file_size": 926600
   },
   {
    "id": "retail_m",
    "src_tris": 21608,
    "far_tris": 10768,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3660,
      "mats": [
-      "Glow",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
     "Roof": {
      "tris": 3414,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
@@ -6957,26 +7089,27 @@
      ]
     }
    },
-   "file_size": 711360
+   "file_size": 712476
   },
   {
    "id": "retail_s",
    "src_tris": 15704,
    "far_tris": 8210,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3278,
      "mats": [
-      "Glow",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
     "Roof": {
      "tris": 3116,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     },
     "Interior": {
@@ -6987,47 +7120,49 @@
      ]
     }
    },
-   "file_size": 537416
+   "file_size": 538532
   },
   {
    "id": "security_office_m",
    "src_tris": 19373,
    "far_tris": 9454,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3414,
      "mats": [
-      "Neon",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
     "Interior": {
      "tris": 2767,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3273,
      "mats": [
       "Palette",
-      "SignalRedGlow"
+      "Window"
      ]
     }
    },
-   "file_size": 593688
+   "file_size": 594448
   },
   {
    "id": "security_office_s",
    "src_tris": 15195,
    "far_tris": 7837,
-   "draws": 6,
+   "draws": 7,
    "groups": {
     "Base": {
      "tris": 3096,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7035,29 +7170,30 @@
     "Interior": {
      "tris": 1774,
      "mats": [
-      "L3Band",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 2967,
      "mats": [
       "Palette",
-      "SignalRedGlow"
+      "Window"
      ]
     }
    },
-   "file_size": 486528
+   "file_size": 487232
   },
   {
    "id": "steel_mill_l",
    "src_tris": 22962,
    "far_tris": 11220,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3596,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7093,8 +7229,8 @@
     "Interior": {
      "tris": 3111,
      "mats": [
-      "Palette",
-      "Window"
+      "BeaconAmber",
+      "Palette"
      ]
     },
     "Roof": {
@@ -7105,17 +7241,18 @@
      ]
     }
    },
-   "file_size": 732924
+   "file_size": 733752
   },
   {
    "id": "steel_mill_m",
    "src_tris": 17899,
    "far_tris": 8844,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7151,8 +7288,8 @@
     "Interior": {
      "tris": 1482,
      "mats": [
-      "Palette",
-      "Window"
+      "BeaconAmber",
+      "Palette"
      ]
     },
     "Roof": {
@@ -7163,17 +7300,18 @@
      ]
     }
    },
-   "file_size": 575600
+   "file_size": 576424
   },
   {
    "id": "steel_mill_s",
    "src_tris": 13285,
    "far_tris": 7556,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3470,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7215,22 +7353,23 @@
     "Roof": {
      "tris": 2150,
      "mats": [
-      "Neon",
+      "Ember",
       "Palette"
      ]
     }
    },
-   "file_size": 484392
+   "file_size": 484856
   },
   {
    "id": "steel_mill_xl",
    "src_tris": 33237,
    "far_tris": 14496,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3700,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7266,8 +7405,8 @@
     "Interior": {
      "tris": 6106,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -7278,17 +7417,18 @@
      ]
     }
    },
-   "file_size": 965472
+   "file_size": 966240
   },
   {
    "id": "storehouse_l",
-   "src_tris": 34040,
-   "far_tris": 16812,
-   "draws": 14,
+   "src_tris": 32866,
+   "far_tris": 16010,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4008,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7315,10 +7455,10 @@
      ]
     },
     "Interior": {
-     "tris": 8070,
+     "tris": 7268,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L5": {
@@ -7336,17 +7476,18 @@
      ]
     }
    },
-   "file_size": 1117800
+   "file_size": 1062736
   },
   {
    "id": "storehouse_m",
-   "src_tris": 24760,
-   "far_tris": 13241,
-   "draws": 14,
+   "src_tris": 23762,
+   "far_tris": 12527,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 4056,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7373,10 +7514,10 @@
      ]
     },
     "Interior": {
-     "tris": 5816,
+     "tris": 5102,
      "mats": [
-      "LightStrip",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "L5": {
@@ -7394,17 +7535,18 @@
      ]
     }
    },
-   "file_size": 871040
+   "file_size": 822128
   },
   {
    "id": "storehouse_s",
-   "src_tris": 16578,
-   "far_tris": 9075,
-   "draws": 14,
+   "src_tris": 16288,
+   "far_tris": 8769,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3776,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7430,6 +7572,13 @@
       "Palette"
      ]
     },
+    "Interior": {
+     "tris": 1938,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    },
     "L5": {
      "tris": 282,
      "mats": [
@@ -7437,32 +7586,26 @@
       "Palette"
      ]
     },
-    "Interior": {
-     "tris": 2260,
-     "mats": [
-      "LightStrip",
-      "Palette"
-     ]
-    },
     "Roof": {
-     "tris": 2185,
+     "tris": 2201,
      "mats": [
       "Neon",
       "Palette"
      ]
     }
    },
-   "file_size": 596808
+   "file_size": 573316
   },
   {
    "id": "storehouse_xl",
-   "src_tris": 43361,
-   "far_tris": 20868,
-   "draws": 14,
+   "src_tris": 42415,
+   "far_tris": 20188,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3994,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7489,7 +7632,7 @@
      ]
     },
     "Interior": {
-     "tris": 11477,
+     "tris": 10797,
      "mats": [
       "Palette",
       "Window"
@@ -7510,17 +7653,18 @@
      ]
     }
    },
-   "file_size": 1392028
+   "file_size": 1345260
   },
   {
    "id": "superconductor_lab_l",
    "src_tris": 24567,
    "far_tris": 11723,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7557,7 +7701,7 @@
      "tris": 2984,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -7568,18 +7712,19 @@
      ]
     }
    },
-   "file_size": 742216
+   "file_size": 742984
   },
   {
    "id": "superconductor_lab_m",
    "src_tris": 18876,
    "far_tris": 9452,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
-      "Neon",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
@@ -7614,8 +7759,8 @@
     "Interior": {
      "tris": 1778,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -7626,17 +7771,18 @@
      ]
     }
    },
-   "file_size": 604868
+   "file_size": 605940
   },
   {
    "id": "superconductor_lab_s",
    "src_tris": 14293,
    "far_tris": 7604,
-   "draws": 13,
+   "draws": 14,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7672,7 +7818,7 @@
      "tris": 1100,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
@@ -7683,17 +7829,18 @@
      ]
     }
    },
-   "file_size": 478240
+   "file_size": 479008
   },
   {
    "id": "superconductor_lab_xl",
    "src_tris": 34214,
    "far_tris": 15299,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7729,8 +7876,8 @@
     "Interior": {
      "tris": 6306,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Screen"
      ]
     },
     "Roof": {
@@ -7741,17 +7888,18 @@
      ]
     }
    },
-   "file_size": 992368
+   "file_size": 993140
   },
   {
    "id": "titanium_smelter_l",
    "src_tris": 23350,
    "far_tris": 11491,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3614,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7787,30 +7935,31 @@
     "Interior": {
      "tris": 3088,
      "mats": [
-      "Glow",
+      "Ember",
       "Palette"
      ]
     },
     "Roof": {
      "tris": 3738,
      "mats": [
-      "Neon",
+      "Ember",
       "Palette"
      ]
     }
    },
-   "file_size": 742196
+   "file_size": 742676
   },
   {
    "id": "titanium_smelter_m",
    "src_tris": 17462,
    "far_tris": 9387,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3712,
      "mats": [
-      "Neon",
+      "Floor",
+      "LightStrip",
       "Palette"
      ]
     },
@@ -7852,22 +8001,23 @@
     "Roof": {
      "tris": 3040,
      "mats": [
-      "Neon",
+      "Ember",
       "Palette"
      ]
     }
    },
-   "file_size": 604932
+   "file_size": 605708
   },
   {
    "id": "titanium_smelter_s",
    "src_tris": 13522,
    "far_tris": 7854,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3486,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7903,29 +8053,30 @@
     "Interior": {
      "tris": 1104,
      "mats": [
-      "Palette",
-      "Window"
+      "Ember",
+      "Palette"
      ]
     },
     "Roof": {
      "tris": 2488,
      "mats": [
-      "Neon",
+      "Ember",
       "Palette"
      ]
     }
    },
-   "file_size": 493688
+   "file_size": 494172
   },
   {
    "id": "titanium_smelter_xl",
    "src_tris": 33839,
    "far_tris": 14731,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3692,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -7961,29 +8112,30 @@
     "Interior": {
      "tris": 6099,
      "mats": [
-      "Palette",
-      "Window"
+      "Ember",
+      "Palette"
      ]
     },
     "Roof": {
      "tris": 3890,
      "mats": [
-      "Neon",
+      "Ember",
       "Palette"
      ]
     }
    },
-   "file_size": 960388
+   "file_size": 960860
   },
   {
    "id": "water_recycler_l",
    "src_tris": 20618,
    "far_tris": 9342,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3244,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8031,17 +8183,18 @@
      ]
     }
    },
-   "file_size": 543676
+   "file_size": 544464
   },
   {
    "id": "water_recycler_m",
    "src_tris": 17198,
    "far_tris": 8150,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3324,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8089,17 +8242,18 @@
      ]
     }
    },
-   "file_size": 485704
+   "file_size": 486524
   },
   {
    "id": "water_recycler_s",
    "src_tris": 13195,
    "far_tris": 6468,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 2984,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8147,17 +8301,18 @@
      ]
     }
    },
-   "file_size": 400396
+   "file_size": 401212
   },
   {
    "id": "water_recycler_xl",
    "src_tris": 26015,
    "far_tris": 10912,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3348,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8205,17 +8360,18 @@
      ]
     }
    },
-   "file_size": 637288
+   "file_size": 638112
   },
   {
    "id": "workshop_l",
    "src_tris": 23070,
    "far_tris": 11568,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3592,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8252,28 +8408,29 @@
      "tris": 2950,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3976,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 759672
+   "file_size": 760396
   },
   {
    "id": "workshop_m",
    "src_tris": 18038,
    "far_tris": 9359,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3710,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8310,28 +8467,29 @@
      "tris": 1580,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 3228,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 616616
+   "file_size": 617336
   },
   {
    "id": "workshop_s",
    "src_tris": 13220,
    "far_tris": 7606,
-   "draws": 12,
+   "draws": 13,
    "groups": {
     "Base": {
      "tris": 3474,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8372,22 +8530,23 @@
     "Roof": {
      "tris": 2568,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 489632
+   "file_size": 490404
   },
   {
    "id": "workshop_xl",
    "src_tris": 32217,
    "far_tris": 15371,
-   "draws": 14,
+   "draws": 15,
    "groups": {
     "Base": {
      "tris": 3694,
      "mats": [
+      "Floor",
       "LightStrip",
       "Palette"
      ]
@@ -8424,18 +8583,18 @@
      "tris": 6268,
      "mats": [
       "Palette",
-      "Window"
+      "Screen"
      ]
     },
     "Roof": {
      "tris": 4358,
      "mats": [
-      "Neon",
-      "Palette"
+      "Palette",
+      "Window"
      ]
     }
    },
-   "file_size": 1025828
+   "file_size": 1026556
   }
  ],
  "groups": [

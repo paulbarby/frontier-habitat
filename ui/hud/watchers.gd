@@ -50,6 +50,14 @@ const PARTY_LOG := {
 	"hr_transfer_request": ["warning", "ship", "hr", true], "hr_transfer_approved": ["info", "ship", "hr", false], "hr_transfer_refused": ["info", "ship", "hr", false],
 }
 
+## Orders (V5 section 18; sim/orders.gd, sim/workq.gd): log code -> [priority, icon, panel manager type, pops up]. A head reports a
+## team order, an order ends. These show also in the first seconds after a load (a player who gives an order while the game
+## is paused after a load still sees the report).
+const ORDER_LOG := {
+	"team_order": ["info", "people", "orders", true], "team_done": ["info", "sev_ok", "orders", true], "order_done": ["info", "wrench", "orders", false],
+	"order_ended": ["info", "orders", "orders", false],
+}
+
 var hud
 var gate = AlertGate.new()   # alert toasts and the steady alert list (V3_DESIGN §2)
 var world                    # world sounds from simulation state (V3_1_DESIGN §2.2)
@@ -185,7 +193,7 @@ func check() -> void:
 		hud.toast(String(issue.get("text", "")), "bad" if sv >= 3 else "warn", "sev_critical" if sv >= 3 else "sev_warning", "alert")
 	# Log: finished structures, settlers, pods, upgrades, deaths
 	var log: Array = st.get("log", [])
-	if not quiet:
+	if not _title():
 		for i in range(log.size() - 1, -1, -1):
 			var e: Dictionary = log[i]
 			# The last entry seen stops the walk (entries of one tick, logged while paused, after it still
@@ -194,6 +202,8 @@ func check() -> void:
 				break
 			if int(e["tick"]) < _log_tick or (_log_last == null and int(e["tick"]) <= _log_tick):
 				break
+			if quiet and not ORDER_LOG.has(String(e.get("code", ""))):
+				continue
 			match String(e.get("code", "")):
 				"commissioned":
 					hud.toast(String(e["text"]), "good", "build")
@@ -217,7 +227,10 @@ func check() -> void:
 				"death":
 					hud.toast(String(e["text"]), "bad", "sev_critical", "people")
 				var code:
-					if PARTY_LOG.has(String(code)):
+					if ORDER_LOG.has(String(code)):
+						var os: Array = ORDER_LOG[String(code)]
+						hud.panels.post(String(os[2]), String(e["text"]), String(os[0]), String(os[1]), bool(os[3]))
+					elif PARTY_LOG.has(String(code)):
 						var ps: Array = PARTY_LOG[String(code)]
 						hud.panels.post(String(ps[2]), String(e["text"]), String(ps[0]), String(ps[1]), bool(ps[3]))
 					elif HAZARD_LOG.has(String(code)):

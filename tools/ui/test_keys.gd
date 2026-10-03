@@ -275,6 +275,12 @@ func _plan() -> void:
 		key(KEY_J), 4)
 	q(func():
 		check("J again closes it", not hud.rag.visible)
+		key(KEY_M), 4)
+	q(func():
+		check("M opens the Work window", hud.work.visible)
+		key(KEY_M), 4)
+	q(func():
+		check("M again closes it", not hud.work.visible)
 		key(KEY_N), 4)
 	q(func():
 		check("N opens the advisor", hud.advisor.visible)

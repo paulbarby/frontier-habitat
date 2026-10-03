@@ -71,3 +71,13 @@ life-event messages, order answers.
    one placement, on Esc or on a right click. Shift + click keeps the tool, so the strip stays folded. A tab ends the tool.
 3. The remove question is in the same panel (no window). The inspector (Upgrade tab) is a side window at the right edge.
 Test: `tools/ui/test_panels.gd` (every category open, placing, corridor tool, remove question: nothing in the centre).
+
+## 9. Section 18: orders, work, chains, transport (Paul, 2026-10-04)
+Through the panel manager: the type "Orders and work" (News tab; a head's team report, "order done", "order ended": log codes `team_order`,
+`team_done`, `order_done`, `order_ended` in `ui/hud/watchers.gd`; shown also in the first seconds after a load); the card "Work" in the Alerts
+tab (`ui/hud/work_card.gd`: open items and the urgent ones nobody has; the nav rail button Work has the same number); "Show chain" on an
+alert about a missing item (`alerts_panel.gd`). Windows of the window manager, all in the right quarter (`ui/wm/quarter.gd`; the centre rule
+holds, `test_panels` opens each): Work (key M), Who (Repair now, Assign to...), Chain. The package transport network is the last step of the
+overlay key O (`ui/hud/transport_marks.gd`). Windows rebuild a row on the mouse RELEASE, not the press: a release without its row would
+reach the map and select a structure behind the window.
+Tests: `tools/ui/test_work.gd`, `tools/ui/test_transport.gd`.

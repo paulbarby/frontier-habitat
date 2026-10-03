@@ -506,15 +506,15 @@ func _think(a: Dictionary) -> void:
 			return
 		if float(a["fatigue"]) >= crit and kind != "sleep" and kind != "eat" and kind != "drink" and _sleep_any(a):
 			return
+	# V5 section 18.1: an order interrupts every plan except one that answers an imminent death need
+	# (orders.gd drive); it makes the colonist's next plan, or keeps the plan that already carries it out.
+	if a.has("order") and a["kind"] != "visitor" and sim.orders.drive(a):
+		return
 	if not (a["plan"] as Array).is_empty():
 		return
 	# Visitors (V3.1) have their own day and never take work.
 	if a["kind"] == "visitor":
 		_visitor_think(a)
-		return
-	# V4: a player order comes before the colonist's own choices (critical needs above
-	# still interrupt it).
-	if a.has("order") and sim.orders.think(a):
 		return
 	# V5: a lock-down keeps people in the room they are in (unrest.gd); critical needs above still move them.
 	if sim.unrest.locked_in(a):
@@ -938,7 +938,8 @@ func _try_work(a: Dictionary) -> bool:
 	# kilometres away; a vehicle order moves people between bases).
 	var my_base: int = sim.bases.base_of_agent(a) if sim.bases.count() > 1 else -1
 	# V4: a work_at or survey order keeps the colonist to its structure or site (any role).
-	var ordered: bool = a.has("order")
+	# A blocked order (it waits for an item or a way) leaves the colonist to the ordinary work meanwhile.
+	var ordered: bool = a.has("order") and not sim.orders.is_blocked(a)
 	for tid in tasks:
 		var t: Dictionary = tasks[tid]
 		if int(t["owner"]) != -1 or t["state"] != "open" or int(t["retry"]) > tick or backoff.has(tid):
@@ -1018,6 +1019,36 @@ func _inv_loc(inv_id: int, from: Vector2) -> Dictionary:
 			return {"b": int(inv["oid"]), "p": inv["pos"]}
 		return {"b": -1, "p": inv["pos"]}
 	return {}
+
+## Starts the plan of task t for colonist a now (an order, or a team order, picks the work itself; _try_work
+## picks it for everybody else). Returns {ok, reason}. On success the colonist owns the task.
+func start_task_for(a: Dictionary, t: Dictionary) -> Dictionary:
+	var plan: Dictionary = plan_task_for(a, t)
+	if not plan["ok"]:
+		return plan
+	begin_task(a, t, plan)
+	return {"ok": true, "reason": ""}
+
+## The plan of task t for colonist a, with no side effect: {ok, reason, steps, goal}.
+func plan_task_for(a: Dictionary, t: Dictionary) -> Dictionary:
+	var plan: Dictionary = _plan_for_task(a, t)
+	if plan["ok"] and _stay_inside(a) and _goes_out(plan["steps"]):
+		plan = {"ok": false, "reason": "shelter"}
+	return plan
+
+## Starts a plan made by plan_task_for: the colonist drops what it was doing (an order interrupts it), the task
+## is taken from another colonist who has only started to walk to it, and the colonist owns it.
+func begin_task(a: Dictionary, t: Dictionary, plan: Dictionary) -> void:
+	var owner: int = int(t["owner"])
+	if owner != -1 and owner != int(a["id"]) and not bool(t["picked"]):
+		var other: Dictionary = sim.state["agents"].get(owner, {})
+		if not other.is_empty():
+			abort_plan(other, "reassigned")
+	if not (a["plan"] as Array).is_empty() or int(a["task"]) != -1:
+		abort_plan(a, "ordered")
+	sim.jobs.claim(t, a)
+	t["state"] = "traveling"
+	_start_plan(a, "task", plan["steps"], plan["goal"])
 
 func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 	var blds: Dictionary = sim.state["buildings"]
@@ -1484,6 +1515,9 @@ func _do_deliver(a: Dictionary) -> void:
 	t["picked"] = false
 	var m: Dictionary = sim.state["metrics"]
 	m["delivered"] = int(m.get("delivered", 0)) + int(t["qty"])
+	# A haul order counts what it has carried (orders.gd haul).
+	if a.has("order") and int(a["order"].get("tid", -2)) == int(t["id"]) and a["order"].has("left"):
+		a["order"]["left"] = int(a["order"]["left"]) - int(t["qty"])
 	_finish_task(a)
 
 func _do_work(a: Dictionary, step: Dictionary, dt: float) -> void:

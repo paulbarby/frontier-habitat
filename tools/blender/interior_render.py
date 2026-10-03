@@ -357,6 +357,12 @@ def place_junction(R, betas, length=4.5, cutaway=True, accent=None):
         start = R - 0.25
         Mc = rot @ Matrix.Translation((start + length / 2, 0, 0.05)) @ Matrix.Diagonal((length, 1, 1, 1))
         import_at("corridor", Mc, hide=("Roof",) if cutaway else ())
+        if TRANSPORT["on"]:
+            transport_corridor(rot, start, length, cutaway)
+            # the radial tube from the mouth to the manifold (r 0.31)
+            r0, r1 = 0.31, Rw
+            import_at("transport_tube", rot @ Matrix.Translation(((r0 + r1) / 2, 0, 0.05)) @
+                      Matrix.Diagonal((r1 - r0, 1, 1, 1)), hide=("Roof",) if cutaway else ())
         for j in range(1, int(length // 2.5) + 1):
             x = start + 0.45 + 2.5 * j - 1.25
             if x > start + length - 0.2:
@@ -425,6 +431,21 @@ def tint_accent(objs, rgb):
                     else:
                         src.default_value = (*rgb, 1.0)
                 o.data.materials[i] = mm
+
+
+TRANSPORT = {"on": False}         # 2026-10-04 (V5_DESIGN 18.5): --transport draws the tube upgrade, ports and the hub
+
+
+def transport_corridor(rot, start, length, cutaway):
+    """The tube upgrade on one corridor stub: transport_tube scaled like the corridor, a bracket at every rib."""
+    hide = ("Roof",) if cutaway else ()
+    import_at("transport_tube", rot @ Matrix.Translation((start + length / 2, 0, 0.05)) @
+              Matrix.Diagonal((length, 1, 1, 1)), hide=hide)
+    for j in range(1, int(length // 2.5) + 1):
+        x = start + 0.45 + 2.5 * j - 1.25
+        if x > start + length - 0.2:
+            break
+        import_at("transport_bracket", rot @ Matrix.Translation((x, 0, 0.05)), hide=hide)
 
 
 def place_link(R, theta, length=4.5, cutaway=True, open_doors=False, accent=None, upper_z=None, flat_roof=False,
@@ -517,6 +538,9 @@ def place_link(R, theta, length=4.5, cutaway=True, open_doors=False, accent=None
     start = R - 0.25
     Mc = rot @ Matrix.Translation((start + length / 2, 0, 0.05)) @ Matrix.Diagonal((length, 1, 1, 1))
     import_at("corridor", Mc, hide=("Roof",) if cutaway else ())
+    if TRANSPORT["on"]:
+        transport_corridor(rot, start, length, cutaway)
+        import_at("transport_port", Md, hide=("PortTop",) if cutaway else ())
     nrib = int(length // 2.5)
     for j in range(1, nrib + 1):
         x = start + 0.45 + 2.5 * j - 1.25
@@ -635,6 +659,13 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
         acc = BA.hex_to_linear(K.ACCENTS[K.load_buildings().get(tid, {}).get("category", "logistics")])
     except Exception:
         acc = None
+    if TRANSPORT["on"]:
+        hub = [o for o in objs if o.type == "EMPTY" and o.name.split(".")[0] == "Anchor_Hub"]
+        if hub:
+            sz = file.rsplit("_", 1)[-1] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else "m"
+            import_at("transport_hub_%s" % sz, hub[0].matrix_world.copy())
+        if file == "junction":
+            import_at("transport_junction", Matrix.Identity(4), hide=("Roof",) if cutaway else ())
     if file == "junction" and links:
         plan = place_junction(R, links, cutaway=cutaway, accent=acc)
         hide_match(objs, {"Wall_%02d" % k for k in plan["hide"]})
@@ -846,6 +877,7 @@ def main():
     global SIZE
     if "--size" in argv:
         SIZE = tuple(int(v) for v in argv[argv.index("--size") + 1].split("x"))
+    TRANSPORT["on"] = "--transport" in argv
     tid = base_tid(file.rsplit("_", 1)[0] if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else file)
     size = K.SIZE_KEYS.index(file.rsplit("_", 1)[-1]) if file.rsplit("_", 1)[-1] in K.SIZE_KEYS else 1
     b = K.load_buildings().get(tid, {})
@@ -966,6 +998,22 @@ def main():
             shot_room(file, R, base + "_doorview_%s.png" % tag, size=(1500, 840), cutaway=False, links=[th],
                       open_doors=True, night=("--night" in argv),
                       cam_fn=eye_camera(p_.x, p_.y, yaw, dist=1.9, side=0.3 if tag == "in" else 0.55))
+    if "hubview" in only:
+        # 2026-10-04 (V5_DESIGN 18.5): the follow camera at the Transport hub (Anchor_Hub): the person 2.0 m in front of
+        # the sorter and 0.9 m to the side, facing it, roof on
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=os.path.join(K.MODEL_DIR, file + ".glb"))
+        hub = [o for o in bpy.data.objects if o.name.split(".")[0] == "Anchor_Hub"]
+        if hub:
+            mw = hub[0].matrix_world
+            c = mw.translation
+            fwd = (mw.to_3x3() @ Vector((1, 0, 0))).normalized()
+            side = Vector((-fwd.y, fwd.x, 0.0))
+            for j, sg in enumerate((1.0, -1.0)):
+                p_ = c + fwd * 2.0 + side * 0.9 * sg
+                yaw = degrees(atan2(c.y - p_.y, c.x - p_.x))
+                shot_room(file, R, base + "_hubview%d.png" % j, size=(1500, 840), cutaway=False, links=links,
+                          cam_fn=eye_camera(p_.x, p_.y, yaw, dist=1.5, side=0.4, aim_ahead=2.0, aim_z=1.2))
     if "cutproof" in only:
         # round 12: the cutaway from the side at eye level, a red ring at WALL_TOP 1.40 m round the room: nothing of
         # the cutaway may stand above the ring

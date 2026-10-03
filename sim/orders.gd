@@ -5,7 +5,11 @@ extends RefCounted
 ##
 ## agent.order (absent when there is none) = {kind, p (Vector2), b (room id or -1), v, site,
 ##   stay (bool), confirm (bool), t (tick given)}
-##   kind: "go" | "stay" | "return" | "board" | "work_at" | "survey"
+##   kind: "go" | "stay" | "return" | "board" | "work_at" | "survey" | "repair" | "maintain" | "build" | "haul" | "task"
+##   V5 section 18: repair / maintain {b}, build {b}, haul {res, left, b}, task {tid} (made by the work queue).
+##   Also: text (what the colonist does for the order, for the person window), blocked ("" or a code),
+##   missing {item, qty} (what a blocked order waits for), tid (the task that carries it out), team (a team order id).
+##   An order interrupts every plan except one that answers an imminent death need (drive).
 ## agent.jobs (absent when there is none) = {category: 0..3}: this colonist's own job
 ##   priorities; 0 = not allowed. A category not in it uses the colony priority.
 ##
@@ -18,7 +22,11 @@ var sim
 func _init(s) -> void:
 	sim = s
 
-const KINDS := ["go", "stay", "return", "board", "work_at", "survey"]
+const KINDS := ["go", "stay", "return", "board", "work_at", "survey", "repair", "maintain", "build", "haul", "task"]
+## Order kinds that a head of a department allocates to the team (docs/V5_DESIGN.md 18.2).
+const TEAM_KINDS := ["repair", "maintain", "build", "haul", "work_at"]
+## Orders that make a task for the colonist (_think_work).
+const WORK_KINDS := ["repair", "maintain", "build", "haul", "task", "work_at"]
 const TEXT := {
 	"ok": "",
 	"unknown": "That colonist does not exist.",
@@ -36,6 +44,12 @@ const TEXT := {
 	"no_building": "That structure does not exist or is not complete.",
 	"no_site": "That site does not exist or is already surveyed.",
 	"no_base": "The colonist has no base with air.",
+	"no_work": "That structure needs no repair.",
+	"not_site": "That is not a site that is being built.",
+	"no_item": "The colony has none of that item.",
+	"no_task": "That work does not exist any more.",
+	"no_head": "That colonist is not a head of a department.",
+	"no_one": "Nobody is free to take the order.",
 }
 
 func text_of(code: String) -> String:
@@ -115,7 +129,7 @@ func _check(a: Dictionary, p: Dictionary) -> String:
 		return "unknown"
 	if a["state"] != "alive":
 		return "dead"
-	if a["kind"] == "visitor":
+	if a["kind"] == "visitor" or a["kind"] == "child":
 		return "not_colonist"
 	var kind: String = String(p.get("kind", ""))
 	if not KINDS.has(kind):
@@ -165,6 +179,35 @@ func _check(a: Dictionary, p: Dictionary) -> String:
 			var b: Dictionary = sim.state["buildings"].get(int(p.get("b", -1)), {})
 			if b.is_empty() or b["kind"] == "link":
 				return "no_building"
+			# Work at a structure that has no work (no task, no wear, not a site): nothing to do.
+			if b["state"] != "blueprint" and b["state"] != "building" and repair_need(b) == "" and sim.jobs.tasks_at(int(b["id"])) == 0:
+				return "no_work"
+		"repair", "maintain":
+			var rb: Dictionary = sim.state["buildings"].get(int(p.get("b", -1)), {})
+			if rb.is_empty() or (rb["state"] != "active" and rb["state"] != "broken"):
+				return "no_building"
+			# A "maintain" order is a standing one: it is accepted for any machine, even a sound one.
+			if kind == "repair" and repair_need(rb) == "":
+				return "no_work"
+			if kind == "maintain" and repair_need(rb) == "" and not sim.hazards.is_machine(rb):
+				return "no_work"
+		"build":
+			var sb: Dictionary = sim.state["buildings"].get(int(p.get("b", -1)), {})
+			if sb.is_empty() or (sb["state"] != "blueprint" and sb["state"] != "building"):
+				return "not_site"
+		"haul":
+			var hb: Dictionary = sim.state["buildings"].get(int(p.get("b", -1)), {})
+			var hres: String = String(p.get("res", ""))
+			if hb.is_empty() or sim.jobs.order_inv(hb) == -1:
+				return "no_building"
+			if not sim.content["items"].has(hres) or int(p.get("qty", 1)) < 1:
+				return "invalid"
+			if sim.jobs.find_source(hres, hb["pos"], sim.jobs.order_inv(hb), true) == -1:
+				return "no_item"
+		"task":
+			var tk: Dictionary = sim.state["tasks"].get(int(p.get("tid", -1)), {})
+			if tk.is_empty() or (int(tk["owner"]) != -1 and int(tk["owner"]) != int(a["id"])):
+				return "no_task"
 		"survey":
 			if p.has("poi"):
 				# V4 milestone 7: visit a point of interest (on foot).
@@ -204,6 +247,11 @@ func cmd_order(p: Dictionary) -> Dictionary:
 	var acc: Array = []
 	var ref := {}
 	var first := ""
+	# V5 section 18.2: a work order to a head of a department is a team order (the head allocates it).
+	if not bool(p.get("direct", false)) and TEAM_KINDS.has(String(p.get("kind", ""))) and (p.get("agents", []) as Array).size() == 1:
+		var head: Dictionary = sim.state["agents"].get(int((p["agents"] as Array)[0]), {})
+		if not head.is_empty() and sim.workq.is_head(head):
+			return sim.workq.team_order(head, p)
 	for aid in p.get("agents", []):
 		var a: Dictionary = sim.state["agents"].get(int(aid), {})
 		var c: Dictionary = check(a, p)
@@ -219,7 +267,7 @@ func cmd_order(p: Dictionary) -> Dictionary:
 
 func _give(a: Dictionary, p: Dictionary) -> void:
 	var kind: String = String(p["kind"])
-	var o := {"kind": kind, "confirm": bool(p.get("confirm", false)), "t": int(sim.state["tick"])}
+	var o := {"kind": kind, "confirm": bool(p.get("confirm", false)), "t": int(sim.state["tick"]), "blocked": "", "text": "", "tid": -1}
 	match kind:
 		"go", "stay":
 			var to: Dictionary = _target(a, Vector2(float(p.get("x", 0.0)), float(p.get("y", 0.0))))
@@ -230,6 +278,15 @@ func _give(a: Dictionary, p: Dictionary) -> void:
 			o["v"] = int(p["v"])
 		"work_at":
 			o["b"] = int(p["b"])
+		"repair", "maintain", "build":
+			o["b"] = int(p["b"])
+			o["standing"] = kind == "maintain"
+		"haul":
+			o["b"] = int(p["b"])
+			o["res"] = String(p["res"])
+			o["left"] = int(p.get("qty", 1))
+		"task":
+			o["tid"] = int(p["tid"])
 		"survey":
 			if p.has("poi"):
 				o["poi"] = int(p["poi"])
@@ -237,18 +294,31 @@ func _give(a: Dictionary, p: Dictionary) -> void:
 			else:
 				o["site"] = int(p["site"])
 				sim.hazards.hs()["sites"][int(p["site"])]["order"] = true
-	if kind != "work_at":
+	if p.has("team"):
+		o["team"] = int(p["team"])
+	# A work order drops the colonist's plan when it has work to start (think); the others at once.
+	if not WORK_KINDS.has(kind):
 		sim.agents.abort_plan(a, "ordered")
 	a["order"] = o
-	a["goal"] = goal_text(a)
+	o["text"] = goal_text(a)
+	if not WORK_KINDS.has(kind):
+		a["goal"] = String(o["text"])
+	if kind == "maintain":
+		sim.workq.standing_add(a, int(p["b"]))
 
 ## "order_clear" {agents}: the colonists go back to their own choices.
 func cmd_clear(p: Dictionary) -> Dictionary:
 	var n := 0
 	for aid in p.get("agents", []):
 		var a: Dictionary = sim.state["agents"].get(int(aid), {})
+		if not a.is_empty():
+			sim.workq.clear_standing(int(aid))
 		if not a.is_empty() and a.has("order"):
-			clear(a, "")
+			# The work the order started stops too (a repair walk is not left to finish by itself).
+			if a["plan_kind"] == "task" and int(a["task"]) != -1 and int(a["task"]) == int(a["order"].get("tid", -2)):
+				sim.agents.abort_plan(a, "order_cleared")
+			sim.workq.order_ended(a, true)
+			a.erase("order")
 			n += 1
 	return {"ok": true, "code": "ok", "cleared": n}
 
@@ -278,6 +348,7 @@ func job_categories() -> Array:
 	return out
 
 func clear(a: Dictionary, why: String) -> void:
+	sim.workq.order_ended(a, false)
 	a.erase("order")
 	if why != "":
 		sim.log_event("order_ended", "%s: the order ended (%s)." % [a["name"], why], [int(a["id"])], 1)
@@ -303,6 +374,8 @@ func allows(a: Dictionary, t: Dictionary) -> bool:
 func think(a: Dictionary) -> bool:
 	var o: Dictionary = a["order"]
 	match String(o["kind"]):
+		"repair", "maintain", "build", "haul", "task", "work_at":
+			return _think_work(a, o)
 		"go", "stay":
 			var p: Vector2 = o["p"]
 			var here: bool = (a["pos"] as Vector2).distance_to(p) < 1.0 and (int(o["b"]) == -1 or (a["where"] == "in" and int(a["bld"]) == int(o["b"])))
@@ -335,10 +408,6 @@ func think(a: Dictionary) -> bool:
 				return true
 			clear(a, "no way to the vehicle")
 			return false
-		"work_at":
-			if not sim.state["buildings"].has(int(o["b"])):
-				clear(a, "the structure is gone")
-			return false
 		"survey":
 			if o.has("poi"):
 				var poi: Dictionary = sim.explore.poi(int(o["poi"]))
@@ -359,6 +428,211 @@ func think(a: Dictionary) -> bool:
 			return false
 	return false
 
+# ---------------------------------------------------------------- V5 section 18.1: an order is obeyed at once
+## What a repair order still has to do on structure b ("" = nothing): "repair" (broken or worn down),
+## "patch" (a breach), "clean" (dust on a panel), "maintain" (the wear of a machine).
+func repair_need(b: Dictionary) -> String:
+	if b["state"] == "broken" or float(b["health"]) < 99.5:
+		return "repair"
+	if bool(b.get("breach", false)):
+		return "patch"
+	if bool(b.get("dust", false)) and b["state"] == "active":
+		return "clean"
+	if sim.hazards.is_machine(b):
+		var rec: Dictionary = sim.hazards.hs()["wear"].get(int(b["id"]), {})
+		if not rec.is_empty() and float(rec["w"]) >= 1.0:
+			return "maintain"
+	return ""
+
+## True when the plan answers an imminent death need: the order waits for it and resumes right after.
+func _imminent(a: Dictionary, kind: String) -> bool:
+	if a.has("lift"):
+		return true
+	var crit: float = float(sim.bal["need_critical"])
+	match kind:
+		"safety":
+			return true
+		"drink":
+			return float(a["thirst"]) >= crit * 0.5
+		"eat":
+			return float(a["hunger"]) >= crit * 0.5
+		"sleep":
+			return float(a["fatigue"]) >= crit
+		"heal":
+			return float(a["health"]) < 30.0
+	return false
+
+## Called at every think of a colonist who has an order (agents._think, after the critical needs). The plan that
+## carries the order out keeps running; any other plan (a party, sleep, leisure, a talk, work, idle) is
+## dropped at once. true = the colonist is busy with the order (or with an imminent need).
+func drive(a: Dictionary) -> bool:
+	var o: Dictionary = a["order"]
+	var plan: Array = a["plan"]
+	if not plan.is_empty():
+		var kind: String = String(a["plan_kind"])
+		var tid: int = int(a["task"])
+		if kind == "order":
+			return true
+		if kind == "task" and tid != -1 and tid == int(o.get("tid", -2)):
+			return true
+		if kind == "task" and tid != -1 and sim.state["tasks"].has(tid) and o["kind"] == "survey" and allows(a, sim.state["tasks"][tid]):
+			return true
+		if _imminent(a, kind):
+			return false
+		# A work order decides first and drops the colonist's plan only when it has work to start (think does
+		# it): an order that waits for a part leaves the colonist's own plan alone (no thrash).
+		if WORK_KINDS.has(String(o["kind"])):
+			return think(a)
+		sim.agents.abort_plan(a, "ordered")
+	return think(a)
+
+## True when the order waits for something (an item, a way): the colonist then works as usual meanwhile.
+func is_blocked(a: Dictionary) -> bool:
+	var o = a.get("order")
+	return o != null and String((o as Dictionary).get("blocked", "")) != ""
+
+func _blocked(a: Dictionary, o: Dictionary, code: String, text: String, missing: Dictionary = {}) -> bool:
+	o["blocked"] = code
+	o["text"] = text
+	o["missing"] = missing
+	o["fails"] = int(o.get("fails", 0)) + 1
+	# The order is looked at again in five seconds (not every second: it asks the stores each time).
+	o["next"] = int(sim.state["tick"]) + 5 * int(sim.bal["tick_hz"])
+	if (a["plan"] as Array).is_empty():
+		a["goal"] = text
+	# An order that cannot be carried out for want of a way (not for want of an item) ends after two minutes.
+	if missing.is_empty() and int(o["fails"]) > 24:
+		clear(a, text)
+		return false
+	if not missing.is_empty():
+		sim.chains.report_missing(String(missing["item"]), int(missing.get("qty", 1)), "order", int(o.get("b", -1)), String(a["name"]), String(missing.get("reason", "none")))
+	return false
+
+func _ok(a: Dictionary, o: Dictionary, tid: int) -> bool:
+	o["blocked"] = ""
+	o["missing"] = {}
+	o["fails"] = 0
+	o["tid"] = tid
+	o["text"] = String(a["goal"])
+	return true
+
+func _finished(a: Dictionary, o: Dictionary, text: String) -> bool:
+	sim.log_event("order_done", "%s: %s" % [a["name"], text], [int(a["id"]), int(o.get("b", -1))], 1)
+	if bool(o.get("standing", false)):
+		sim.workq.standing_wait(a, o)
+	clear(a, "")
+	return false
+
+func _why(reason: String) -> String:
+	match reason:
+		"no_path", "no_path_src", "no_path_here":
+			return "there is no way to it"
+		"suit_range":
+			return "the suit air is not enough"
+		"no_air":
+			return "the room has no air"
+		"shelter":
+			return "everybody must stay inside"
+	return reason
+
+## The thinking of the work orders (repair, maintain, build, haul, task, work_at). Called when the colonist has no
+## plan that carries the order out. It decides first: only an order that has a plan to start drops the
+## colonist's own plan (agents.begin_task); an order that waits keeps the colonist's plan and is looked at again
+## every five seconds.
+func _think_work(a: Dictionary, o: Dictionary) -> bool:
+	var tick: int = int(sim.state["tick"])
+	if String(o.get("blocked", "")) != "" and tick < int(o.get("next", 0)):
+		return false
+	var blds: Dictionary = sim.state["buildings"]
+	var kind: String = String(o["kind"])
+	if kind == "task":
+		var t0: Dictionary = sim.state["tasks"].get(int(o["tid"]), {})
+		if t0.is_empty() or (int(t0["owner"]) != -1 and int(t0["owner"]) != int(a["id"])):
+			return _finished(a, o, "the assigned work is done or gone.")
+		return _start(a, o, t0, "the assigned work")
+	var b: Dictionary = blds.get(int(o["b"]), {})
+	if b.is_empty():
+		clear(a, "the structure is gone")
+		return false
+	var nm: String = String(b["name"])
+	if kind == "work_at":
+		# Work at a structure: a site is built, a worn structure is repaired, else the open work there is done.
+		if b["state"] == "blueprint" or b["state"] == "building":
+			kind = "build"
+		elif repair_need(b) != "":
+			kind = "repair"
+		else:
+			var wt: Dictionary = sim.jobs.best_task_at(int(o["b"]), a)
+			if wt.is_empty():
+				return _finished(a, o, "there is no more work at %s." % nm)
+			return _start(a, o, wt, nm)
+	match kind:
+		"repair", "maintain":
+			if b["state"] != "active" and b["state"] != "broken":
+				clear(a, "the structure is gone")
+				return false
+			var need: String = repair_need(b)
+			if need == "":
+				return _finished(a, o, "%s is in repair." % nm)
+			var r: Dictionary = sim.jobs.order_task(int(o["b"]), need, int(a["id"]))
+			if r.has("missing"):
+				var item: String = String(r["missing"])
+				var why: String = String(r.get("reason", "none"))
+				var text: String = "Waiting for %s to repair %s (order)" % [sim.items.name_of(item).to_lower(), nm]
+				if why == "unreachable":
+					text = "The %s for %s lies where nobody can reach it (order)" % [sim.items.name_of(item).to_lower(), nm]
+				elif why == "elsewhere":
+					text = "The %s for %s is at another base (order)" % [sim.items.name_of(item).to_lower(), nm]
+				return _blocked(a, o, "no_item", text, {"item": item, "qty": int(r.get("qty", 1)), "reason": why})
+			if r.has("busy"):
+				return _blocked(a, o, "busy", "Another colonist is already on %s (order)" % nm)
+			return _start(a, o, r["task"], "repair %s" % nm)
+		"build":
+			if b["state"] == "active":
+				return _finished(a, o, "%s is built." % nm)
+			if b["state"] == "blueprint":
+				var blk: String = String(b.get("block", ""))
+				if blk.begins_with("materials:"):
+					var mi: String = blk.substr(10)
+					return _blocked(a, o, "no_item", "Waiting for %s to build %s (order)" % [sim.items.name_of(mi).to_lower(), nm], {"item": mi, "qty": 1, "reason": "none"})
+				var h: Dictionary = sim.jobs.open_task_at(int(o["b"]), "haul")
+				if h.is_empty():
+					return _blocked(a, o, "wait", "Waiting for the materials of %s (order)" % nm)
+				return _start(a, o, h, "carry materials to %s" % nm)
+			if b["state"] == "building":
+				var bt: Dictionary = sim.jobs.open_task_at(int(o["b"]), "build")
+				if bt.is_empty():
+					return _blocked(a, o, "wait", "All the places at %s are taken (order)" % nm)
+				return _start(a, o, bt, "build %s" % nm)
+			clear(a, "the site is gone")
+			return false
+		"haul":
+			var res: String = String(o["res"])
+			if int(o["left"]) <= 0:
+				return _finished(a, o, "%s delivered to %s." % [sim.items.name_of(res), nm])
+			var hr: Dictionary = sim.jobs.order_haul(res, int(o["left"]), int(o["b"]))
+			if hr.has("missing"):
+				return _blocked(a, o, "no_item", "Waiting for %s to carry to %s (order)" % [sim.items.name_of(res).to_lower(), nm], {"item": res, "qty": int(o["left"]), "reason": String(hr.get("reason", "none"))})
+			if hr.has("full"):
+				return _blocked(a, o, "full", "%s has no room for %s (order)" % [nm, sim.items.name_of(res).to_lower()])
+			var ht: Dictionary = hr["task"]
+			var plan: Dictionary = sim.agents.plan_task_for(a, ht)
+			if not bool(plan["ok"]):
+				sim.jobs.fail(int(ht["id"]), "order_failed")
+				return _blocked(a, o, String(plan["reason"]), "Cannot carry %s: %s (order)" % [sim.items.name_of(res).to_lower(), _why(String(plan["reason"]))])
+			sim.agents.begin_task(a, ht, plan)
+			return _ok(a, o, int(ht["id"]))
+	return false
+
+## Plans task t for the colonist; when the plan is possible the colonist starts it (and drops its own plan).
+func _start(a: Dictionary, o: Dictionary, t: Dictionary, what: String) -> bool:
+	t["retry"] = 0
+	var plan: Dictionary = sim.agents.plan_task_for(a, t)
+	if not bool(plan["ok"]):
+		return _blocked(a, o, String(plan["reason"]), "Cannot %s: %s (order)" % [what, _why(String(plan["reason"]))])
+	sim.agents.begin_task(a, t, plan)
+	return _ok(a, o, int(t["id"]))
+
 func _walk(a: Dictionary, to: Dictionary, goal: String) -> bool:
 	var r: Dictionary = sim.nav.plan(sim.agents.loc_of(a), to)
 	if not r["ok"]:
@@ -378,4 +652,12 @@ func goal_text(a: Dictionary) -> String:
 		"board": return "Going to the vehicle (order)"
 		"work_at": return "Working at %s (order)" % String(sim.state["buildings"].get(int(o["b"]), {}).get("name", "?"))
 		"survey": return "Survey (order)"
+		"repair": return "Going to repair %s (order)" % _bname(o)
+		"maintain": return "Going to maintain %s (order)" % _bname(o)
+		"build": return "Going to build %s (order)" % _bname(o)
+		"haul": return "Going to fetch %s for %s (order)" % [sim.items.name_of(String(o["res"])).to_lower(), _bname(o)]
+		"task": return "Doing the work that was assigned (order)"
 	return String(a["goal"])
+
+func _bname(o: Dictionary) -> String:
+	return String(sim.state["buildings"].get(int(o.get("b", -1)), {}).get("name", "a structure"))

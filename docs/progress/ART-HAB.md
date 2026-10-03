@@ -5,6 +5,16 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-04 critic r42 PE-01 (far rooms half as bright)
+- Cause: far Base floors baked into Palette lost the game's interior shader fill (Floor/FloorDark are INTERIOR_ONLY); far materials named Palette.001. Fix in rooms_far.py: far floors keep material "Floor" (white, colour in COLOR_0), exact material names. Verified with tools/arthab_farcheck.gd: far floors now on the interior shader path.
+- RESULT 159 far files rebuilt; draw calls roof off 795, roof on 831 (near 3,649 / 4,009); import done; check 347 scripts 0 failed; nav bake 160 grids; pck 186.22 MB. RENDER asked to re-measure luminance.
+
+## 2026-10-04 package transport models (V5_DESIGN 18.5) + far glow fix
+- `tools/blender/interior_transport.py`: transport_tube (36 tris), transport_bracket (164), transport_junction (398), transport_port (210), transport_hub_s/m/l/xl (1,462 each); 0 flags; 102 KB in the pck.
+- Storehouse / cold storage: hub pad + Anchor_Hub (longest rack row, 1.0 m bay), decks 2.90/2.90/3.10/3.30; 8 files rebuilt 0 flags, door_blocked unchanged.
+- Far files: glow kept by area, folded only into a matching glow (RENDER: habitat window glow); 159 rebuilt, draw calls unchanged (636 / 672).
+- RESULT import done; check 346 scripts 0 failed; nav bake 160 grids / 162 occluder grids; pck 186.18 MB. Renders art/interiors/transport/. SIM and RENDER told; no critic round 42 file yet.
+
 ## 2026-10-03 far files, all groups (coordinator: roof-on overview 33.8 fps)
 - RESULT `rooms_far.py --groups all`: 159 files with Base, Interior, Roof, L2..L5; roof-on draw calls 4,009 -> 672 (25.2 -> 4.2 per type), triangles -45 %; roof-off 3,649 -> 636. Far files 28.3 MB imported; pck 185.95 MB. Import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids. RENDER told.
 
