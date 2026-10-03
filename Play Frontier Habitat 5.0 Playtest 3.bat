@@ -1,0 +1,38 @@
+@echo off
+rem Play the Frontier Habitat 5.0 PLAYTEST 3 2026-10-04 (fixed copy for Paul's playtest): serves build\web_v5play3 on port 5798.
+rem The released game (4.0) stays in build\web and "Play Frontier Habitat.bat".
+title Frontier Habitat 5.0 Playtest 3
+cd /d "%~dp0"
+set PORT=5798
+set URL=http://localhost:%PORT%/
+
+if not exist "build\web_v5play3\index.html" (
+  echo The preview build is missing: build\web_v5play3\index.html
+  pause
+  exit /b 1
+)
+
+rem Is the server already running?
+curl.exe -s -o nul -m 2 %URL%
+if errorlevel 1 (
+  echo Starting the preview server on port %PORT% ...
+  start "Frontier Habitat 5.0 Playtest 3 server - close this window to stop the game" /min node "%~dp0tools\serve.mjs" %PORT% web_v5play3
+  rem Wait up to 10 seconds for it to answer.
+  for /l %%i in (1,1,20) do (
+    curl.exe -s -o nul -m 1 %URL% && goto :open
+    timeout /t 1 /nobreak >nul
+  )
+  echo The server did not start. Is Node.js installed?
+  pause
+  exit /b 1
+)
+
+:open
+rem Open in its own Chrome window if Chrome is installed, else in the default browser.
+set CHROME=%ProgramFiles%\Google\Chrome\Application\chrome.exe
+if exist "%CHROME%" (
+  start "" "%CHROME%" --app=%URL% --start-maximized
+) else (
+  start "" %URL%
+)
+exit /b 0
