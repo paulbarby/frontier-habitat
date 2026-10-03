@@ -124,3 +124,15 @@ of shoulder height and over 0.55 m out from the spine) finds this pose only in s
 A colonist standing free cheers when the colony gets an award (fx_npc), so `cheer` is the most likely clip in that
 shot. If the arms-out section reads as a T-pose at eye level, please bend the elbows or raise the hands in
 cheer (and dance_c), or tell me and I take cheer out of the follow-view person's clips.
+
+## 2026-10-03 (night) - a far LOD2 for the people, please (RENDER, coordinator)
+
+All roofs off / the overview at 110 m: the 134 people are 1.7 M triangles and 228 draw calls (about 5 ms a frame in
+the web build). LOD1 is 12.9 k triangles per library over 21 parts (6 k per body drawn). Please make
+`people_<v>_lod2.glb` for p_m1..m3, p_f1..f3, p_c1, p_c2:
+- **a few hundred triangles per body** (target 300-500), the same skeleton and bind as LOD0 (the LOD0 clips are
+  shared, as for LOD1), so my loader takes it like LOD1;
+- **one mesh part per outfit at most** (better: one part with the outfit colours in vertex colour or the palette),
+  no separate heads, hair or add-ons (one draw call per library and outfit);
+- feet at the same height as LOD0 (the ground gate measures the planted foot).
+I draw LOD2 beyond 40 m from the camera (LOD1 from 12 m as now). Tell me the file names when they are in.

@@ -49,9 +49,10 @@ func remove(h: int) -> void:
 		(p["mm"] as MultiMesh).set_instance_transform(slot, _zero((e["xf"] as Transform3D).origin))
 	(bt["slots"] as Dictionary).erase(slot)
 	(bt["free"] as Array).append(slot)
-	for g in bt["vis"]:
-		if not (e["hidden"] as Dictionary).has(g):
-			_vis_delta(bt, g, -1)
+	if not bool(e.get("supp", false)):
+		for g in bt["vis"]:
+			if not (e["hidden"] as Dictionary).has(g):
+				_vis_delta(bt, g, -1)
 	handles.erase(h)
 
 func has(h: int) -> bool:
@@ -94,9 +95,24 @@ func set_hidden(h: int, group: String, hide: bool) -> void:
 	else:
 		(e["hidden"] as Dictionary).erase(group)
 	var bt: Dictionary = batches[e["key"]]
-	if (bt["vis"] as Dictionary).has(group):
+	if (bt["vis"] as Dictionary).has(group) and not bool(e.get("supp", false)):
 		_vis_delta(bt, group, -1 if hide else 1)
 	_write_group(h, group)
+
+## Suppress a copy (2026-10-03, far meshes): none of its parts is drawn, whatever its hidden groups; its batch
+## parts stop drawing when no copy shows them. Lifting it restores the copy as its hidden groups say.
+func set_suppressed(h: int, on: bool) -> void:
+	if not handles.has(h):
+		return
+	var e: Dictionary = handles[h]
+	if bool(e.get("supp", false)) == on:
+		return
+	e["supp"] = on
+	var bt: Dictionary = batches[e["key"]]
+	for g in bt["vis"]:
+		if not (e["hidden"] as Dictionary).has(g):
+			_vis_delta(bt, g, -1 if on else 1)
+	_write(h)
 
 func set_extra(h: int, group: String, t: Transform3D) -> void:
 	if not handles.has(h):
@@ -331,7 +347,7 @@ func _zero(at: Vector3) -> Transform3D:
 func _part_xf(e: Dictionary, part: Dictionary) -> Transform3D:
 	var g: String = part["group"]
 	var xf: Transform3D = e["xf"]
-	if (e["hidden"] as Dictionary).has(g):
+	if (e["hidden"] as Dictionary).has(g) or bool(e.get("supp", false)):
 		return _zero(xf.origin)
 	var ex = (e["extra"] as Dictionary).get(g)
 	if ex == null:

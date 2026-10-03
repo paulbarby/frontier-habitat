@@ -1294,3 +1294,22 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
   frames, beam 0, gap 0).
 - **Follow (headless 60 s):** in1 cam 2.26 mm (head 4.3 px), in4 cam 4.42 mm (target 3: not met; the walks differ
   from the last round after the path changes), out4 1.69 mm. Framing: not worked on this round (2-3 of 30 left).
+
+## 2026-10-03 (Opus, round 5) - ground rule, far meshes, LOD2 hook
+- **Ground gate rule (coordinator):** windows are skipped only where the FLOOR changes: the floor is now the drawn
+  floor under the feet (a ray down against physics shapes of every structure copy, `fx_cam_phys.sync_all`), and a
+  window whose floor changes by over 1 cm (stairs, ramps, lift platforms; inside a structure with no floor under
+  the feet) is skipped. The body's height over the floor no longer skips anything. That showed real sinks:
+  2,198 in corridors (bodies walked on the room floors' height, 33 mm under the tube floor) -> fixed: in a corridor
+  the body walks on the tube floor (the line between the end heights + 0.193 m, measured flat by rays); the
+  multi-storey floor tops came from 5 cm anchor bins (12 mm off) -> the median of the real anchor heights;
+  airlock floor plates +12 mm; doorway kit plates +12 mm within 0.45 m of a doorway. Result: **sink 43, float 1:
+  FAIL.** 36 of the 43 are one suited body at a work spot beside airlock_m standing on the terrain where the
+  airlock's base plinth is drawn 12 cm higher; the rest are airlock floor plates (2), a doorway (1) and dome floors.
+- **Far meshes (ART-HAB):** a room with its roof open beyond 80 m draws `<id>_far.glb`; the near copy is suppressed
+  (new `fx_instancer.set_suppressed`), one far template loads per frame, `farlod 0|1`; a roof-on room uses its far
+  file when the file has a Roof group (asked ART-HAB for `--groups all`). pck 176.5 MB.
+- **People LOD2 hook:** `people_<v>_lod2.glb` is loaded when present and drawn beyond 40 m (asked ART-NPC).
+- **Web (render_perf, vsync, 30 s, showcase_v5):** all roofs off **42.8 fps** (1,126 draws, 4.3 M tris; was 31.7-35.1);
+  overview roofs on 33.8 fps (target 45: waits for ART-HAB's roof-on far files); room follow 40.3 (44.9 last round,
+  55.6 the round before: machine load 17-27 % from other agents; not proven >= 45 this round).

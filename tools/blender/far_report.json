@@ -1,0 +1,3668 @@
+{
+ "min_area": 0.02,
+ "min_area_shell": 0.005,
+ "ratio": 1.0,
+ "rows": [
+  {
+   "id": "academy_l",
+   "src_tris": 35892,
+   "far_tris": 11487,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3586,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 7901,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 779040
+  },
+  {
+   "id": "academy_m",
+   "src_tris": 26000,
+   "far_tris": 8429,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3610,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4819,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 572116
+  },
+  {
+   "id": "academy_s",
+   "src_tris": 19062,
+   "far_tris": 5921,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3192,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2729,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 396992
+  },
+  {
+   "id": "airlock_l",
+   "src_tris": 11788,
+   "far_tris": 3732,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2520,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1212,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 244892
+  },
+  {
+   "id": "airlock_m",
+   "src_tris": 10598,
+   "far_tris": 3294,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2398,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 896,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 214192
+  },
+  {
+   "id": "airlock_r28",
+   "src_tris": 8442,
+   "far_tris": 2926,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2084,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 842,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 188468
+  },
+  {
+   "id": "algae_bioreactor_l",
+   "src_tris": 25467,
+   "far_tris": 7968,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3346,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4622,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 432844
+  },
+  {
+   "id": "algae_bioreactor_m",
+   "src_tris": 18248,
+   "far_tris": 5486,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3230,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2256,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 323100
+  },
+  {
+   "id": "algae_bioreactor_s",
+   "src_tris": 13863,
+   "far_tris": 4712,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3060,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1652,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 284152
+  },
+  {
+   "id": "algae_bioreactor_xl",
+   "src_tris": 36409,
+   "far_tris": 11302,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3386,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 7916,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 575808
+  },
+  {
+   "id": "atmo_processor_l",
+   "src_tris": 23899,
+   "far_tris": 6824,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3470,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3354,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 414664
+  },
+  {
+   "id": "atmo_processor_m",
+   "src_tris": 20138,
+   "far_tris": 5404,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3196,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2208,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 330752
+  },
+  {
+   "id": "atmo_processor_s",
+   "src_tris": 13969,
+   "far_tris": 4206,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2878,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1328,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 267056
+  },
+  {
+   "id": "atmo_processor_xl",
+   "src_tris": 33134,
+   "far_tris": 9306,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3206,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6100,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 553184
+  },
+  {
+   "id": "battery_plant_l",
+   "src_tris": 22828,
+   "far_tris": 6710,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3096,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 462368
+  },
+  {
+   "id": "battery_plant_m",
+   "src_tris": 16677,
+   "far_tris": 5220,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3716,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1504,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 358072
+  },
+  {
+   "id": "battery_plant_s",
+   "src_tris": 13978,
+   "far_tris": 4690,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3478,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1212,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 323352
+  },
+  {
+   "id": "battery_plant_xl",
+   "src_tris": 32582,
+   "far_tris": 9584,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3694,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5890,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 668040
+  },
+  {
+   "id": "bio_lab_l",
+   "src_tris": 21855,
+   "far_tris": 5500,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3182,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2318,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 373768
+  },
+  {
+   "id": "bio_lab_m",
+   "src_tris": 16656,
+   "far_tris": 4489,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3198,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1291,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 301876
+  },
+  {
+   "id": "bio_lab_s",
+   "src_tris": 12920,
+   "far_tris": 3800,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2972,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 828,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 255536
+  },
+  {
+   "id": "bio_lab_xl",
+   "src_tris": 28031,
+   "far_tris": 6558,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3248,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3310,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 449312
+  },
+  {
+   "id": "cantina_l",
+   "src_tris": 30915,
+   "far_tris": 7322,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3604,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3718,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 489868
+  },
+  {
+   "id": "cantina_m",
+   "src_tris": 22109,
+   "far_tris": 5090,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3468,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1622,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 342936
+  },
+  {
+   "id": "cantina_s",
+   "src_tris": 17299,
+   "far_tris": 3805,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2592,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1213,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 256016
+  },
+  {
+   "id": "cantina_xl",
+   "src_tris": 39215,
+   "far_tris": 9460,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3384,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6076,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 634616
+  },
+  {
+   "id": "carbon_works_l",
+   "src_tris": 24524,
+   "far_tris": 6544,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2930,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 441400
+  },
+  {
+   "id": "carbon_works_m",
+   "src_tris": 17758,
+   "far_tris": 5066,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3636,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1430,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 341908
+  },
+  {
+   "id": "carbon_works_s",
+   "src_tris": 14850,
+   "far_tris": 4672,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3480,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1192,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 316884
+  },
+  {
+   "id": "carbon_works_xl",
+   "src_tris": 32548,
+   "far_tris": 9502,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3696,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5806,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 653528
+  },
+  {
+   "id": "ceramics_kiln_l",
+   "src_tris": 22687,
+   "far_tris": 6362,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2748,
+     "mats": [
+      "Ember",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 438892
+  },
+  {
+   "id": "ceramics_kiln_m",
+   "src_tris": 16969,
+   "far_tris": 5250,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1538,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 360148
+  },
+  {
+   "id": "ceramics_kiln_s",
+   "src_tris": 13874,
+   "far_tris": 4418,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 932,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 303192
+  },
+  {
+   "id": "ceramics_kiln_xl",
+   "src_tris": 30877,
+   "far_tris": 9443,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5751,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 658892
+  },
+  {
+   "id": "cold_storage_l",
+   "src_tris": 24518,
+   "far_tris": 8428,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3482,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4946,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 581412
+  },
+  {
+   "id": "cold_storage_m",
+   "src_tris": 17897,
+   "far_tris": 6288,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3426,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2862,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 435252
+  },
+  {
+   "id": "cold_storage_s",
+   "src_tris": 13132,
+   "far_tris": 4928,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3196,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1732,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 339800
+  },
+  {
+   "id": "cold_storage_xl",
+   "src_tris": 32788,
+   "far_tris": 10788,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3478,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 7310,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 749756
+  },
+  {
+   "id": "distillery_l",
+   "src_tris": 33264,
+   "far_tris": 6235,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3596,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2639,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 392268
+  },
+  {
+   "id": "distillery_m",
+   "src_tris": 25875,
+   "far_tris": 5006,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3714,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1292,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 327260
+  },
+  {
+   "id": "distillery_s",
+   "src_tris": 18095,
+   "far_tris": 4534,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1048,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 301452
+  },
+  {
+   "id": "distillery_xl",
+   "src_tris": 46257,
+   "far_tris": 7513,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3700,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3813,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 485284
+  },
+  {
+   "id": "electronics_fab_l",
+   "src_tris": 24160,
+   "far_tris": 6342,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2728,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 431812
+  },
+  {
+   "id": "electronics_fab_m",
+   "src_tris": 16674,
+   "far_tris": 5074,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3716,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1358,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 346076
+  },
+  {
+   "id": "electronics_fab_s",
+   "src_tris": 15233,
+   "far_tris": 4640,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3478,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1162,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 318276
+  },
+  {
+   "id": "electronics_fab_xl",
+   "src_tris": 34112,
+   "far_tris": 9014,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3694,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5320,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 625900
+  },
+  {
+   "id": "fabricator_l",
+   "src_tris": 26421,
+   "far_tris": 7368,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3598,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3770,
+     "mats": [
+      "Palette",
+      "Plasma"
+     ]
+    }
+   },
+   "file_size": 508212
+  },
+  {
+   "id": "fabricator_m",
+   "src_tris": 19037,
+   "far_tris": 5468,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3754,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1714,
+     "mats": [
+      "Palette",
+      "Plasma"
+     ]
+    }
+   },
+   "file_size": 371112
+  },
+  {
+   "id": "fabricator_s",
+   "src_tris": 15068,
+   "far_tris": 4610,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3490,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1120,
+     "mats": [
+      "Palette",
+      "Plasma"
+     ]
+    }
+   },
+   "file_size": 314832
+  },
+  {
+   "id": "fabricator_xl",
+   "src_tris": 34967,
+   "far_tris": 9920,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3686,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6234,
+     "mats": [
+      "Palette",
+      "Plasma"
+     ]
+    }
+   },
+   "file_size": 682516
+  },
+  {
+   "id": "fungus_farm_l",
+   "src_tris": 23334,
+   "far_tris": 5868,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3734,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2134,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 386412
+  },
+  {
+   "id": "fungus_farm_m",
+   "src_tris": 19025,
+   "far_tris": 4892,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3710,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1182,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 334104
+  },
+  {
+   "id": "fungus_farm_s",
+   "src_tris": 15537,
+   "far_tris": 4238,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3424,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 814,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 279344
+  },
+  {
+   "id": "fungus_farm_xl",
+   "src_tris": 30635,
+   "far_tris": 8238,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3568,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4670,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 547840
+  },
+  {
+   "id": "glassworks_l",
+   "src_tris": 21120,
+   "far_tris": 6082,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2468,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 404176
+  },
+  {
+   "id": "glassworks_m",
+   "src_tris": 16332,
+   "far_tris": 5214,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1502,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 352712
+  },
+  {
+   "id": "glassworks_s",
+   "src_tris": 13178,
+   "far_tris": 4444,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 958,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 299820
+  },
+  {
+   "id": "glassworks_xl",
+   "src_tris": 28787,
+   "far_tris": 8824,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5132,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 598368
+  },
+  {
+   "id": "greenhouse_l",
+   "src_tris": 23248,
+   "far_tris": 7182,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3348,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3834,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 481656
+  },
+  {
+   "id": "greenhouse_m",
+   "src_tris": 19488,
+   "far_tris": 5284,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3376,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1908,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 347436
+  },
+  {
+   "id": "greenhouse_s",
+   "src_tris": 13330,
+   "far_tris": 3958,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3136,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 822,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 264924
+  },
+  {
+   "id": "greenhouse_xl",
+   "src_tris": 28324,
+   "far_tris": 8646,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3390,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5256,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 581084
+  },
+  {
+   "id": "habitat_l",
+   "src_tris": 33123,
+   "far_tris": 10787,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4641,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6146,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 701276
+  },
+  {
+   "id": "habitat_m",
+   "src_tris": 24990,
+   "far_tris": 8215,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4353,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3862,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 535048
+  },
+  {
+   "id": "habitat_s",
+   "src_tris": 15406,
+   "far_tris": 4878,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3509,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1369,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 317732
+  },
+  {
+   "id": "habitat_xl",
+   "src_tris": 43714,
+   "far_tris": 14350,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 5097,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 9253,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 942924
+  },
+  {
+   "id": "hr_office_l",
+   "src_tris": 33001,
+   "far_tris": 9615,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4072,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5543,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 630352
+  },
+  {
+   "id": "hr_office_m",
+   "src_tris": 24487,
+   "far_tris": 6773,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3646,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3127,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 446408
+  },
+  {
+   "id": "hr_office_s",
+   "src_tris": 19115,
+   "far_tris": 4807,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3202,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1605,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 313096
+  },
+  {
+   "id": "jail_l",
+   "src_tris": 21595,
+   "far_tris": 7602,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3210,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4392,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 510252
+  },
+  {
+   "id": "jail_m",
+   "src_tris": 15754,
+   "far_tris": 5093,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2992,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2101,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 341344
+  },
+  {
+   "id": "jail_s",
+   "src_tris": 13051,
+   "far_tris": 4052,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2736,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1316,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 271792
+  },
+  {
+   "id": "junction",
+   "src_tris": 8654,
+   "far_tris": 2548,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2414,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 134,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 169092
+  },
+  {
+   "id": "kitchen_l",
+   "src_tris": 29275,
+   "far_tris": 8290,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4134,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4156,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 553360
+  },
+  {
+   "id": "kitchen_m",
+   "src_tris": 22275,
+   "far_tris": 6394,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4050,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2344,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 434356
+  },
+  {
+   "id": "kitchen_s",
+   "src_tris": 16076,
+   "far_tris": 4638,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3178,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1460,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 314288
+  },
+  {
+   "id": "kitchen_xl",
+   "src_tris": 36452,
+   "far_tris": 9768,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3850,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5918,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 656192
+  },
+  {
+   "id": "lounge_l",
+   "src_tris": 30394,
+   "far_tris": 8997,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4506,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4491,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 573264
+  },
+  {
+   "id": "lounge_m",
+   "src_tris": 22758,
+   "far_tris": 6388,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3998,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2390,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 411644
+  },
+  {
+   "id": "lounge_s",
+   "src_tris": 17838,
+   "far_tris": 4942,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3234,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1708,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 320940
+  },
+  {
+   "id": "lounge_xl",
+   "src_tris": 38877,
+   "far_tris": 11956,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4916,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 7040,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 757460
+  },
+  {
+   "id": "magnet_works_l",
+   "src_tris": 24784,
+   "far_tris": 6761,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3534,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3227,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 455772
+  },
+  {
+   "id": "magnet_works_m",
+   "src_tris": 17848,
+   "far_tris": 5261,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3636,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1625,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 359564
+  },
+  {
+   "id": "magnet_works_s",
+   "src_tris": 14383,
+   "far_tris": 4743,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3470,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1273,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 324752
+  },
+  {
+   "id": "magnet_works_xl",
+   "src_tris": 34943,
+   "far_tris": 10254,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3698,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6556,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 697224
+  },
+  {
+   "id": "medical_l",
+   "src_tris": 22866,
+   "far_tris": 6434,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2722,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 434220
+  },
+  {
+   "id": "medical_m",
+   "src_tris": 17916,
+   "far_tris": 5082,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3734,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1348,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 340668
+  },
+  {
+   "id": "medical_s",
+   "src_tris": 13850,
+   "far_tris": 4076,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3210,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 866,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 271268
+  },
+  {
+   "id": "medical_xl",
+   "src_tris": 30427,
+   "far_tris": 7902,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3564,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4338,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 538528
+  },
+  {
+   "id": "metamaterial_foundry_l",
+   "src_tris": 24155,
+   "far_tris": 7038,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3424,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 460132
+  },
+  {
+   "id": "metamaterial_foundry_m",
+   "src_tris": 18014,
+   "far_tris": 5318,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3636,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1682,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 350228
+  },
+  {
+   "id": "metamaterial_foundry_s",
+   "src_tris": 15045,
+   "far_tris": 4808,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3480,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1328,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 326748
+  },
+  {
+   "id": "metamaterial_foundry_xl",
+   "src_tris": 32552,
+   "far_tris": 9649,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3696,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5953,
+     "mats": [
+      "L4Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 636772
+  },
+  {
+   "id": "mine_l",
+   "src_tris": 22988,
+   "far_tris": 6316,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3616,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2700,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 420896
+  },
+  {
+   "id": "mine_m",
+   "src_tris": 19089,
+   "far_tris": 5548,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1836,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 375600
+  },
+  {
+   "id": "mine_s",
+   "src_tris": 14090,
+   "far_tris": 4447,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3488,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 959,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 298820
+  },
+  {
+   "id": "mine_xl",
+   "src_tris": 29986,
+   "far_tris": 8550,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3700,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4850,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 574896
+  },
+  {
+   "id": "oxygen_plant_l",
+   "src_tris": 20986,
+   "far_tris": 5748,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3172,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2576,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 350668
+  },
+  {
+   "id": "oxygen_plant_m",
+   "src_tris": 15913,
+   "far_tris": 4288,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3234,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1054,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 276136
+  },
+  {
+   "id": "oxygen_plant_s",
+   "src_tris": 12049,
+   "far_tris": 3422,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2974,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 448,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 231504
+  },
+  {
+   "id": "oxygen_plant_xl",
+   "src_tris": 28148,
+   "far_tris": 7586,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3248,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4338,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 425756
+  },
+  {
+   "id": "park_l",
+   "src_tris": 31845,
+   "far_tris": 12486,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4560,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 7926,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 545952
+  },
+  {
+   "id": "park_m",
+   "src_tris": 22055,
+   "far_tris": 8582,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4054,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4528,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 403664
+  },
+  {
+   "id": "park_xl",
+   "src_tris": 48057,
+   "far_tris": 18256,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4996,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 13260,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 741120
+  },
+  {
+   "id": "parts_works_l",
+   "src_tris": 23213,
+   "far_tris": 6458,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3616,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2842,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 442272
+  },
+  {
+   "id": "parts_works_m",
+   "src_tris": 18257,
+   "far_tris": 5294,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1582,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 363352
+  },
+  {
+   "id": "parts_works_s",
+   "src_tris": 13350,
+   "far_tris": 4485,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3488,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 997,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 307604
+  },
+  {
+   "id": "parts_works_xl",
+   "src_tris": 31324,
+   "far_tris": 9638,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3700,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5938,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 672820
+  },
+  {
+   "id": "polymer_plant_l",
+   "src_tris": 24195,
+   "far_tris": 6875,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3261,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 436812
+  },
+  {
+   "id": "polymer_plant_m",
+   "src_tris": 16498,
+   "far_tris": 5395,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1683,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 353784
+  },
+  {
+   "id": "polymer_plant_s",
+   "src_tris": 14910,
+   "far_tris": 4802,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1316,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 321296
+  },
+  {
+   "id": "polymer_plant_xl",
+   "src_tris": 31716,
+   "far_tris": 9630,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5938,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 609188
+  },
+  {
+   "id": "refinery_l",
+   "src_tris": 23921,
+   "far_tris": 6762,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3608,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3154,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 443144
+  },
+  {
+   "id": "refinery_m",
+   "src_tris": 17570,
+   "far_tris": 5294,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3630,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1664,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 352960
+  },
+  {
+   "id": "refinery_s",
+   "src_tris": 14512,
+   "far_tris": 4926,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3470,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1456,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 331036
+  },
+  {
+   "id": "refinery_xl",
+   "src_tris": 33205,
+   "far_tris": 9420,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5728,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 629792
+  },
+  {
+   "id": "research_assembler_l",
+   "src_tris": 27365,
+   "far_tris": 6784,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3670,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3114,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 463008
+  },
+  {
+   "id": "research_assembler_m",
+   "src_tris": 23012,
+   "far_tris": 5618,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3862,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1756,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 377316
+  },
+  {
+   "id": "research_assembler_s",
+   "src_tris": 16144,
+   "far_tris": 4158,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3178,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 980,
+     "mats": [
+      "Palette",
+      "Plasma"
+     ]
+    }
+   },
+   "file_size": 282172
+  },
+  {
+   "id": "research_assembler_xl",
+   "src_tris": 40305,
+   "far_tris": 9476,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4184,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5292,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 650636
+  },
+  {
+   "id": "research_lab_l",
+   "src_tris": 36569,
+   "far_tris": 9236,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 5128,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4108,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 592156
+  },
+  {
+   "id": "research_lab_m",
+   "src_tris": 26894,
+   "far_tris": 6624,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4526,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2098,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 429288
+  },
+  {
+   "id": "research_lab_s",
+   "src_tris": 18882,
+   "far_tris": 4632,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3374,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1258,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 303088
+  },
+  {
+   "id": "research_lab_xl",
+   "src_tris": 45286,
+   "far_tris": 12476,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 6062,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6414,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 816420
+  },
+  {
+   "id": "residence_tube_executive_l",
+   "src_tris": 35531,
+   "far_tris": 10150,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3204,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6946,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 682900
+  },
+  {
+   "id": "residence_tube_executive_m",
+   "src_tris": 26520,
+   "far_tris": 6952,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3206,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3746,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 466280
+  },
+  {
+   "id": "residence_tube_executive_xl",
+   "src_tris": 44779,
+   "far_tris": 12077,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3188,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 8889,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 817096
+  },
+  {
+   "id": "residence_tube_l",
+   "src_tris": 39396,
+   "far_tris": 11530,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3204,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 8326,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 785036
+  },
+  {
+   "id": "residence_tube_m",
+   "src_tris": 27844,
+   "far_tris": 7848,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3206,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 4642,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 531720
+  },
+  {
+   "id": "residence_tube_xl",
+   "src_tris": 46482,
+   "far_tris": 13368,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3188,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 10180,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 916616
+  },
+  {
+   "id": "retail_l",
+   "src_tris": 30723,
+   "far_tris": 10222,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3620,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6602,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 690684
+  },
+  {
+   "id": "retail_m",
+   "src_tris": 21608,
+   "far_tris": 7354,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3660,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3694,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 497980
+  },
+  {
+   "id": "retail_s",
+   "src_tris": 15704,
+   "far_tris": 5094,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3278,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1816,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 346816
+  },
+  {
+   "id": "security_office_m",
+   "src_tris": 19373,
+   "far_tris": 6181,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3414,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2767,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 416292
+  },
+  {
+   "id": "security_office_s",
+   "src_tris": 15195,
+   "far_tris": 4870,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3096,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1774,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 328124
+  },
+  {
+   "id": "steel_mill_l",
+   "src_tris": 22962,
+   "far_tris": 6707,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3596,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3111,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 449852
+  },
+  {
+   "id": "steel_mill_m",
+   "src_tris": 17899,
+   "far_tris": 5176,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3694,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1482,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 348920
+  },
+  {
+   "id": "steel_mill_s",
+   "src_tris": 13285,
+   "far_tris": 4730,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3470,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1260,
+     "mats": [
+      "Ember",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 318912
+  },
+  {
+   "id": "steel_mill_xl",
+   "src_tris": 33237,
+   "far_tris": 9806,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3700,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6106,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 673416
+  },
+  {
+   "id": "storehouse_l",
+   "src_tris": 34040,
+   "far_tris": 12078,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4008,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 8070,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 835956
+  },
+  {
+   "id": "storehouse_m",
+   "src_tris": 24760,
+   "far_tris": 9872,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 4056,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 5816,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 680568
+  },
+  {
+   "id": "storehouse_s",
+   "src_tris": 16578,
+   "far_tris": 6036,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3776,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2260,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 417040
+  },
+  {
+   "id": "storehouse_xl",
+   "src_tris": 43361,
+   "far_tris": 15471,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3994,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 11477,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 1079140
+  },
+  {
+   "id": "superconductor_lab_l",
+   "src_tris": 24567,
+   "far_tris": 6598,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2984,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 438124
+  },
+  {
+   "id": "superconductor_lab_m",
+   "src_tris": 18876,
+   "far_tris": 5490,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1778,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 369484
+  },
+  {
+   "id": "superconductor_lab_s",
+   "src_tris": 14293,
+   "far_tris": 4586,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1100,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 306496
+  },
+  {
+   "id": "superconductor_lab_xl",
+   "src_tris": 34214,
+   "far_tris": 9998,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6306,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 679588
+  },
+  {
+   "id": "titanium_smelter_l",
+   "src_tris": 23350,
+   "far_tris": 6702,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3614,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 3088,
+     "mats": [
+      "Glow",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 445404
+  },
+  {
+   "id": "titanium_smelter_m",
+   "src_tris": 17462,
+   "far_tris": 5392,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3712,
+     "mats": [
+      "Neon",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1680,
+     "mats": [
+      "Ember",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 362344
+  },
+  {
+   "id": "titanium_smelter_s",
+   "src_tris": 13522,
+   "far_tris": 4590,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3486,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1104,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 306876
+  },
+  {
+   "id": "titanium_smelter_xl",
+   "src_tris": 33839,
+   "far_tris": 9791,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3692,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6099,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 655092
+  },
+  {
+   "id": "water_recycler_l",
+   "src_tris": 20618,
+   "far_tris": 4833,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3244,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1589,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 305984
+  },
+  {
+   "id": "water_recycler_m",
+   "src_tris": 17198,
+   "far_tris": 4304,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3324,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 980,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 283380
+  },
+  {
+   "id": "water_recycler_s",
+   "src_tris": 13195,
+   "far_tris": 3598,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 2984,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 614,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 240436
+  },
+  {
+   "id": "water_recycler_xl",
+   "src_tris": 26015,
+   "far_tris": 5971,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3348,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2623,
+     "mats": [
+      "L3Band",
+      "Palette"
+     ]
+    }
+   },
+   "file_size": 380840
+  },
+  {
+   "id": "workshop_l",
+   "src_tris": 23070,
+   "far_tris": 6542,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3592,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 2950,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 445392
+  },
+  {
+   "id": "workshop_m",
+   "src_tris": 18038,
+   "far_tris": 5290,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3710,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 1580,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 361912
+  },
+  {
+   "id": "workshop_s",
+   "src_tris": 13220,
+   "far_tris": 4462,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3474,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 988,
+     "mats": [
+      "Palette",
+      "Screen"
+     ]
+    }
+   },
+   "file_size": 305824
+  },
+  {
+   "id": "workshop_xl",
+   "src_tris": 32217,
+   "far_tris": 9962,
+   "draws": 4,
+   "groups": {
+    "Base": {
+     "tris": 3694,
+     "mats": [
+      "LightStrip",
+      "Palette"
+     ]
+    },
+    "Interior": {
+     "tris": 6268,
+     "mats": [
+      "Palette",
+      "Window"
+     ]
+    }
+   },
+   "file_size": 687880
+  }
+ ],
+ "groups": [
+  "Base",
+  "Interior"
+ ]
+}

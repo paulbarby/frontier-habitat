@@ -53,6 +53,7 @@ const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a"
 const CAM_FADE_R := 1.0         # m: another body this close to the follow camera fades out (critic round 41; 0.8 left a
                                 # shoulder filling a third of the frame)
 const CAM_LINE_R := 0.4         # m: another body this close (plan) to the line from the lens to the followed person fades
+const LOD2_DIST := 40.0         # m: people_<v>_lod2.glb beyond this when present (ART-NPC, asked 2026-10-03)
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
 const FPS := 30.0
 const FLOOR_Z := 0.14            # rooms_kit.py: top of the floor in every room
@@ -210,6 +211,9 @@ func setup(v, fixture: bool = false) -> void:
 		for pv in people_variants():
 			if ResourceLoader.exists("res://assets/models/people_%s_lod1.glb" % pv):
 				variants.append("p_%s_lod1" % pv)
+			# LOD2 (asked of ART-NPC 2026-10-03: a few hundred triangles, LOD0 clips shared) beyond LOD2_DIST
+			if ResourceLoader.exists("res://assets/models/people_%s_lod2.glb" % pv):
+				variants.append("p_%s_lod2" % pv)
 	for variant in variants:
 		var lib: Dictionary = load_lib(variant, fixture)
 		status[variant] = String(lib.get("status", "missing"))
@@ -290,8 +294,8 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 		share = _libs["suit" + (":fixture" if fixture else "")]
 		if not bool(share.get("ok", false)):
 			share = null
-	if variant.ends_with("_lod1"):
-		share = load_lib(variant.trim_suffix("_lod1"), fixture)
+	if variant.ends_with("_lod1") or variant.ends_with("_lod2"):
+		share = load_lib(variant.trim_suffix("_lod1").trim_suffix("_lod2"), fixture)
 		if not bool(share.get("ok", false)):
 			share = null
 	_baking_people = people
@@ -299,8 +303,8 @@ static func load_lib(variant: String, fixture: bool = false) -> Dictionary:
 	_baking_people = false
 	lib["people"] = people
 	if people and bool(lib.get("ok", false)):
-		lib["pvariant"] = variant.substr(2).trim_suffix("_lod1")
-		lib["lod1"] = variant.ends_with("_lod1")
+		lib["pvariant"] = variant.substr(2).trim_suffix("_lod1").trim_suffix("_lod2")
+		lib["lod1"] = variant.ends_with("_lod1") or variant.ends_with("_lod2")
 		# UniformBase colour per outfit (mode 6), indexed by the outfit's idx.
 		var ub := PackedColorArray()
 		ub.resize(16)
@@ -1264,6 +1268,45 @@ func _look(a: Dictionary) -> int:
 	var tone: int = int(Rng.hash2(id, 29, 7) * 6.0) % 6
 	return role * 64 + head * 8 + tone
 
+var _door_grid := {}
+var _door_grid_n := -1
+## Doorway positions in the 4 m cell of q and its neighbours (fx_doors), rebuilt when the doors change.
+func _doors_near(q: Vector2) -> Array:
+	var dl: Array = view.doors.doors
+	if dl.size() != _door_grid_n:
+		_door_grid_n = dl.size()
+		_door_grid = {}
+		for d in dl:
+			var p: Vector3 = d["pos"]
+			var k: int = int(floor(p.x / 4.0)) * 4096 + int(floor(p.z / 4.0))
+			(_door_grid.get_or_add(k, []) as Array).append(p)
+	var out: Array = []
+	var cx: int = int(floor(q.x / 4.0))
+	var cz: int = int(floor(q.y / 4.0))
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			out.append_array(_door_grid.get((cx + dx) * 4096 + cz + dz, []))
+	return out
+const FLOOR_PLATE := {"airlock": 0.012}   # m over FLOOR_Z: the airlock's floor plates (rays down, ground check)
+const DOOR_SILL := 0.012         # m: the doorway kit's floor plate over the room floor (rays down, ground check)
+func _door_floor_z() -> float:
+	return FLOOR_Z + DOOR_SILL
+const TUBE_FLOOR_Z := 0.143      # m: the corridor model's floor top over its axis line + 0.05 (corridor.glb, rays down: flat)
+func _tube_floor(p: Vector3) -> float:
+	if planner == null:
+		return INF
+	var rg: Dictionary = planner.region_of(p, true)
+	if String(rg["k"]) != "tube":
+		return INF
+	var l: Dictionary = sim.state["buildings"].get(int(rg["id"]), {})
+	if l.is_empty() or not l.has("p0"):
+		return INF
+	var a: Vector2 = l["p0"]
+	var b2: Vector2 = l["p1"]
+	var ab: Vector2 = b2 - a
+	var t: float = clampf((Vector2(p.x, p.z) - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+	return lerpf(view.h(a.x, a.y), view.h(b2.x, b2.y), t) + 0.05 + TUBE_FLOOR_Z
+
 func _floor_y(b: Dictionary) -> float:
 	var meta = view.bmeta.get(int(b["id"]))
 	var base: float = view.h(b["pos"].x, b["pos"].y) + 0.02
@@ -1278,7 +1321,12 @@ func _floor_y(b: Dictionary) -> float:
 			var tops: Array = _floor_tops(meta, nf)
 			if not tops.is_empty():
 				return base + float(tops[0]) * sc
-		return base + FLOOR_Z * sc
+		# (a single-floor room: its floor top from its anchors when within 3 cm of FLOOR_Z: the airlock's chamber floor
+		# is 12 mm higher, people walked 12 mm into it, ground check 2026-10-03)
+		var t1: Array = _floor_tops(meta, 1)
+		if not t1.is_empty() and absf(float(t1[0]) - FLOOR_Z) <= 0.03:
+			return base + float(t1[0]) * sc
+		return base + (FLOOR_Z + float(FLOOR_PLATE.get(String(b["def"]), 0.0))) * sc
 	return base + FLOOR_Z
 
 ## World y of the top of floor f of a multi-storey building, from its model's anchors (each floor's anchors
@@ -1317,8 +1365,16 @@ static func _floor_tops(meta: Dictionary, nf: int) -> Array:
 			cl.append([int(hist[k]), k * 0.05, k, int(hist[k])])
 	cl.sort_custom(func(x, y): return int(x[0]) > int(y[0]))
 	var tops: Array = []
+	# (each top is the median of the real anchor heights within 3 cm of its 5 cm bin: the bin alone was up to 2.5
+	# cm off the floor, people 12 mm into the dome's floors, ground check 2026-10-03)
+	var ys: Array = []
+	for an2 in (tpl.get("anchors", {}) as Dictionary):
+		ys.append((tpl["anchors"][an2] as Transform3D).origin.y)
 	for c in cl.slice(0, nf):
-		tops.append(float(c[1]))
+		var t0: float = float(c[1])
+		var near: Array = ys.filter(func(y): return absf(float(y) - t0) <= 0.03)
+		near.sort()
+		tops.append(float(near[near.size() / 2]) if not near.is_empty() else t0)
 	tops.sort()
 	if tops.size() < nf or tops.is_empty() or float(tops[0]) > 1.0:
 		tops = []
@@ -1767,7 +1823,10 @@ func sync(delta: float) -> bool:
 		if dk.begins_with("p_") and libs.has(dk + "_lod1") and agents.has(id) and int(id) != _follow_id and _cam_pos != Vector3.INF:
 			var cdl: float = (agents[id]["pos"] as Vector3).distance_to(_cam_pos)
 			var was: bool = String(agents[id].get("dk", "")).ends_with("_lod1")
-			if cdl > LOD1_DIST + (-1.0 if was else 1.0):
+			var was2: bool = String(agents[id].get("dk", "")).ends_with("_lod2")
+			if libs.has(dk + "_lod2") and cdl > LOD2_DIST + (-2.0 if was2 else 2.0):
+				dk += "_lod2"
+			elif cdl > LOD1_DIST + (-1.0 if was else 1.0):
 				dk += "_lod1"
 		var lib: Dictionary = libs[dk]
 		if not agents.has(id):
@@ -2268,6 +2327,19 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 		elif not dead and bool(a.get("sleeping", false)) and not inside:
 			goal = ["lie", "sleep"]
 	_prof_mark("move")
+	# (in a corridor the body walks on the tube's drawn floor: the line between the corridor's end heights + 0.05
+	# + TUBE_FLOOR_Z; it walked 3.3 cm into it at the terrain height + 0.19, ground check 2026-10-03)
+	if inside and not dead and _room_at(Vector2(now.x, now.z)) < 0:
+		var tf: float = _tube_floor(now)
+		if tf != INF:
+			now.y = tf
+	# (the doorway kit's floor plate stands DOOR_SILL over the room floor: a body crossing it walks on it)
+	if inside and not dead and view.doors != null:
+		var dq: Vector2 = Vector2(now.x, now.z)
+		for dd in _doors_near(dq):
+			if Vector2((dd as Vector3).x, (dd as Vector3).z).distance_to(dq) < 0.45:
+				now.y = maxf(now.y, (dd as Vector3).y + _door_floor_z())
+				break
 	rec["pos"] = now
 	rec["seen"] = true
 	rec["age"] = float(rec.get("age", 0.0)) + dt

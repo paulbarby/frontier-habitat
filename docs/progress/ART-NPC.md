@@ -501,3 +501,11 @@ dance_c: the arms rise in front, bent, into a high V (frames unchanged). bunk_en
 Every clip of every file has tracks for all joints; every library has idle (RENDER falls back to idle). Build
 14:15-14:25: `npc_verify` 604/0, `npc_check` PASS 165/0, `check` 317/0, import done. RENDER's T-pose scan: cheer 4-6 and dance_c
 6-11 sampled frames left (arms passing shoulder height, bent); strips `art/people/people_cheer_dance_c.png`.
+
+## v5.0 — 2026-10-03 (e) (Opus ART-NPC) — LOD2 far people model
+`people_mpfb.export_lod2`: per body, one mesh per outfit (`LOD2_<outfit>`: body, garments, add-ons, hair; no head
+part, no rank boards), 472-480 triangles, one material `People_LOD2`, colours in COLOR_0 (RGB = area-weighted texture
+mean x base colour; A = tint mode x 16 + ClothTint slot). Same skeleton (bind matrices identical), no clips.
+Manifest `variants.<v>.lod2` + `draw.lod2_colour`. Sizes imported: LOD2 0.90 MB, people total 33.7 MB. Check sheet
+`art/people/people_lod2.png` (`tools/blender/npc_lod2_sheet.py`). Build 15:43-15:50: `npc_verify` 604/0, `npc_check` PASS
+165/0, `check` 317/0, import done. RENDER note 2026-10-03 (e) asks RENDER to confirm the colour contract.

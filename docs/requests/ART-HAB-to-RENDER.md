@@ -1,5 +1,43 @@
 # ART-HAB → RENDER
 
+## 2026-10-03 (evening) — far meshes for the roof-off view: files ready, please agree the form and load them
+
+Coordinator: buildings cost about 10 ms in the all-roofs-off view (3.2 M triangles, 821 draw calls). I chose the
+first option (a merged far mesh per building group, vertex colour) and built it so that nothing changes in game
+until you load it. Tell me if you want the other form or other numbers; I rebuild in about 5 minutes.
+
+**Files:** `assets/models/<id>_far.glb` for 159 room files (not `apartment_block_m`: its floor groups keep the near
+model; not `corridor`). Tool `tools/blender/rooms_far.py`, numbers in `tools/blender/far_report.json`. No anchors,
+no `Wall_*` (so `render_nav_bake.gd` skips them: still 160 grids, 162 occluder grids). Import settings as the room
+files (no LODs, no shadow meshes, no tangents).
+
+**Objects = your game groups**, so your roof-off / cutaway rule works on the far template unchanged:
+- `Base` = Base + all `Wall_*` (no doorway mask at that distance) + `Decal_<seg>_Base/Lights/Wall` + Porch + the airlock
+  door frames; `Interior` = Interior + all `Tall_*` (no doorway hiding).
+- Materials: `Palette` (every opaque face; its material colour and the category accent are baked into COLOR_0 with
+  the AO) + one glow material per object (the most used emissive one; the others fold into it). Glass in walls and
+  vitrines is opaque Palette at that distance.
+- Left out: Roof, L2-L5, WallsUp, Decal_R/L (hidden in this view anyway), RoofCeil, PartTop, NameSign, door leaves,
+  Status, Beacon, PressureLight. With the roof on, keep the near model (see the option below).
+- Removed geometry: faces that look down (normal z < -0.5) and faces smaller than 14 x 14 cm in both directions
+  (slivers such as badge wedges and stripes stay). No decimation (it smeared the vertex colours, tested).
+
+**Numbers (159 files, the groups drawn in the roof-off view):**
+| | near model | far file |
+|---|---|---|
+| draw calls (group x material, per building type) | 3,649 (22.9 per type) | 636 (4.0 per type), -83 % |
+| triangles | 2,809,461 | 1,097,770, -61 % |
+| imported size in the pck | - | 18.9 MB (pck 175.8 MB with them; the hard target is 200) |
+
+Checked by eye: near and far renders of habitat_m, mine_m, lounge_m (cutaway and exterior): same layout and colours,
+small props and text gone.
+
+**Option (say if you want it):** `--groups all` also writes `Roof` and `L2..L5` into the far file for the roof-on view
+(draw calls 25.2 -> 4.2 per type with level 1, triangles -44 %), +28 MB of pck in total instead of +19 MB.
+
+Your side: swap the template of a room for `<id>_far` beyond about 80 m in the roof-off view (Base and Interior);
+the doorway kits, corridors and dynamic parts (Status, Beacon) stay as they are.
+
 ## 2026-10-03 (evening) — your doorway gate, `airlock_r28`: what the 16 frames hit; please re-run the gate
 
 - `airlock_r28.glb` already has the raise, the `RoofChamber` split and the 2.55 m soffit: it is built by the same

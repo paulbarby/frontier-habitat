@@ -3,7 +3,7 @@
   "eval": "window.__fhr.cmd('loadurl showcase_v5.fhsave')"
  },
  {
-  "wait": 20
+  "wait": 30
  },
  {
   "cmd": "speed 1"

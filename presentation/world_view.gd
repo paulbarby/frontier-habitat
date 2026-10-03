@@ -1908,6 +1908,7 @@ func sync(delta: float) -> void:
 	var focus: Vector3 = _focus()
 	_focus_now = focus
 	_cam_now = cam.global_position if cam != null else Vector3.INF
+	_far_loads = 0
 	_frame += 1
 	# Time of day (visual) and weather.
 	var day_len: float = float(sim.bal["day_length"])
@@ -2599,6 +2600,68 @@ func _make_building(b: Dictionary, mode: String) -> void:
 		if state == "building" or state == "blueprint":
 			fx.site_start(id, xf.origin, float(b["radius"]) if b["kind"] != "link" else 1.5)
 
+## Far meshes (ART-HAB 2026-10-03, orchestrator: beyond about FAR_LOD_D m): a room whose roof is open (all roofs
+## off, the cutaway) and that stands beyond FAR_LOD_D m from the camera is drawn from `<id>_far.glb` (groups Base and
+## Interior, 2 materials, vertex colour: 4 draw calls a type instead of 23). The near copy is suppressed, not
+## removed, so its hidden groups, doorway masks and custom colours stay as they are. One far template is loaded
+## per frame. The roof-on view keeps the near model (the far file has no roof).
+const FAR_LOD_D := 80.0
+var far_lod_on := true         # measurement switch (`farlod 0|1`)
+var _far_loads := 0
+static var _far_tpls := {}
+func _far_tpl(tpl: Dictionary) -> Dictionary:
+	var key: String = String(tpl.get("key", ""))
+	var base_path: String = key.get_slice("@", 0)
+	if not base_path.ends_with(".glb"):
+		return {}
+	var fp: String = base_path.trim_suffix(".glb") + "_far.glb"
+	var fk: String = fp + "|" + key
+	if _far_tpls.has(fk):
+		return _far_tpls[fk]
+	if not ResourceLoader.exists(fp) or _far_loads >= 1:
+		if not ResourceLoader.exists(fp):
+			_far_tpls[fk] = {}
+		return {} if not ResourceLoader.exists(fp) else {"wait": true}
+	_far_loads += 1
+	var ft: Dictionary = Models._template_from_file(fp).duplicate()
+	ft["scale"] = float(tpl.get("scale", 1.0))
+	if tpl.has("scale_y"):
+		ft["scale_y"] = float(tpl["scale_y"])
+	ft["key"] = fp + "@" + key.get_slice("@", 1) if key.contains("@") else fp
+	_far_tpls[fk] = ft
+	return ft
+
+func _far_lod(b: Dictionary, meta: Dictionary, o: float, cdist: float) -> void:
+	if String(b["kind"]) != "room" or int(meta["h"]) < 0 or bool(meta.get("far_none", false)):
+		return
+	var was: bool = bool(meta.get("far_on", false))
+	var want: bool = far_lod_on and follow_id < 0 and cdist > FAR_LOD_D + (-8.0 if was else 0.0)
+	# (roof on: only when the far file carries the roof, ART-HAB's `--groups all` option)
+	if want and o < 0.99:
+		var ft0: Dictionary = _far_tpl(meta["tpl"])
+		if ft0.is_empty() or ft0.has("wait") or not (ft0.get("groups", {}) as Dictionary).has("Roof"):
+			want = false
+	if want:
+		if not meta.has("h_far"):
+			var ft: Dictionary = _far_tpl(meta["tpl"])
+			if ft.is_empty():
+				meta["far_none"] = true
+				return
+			if ft.has("wait"):
+				return
+			meta["h_far"] = inst.add(ft, meta["xf"])
+			meta["handles"].append(meta["h_far"])
+			inst.set_suppressed(meta["h_far"], true)
+		# (the far copy shows its interior when the near one does: all roofs off, within the interior distance)
+		var near_int_hidden: bool = (inst.handles[meta["h"]]["hidden"] as Dictionary).has("Interior")
+		inst.set_hidden(meta["h_far"], "Interior", near_int_hidden)
+	if want == was:
+		return
+	meta["far_on"] = want
+	inst.set_suppressed(meta["h"], want)
+	if meta.has("h_far"):
+		inst.set_suppressed(meta["h_far"], not want)
+
 func _drop_building(id: int) -> void:
 	var meta: Dictionary = bmeta[id]
 	if meta["mode"] == "ship":
@@ -2729,6 +2792,7 @@ func _update_building(b: Dictionary, delta: float, slow: bool = true) -> void:
 			if o != want:
 				meta["open"] = move_toward(o, want, delta * 3.5)
 				_apply_roof(b, meta)
+			_far_lod(b, meta, float(meta["open"]), cdist)
 		if String(b["def"]) == "super_dome":
 			_dome_update(b, meta, delta)
 		elif bool(meta["tpl"].get("has_floors", false)):
@@ -3980,6 +4044,10 @@ func debug_cmd(text: String) -> String:
 			# the CPU's alone; the difference to drawing on is the GPU / driver share.
 			RenderingServer.render_loop_enabled = not (w.size() > 1 and w[1] == "0")
 			return "render %s" % str(RenderingServer.render_loop_enabled)
+		"farlod":
+			# farlod 0|1: the far meshes of rooms beyond FAR_LOD_D m with the roof open (measurement)
+			far_lod_on = not (w.size() > 1 and w[1] == "0")
+			return "farlod %s" % str(far_lod_on)
 		"intlod":
 			# intlod <m>: the room-interior draw distance (measurement)
 			INTERIOR_LOD_D = float(w[1]) if w.size() > 1 else 110.0

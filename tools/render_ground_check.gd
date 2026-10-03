@@ -154,6 +154,10 @@ func _sample() -> void:
 		var fr: float = _floor_ray(Npc._dp(rec))
 		if fr != INF:
 			fl = fr
+		elif npc._room_at(Vector2(Npc._dp(rec).x, Npc._dp(rec).z)) >= 0:
+			# (inside a structure with no drawn floor under the feet: a stair or ramp opening; marked so the floor-change
+			# rule skips the window)
+			fl = Npc._dp(rec).y + 100.0 * float(int(t * 60.0) % 2)
 		if fl == INF:
 			hist.erase(id)
 			continue
@@ -201,7 +205,7 @@ func _sample() -> void:
 		if not hist.has(id):
 			hist[id] = []
 		var h: Array = hist[id]
-		h.append([t, off + cl, key, off, fl, "%s far %s a %s %.2f b %s %.2f wb %.2f c %s" % ["", str(rec.get("far", false)), pz["a"], float(pz["ta"]), pz["b"], float(pz["tb"]), float(pz["wb"]), pz["c"]]])
+		h.append([t, off + cl, key, off, fl, "floor %s far %s a %s %.2f b %s %.2f wb %.2f c %s" % [(cp.dbg_last if fr != INF else "-"), str(rec.get("far", false)), pz["a"], float(pz["ta"]), pz["b"], float(pz["tb"]), float(pz["wb"]), pz["c"]]])
 		while not h.is_empty() and t - float(h[0][0]) > WIN:
 			h.pop_front()
 		if t - float(h[0][0]) >= WIN - DT * 1.5 and int(Engine.get_process_frames()) % 6 == 0:

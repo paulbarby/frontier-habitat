@@ -175,7 +175,7 @@
    },
    "triangles_lod1": {
     "Addon_apron": 340,
-    "Addon_jacket": 419,
+    "Addon_jacket": 420,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
@@ -243,7 +243,7 @@
     "uniform_food": 2918,
     "uniform_medical": 2998,
     "uniform_security": 3257,
-    "uniform_command": 3173,
+    "uniform_command": 3174,
     "prison": 2578,
     "casual_a": 2578,
     "casual_b": 2577,
@@ -266,17 +266,17 @@
      "swimwear": "LOD2_swimwear"
     },
     "triangles": {
-     "uniform_engineering": 633,
-     "uniform_science": 678,
-     "uniform_food": 617,
-     "uniform_medical": 683,
-     "uniform_security": 653,
-     "uniform_command": 699,
-     "prison": 616,
+     "uniform_engineering": 476,
+     "uniform_science": 479,
+     "uniform_food": 480,
+     "uniform_medical": 480,
+     "uniform_security": 474,
+     "uniform_command": 480,
+     "prison": 480,
      "casual_a": 479,
      "casual_b": 480,
      "casual_c": 480,
-     "swimwear": 479
+     "swimwear": 480
     },
     "cloth_slots": {
      "uniform_engineering": [],
@@ -538,7 +538,7 @@
    },
    "triangles_lod1": {
     "Addon_apron": 339,
-    "Addon_jacket": 419,
+    "Addon_jacket": 420,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
@@ -552,7 +552,7 @@
     "Outfit_casual_b": 1898,
     "Outfit_casual_c": 1900,
     "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1900
+    "Outfit_uniform": 1899
    },
    "triangles_on_screen": {
     "uniform_engineering": {
@@ -601,17 +601,66 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2919,
-    "uniform_science": 2999,
-    "uniform_food": 2918,
-    "uniform_medical": 2999,
-    "uniform_security": 3259,
+    "uniform_engineering": 2918,
+    "uniform_science": 2998,
+    "uniform_food": 2917,
+    "uniform_medical": 2998,
+    "uniform_security": 3258,
     "uniform_command": 3174,
-    "prison": 2579,
+    "prison": 2578,
     "casual_a": 2579,
     "casual_b": 2577,
     "casual_c": 2579,
     "swimwear": 2579
+   },
+   "lod2": {
+    "file": "people_m2_lod2.glb",
+    "meshes": {
+     "uniform_engineering": "LOD2_uniform_engineering",
+     "uniform_science": "LOD2_uniform_science",
+     "uniform_food": "LOD2_uniform_food",
+     "uniform_medical": "LOD2_uniform_medical",
+     "uniform_security": "LOD2_uniform_security",
+     "uniform_command": "LOD2_uniform_command",
+     "prison": "LOD2_prison",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "casual_c": "LOD2_casual_c",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "uniform_engineering": 475,
+     "uniform_science": 480,
+     "uniform_food": 480,
+     "uniform_medical": 480,
+     "uniform_security": 474,
+     "uniform_command": 480,
+     "prison": 480,
+     "casual_a": 480,
+     "casual_b": 480,
+     "casual_c": 479,
+     "swimwear": 480
+    },
+    "cloth_slots": {
+     "uniform_engineering": [],
+     "uniform_science": [],
+     "uniform_food": [],
+     "uniform_medical": [],
+     "uniform_security": [],
+     "uniform_command": [],
+     "prison": [],
+     "casual_a": [
+      "ClothTint_namuhekam_male_polo_shirt"
+     ],
+     "casual_b": [
+      "ClothTint_toigo_fisherman_sweater"
+     ],
+     "casual_c": [],
+     "swimwear": [
+      "ClothTint_elvs_crude_t-shirt_male",
+      "ClothTint_trunks"
+     ]
+    }
    },
    "clips": [
     "argue",
@@ -851,7 +900,7 @@
     "Addon_rank3": 176
    },
    "triangles_lod1": {
-    "Addon_apron": 339,
+    "Addon_apron": 340,
     "Addon_jacket": 420,
     "Addon_labcoat": 420,
     "Addon_rank1": 128,
@@ -917,7 +966,7 @@
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
     "uniform_science": 2999,
-    "uniform_food": 2918,
+    "uniform_food": 2919,
     "uniform_medical": 2999,
     "uniform_security": 3258,
     "uniform_command": 3175,
@@ -926,6 +975,53 @@
     "casual_b": 2578,
     "casual_c": 2578,
     "swimwear": 2579
+   },
+   "lod2": {
+    "file": "people_m3_lod2.glb",
+    "meshes": {
+     "uniform_engineering": "LOD2_uniform_engineering",
+     "uniform_science": "LOD2_uniform_science",
+     "uniform_food": "LOD2_uniform_food",
+     "uniform_medical": "LOD2_uniform_medical",
+     "uniform_security": "LOD2_uniform_security",
+     "uniform_command": "LOD2_uniform_command",
+     "prison": "LOD2_prison",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "casual_c": "LOD2_casual_c",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "uniform_engineering": 475,
+     "uniform_science": 480,
+     "uniform_food": 480,
+     "uniform_medical": 480,
+     "uniform_security": 474,
+     "uniform_command": 480,
+     "prison": 480,
+     "casual_a": 480,
+     "casual_b": 480,
+     "casual_c": 480,
+     "swimwear": 480
+    },
+    "cloth_slots": {
+     "uniform_engineering": [],
+     "uniform_science": [],
+     "uniform_food": [],
+     "uniform_medical": [],
+     "uniform_security": [],
+     "uniform_command": [],
+     "prison": [],
+     "casual_a": [
+      "ClothTint_elvs_crude_t-shirt_male"
+     ],
+     "casual_b": [],
+     "casual_c": [],
+     "swimwear": [
+      "ClothTint_elvs_crude_t-shirt_male",
+      "ClothTint_trunks"
+     ]
+    }
    },
    "clips": [
     "argue",
@@ -1171,7 +1267,7 @@
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 419,
+    "Addon_tunic": 420,
     "Addon_vest": 340,
     "Hair_f1": 520,
     "Head_f1": 160,
@@ -1179,7 +1275,7 @@
     "Outfit_casual_b": 1900,
     "Outfit_casual_c": 1898,
     "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1898
+    "Outfit_uniform": 1899
    },
    "triangles_on_screen": {
     "uniform_engineering": {
@@ -1228,17 +1324,67 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2918,
-    "uniform_science": 2997,
-    "uniform_food": 2918,
-    "uniform_medical": 2997,
-    "uniform_security": 3258,
-    "uniform_command": 3174,
-    "prison": 2578,
+    "uniform_engineering": 2919,
+    "uniform_science": 2998,
+    "uniform_food": 2919,
+    "uniform_medical": 2999,
+    "uniform_security": 3259,
+    "uniform_command": 3175,
+    "prison": 2579,
     "casual_a": 2580,
     "casual_b": 2580,
     "casual_c": 2578,
     "swimwear": 2580
+   },
+   "lod2": {
+    "file": "people_f1_lod2.glb",
+    "meshes": {
+     "uniform_engineering": "LOD2_uniform_engineering",
+     "uniform_science": "LOD2_uniform_science",
+     "uniform_food": "LOD2_uniform_food",
+     "uniform_medical": "LOD2_uniform_medical",
+     "uniform_security": "LOD2_uniform_security",
+     "uniform_command": "LOD2_uniform_command",
+     "prison": "LOD2_prison",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "casual_c": "LOD2_casual_c",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "uniform_engineering": 476,
+     "uniform_science": 480,
+     "uniform_food": 479,
+     "uniform_medical": 480,
+     "uniform_security": 473,
+     "uniform_command": 480,
+     "prison": 480,
+     "casual_a": 479,
+     "casual_b": 480,
+     "casual_c": 480,
+     "swimwear": 479
+    },
+    "cloth_slots": {
+     "uniform_engineering": [],
+     "uniform_science": [],
+     "uniform_food": [],
+     "uniform_medical": [],
+     "uniform_security": [],
+     "uniform_command": [],
+     "prison": [],
+     "casual_a": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "casual_b": [
+      "ClothTint_toigo_shift_dress"
+     ],
+     "casual_c": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "swimwear": [
+      "ClothTint_swimsuit"
+     ]
+    }
    },
    "clips": [
     "argue",
@@ -1479,12 +1625,12 @@
    "triangles_lod1": {
     "Addon_apron": 340,
     "Addon_jacket": 419,
-    "Addon_labcoat": 420,
+    "Addon_labcoat": 419,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176,
     "Addon_toolbelt": 340,
-    "Addon_tunic": 419,
+    "Addon_tunic": 420,
     "Addon_vest": 340,
     "Hair_f2": 519,
     "Head_f2": 160,
@@ -1542,9 +1688,9 @@
    },
    "triangles_on_screen_lod1": {
     "uniform_engineering": 2918,
-    "uniform_science": 2998,
+    "uniform_science": 2997,
     "uniform_food": 2918,
-    "uniform_medical": 2997,
+    "uniform_medical": 2998,
     "uniform_security": 3258,
     "uniform_command": 3173,
     "prison": 2578,
@@ -1552,6 +1698,56 @@
     "casual_b": 2578,
     "casual_c": 2579,
     "swimwear": 2578
+   },
+   "lod2": {
+    "file": "people_f2_lod2.glb",
+    "meshes": {
+     "uniform_engineering": "LOD2_uniform_engineering",
+     "uniform_science": "LOD2_uniform_science",
+     "uniform_food": "LOD2_uniform_food",
+     "uniform_medical": "LOD2_uniform_medical",
+     "uniform_security": "LOD2_uniform_security",
+     "uniform_command": "LOD2_uniform_command",
+     "prison": "LOD2_prison",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "casual_c": "LOD2_casual_c",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "uniform_engineering": 476,
+     "uniform_science": 480,
+     "uniform_food": 480,
+     "uniform_medical": 480,
+     "uniform_security": 473,
+     "uniform_command": 480,
+     "prison": 480,
+     "casual_a": 480,
+     "casual_b": 479,
+     "casual_c": 480,
+     "swimwear": 480
+    },
+    "cloth_slots": {
+     "uniform_engineering": [],
+     "uniform_science": [],
+     "uniform_food": [],
+     "uniform_medical": [],
+     "uniform_security": [],
+     "uniform_command": [],
+     "prison": [],
+     "casual_a": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "casual_b": [
+      "ClothTint_toigo_halter_dress_knee_length"
+     ],
+     "casual_c": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "swimwear": [
+      "ClothTint_swimsuit"
+     ]
+    }
    },
    "clips": [
     "argue",
@@ -1774,7 +1970,7 @@
    "triangles": {
     "Head_f3": 2916,
     "Hair_f3": 3400,
-    "Outfit_uniform": 11675,
+    "Outfit_uniform": 11673,
     "Outfit_casual_a": 11660,
     "Outfit_casual_b": 13998,
     "Outfit_casual_c": 12406,
@@ -1782,9 +1978,9 @@
     "Addon_toolbelt": 416,
     "Addon_apron": 712,
     "Addon_vest": 1500,
-    "Addon_labcoat": 2149,
-    "Addon_tunic": 2149,
-    "Addon_jacket": 2149,
+    "Addon_labcoat": 2150,
+    "Addon_tunic": 2150,
+    "Addon_jacket": 2150,
     "Addon_rank1": 128,
     "Addon_rank2": 152,
     "Addon_rank3": 176
@@ -1804,37 +2000,37 @@
     "Outfit_casual_a": 1900,
     "Outfit_casual_b": 1899,
     "Outfit_casual_c": 1900,
-    "Outfit_swimwear": 1900,
-    "Outfit_uniform": 1899
+    "Outfit_swimwear": 1899,
+    "Outfit_uniform": 1900
    },
    "triangles_on_screen": {
     "uniform_engineering": {
-     "outfit_and_addons": 12091,
-     "with_head_and_hair": 18407
+     "outfit_and_addons": 12089,
+     "with_head_and_hair": 18405
     },
     "uniform_science": {
-     "outfit_and_addons": 13824,
-     "with_head_and_hair": 20140
+     "outfit_and_addons": 13823,
+     "with_head_and_hair": 20139
     },
     "uniform_food": {
-     "outfit_and_addons": 12387,
-     "with_head_and_hair": 18703
+     "outfit_and_addons": 12385,
+     "with_head_and_hair": 18701
     },
     "uniform_medical": {
-     "outfit_and_addons": 13824,
-     "with_head_and_hair": 20140
+     "outfit_and_addons": 13823,
+     "with_head_and_hair": 20139
     },
     "uniform_security": {
-     "outfit_and_addons": 13591,
-     "with_head_and_hair": 19907
+     "outfit_and_addons": 13589,
+     "with_head_and_hair": 19905
     },
     "uniform_command": {
-     "outfit_and_addons": 14000,
-     "with_head_and_hair": 20316
+     "outfit_and_addons": 13999,
+     "with_head_and_hair": 20315
     },
     "prison": {
-     "outfit_and_addons": 11675,
-     "with_head_and_hair": 17991
+     "outfit_and_addons": 11673,
+     "with_head_and_hair": 17989
     },
     "casual_a": {
      "outfit_and_addons": 11660,
@@ -1854,17 +2050,67 @@
     }
    },
    "triangles_on_screen_lod1": {
-    "uniform_engineering": 2919,
-    "uniform_science": 2999,
-    "uniform_food": 2919,
-    "uniform_medical": 2998,
-    "uniform_security": 3259,
-    "uniform_command": 3175,
-    "prison": 2579,
+    "uniform_engineering": 2920,
+    "uniform_science": 3000,
+    "uniform_food": 2920,
+    "uniform_medical": 2999,
+    "uniform_security": 3260,
+    "uniform_command": 3176,
+    "prison": 2580,
     "casual_a": 2580,
     "casual_b": 2579,
     "casual_c": 2580,
-    "swimwear": 2580
+    "swimwear": 2579
+   },
+   "lod2": {
+    "file": "people_f3_lod2.glb",
+    "meshes": {
+     "uniform_engineering": "LOD2_uniform_engineering",
+     "uniform_science": "LOD2_uniform_science",
+     "uniform_food": "LOD2_uniform_food",
+     "uniform_medical": "LOD2_uniform_medical",
+     "uniform_security": "LOD2_uniform_security",
+     "uniform_command": "LOD2_uniform_command",
+     "prison": "LOD2_prison",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "casual_c": "LOD2_casual_c",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "uniform_engineering": 476,
+     "uniform_science": 479,
+     "uniform_food": 480,
+     "uniform_medical": 479,
+     "uniform_security": 473,
+     "uniform_command": 480,
+     "prison": 480,
+     "casual_a": 480,
+     "casual_b": 479,
+     "casual_c": 480,
+     "swimwear": 480
+    },
+    "cloth_slots": {
+     "uniform_engineering": [],
+     "uniform_science": [],
+     "uniform_food": [],
+     "uniform_medical": [],
+     "uniform_security": [],
+     "uniform_command": [],
+     "prison": [],
+     "casual_a": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "casual_b": [
+      "ClothTint_toigo_shift_dress"
+     ],
+     "casual_c": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "swimwear": [
+      "ClothTint_swimsuit"
+     ]
+    }
    },
    "clips": [
     "argue",
@@ -2006,7 +2252,7 @@
     "Outfit_casual_a": 1899,
     "Outfit_casual_b": 1899,
     "Outfit_school": 1898,
-    "Outfit_swimwear": 1900
+    "Outfit_swimwear": 1899
    },
    "triangles_on_screen": {
     "school": {
@@ -2030,7 +2276,7 @@
     "school": 2576,
     "casual_a": 2577,
     "casual_b": 2577,
-    "swimwear": 2578
+    "swimwear": 2577
    },
    "lod2": {
     "file": "people_c1_lod2.glb",
@@ -2043,7 +2289,7 @@
     "triangles": {
      "school": 480,
      "casual_a": 480,
-     "casual_b": 480,
+     "casual_b": 479,
      "swimwear": 479
     },
     "cloth_slots": {
@@ -2206,6 +2452,33 @@
     "casual_a": 2578,
     "casual_b": 2578,
     "swimwear": 2579
+   },
+   "lod2": {
+    "file": "people_c2_lod2.glb",
+    "meshes": {
+     "school": "LOD2_school",
+     "casual_a": "LOD2_casual_a",
+     "casual_b": "LOD2_casual_b",
+     "swimwear": "LOD2_swimwear"
+    },
+    "triangles": {
+     "school": 477,
+     "casual_a": 480,
+     "casual_b": 478,
+     "swimwear": 479
+    },
+    "cloth_slots": {
+     "school": [],
+     "casual_a": [
+      "ClothTint_joepal_crude_t-shirt_female"
+     ],
+     "casual_b": [
+      "ClothTint_toigo_shift_dress"
+     ],
+     "swimwear": [
+      "ClothTint_swimsuit"
+     ]
+    }
    },
    "clips": [
     "carry_idle",

@@ -7,7 +7,7 @@ Run from the project root, after rooms_build.py:
       --python tools/blender/rooms_far.py -- [--only habitat_m,lounge] [--report path]
 
 For every room file assets/models/<id>.glb it writes assets/models/<id>_far.glb: the same building with few objects
-and few materials, for distances beyond about 80 m.  The objects carry the GAME GROUP names, so RENDER's group rules
+and few materials, for distances beyond about 80 m.  By default only Base and Interior (GROUPS): the roof-off view.  The objects carry the GAME GROUP names, so RENDER's group rules
 work unchanged on the far template (roof on / off, cutaway, upgrade levels):
     Base      Base, Wall_* (no doorway mask at that distance), Decal_<seg>_Base/Lights/Wall*, Porch, the airlock's
               static door frames (OuterFrame, *FrameCap), ChamberLight
@@ -21,8 +21,9 @@ The multi-storey apartment block has no far file (its floor groups keep the near
 Materials per object: "Palette" (every opaque face: its material colour - the category accent for Accent - is
 multiplied into the vertex colour with the baked AO), one glow material (the most used emissive material; the
 others fold into it), and "Glass" where the roof has glass (wall windows and vitrines become opaque Palette).
-Triangles: faces smaller than MIN_AREA go (text, bolts, glyph covers: sub-pixel at 80 m), then a collapse decimate to
-RATIO of what is left (vertex colours interpolate).
+Triangles: faces smaller than MIN_AREA (Base, Interior) or MIN_AREA_SHELL (Roof, L<n>) go: text, bolts, glyph covers,
+sub-pixel at 80 m; so do faces that look down (normal z < DOWN_Z: undersides, the inside of the roof), which the far
+camera (outside, above) never sees.  No collapse decimate (it smeared the corner colours into dark wedges; RATIO 1.0).
 """
 import bpy
 import bmesh
@@ -37,10 +38,16 @@ if HERE not in sys.path:
 import build_assets as BA          # noqa: E402
 import rooms_kit as K              # noqa: E402
 
-MIN_AREA = 0.0025                  # m2 (5 x 5 cm)
+MIN_AREA = 0.0200                  # m2 (14 x 14 cm): Base, Interior (the cutaway at 80 m)
+MIN_AREA_SHELL = 0.0050            # m2 (7 x 7 cm): Roof, L2..L5 (the badge, the roof silhouette)
+DOWN_Z = -0.5                      # faces whose normal points this far down go
 RATIO = 1.0                        # collapse decimation smears the corner colours (tested 0.3 / 0.45): off
 MAX_GLOW = 1
 SKIP_FILES = ("apartment_block",)
+# 2026-10-03: the far file is for the roof-off (cutaway) view, where buildings cost 10 ms: Base + Interior only
+# (17 MB of pck).  "--groups all" adds Roof and L2..L5 for the roof-on view too (28 MB of pck, measured).
+GROUPS = ("Base", "Interior")
+ALL_GROUPS = ("Base", "Interior", "Roof", "L2", "L3", "L4", "L5")
 REPORT = os.path.join(HERE, "far_report.json")
 
 
@@ -82,21 +89,10 @@ def _kind(mset, nm):
     return "opaque"
 
 
-def mat_rgb(m):
-    """The material's own base colour (linear) as exported: the glb is the truth (the category accent, shell folds)."""
-    try:
-        n = m.node_tree.nodes.get("Principled BSDF")
-        c = n.inputs["Base Color"].default_value
-        return (c[0], c[1], c[2])
-    except Exception:
-        return None
-
-
 def convert(o, mset, glow_keep, glass=True):
     """Corner colours *= material colour on opaque faces; material slots -> Palette / glow / Glass."""
     me = o.data
     names = [m.name.split(".")[0] if m else "Palette" for m in me.materials] or ["Palette"]
-    rgbs = {nm: mat_rgb(m) for nm, m in zip(names, me.materials) if m}
     attr = me.color_attributes.active_color or (me.color_attributes[0] if me.color_attributes else None)
     if attr is None:
         attr = me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
@@ -126,20 +122,20 @@ def convert(o, mset, glow_keep, glass=True):
         src = names[min(p.material_index, len(names) - 1)]
         if targets[src] == "Palette" and src not in ("Palette", "PaletteMetal"):
             sp_ = _spec(mset, src)
-            if rgbs.get(src) is not None and not sp_.get("emit"):
-                r, g, b = rgbs[src]
-            else:
-                r, g, b = BA.hex_to_linear(sp_.get("emit", sp_.get("color", "#ffffff")) if sp_.get("emit")
-                                           else sp_.get("color", "#ffffff"))
+            r, g, b = BA.hex_to_linear(sp_.get("emit", sp_.get("color", "#ffffff")) if sp_.get("emit")
+                                       else sp_.get("color", "#ffffff"))
             for li in p.loop_indices:
                 cols[li * 4] *= r
                 cols[li * 4 + 1] *= g
                 cols[li * 4 + 2] *= b
-    if point:
-        me.color_attributes.remove(attr)
-        attr = me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
+    # one corner attribute of the same name on every object, so the join keeps every object's colours
+    for a_ in list(me.color_attributes):
+        me.color_attributes.remove(a_)
+    attr = me.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
     attr.data.foreach_set("color", cols)
     me.color_attributes.active_color = attr
+    me.color_attributes.active_color_name = "Col"
+    me.color_attributes.default_color_name = "Col"     # the exporter writes the render colour (COLOR_0)
     order = sorted(set(targets.values()))
     orig = [min(p.material_index, len(names) - 1) for p in me.polygons]
     me.materials.clear()
@@ -162,11 +158,17 @@ def nearest_glow(mset, nm, keep):
     return min(keep, key=d)
 
 
-def reduce(o):
+def reduce(o, min_area=MIN_AREA):
     me = o.data
     bm = bmesh.new()
     bm.from_mesh(me)
-    small = [f for f in bm.faces if f.calc_area() < MIN_AREA]
+    # small faces, and faces that look down (undersides, the roof's inside): the far camera is outside and above
+    # (a sliver - a badge wedge, a stripe - stays: only faces that are small in both directions go)
+    def tiny(f):
+        if f.calc_area() >= min_area:
+            return False
+        return max(e.calc_length() for e in f.edges) < 2.0 * min_area ** 0.5
+    small = [f for f in bm.faces if f.normal.z < DOWN_Z or tiny(f)]
     bmesh.ops.delete(bm, geom=small, context="FACES")
     bm.to_mesh(me)
     bm.free()
@@ -197,7 +199,7 @@ def build(fid, tid, cat, out_dir=None):
             continue
         g = far_group(o.name.split(".")[0])
         t0 += tris_of(o)
-        if g is None:
+        if g is None or g not in GROUPS:
             bpy.data.objects.remove(o, do_unlink=True)
             continue
         groups.setdefault(g, []).append(o)
@@ -224,7 +226,9 @@ def build(fid, tid, cat, out_dir=None):
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
         j.name = g
         j.data.name = g
-        reduce(j)
+        j.data.color_attributes.active_color_name = "Col"
+        j.data.color_attributes.default_color_name = "Col"
+        reduce(j, MIN_AREA if g in ("Base", "Interior") else MIN_AREA_SHELL)
         out[g] = dict(tris=tris_of(j), mats=sorted(m.name.split(".")[0] for m in j.data.materials))
     path = os.path.join(out_dir or K.MODEL_DIR, fid + "_far.glb")
     K.export_glb_atomic(path)
@@ -237,6 +241,10 @@ def main():
     only = argv[argv.index("--only") + 1].split(",") if "--only" in argv else None
     rep_path = argv[argv.index("--report") + 1] if "--report" in argv else REPORT
     out_dir = argv[argv.index("--out") + 1] if "--out" in argv else None
+    global GROUPS
+    if "--groups" in argv:
+        v = argv[argv.index("--groups") + 1]
+        GROUPS = ALL_GROUPS if v == "all" else tuple(v.split(","))
     rep = json.load(open(os.path.join(HERE, "build_report.json"), encoding="utf-8"))
     bl = K.load_buildings()
     rows = []
@@ -256,7 +264,7 @@ def main():
             r["id"], r["src_tris"], r["far_tris"], r["draws"], r["file_size"] / 1024.0, time.time() - t,
             {g: v["mats"] for g, v in r["groups"].items()}))
         sys.stdout.flush()
-    json.dump(dict(min_area=MIN_AREA, ratio=RATIO, rows=rows), open(rep_path, "w", encoding="utf-8"), indent=1)
+    json.dump(dict(min_area=MIN_AREA, min_area_shell=MIN_AREA_SHELL, ratio=RATIO, rows=rows), open(rep_path, "w", encoding="utf-8"), indent=1)
 
 
 if __name__ == "__main__":

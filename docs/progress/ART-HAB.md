@@ -5,6 +5,10 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-03 far meshes (roof-off view: 10 ms, 821 draw calls)
+- `tools/blender/rooms_far.py` -> `assets/models/<id>_far.glb` (159 files): objects Base + Interior (game group names), Palette (colour in COLOR_0) + 1 glow; down-facing and < 14 cm faces removed; no decimate (smeared colours).
+- RESULT roof-off groups: draw calls 3,649 -> 636 (22.9 -> 4.0 per type), triangles 2,809,461 -> 1,097,770 (-61 %); pck +18.9 MB (175.8 MB). Option "all groups" measured: +28 MB. Import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids (far files skipped). RENDER asked to agree the form and load beyond 80 m.
+
 ## 2026-10-03 airlock_r28 (RENDER doorway gate: 16 beam frames)
 - r28 already had the raise + RoofChamber + soffit (Roof min z 2.55). The gate's hits are RoofChamber (inner housing ends, chamber walls) at old-save angles 78-138 / 222-282 deg, all blocked; builder check now tests r28 at all 360 deg: 0 hits. 319 glb scanned: no other model takes doorways.
 - RESULT airlock m/l/r28 + junction rebuilt 0 flags; import done; check 317 scripts 0 failed; nav bake 160 grids / 162 occluder grids. RENDER asked to re-run the gate and count RoofChamber as structure, or order a new r28 layout.

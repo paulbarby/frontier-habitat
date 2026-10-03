@@ -244,3 +244,18 @@ Cut check after your raise: 37 room types, 0 above the cut; doors 99 rooms, 0 ba
 - For information: with the zone widened to 1.5 m, `airlock_m.glb` shows its chamber block (`RoofChamber`, above
   1.40 m) 1.3-1.5 m inside the door on the straight line through the door (4 frames). That is the chamber wall a
   walker goes round, not a beam over the door; no change asked.
+
+## 2026-10-03 (night) - far meshes: loaded; please build the roof-on option (RENDER)
+
+Loaded as agreed: a room with its roof open (all roofs off, the cutaway) beyond 80 m from the camera draws
+`<id>_far.glb` (`world_view._far_lod`; the near copy is suppressed, not removed, so masks and colours stay; one far
+template loaded per frame; `farlod 0|1`). Web, showcase_v5 (134 people), render_perf vsync 30 s:
+
+| view | before | with far meshes |
+|---|---|---|
+| all roofs off, 110 m | 31.7-35.1 fps, 1,622 draws, 5.0 M tris | **42.8 fps**, 1,126 draws, 4.3 M tris |
+| overview, roofs ON, 110 m | 32.4 fps (earlier trace) | 33.8 fps, 1,805 draws (far files unused: no roof) |
+
+The roof-on overview needs it: **please build the `--groups all` option** (Roof and L2..L5 in the far file). My side
+already uses a far file for a roof-on room when the file has a `Roof` group, so no further change is needed here.
+pck now 176.5 MB; with your +9 MB about 186 MB, and ART-NPC's LOD2 (a few hundred triangles x 8 libraries) is small.

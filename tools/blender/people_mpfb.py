@@ -1462,6 +1462,83 @@ def _mean_rgb(mat):
     return _MEAN_CACHE[mat.name]
 
 
+_TEX_CACHE = {}
+
+
+def _tex_of(mat):
+    """(constant rgb or None, image as a linear float array [h, w, 4] at 64 px or None) behind the base colour."""
+    import numpy as np
+    if mat is None or not mat.use_nodes:
+        return None, None
+    if mat.name in _TEX_CACHE:
+        return _TEX_CACHE[mat.name]
+    const, arr = None, None
+    bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    if bsdf is not None:
+        inp = bsdf.inputs["Base Color"]
+        const = None if inp.links else list(inp.default_value[:3])
+        seen, stack, img = set(), [l.from_node for l in inp.links], None
+        while stack:
+            nd = stack.pop()
+            if nd in seen:
+                continue
+            seen.add(nd)
+            if nd.type == "TEX_IMAGE" and nd.image is not None and img is None:
+                img = nd.image
+            if nd.type == "RGB" and const is None:
+                const = list(nd.outputs[0].default_value[:3])
+            for i in nd.inputs:
+                stack.extend(l.from_node for l in i.links)
+        if img is not None:
+            try:
+                im = img.copy()
+                im.scale(64, 64)
+                a = np.array(im.pixels[:], dtype=np.float32).reshape(64, 64, 4)
+                bpy.data.images.remove(im)
+                if img.colorspace_settings.name.lower().startswith("srgb"):
+                    a[..., :3] = np.where(a[..., :3] <= 0.04045, a[..., :3] / 12.92,
+                                          ((a[..., :3] + 0.055) / 1.055) ** 2.4)
+                arr = a
+            except Exception as e:
+                print("  LOD2 texture of %s failed: %s" % (mat.name, e))
+    _TEX_CACHE[mat.name] = (const, arr)
+    return const, arr
+
+
+def _used_rgb(ob):
+    """Per material slot of ob: the mean colour of the texture over the parts the faces use (area-weighted samples
+    at the face UV centres; an atlas's unused black does not count), times its constant colour."""
+    import numpy as np
+    me = ob.data
+    uv = me.uv_layers.active.data if me.uv_layers.active else None
+    acc = {}
+    for poly in me.polygons:
+        mi = poly.material_index
+        m = me.materials[mi] if mi < len(me.materials) else None
+        const, arr = _tex_of(m)
+        if arr is None or uv is None:
+            continue
+        us = [uv[li].uv for li in poly.loop_indices]
+        u = sum(x[0] for x in us) / len(us)
+        v = sum(x[1] for x in us) / len(us)
+        px = arr[int((v % 1.0) * 63.999), int((u % 1.0) * 63.999)]
+        w = poly.area * (px[3] if px[3] > 0.05 else 0.0)
+        a = acc.setdefault(mi, [np.zeros(3), 0.0])
+        a[0] += px[:3] * w
+        a[1] += w
+    out = {}
+    for mi, m in enumerate(me.materials):
+        const, arr = _tex_of(m)
+        if mi in acc and acc[mi][1] > 0:
+            rgb = acc[mi][0] / acc[mi][1]
+            if const is not None:
+                rgb = rgb * np.array(const)
+            out[mi] = tuple(float(c) for c in rgb)
+        else:
+            out[mi] = _mean_rgb(m)
+    return out
+
+
 def _lod2_mode(mat):
     nm = mat.name.split(".")[0] if mat else ""
     for pre, mode in LOD2_MODES:
@@ -1512,9 +1589,18 @@ def export_lod2(v, rig, outfits):
                 bpy.ops.object.join()
         ob = dups[0]
         ob.name = ob.data.name = "LOD2_%s" % key
+        used = _used_rgb(ob)                          # (on the LOD1 faces, before the decimation moves the UVs)
+        used = {(ob.data.materials[i].name if ob.data.materials[i] else ""): c for i, c in used.items()}
         ob.data.validate(clean_customdata=False)
-        for _ in range(4):                            # separate parts (pouches, straps) need more than one pass
-            n_ = decimate(ob, LOD2_TRIS, edges=False)
+        import bmesh
+        bm = bmesh.new()                              # seams, rolled hems and bisect cuts: merged, or the collapse
+        bm.from_mesh(ob.data)                         # stops at about 610 triangles (the coverall)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.002)
+        bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=0.0005)
+        bm.to_mesh(ob.data)
+        bm.free()
+        for k_ in range(5):                           # separate parts (pouches, straps, bands) need more passes
+            n_ = decimate(ob, int(LOD2_TRIS * 0.8 ** k_), edges=False)
             if n_ <= LOD2_TRIS * 1.08:
                 break
         ob.data.validate(clean_customdata=False)
@@ -1524,8 +1610,10 @@ def export_lod2(v, rig, outfits):
             mode, nm = _lod2_mode(m)
             if mode == 5 and nm not in cloth:
                 cloth.append(nm)
-            info.append((mode, nm, _mean_rgb(m)))
-        col = me.color_attributes.get("Col") or me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
+            info.append((mode, nm, used.get(m.name if m else "", _mean_rgb(m))))
+        for ca_ in list(me.color_attributes):          # (the AO colours of LOD0/LOD1 would be exported instead)
+            me.color_attributes.remove(ca_)
+        col = me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
         for poly in me.polygons:
             mode, nm, rgb = info[poly.material_index] if poly.material_index < len(info) else (0, "", (0.6, 0.6, 0.6))
             slot = cloth.index(nm) if mode == 5 else 0
@@ -1533,6 +1621,7 @@ def export_lod2(v, rig, outfits):
             for li in poly.loop_indices:
                 col.data[li].color = (rgb[0], rgb[1], rgb[2], a)
         me.color_attributes.active_color = col
+        me.color_attributes.render_color_index = me.color_attributes.active_color_index
         for uv in list(me.uv_layers):
             me.uv_layers.remove(uv)
         me.materials.clear()

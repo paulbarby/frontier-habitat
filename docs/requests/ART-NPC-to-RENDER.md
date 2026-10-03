@@ -632,3 +632,51 @@ tell a bent arm in transit from a T. If you still want zero hits, tell me and I 
   child could lie down on a bunk and then stand up in idle.
 - Astronaut files: 35 clips (the v3 set + vehicle and suit clips). The people social clips are not in them; your
   `resolve_loop` maps those to near v3 loops.
+
+## 2026-10-03 (e) — LOD2 people (far model, beyond about 40 m): files delivered; please confirm the colour contract
+
+New consistent build 2026-10-03 15:43-15:50. `npc_verify` 604/0, your `npc_check` PASS 165/0, `check` 317/0,
+import done.
+
+**Files:** `assets/models/people_<v>_lod2.glb` for m1 m2 m3 f1 f2 f3 c1 c2.
+- One mesh per outfit: `LOD2_<outfit>`. The outfit keys are the same as in `variants.<v>.outfits` (11 per adult, 4
+  per child). Each mesh holds the body, the garments, the add-ons and the hair. There is no head part: eyes and brows
+  do not show at 40 m. Rank boards are left out.
+- 472-480 triangles each.
+- ONE material, `People_LOD2`, and no textures. One mesh and one material give one draw call per person.
+  134 people x 480 = about 64k triangles (now about 1.7 M).
+- The same skeleton as LOD0. The inverse bind matrices are identical (checked on all 8 files). No clips: use the
+  LOD0 file's clips, as for LOD1.
+- Manifest: `variants.<v>.lod2` = `{file, meshes{outfit: mesh}, triangles{outfit: n}, cloth_slots{outfit: [...]}}`.
+  The rules are in `draw.lod` and `draw.lod2_colour`.
+
+**Colour contract (please confirm, or tell me the format you want):** `COLOR_0`, one colour per face.
+- RGB = the mean colour of the LOD0 material over the texture area the faces use, times its base colour (linear).
+- A = (mode x 16 + slot) / 255. Decode: `code = round(a * 255)`, `mode = code / 16`, `slot = code % 16`.
+- mode = the LOD0 tint mode of that material:
+
+| mode | LOD0 material | what to do |
+|---|---|---|
+| 0 | plain | use RGB |
+| 1 | SuitAccent | RGB x the department colour (or the outfit's `accent_rgb`) |
+| 2 | Skin | RGB x the skin tint |
+| 3 | Hair | RGB x the hair tint |
+| 5 | ClothTint | RGB x the per-person colour of the material `cloth_slots[outfit][slot]` |
+| 6 | UniformBase | RGB x the outfit's `base_rgb` |
+
+- In Blender I multiply RGB by your palettes (`people_render` tones and hair colours, the stripe colours, the
+  outfit colours) and LOD0 and LOD2 match from the top. A material that ignores the vertex colour draws grey/white.
+
+**Check:** `art/people/people_lod2.png`: every body, 7 adult or 4 child outfits, LOD0 (left) next to LOD2 (right),
+walk frame 6, top view and a high 3/4 view, 2.6 m frame. The silhouette, the hair, the department colours (white
+medical tunic, black security vest, navy command jacket) and the clothes colours read the same. Not kept: the reflective
+bands and small prints (one colour per material); m3 casual_b's jeans read grey-blue.
+
+**Import:** the `.import` files of the 8 LOD2 files are set like LOD1 (no generated LODs, no shadow meshes, no tangents).
+
+**Sizes (imported):** LOD2 0.90 MB (8 files, 1.60 MB source), LOD1 2.86 MB, LOD0 24.68 MB, textures 5.27 MB:
+**people total 33.7 MB**.
+
+**Your side:** the distance switch (I suggest 40 m), the vertex-colour tint in your people shader, and picking
+`LOD2_<outfit>` for the person's outfit. Tell me if you want a different budget (300 is possible: hair and coat
+parts then lose their shape), or the colours as an atlas texture instead.
