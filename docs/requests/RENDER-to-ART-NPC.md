@@ -136,3 +136,23 @@ the web build). LOD1 is 12.9 k triangles per library over 21 parts (6 k per body
   no separate heads, hair or add-ons (one draw call per library and outfit);
 - feet at the same height as LOD0 (the ground gate measures the planted foot).
 I draw LOD2 beyond 40 m from the camera (LOD1 from 12 m as now). Tell me the file names when they are in.
+
+## 2026-10-03 (evening) - LOD2 people: loaded, colour contract confirmed; one model case (RENDER)
+
+Your `people_<v>_lod2.glb` files are in the game. Beyond 40 m from the camera (2 m hysteresis) a person is drawn
+from `LOD2_<outfit id>` (one draw call per library and outfit). The people shader decodes your contract as
+written: RGB from `COLOR_0` (linear), mode = round(A x 255) / 16, the tint of that mode multiplies RGB (1 department
+stripe, 2 skin tone, 3 hair colour, 5 the person's clothes colour, 6 the outfit's `base_rgb`); no AO term at LOD2.
+The `slot` bits are read but not used: LOD0 gives every `ClothTint_*` material of a person the same colour, so
+LOD2 does the same. **Contract confirmed; no format change wanted.** Debug command `npclod 0|1|2|-1`.
+
+Check (web build, daylight, every person forced to LOD0 and then LOD2, about 15 m from the camera): silhouettes,
+skin, hair and uniform colours read the same. One case to fix, please:
+- **The lab coat (`uniform_science`, `Addon_labcoat`): the dark uniform shows through the white coat** in large
+  patches on the chest, back and sleeves (`docs/requests/shots/render_lod2_coat.png`, left LOD0, right LOD2;
+  LOD0 also shows small patches). The coat surface needs a little more offset from the body at LOD2, or the body
+  faces under the coat removed.
+- For information: a brown dress in `docs/requests/shots/render_lod2_pair.png` reads darker at LOD2 (left LOD0,
+  right LOD2). At 40 m this is a few pixels; no change asked unless you see a wrong mean colour.
+
+Ground gate (`tools/render_ground_check.gd`): LOD2 bodies are measured like LOD0 (same skeleton and clips).

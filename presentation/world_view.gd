@@ -2637,6 +2637,9 @@ func _far_lod(b: Dictionary, meta: Dictionary, o: float, cdist: float) -> void:
 	var was: bool = bool(meta.get("far_on", false))
 	var want: bool = far_lod_on and follow_id < 0 and cdist > FAR_LOD_D + (-8.0 if was else 0.0)
 	# (roof on: only when the far file carries the roof, ART-HAB's `--groups all` option)
+	if want and o > 0.01 and o < 0.99:
+		# (a roof opening or closing moves: the near model draws it)
+		want = false
 	if want and o < 0.99:
 		var ft0: Dictionary = _far_tpl(meta["tpl"])
 		if ft0.is_empty() or ft0.has("wait") or not (ft0.get("groups", {}) as Dictionary).has("Roof"):
@@ -2653,8 +2656,12 @@ func _far_lod(b: Dictionary, meta: Dictionary, o: float, cdist: float) -> void:
 			meta["handles"].append(meta["h_far"])
 			inst.set_suppressed(meta["h_far"], true)
 		# (the far copy shows its interior when the near one does: all roofs off, within the interior distance)
-		var near_int_hidden: bool = (inst.handles[meta["h"]]["hidden"] as Dictionary).has("Interior")
-		inst.set_hidden(meta["h_far"], "Interior", near_int_hidden)
+		# (and its roof and level parts as the near one: roof on, roof off, levels; ART-HAB --groups all)
+		var near_hid: Dictionary = inst.handles[meta["h"]]["hidden"]
+		var far_groups: Dictionary = (_far_tpl(meta["tpl"]).get("groups", {}) as Dictionary)
+		for fg in far_groups:
+			if String(fg) != "Base":
+				inst.set_hidden(meta["h_far"], String(fg), near_hid.has(fg))
 	if want == was:
 		return
 	meta["far_on"] = want

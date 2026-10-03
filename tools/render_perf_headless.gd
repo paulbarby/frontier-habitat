@@ -14,6 +14,7 @@ var only := ""
 var rows: Array = []
 var phase := 0
 var report := {}
+var sets: Array = []   # npc.<var>=<value> (A/B switches on fx_npc)
 
 func _initialize() -> void:
 	var a := OS.get_cmdline_user_args()
@@ -23,11 +24,18 @@ func _initialize() -> void:
 		nfr = int(a[1])
 	if a.size() > 2:
 		cases = Array(a[2].split(","))
+	for x in a:
+		if String(x).begins_with("npc."):
+			sets.append(String(x).substr(4))
 	main = (load("res://main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 
 func _step() -> void:
 	main.set_process(false)
+	if not sets.is_empty() and main.view.npc != null:
+		for kv in sets:
+			main.view.npc.set(String(kv).get_slice("=", 0), float(String(kv).get_slice("=", 1)))
+		sets = []
 	var t0: int = Time.get_ticks_usec()
 	main._process(1.0 / 60.0)
 	var t1: int = Time.get_ticks_usec()

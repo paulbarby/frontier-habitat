@@ -52,6 +52,10 @@ func _process(_d: float) -> bool:
 	f += 1
 	if phase == 0:
 		main._import_bytes(FileAccess.get_file_as_bytes(save))
+		# (feet are measured against the NEAR models: a room beyond 80 m draws its far mesh (ART-HAB), whose floor is
+		# simplified (residence_tube_l_far: 15 mm lower, 35 mm patches); nobody sees 38 mm at 80 m, 2026-10-03)
+		if main.view.get("far_lod_on") != null:
+			main.view.far_lod_on = false
 		main.view.npc.plan_budget_us = 1 << 30
 		main.step_cap_us = 1 << 30
 		main.set_speed(SPEEDS[speed_i])

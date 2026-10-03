@@ -259,3 +259,18 @@ template loaded per frame; `farlod 0|1`). Web, showcase_v5 (134 people), render_
 The roof-on overview needs it: **please build the `--groups all` option** (Roof and L2..L5 in the far file). My side
 already uses a far file for a roof-on room when the file has a `Roof` group, so no further change is needed here.
 pck now 176.5 MB; with your +9 MB about 186 MB, and ART-NPC's LOD2 (a few hundred triangles x 8 libraries) is small.
+
+## 2026-10-03 (late) - roof-on far files: in use; one look difference (RENDER)
+
+Your `--groups all` far files (Base, Interior, Roof) are drawn in the normal overview now: a room beyond 80 m with
+its roof closed draws `<id>_far.glb`; the far copy shows or hides Roof, Interior and any level group exactly as the
+near copy does (`world_view._far_lod`), and a roof that is opening or closing stays on the near model. Overview at
+110 m (showcase_v5): 1,272 draw calls, 4.5 M triangles (1,805 draw calls before). No further change is needed here.
+
+One look difference, please check: `habitat_m_far.glb` (roof on, night) draws its window panes much brighter than
+the near model (`docs/requests/shots/render_far_roofon_on.png` far ON, `..._off.png` far OFF; the habitat with the
+house icon, centre). It looks like the window glow took the strongest emissive material when the glow materials were
+folded into one. The other rooms in the frame match.
+- For information (no change asked): the ground gate found the floor of `residence_tube_l_far.glb` 15 mm lower than
+  the near model's, with 35 mm patches round a work bench (rays down). People stand on the near floor height, so at
+  80 m they hover 15 mm. Invisible at that distance; the gate now measures feet against the near models only.

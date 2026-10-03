@@ -26,6 +26,8 @@ func _process(_d: float) -> bool:
 	f += 1
 	if f == 2:
 		main._import_bytes(FileAccess.get_file_as_bytes(save))
+		if OS.get_cmdline_user_args().has("nofar"):
+			main.view.far_lod_on = false
 		return false
 	if f < 200:
 		return false
@@ -47,4 +49,9 @@ func _process(_d: float) -> bool:
 	var p0 := Vector3(c.x, c.y + 0.6, c.z)
 	cp.ray(p0, p0 + Vector3(0, -1.4, 0))
 	print("centre hit: %s" % String(cp.dbg_last))
+	for dz in [-0.25, 0.0, 0.25]:
+		for dx in [-0.25, 0.0, 0.25]:
+			var p1 := Vector3(c.x + dx, c.y + 0.6, c.z + dz)
+			var d1: float = cp.ray(p1, p1 + Vector3(0, -1.4, 0))
+			print("  %+.2f %+.2f: %s %s" % [dx, dz, ("%+.1f" % [(p1.y - d1 - c.y) * 1000.0]) if d1 != INF else "none", String(cp.dbg_last)])
 	return true

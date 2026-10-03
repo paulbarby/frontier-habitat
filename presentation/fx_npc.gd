@@ -53,6 +53,7 @@ const STRIPE_COLS := ["e0902a", "3f7fd0", "4fa35a", "c8323a", "c9d3e0", "d8b54a"
 const CAM_FADE_R := 1.0         # m: another body this close to the follow camera fades out (critic round 41; 0.8 left a
                                 # shoulder filling a third of the frame)
 const CAM_LINE_R := 0.4         # m: another body this close (plan) to the line from the lens to the followed person fades
+var dbg_floor_off := 0          # measurement: 1 airlock floors, 2 doorway profile, 4 level plates, 8 tube floor off
 var force_lod := -1             # >= 0: every person (not the followed one) at this LOD (world_view `npclod`, checks)
 const LOD2_DIST := 40.0         # m: people_<v>_lod2.glb beyond this when present (ART-NPC, asked 2026-10-03)
 const LOD1_DIST := 12.0         # m from the camera: people_<v>_lod1.glb beyond this (ART-NPC manifest `draw`)
@@ -1280,24 +1281,32 @@ func _look(a: Dictionary) -> int:
 
 var _door_grid := {}
 var _door_grid_n := -1
+var _door_near_cache := {}
 ## Doorway positions in the 4 m cell of q and its neighbours (fx_doors), rebuilt when the doors change.
 func _doors_near(q: Vector2) -> Array:
 	var dl: Array = view.doors.doors
 	if dl.size() != _door_grid_n:
 		_door_grid_n = dl.size()
 		_door_grid = {}
+		_door_near_cache = {}
 		for d in dl:
 			var p: Vector3 = d["pos"]
 			var k: int = int(floor(p.x / 4.0)) * 4096 + int(floor(p.z / 4.0))
-			(_door_grid.get_or_add(k, []) as Array).append(p)
-	var out: Array = []
+			(_door_grid.get_or_add(k, []) as Array).append([p, int(d.get("room", -1))])
+	# (the 3 x 3 cell list is kept per cell: one array per call cost 0.3 ms a frame at 134 people)
 	var cx: int = int(floor(q.x / 4.0))
 	var cz: int = int(floor(q.y / 4.0))
+	var ck: int = cx * 4096 + cz
+	var hit = _door_near_cache.get(ck)
+	if hit != null:
+		return hit
+	var out: Array = []
 	for dx in range(-1, 2):
 		for dz in range(-1, 2):
 			out.append_array(_door_grid.get((cx + dx) * 4096 + cz + dz, []))
+	_door_near_cache[ck] = out
 	return out
-const FLOOR_PLATE := {"airlock": 0.012}   # m over FLOOR_Z: the airlock's floor plates (rays down, ground check)
+const FLOOR_PLATE := {}   # m over FLOOR_Z per room def (the airlock's plates: _lock_floor, by zone)
 const DOOR_SILL := 0.012         # m: the doorway kit's floor plate over the room floor (rays down, ground check)
 func _door_floor_z() -> float:
 	return FLOOR_Z + DOOR_SILL
@@ -1318,6 +1327,56 @@ func _tube_floor(p: Vector3) -> Vector2:
 	var t: float = clampf((Vector2(p.x, p.z) - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
 	var de: float = minf(t, 1.0 - t) * ab.length()
 	return Vector2(lerpf(view.h(a.x, a.y), view.h(b2.x, b2.y), t) + 0.05 + TUBE_FLOOR_Z, smoothstep(0.1, 0.8, de))
+
+## The height of a body on a multi-storey building's level: the level top + the baked fit-out plate under p
+## (presentation/navgrid/floor_fit.res, 0.5 m cells, bilinear). p.y over 6 cm off every level: unchanged.
+static var _fit_data = null
+func _fit_y(b: Dictionary, p: Vector3) -> float:
+	var meta = view.bmeta.get(int(b["id"]))
+	if meta == null:
+		return p.y
+	var nf: int = int(sim.bdef(b["def"]).get("floors", 1))
+	var tops: Array = _floor_tops(meta, nf)
+	if tops.is_empty():
+		return p.y
+	var tpl: Dictionary = meta.get("tpl", {})
+	var sc: Vector3 = Models.scale3(tpl)
+	var xf: Transform3D = meta["xf"]
+	var best := -1
+	var bd := 0.06
+	for i in tops.size():
+		var d: float = absf(p.y - (xf.origin.y + float(tops[i]) * sc.y))
+		if d < bd:
+			bd = d
+			best = i
+	if best < 0:
+		return p.y
+	var ly: float = xf.origin.y + float(tops[best]) * sc.y
+	if _fit_data == null:
+		_fit_data = {}
+		if ResourceLoader.exists("res://presentation/navgrid/floor_fit.res"):
+			var r = load("res://presentation/navgrid/floor_fit.res")
+			if r is Resource and (r as Resource).has_meta("fit"):
+				_fit_data = (r as Resource).get_meta("fit")
+	var e = (_fit_data as Dictionary).get(String(tpl.get("key", "")))
+	if e == null or best >= (e["levels"] as Array).size():
+		return ly
+	if not meta.has("fit_inv"):
+		meta["fit_inv"] = Transform3D(xf.basis * Basis.from_scale(sc), xf.origin).affine_inverse()
+	var q: Vector3 = (meta["fit_inv"] as Transform3D) * p
+	var n: int = int(e["n"])
+	var cell: float = float(e["cell"])
+	var fx: float = q.x / cell + float((n - 1) / 2)
+	var fz: float = q.z / cell + float((n - 1) / 2)
+	var x0: int = int(floor(fx))
+	var z0: int = int(floor(fz))
+	if x0 < 0 or z0 < 0 or x0 + 1 >= n or z0 + 1 >= n:
+		return ly
+	var g: PackedByteArray = e["levels"][best]
+	var tx: float = fx - x0
+	var tz: float = fz - z0
+	var v: float = lerpf(lerpf(g[z0 * n + x0], g[z0 * n + x0 + 1], tx), lerpf(g[(z0 + 1) * n + x0], g[(z0 + 1) * n + x0 + 1], tx), tz)
+	return ly + v * 0.001 * sc.y
 
 ## Airlock floors (airlock_m / _l / _r28, measured from the models 2026-10-03, model units from the inner door leaf
 ## x = ix and the outer door leaf x = ox): the suit room 0.140; from ix - 0.43 to ox + 0.42 the sill plates (0.152)
@@ -1352,12 +1411,32 @@ func _lock_floor(p: Vector3) -> float:
 			continue
 		var q: Vector3 = (e[0] as Transform3D) * Vector3(p.x, float(e[4]), p.z)
 		var ax: float = e[3]
-		if ax != INF and q.x >= ax - 0.85 and q.x <= ax + 0.65 and absf(q.z) <= 1.0:
-			return float(e[4]) + 0.106 * float(e[5])
+		var ix: float = e[1]
+		var ox: float = e[2]
+		var oy: float = e[4]
+		var sy: float = e[5]
+		# (every change of height is a 0.3 m ramp on the lower side: orchestrator 2026-10-03)
+		if ax != INF and q.x >= ax - 0.85:
+			var e_out: float = maxf(q.x - (ax + 0.65), absf(q.z) - 1.0)
+			if e_out <= 0.3:
+				var deck: float = 0.106
+				if q.x < ax - 0.55:
+					# the outer frame's plate (0.152) down to the deck
+					deck = lerpf(0.152, 0.106, smoothstep(ax - 0.85, ax - 0.55, q.x))
+				var yd: float = oy + deck * sy
+				if e_out <= 0.0:
+					return yd
+				# off the deck's open sides: down to the ground over 0.3 m
+				return lerpf(yd, view.h(p.x, p.z), smoothstep(0.0, 0.3, e_out))
+			continue
 		if p2.distance_to(e[6]) > float(e[8]):
 			continue
-		var fm: float = 0.152 if q.x >= float(e[1]) - 0.43 and q.x <= float(e[2]) + 0.42 else 0.140
-		return float(e[4]) + fm * float(e[5])
+		var fm: float = 0.140
+		if q.x >= ix - 0.43:
+			fm = 0.152
+		elif q.x > ix - 0.73:
+			fm = lerpf(0.140, 0.152, smoothstep(ix - 0.73, ix - 0.43, q.x))
+		return oy + fm * sy
 	return -INF
 
 func _floor_y(b: Dictionary) -> float:
@@ -2393,7 +2472,8 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 		rec["start_hold"] = false
 	# (in a corridor the body walks on the tube's drawn floor: the line between the corridor's end heights + 0.05
 	# + TUBE_FLOOR_Z; it walked 3.3 cm into it at the terrain height + 0.19, ground check 2026-10-03)
-	if inside and not dead and _room_at(Vector2(now.x, now.z)) < 0:
+	var room_now: int = _room_at(Vector2(now.x, now.z)) if not dead else -1
+	if inside and not dead and (dbg_floor_off & 8) == 0 and room_now < 0:
 		var tf: Vector2 = _tube_floor(now)
 		# (a body standing still keeps its height: one idling on the corridor / room boundary flipped 3 cm up and down
 		# as the spacing pass nudged it, a slide in the path check, 2026-10-03)
@@ -2405,19 +2485,55 @@ func _update_body(a: Dictionary, rec: Dictionary, lib: Dictionary, dt: float, de
 	# (an airlock's floors from the model: sill plates, chamber grating, porch deck - inside or outside, any mode; the
 	# porch places put three bodies 12 cm into the porch deck and the chamber riders walked 12 mm into the inner door's
 	# sill plate on the anchors' 0.14 m, ground check 2026-10-03)
-	if not dead:
+	if not dead and (dbg_floor_off & 1) == 0:
 		var lf: float = _lock_floor(now)
 		if lf != -INF:
 			now.y = lf
-	# (the doorway kit's floor plate stands DOOR_SILL over the room floor: a body crossing it walks on it)
-	if inside and not dead and view.doors != null:
+	# (multi-storey buildings: the raised fit-out plates of each level (the dome's rings and venues 12-30 mm over the
+	# level top; people walked 12 mm into them), baked by tools/render_floor_fit_bake.gd, read bilinear (a 0.5 m ramp
+	# at a plate's edge, at most 6 mm on either side); on stairs, ramps and lifts (over 6 cm off a level) unchanged)
+	if not dead and (dbg_floor_off & 4) == 0:
+		var rr2: int = room_now
+		if rr2 >= 0 and int(sim.bdef(blds[rr2]["def"]).get("floors", 1)) > 1:
+			now.y = _fit_y(blds[rr2], now)
+	# (the doorway, measured along the door axis with rays (tools/render_door_profile.gd, 2026-10-03; sd = metres from
+	# the door point outward, x the room's scale): room floor to sd -0.67, the kit's plate +12 mm to sd +0.08, the
+	# corridor floor (+33 mm on flat ground) beyond. The body's height follows ramps, never a step (orchestrator
+	# 2026-10-03: "ramp them over 0.3 m"), each on the lower side so the body never goes under a floor it walks onto.)
+	if not dead and view.doors != null and (dbg_floor_off & 2) == 0:
 		var dq: Vector2 = Vector2(now.x, now.z)
-		for dd in _doors_near(dq):
-			var ddist: float = Vector2((dd as Vector3).x, (dd as Vector3).z).distance_to(dq)
-			if ddist < 0.55:
-				var ks: float = 1.0 - smoothstep(0.30, 0.55, ddist)
-				now.y = maxf(now.y, (dd as Vector3).y + FLOOR_Z + DOOR_SILL * ks)
-				break
+		for de in _doors_near(dq):
+			var dd: Vector3 = de[0]
+			var drid: int = int(de[1])
+			if not blds.has(drid):
+				continue
+			var rc: Vector2 = blds[drid]["pos"]
+			var od: Vector2 = Vector2(dd.x - rc.x, dd.z - rc.y)
+			if od.length() < 0.01:
+				continue
+			od = od.normalized()
+			var rel: Vector2 = dq - Vector2(dd.x, dd.z)
+			var r_off: float = maxf(0.05, float(blds[drid]["radius"]) - Vector2(dd.x, dd.z).distance_to(rc))
+			var ks: float = r_off / 0.32
+			var sd: float = rel.dot(od) / ks
+			var lat: float = absf(rel.cross(od))
+			if lat > 0.8 * ks or sd < -0.97 or sd > r_off / ks + 0.02:
+				continue
+			var rf: float = _floor_y(blds[drid])
+			if absf(now.y - rf) > 0.5:
+				continue
+			var plate: float = rf + DOOR_SILL * ks
+			var yk: float
+			if sd <= -0.67:
+				yk = lerpf(rf, plate, smoothstep(-0.97, -0.67, sd))
+			elif sd <= -0.22:
+				yk = plate
+			else:
+				var tq: Vector3 = Vector3(dd.x + od.x * (r_off + 0.25), dd.y, dd.z + od.y * (r_off + 0.25))
+				var tfl: float = _tube_floor(tq).x
+				yk = lerpf(plate, maxf(plate, tfl) if tfl != INF else plate, smoothstep(-0.22, 0.08, sd))
+			now.y = yk
+			break
 	rec["pos"] = now
 	rec["seen"] = true
 	rec["age"] = float(rec.get("age", 0.0)) + dt
@@ -2847,22 +2963,25 @@ func _walk2(rec: Dictionary, before: Vector3, goal: Vector3, dt: float, vmax: fl
 	# Move exactly along the (corner-rounded) polyline: a long frame step never cuts a corner.
 	var left: float = v * dtg
 	var now: Vector3 = before
+	# (horizontal distances: the floor rules set the body's height after the walk (tube floor, plates), so a
+	# waypoint 33 mm lower than the body took part of every step in y; with corner samples 0.12 m apart the
+	# drawn speed alternated frame to frame, 5-7 % ripple, orchestrator probe in1 2026-10-03)
 	while left > 0.0 and not wp.is_empty():
 		var q: Vector3 = wp[0]
-		var d: float = now.distance_to(q)
+		var d: float = Vector2(q.x - now.x, q.z - now.z).length()
 		if d <= left:
 			now = q
 			left -= d
 			wp.pop_front()
 		else:
-			now = now + (q - now) / d * left
+			now = now + (q - now) * (left / d)
 			left = 0.0
 	# The path ran out inside this frame while the goal is a little further on in plain sight (the
 	# path's end follows the goal in 0.25 m steps): walk on to it (the body stopped dead for a frame).
 	if left > 0.001 and wp.is_empty():
 		var dg: float = Vector2(goal.x - now.x, goal.z - now.z).length()
 		if dg > 0.01 and dg < 1.0 and planner.same_leg(now, goal, inside):
-			now = now.move_toward(goal, left)
+			now = now + (goal - now) * minf(1.0, left / dg)
 	rec["wp"] = wp
 	return now
 
