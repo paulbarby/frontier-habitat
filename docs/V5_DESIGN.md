@@ -600,3 +600,72 @@ Rules:
 8. **Tests:** no HR → no complaints and no transfers; with HR → complaints filed by unhappy people;
    transfer approved → person leaves on the next ship; refused → costs applied; public vs private gossip
    rates differ for the HR officer; determinism and perf budgets hold.
+
+## 18. Orders that are obeyed, chain of command, work queues, missing-capability alerts, package transport (Paul, 2026-10-04)
+
+Paul's words (summary, after extensive playtesting): when I order NPCs to repair worn systems it is the last
+thing they ever do; I cannot get them to maintain things. If I give an order to an NPC they must go and do it,
+simple as that: even if they are at a party, not after a sleep, not after their routine. An order to a head of
+a department makes them get their subordinates to do it: one person → click a subordinate; a team → ask the
+captain/head, who allocates. I need a list of things to be done, a work queue, so I can change the order.
+Worn items go into a maintenance queue and the maintenance team fixes them. I have trouble building things:
+if items are missing and the ability to build those things is missing, alerts must say what needs to be built,
+including how the chain works from mining to refining to processing, with a little explanation. Logistics:
+an end-game upgrade, a package transport system: upgrade habitats and the connections between them; two
+storage habitats with storage transport systems and upgraded connections route items automatically. This is
+quality of life.
+
+### 18.1 Orders are obeyed at once (SIM; bug fix first)
+1. New order kinds: `repair` (a structure: fix wear now), `maintain` (keep a structure in repair: a standing
+   order), `build` (help build a site), `haul` (move an item to a place), plus the existing go / stay / return
+   / board / work_at / survey.
+2. An order INTERRUPTS any plan at once: party, leisure, talk, work, idle, sleep (the colonist wakes). Only an
+   imminent death need (suit air, thirst/hunger/exhaustion at critical) may come first, and the order resumes
+   right after. When the order is done, the colonist returns to routine. A party or sleep is not resumed
+   unless still useful.
+3. A repair order reserves the repair task for that colonist (or creates it if wear is under the automatic
+   threshold), brings spare parts from the nearest store, or reports exactly what is missing (and raises the
+   §18.4 alert). The order text in the person window says what the colonist is doing for the order.
+4. Tests: an idle, a partying, a sleeping and a working colonist each start an ordered repair within 5 game
+   seconds and finish it; the structure's wear drops; the colonist then returns to routine.
+
+### 18.2 Chain of command (SIM; UI)
+1. An order to a colonist goes to that colonist. An order to a department head (§5.1 ranks: chief, captain,
+   commander) is a TEAM order: the head allocates it to the best free subordinates of that department (by
+   skill and distance) and reports back ("Chief Engineer Asha assigned Bram and Lin"). The head may do it
+   too if the department is small.
+2. Team orders appear in the work queue with the assignees; the player can reassign.
+
+### 18.3 Work queues (SIM; UI)
+1. Every department has a queue of open work (build, repair, maintain, haul, produce, research, security,
+   medical): each item has a priority, the assignee (or "unassigned"), the reason, and the time waiting.
+2. Worn structures enter the maintenance queue at a wear threshold; the maintenance (engineering) team takes
+   them in queue order. Broken ones go to the top.
+3. The player sees a Work window (key W free? choose a free key, listed in Settings > Keys): tabs per
+   department + All; drag to reorder, buttons Top / Up / Down / Bottom, Assign to…, Cancel. Orders and team
+   orders show here too. The dock shows a count of urgent unassigned items.
+4. The sim's job choice follows the queue order within a department, after orders and critical needs.
+   Job priorities (§ Priorities tab) still choose WHICH department's queue a colonist serves.
+
+### 18.4 Missing items and missing capability (SIM; UI)
+1. When a build, repair, upgrade, recipe or order needs an item the colony does not have, SIM finds the
+   production chain for it (content recipes and buildings: raw resource → mine/extractor → refinery →
+   processor → item) and which steps the colony cannot do now (no building, building not powered, no
+   worker, research missing).
+2. The player sees an alert (panel manager, Alerts tab) "Spare parts needed: build a Parts Works" with a
+   "Show chain" button: a small chain diagram (icons: regolith → Mine → ore → Refinery → metal → Parts Works
+   → spare parts), each step marked done / missing / unpowered / needs research, with one-line STE
+   explanations, and a Place button for the missing building when it is unlocked.
+3. The codex gets a "Production chains" page with every chain.
+
+### 18.5 Package transport system (end game, quality of life) (SIM; ART-HAB; RENDER; UI)
+1. Research: "Package Transport" (late tech). Unlocks two upgrades: a storage habitat upgrade "Transport
+   hub" (a sorter with a tube port) and a corridor upgrade "Transport tube" (a pneumatic tube along the
+   corridor ceiling or floor).
+2. Items are routed automatically between storage habitats that have a Transport hub and are joined by a
+   path of corridors that all have the tube upgrade: hauling jobs between them disappear (items move in
+   capsules at a set speed, with a capacity per tube). Producers and consumers next to a hub use it.
+3. Visible: capsules moving in the tubes (RENDER), hub models (ART-HAB), an overlay showing the network and
+   flows (UI), the inspector showing items in transit.
+4. Tests: two hubs joined by upgraded corridors move items with no colonist hauling; a broken link stops the
+   flow and raises an alert; the ledger stays balanced.

@@ -84,3 +84,5 @@ out1 fps 47.0, 0.079 px, 0.20 mm (OK). Since 325d0af: ART-HAB ceilings, partitio
 RENDER framing rule, occluder grids (162, 573,585 cells), near fades. Find what costs the indoor frame time
 (profile the follow view in a room: occluder checks per frame, the ceiling liner, transparency/fades, lights)
 and what adds the jerk (the framing rule moving the camera?). Targets as V5_RUN3.md, fps not below 45 indoors.
+
+## 2026-10-04 — Paul (after playtesting): V5_DESIGN.md §18 (orders obeyed at once, chain of command, work queues, missing-capability alerts with production chains, package transport system). Your parts as listed there. SIM first: §18.1 bug fix.
