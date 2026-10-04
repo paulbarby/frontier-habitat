@@ -1,4 +1,6 @@
-# Deploying Frontier Habitat 5.0 (GitHub Pages + Cloudflare R2)
+# Deploying Frontier Habitat 5.0 (GitHub Pages + a public pack host)
+
+**5.0.0 as released (2026-10-04):** the pack is served from Amazon S3, bucket `do.public` (Eden Core's public bucket), uploaded by Bobby: https://s3.ap-southeast-2.amazonaws.com/do.public/frontier-habitat/5.0.0/index.pck (sha256 9b07b579ab0acb6cf082cdfbb4ba87bc7dfc222a2ec48861107c16b8cb0812e4, CORS *). Bobby had no Cloudflare R2 API access; Paul chose S3. Eden Core asset record af947c58 (form frontier-habitat-asset-ul7fgb). The R2 steps below stay as the alternative.
 
 ## Why two hosts
 GitHub refuses any file over 100 MB. The 5.0 game data file `index.pck` is about 186 MB. All other files
