@@ -86,3 +86,5 @@ RENDER framing rule, occluder grids (162, 573,585 cells), near fades. Find what 
 and what adds the jerk (the framing rule moving the camera?). Targets as V5_RUN3.md, fps not below 45 indoors.
 
 ## 2026-10-04 — Paul (after playtesting): V5_DESIGN.md §18 (orders obeyed at once, chain of command, work queues, missing-capability alerts with production chains, package transport system). Your parts as listed there. SIM first: §18.1 bug fix.
+
+## 2026-10-04 evening — Paul: V5_DESIGN.md §19 (playtest fixes, watch mode). Your parts are named in each item.

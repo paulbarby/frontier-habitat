@@ -669,3 +669,46 @@ quality of life.
    flows (UI), the inspector showing items in transit.
 4. Tests: two hubs joined by upgraded corridors move items with no colonist hauling; a broken link stops the
    flow and raises an alert; the ledger stays balanced.
+
+## 19. Playtest fixes and demo mode (Paul, 2026-10-04 evening)
+
+Paul's list after playtesting Playtest 5:
+1. **Corridors not built (SIM bug):** supplies are delivered to some corridor sites but the build never
+   happens. Find why (builders never assigned, a reservation, a blocked work spot, a corridor joint, a link
+   kind left out of the job board) and fix; a test: every corridor site with its materials delivered is
+   completed within N game minutes in showcase_v5 and a new colony.
+2. **Greenhouse crops (SIM; UI):** one greenhouse (and fungus farm, algae) can grow several crops at once:
+   per-bed (per slot) crop choice in the inspector, each bed with its own growth and yield; the farm's menu
+   shows each crop's share. Old saves: all beds keep the current crop.
+3. **Vehicles are confusing (UI; SIM):** make the use clear: a Vehicles help topic with steps; the vehicle
+   inspector shows what to do next (build a depot → build a rover → assign a driver/crew → pick a
+   destination on the map → go); orders "Drive to…", "Explore…", "Return" as clear buttons; the map click
+   to send; the status line says what the vehicle is doing and why it waits. A first-use hint the first
+   time a depot or vehicle exists.
+4. **Doorways still blocked by objects (ART-HAB; RENDER):** in some habitats a corridor door opens onto
+   furniture or props that are not removed. Every door slot keeps a clear zone (door width + 0.4 m, 1.8 m
+   deep into the room): props in it are removed or moved in the model at every allowed door angle, or the
+   game hides them when a door is placed there. Add a check over every room type and every allowed angle.
+5. **Music playlist (UI):** a Music panel in Settings (and a small now-playing line): list every track
+   with its name and mood, play / skip / disable per track, shuffle, and a mood filter; the over-rhythmic and
+   tense tracks are tagged so the player can turn them off; defaults favour calm ambient music during
+   normal play; tense tracks only during real danger.
+6. **Watch mode for demos (RENDER camera; UI):** a curated over-the-shoulder "Watch" mode: it follows a
+   person for a while, then switches to another interesting person; when an event with people happens
+   (a party, a fight, a drama, a wedding, a landing, an accident, a protest) it jumps to it and frames the
+   people involved; smooth transitions; a small caption names who and what; any input ends it. Key and
+   menu entry; the title screen can start it on showcase_v5 for demos.
+7. **Over-the-shoulder camera is hard to control (RENDER; UI):** simplify: mouse moves look around
+   (orbit) without holding a button, wheel zooms, one key (or button) returns behind the shoulder, the
+   camera never fights the player (no auto-snap while the player is looking), an on-screen hint of the 3
+   controls. Allow looking up much higher at the sky.
+8. **Airless planet (RENDER):** black sky like on the Moon, stars, no atmospheric effects anywhere (no
+   haze, fog, dust, wind particles, sky glow, re-entry plasma); check it in every view.
+9. **Inside a habitat in the over-the-shoulder view (RENDER; UI):** no wind or weather effects drawn at all
+   when the camera is inside (not even through windows), and outside sound almost silent (atmosphere muted:
+   -40 dB or off, a faint hull creak at most); the room tone carries the sound.
+10. **Sky (RENDER):** stars and recognisable constellations (original names allowed; real star patterns
+   are public domain), visible at night and in the airless day sky; the camera can look up to see them.
+11. **Ships arriving (RENDER):** an arriving ship is visible from far away (a light descending from the sky,
+   long draw distance), with a re-entry flame / plasma glow while it descends on planets with an atmosphere
+   (none on airless: engine light only); the landing burn near the pad.

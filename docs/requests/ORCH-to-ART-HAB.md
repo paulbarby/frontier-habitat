@@ -42,3 +42,5 @@ Keep the triangle and pck budgets; reuse a shared prop kit.
 Every roof/ceiling/band part stays at or above door head + 0.25 m within 1.5 m of a door, or is cut at the door; builder check (0 flags); renders through doorways. RENDER adds an in-game doorway gate.
 
 ## 2026-10-04 — Paul (after playtesting): V5_DESIGN.md §18 (orders obeyed at once, chain of command, work queues, missing-capability alerts with production chains, package transport system). Your parts as listed there. SIM first: §18.1 bug fix.
+
+## 2026-10-04 evening — Paul: V5_DESIGN.md §19 (playtest fixes, watch mode). Your parts are named in each item.

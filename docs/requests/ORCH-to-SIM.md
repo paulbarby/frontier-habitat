@@ -24,3 +24,5 @@ Do:
 ## 2026-10-03 — Paul: check that job priorities (Colonists > Priorities: 3 first, 2 normal, 1 last, - never; colony default vs own) really change who does what
 
 ## 2026-10-04 — Paul (after playtesting): V5_DESIGN.md §18 (orders obeyed at once, chain of command, work queues, missing-capability alerts with production chains, package transport system). Your parts as listed there. SIM first: §18.1 bug fix.
+
+## 2026-10-04 evening — Paul: V5_DESIGN.md §19 (playtest fixes, watch mode). Your parts are named in each item.
