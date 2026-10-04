@@ -323,10 +323,10 @@ def v4_decor(plan, max_items=40):
             if any(hypot(x - ax, y - ay) < need + (0.9 if need > 0.6 else 0.65) for (ax, ay) in people):
                 continue
             yaw = degrees(atan2(y, x)) + 90.0
-            n0 = len(plan.n.verts)
+            n0, f0 = len(plan.n.verts), len(plan.n.faces)
             rr = _FAMX.DECOR[kind](plan, x, y, yaw, k)
             _fit_under_roof(rm, plan.n, n0)
-            plan.circle(x, y, rr, tag="decor")
+            plan.circle(x, y, rr, tag=plan.decor_tall(n0, f0, x, y, rr))
             used_n[kind] = used_n.get(kind, 0) + 1
             placed += 1
             k += 1

@@ -1,5 +1,35 @@
 # ART-HAB → RENDER
 
+## 2026-10-04 (evening) — V5_DESIGN 19.4 door clear zone: please change the Tall hide rule (one function)
+
+Paul: doors still open onto furniture and props. Rule now in the builder: every free door angle keeps a clear zone
+**1.90 m wide (door 1.50 + 0.40), from the wall line to 0.56 + 1.80 m inside it, 0.24-2.40 m high** with no prop in it.
+
+What I changed (all 160 room files rebuilt, 0 flags):
+1. Decor that reaches into the zone band (plants, crates, carts, coolers, park trees and the other fill items) is no
+   longer in `Interior`: each item is a `Tall_<nn>` part of its own (floor origin at the item). Up to 27 Tall parts per
+   file (your mask has 32 bits). The security office lockers are Tall parts too (like the airlock suit racks).
+2. **The hide rule I built for (please use it instead of "origin within 2.2 m"):** hide Tall part k at a doorway of
+   model angle beta when its origin (ox, oy) lies inside the door's clear zone grown by its radius r_k:
+   `s = ox cos(beta) + oy sin(beta)`, `t = -ox sin(beta) + oy cos(beta)`;
+   hide if `|t| <= 0.95 + r_k` and `Rw - 2.36 - r_k <= s <= Rw + r_k` (Rw = R - 0.32, model units).
+   The data is in the build report `v3.decals.tall_zone` = {"Tall_07": [ox, oy, r], ...} and `v3.decals.door_zone`
+   = [0.95, 0.56, 1.80], so `render_nav_bake.gd` already copies it into `room_meta.res` (rebaked). With the old 2.2 m
+   rule some decor whose origin is 2.2-2.6 m from the door origin stays visible in the zone.
+3. Furniture that cannot hide (beds, desks, machines, counters, consoles, racks) blocks those angles in
+   `content/door_blocked.json` (zone test on the footprints, + 8 cm margin, and on the real geometry: anything still in
+   a zone at a free angle blocks that angle too). 81 files changed; free door angles 56,467 -> 47,165 deg in total;
+   every room keeps its door-slot minimum (S 4, M 6, L 7, XL 8). Airlocks keep the 0.9 m lane rule (the chamber fills
+   any 1.8 m zone in a 2.8-4.0 m room).
+4. Layouts moved: algae bioreactor S/M tube rows stop short of the band; oxygen plant S has no console; the
+   security office lockers hide.
+
+Builder check (`tools/blender/interior_doorclear.zone_check`, report `v3.door_zone`): Interior and the visible Tall
+parts at every free angle, 1 deg steps: **0 props in any clear zone in 160 files**. My renders hide the Tall parts by the
+rule above: `art/interiors/doorzone/` (refinery_m, kitchen_m, habitat_s, security_office_m, lounge_m, park_m; cutaway
+and both directions through the door). Import done, `check` 359 scripts 0 failed, nav bake 160 grids / 162 occluder
+grids, far files rebuilt (draw calls 795 / 831), pck 186.82 MB.
+
 ## 2026-10-04 (later) — critic r42 PE-01 (far rooms half as bright): cause found on my side, far files rebuilt
 
 Cause, checked in Godot with `tools/arthab_farcheck.gd` (loads near and far through `Models._template_from_file`):

@@ -67,6 +67,8 @@ On: two adults who fancy each other tease with adult innuendo. Off: mild flirtin
 		au.add_child(_slider(spec[0], spec[1], 0.0, 1.0, 0.05, func(v): return "%d%%" % int(roundf(v * 100.0))))
 	if hud.main.audio == null or not hud.main.audio.has_sounds():
 		au.add_child(Kit.label("No sound files are installed. The game is silent.", "SmallLabel", 11, P.TEXT_3))
+	# Music (V5 section 19.5): the playlist with names and moods, on or off for each track, play one now, skip, shuffle, the moods that may play.
+	_music_card(right)
 	# Notifications (docs/UI_PANELS.md): every message type: Pop up, Badge only or Off.
 	var nt: VBoxContainer = card("Notifications", "sev_info", P.CYAN)
 	card_panel(nt).name = "Notifications"
@@ -157,3 +159,94 @@ func _slider(text: String, key: String, lo: float, hi: float, step: float, fmt: 
 			Settings.set_value(key, x)
 			hud.main.apply_settings())
 	return row
+
+# ---------------------------------------------------------------- the music panel (V5 section 19.5)
+var _now: Label
+var _music_rows := {}        # track id -> {row, on, name, play}
+var _music_sig := ""
+
+func _music_card(parent: VBoxContainer) -> void:
+	var mu = hud.main.audio.music if hud.main.audio != null else null
+	var mc: VBoxContainer = card("Music", "music", P.CYAN)
+	card_panel(mc).name = "MusicCard"
+	parent.add_child(card_panel(mc))
+	if mu == null or mu.tracks.is_empty():
+		mc.add_child(Kit.label("No music files are installed.", "SmallLabel", 11, P.TEXT_3))
+		return
+	mc.add_child(Kit.wrap("Calm music plays by day and by night. Tense music plays only in real danger. Turn a track off to never hear it.", 12, P.TEXT_2))
+	_now = Kit.wrap("", 13, P.CYAN)
+	_now.name = "NowPlaying"
+	mc.add_child(_now)
+	var ctl: HFlowContainer = HFlowContainer.new()
+	ctl.add_theme_constant_override("h_separation", 6)
+	ctl.add_theme_constant_override("v_separation", 4)
+	mc.add_child(ctl)
+	var skip: Button = Kit.button("Skip", func(): mu.skip(), "Skip\nPlays the next track now.", "ChipButton", "chevron_right", 12)
+	skip.name = "MusicSkip"
+	ctl.add_child(skip)
+	var sh: Button = Kit.button("Shuffle", func(): mu.set_shuffle(not mu.shuffle), "Shuffle\nOn: a random track of the right kind each time. Off: in turn.", "ChipButton", "rotate", 12)
+	sh.name = "MusicShuffle"
+	sh.toggle_mode = true
+	sh.set_pressed_no_signal(mu.shuffle)
+	sh.toggled.connect(func(on): mu.set_shuffle(on))
+	ctl.add_child(sh)
+	mc.add_child(Kit.dim("Moods that may play", 12))
+	var mf: HFlowContainer = HFlowContainer.new()
+	mf.add_theme_constant_override("h_separation", 6)
+	mc.add_child(mf)
+	for md in [["calm", "Calm", "Slow and quiet music."], ["steady", "Steady", "A regular pulse: it can feel busy after an hour."], ["tense", "Tense", "Danger music. It plays only in real danger: a hazard, a critical alert or a hull breach."]]:
+		var mood: String = md[0]
+		var b: Button = Kit.button(String(md[1]), func(): pass, "%s\n%s" % [md[1], md[2]], "ChipButton")
+		b.name = "Mood_" + mood
+		b.toggle_mode = true
+		b.set_pressed_no_signal(mu.mood_allowed(mood))
+		b.toggled.connect(func(on): mu.set_mood_allowed(mood, on))
+		mf.add_child(b)
+	var lst: VBoxContainer = Kit.seam_list(2)
+	lst.name = "MusicList"
+	mc.add_child(lst)
+	for e in mu.playlist():
+		var id: String = e["id"]
+		var row: HBoxContainer = Kit.hbox(6)
+		row.name = "Track_" + id
+		var cb := CheckBox.new()
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.button_pressed = bool(e["on"])
+		cb.tooltip_text = "On or off\nOff: this track never plays."
+		cb.toggled.connect(func(on): mu.set_on(id, on))
+		row.add_child(cb)
+		var tv: VBoxContainer = Kit.vbox(0)
+		tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(tv)
+		var nm: Label = Kit.label(String(e["name"]), "", 13, P.TEXT)
+		nm.clip_text = true
+		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		tv.add_child(nm)
+		var tags: Array = [String(e["mood"]).capitalize()]
+		for t in e["tags"]:
+			if String(t) != String(e["mood"]):
+				tags.append(String(t))
+		tv.add_child(Kit.label("%s  ·  %s  ·  %s" % [" · ".join(tags), Kit.clock(float(e["seconds"])), ", ".join(e["states"]).replace("tension", "danger")], "SmallLabel", 11, P.TEXT_3))
+		var pb: Button = Kit.icon_button("play", func(): mu.play_now(id), "Play now\nPlays this track now, to its end. Real danger still interrupts it.", "GhostButton", 14, 26)
+		pb.name = "Play_" + id
+		row.add_child(pb)
+		lst.add_child(row)
+		_music_rows[id] = {"row": row, "on": cb, "name": nm, "play": pb}
+	refresh()
+
+func refresh() -> void:
+	if _now == null or hud.main.audio == null:
+		return
+	var mu = hud.main.audio.music
+	var np: Dictionary = mu.now_playing()
+	var line: String
+	if String(np["id"]) == "":
+		line = "Now playing: silence" + (" (next in %d s)" % int(float(np["gap"])) if float(np["gap"]) >= 0.0 else "")
+	else:
+		line = "Now playing: %s (%s)" % [String(np["name"]), String(np["mood"])]
+	_now.text = line
+	for id in _music_rows:
+		var r: Dictionary = _music_rows[id]
+		var e_on: bool = mu.is_on(id)
+		(r["on"] as CheckBox).set_pressed_no_signal(e_on)
+		(r["name"] as Label).add_theme_color_override("font_color", P.CYAN if id == String(np["id"]) else (P.TEXT if mu.plays(id) else P.TEXT_3))

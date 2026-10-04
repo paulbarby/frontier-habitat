@@ -3,7 +3,7 @@ extends SceneTree
 ## on showcase_v5:
 ##   node tools/godot.mjs script res://tools/ui/test_indoor_sound.gd
 ## A storm blows. A close camera over a habitat: the listener is indoors; the outdoor buses fade to
-## -24 dB with the low-pass at 400 Hz in about 0.5 s; the room tone is up. The camera on open ground:
+## -40 dB with the low-pass at 250 Hz in about 0.5 s; the room tone is up. The camera on open ground:
 ## outdoors, full level. The follow view of a person who is inside: indoors.
 
 const A = preload("res://ui/audio.gd")
@@ -60,7 +60,7 @@ func _process(_d: float) -> bool:
 			if _n < 70:   # about 1.2 s at 60 frames a second: past the 0.5 s fade
 				return false
 			check("close over a habitat: indoors", au.indoor_now, "focus %s distance %.1f" % [str(main.rig.focus), main.rig.distance])
-			check("indoors: the outdoor buses at -24 dB, low-pass 400 Hz", absf(_bus_db("OutdoorAmbience") + 24.0) < 0.6 and absf(_lp("OutdoorAmbience") - 400.0) < 30.0, "%.1f dB, %.0f Hz" % [_bus_db("OutdoorAmbience"), _lp("OutdoorAmbience")])
+			check("indoors: the outdoor buses at -40 dB, low-pass 250 Hz", absf(_bus_db("OutdoorAmbience") + 40.0) < 0.6 and absf(_lp("OutdoorAmbience") - 250.0) < 20.0, "%.1f dB, %.0f Hz" % [_bus_db("OutdoorAmbience"), _lp("OutdoorAmbience")])
 			print("MEASURE indoor: outdoor buses %.1f dB, low-pass %.0f Hz (k %.2f)" % [_bus_db("OutdoorSFX"), _lp("OutdoorSFX"), au.indoor_k])
 			main._on_cmd("goto 40 40")
 			main.rig.distance = 18.0

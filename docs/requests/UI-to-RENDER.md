@@ -206,3 +206,13 @@ Requests:
 says WORN when the health is under `balance.repair_trigger_health`. Also: the world pick prefers a colonist within 1.6 m of the click
 (`world_view.gd` about line 3593). The UI now reads the structure under the click itself (`main.structure_at`), so no change is needed
 for the orders; for the plain left click a colonist standing on a structure still wins, as before.
+
+## 2026-10-04 (evening) - Watch mode and the follow hint: UI side done on RENDER's API
+- `ui/hud/watch_mode.gd` calls `world_view.watch_start / watch_stop / watch_state` (key F2, menu entry Watch, title button Watch); it hides the HUD while the tour runs and
+  brings it back when `watch_state().active` ends (your any-input end). RENDER's caption is used (`show_caption` stays true). `tools/ui/test_keys.gd` now lists
+  `presentation/fx_watch.gd` as a file allowed to read keys (it ends the tour on any key); F2 is documented in `ui/keys.gd`.
+- The follow card shows your three controls (mouse looks, wheel zooms, R or Space back behind). If Space no longer pauses over the shoulder, tell me; `ui/keys.gd` says R, Space.
+
+## 2026-10-04 (night) - Space must be pause only (coordinator decision)
+`presentation/camera_rig.gd` line 317 `elif k == KEY_R or k == KEY_SPACE: shoulder_return()` runs together with main's `KEY_SPACE: set_speed(...)`: in the follow view Space both pauses and returns the camera.
+Please change it to `elif k == KEY_R:`. UI side done: `ui/keys.gd`, the help topic and the follow card say R only; `tools/ui/test_keys.gd` has the check "camera_rig.gd does not use KEY_SPACE" and FAILS until the line is changed.

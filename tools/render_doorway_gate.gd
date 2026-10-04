@@ -12,6 +12,11 @@ extends SceneTree
 ##         above the horizon, the top of the follow camera's frame) finds no surface
 ##         within 0.75 m past the door plane (sky or void above the door) -> a bad frame (the upper patch stands 0.32 m inside the ring).
 ## Target: 0 bad frames.
+## Also (V5 §19.4, orchestrator 2026-10-04):
+##   prop: a ray down through the door's clear zone (1.90 m wide, 2.36 m into the room, 0.24-2.40 m over the floor,
+##         5 x 6 points) meets a drawn Interior or Tall part (hidden Tall parts are out of the physics) -> a prop;
+##   every doorway at an angle content/door_blocked.json now blocks (old saves) is tested too (beam, gap, prop),
+##   whatever its room type.
 ##   node tools/godot.mjs script res://tools/render_doorway_gate.gd [n=20]
 const CamPhys = preload("res://presentation/fx_cam_phys.gd")
 const SAVES := ["res://content/saves/showcase_v3_late.fhsave", "res://content/saves/showcase_v5.fhsave", "res://build/web_render/doors8.fhsave"]
@@ -27,7 +32,7 @@ var di := 0
 var cp
 var wait := 0
 var seen_keys := {}
-var total := {"doors": 0, "frames": 0, "beam": 0, "gap": 0}
+var total := {"doors": 0, "frames": 0, "beam": 0, "gap": 0, "prop": 0, "zone_doors": 0, "blocked_doors": 0, "blocked_found": 0}
 var fails: Array = []
 
 func _initialize() -> void:
@@ -44,7 +49,7 @@ func _process(_d: float) -> bool:
 	f += 1
 	match phase:
 		0:
-			if si >= SAVES.size() or int(total["doors"]) >= n_want:
+			if si >= SAVES.size():
 				_report()
 				return true
 			if not FileAccess.file_exists(SAVES[si]):
@@ -69,7 +74,7 @@ func _process(_d: float) -> bool:
 			di = 0
 			phase = 2
 		2:
-			if di >= doors.size() or int(total["doors"]) >= n_want:
+			if di >= doors.size() or (int(total["doors"]) >= n_want and not bool(doors[di].get("blocked", false))):
 				cp.clear()
 				si += 1
 				phase = 0
@@ -99,14 +104,18 @@ func _pick_doors() -> Array:
 		if not v.bmeta.has(rid):
 			continue
 		var key: String = String(v.bmeta[rid].get("tpl", {}).get("key", "?")).get_file()
-		if seen_keys.has(key):
+		var blocked: bool = _door_blocked(rid, d["pos"])
+		if blocked:
+			total["blocked_found"] = int(total["blocked_found"]) + 1
+		if seen_keys.has(key) and not blocked:
 			continue
 		seen_keys[key] = true
 		var b: Dictionary = main.sim.state["buildings"][rid]
 		var c: Vector2 = b["pos"]
 		var p: Vector3 = d["pos"]
 		var inward := Vector3(c.x - p.x, 0.0, c.y - p.z).normalized()
-		out.append({"pos": p, "in": inward, "key": key, "room": rid, "def": String(b["def"])})
+		out.append({"pos": p, "in": inward, "key": key + (" BLOCKED" if blocked else ""), "room": rid, "def": String(b["def"]), "blocked": blocked})
+	out.sort_custom(func(x, y): return bool(x.get("blocked", false)) and not bool(y.get("blocked", false)))
 	# Junction mouths (no doorway kit: the corridor meets the junction ring): up to 3 per save.
 	var nj := 0
 	for lid in main.sim.state["buildings"]:
@@ -129,6 +138,49 @@ func _pick_doors() -> Array:
 					out.append({"pos": mp, "in": Vector3(-dv.x, 0.0, -dv.y), "key": "junction mouth %d" % nj, "room": int(jid), "def": "junction"})
 					nj += 1
 	return out
+
+## Is this doorway at a model angle content/door_blocked.json blocks for its room model?
+func _door_blocked(rid: int, p: Vector3) -> bool:
+	var v = main.view
+	var b: Dictionary = main.sim.state["buildings"][rid]
+	var key: String = String(v.bmeta[rid].get("tpl", {}).get("key", "")).get_file().get_slice("@", 0).get_slice(":", 0).trim_suffix(".glb")
+	var db: Dictionary = main.sim.content.get("door_blocked", {})
+	var rec = db.get(key, db.get(String(b["def"]), null))
+	if not (rec is Dictionary):
+		return false
+	var c: Vector2 = b["pos"]
+	var phi: float = atan2(-(p.z - c.y), p.x - c.x)
+	var beta: float = fposmod(rad_to_deg(phi - float(b.get("rot", 0.0))), 360.0)
+	for span in (rec.get("blocked", []) as Array):
+		var a0: float = float(span[0])
+		var a1: float = float(span[1])
+		for bb in [beta, beta - 360.0, beta + 360.0]:
+			if bb > a0 + 0.5 and bb < a1 - 0.5:
+				return true
+	return false
+
+## Drawn props in the door's clear zone (rays down through a 5 x 6 grid).
+func _zone_props(d: Dictionary) -> String:
+	var p: Vector3 = d["pos"]
+	var nin: Vector3 = d["in"]
+	var side: Vector3 = nin.cross(Vector3.UP).normalized()
+	var fy: float = p.y + 0.14
+	var b: Dictionary = main.sim.state["buildings"].get(int(d["room"]), {})
+	var sc: float = 1.0
+	if main.view.bmeta.has(int(d["room"])):
+		sc = float(main.view.bmeta[int(d["room"])].get("tpl", {}).get("scale", 1.0))
+	for lat in [-0.8, -0.4, 0.0, 0.4, 0.8]:
+		for dep in [0.4, 0.8, 1.2, 1.6, 2.0, 2.3]:
+			var q: Vector3 = p + nin * dep * sc + side * lat * sc
+			var a := Vector3(q.x, fy + 2.40, q.z)
+			var hit: float = cp.ray(a, Vector3(q.x, fy + 0.24, q.z))
+			if hit < INF:
+				var dl: String = String(cp.dbg_last)
+				# (a door at an angle door_blocked.json now blocks (old saves): only hideable Tall parts count; the
+				# furniture that blocked the angle stays, and the walk test below must pass)
+				if dl.contains(":Tall") or (dl.contains(":Interior") and not bool(d.get("blocked", false))):
+					return "%s at lat %.1f depth %.1f, %.2f m down" % [dl, lat, dep, hit]
+	return ""
 
 func _test_door(d: Dictionary) -> void:
 	var p: Vector3 = d["pos"]
@@ -198,6 +250,42 @@ func _test_door(d: Dictionary) -> void:
 					total["gap"] = int(total["gap"]) + 1
 				if fails.size() < 60:
 					fails.append("%s %s (%s) %s cam off %.1f: %s" % [d["def"], d["key"], str(d["room"]), "in" if way > 0 else "out", off, why])
+	if String(d["def"]) != "junction" and String(d["def"]) != "airlock":
+		total["zone_doors"] = int(total["zone_doors"]) + 1
+		var zp: String = _zone_props(d)
+		if zp != "":
+			total["prop"] = int(total["prop"]) + 1
+			if fails.size() < 60:
+				fails.append("%s %s (%s) prop in the clear zone: %s" % [d["def"], d["key"], str(d["room"]), zp])
+	if bool(d.get("blocked", false)):
+		total["blocked_doors"] = int(total["blocked_doors"]) + 1
+	# the walk: the entry lane (0.8-1.6 m in from the door point; the walk grid keeps a wall band nearer, the axis and 0.3 m either side) is free floor in
+	# the room's walk grid (fx_npc planner)
+	if String(d["def"]) != "junction" and main.view.npc != null and main.view.npc.planner != null:
+		var pl = main.view.npc.planner
+		var blocked_at := ""
+		# a walk from 0.8 m outside the door into the room (its free centre point): the planner finds a path, and
+		# the path stays within 3 x the straight distance (a lane round the furniture is fine)
+		var rb: Dictionary = main.sim.state["buildings"][int(d["room"])]
+		var fy2: float = p.y + 0.14
+		var a2: Vector3 = p - nin * 0.8 + Vector3(0, fy2 - p.y, 0)
+		var goal: Vector3 = pl.indoor_snap(Vector3((rb["pos"] as Vector2).x, fy2, (rb["pos"] as Vector2).y))
+		var path: Array = pl.plan(a2, goal, true)
+		var plen := 0.0
+		var prev: Vector3 = a2
+		for wpt in path:
+			plen += Vector2((wpt as Vector3).x - prev.x, (wpt as Vector3).z - prev.z).length()
+			prev = wpt
+		var straight: float = Vector2(goal.x - a2.x, goal.z - a2.z).length()
+		if path.is_empty() or Vector2(prev.x - goal.x, prev.z - goal.z).length() > 1.0:
+			blocked_at = "no path to the room"
+		elif plen > 3.0 * straight + 2.0:
+			blocked_at = "path %.1f m for %.1f m" % [plen, straight]
+		total["walk_doors"] = int(total.get("walk_doors", 0)) + 1
+		if blocked_at != "":
+			total["walk"] = int(total.get("walk", 0)) + 1
+			if fails.size() < 60:
+				fails.append("%s %s (%s) walk blocked %s" % [d["def"], d["key"], str(d["room"]), blocked_at])
 	print("DOOR %-28s %-12s bad frames %d" % [d["key"], d["def"], bad_here])
 	if bad_here > 0 and String(d["def"]) == "junction":
 		var near := ""
@@ -234,5 +322,5 @@ func _hits_along(a: Vector3, b: Vector3) -> String:
 func _report() -> void:
 	for l in fails:
 		print("  FAIL ", l)
-	var ok: bool = int(total["beam"]) == 0 and int(total["gap"]) == 0
-	print("DOORWAY GATE: %d doorways, %d frames, beam %d, gap %d | %s" % [int(total["doors"]), int(total["frames"]), int(total["beam"]), int(total["gap"]), "PASS" if ok else "FAIL"])
+	var ok: bool = int(total["beam"]) == 0 and int(total["gap"]) == 0 and int(total["prop"]) == 0 and int(total.get("walk", 0)) == 0
+	print("DOORWAY GATE: %d doorways, %d frames, beam %d, gap %d | clear zone: %d doorways, %d with a prop | walk lane blocked %d of %d | blocked-angle doorways (old saves): %d found, %d tested | %s" % [int(total["doors"]), int(total["frames"]), int(total["beam"]), int(total["gap"]), int(total["zone_doors"]), int(total["prop"]), int(total.get("walk", 0)), int(total.get("walk_doors", 0)), int(total["blocked_found"]), int(total["blocked_doors"]), "PASS" if ok else "FAIL"])

@@ -1361,6 +1361,8 @@ func path_failed(t: Dictionary) -> void:
 			fail(t["id"], "no_path")
 			return
 		var again: bool = int(b.get("unreach_logged", -2)) == int(sim.state["rev"]["walk"])
+		if int(b.get("unreach_rev", -1)) != int(sim.state["rev"]["walk"]):
+			b["unreach_n"] = int(b.get("unreach_n", 0)) + 1      # a new episode of "unreachable" (V5 19.1)
 		b["unreach_rev"] = int(sim.state["rev"]["walk"])
 		b["unreach_tick"] = int(sim.state["tick"])
 		b["unreach_logged"] = int(sim.state["rev"]["walk"])

@@ -20,6 +20,16 @@ const DUST_AT := 20.0
 const RAMP_T := 2.5
 const DOOR_T := 1.5
 const FLOOD_RANGE := 9.0
+# V5 §19.11 (Paul 2026-10-04): an arriving ship is seen from far: in the last APPROACH_S s of its orbit phase a light
+# comes down from APP_ALT m (with a re-entry glow on a planet with air; the engine light only on airless), then the
+# landing curve starts higher and further out; the landing burn lights the pad.
+const APPROACH_S := 16.0
+const APP_ALT := 1100.0
+const APP_SIDE := 1000.0
+const LAND_TOP := 900.0       # m: the landing starts this high (the sim has no orbit phase on screen)
+const LAND_SIDE := 800.0
+var _app := {}                # arrival id -> {node, core, glow}
+var _glow_shader: Shader
 
 var view
 var sim
@@ -76,8 +86,25 @@ func sync(delta: float) -> void:
 	var gdt: float = delta * clampf(float(view.game_rate), 0.0, 50.0)
 	var night: float = float(view.sky.night) if view.sky != null else 0.0
 	var nflood := 0
+	var app_seen := {}
 	for arr in rows:
 		var phase: String = String(arr.get("phase", ""))
+		if phase == "orbit":
+			var ts_o: float = maxf(0.0, float(int(arr.get("t", tick)) - tick) / hz)
+			var pid_o: int = int(arr.get("pad", -1))
+			if ts_o <= APPROACH_S and view.bmeta.has(pid_o):
+				app_seen[int(arr["id"])] = true
+				_approach(int(arr["id"]), _pad_xf(pid_o), 1.0 - ts_o / APPROACH_S, night)
+			continue
+		if phase == "landing":
+			# (the light stays with the ship in the high part of the landing)
+			var ts_l: float = maxf(0.0, float(int(arr.get("t", tick)) - tick) / hz)
+			var ul: float = clampf(1.0 - ts_l / DESCENT, 0.0, 1.0)
+			if ul < 0.55 and view.bmeta.has(int(arr.get("pad", -1))):
+				app_seen[int(arr["id"])] = true
+				var lx: Transform3D = _pad_xf(int(arr.get("pad", -1)))
+				var lp: Vector3 = lx.origin - lx.basis.x.normalized() * LAND_SIDE * pow(1.0 - ul, 3.0) + Vector3(0, LAND_TOP * pow(1.0 - ul, 2.6), 0)
+				_approach_at(int(arr["id"]), lp, 1.0 - smoothstep(0.35, 0.55, ul), 0.0 if view.airless() else 1.0 - smoothstep(0.2, 0.42, ul))
 		if not (phase in ["landing", "landed", "boarding", "takeoff"]):
 			continue
 		var pid: int = int(arr.get("pad", -1))
@@ -105,6 +132,10 @@ func sync(delta: float) -> void:
 	for id in ships.keys():
 		if not seen.has(id):
 			_free(id)
+	for aid in _app.keys():
+		if not app_seen.has(aid):
+			(_app[aid]["node"] as Node).queue_free()
+			_app.erase(aid)
 	stats["ships"] = ships.size()
 	stats["floods"] = nflood
 	stats["ms"] = snappedf(lerpf(float(stats["ms"]), (Time.get_ticks_usec() - t0) / 1000.0, 0.1), 0.001)
@@ -199,8 +230,73 @@ func _flame(t: Node3D) -> MeshInstance3D:
 	t.add_child(mi)
 	return mi
 
+## The descending light of an arrival in its orbit phase, u 0..1 over the last APPROACH_S s.
+func _approach(id: int, land: Transform3D, u: float, night: float) -> void:
+	var fwd: Vector3 = land.basis.x.normalized()
+	var e: float = 1.0 - pow(1.0 - u, 1.6)
+	var alt: float = lerpf(APP_ALT, LAND_TOP, e)
+	var side: float = lerpf(APP_SIDE, LAND_SIDE, e)
+	var p: Vector3 = land.origin - fwd * side + Vector3(0, alt, 0)
+	# re-entry glow strongest high up, gone by the landing curve (air only)
+	var plasma: float = 0.0 if view.airless() else (1.0 - smoothstep(0.55, 0.95, u))
+	_approach_at(id, p, 1.0, plasma)
+
+func _approach_at(id: int, p: Vector3, light: float, plasma: float) -> void:
+	if not _app.has(id):
+		var n := Node3D.new()
+		add_child(n)
+		var core := _glow_quad(Color(0.85, 0.92, 1.0))
+		var glow := _glow_quad(Color(1.0, 0.55, 0.3))
+		n.add_child(core)
+		n.add_child(glow)
+		_app[id] = {"node": n, "core": core, "glow": glow}
+	var a: Dictionary = _app[id]
+	(a["node"] as Node3D).global_position = p
+	var cam: Camera3D = view.get_viewport().get_camera_3d()
+	var dist: float = cam.global_position.distance_to(p) if cam != null else 500.0
+	# sized with the distance: a bright point a few pixels across at any range
+	var cs: float = maxf(1.5, dist * 0.010)
+	(a["core"] as MeshInstance3D).scale = Vector3.ONE * cs
+	(a["core"] as MeshInstance3D).set_instance_shader_parameter("k", light * 2.2)
+	(a["glow"] as MeshInstance3D).scale = Vector3(cs * 2.6, cs * 2.6, cs * 2.6)
+	(a["glow"] as MeshInstance3D).set_instance_shader_parameter("k", plasma * 1.6)
+	(a["glow"] as MeshInstance3D).visible = plasma > 0.01
+
+func _glow_quad(col: Color) -> MeshInstance3D:
+	if _glow_shader == null:
+		_glow_shader = Shader.new()
+		_glow_shader.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, fog_disabled, shadows_disabled;
+uniform vec4 col : source_color = vec4(1.0);
+instance uniform float k = 1.0;
+void vertex() {
+	vec3 c = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+	float s = length(MODEL_MATRIX[0].xyz);
+	vec3 w = c + (INV_VIEW_MATRIX[0].xyz * VERTEX.x + INV_VIEW_MATRIX[1].xyz * VERTEX.y) * s;
+	POSITION = PROJECTION_MATRIX * VIEW_MATRIX * vec4(w, 1.0);
+}
+void fragment() {
+	float r = length(UV - vec2(0.5)) * 2.0;
+	ALBEDO = col.rgb * (exp(-r * r * 8.0) + 0.3 * exp(-r * r * 2.0)) * k;
+}
+"""
+	var m := ShaderMaterial.new()
+	m.shader = _glow_shader
+	m.set_shader_parameter("col", col)
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	mi.mesh = q
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.extra_cull_margin = 4000.0
+	mi.set_instance_shader_parameter("k", 1.0)
+	return mi
+
 func _free(id: int) -> void:
 	var r: Dictionary = ships[id]
+	if r.get("burn") != null and is_instance_valid(r["burn"]):
+		(r["burn"] as Node).queue_free()
 	if is_instance_valid(r["node"]):
 		(r["node"] as Node).queue_free()
 	ships.erase(id)
@@ -222,8 +318,8 @@ func _pose(r: Dictionary, phase: String, t_s: float, gdt: float) -> void:
 		"landing":
 			var u: float = clampf(1.0 - t_s / DESCENT, 0.0, 1.0)
 			# Height falls fast then brakes; the approach offset closes faster (a curve in).
-			hgt = TOP * pow(1.0 - u, 2.2)
-			side = 140.0 * pow(1.0 - u, 3.0)
+			hgt = LAND_TOP * pow(1.0 - u, 2.6)
+			side = LAND_SIDE * pow(1.0 - u, 3.0)
 			pitch = deg_to_rad(8.0) * smoothstep(0.35, 0.8, u) * (1.0 - smoothstep(0.92, 1.0, u))
 			thrust_m = 1.0 - smoothstep(0.3, 0.6, u)
 			thrust_h = smoothstep(0.25, 0.55, u)
@@ -284,6 +380,18 @@ func _pose(r: Dictionary, phase: String, t_s: float, gdt: float) -> void:
 	var basis: Basis = land.basis * Basis(Vector3(0, 0, 1), pitch)
 	(r["node"] as Node3D).global_transform = Transform3D(basis, pos)
 	r["hgt"] = hgt
+	# the landing / take-off burn lights the pad and the ground (§19.11)
+	if r.get("burn") == null:
+		var bl := OmniLight3D.new()
+		bl.light_color = Color(1.0, 0.78, 0.5)
+		bl.omni_range = 28.0
+		bl.omni_attenuation = 1.2
+		bl.shadow_enabled = false
+		add_child(bl)
+		r["burn"] = bl
+	var burn: OmniLight3D = r["burn"]
+	burn.global_position = pos - Vector3(0, 2.5, 0)
+	burn.light_energy = 0.0005 + 6.0 * thrust_h * (1.0 - smoothstep(30.0, 90.0, hgt))
 	# Thrust: flames, nozzle glow, dust.
 	for e in r["thr"]:
 		var fl: MeshInstance3D = e[2]
@@ -305,7 +413,7 @@ func _hinge(e: Array, s: float) -> void:
 
 ## Dust ring on the pad while the hover thrusters blow below DUST_AT.
 func _dust(r: Dictionary, hgt: float, thrust_h: float) -> void:
-	var on: bool = hgt < DUST_AT and thrust_h > 0.1
+	var on: bool = hgt < DUST_AT and thrust_h > 0.1 and not view.airless()
 	var pa = r["dust"]
 	if not on:
 		if pa != null and is_instance_valid(pa):

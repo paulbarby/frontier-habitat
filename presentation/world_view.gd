@@ -26,6 +26,8 @@ const Vehicles = preload("res://presentation/fx_vehicles.gd")
 const Reactor = preload("res://presentation/fx_reactor.gd")
 const Explore = preload("res://presentation/fx_explore.gd")
 const Bubbles = preload("res://presentation/fx_bubbles.gd")
+const Watch = preload("res://presentation/fx_watch.gd")
+const Transport = preload("res://presentation/fx_transport.gd")
 const Photo = preload("res://presentation/fx_photo.gd")
 const Post = preload("res://presentation/fx_post.gd")
 const Particles = preload("res://presentation/fx_particles.gd")
@@ -233,6 +235,13 @@ func setup(s) -> void:
 	bubbles.name = "Bubbles"
 	add_child(bubbles)
 	bubbles.setup(self)
+	watch = Watch.new()
+	watch.name = "Watch"
+	add_child(watch)
+	watch.setup(self)
+	transport_fx = Transport.new()
+	add_child(transport_fx)
+	transport_fx.setup(self)
 	photos = Photo.new()
 	photos.name = "Photos"
 	add_child(photos)
@@ -426,6 +435,8 @@ func _lift_y(t: float) -> float:
 
 # ---------------------------------------------------------------- V5 §3 follow view (RENDER camera)
 var bubbles
+var watch                  # fx_watch: the demo Watch mode (V5 §19.6)
+var transport_fx           # fx_transport: hubs, tubes and capsules (V5 §18.5)
 var photos                   # fx_photo: photo() for the Rag and portraits (V5 §4.4)
 var follow_id := -1
 var _follow_open := {}      # building id -> true: interior drawn under the closed roof (follow view)
@@ -495,6 +506,16 @@ func set_roofs_off(on: bool) -> void:
 
 func in_follow() -> bool:
 	return follow_id >= 0
+
+## Watch mode (V5 §19.6) for the UI: a key / menu entry / the title screen starts it; any input ends it.
+func watch_start() -> bool:
+	return watch.start() if watch != null else false
+func watch_stop() -> void:
+	if watch != null:
+		watch.stop()
+## {active, id, who, what, caption, since}
+func watch_state() -> Dictionary:
+	return watch.state() if watch != null else {"active": false}
 
 ## The next living person (Tab), by id order.
 func follow_next() -> int:
@@ -1660,6 +1681,8 @@ func _follow_indoor(cam: Vector3) -> void:
 			want = 1.0
 	_indoor = move_toward(_indoor, want, _sync_dt * 2.0)
 	sky.indoor = _indoor
+	if fx != null:
+		fx.indoor_hide = want > 0.5
 	Models.set_fill_k(lerpf(1.0, 0.45, _indoor))
 	# (bodies behind the walls are not drawn while the camera is inside a room; not in the dome: it is open)
 	var in_dome := false
@@ -2057,6 +2080,10 @@ func sync(delta: float) -> void:
 		CamPhys.step(cam_step_us)
 	tp = _prof("camphys", tp)
 	bubbles.sync(delta)
+	if watch != null:
+		watch.sync(delta)
+	if transport_fx != null and not _skip.has("transport"):
+		transport_fx.sync(delta)
 	tp = _prof("bubbles", tp)
 	if robots != null and not _skip.has("robots"):
 		robots.sync(delta)
@@ -2439,6 +2466,10 @@ func _planet_check() -> void:
 		fx.particles.planet = pl
 	elif fx != null and "planet" in fx:
 		fx.planet = pl
+
+## The planet drawn has no air (the save's planet or the debug look): no dust, haze, smoke or plasma anywhere.
+func airless() -> bool:
+	return _planet_seen == "airless"
 
 func _storm_level() -> float:
 	if _forced_storm >= 0.0:
@@ -4166,6 +4197,33 @@ func debug_cmd(text: String) -> String:
 			# farlod 0|1: the far meshes of rooms beyond FAR_LOD_D m with the roof open (measurement)
 			far_lod_on = not (w.size() > 1 and w[1] == "0")
 			return "farlod %s" % str(far_lod_on)
+		"starsdbg":
+			var stx = sky.get("_stars")
+			if stx == null:
+				return "no stars"
+			var camq: Camera3D = get_viewport().get_camera_3d()
+			return "vis %s pos %s inst0 %s far %.0f vis_u %s" % [str(stx.visible), str(stx.global_position), str(stx.multimesh.get_instance_transform(0).origin), camq.far if camq != null else -1.0, str(stx.material_override.get_shader_parameter("vis"))]
+		"shipsdbg":
+			var out_s: PackedStringArray = []
+			for sid in traffic.ships:
+				var rr: Dictionary = traffic.ships[sid]
+				out_s.append("ship %d %s hgt %.0f pos %s" % [int(sid), String(rr["phase"]), float(rr["hgt"]), str((rr["node"] as Node3D).global_position.snapped(Vector3.ONE))])
+			for aid in traffic._app:
+				out_s.append("light %d pos %s glow %s" % [int(aid), str((traffic._app[aid]["node"] as Node3D).global_position.snapped(Vector3.ONE)), str((traffic._app[aid]["glow"] as Node3D).visible)])
+			var trs = sim.state.get("traffic", {})
+			for rw in (trs.get("ships", []) if trs is Dictionary else []):
+				out_s.append("row %s %s t-%d" % [str(rw.get("id")), String(rw.get("phase", "")), int(rw.get("t", 0)) - int(sim.state["tick"])])
+			return " | ".join(out_s)
+		"watch":
+			# watch on|off|status (V5 §19.6)
+			if w.size() > 1 and w[1] == "on":
+				watch_start()
+			elif w.size() > 1 and w[1] == "off":
+				watch_stop()
+			return str(watch_state())
+		"transportdbg":
+			var ov: Dictionary = sim.transport.overview()
+			return str(transport_fx.stats) + " sim capsules %d stuck %d nets %d delivered %d" % [int(ov.get("capsules", 0)), int(ov.get("stuck", 0)), (ov.get("networks", []) as Array).size(), int(ov.get("delivered", 0))]
 		"drawcount":
 			# drawcount: visible mesh surfaces by owner (MultiMesh with instances > 0), with shadow casting (measurement)
 			var tally := {}

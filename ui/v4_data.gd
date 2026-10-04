@@ -421,3 +421,38 @@ const POI_ICON := {"wreck": "poi_wreck", "derelict_probe": "poi_probe", "meteori
 	"anomaly": "poi_anomaly", "rich_deposit": "poi_deposit"}
 const POI_COLOR := {"wreck": Color("C9D3E0"), "derelict_probe": Color("7C8CFF"), "meteorite_field": Color("FF7A59"), "cave": Color("D9A066"),
 	"anomaly": Color("C792EA"), "rich_deposit": Color("FFD166")}
+
+# ---------------------------------------------------------------- the vehicle guide (V5 section 19.3)
+## SIM's sim.vehicles.guide(): {step, steps [{id, text, done}], text}: depot -> vehicle -> crew -> destination -> go.
+func vehicle_guide() -> Dictionary:
+	if live("vehicles") and _sim().vehicles.has_method("guide"):
+		return _sim().vehicles.guide()
+	return {"step": "depot", "steps": [], "text": ""}
+
+func vehicle_steps() -> Array:
+	return vehicle_guide().get("steps", [])
+
+## The first step that is not done ({} when all are done).
+func vehicle_next() -> Dictionary:
+	for st in vehicle_steps():
+		if not bool(st["done"]):
+			return st
+	return {}
+
+## SIM's sim.vehicles.status(id): {line (headline and why it waits), next (text), next_id, buttons {id: {label, enabled, why}}, low_charge}.
+func vehicle_status(v: Dictionary) -> Dictionary:
+	var st: Dictionary = _sim().vehicles.status(int(v["id"]))
+	var line: String = String(st.get("headline", ""))
+	if String(st.get("why_waiting", "")) != "":
+		line += " " + String(st["why_waiting"])
+	var btn := {}
+	for b in st.get("buttons", []):
+		btn[String(b["id"])] = b
+	return {"line": line, "next": String(st.get("next_step", {}).get("text", "")), "next_id": String(st.get("next_step", {}).get("id", "")), "buttons": btn,
+		"low_charge": bool(st.get("low_charge", false)), "why": String(st.get("why_waiting", ""))}
+
+## SIM's sim.vehicles.depot_status(id): {headline, why, next, next_id, bays_free, order}.
+func depot_status(bid: int) -> Dictionary:
+	var st: Dictionary = _sim().vehicles.depot_status(bid)
+	return {"headline": String(st.get("headline", "")), "why": String(st.get("why_waiting", "")), "next": String(st.get("next_step", {}).get("text", "")),
+		"next_id": String(st.get("next_step", {}).get("id", "")), "bays_free": int(st.get("bays_free", 0)), "order": st.get("order", {})}

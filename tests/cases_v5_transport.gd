@@ -10,6 +10,7 @@ func tests() -> Array:
 		["v5_transport_moves_goods_without_colonists", v5_transport_moves_goods_without_colonists],
 		["v5_transport_broken_link_and_alert", v5_transport_broken_link_and_alert],
 		["v5_transport_capacity_and_save_load", v5_transport_capacity_and_save_load],
+		["v5_transport_demo_on_showcase", v5_transport_demo_on_showcase],
 	]
 
 ## A small base: the reference core and a habitat, two storehouses (SA, SB) and a workshop W next to SB, all joined
@@ -245,4 +246,37 @@ func v5_transport_capacity_and_save_load(t) -> void:
 		t.eq(sim2.inv.audit(), {}, "ledger after the load")
 		sim2.dispose()
 	g.dispose()
+	t.done()
+
+# ---------------------------------------------------------------- the debug demo network (RENDER): capsules in 30 s on showcase_v5
+func v5_transport_demo_on_showcase(t) -> void:
+	var sim = H.Sim.new()
+	var Persistence = preload("res://sim/persistence.gd")
+	sim.load_state(Persistence.decode(FileAccess.get_file_as_bytes("res://content/saves/showcase_v5.fhsave"))["state"])
+	sim.state["options"]["debug"] = true                                                    # test set-up: the debug option
+	t.check(not sim.transport.any(), "the showcase has no transport network")
+	sim.state["options"]["debug"] = false
+	var id: int = sim.submit("transport_demo", {})
+	sim.step()
+	t.eq(sim.cmds.results.get(id, {}).get("code", ""), "debug_only", "without the debug option the command is refused")
+	sim.state["options"]["debug"] = true
+	id = sim.submit("transport_demo", {})
+	sim.step()
+	var r: Dictionary = sim.cmds.results.get(id, {})
+	t.check(bool(r.get("ok", false)), "the demo network is built (%s)" % str(r.get("code", r.get("text", ""))))
+	if bool(r.get("ok", false)):
+		var seen := 0
+		var max_caps := 0
+		for i in 300:
+			sim.step()
+			var n: int = sim.transport.capsules_view().size()
+			max_caps = maxi(max_caps, n)
+			if n > 0:
+				seen += 1
+		var ov: Dictionary = sim.transport.overview()
+		t.check(seen > 0 and max_caps > 0, "capsules are seen within 30 s (%d capsules at most)" % max_caps)
+		t.check(int(ov["delivered"]) >= 1, "and some arrive (%d delivered)" % int(ov["delivered"]))
+		t.check((ov["hubs"] as Array).size() >= 2 and (ov["tubes"] as Array).size() >= 1, "two hubs and a tube chain: %d hubs, %d tubes" % [(ov["hubs"] as Array).size(), (ov["tubes"] as Array).size()])
+		t.eq(sim.inv.audit(), {}, "the ledger balances (the demo stock is made as debug stock)")
+	sim.dispose()
 	t.done()

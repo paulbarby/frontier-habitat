@@ -9,9 +9,11 @@ const DEFAULTS := {
 	# Panel manager (docs/UI_PANELS.md): the dock open or closed; each message type: popup | badge | off.
 	"dock_open": true, "notify_alert": "popup", "notify_hazard": "popup", "notify_reactor": "popup", "notify_unrest": "popup",
 	"notify_request": "popup", "notify_traffic": "popup", "notify_people": "popup", "notify_goal": "popup", "notify_award": "popup",
-	"notify_research": "popup", "notify_build": "popup", "notify_system": "popup", "notify_party": "popup", "notify_hr": "popup",
+	"notify_research": "popup", "notify_build": "popup", "notify_system": "popup", "notify_party": "popup", "notify_hr": "popup", "notify_orders": "popup", "notify_music": "badge",
 	# V5 section 16: "Cheeky dialogue" (innuendo lines; off = mild flirt lines). SIM: set_option cheeky.
 	"cheeky": true,
+	# Music panel (V5 section 19.5): tracks the player turned off (null = the manifest defaults), moods that may play (null = all), shuffle.
+	"music_off": null, "music_moods": null, "music_shuffle": false, "hint_vehicles": false,
 	# All roofs off (Paul, 2026-10-01): key Y, the nav rail button; RENDER view.set_roofs_off.
 	"roofs_off": false,
 }

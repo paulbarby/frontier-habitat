@@ -39,13 +39,16 @@ func fits_content() -> bool:
 
 func build_tab(id: String, box: VBoxContainer) -> void:
 	if _v4.vehicles().is_empty() and id == "vehicles":
-		box.add_child(Kit.wrap("No vehicles yet. Build a rover depot (research Space 1), then build a rover from its panel.", 15, P.TEXT_2))
+		box.add_child(Kit.wrap("No vehicle yet. A vehicle is built at a rover depot. These are the steps:", 15, P.TEXT_2))
+		box.add_child(_guide())
 		return
 	match id:
 		"vehicles": _vehicles_tab(box)
 		"routes": _routes_tab(box)
 
 func _vehicles_tab(box: VBoxContainer) -> void:
+	if not _v4.vehicle_next().is_empty():
+		box.add_child(_guide())
 	var row: HBoxContainer = Kit.hbox(16)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(row)
@@ -142,6 +145,14 @@ func _show(id: int) -> void:
 	tv.add_child(Kit.label("%s · %s · base: %s" % [_v4.vehicle_name(String(v["kind"])), String(STATE_WORD.get(v["state"], v["state"])),
 		String(hud.main.sim.bases.name_of(int(v.get("base", 1)))) if "bases" in hud.main.sim and hud.main.sim.bases != null else "-"], "DimLabel", 13, P.TEXT_2))
 	h.add_child(Kit.icon_button("target", func(): _go(v), "Show\nMoves the camera to the vehicle.", "GhostButton", 18, 34))
+	# V5 section 19.3: what it does now, why it waits, and what the player can do next.
+	var stt: Dictionary = _v4.vehicle_status(v)
+	var sl: Label = Kit.wrap(String(stt["line"]), 14, P.TEXT)
+	sl.name = "VehicleStatus"
+	_detail.add_child(sl)
+	var nl: Label = Kit.wrap("Next: " + String(stt["next"]), 13, P.GOLD)
+	nl.name = "VehicleNext"
+	_detail.add_child(nl)
 	var g: GridContainer = Kit.grid(2, 16, 4)
 	_detail.add_child(g)
 	var e: Array = _energy(v)
@@ -195,12 +206,36 @@ func _show(id: int) -> void:
 	act.add_theme_constant_override("v_separation", 6)
 	_detail.add_child(act)
 	var vid: int = id
-	act.add_child(Kit.button("Drive to…", func(): _pick_drive(vid), "Drive to\nClick a place on the ground. The driver takes the safest path (rovers) or hops there (hopper).", "", "follow", 15))
-	act.add_child(Kit.button("Return", func(): _do(vid, "return"), "Return\nBack to a free bay of its depot (else the nearest depot): it charges, refuels and is repaired there.", "", "home", 15))
-	act.add_child(Kit.button("Stop", func(): _do(vid, "stop"), "Stop\nStops where it is. The crew stays aboard; a route ends.", "", "pause", 15))
-	act.add_child(Kit.button("Board…", func(): _board(vid), "Board\nThe colonists in the Orders group (else the selected colonist) walk to it and get in.", "", "people", 15))
-	act.add_child(Kit.button("Get out", func(): _do(vid, "alight"), "Get out\nEveryone gets out beside it, in suits.", "", "evacuate", 15))
-	act.add_child(Kit.button("Explore area…", func(): _pick_drive(vid, "explore"), "Explore area\nClick a place: the driver takes it round 8 points on a 150 m circle there (points it cannot reach are left out).", "", "search", 15))
+	var drive_b: Button = Kit.button("Drive to…", func(): _pick_drive(vid), "Drive to
+Press, then click a place on the map. The driver takes the safest path (rovers) or hops there (hopper).", "PrimaryButton", "follow", 15)
+	drive_b.name = "DriveTo"
+	act.add_child(drive_b)
+	var expl_b: Button = Kit.button("Explore area…", func(): _pick_drive(vid, "explore"), "Explore area
+Press, then click a place on the map: the driver takes it round 8 points on a 150 m circle there (points it cannot reach are left out).", "PrimaryButton", "search", 15)
+	expl_b.name = "ExploreArea"
+	act.add_child(expl_b)
+	var ret_b: Button = Kit.button("Return", func(): _do(vid, "return"), "Return
+Back to a free bay of its depot (else the nearest depot): it charges, refuels and is repaired there.", "PrimaryButton", "home", 15)
+	ret_b.name = "ReturnToDepot"
+	act.add_child(ret_b)
+	var stop_b: Button = Kit.button("Stop", func(): _do(vid, "stop"), "Stop\nStops where it is. The crew stays aboard; a route ends.", "", "pause", 15)
+	stop_b.name = "StopVehicle"
+	act.add_child(stop_b)
+	var board_b: Button = Kit.button("Board…", func(): _board(vid), "Board\nThe colonists in the Orders group (else the selected colonist) walk to it and get in.", "", "people", 15)
+	board_b.name = "BoardVehicle"
+	act.add_child(board_b)
+	var out_b: Button = Kit.button("Get out", func(): _do(vid, "alight"), "Get out\nEveryone gets out beside it, in suits.", "", "evacuate", 15)
+	out_b.name = "GetOut"
+	act.add_child(out_b)
+	# SIM says which orders make sense now (sim.vehicles.status): a button that cannot work is off and says why in its tooltip.
+	for pair in [["drive", drive_b], ["explore", expl_b], ["return", ret_b], ["stop", stop_b], ["board", board_b], ["alight", out_b]]:
+		var sb: Dictionary = (stt["buttons"] as Dictionary).get(String(pair[0]), {})
+		var bt: Button = pair[1]
+		if not sb.is_empty() and not bool(sb.get("enabled", true)):
+			bt.disabled = true
+			bt.tooltip_text = "%s\nNot now: %s" % [String(sb.get("label", bt.text)).trim_suffix("..."), String(sb.get("why", ""))]
+	# The next step is the lit button.
+	board_b.theme_type_variation = "PrimaryButton" if String(stt["next_id"]) == "board" else ""
 	# Cargo with the stores of the base where it stands (SIM vehicle_cargo: stores within 85 m).
 	_detail.add_child(Kit.head("Cargo", P.CYAN, 12))
 	var cg := HFlowContainer.new()
@@ -261,28 +296,31 @@ func _board(vid: int) -> void:
 	_say(_v4.vehicle_cmd("board", vid, {"agents": ids}), "%s walking to it." % Kit.plural(ids.size(), "colonist"))
 
 func _pick_drive(vid: int, kind: String = "drive") -> void:
+	# The screen closes and is freed before the click: the callback keeps the HUD itself, not this screen.
+	var h = hud
 	host.close(self)
-	hud.main.pick_point("%s: click a place on the ground. Right click cancels." % ("Drive to" if kind == "drive" else "Explore"), func(p: Vector2, _pick: Dictionary):
-		var r: Dictionary = hud.v4.vehicle_cmd(kind, vid, {"target": p})
+	h.main.pick_point("%s: click a place on the ground. Right click cancels." % ("Drive to" if kind == "drive" else "Explore"), func(p: Vector2, _pick: Dictionary):
+		var r: Dictionary = h.v4.vehicle_cmd(kind, vid, {"target": p})
 		var ok: bool = bool(r.get("ok", false)) or String(r.get("code", "")) == "submitted"
-		hud.toast("%s: %s" % [String(hud.v4.vehicle(vid).get("name", "Vehicle")), "on the way." if ok else hud.v4.refusal_text(String(r.get("code", "")))], "info" if ok else "warn"))
+		h.toast("%s: %s" % [String(h.v4.vehicle(vid).get("name", "Vehicle")), "on the way." if ok else h.v4.refusal_text(String(r.get("code", "")))], "info" if ok else "warn"))
 
 ## Outpost Kit: pick the place, preview it with sim.bases.check_outpost, then deploy from the cargo.
 func _pick_outpost(vid: int) -> void:
+	var h = hud   # the screen is freed before the click
 	host.close(self)
-	hud.main.pick_point("Deploy Outpost Kit: click the place (within 30 m of the vehicle). Right click cancels.", func(p: Vector2, _pick: Dictionary):
-		var s = hud.main.sim
+	h.main.pick_point("Deploy Outpost Kit: click the place (within 30 m of the vehicle). Right click cancels.", func(p: Vector2, _pick: Dictionary):
+		var s = h.main.sim
 		var chk: String = String(s.bases.check_outpost(p, 0.0)) if "bases" in s and s.bases != null else "ok"
 		if chk != "ok":
-			hud.toast("Outpost Kit: " + hud.v4.refusal_text(chk), "warn")
+			h.toast("Outpost Kit: " + h.v4.refusal_text(chk), "warn")
 			return
-		var v: Dictionary = hud.v4.vehicle(vid)
+		var v: Dictionary = h.v4.vehicle(vid)
 		if (v.get("pos", p) as Vector2).distance_to(p) > 30.0:
-			hud.toast("Outpost Kit: " + hud.v4.refusal_text("kit_far"), "warn")
+			h.toast("Outpost Kit: " + h.v4.refusal_text("kit_far"), "warn")
 			return
-		var r: Dictionary = hud.v4.vehicle_cmd("deploy", vid, {"x": p.x, "y": p.y})
+		var r: Dictionary = h.v4.vehicle_cmd("deploy", vid, {"x": p.x, "y": p.y})
 		var ok: bool = bool(r.get("ok", false)) or String(r.get("code", "")) == "submitted"
-		hud.toast("Outpost Kit: " + ("a new base is set up." if ok else hud.v4.refusal_text(String(r.get("code", "")))), "info" if ok else "warn"))
+		h.toast("Outpost Kit: " + ("a new base is set up." if ok else h.v4.refusal_text(String(r.get("code", "")))), "info" if ok else "warn"))
 # ---------------------------------------------------------------- routes
 ## A route (SIM vehicle_route): unload + load at base A, drive to B, unload + load "back", drive to A,
 ## again and again while it has a driver. Stop ends it.
@@ -393,3 +431,20 @@ func _amount_row(lead: String, target: Dictionary) -> Control:
 	return f
 func _base(id: int) -> String:
 	return String(hud.main.sim.bases.name_of(id)) if "bases" in hud.main.sim and hud.main.sim.bases != null else str(id)
+
+## How to use a vehicle (V5 section 19.3): the five steps, the done ones ticked, the next one marked.
+func _guide() -> Control:
+	var c: VBoxContainer = card("How to use a vehicle", "info", P.CYAN)
+	var panel: PanelContainer = card_panel(c)
+	panel.name = "VehicleGuide"
+	var next_id: String = String(_v4.vehicle_next().get("id", ""))
+	for st in _v4.vehicle_steps():
+		var r: HBoxContainer = Kit.hbox(8)
+		r.name = "Step_" + String(st["id"])
+		r.add_child(Kit.icon("check" if bool(st["done"]) else ("arrow_right" if String(st["id"]) == next_id else "minus"), 14, P.GREEN if bool(st["done"]) else (P.GOLD if String(st["id"]) == next_id else P.TEXT_3)))
+		var l: Label = Kit.wrap(String(st["text"]), 13, P.TEXT_3 if bool(st["done"]) else (P.TEXT if String(st["id"]) == next_id else P.TEXT_2))
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.custom_minimum_size.x = 300
+		r.add_child(l)
+		c.add_child(r)
+	return panel

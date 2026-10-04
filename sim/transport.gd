@@ -295,6 +295,7 @@ func tick_second() -> void:
 	if not any():
 		return
 	_ensure()
+	_demo_feed()
 	var w: Dictionary = _w()
 	var caps: Dictionary = w["capsules"]
 	if caps.is_empty():
@@ -480,3 +481,106 @@ func issues(found: Dictionary, alerts) -> void:
 		if n > 0:
 			text += " %d capsule%s wait%s for it." % [n, "" if n == 1 else "s", "s" if n == 1 else ""]
 		alerts._add(found, "transport:%d" % int(cid), "transport_down", 2, text, "Repair the corridor. The goods go by hand until it works.", [int(cid)], "", -1.0, maxi(1, n))
+
+# ---------------------------------------------------------------- debug demo (RENDER, UI, showcase)
+## Command "transport_demo" (debug only): builds a working network in the colony at once and keeps it busy for two
+## minutes, so that capsules are seen in the first seconds: the two storage structures (storehouse or cold storage)
+## that are joined by the shortest chain of corridors get hubs, every corridor of that chain gets a tube (the research
+## and the materials are skipped), steel and polymer are put into the first hub (made from nothing: a debug stock), and
+## every 3 s a haul of 2 units goes from one hub to the other (it is routed by tube like any haul). Result:
+## {ok, code, hubs [ids], tubes [ids], text}. A second call renews the two minutes.
+func cmd_demo(p: Dictionary) -> Dictionary:
+	if not bool(sim.state.get("options", {}).get("debug", false)):
+		return {"ok": false, "code": "debug_only", "text": "Debug only."}
+	var blds: Dictionary = sim.state["buildings"]
+	var stores: Array = []
+	var ids: Array = blds.keys()
+	ids.sort()
+	for id in ids:
+		var b: Dictionary = blds[id]
+		if b["state"] == "active" and b["kind"] == "room" and hub_defs().has(String(b["def"])) and int(b["inv_out"]) != -1:
+			stores.append(int(id))
+	if stores.size() < 2:
+		return {"ok": false, "code": "no_stores", "text": "Fewer than two storehouses or cold stores."}
+	# Corridor graph over every corridor (built or not tubed), shortest chain between two stores.
+	var adj := {}
+	for id in ids:
+		var c: Dictionary = blds[id]
+		if c["kind"] == "link" and c["def"] == "corridor" and c["state"] == "active":
+			var a: int = int(c["a"])
+			var z: int = int(c["b"])
+			if not adj.has(a):
+				adj[a] = []
+			if not adj.has(z):
+				adj[z] = []
+			adj[a].append([z, int(id)])
+			adj[z].append([a, int(id)])
+	var best: Array = []
+	for s in stores:
+		var prev := {s: [-1, -1]}
+		var q: Array = [s]
+		var qi := 0
+		while qi < q.size():
+			var x: int = q[qi]
+			qi += 1
+			for e in adj.get(x, []):
+				if not prev.has(int(e[0])):
+					prev[int(e[0])] = [x, int(e[1])]
+					q.append(int(e[0]))
+		for o in stores:
+			if o == s or not prev.has(o):
+				continue
+			var chain: Array = []
+			var cur: int = o
+			while cur != s:
+				chain.push_front(int(prev[cur][1]))
+				cur = int(prev[cur][0])
+			if best.is_empty() or chain.size() < (best[2] as Array).size():
+				best = [s, o, chain]
+	if best.is_empty():
+		return {"ok": false, "code": "no_path", "text": "No two stores are joined by corridors."}
+	var a_id: int = best[0]
+	var b_id: int = best[1]
+	blds[a_id]["hub"] = true
+	blds[b_id]["hub"] = true
+	for cid in best[2]:
+		blds[int(cid)]["tube"] = true
+	installed(blds[a_id])
+	_ensure()
+	var w: Dictionary = _w()
+	w["demo"] = {"a": a_id, "b": b_id, "until": int(sim.state["tick"]) + 120 * int(sim.bal["tick_hz"]), "n": 0}
+	# Room for the goods in both stores (a full store takes none: debug only).
+	for sid in [a_id, b_id]:
+		var sinv: Dictionary = sim.inv.get_inv(int(blds[sid]["inv_out"]))
+		if sim.inv.free_space(int(blds[sid]["inv_out"])) < 60:
+			sinv["cap"] = int(sinv["cap"]) + 60 - sim.inv.free_space(int(blds[sid]["inv_out"]))
+	sim.inv.add_new_forced(int(blds[a_id]["inv_out"]), "metal", 24, "debug")
+	sim.inv.add_new_forced(int(blds[a_id]["inv_out"]), "polymer", 12, "debug")
+	_demo_feed()
+	return {"ok": true, "code": "ok", "hubs": [a_id, b_id], "tubes": (best[2] as Array).duplicate(), "text": "%d hubs, %d tubes." % [2, (best[2] as Array).size()]}
+
+## Called every second: one haul from hub to hub every 3 s while the demo runs.
+func _demo_feed() -> void:
+	var w: Dictionary = _w()
+	var d: Dictionary = w.get("demo", {})
+	if d.is_empty():
+		return
+	var now: int = int(sim.state["tick"])
+	if now > int(d["until"]):
+		w.erase("demo")
+		return
+	var hz: int = int(sim.bal["tick_hz"])
+	if int(d["n"]) > 0 and (now / hz) % 3 != 0:
+		return
+	d["n"] = int(d["n"]) + 1
+	var blds: Dictionary = sim.state["buildings"]
+	var from: int = int(d["a"]) if int(d["n"]) % 2 == 1 else int(d["b"])
+	var to: int = int(d["b"]) if from == int(d["a"]) else int(d["a"])
+	if not blds.has(from) or not blds.has(to):
+		w.erase("demo")
+		return
+	_ensure()
+	var res: String = "metal" if (int(d["n"]) / 2) % 2 == 0 else "polymer"
+	if sim.inv.available(int(blds[from]["inv_out"]), res) < 2:
+		sim.inv.add_new_forced(int(blds[from]["inv_out"]), res, 6, "debug")
+	sim.jobs._make_haul("logistics", int(blds[from]["inv_out"]), int(blds[to]["inv_out"]), res, 2, to, 0)

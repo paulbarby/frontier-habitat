@@ -30,6 +30,7 @@ const TYPES := {
 	"party": ["Parties and celebrations", "events", "music"],
 	"hr": ["HR and complaints", "requests", "colonists"],
 	"orders": ["Orders and work", "news", "orders"],
+	"music": ["Music: now playing", "news", "music"],
 	"goal": ["Goals and chapters", "goals", "goals"],
 	"award": ["Medals", "news", "medal"],
 	"research": ["Research", "news", "research"],

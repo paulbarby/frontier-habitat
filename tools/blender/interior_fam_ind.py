@@ -620,7 +620,8 @@ def oxygen_plant(rm):
     cpos = side_spot(plan, [(hx + 0.75, oy, 180.0), (-hx - 0.75, oy, 0.0), (hx + 0.75, oy + 0.9, 180.0),
                             (0.0, oy + hy + 0.75, 270.0)] if s >= 2 else
                      [(hx + 0.55, oy - 0.2, 180.0), (-hx - 0.55, oy - 0.2, 0.0)])
-    if cpos and (s >= 2 or hypot(cpos[0], cpos[1]) + 0.45 <= plan.lane_r() + 0.15):
+    if cpos and s >= 1 and (s >= 2 or hypot(cpos[0], cpos[1]) + 0.45 <= plan.lane_r() + 0.15):   # S: no console
+        # (V5_DESIGN 19.4: in the 3.9 m S room it took the door slots of the free half)
         console_at(plan, cpos[0], cpos[1], cpos[2], w=0.8, work=False)
     _oxygen_finish(rm, plan, s, fu, hx, hy, oy)
 
@@ -898,8 +899,9 @@ def atmo_processor(rm):
             b = a + 180.0 / nc
             x, y = (rc + 0.2) * cos(radians(b)), (rc + 0.2) * sin(radians(b))
             if plan.fits(x, y, 0.7, 0.55, b) and plan.dist(x, y) > 1.0:
+                n0, f0 = len(plan.n.verts), len(plan.n.faces)
                 d_cooler(plan, x, y, b + 90.0, 0)
-                plan.circle(x, y, 0.85, tag="decor")
+                plan.circle(x, y, 0.85, tag=plan.decor_tall(n0, f0, x, y, 0.85))
                 FU.pipe_run(n, [(x, y, F + 0.8), (x * 0.45, y * 0.45, F + 0.8), (x * 0.45, y * 0.45, F + 0.2)],
                             r=0.07, mat="Metal")
     # service console facing the column, between two compressors
@@ -913,8 +915,9 @@ def atmo_processor(rm):
         for a in (angs[0] + 180.0 / nc + 90.0, angs[-1] + 180.0 / nc + 90.0):
             x, y = (rmax - 1.0) * cos(radians(a)), (rmax - 1.0) * sin(radians(a))
             if plan.fits(x, y, 0.7, 0.55, a) and plan.dist(x, y) > 1.2:
+                n0, f0 = len(plan.n.verts), len(plan.n.faces)
                 d_cooler(plan, x, y, a + 90.0, 1)
-                plan.circle(x, y, 0.85, tag="decor")
+                plan.circle(x, y, 0.85, tag=plan.decor_tall(n0, f0, x, y, 0.85))
     fill_decor(plan, ["bottles", "drums", "cart", "tanks"], max_n=(0, 1, 2, 4)[s], seed=141 + s, align=0.0)
     plan.wall_items(["vent", "cable", "vent", "panel", "lockers"], wall_set(plan), open_every=3, seed=141 + s,
                     depth_of=DEPTHS)

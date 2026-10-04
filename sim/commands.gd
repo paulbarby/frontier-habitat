@@ -84,8 +84,13 @@ func _apply(kind: String, p: Dictionary) -> Dictionary:
 				return sim.research.cmd_focus(blds[int(p["id"])], String(p.get("branch", "")))
 		"maintain":
 			return sim.hazards.cmd_maintain(int(p.get("id", -1)))
+		"transport_demo":
+			return sim.transport.cmd_demo(p)
 		"install_transport":
 			return sim.transport.cmd_install(p)
+		"set_crops":
+			if blds.has(int(p.get("id", -1))):
+				return sim.prod.set_crop_shares(blds[int(p["id"])], p.get("beds", {}))
 		"workq_move":
 			return sim.workq.cmd_move(p)
 		"workq_assign":

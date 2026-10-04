@@ -4,6 +4,9 @@ extends Node3D
 ## the sky shader (shaders/sky.gdshader) and the post grade only read the result.
 
 const SKY_SHADER = preload("res://shaders/sky.gdshader")
+const FxStars = preload("res://presentation/fx_stars.gd")
+var _stars
+var _day_frac := 0.0
 
 var env: Environment
 var we: WorldEnvironment
@@ -198,6 +201,7 @@ func set_sites(sites: Array) -> void:
 var _focus_y := 0.0
 func update(t: float, day_len: float, daylight: float, delta: float, focus: Vector3, cam_dist: float, wind: float) -> void:
 	_time += delta
+	_day_frac = t / maxf(day_len, 1.0)
 	_focus_y = focus.y
 	_cam_dist = cam_dist
 	# --- sun path -------------------------------------------------------------
@@ -232,7 +236,9 @@ func update(t: float, day_len: float, daylight: float, delta: float, focus: Vect
 	if airless():
 		storm = 0.0
 		aurora = 0.0
-	var st: float = storm
+	# (V5 §19.9: the follow camera inside a habitat shows no weather at all, not even through the windows: the sky,
+	# the haze, the grade and the ambient lose the storm)
+	var st: float = storm * (1.0 - indoor)
 	var zen: Color = k["zen"]
 	var hor: Color = k["hor"]
 	if st > 0.0:
@@ -276,6 +282,14 @@ func _set_sky(k: Dictionary, zen: Color, hor: Color, st: float) -> void:
 	sky_mat.set_shader_parameter("storm", st)
 	sky_mat.set_shader_parameter("time", _time)
 	sky_mat.set_shader_parameter("sun_disc", 1.0 - st)
+	# (V5 §19.10: the bright stars in their real patterns, by night and in the airless day sky)
+	if _stars == null:
+		_stars = FxStars.new()
+		add_child(_stars)
+	var camx: Camera3D = get_viewport().get_camera_3d() if is_inside_tree() else null
+	if camx != null:
+		var sv: float = 1.0 if airless() else clampf(night * 1.3 - 0.15, 0.0, 1.0) * (1.0 - st)
+		_stars.update_sky(camx.global_position, _day_frac, sv)
 	sky_mat.set_shader_parameter("aurora", aurora)
 
 func _set_light(k: Dictionary, e_deg: float, st: float, cam_dist: float) -> void:
@@ -325,7 +339,7 @@ func _set_env(k: Dictionary, zen: Color, hor: Color, st: float, e_deg: float) ->
 	# Inside a room under its roof (follow view, Paul 2026-10-01): no outdoor haze or storm dust in the room,
 	# and a brighter neutral ambient so the interior reads with the roof on.
 	if indoor > 0.0:
-		env.fog_density *= 1.0 - 0.92 * indoor
+		env.fog_density *= 1.0 - indoor
 		# Indoor night (critic round 41: `time 540` did not change the indoor light): by night the room's ambient
 		# is warm lamplight and lower, so the lamp pools and screens carry the room; by day neutral and brighter.
 		var warm: Color = Color("d9d2c8").lerp(Color("d8ab7a"), night)

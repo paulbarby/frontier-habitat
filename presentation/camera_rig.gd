@@ -243,13 +243,22 @@ const SH_PMIN := -0.6         # rad: the camera low, near the floor, looking up
 const SH_PMAX := 1.35         # rad: high above, looking down
 const SH_W_ORBIT := 8.0       # rad/s: orbit / tilt / free-look follow the mouse
 const SH_W_RETURN := 2.5      # rad/s: the return behind the shoulder
-const SH_RETURN_S := 4.0      # s without camera input while the person walks: back behind the shoulder
+const SH_RETURN_S := 4.0      # s without camera input while the person walks: back behind the shoulder (auto_return only)
+const HOVER_K := 0.0035        # rad per pixel: the no-button mouse look
+const LOOK_UP_MAX := 1.4       # rad: the aim turns up this far past the lowest tilt (the sky, §19.10)
+var hover_look := true         # §19.7: the mouse looks round with no button held
+const PLAYER_HOLD := 3.0       # s after the player's last mouse look before the framing swing may act again
+var auto_return := false       # §19.7: no auto-snap behind the shoulder (R / Space returns); was 4 s idle while walking
+var _sh_vert := 0.0
 
 func shoulder_start(fn: Callable) -> void:
 	shoulder_fn = fn
 	_sh_new = true
 	sh_orbit = 0.0
 	sh_pitch = 0.0
+	sh_look_pitch = 0.0
+	sh_look_yaw = 0.0
+	_sh_vert = 0.0
 	_photo = false
 	_intro = -1.0
 	camera.near = 0.08
@@ -284,16 +293,23 @@ func _shoulder_input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_MIDDLE:
 			_sh_drag = mb.pressed
 			_sh_look_drag = mb.pressed
-	elif event is InputEventMouseMotion and _sh_drag:
+	elif event is InputEventMouseMotion and (_sh_drag or hover_look):
+		# (V5 §19.7, Paul 2026-10-04: the mouse looks round with no button held (over the 3D view only: the HUD
+		# takes the events over its panels); dragging works as before)
 		var mm: InputEventMouseMotion = event
 		_sh_idle = 0.0
 		_sh_returning = false
+		var kx: float = 0.006 if _sh_drag else HOVER_K
 		if _sh_look_drag:
 			sh_look_yaw = clampf(sh_look_yaw - mm.relative.x * 0.005, -PI, PI)
-			sh_look_pitch = clampf(sh_look_pitch - mm.relative.y * 0.004, -1.2, 1.2)
+			sh_look_pitch = clampf(sh_look_pitch - mm.relative.y * 0.004, -1.2, LOOK_UP_MAX)
 		else:
-			sh_orbit = wrapf(sh_orbit - mm.relative.x * 0.006, -PI, PI)
-			sh_pitch = clampf(sh_pitch + mm.relative.y * 0.004, SH_PMIN, SH_PMAX)
+			sh_orbit = wrapf(sh_orbit - mm.relative.x * kx, -PI, PI)
+			# one vertical axis: the camera tilts from high above down to near the floor, and past that the aim
+			# turns up toward the sky (to about 80 deg), §19.7 / §19.10
+			_sh_vert = clampf(_sh_vert + mm.relative.y * kx * 0.7, SH_PMIN - LOOK_UP_MAX, SH_PMAX)
+			sh_pitch = clampf(_sh_vert, SH_PMIN, SH_PMAX)
+			sh_look_pitch = maxf(0.0, SH_PMIN - _sh_vert)
 	elif event is InputEventKey and event.pressed and not event.echo and not _typing():
 		var k: int = (event as InputEventKey).physical_keycode
 		if k == KEY_Q or k == KEY_E:
@@ -303,6 +319,7 @@ func _shoulder_input(event: InputEvent) -> void:
 
 ## Back behind the shoulder (orbit, tilt and free-look to 0; the zoom stays), smoothly.
 func shoulder_return() -> void:
+	_sh_vert = 0.0
 	sh_orbit = 0.0
 	sh_pitch = 0.0
 	sh_look_yaw = 0.0
@@ -316,6 +333,7 @@ func set_shot(dist: float, orbit: float, pitch: float, look_yaw: float = 0.0, lo
 	sh_dist = clampf(dist, SH_DMIN, SH_DMAX)
 	sh_orbit = wrapf(orbit, -PI, PI)
 	sh_pitch = clampf(pitch, SH_PMIN, SH_PMAX)
+	_sh_vert = sh_pitch
 	sh_look_yaw = clampf(look_yaw, -PI, PI)
 	sh_look_pitch = clampf(look_pitch, -1.2, 1.2)
 	_sh_idle = 0.0
@@ -410,7 +428,7 @@ func _shoulder_process2(delta: float) -> bool:
 		# Orbit, tilt and free-look ease to their targets (the mouse sets the targets); a return eases slower.
 		_sh_idle += dt
 		var moving: bool = _sh_bu.length() > 0.5
-		if _sh_idle > SH_RETURN_S and moving and (absf(sh_orbit) > 0.001 or absf(sh_pitch) > 0.001 or absf(sh_look_yaw) > 0.001 or absf(sh_look_pitch) > 0.001):
+		if auto_return and _sh_idle > SH_RETURN_S and moving and (absf(sh_orbit) > 0.001 or absf(sh_pitch) > 0.001 or absf(sh_look_yaw) > 0.001 or absf(sh_look_pitch) > 0.001):
 			shoulder_return()
 		var wo: float = SH_W_RETURN if _sh_returning else SH_W_ORBIT
 		var ro: Vector2 = _crit(_sh_o, _sh_ov, _sh_o + angle_difference(_sh_o, sh_orbit), wo, dt)
@@ -450,7 +468,8 @@ func _shoulder_process2(delta: float) -> bool:
 	# Occluders on the sight line (orchestrator 2026-10-02: a dome pillar between the lens and the person):
 	# the camera first swings round the person by the smallest of +-15/30/45/60 deg that clears both lines
 	# (chest, head), eased; it swings back once the plain view has been clear for SH_OCC_HOLD s.
-	if occ_fn.is_valid() and occ_on > 0.5 and not _sh_new and dt > 0.0:
+	# (§19.7: the camera never fights the player: no automatic swing for PLAYER_HOLD s after a mouse look)
+	if occ_fn.is_valid() and occ_on > 0.5 and not _sh_new and dt > 0.0 and _sh_idle > PLAYER_HOLD:
 		# The framing rule (critic round 41): the person in sight (no occluder on the chest / head lines) AND no
 		# surface closer than 0.8 m across the centre of the frame. The camera swings round the person by the
 		# smallest of +-15..90 deg that gives both, eased; back behind the shoulder once the plain view has

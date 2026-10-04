@@ -2,15 +2,14 @@ extends RefCounted
 ## Version-5 section 18 data (Paul, 2026-10-04): orders that are obeyed, the chain of command, work queues, missing-capability
 ## chains and package transport, behind ONE adapter. SIM's modules: sim.orders (the order kinds repair, maintain, build, haul, task;
 ## check, repair_need), sim.workq (rows, summary, urgent_count; commands workq_move, workq_assign, workq_cancel, workq_release),
-## sim.chains (chain_for, all_chains; the alerts "chain:<item>" and the chain on "materials:<item>"). Package transport (18.5) is
-## not in SIM yet: `transport()` answers an empty network until sim.transport.network() exists (docs/requests/UI-to-SIM.md has
-## the shape the UI reads); the debug command `transport demo` fills `demo_transport` for screenshots and tests.
+## sim.chains (chain_for, all_chains; the alerts "chain:<item>" and the chain on "materials:<item>"), sim.transport (overview, info,
+## capsules_view, position_of; command install_transport; alert transport:<corridor>) for the package transport (18.5).
+
 ## Nothing here writes to sim.state; commands go through main.submit.
 
 const P = preload("res://ui/theme/palette.gd")
 
 var hud
-var demo_transport := {}              # debug `transport demo`: a network for shots and tests (only while SIM has none)
 
 func _init(h) -> void:
 	hud = h
@@ -33,7 +32,7 @@ func live(system: String) -> bool:
 			return c != null and (c as Object).has_method("chain_for")
 		"transport":
 			var t = _obj("transport")
-			return t != null and (t as Object).has_method("network")
+			return t != null and (t as Object).has_method("overview")
 	return false
 
 ## The result of a command at once (the game is paused) or "submitted": {ok, code, cid, result}.
@@ -324,37 +323,35 @@ func normalize(c: Dictionary) -> Dictionary:
 	return {"item": String(c.get("item", "")), "name": String(c.get("name", "")), "ok": bool(c.get("ok", false)), "text": String(c.get("text", "")), "steps": steps}
 
 # ---------------------------------------------------------------- package transport (18.5)
+## SIM's sim.transport (sim/transport.gd). overview(): {enabled, hubs [{id, name, pos, ok, to, from, net}], tubes [{id, a, b, p0, p1, length, ok, busy_s}],
+## networks, capsules, stuck, moved, flow {item: units in 5 minutes}, delivered}. info(id): {hub, tube, check, ok, in_transit [{res, qty, dir, eta_s, stuck}]}.
 func transport_live() -> bool:
 	return live("transport")
 
-## The network: {hubs, tubes, flows, transit, broken}; an empty one when the colony has none.
 func transport() -> Dictionary:
 	if transport_live():
-		return _sim().transport.network()
-	if not demo_transport.is_empty():
-		return demo_transport
-	return {"hubs": [], "tubes": [], "flows": [], "transit": [], "broken": []}
+		return _sim().transport.overview()
+	return {"enabled": false, "hubs": [], "tubes": [], "networks": [], "capsules": 0, "stuck": 0, "moved": {}, "flow": {}, "delivered": 0}
 
-func in_transit(bid: int) -> Array:
-	if transport_live():
-		return _sim().transport.in_transit(bid)
+## Capsules in flight with their position now: [{res, qty, pos (Vector2), in_tube, stuck}].
+func capsules() -> Array:
 	var out: Array = []
-	for t in transport().get("transit", []):
-		if int(t.get("to", -1)) == bid or int(t.get("from", -1)) == bid:
-			out.append({"res": String(t["res"]), "qty": int(t["qty"]), "to": int(t["to"]), "eta_s": (1.0 - float(t.get("t", 0.0))) * 20.0})
+	if not transport_live():
+		return out
+	var tick: int = int(_sim().state["tick"])
+	for c in _sim().transport.capsules_view():
+		var p: Dictionary = _sim().transport.position_of(c, tick)
+		out.append({"res": String(c["res"]), "qty": int(c["qty"]), "pos": p["pos"], "in_tube": bool(p["in_tube"]), "stuck": bool(c["stuck"])})
 	return out
 
+func transport_info(bid: int) -> Dictionary:
+	return _sim().transport.info(bid) if transport_live() else {"hub": false, "tube": false, "ok": true, "in_transit": [], "check": {}}
+
 func is_hub(bid: int) -> bool:
-	for h in transport().get("hubs", []):
-		if int(h["b"]) == bid:
-			return true
-	return false
+	return bool(_sim().state["buildings"].get(bid, {}).get("hub", false))
 
 func is_tube(bid: int) -> bool:
-	for t in transport().get("tubes", []):
-		if int(t["b"]) == bid:
-			return true
-	return false
+	return bool(_sim().state["buildings"].get(bid, {}).get("tube", false))
 
 # ---------------------------------------------------------------- what is on a structure, and stock (the pending state)
 ## Who has work on a structure now: [{agent, name, via ("order" | "task"), kind, text, state ("going" | "working" | "waiting")}].

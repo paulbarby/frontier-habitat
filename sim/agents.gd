@@ -1050,6 +1050,36 @@ func begin_task(a: Dictionary, t: Dictionary, plan: Dictionary) -> void:
 	t["state"] = "traveling"
 	_start_plan(a, "task", plan["steps"], plan["goal"])
 
+## The place inside an end room of a corridor, at the mouth of the corridor, where its site is worked from the
+## inside: {b: room, p} or {} when neither end room has air. The end nearer to `from` first.
+func _corridor_mouth(b: Dictionary, from: Vector2) -> Dictionary:
+	# Only a site that has been parked as unreachable three times (jobs.path_failed counts the episodes): a way that is
+	# only missing for now (an airlock not yet built) is still waited for, as before.
+	if int(b.get("unreach_n", 0)) < 3:
+		return {}
+	var blds: Dictionary = sim.state["buildings"]
+	var best: Dictionary = {}
+	var best_d := 1e18
+	for pair in [[int(b["a"]), b["p0"]], [int(b["b"]), b["p1"]]]:
+		var room: Dictionary = blds.get(int(pair[0]), {})
+		if room.is_empty() or room["state"] != "active" or not sim.topo.atmo_comp.has(int(pair[0])) or not sim.util.building_supplied(int(pair[0])):
+			continue
+		var p: Vector2 = (pair[1] as Vector2).lerp(room["pos"], 0.25)
+		var d: float = p.distance_to(from)
+		if d < best_d:
+			best_d = d
+			best = {"b": int(pair[0]), "p": p}
+	return best
+
+func _corridor_mouth_of_inv(inv_id: int, from: Vector2) -> Dictionary:
+	var inv: Dictionary = sim.inv.get_inv(inv_id)
+	if inv.is_empty() or inv["ot"] != "b":
+		return {}
+	var cb: Dictionary = sim.state["buildings"].get(int(inv["oid"]), {})
+	if cb.is_empty() or cb["kind"] != "link" or cb["def"] != "corridor":
+		return {}
+	return _corridor_mouth(cb, from)
+
 func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 	var blds: Dictionary = sim.state["buildings"]
 	var rev: int = int(sim.state["rev"]["walk"])
@@ -1060,12 +1090,22 @@ func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 			if src.is_empty():
 				return {"ok": false, "reason": "no_path_src"}
 			var dst: Dictionary = _inv_loc(t["dst"], src["p"])
+			var alt: Dictionary = {}
 			if dst.is_empty():
-				return {"ok": false, "reason": "no_path"}
+				# V5 19.1: the site of a corridor with no way to it from outside is supplied from inside.
+				alt = _corridor_mouth_of_inv(t["dst"], src["p"])
+				if alt.is_empty():
+					return {"ok": false, "reason": "no_path"}
+				dst = alt
 			var r1: Dictionary = sim.nav.plan(loc_of(a), src)
 			if not r1["ok"]:
 				return {"ok": false, "reason": "no_path_src" if a["where"] != "out" else "no_path_here"}
 			var r2: Dictionary = sim.nav.plan(src, dst)
+			if not r2["ok"] and alt.is_empty():
+				alt = _corridor_mouth_of_inv(t["dst"], src["p"])
+				if not alt.is_empty():
+					dst = alt
+					r2 = sim.nav.plan(src, dst)
 			if not r2["ok"]:
 				return {"ok": false, "reason": "no_path"}
 			var legs: Array = (r1["legs"] as Array) + (r2["legs"] as Array)
@@ -1076,18 +1116,28 @@ func _plan_for_task(a: Dictionary, t: Dictionary) -> Dictionary:
 				{"op": "go", "to": dst, "route": r2, "rev": rev}, {"op": "deliver"}]}
 		"build", "demolish":
 			var b: Dictionary = blds[t["bld"]]
-			var p = sim.nav.best_access(b, a["pos"])
-			if p == null:
-				return {"ok": false, "reason": "no_path"}
-			var to := {"b": -1, "p": p}
-			var r: Dictionary = sim.nav.plan(loc_of(a), to)
-			if not r["ok"]:
-				return {"ok": false, "reason": "no_path"}
-			if not _air_ok(a, r["legs"], float(sim.bal["exterior_work_chunk_seconds"]), -1, p):
-				return {"ok": false, "reason": "suit_range"}
 			var verb: String = "Building" if t["kind"] == "build" else "Removing"
-			return {"ok": true, "goal": "%s %s" % [verb, b["name"]], "steps": [
-				{"op": "go", "to": to, "route": r, "rev": rev}, {"op": "work", "kind": t["kind"], "b": b["id"]}]}
+			var fail_reason := "no_path"
+			var p = sim.nav.best_access(b, a["pos"])
+			if p != null:
+				var to := {"b": -1, "p": p}
+				var r: Dictionary = sim.nav.plan(loc_of(a), to)
+				if r["ok"]:
+					if _air_ok(a, r["legs"], float(sim.bal["exterior_work_chunk_seconds"]), -1, p):
+						return {"ok": true, "goal": "%s %s" % [verb, b["name"]], "steps": [
+							{"op": "go", "to": to, "route": r, "rev": rev}, {"op": "work", "kind": t["kind"], "b": b["id"]}]}
+					fail_reason = "suit_range"
+			# V5 19.1 (Paul: corridor sites with their supplies never built): a corridor between rooms may have no
+			# way to it from outside (a pocket between structures); it is then worked from inside, at the mouth of
+			# an end room that has air.
+			if b["kind"] == "link" and b["def"] == "corridor":
+				var m: Dictionary = _corridor_mouth(b, a["pos"])
+				if not m.is_empty():
+					var rm: Dictionary = sim.nav.plan(loc_of(a), m)
+					if rm["ok"] and _air_ok(a, rm["legs"], 0.0, int(m["b"]), m["p"]):
+						return {"ok": true, "goal": "%s %s" % [verb, b["name"]], "steps": [
+							{"op": "go", "to": m, "route": rm, "rev": rev}, {"op": "work", "kind": t["kind"], "b": b["id"]}]}
+			return {"ok": false, "reason": fail_reason}
 		"operate", "tend", "research":
 			var b: Dictionary = blds[t["bld"]]
 			if not sim.util.building_supplied(b["id"]):

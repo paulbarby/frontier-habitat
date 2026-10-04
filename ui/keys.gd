@@ -32,7 +32,7 @@ const ROWS := [
 	{"g": "Building", "keys": "Shift + click", "codes": [], "mouse": [],
 		"short": "keep placing", "long": "Place more than one structure, or chain corridors."},
 	{"g": "Building", "keys": "R, Shift+R", "codes": ["KEY_R"], "mouse": [],
-		"short": "turn 15 degrees; camera back (shoulder view)", "long": "Turn the structure you place by 15 degrees (Shift+R: the other way). Over the shoulder: the camera goes back behind the person."},
+		"short": "turn 15 degrees; camera back (shoulder view)", "long": "Turn the structure you place by 15 degrees (Shift+R: the other way). Over the shoulder: the camera goes back behind the person (R only: Space pauses the game everywhere). The mouse looks round without a button; the wheel zooms."},
 	{"g": "Building", "keys": "Z X, [ ]", "codes": ["KEY_Z", "KEY_X", "KEY_BRACKETLEFT", "KEY_BRACKETRIGHT"], "mouse": [],
 		"short": "size while placing", "long": "A smaller or bigger size while you place a structure (S, M, L, XL)."},
 	{"g": "Building", "keys": "Delete", "codes": ["KEY_DELETE"], "mouse": [],
@@ -69,6 +69,8 @@ const ROWS := [
 		"short": "follow from above", "long": "Follow the selected person from above. Any camera key ends it."},
 	{"g": "People", "keys": "V", "codes": ["KEY_V"], "mouse": [],
 		"short": "over the shoulder; awards", "long": "Over the shoulder: the camera goes behind the selected person. V or Esc: back. With nobody selected, V opens the Awards."},
+	{"g": "People", "keys": "F2", "codes": ["KEY_F2"], "mouse": [],
+		"short": "watch mode", "long": "Watch mode: a hands-off tour. The camera follows one person for a while, then another; when a party, a fight, a wedding or a landing happens it goes there. A caption says who and what. Any key, click, wheel or a long mouse move ends it. Also in the menu and on the title screen."},
 	{"g": "People", "keys": "Tab", "codes": ["KEY_TAB"], "mouse": [],
 		"short": "next person (shoulder view)", "long": "Over the shoulder: follow the next person."},
 ]

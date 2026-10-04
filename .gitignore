@@ -14,3 +14,7 @@ __pycache__/
 *.tmp.glb
 *.tmp
 art/people/_tmp/
+
+# 5.0: the game pack is over GitHub's 100 MB limit; it is served from Cloudflare R2 (docs/DEPLOY.md)
+build/web/index.pck
+build/release_pack/

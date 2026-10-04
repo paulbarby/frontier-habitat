@@ -87,6 +87,10 @@ func _ready() -> void:
 	v.add_child(_love)
 	_lines = Kit.vbox(2)
 	v.add_child(_lines)
+	# V5 §19.7: the three controls of the over-the-shoulder camera, always in view while it runs.
+	var hint: Label = Kit.wrap("Mouse: look round, also up at the sky. Wheel: zoom. R: back behind the shoulder.", 11, P.TEXT_3)
+	hint.name = "ControlsHint"
+	v.add_child(hint)
 	var btn := HFlowContainer.new()   # the buttons wrap in a narrow card
 	btn.add_theme_constant_override("h_separation", 4)
 	btn.add_theme_constant_override("v_separation", 4)

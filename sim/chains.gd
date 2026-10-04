@@ -93,6 +93,8 @@ func _build() -> void:
 		if not _prod.has(cid):
 			_prod[cid] = []
 		_prod[cid].append(["", String(c["building"]), "crop"])
+		for extra in c.get("also", []):
+			_prod[cid].append(["", String(extra), "crop"])
 		# Every harvest leaves biomass.
 		if int(c.get("biomass", 0)) > 0:
 			if not _prod.has("biomass"):

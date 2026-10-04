@@ -94,6 +94,11 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.main = self
 	add_child(hud)
+	# The music director tells the dock what plays (News, type Music: a badge only by default; Settings > Notifications can pop it up).
+	audio.music.track_changed.connect(func(id: String):
+		var t: Dictionary = audio.music.tracks.get(id, {})
+		if not t.is_empty() and String(t["mood"]) != "event" and hud.panels != null:
+			hud.panels.post("music", "Now playing: %s (%s)." % [String(t["name"]), String(t["mood"])], "info", "music", true))
 	if not OS.is_userfs_persistent():
 		persist_warning = "This browser does not keep saved games. Use Export to keep a save file."
 	Settings.load_all()
@@ -658,6 +663,22 @@ func _on_cmd(text: String) -> String:
 				return "no screen"
 			ts._scroll.scroll_vertical = int(w[1]) if w.size() > 1 else 0
 			return str(ts._scroll.scroll_vertical)
+		"humoff":
+			# humoff [on]: debug only: pauses the room tone (the hum loop), so tools/audio_probe.mjs measures the outdoor atmosphere alone
+			# (V5 section 19.9: indoors it must be almost silent). "humoff on" plays it again.
+			if not debug_mode() or audio == null:
+				return "debug only"
+			var hp = audio._loop_players.get("hum")
+			if hp == null:
+				return "no hum"
+			hp.stream_paused = not (w.size() > 1 and w[1] == "on")
+			return "hum paused %s" % str(hp.stream_paused)
+		"watchmode":
+			# watchmode [off]: Watch mode (key F2), for the screenshots.
+			if w.size() > 1 and w[1] == "off":
+				hud.watch.stop()
+				return "off"
+			return str(hud.watch.start())
 		"deselect":
 			select("", -1)
 			return "ok"
@@ -709,53 +730,33 @@ func _on_cmd(text: String) -> String:
 					return "ok %d" % int(id)
 			return "not found"
 		"transport":
-			# transport demo [broken] | transport off: debug only: a made-up package transport network (the first three stores joined by
-			# tubes along the nearest corridors, capsules on the way) for screenshots and tests, while SIM has no transport (V5 §18.5).
+			# transport build [broken]: debug only (changes the colony): the first three storehouses get a hub and every corridor a tube, as SIM's
+			# own test sets it up (the research and the materials are skipped), so the overlay and the inspector show a real network (V5 18.5).
+			# "broken" breaks the corridor of the first tube (its state, so the sim marks the tube down).
 			if not debug_mode():
 				return "debug only"
-			if w.size() > 1 and w[1] == "off":
-				hud.v18.demo_transport = {}
-				hud.transport_marks.set_on(false)
-				return "off"
+			sim.state["flags"]["unlock_all"] = true
 			var stores: Array = []
 			var ids_b: Array = sim.state["buildings"].keys()
 			ids_b.sort()
 			for bid in ids_b:
 				var sb: Dictionary = sim.state["buildings"][bid]
-				if String(sb["state"]) == "active" and String(sb["kind"]) == "room" and hud.inspector.sections._is_store(sb):
+				if String(sb["state"]) == "active" and String(sb["kind"]) == "room" and sim.transport.hub_defs().has(String(sb["def"])):
 					stores.append(int(bid))
 			if stores.size() < 2:
 				return "fewer than two stores"
-			stores = stores.slice(0, 3)
-			var tubes: Array = []
-			var hubs: Array = []
-			var transit: Array = []
-			var broken_ids: Array = []
-			var used_tubes: Array = []
-			for i in stores.size():
-				hubs.append({"b": stores[i], "ok": true, "items": {"metal": 12, "spare_parts": 4}})
-			for i in stores.size() - 1:
-				var pa: Vector2 = sim.state["buildings"][stores[i]]["pos"]
-				var pc: Vector2 = sim.state["buildings"][stores[i + 1]]["pos"]
-				var mid: Vector2 = (pa + pc) * 0.5
-				var tb := -1
-				var td := 1e9
-				for bid in ids_b:
-					var cb: Dictionary = sim.state["buildings"][bid]
-					if String(cb["def"]) == "corridor" and not used_tubes.has(int(bid)) and (cb["pos"] as Vector2).distance_to(mid) < td:
-						td = (cb["pos"] as Vector2).distance_to(mid)
-						tb = int(bid)
-				used_tubes.append(tb)
-				var bad: bool = w.size() > 2 and w[2] == "broken" and i == 1
-				if bad:
-					broken_ids.append(tb)
-				tubes.append({"b": tb, "a": stores[i], "c": stores[i + 1], "ok": not bad, "load": 0.35 + 0.5 * float(i)})
-				transit.append({"id": i * 2, "res": "metal", "qty": 4, "from": stores[i], "to": stores[i + 1], "t": 0.3})
-				transit.append({"id": i * 2 + 1, "res": "spare_parts", "qty": 2, "from": stores[i + 1], "to": stores[i], "t": 0.6})
-			hud.v18.demo_transport = {"hubs": hubs, "tubes": tubes, "flows": [], "transit": transit, "broken": broken_ids}
+			for i in mini(3, stores.size()):
+				sim.state["buildings"][stores[i]]["hub"] = true
+			var ntube := 0
+			for bid in ids_b:
+				var cb: Dictionary = sim.state["buildings"][bid]
+				if String(cb["kind"]) == "link" and String(cb["def"]) == "corridor":
+					cb["tube"] = true
+					ntube += 1
+			sim.transport.installed(sim.state["buildings"][stores[0]])
 			focus_on(sim.state["buildings"][stores[1]]["pos"])
 			select("building", stores[0])
-			return "demo network: %d hubs, %d tubes" % [hubs.size(), tubes.size()]
+			return "transport: %d hubs, %d tubes" % [mini(3, stores.size()), ntube]
 		"prio":
 			# prio <agent id> <job> <0..3> | prio colony <job> <0..3>: debug only (changes the colony): an own
 			# job priority of a colonist (set_jobs) or the colony default (set_priority), for the Priorities shots.
@@ -1454,6 +1455,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_SLASH: hud.toggle_find()
 			KEY_N: hud.toggle_advisor()   # version 4 advisor (V4_DESIGN §6)
 			KEY_J: hud.toggle_rag()       # version 5 "The Regolith Rag" (V5_DESIGN §4.3)
+			KEY_F2: hud.watch.toggle()      # version 5 §19.6: Watch mode
 			KEY_M: hud.toggle_work()      # version 5 §18.3: the Work window (queues of every department)
 			KEY_K: hud.toggle_screen("codex")   # version 4 codex (V4_DESIGN §6)
 			KEY_O: hud.cycle_overlay()
@@ -1791,3 +1793,10 @@ func structure_at(p: Vector2) -> int:
 			best_d = d
 			best = int(id)
 	return best if best_d <= 4.0 else -1
+
+## Watch mode from the title screen (V5 §19.6): the showcase colony behind the title, played, with the hands-off tour.
+func start_watch() -> void:
+	if on_title:
+		leave_title()
+	set_speed(1)
+	hud.watch.start()

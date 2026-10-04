@@ -193,9 +193,13 @@ func v5_order_kinds_build_haul_maintain(t) -> void:
 	var b2: Dictionary = sim.state["agents"][c["ids"][1]]
 	var lander: Dictionary = sim.state["buildings"][lid]
 	# A small base: the reference core, a habitat and a workshop, joined by corridors (test set-up).
-	var lay: Dictionary = H.layout(sim, H.CORE_STEPS + [{"place": "habitat", "as": "H1"}, {"link": "corridor", "a": "L1", "b": "H1"},
-		{"place": "workshop", "as": "K1", "at": "S1"}, {"link": "corridor", "a": "H1", "b": "K1"}])
+	var lay: Dictionary = H.layout(sim, H.CORE_STEPS)
 	t.eq(lay["errors"], [], "the base layout")
+	g.run(2)
+	H.fill_utilities(sim, 1.0, 0.5, true)
+	var hb: Dictionary = H.attach(sim, "habitat", (lander["pos"] as Vector2) + Vector2(30, 0))      # test set-up (door rules change: attach finds a legal place)
+	g.run(2)
+	var wsb: Dictionary = H.attach(sim, "workshop", hb["pos"])
 	g.run(2)
 	H.fill_utilities(sim, 1.0, 0.5, true)
 	# build: a planned solar array gets built by the ordered colonist (the others are kept busy elsewhere).
@@ -211,7 +215,7 @@ func v5_order_kinds_build_haul_maintain(t) -> void:
 	var order_ended: bool = g.run_until(func(): return not a.has("order"), 3000)
 	t.check(order_ended, "the build order ends when the site is done")
 	# haul: carry 4 steel to a workshop.
-	var ws: Dictionary = sim.state["buildings"][int(lay["ids"]["K1"])]
+	var ws: Dictionary = wsb
 	var inv_in: int = int(ws["inv_in"])
 	t.check(inv_in != -1, "the workshop has an input store")
 	var before: int = sim.inv.count(inv_in, "metal")
@@ -673,7 +677,8 @@ func v5_order_every_role_and_work_at(t) -> void:
 				done2 = true
 				break
 		t.check(done2, "%s: work_at did the work and ended" % role)
-		var rn: Dictionary = sim.orders.cmd_order({"direct": true, "agents": [int(a["id"])], "kind": "work_at", "b": int(dusty["id"])})
+		var sound: Dictionary = sim.build.spawn_active("solar_array", _spot(sim, "solar_array", core["pos"], 30.0, 60.0, 15 + k * 9), 0.0)   # test set-up: nothing to do there
+		var rn: Dictionary = sim.orders.cmd_order({"direct": true, "agents": [int(a["id"])], "kind": "work_at", "b": int(sound["id"])})
 		t.eq(rn["code"], "no_work", "%s: work_at on a structure with no work is refused (no_work)" % role)
 	sim.dispose()
 	t.done()

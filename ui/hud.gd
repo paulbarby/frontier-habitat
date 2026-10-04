@@ -81,6 +81,7 @@ var assign      # Who? window: Repair now and Assign to... (version 5, §18.1)
 var work_card   # the dock card of the work queue
 var chain       # production chain window (version 5, §18.4)
 var transport_marks  # the package transport network on the map (version 5, §18.5)
+var watch           # Watch mode: a hands-off tour for demos (version 5, §19.6)
 var reactor_win # Reactor controls window (version 4, §4.2)
 var reactor_banner
 var find_marks  # marks of one structure type on the map, set from Find
@@ -160,6 +161,9 @@ func _ready() -> void:
 	screens.hud = self
 	root.add_child(screens)
 	watchers = Watchers.new(self)
+	watch = load("res://ui/hud/watch_mode.gd").new()
+	watch.hud = self
+	add_child(watch)
 	bounds = BoundsKeeper.new()
 	bounds.hud = self
 	add_child(bounds)
@@ -343,6 +347,8 @@ func toggle_find() -> void:
 
 ## After a new game, a load or an import: every module starts again from the new state.
 func rebuild_all() -> void:
+	if watch != null and watch.active:
+		watch.stop()
 	kpi = data.kpis() if main != null and main.sim != null else {}
 	screens.close_all()
 	for m in [top_bar, time_panel, nav, goals, alerts, build_bar, inspector, minimap, hazard, traffic]:

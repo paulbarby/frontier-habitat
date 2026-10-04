@@ -116,6 +116,7 @@ func _ready() -> void:
 	menu.add_child(_item("Continue", cont_sub, "play", func(): hud.main.continue_game(), true))
 	menu.add_child(_item("New colony", "Planet, difficulty and seed.", "new_game", func(): hud.open_screen("newcolony"), false))
 	menu.add_child(_item("Load", "Saves on this device, or a save file.", "load", func(): hud.open_screen("saveload"), false))
+	menu.add_child(_item("Watch", "A hands-off tour of the showcase colony, for demos.", "eye", func(): hud.main.start_watch(), false))
 	menu.add_child(_item("Awards", "%d of %d medals earned on this device." % [Profile.award_count(), hud.data.awards_def().size()], "medal", func(): hud.open_screen("awards"), false))
 	menu.add_child(_item("Settings", "Graphics, interface, camera, sound.", "settings", func(): hud.open_screen("settings"), false))
 	menu.add_child(_item("How to play", "The rules on one page.", "info", func(): hud.open_screen("help"), false))

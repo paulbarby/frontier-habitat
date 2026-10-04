@@ -448,6 +448,17 @@ func _depot(b: Dictionary) -> void:
 	var d = _d()
 	var id: int = b["id"]
 	var v4 = insp.hud.v4
+	# V5 section 19.3 (SIM vehicles.depot_status): what the depot is doing, why it waits, and the next step.
+	var ds: Dictionary = v4.depot_status(id)
+	if not ds.is_empty():
+		var dh: Label = Kit.wrap(String(ds["headline"]), 13, P.TEXT)
+		dh.name = "DepotStatus"
+		insp.body().add_child(dh)
+		if String(ds["why"]) != "":
+			insp.body().add_child(Kit.wrap(String(ds["why"]), 13, P.AMBER))
+		var ngl: Label = Kit.wrap("Next step: " + String(ds["next"]), 13, P.GOLD)
+		ngl.name = "VehicleNextStep"
+		insp.body().add_child(ngl)
 	var sec: VBoxContainer = _section("Bays", "rover")
 	var parked := {}
 	var bays: Array = s.vehicles.bays(b)
@@ -639,53 +650,85 @@ func _repair_status(b: Dictionary) -> void:
 		lbl.text = "On it: " + ", ".join(parts) + "."
 		lbl.add_theme_color_override("font_color", P.CYAN if not on.any(func(r): return String(r["state"]) == "waiting") else P.AMBER))
 
-## V5 §18.5: the package transport of a storage habitat (a hub) and of a corridor (a tube): what it is, the load, the items in transit
-## (SIM sim.transport.in_transit) and the button that shows the network on the map. Shown when the structure is a hub or a tube, or
-## when SIM has the transport and the structure can be one (then the line says what is missing).
+## V5 §18.5: the package transport of a storage habitat (a hub) and of a corridor (a tube). A hub or a tube: its role and state, the
+## capsules on their way (SIM sim.transport.info) and Show the network. A storehouse, cold storage or corridor without one, once the
+## research Package Transport is done: the cost and the button Install (SIM install_transport), or the reason it cannot be installed.
 func _transport_section(b: Dictionary) -> void:
 	var v18 = insp.hud.v18
+	if not v18.transport_live():
+		return
+	var s = _sim()
 	var id: int = b["id"]
-	var is_hub: bool = v18.is_hub(id)
-	var is_tube: bool = v18.is_tube(id)
-	var store: bool = _is_store(b) and String(b["state"]) == "active"
-	var corridor: bool = String(b["def"]) == "corridor"
-	if not (is_hub or is_tube) and not (v18.transport_live() and (store or corridor)):
+	var info: Dictionary = v18.transport_info(id)
+	var chk: Dictionary = info.get("check", {})
+	var feature: String = String(chk.get("feature", ""))
+	var has: bool = bool(info.get("hub", false)) or bool(info.get("tube", false))
+	var installing: bool = not (b.get("upgrade", {}) as Dictionary).is_empty() and String((b["upgrade"] as Dictionary).get("feature", "")) != ""
+	var code: String = String(chk.get("code", ""))
+	if not has and not installing and (feature == "" or code in ["unknown", "not_storage", "not_corridor", "locked_research", "not_active", "demolish"]):
 		return
 	var sec: VBoxContainer = _section("Package transport", "route", P.GOLD)
 	sec.name = "TransportSection"
-	if not (is_hub or is_tube):
-		sec.add_child(Kit.wrap("%s Research Package Transport, then upgrade this structure (tab Upgrade): items then move to other hubs in capsules, with no colonist hauling." % ("Not a transport hub." if store else "Not a transport tube."), 13, P.TEXT_2))
+	if installing:
+		var up: Dictionary = b["upgrade"]
+		var tl0: Label = Kit.wrap("", 13, P.VIOLET)
+		sec.add_child(tl0)
+		insp.bind(func():
+			var u: Dictionary = s.state["buildings"].get(id, {}).get("upgrade", {})
+			tl0.text = "Installing the transport %s: %s" % [String(up.get("feature", "")), ("carriers bring the materials" if String(u.get("state", "")) == "deliver" else "technicians work, %d %%" % int(100.0 * float(u.get("progress", 0.0)) / maxf(1.0, float(u.get("work_total", 1.0)))))]
+			if String(u.get("block", "")) != "":
+				tl0.text += " (" + String(u["block"]).replace("_", " ") + ")")
+		var cancel: Button = Kit.button("Cancel", func(): insp.hud.main.submit("cancel_upgrade", {"id": id}), "Cancel\nStops the installation.", "ChipButton", "close", 12)
+		sec.add_child(cancel)
+		return
+	if not has:
+		var what: String = "hub" if feature == "hub" else "tube"
+		sec.add_child(Kit.wrap(("A transport hub lets this store send and take goods in capsules, with no colonist hauling, to other hubs joined by corridors with a tube." if feature == "hub"
+			else "A transport tube carries capsules along this corridor. Hubs joined by corridors that all have a tube move goods by themselves."), 13, P.TEXT_2))
+		var cost: Dictionary = chk.get("cost", {})
+		var cf := HFlowContainer.new()
+		cf.add_theme_constant_override("h_separation", 10)
+		for res in cost:
+			cf.add_child(Kit.chip(Icons.item(String(res)), "%d" % int(cost[res]), _d().item_color(String(res)), "%s: %d" % [_d().item_name(String(res)), int(cost[res])], true, 16))
+		sec.add_child(cf)
+		var why: String = {"busy": "Another upgrade runs here.", "have": ""}.get(code, "")
+		var ib: Button = Kit.button("Install transport %s" % what, func():
+			var r: Dictionary = insp.hud.v4._submit("install_transport", {"id": id})
+			var res2: Dictionary = r.get("result", {})
+			if r.get("code", "") != "submitted" and not bool(res2.get("ok", r.get("ok", false))):
+				insp.hud.toast("Transport %s: %s" % [what, insp.hud.v4.refusal_text(String(res2.get("code", r.get("code", ""))))], "warn", "route"),
+			"Install transport %s\nCarriers bring the materials, then technicians work. Then this %s joins the network." % [what, "store" if feature == "hub" else "corridor"], "PrimaryButton", "route", 14)
+		ib.name = "InstallTransport"
+		ib.disabled = not bool(chk.get("ok", false))
+		sec.add_child(ib)
+		if why != "":
+			sec.add_child(Kit.wrap(why, 12, P.AMBER))
 		return
 	var g: GridContainer = _grid()
 	sec.add_child(g)
-	_fact(g, "Role", func(): return "Transport hub" if v18.is_hub(id) else "Transport tube", P.GOLD)
+	_fact(g, "Role", func(): return "Transport hub" if bool(v18.transport_info(id).get("hub", false)) else "Transport tube", P.GOLD)
 	_fact(g, "State", func():
-		for h in v18.transport().get("hubs", []):
-			if int(h["b"]) == id:
-				return "working" if bool(h.get("ok", true)) else "no link"
-		for t in v18.transport().get("tubes", []):
-			if int(t["b"]) == id:
-				return "working" if bool(t.get("ok", true)) else "broken"
-		return "-", P.GREEN)
-	if is_tube:
-		_fact(g, "Load", func():
+		var ok: bool = bool(v18.transport_info(id).get("ok", true))
+		return "working" if ok else ("broken" if not bool(s.state["buildings"].get(id, {}).get("hub", false)) else "not working"), P.GREEN)
+	if bool(info.get("tube", false)):
+		_fact(g, "Busy for", func():
 			for t in v18.transport().get("tubes", []):
-				if int(t["b"]) == id:
-					return "%d %%" % int(float(t.get("load", 0.0)) * 100.0)
+				if int(t["id"]) == id:
+					return "%d s" % int(float(t.get("busy_s", 0.0)))
 			return "-")
 	var tl: Label = Kit.wrap("", 13, P.TEXT)
 	tl.name = "InTransit"
 	sec.add_child(tl)
 	insp.bind(func():
-		var rows: Array = v18.in_transit(id)
+		var rows: Array = v18.transport_info(id).get("in_transit", [])
 		if rows.is_empty():
 			tl.text = "Nothing in transit now."
 			tl.add_theme_color_override("font_color", P.TEXT_3)
 			return
 		var parts: Array = []
 		for r in rows.slice(0, 5):
-			var dest: String = String(_sim().state["buildings"].get(int(r["to"]), {}).get("name", "a hub"))
-			parts.append("%d %s to %s (%s)" % [int(r["qty"]), _d().item_name(String(r["res"])).to_lower(), dest, Kit.clock(float(r["eta_s"]))])
+			var dir: String = {"in": "arrives", "out": "leaves", "through": "passes"}.get(String(r["dir"]), "")
+			parts.append("%d %s %s (%s%s)" % [int(r["qty"]), _d().item_name(String(r["res"])).to_lower(), dir, Kit.clock(float(r["eta_s"])), ", waits" if bool(r["stuck"]) else ""])
 		tl.text = "In transit: " + ", ".join(parts) + ("." if rows.size() <= 5 else ", and %d more." % (rows.size() - 5))
 		tl.add_theme_color_override("font_color", P.TEXT))
 	var nb: Button = Kit.button("Show the network", func(): insp.hud.set_overlay("transport"), "Show the network\nThe package transport network on the map: hubs, tubes and the capsules that move. Key O steps through the overlays; the last one is the transport network.", "ChipButton", "route", 12)
@@ -989,58 +1032,107 @@ func _rates(b: Dictionary, def: Dictionary) -> void:
 
 # ---------------------------------------------------------------- crops
 func _crops(b: Dictionary, def: Dictionary) -> void:
+	# V5 19.2: a farm grows several crops at once. SIM prod.farm_menu: the crops you may plant, the share of beds for each, and each bed's
+	# plan. Three parts: the crop for every bed (one click), the menu (the share of each crop and its yield), and a crop for each bed.
 	var s = _sim()
 	var d = _d()
 	var id: int = b["id"]
-	var can_plan: bool = b.has("crop") or (not (b.get("trays", []) as Array).is_empty() and (b["trays"][0] as Dictionary).has("crop"))
-	var avail: Array = []
+	var menu: Dictionary = s.prod.farm_menu(b)
+	var beds: int = int(menu["beds"])
+	var allowed: Array = menu["allowed"]
+	var can_plan: bool = beds > 0
+	var all_crops: Array = []
 	for cid in d.crops():
-		var c: Dictionary = d.crops()[cid]
-		if String(c.get("building", "greenhouse")) == String(b["def"]):
-			avail.append(cid)
-	if avail.size() > 1:
-		var sec: VBoxContainer = _section("Crop for every tray", "cat_food", P.CATEGORY["food"])
+		if s.prod.crop_fits(String(cid), String(b["def"])):
+			all_crops.append(String(cid))
+	if all_crops.size() > 1 and can_plan:
+		var sec: VBoxContainer = _section("Crop for every bed", "cat_food", P.CATEGORY["food"])
+		sec.name = "CropAll"
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 6)
 		row.add_theme_constant_override("v_separation", 6)
 		sec.add_child(row)
-		var cur: String = String(b.get("crop", ""))
-		for cid in avail:
-			var c: Dictionary = d.crops()[cid]
+		for cc in all_crops:
+			var c: Dictionary = d.crops()[cc]
 			var tech: String = String(c.get("research", ""))
-			var ok: bool = d.tech_done(tech)
-			var cc: String = String(cid)
-			var tip: String = "%s\nGrows in %s s. Yield %d, biomass %d, water %s per day." % [d.item_name(cc), Kit.fmt(float(c.get("cycle_seconds", 0))), int(c.get("yield", 0)), int(c.get("biomass", 0)), Kit.fmt(float(c.get("water_per_day", 0)))]
+			var ok: bool = allowed.has(cc)
+			var tip: String = "%s\nPlants every bed with it (a bed that grows keeps its crop until the next seeding). Grows in %s s. Yield %d, biomass %d, water %s per day." % [d.item_name(cc), Kit.fmt(float(c.get("cycle_seconds", 0))), int(c.get("yield", 0)), int(c.get("biomass", 0)), Kit.fmt(float(c.get("water_per_day", 0)))]
 			if not ok:
 				tip += " Needs research: %s." % d.tech_name(tech)
 			var bt: Button = Kit.button(d.item_name(cc), func(): insp.hud.main.submit("set_crop", {"id": id, "crop": cc, "tray": -1}), tip, "ChipButton", Icons.item(cc), 14)
+			bt.name = "All_" + cc
 			bt.toggle_mode = true
-			bt.set_pressed_no_signal(cc == cur)
-			bt.disabled = not ok or not can_plan
+			var mine: Dictionary = {}
+			for mc in menu["crops"]:
+				if String(mc["crop"]) == cc:
+					mine = mc
+			bt.set_pressed_no_signal(not mine.is_empty() and int(mine["beds"]) == beds)
+			bt.disabled = not ok
 			bt.custom_minimum_size.y = 28
 			bt.add_theme_color_override("icon_normal_color", d.item_color(cc))
 			row.add_child(bt)
-		if not can_plan:
-			sec.add_child(Kit.label("Crop choice is not available yet.", "SmallLabel", 12, P.TEXT_3))
+	# The menu: the share of beds for each crop, with the yield of one bed and of all its beds.
+	var sec3: VBoxContainer = _section("Farm menu", "cat_food", P.CATEGORY["food"])
+	sec3.name = "FarmMenu"
+	for mc in menu["crops"]:
+		var cc2: String = String(mc["crop"])
+		var r3: HBoxContainer = Kit.hbox(8)
+		r3.name = "Menu_" + cc2
+		r3.add_child(Kit.icon(Icons.item(cc2), 16, d.item_color(cc2)))
+		var nm3: Label = Kit.label(d.item_name(cc2), "", 13, P.TEXT)
+		nm3.custom_minimum_size.x = 52
+		nm3.clip_text = true
+		r3.add_child(nm3)
+		var bar3 = Kit.bar(float(mc["share"]), d.item_color(cc2), 7.0)
+		bar3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar3.custom_minimum_size.x = 24
+		var tx: Label = Kit.num("%d/%d" % [int(mc["beds"]), beds], 12, P.TEXT)
+		tx.tooltip_text = "%s\n%d of %d beds are planned for it (%d %%). One bed gives about %s a day; these beds %s. A harvest gives %d units every %s." % [d.item_name(cc2), int(mc["beds"]), beds, int(float(mc["share"]) * 100.0), Kit.fmt(float(mc["yield_per_day"])), Kit.fmt(float(mc["planned_per_day"])), int(mc["yield"]), Kit.clock(float(mc["cycle_seconds"]))]
+		tx.mouse_filter = Control.MOUSE_FILTER_PASS
+		r3.add_child(tx)
+		r3.add_child(bar3)
+		sec3.add_child(r3)
+	# A crop for each bed.
+	var sec2: VBoxContainer = _section("Beds  %d" % beds, "grid")
+	sec2.name = "FarmBeds"
 	var trays: Array = b.get("trays", [])
-	var sec2: VBoxContainer = _section("Trays  %d" % trays.size(), "grid")
 	for i in trays.size():
 		var t: Dictionary = trays[i]
-		var crop: String = String(t.get("crop", b.get("crop", def.get("crop", "potato"))))
+		var planned: String = String(t.get("crop", b.get("crop", def.get("crop", "potato"))))
 		var row2: HBoxContainer = Kit.hbox(8)
+		row2.name = "Bed_%d" % i
 		row2.add_child(Kit.num("%d" % (i + 1), 12, P.TEXT_3))
-		row2.add_child(Kit.icon(Icons.item(crop), 18, d.item_color(crop)))
-		var nm: Label = Kit.label(d.item_name(crop), "", 13, P.TEXT)
-		nm.custom_minimum_size.x = 84
-		row2.add_child(nm)
+		row2.add_child(Kit.icon(Icons.item(planned), 18, d.item_color(planned)))
+		var ob := OptionButton.new()
+		ob.name = "BedCrop_%d" % i
+		ob.focus_mode = Control.FOCUS_NONE
+		ob.fit_to_longest_item = false
+		ob.clip_text = true
+		ob.custom_minimum_size.x = 104
+		ob.add_theme_font_size_override("font_size", 12)
+		ob.tooltip_text = "Crop of bed %d\nThe crop planted at the next seeding. A bed that grows keeps its crop until the harvest." % (i + 1)
+		var sel := -1
+		for k in all_crops.size():
+			var cid2: String = all_crops[k]
+			ob.add_item(d.item_name(cid2))
+			ob.set_item_metadata(k, cid2)
+			ob.set_item_disabled(k, not allowed.has(cid2) and cid2 != planned)
+			if cid2 == planned:
+				sel = k
+		if sel >= 0:
+			ob.select(sel)
+		var ti0: int = i
+		ob.item_selected.connect(func(k2: int): insp.hud.main.submit("set_crop", {"id": id, "crop": String(ob.get_item_metadata(k2)), "tray": ti0}))
+		row2.add_child(ob)
 		var bar = Kit.bar(0.0, P.CATEGORY["food"], 7.0)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.custom_minimum_size.x = 16
 		row2.add_child(bar)
 		var st: Label = Kit.label("", "SmallLabel", 11, P.TEXT_2)
-		st.custom_minimum_size.x = 78
+		st.custom_minimum_size.x = 56
 		row2.add_child(st)
 		sec2.add_child(row2)
-		var ti: int = i
-		insp.bind(func(): _update_tray(id, ti, bar, st, crop))
+		insp.bind(func(): _update_tray(id, ti0, bar, st, planned))
 
 func _update_tray(id: int, ti: int, bar, st: Label, crop: String) -> void:
 	var s = _sim()
@@ -1049,11 +1141,11 @@ func _update_tray(id: int, ti: int, bar, st: Label, crop: String) -> void:
 	if bb.is_empty() or ti >= (bb.get("trays", []) as Array).size():
 		return
 	var tt: Dictionary = bb["trays"][ti]
-	var cyc: float = float(d.crops().get(String(tt.get("crop", crop)), {}).get("cycle_seconds", s.bal.get("crop_cycle_seconds", 300)))
+	var cyc: float = float(d.crops().get(String(tt.get("grow", tt.get("crop", crop))), {}).get("cycle_seconds", s.bal.get("crop_cycle_seconds", 300)))
 	var state: String = String(tt.get("state", ""))
 	if state == "growing":
 		bar.value = float(tt.get("growth", 0.0)) / maxf(1.0, cyc)
-		st.text = "growing %d%%" % int(bar.value * 100.0)
+		st.text = "%s %d%%" % [d.item_name(String(tt.get("grow", crop))).to_lower() if String(tt.get("grow", crop)) != crop else "growing", int(bar.value * 100.0)]
 		if float(tt.get("interrupt", 0.0)) > 0.0:
 			st.text = "STOPPED %ds" % int(tt["interrupt"])
 			bar.color = P.AMBER

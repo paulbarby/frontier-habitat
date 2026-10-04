@@ -436,6 +436,7 @@ class Plan:
         self.circles = []
         self.count = {}
         self.tall_n = 0
+        self.tall_r = {}                  # Tall part -> footprint radius (m) round its origin (V5_DESIGN 19.4)
         self.lamps = []
         rm.extra_parts = getattr(rm, "extra_parts", [])
         rm.plan = self
@@ -485,6 +486,33 @@ class Plan:
         self.tall_n += 1
         self.rm.extra_parts.append(p)
         return p
+
+    def decor_tall(self, n0, f0, x, y, r):
+        """V5_DESIGN 19.4: decor drawn into Interior since (n0 verts, f0 faces) that reaches into the door clear zone
+        band (within ZONE_FACE + ZONE_DEPTH of the wall line) moves to a Tall part of its own (origin (x, y, 0)), which
+        the game hides when a doorway's clear zone takes it.  Returns the footprint tag: "decor_t" (hideable, not a
+        door blocker) or "decor"."""
+        n = self.n
+        Rw = self.rm.R - 0.32
+        reach = max([r] + [hypot(v.x - x, v.y - y) for v in n.verts[n0:]])     # a tree crown reaches further
+        if not n.faces[f0:] or hypot(x, y) + reach < Rw - ZONE_FACE - ZONE_DEPTH or self.tall_n >= TALL_MAX:
+            return "decor"
+        faces = n.faces[f0:]
+        if any(i < n0 for f in faces for i in f):
+            return "decor"                     # shares old vertices: leave it
+        p = self.tall(x, y)
+        p.verts = [v.copy() for v in n.verts[n0:]]          # Part verts are in model space (the origin is subtracted at export)
+        p.vover = list(n.vover[n0:]) if len(n.vover) >= len(n.verts) else [False] * len(p.verts)
+        p.faces = [tuple(i - n0 for i in f) for f in faces]
+        p.fmat = list(n.fmat[f0:])
+        p.fsmooth = list(n.fsmooth[f0:])
+        del n.verts[n0:]
+        del n.vover[n0:]
+        del n.faces[f0:]
+        del n.fmat[f0:]
+        del n.fsmooth[f0:]
+        self.tall_r[p.name] = max([hypot(v.x - x, v.y - y) for v in p.verts] or [0.0])
+        return "decor_t"
 
     # ---- anchors ----------------------------------------------------------------------------------
     def anchor(self, kind, x, y, yaw, z=F):
@@ -773,7 +801,11 @@ def check_anchors(rm):
 # --------------------------------------------------------------------------------------
 # Door clearance (critic round 4): free floor in front of a doorway at every model angle
 # --------------------------------------------------------------------------------------
-TALL_TAGS = ("suit", "screen", "hood", "curtain", "backbar", "sign")     # hidden near a door by the game
+TALL_TAGS = ("suit", "screen", "hood", "curtain", "backbar", "sign", "decor_t", "lockers_t")     # hidden near a door by the game
+TALL_MAX = 32               # the game's Tall mask has 32 bits
+ZONE_HW = 0.95              # V5_DESIGN 19.4: door clear zone, (door 1.50 + 0.40) / 2
+ZONE_FACE = 0.56            # from the room face of the door housing ...
+ZONE_DEPTH = 1.80           # ... 1.8 m into the room
 DOOR_CLEAR = 1.20
 
 
@@ -781,7 +813,7 @@ LANE_HW = 0.45          # RENDER / coordinator 2026-09-25: a 0.9 m lane from eve
 DOOR_FACE = 0.56        # the room face of the door housing (door kit 3.1, HX -0.56) inside the wall line
 
 
-def door_blocked(plan, half=LANE_HW, step=1.0):
+def door_blocked(plan, half=LANE_HW, step=1.0, depth=None, skip=()):
     """Model angles (deg) where a doorway has no clear lane to the aisle ring: the lane `2 * half` wide runs from
     the room face of the door housing (wall line - 0.56) to the far side of the aisle ring (ring radius - half).
     Free-standing footprints block it; Tall parts do not (the game hides them near a doorway), nor do wall items
@@ -790,9 +822,9 @@ def door_blocked(plan, half=LANE_HW, step=1.0):
     Rw = rm.R - 0.32
     rr = 0.5 * (plan.wall_front + plan.r_max)
     r_door = Rw - DOOR_FACE
-    depth = max(0.2, r_door - (rr - half))
-    keep_r = [r for r in plan.rects if r[5] not in TALL_TAGS]
-    keep_c = [c for c in plan.circles if c[3] not in TALL_TAGS]
+    depth = max(0.2, r_door - (rr - half)) if depth is None else depth
+    keep_r = [r for r in plan.rects if r[5] not in TALL_TAGS and r[5] not in skip]
+    keep_c = [c for c in plan.circles if c[3] not in TALL_TAGS and c[3] not in skip]
 
     hits, hit_ang, cur_a = {}, {}, [0.0]
     plan.lane_hit_angles = hit_ang

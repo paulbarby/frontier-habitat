@@ -85,7 +85,7 @@ func v2_content(t) -> void:
 			t.check(c["recipes"].has(rid), "building %s recipe %s exists" % [id, rid])
 		if bool(d.get("levels", false)) and String(d.get("family", "")) != "":
 			t.check(sim.research.level_tech(id, 5) != "__none__" and c["techs"].has(sim.research.level_tech(id, 5)), "building %s has a level-5 tech" % id)
-	t.eq(c["techs"].size(), 87, "techs (29 of v2 + 16 of v3 + 37 of v4 + 5 of v5)")
+	t.eq(c["techs"].size(), 88, "techs (29 of v2 + 16 of v3 + 37 of v4 + 6 of v5)")
 	for id in c["techs"]:
 		for req in c["techs"][id].get("requires", []):
 			t.check(c["techs"].has(req), "tech %s requires known %s" % [id, req])

@@ -50,6 +50,8 @@ var _glow: MultiMeshInstance3D
 var _glow_mat: ShaderMaterial
 var _lamp_sig := ""
 var wind_storm := 0.0      # V3 wind storm 0..1 (fx_hazards): fast pale dust sheets
+var indoor_hide := false   # V5 §19.9: the follow camera is inside a habitat: no weather particles at all
+const WEATHER_KINDS := ["dust", "devil", "dust_column", "impact_dust", "dust_ring"]
 const HUGE_AABB := AABB(Vector3(-900, -200, -900), Vector3(4400, 700, 4400))   # the 2,560 m v4 map too
 
 var field_on := true        # the camera dust motes (off for critic stills: `toggle dust 0`)
@@ -61,6 +63,11 @@ var planet := "dry":
 			return
 		planet = v
 		_planet_colours()
+		if v == "airless":
+			# (emitters made before the switch stop: steam, smoke and dust need air)
+			for ek in emitters.keys():
+				if String(emitters[ek]["kind"]) in AIRLESS_NO:
+					emitter_stop(ek)
 ## Cold planet (critic round 41 follow-up: the dust stayed orange): the ground and storm dust kinds are pale ice
 ## and snow, keeping each kind's alpha.
 const ICE_KINDS := ["dust", "dust_ring", "impact_dust", "devil", "dust_column", "site_dust"]
@@ -78,8 +85,9 @@ func _planet_colours() -> void:
 		var sc: Color = Color(0.86, 0.9, 0.96, 0.55) if planet == "cold" else Color(0.72, 0.5, 0.34, 0.55)
 		(_storm.material_override as ShaderMaterial).set_shader_parameter("color0", sc)
 		(_storm.material_override as ShaderMaterial).set_shader_parameter("color1", sc)
-const AIRLESS_NO := ["devil", "dust_column"]          # never on an airless planet
-const AIRLESS_LOW := ["dust", "site_dust", "dust_ring", "impact_dust"]   # ballistic only: a third, no drift
+# (V5 §19.8, Paul 2026-10-04: no atmospheric effect of any kind on the airless planet: no dust, smoke or steam)
+const AIRLESS_NO := ["devil", "dust_column", "dust", "site_dust", "dust_ring", "impact_dust", "smoke", "smoke_dark", "steam"]
+const AIRLESS_LOW := []
 var field_light := 1.0      # V4: motes dim in a shadowed crater (no bright streaks on a dark floor)
 ## Weather kinds clipped by the room / corridor volumes (Paul 2026-10-01: no storm inside habitats).
 const CLIP_KINDS := ["dust", "devil", "impact_dust", "dust_column"]
@@ -296,7 +304,7 @@ func prewarm(pos: Vector3) -> void:
 
 ## One-shot particles (dust puff, sparks shower).
 func burst(kind: String, pos: Vector3, n: int, radius: float = -1.0, yaw: float = 0.0, inten: float = 1.0) -> void:
-	if not KINDS.has(kind) or planet == "airless" and kind in AIRLESS_NO and n > 1:
+	if not KINDS.has(kind) or planet == "airless" and kind in AIRLESS_NO:
 		return
 	if planet == "airless" and kind in AIRLESS_LOW and n > 1:
 		n = maxi(1, n / 3)
@@ -379,9 +387,12 @@ func sync(delta: float, sim_dt: float, cam: Camera3D, focus: Vector3, wind: floa
 	_field_mat.set_shader_parameter("field_size", Vector3(70, 12, 70))
 	var fc := Color(0.8, 0.62, 0.46) if planet != "cold" else Color(0.86, 0.92, 1.0)
 	_field_mat.set_shader_parameter("color0", Color(fc.r, fc.g, fc.b, 0.28 * (1.0 - night * 0.6) * field_light))
-	_field.visible = quality >= 1 and field_on and planet != "airless"
+	_field.visible = quality >= 1 and field_on and planet != "airless" and not indoor_hide
 	var st2: float = maxf(storm, wind_storm)
-	_storm.visible = st2 > 0.02
+	_storm.visible = st2 > 0.02 and not indoor_hide
+	for wk in WEATHER_KINDS:
+		if pools.has(wk):
+			(pools[wk]["mmi"] as Node3D).visible = not indoor_hide
 	if _storm.visible:
 		# A wind storm: paler, thinner sheets that race by; a dust storm: thick orange dust.
 		var ws: float = wind_storm / maxf(st2, 0.001) if wind_storm > storm else 0.0

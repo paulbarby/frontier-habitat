@@ -289,13 +289,32 @@ func _rebuild() -> void:
 		var hb: Dictionary = _group_part(meta, "Tall")
 		if not hb.is_empty():
 			var hmask := 0
+			# (V5 §19.4, ART-HAB's clear-zone rule, orchestrator 2026-10-04: a Tall part hides when its origin is in
+			# the door's clear zone (1.90 m wide, from the wall line 2.36 m in) grown by the part's radius; the data is
+			# the build report's tall_zone / door_zone in room_meta. Without zone data: the old 2.2 m origin rule.)
+			var tz: Dictionary = (rmeta.get("tall_zone", {}) as Dictionary) if rmeta is Dictionary else {}
+			var dz: Array = (rmeta.get("door_zone", [0.95, 0.56, 1.80]) as Array) if rmeta is Dictionary else [0.95, 0.56, 1.80]
+			var half_w: float = float(dz[0])
+			var depth: float = float(dz[1]) + float(dz[2])
+			var rw_m: float = rw / maxf(s, 0.001)
 			for sk in hb.get("seg_pos", {}):
 				var sp: Vector3 = hb["seg_pos"][sk]
+				var zk: String = "Tall_%02d" % int(sk)
 				for d in per_room[rid]:
 					var beta: float = d["beta"]
-					var dl := Vector3(rw * cos(beta), sp.y, -rw * sin(beta)) / maxf(s, 0.001)
-					if Vector2(sp.x - dl.x, sp.z - dl.z).length() * s < 2.2:
-						hmask |= 1 << int(sk)
+					if tz.has(zk):
+						var zr: Array = tz[zk]
+						var ox: float = float(zr[0])
+						var oy: float = float(zr[1])
+						var rk: float = float(zr[2]) if zr.size() > 2 else 0.0
+						var ss: float = ox * cos(beta) + oy * sin(beta)
+						var tt: float = -ox * sin(beta) + oy * cos(beta)
+						if absf(tt) <= half_w + rk and ss >= rw_m - depth - rk and ss <= rw_m + rk:
+							hmask |= 1 << int(sk)
+					else:
+						var dl := Vector3(rw * cos(beta), sp.y, -rw * sin(beta)) / maxf(s, 0.001)
+						if Vector2(sp.x - dl.x, sp.z - dl.z).length() * s < 2.2:
+							hmask |= 1 << int(sk)
 			hb_masks[rid] = hmask
 			var nh := 0
 			for sk in hb.get("seg_pos", {}):

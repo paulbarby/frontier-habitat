@@ -5,6 +5,11 @@ Owner: ART-HAB. Took over the v2 room pipeline of ART-A and the exterior scripts
 `interior_*.py`, `ext_*.py`, `ext_common.py`; `assets/models/` + `assets/thumbs/` except `astronaut_*`;
 `assets/textures/props/`; `art/interiors/**`.
 
+## 2026-10-04 V5_DESIGN 19.4 door clear zone (doors opening onto props)
+- Zone 1.90 m wide, wall line to 2.36 m inside, 0.24-2.40 m high, every free angle. Builder check `interior_doorclear.zone_check` (report v3.door_zone); geometry hits at a free angle block that angle (door_blocked stays true to the models).
+- Decor / fill / park trees / coolers reaching the zone band -> own Tall parts (Plan.decor_tall); security lockers Tall; algae S/M rows shortened; oxygen S no console; airlocks keep the lane rule. Tall hide rule (zone grown by radius) in v3.decals.tall_zone -> room_meta; RENDER asked to switch from the 2.2 m rule.
+- RESULT 160 files 0 flags, 0 props in any clear zone; door_blocked 81 files changed (free 56,467 -> 47,165 deg), all slot minimums kept; import done; check 359 scripts 0 failed; nav bake 160 grids / 162 occluder grids; far files rebuilt; pck 186.82 MB. Renders art/interiors/doorzone/. SIM and RENDER told.
+
 ## 2026-10-04 critic r42 PE-01 (far rooms half as bright)
 - Cause: far Base floors baked into Palette lost the game's interior shader fill (Floor/FloorDark are INTERIOR_ONLY); far materials named Palette.001. Fix in rooms_far.py: far floors keep material "Floor" (white, colour in COLOR_0), exact material names. Verified with tools/arthab_farcheck.gd: far floors now on the interior shader path.
 - RESULT 159 far files rebuilt; draw calls roof off 795, roof on 831 (near 3,649 / 4,009); import done; check 347 scripts 0 failed; nav bake 160 grids; pck 186.22 MB. RENDER asked to re-measure luminance.

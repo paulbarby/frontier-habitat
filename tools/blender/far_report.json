@@ -253,8 +253,8 @@
   },
   {
    "id": "algae_bioreactor_m",
-   "src_tris": 18248,
-   "far_tris": 9423,
+   "src_tris": 17788,
+   "far_tris": 8943,
    "draws": 15,
    "groups": {
     "Base": {
@@ -294,7 +294,7 @@
      ]
     },
     "Interior": {
-     "tris": 2256,
+     "tris": 1776,
      "mats": [
       "Glow",
       "Palette"
@@ -308,12 +308,12 @@
      ]
     }
    },
-   "file_size": 529868
+   "file_size": 515472
   },
   {
    "id": "algae_bioreactor_s",
-   "src_tris": 13863,
-   "far_tris": 7305,
+   "src_tris": 13007,
+   "far_tris": 6649,
    "draws": 15,
    "groups": {
     "Base": {
@@ -353,7 +353,7 @@
      ]
     },
     "Interior": {
-     "tris": 1652,
+     "tris": 996,
      "mats": [
       "Glow",
       "Palette"
@@ -367,7 +367,7 @@
      ]
     }
    },
-   "file_size": 440660
+   "file_size": 415092
   },
   {
    "id": "algae_bioreactor_xl",
@@ -1711,8 +1711,8 @@
     "Interior": {
      "tris": 1538,
      "mats": [
-      "Palette",
-      "Window"
+      "Ember",
+      "Palette"
      ]
     },
     "Roof": {
@@ -1769,8 +1769,8 @@
     "Interior": {
      "tris": 932,
      "mats": [
-      "Palette",
-      "Window"
+      "Ember",
+      "Palette"
      ]
     },
     "Roof": {
@@ -1781,7 +1781,7 @@
      ]
     }
    },
-   "file_size": 495440
+   "file_size": 495444
   },
   {
    "id": "ceramics_kiln_xl",
@@ -2478,8 +2478,8 @@
     "Interior": {
      "tris": 1162,
      "mats": [
-      "Glow",
-      "Palette"
+      "Palette",
+      "Plasma"
      ]
     },
     "Roof": {
@@ -2490,7 +2490,7 @@
      ]
     }
    },
-   "file_size": 509284
+   "file_size": 508992
   },
   {
    "id": "electronics_fab_xl",
@@ -2908,7 +2908,7 @@
   {
    "id": "fungus_farm_s",
    "src_tris": 15537,
-   "far_tris": 7492,
+   "far_tris": 7494,
    "draws": 15,
    "groups": {
     "Base": {
@@ -2934,7 +2934,7 @@
      ]
     },
     "Interior": {
-     "tris": 814,
+     "tris": 816,
      "mats": [
       "L4Band",
       "Palette"
@@ -2962,7 +2962,7 @@
      ]
     }
    },
-   "file_size": 456940
+   "file_size": 457148
   },
   {
    "id": "fungus_farm_xl",
@@ -3141,7 +3141,7 @@
      ]
     }
    },
-   "file_size": 556960
+   "file_size": 557024
   },
   {
    "id": "glassworks_s",
@@ -3261,7 +3261,7 @@
      ]
     }
    },
-   "file_size": 934028
+   "file_size": 934092
   },
   {
    "id": "greenhouse_l",
@@ -3869,7 +3869,7 @@
      ]
     }
    },
-   "file_size": 488372
+   "file_size": 488308
   },
   {
    "id": "junction",
@@ -4200,7 +4200,7 @@
      ]
     }
    },
-   "file_size": 843456
+   "file_size": 843712
   },
   {
    "id": "lounge_m",
@@ -4260,7 +4260,7 @@
      ]
     }
    },
-   "file_size": 646884
+   "file_size": 646820
   },
   {
    "id": "lounge_s",
@@ -4320,7 +4320,7 @@
      ]
     }
    },
-   "file_size": 501748
+   "file_size": 501876
   },
   {
    "id": "lounge_xl",
@@ -4380,7 +4380,7 @@
      ]
     }
    },
-   "file_size": 1067764
+   "file_size": 1068020
   },
   {
    "id": "magnet_works_l",
@@ -4675,7 +4675,7 @@
      ]
     }
    },
-   "file_size": 595628
+   "file_size": 595820
   },
   {
    "id": "medical_m",
@@ -4734,7 +4734,7 @@
      ]
     }
    },
-   "file_size": 470876
+   "file_size": 471068
   },
   {
    "id": "medical_s",
@@ -4793,7 +4793,7 @@
      ]
     }
    },
-   "file_size": 388444
+   "file_size": 388376
   },
   {
    "id": "medical_xl",
@@ -5388,7 +5388,7 @@
   {
    "id": "oxygen_plant_m",
    "src_tris": 15913,
-   "far_tris": 7595,
+   "far_tris": 7601,
    "draws": 16,
    "groups": {
     "Base": {
@@ -5415,7 +5415,7 @@
      ]
     },
     "Interior": {
-     "tris": 1054,
+     "tris": 1060,
      "mats": [
       "Palette",
       "Screen"
@@ -5443,12 +5443,12 @@
      ]
     }
    },
-   "file_size": 450584
+   "file_size": 451000
   },
   {
    "id": "oxygen_plant_s",
-   "src_tris": 12049,
-   "far_tris": 6144,
+   "src_tris": 11843,
+   "far_tris": 6078,
    "draws": 16,
    "groups": {
     "Base": {
@@ -5474,7 +5474,7 @@
      ]
     },
     "Interior": {
-     "tris": 448,
+     "tris": 382,
      "mats": [
       "Palette",
       "Screen"
@@ -5503,7 +5503,7 @@
      ]
     }
    },
-   "file_size": 385248
+   "file_size": 379572
   },
   {
    "id": "oxygen_plant_xl",
@@ -5777,7 +5777,7 @@
      ]
     }
    },
-   "file_size": 593044
+   "file_size": 592980
   },
   {
    "id": "parts_works_s",
@@ -6306,7 +6306,7 @@
      ]
     }
    },
-   "file_size": 508808
+   "file_size": 508744
   },
   {
    "id": "refinery_xl",
@@ -6425,7 +6425,7 @@
      ]
     }
    },
-   "file_size": 816576
+   "file_size": 816640
   },
   {
    "id": "research_assembler_m",
@@ -6605,7 +6605,7 @@
      ]
     }
    },
-   "file_size": 1170248
+   "file_size": 1170184
   },
   {
    "id": "research_lab_l",
@@ -6728,7 +6728,7 @@
   {
    "id": "research_lab_s",
    "src_tris": 18882,
-   "far_tris": 8631,
+   "far_tris": 8633,
    "draws": 15,
    "groups": {
     "Base": {
@@ -6754,7 +6754,7 @@
      ]
     },
     "Interior": {
-     "tris": 1258,
+     "tris": 1260,
      "mats": [
       "Palette",
       "Screen"
@@ -6782,7 +6782,7 @@
      ]
     }
    },
-   "file_size": 567992
+   "file_size": 568196
   },
   {
    "id": "research_lab_xl",
@@ -7058,7 +7058,7 @@
      ]
     }
    },
-   "file_size": 926600
+   "file_size": 926536
   },
   {
    "id": "retail_m",
@@ -7182,7 +7182,7 @@
      ]
     }
    },
-   "file_size": 487232
+   "file_size": 487040
   },
   {
    "id": "steel_mill_l",
@@ -7653,7 +7653,7 @@
      ]
     }
    },
-   "file_size": 1345260
+   "file_size": 1345452
   },
   {
    "id": "superconductor_lab_l",
@@ -8006,7 +8006,7 @@
      ]
     }
    },
-   "file_size": 605708
+   "file_size": 605644
   },
   {
    "id": "titanium_smelter_s",

@@ -45,12 +45,13 @@ const PER_NAME := 3
 ## Outdoor sounds play through their own buses (a copy of Ambience and of SFX, each with a low-pass
 ## filter). While the listener is inside a room, a corridor or the dome (the follow view of a person who
 ## is inside, or a close camera over one), those buses go down to INDOOR_DB with the filter at
-## INDOOR_LP_HZ (a faint hull rumble), and the room tone ("hum") comes up; both fade over about FADE_S.
+## INDOOR_LP_HZ (a faint hull creak at most; V5 section 19.9: -40 dB, measured with tools/audio_probe.mjs: -24 dB gave an atmosphere 22 dB under the outdoor
+## level, -40 dB gives 38 dB under it), and the room tone ("hum") carries the sound; both fade over about FADE_S.
 const OUTDOOR_LOOPS := ["wind", "night"]
 const OUTDOOR_WORLD := ["storm_loop"]
 const OUTDOOR_BUS := {"Ambience": "OutdoorAmbience", "SFX": "OutdoorSFX"}
-const INDOOR_DB := -24.0
-const INDOOR_LP_HZ := 400.0
+const INDOOR_DB := -40.0
+const INDOOR_LP_HZ := 250.0
 const ROOM_TONE_DB := 6.0     # the hum, indoors, louder by this
 const FADE_S := 0.5
 const CLOSE_M := 32.0          # a camera closer than this to its focus listens at the focus
@@ -135,7 +136,7 @@ func _load_manifest() -> void:
 						st.set("loop", true)
 					_loops[name] = rec
 				"music":
-					music.add_track(String(name), st, db)
+					music.add_track(String(name), st, db, e)
 				"world":
 					var lp: bool = bool(e.get("loop", false))
 					if lp and "loop" in st:

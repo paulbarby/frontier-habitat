@@ -114,7 +114,9 @@ func long_campaign(t) -> void:
 	t.eq(causes, {}, "no death at all in the campaign")
 	t.check(sim.goals.chapter() >= 3, "chapter 4 (the Meridian) is open (chapter %d)" % (sim.goals.chapter() + 1))
 	t.check(goal_day.has("ship_survey"), "the wreck was surveyed")
-	t.check(hull_day > 0.0 and hull_day <= 27.0, "the hull was patched by about day 25 (day %.1f)" % hull_day)
+	# 2026-10-04: 31 (was 27). The fix of the corridor bug (V5 19.1) completes the reference colony's Corridor 16 (airlock 2 to
+	# storehouse 11), which was never built before; the campaign is chaotic and the hull day moved from 23.7 to 29.9.
+	t.check(hull_day > 0.0 and hull_day <= 31.0, "the hull was patched by about day 25-30 (day %.1f)" % hull_day)
 	t.eq(H.refused_commands(sim), [], "every reference command was accepted")
 	var parts: Array = []
 	for i in range(1, 6):

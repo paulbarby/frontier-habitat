@@ -373,7 +373,7 @@ func _drive(r: Dictionary, dt: float) -> void:
 		r["steer_a"] = lerpf(float(r["steer_a"]), 0.0, 1.0 - exp(-dt * 2.0))
 	_place(r, v * dt)
 	for d in r["dust"]:
-		(d as CPUParticles3D).emitting = v > 1.0
+		(d as CPUParticles3D).emitting = v > 1.0 and not view.airless()
 	# Tailgate / ramp closed while moving; the medium rover's ramp is down when parked with crew.
 	var ramp_want: float = 1.0 if v > 0.05 or String(r["mode"]) == "drive" else (0.0 if String(r["kind"]) == "rover_medium" else 1.0)
 	r["s_ramp"] = move_toward(float(r["s_ramp"]), ramp_want, dt / 2.5)
@@ -502,7 +502,7 @@ func _hop(r: Dictionary, dt: float) -> void:
 		var gdp: CPUParticles3D = r["gdust"]
 		var pp: Vector2 = r["pos"]
 		gdp.global_position = Vector3(pp.x, view.h(pp.x, pp.y) + 0.2, pp.y)
-		gdp.emitting = near_ground
+		gdp.emitting = near_ground and not view.airless()
 	_hop_ground(r, thrust)
 
 ## Satellite: a straight orbit track over the map at 420 m, 30 m/s, wings to the sun.
@@ -559,7 +559,7 @@ func _launch(r: Dictionary, dt: float) -> void:
 	if r.get("gdust") != null:
 		var gdp: CPUParticles3D = r["gdust"]
 		gdp.global_position = (r["node"] as Node3D).global_position + Vector3(0, 0.3, 0)
-		gdp.emitting = thrust > 0.2 and up < 60.0
+		gdp.emitting = thrust > 0.2 and up < 60.0 and not view.airless()
 
 ## Hopper near the ground (critic round 22): a warm landing glow on the ground under the thrusters
 ## and a lit dust ring blown out from it, readable from 150 m. Strength by thrust and height.
@@ -828,7 +828,7 @@ func _sim_drive(r: Dictionary, delta: float) -> void:
 	r["mode"] = String(row.get("state", "parked"))
 	_place(r, moved)
 	for dd in r["dust"]:
-		(dd as CPUParticles3D).emitting = float(r["speed"]) > 1.0 and not test_off.has("dust")
+		(dd as CPUParticles3D).emitting = float(r["speed"]) > 1.0 and not test_off.has("dust") and not view.airless()
 	var parked: bool = String(row.get("state", "")) != "driving"
 	r["s_ramp"] = move_toward(float(r["s_ramp"]), 0.0 if parked and String(r["kind"]) == "rover_medium" else 1.0, delta / 2.5)
 	for nm in r["hinges"]:

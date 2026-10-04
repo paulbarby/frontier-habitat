@@ -21,6 +21,9 @@ func build() -> void:
 		["Save and load", "save", "Save to a slot, load a slot, export or import a save file.", func(): hud.open_screen("saveload"), ""],
 		["Settings", "settings", "Graphics, interface scale, camera, sound, keys.", func(): hud.open_screen("settings"), ""],
 		["How to play", "info", "The rules on one page, and every key.", func(): hud.open_screen("help"), ""],
+		["Watch", "eye", "A hands-off tour of the colony: the camera follows people and goes to what happens. Any key or click ends it. Key F2.", func():
+			host.close(self)
+			hud.watch.start(), ""],
 		["Plan the reference outpost", "build", "Demo: places the documented reference layout as plans. The colonists build it under the normal rules.", func():
 			host.close(self)
 			hud.main.run_demo(), ""],

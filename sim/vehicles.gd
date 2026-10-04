@@ -945,3 +945,218 @@ func list() -> Array:
 			"depot": int(v.get("depot", -1)), "bay": int(v.get("bay", -1)), "route": (v["route"] as Dictionary).duplicate(),
 			"explore": (v.get("explore", {}) as Dictionary).duplicate(true)})
 	return out
+
+# ---------------------------------------------------------------- V5 19.3: what to do next, and why it waits
+## The steps of a first trip, in order: depot, vehicle, crew, destination, go.
+const STEPS := [
+	["depot", "Build a Rover Depot (Structures > Logistics)."],
+	["vehicle", "Order a rover at the depot (Build vehicle). Carriers bring the parts and a technician assembles it."],
+	["crew", "Send a colonist to the vehicle (Board): the driver rides inside."],
+	["destination", "Pick a destination on the map (Drive to...), or an area (Explore...)."],
+	["go", "Press Go. The vehicle drives and the crew ride along."],
+]
+
+## Where the player is in the steps for the whole colony: {step (id of the first step not done, "done" when all are),
+## steps [{id, text, done}], text}. The first-use hint is this text: show it while a depot or a vehicle exists and the
+## step is not "done".
+func guide() -> Dictionary:
+	var has_depot: bool = not depots().is_empty()
+	var has_vehicle: bool = count() > 0
+	var crewed := false
+	var moving := false
+	for vid in ids():
+		var v: Dictionary = get_v(vid)
+		if not (v["crew"] as Array).is_empty():
+			crewed = true
+		if v["state"] == "driving" or v.has("explore") or not (v["route"] as Dictionary).is_empty():
+			moving = true
+	var done := {"depot": has_depot, "vehicle": has_vehicle, "crew": crewed, "destination": moving, "go": moving}
+	var steps: Array = []
+	var cur := "done"
+	var found := false
+	for s in STEPS:
+		var d: bool = bool(done[s[0]])
+		if not d and not found:
+			cur = String(s[0])
+			found = true
+		steps.append({"id": String(s[0]), "text": String(s[1]), "done": d})
+	var text := "A vehicle is on its way."
+	for s2 in steps:
+		if s2["id"] == cur and not bool(s2["done"]):
+			text = String(s2["text"])
+	return {"step": cur, "steps": steps, "text": text}
+
+func _pct(x: float, cap: float) -> int:
+	return int(round(100.0 * x / maxf(1.0, cap)))
+
+## One vehicle: {id, headline (what it does now), why_waiting ("" when it is not waiting), next_step {id, text},
+## buttons [{id, label, enabled, why}], low_charge (bool), guide}. Buttons: drive, explore, return, stop, board, alight.
+func status(vid: int) -> Dictionary:
+	var v: Dictionary = get_v(vid)
+	if v.is_empty():
+		return {}
+	var k: Dictionary = kind_of(v)
+	var crew_n: int = (v["crew"] as Array).size()
+	var hopper: bool = String(k.get("move", "")) == "hopper"
+	var cap: float = float(k.get("fuel_cap", 0.0)) if hopper else charge_cap(v)
+	var level: float = float(v["fuel"]) if hopper else float(v["charge"])
+	var low: bool = _pct(level, cap) < 15
+	var d: Dictionary = depot_at(v)
+	var headline := ""
+	var why := ""
+	var nxt := {"id": "", "text": ""}
+	var state: String = String(v["state"])
+	var block: String = String(v.get("block", ""))
+	if state == "broken":
+		headline = "Broken: it cannot move."
+		why = "It is repaired at a depot with spare parts, when it is parked there."
+		nxt = {"id": "repair", "text": "Make sure a depot has spare parts in its store. One part repairs 25 wear."}
+	elif state == "driving":
+		if v.has("explore"):
+			headline = "Exploring: point %d of %d." % [int((v["explore"] as Dictionary).get("i", 0)), ((v["explore"] as Dictionary).get("pts", []) as Array).size()]
+		elif not (v["route"] as Dictionary).is_empty():
+			headline = "On a route between two bases (%s)." % String((v["route"] as Dictionary).get("leg", ""))
+		elif bool(v.get("returning", false)):
+			headline = "Returning to the depot."
+		elif v["dest"] != null:
+			headline = "Driving to the chosen place (%d m)." % int((v["pos"] as Vector2).distance_to(v["dest"]))
+		else:
+			headline = "Driving."
+		nxt = {"id": "wait", "text": "Wait, or press Stop. Return sends it to the depot."}
+	else:
+		if crew_n == 0:
+			headline = "Parked at the depot." if not d.is_empty() else "Parked."
+			why = "Nobody is aboard: a vehicle moves only with a driver."
+			nxt = {"id": "board", "text": "Choose a colonist and press Board: they walk to the vehicle and get in."}
+		elif block != "":
+			headline = "Stopped."
+			why = _sentence(_why_text(block)) + "."
+			match block:
+				"no_charge":
+					nxt = {"id": "return", "text": "Press Return, or wait at a powered depot: it charges there."}
+				"no_fuel":
+					nxt = {"id": "fuel", "text": "Put rocket fuel into the depot store: the hopper refuels there."}
+				"no_route":
+					nxt = {"id": "destination", "text": "Pick another place. A structure or a tube is in the way."}
+				"no_driver":
+					nxt = {"id": "board", "text": "Send a colonist to the vehicle (Board)."}
+				_:
+					nxt = {"id": "destination", "text": "Pick a destination (Drive to...)."}
+		elif low:
+			headline = "Parked with a low %s (%d%%)." % ["fuel" if hopper else "battery", _pct(level, cap)]
+			if not d.is_empty():
+				if hopper:
+					why = "It waits for rocket fuel in the depot store."
+					nxt = {"id": "fuel", "text": "Put rocket fuel into the depot store."}
+				elif not bool(d["powered"]):
+					why = "The depot has no power, so the battery does not charge."
+					nxt = {"id": "power", "text": "Join the depot to a power source."}
+				else:
+					why = "It is charging at the depot."
+					nxt = {"id": "wait", "text": "Wait until the battery is above 15%, then pick a destination."}
+			else:
+				why = "The charge is low and no depot is near."
+				nxt = {"id": "return", "text": "Press Return: it drives to a depot and charges there."}
+		elif not (v["route"] as Dictionary).is_empty():
+			headline = "On a route: waiting at a base (%s)." % String((v["route"] as Dictionary).get("leg", ""))
+			why = "It loads or unloads, then drives on."
+			nxt = {"id": "wait", "text": "Wait. Press Stop to end the route."}
+		else:
+			headline = "Ready: %d aboard, %s %d%%." % [crew_n, "fuel" if hopper else "battery", _pct(level, cap)]
+			nxt = {"id": "destination", "text": "Pick a destination on the map and press Drive to..., or Explore... for an area. Return sends it back to the depot."}
+	var parked: bool = state == "parked"
+	var can_move: bool = parked and crew_n > 0 and not low
+	var why_move := ""
+	if not can_move:
+		if state == "broken":
+			why_move = "Broken."
+		elif crew_n == 0:
+			why_move = "Nobody is aboard."
+		elif low:
+			why_move = "The %s is low." % ("fuel" if hopper else "battery")
+		else:
+			why_move = "It is driving."
+	var btn: Array = []
+	btn.append({"id": "drive", "label": "Drive to...", "enabled": can_move, "why": why_move})
+	btn.append({"id": "explore", "label": "Explore...", "enabled": can_move, "why": why_move})
+	btn.append({"id": "return", "label": "Return", "enabled": crew_n > 0 and state != "broken", "why": "" if (crew_n > 0 and state != "broken") else ("Broken." if state == "broken" else "Nobody is aboard.")})
+	btn.append({"id": "stop", "label": "Stop", "enabled": state == "driving" or not (v["route"] as Dictionary).is_empty() or v.has("explore"), "why": "It is not moving."})
+	btn.append({"id": "board", "label": "Board", "enabled": crew_n < seats(v) and state != "driving", "why": "" if (crew_n < seats(v) and state != "driving") else ("No free seat." if crew_n >= seats(v) else "It is driving.")})
+	btn.append({"id": "alight", "label": "Get out", "enabled": crew_n > 0, "why": "Nobody is aboard."})
+	return {"id": int(v["id"]), "headline": headline, "why_waiting": why, "next_step": nxt, "buttons": btn, "low_charge": low, "guide": guide()}
+
+## A depot (or a launch pad): {id, headline, why_waiting, next_step {id, text}, bays, bays_free, order {kind, state, percent, missing {item: n}}}.
+func depot_status(bid: int) -> Dictionary:
+	var d: Dictionary = sim.state["buildings"].get(bid, {})
+	if d.is_empty() or (not is_builder(d) and not is_depot(d)):
+		return {}
+	var out := {"id": bid, "headline": "", "why_waiting": "", "next_step": {"id": "", "text": ""}, "bays": 0, "bays_free": 0, "order": {}}
+	if d["state"] != "active":
+		out["headline"] = "Not finished."
+		out["why_waiting"] = "The depot is still a plan or being built."
+		out["next_step"] = {"id": "wait", "text": "Wait until it is complete."}
+		return out
+	var bay_list: Array = bays(d)
+	var used := 0
+	for vid in ids():
+		var v: Dictionary = get_v(vid)
+		if int(v.get("depot", -1)) == bid and int(v.get("bay", -1)) != -1:
+			used += 1
+	out["bays"] = bay_list.size()
+	out["bays_free"] = maxi(0, bay_list.size() - used)
+	var o: Dictionary = d.get("vorder", {})
+	if is_pad(d):
+		out["headline"] = "Launch pad."
+		if o.is_empty():
+			out["next_step"] = {"id": "order", "text": "Order a survey satellite."}
+		return out
+	if not bool(d["powered"]):
+		out["why_waiting"] = "The depot has no power: vehicles do not charge here."
+	if o.is_empty():
+		out["headline"] = "Empty depot: %d of %d bays free." % [out["bays_free"], out["bays"]]
+		if count() == 0:
+			out["next_step"] = {"id": "order", "text": "Order a rover (Build vehicle). The parts come from the stores."}
+		elif out["bays_free"] == 0:
+			out["next_step"] = {"id": "bays", "text": "All bays are taken. Drive a vehicle away or build another depot."}
+		else:
+			out["next_step"] = {"id": "order", "text": "Order another vehicle, or send a colonist to Board a parked one."}
+		return out
+	var k: Dictionary = kinds().get(String(o["kind"]), cfg().get("satellite", {}))
+	var kname: String = String(k.get("name", o["kind"]))
+	if o["state"] == "deliver":
+		var miss := {}
+		for r in o["cost"]:
+			var need: int = int(o["cost"][r]) - sim.inv.count(int(o["inv"]), r)
+			if need > 0:
+				miss[r] = need
+		out["order"] = {"kind": String(o["kind"]), "state": "deliver", "percent": 0, "missing": miss}
+		var parts: Array = []
+		for r in miss:
+			parts.append("%d %s" % [int(miss[r]), sim.items.name_of(String(r)).to_lower()])
+		out["headline"] = "%s: the parts are on their way." % kname
+		var blk: String = String(o.get("block", ""))
+		if blk.begins_with("materials:"):
+			var item: String = blk.substr(10)
+			out["why_waiting"] = "No %s is free in the stores." % sim.items.name_of(item).to_lower()
+			out["next_step"] = {"id": "make", "text": "Make %s (see the alert for the chain)." % sim.items.name_of(item).to_lower()}
+		else:
+			out["why_waiting"] = "Carriers bring: %s." % ", ".join(parts)
+			out["next_step"] = {"id": "wait", "text": "Wait for the carriers."}
+	else:
+		var pc: int = int(round(100.0 * float(o["progress"]) / maxf(1.0, float(o["work_total"]))))
+		out["order"] = {"kind": String(o["kind"]), "state": "work", "percent": pc, "missing": {}}
+		out["headline"] = "%s: assembly %d%%." % [kname, pc]
+		if String(o.get("block", "")) == "suit_range":
+			out["why_waiting"] = "The depot is too far from an airlock for a suit."
+			out["next_step"] = {"id": "airlock", "text": "Build an airlock nearer to the depot."}
+		else:
+			out["why_waiting"] = "A technician assembles it outside the depot." if _technician_present() else "No technician is alive to assemble it."
+			out["next_step"] = {"id": "wait", "text": "Wait for the technician."}
+	return out
+
+func _technician_present() -> bool:
+	for aid in sim.state["agents"]:
+		var a: Dictionary = sim.state["agents"][aid]
+		if a["state"] == "alive" and a["role"] == "technician" and a["kind"] != "visitor":
+			return true
+	return false

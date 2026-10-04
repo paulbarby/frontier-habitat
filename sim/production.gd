@@ -373,12 +373,20 @@ func set_dish(b: Dictionary, dish: String, on: bool) -> Dictionary:
 func crop_info(crop: String) -> Dictionary:
 	return sim.content["crops"].get(crop, sim.content["crops"]["potato"])
 
+## True when the crop can be planted in this kind of building: its own building, or one of the others it names
+## in "also" (herbs grow in the dark racks of a fungus farm too).
+func crop_fits(crop: String, def_id: String) -> bool:
+	var c: Dictionary = sim.content["crops"].get(crop, {})
+	if c.is_empty():
+		return false
+	return String(c["building"]) == def_id or (c.get("also", []) as Array).has(def_id)
+
 ## Crops that grow in this building and are unlocked, sorted.
 func crops_for(def_id: String) -> Array:
 	var out: Array = []
 	for id in sim.content["crops"]:
 		var c: Dictionary = sim.content["crops"][id]
-		if String(c["building"]) == def_id and int(c.get("cycle_seconds", 0)) > 0 and sim.research.crop_unlocked(id):
+		if crop_fits(String(id), def_id) and int(c.get("cycle_seconds", 0)) > 0 and sim.research.crop_unlocked(id):
 			out.append(id)
 	out.sort()
 	return out
@@ -388,7 +396,7 @@ func crops_for(def_id: String) -> Array:
 func set_crop(b: Dictionary, crop: String, tray: int) -> Dictionary:
 	if (b.get("trays", []) as Array).is_empty() and b["state"] == "active":
 		return {"ok": false, "code": "invalid"}
-	if not sim.content["crops"].has(crop) or String(sim.content["crops"][crop]["building"]) != b["def"]:
+	if not sim.content["crops"].has(crop) or not crop_fits(crop, String(b["def"])):
 		return {"ok": false, "code": "invalid"}
 	if not sim.research.crop_unlocked(crop):
 		return {"ok": false, "code": "locked_research"}
@@ -401,6 +409,71 @@ func set_crop(b: Dictionary, crop: String, tray: int) -> Dictionary:
 		trays[tray]["crop"] = crop
 	else:
 		return {"ok": false, "code": "invalid"}
+	return {"ok": true, "code": "ok"}
+
+## V5 19.2: what a farm grows, bed by bed. {beds, default, allowed [crop ids you may plant now], crops [{crop, name, color, beds (beds planned for it),
+## growing, ready, share (beds / all beds), cycle_seconds, yield (units a harvest), yield_per_day (units a day of one bed, at the
+## farm's growth speed), planned_per_day (this crop's beds together)}], beds_list [{tray, crop (planned), grow (growing now), state, fraction}]}.
+func farm_menu(b: Dictionary) -> Dictionary:
+	var trays: Array = b.get("trays", [])
+	var out := {"beds": trays.size(), "default": String(b.get("crop", "")), "allowed": crops_for(String(b["def"])), "crops": [], "beds_list": []}
+	if trays.is_empty():
+		return out
+	var per := {}
+	var gm: float = float(b.get("out_rate", 1.0)) * _growth_mult(b)
+	var day: float = float(sim.bal["day_length"])
+	for i in trays.size():
+		var t: Dictionary = trays[i]
+		var plan: String = seed_crop(b, t) if String(t["state"]) == "empty" else String(t.get("grow", ""))
+		var planned: String = String(t.get("crop", ""))
+		out["beds_list"].append({"tray": i, "crop": planned, "grow": String(t.get("grow", "")), "state": String(t["state"]), "fraction": tray_fraction(t)})
+		if plan == "":
+			plan = planned
+		if not per.has(plan):
+			per[plan] = {"beds": 0, "growing": 0, "ready": 0}
+		per[plan]["beds"] += 1
+		if t["state"] == "growing":
+			per[plan]["growing"] += 1
+		elif t["state"] == "ready":
+			per[plan]["ready"] += 1
+	var keys: Array = per.keys()
+	keys.sort()
+	for k in keys:
+		var c: Dictionary = crop_info(String(k))
+		var units := 0
+		for r in harvest_units(String(k)):
+			units += int(harvest_units(String(k))[r])
+		var cyc: float = maxf(1.0, float(c.get("cycle_seconds", 1)))
+		var ypd: float = float(units) / cyc * day * gm
+		out["crops"].append({"crop": String(k), "name": String(c.get("name", k)), "color": String(c.get("color", "")), "beds": int(per[k]["beds"]), "growing": int(per[k]["growing"]), "ready": int(per[k]["ready"]),
+			"share": float(per[k]["beds"]) / float(trays.size()), "cycle_seconds": cyc, "yield": units, "yield_per_day": ypd, "planned_per_day": ypd * float(per[k]["beds"])})
+	return out
+
+## Command "set_crops" {id, beds: {crop: number of beds}}: the beds take the crops in the order of the crop ids (a bed that is
+## growing keeps its crop and counts toward the number; the rest is planted at the next seeding). The numbers must add up to the
+## number of beds.
+func set_crop_shares(b: Dictionary, shares: Dictionary) -> Dictionary:
+	var trays: Array = b.get("trays", [])
+	if trays.is_empty():
+		return {"ok": false, "code": "invalid"}
+	var total := 0
+	var crops: Array = []
+	for k in shares:
+		if not sim.content["crops"].has(String(k)) or not crop_fits(String(k), String(b["def"])):
+			return {"ok": false, "code": "invalid"}
+		if not sim.research.crop_unlocked(String(k)):
+			return {"ok": false, "code": "locked_research"}
+		total += int(shares[k])
+		crops.append(String(k))
+	if total != trays.size():
+		return {"ok": false, "code": "invalid", "text": "The numbers of beds must add up to %d." % trays.size()}
+	crops.sort()
+	var i := 0
+	for k in crops:
+		for n in int(shares[k]):
+			trays[i]["crop"] = k
+			i += 1
+	b["crop"] = String(crops[0])
 	return {"ok": true, "code": "ok"}
 
 ## Once per second: growing trays take their water (one second's worth) and grow, or
@@ -483,11 +556,15 @@ func tray_fraction(tray: Dictionary) -> float:
 func seed_crop(b: Dictionary, tray: Dictionary) -> String:
 	var plan: String = String(tray.get("crop", b.get("crop", "")))
 	var c: Dictionary = sim.content["crops"].get(plan, {})
-	if not c.is_empty() and String(c["building"]) == b["def"] and sim.research.crop_unlocked(plan):
+	if not c.is_empty() and crop_fits(plan, String(b["def"])) and sim.research.crop_unlocked(plan):
 		return plan
 	var list: Array = crops_for(b["def"])
 	if list.has(String(b.get("crop", ""))):
 		return String(b["crop"])
+	# The farm's own crops come before the others it may take (a fungus farm seeds mushrooms, not herbs).
+	for cid in list:
+		if String(sim.content["crops"][cid]["building"]) == String(b["def"]):
+			return String(cid)
 	return String(list[0]) if not list.is_empty() else "potato"
 
 func finish_seed(b: Dictionary, tray_i: int) -> void:

@@ -679,6 +679,11 @@ def shot_room(file, R, out, night=False, links=(), cutaway=True, figs=False, siz
                           upper_band=None if cutaway else meta.get("upper_band"))
         hide_match(objs, {"Wall_%02d" % k for k in plan["hide"]} | {"Upper_%02d" % k for k in plan["hide"]})
         hide_prefix(objs, ["Upper_%02d_" % k for k in plan["hide"]])      # the band / sign objects of those segments
+        # V5_DESIGN 19.4: the Tall parts the game hides when this door's clear zone takes them (v3.decals.tall_zone)
+        import interior_doorclear as _DC
+        for tn, tz in (meta.get("tall_zone") or {}).items():
+            if int(round(th)) % 360 in _DC.zone_hide_angles(tz, R - 0.32):
+                hide_match(objs, {tn})
         hide_prefix(objs, ["Decal_%02d_" % k for k in decal_hide(R, th)])
         extra.append(Vector(((R + 2.6) * cos(radians(th)), (R + 2.6) * sin(radians(th)), 0.0)))
     # 3.1 decals follow their source object: Decal_<seg>_L3 shows with L3, Decal_<seg>_Roof with the roof

@@ -11,6 +11,6 @@ const src = fs.readFileSync(path.join(ROOT, 'templates/web_shell.src.html'), 'ut
 const bg = fs.readFileSync(path.join(ROOT, 'templates/loader_bg.jpg')).toString('base64');
 const proj = fs.readFileSync(path.join(ROOT, 'project.godot'), 'utf8');
 const version = (proj.match(/config\/version="([^"]+)"/) || [, '?'])[1];
-const out = src.replace('@BG@', 'data:image/jpeg;base64,' + bg).replace('@VERSION@', version);
+const out = src.replace('@BG@', 'data:image/jpeg;base64,' + bg).replace('@VERSION@', version).replaceAll('@PACK_URL@', process.env.FH_PACK_URL || '');
 fs.writeFileSync(path.join(ROOT, 'templates/web_shell.html'), out);
 console.log(`templates/web_shell.html written (${(out.length / 1024).toFixed(0)} KB, version ${version})`);

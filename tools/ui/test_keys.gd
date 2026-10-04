@@ -157,6 +157,8 @@ func _source_checks() -> void:
 	for dir in ["res://ui", "res://presentation"]:
 		_scan(dir, other)
 	check("no other script under ui/ or presentation/ handles a key", other.is_empty(), str(other))
+	# Space is pause everywhere (coordinator, 2026-10-04): the camera rig must not also use it (the follow view returns behind with R only).
+	check("Space is only pause: camera_rig.gd does not use KEY_SPACE", not _strip(_read("res://presentation/camera_rig.gd")).contains("KEY_SPACE"), "presentation/camera_rig.gd line with KEY_R or KEY_SPACE: use KEY_R only (UI-to-RENDER.md)")
 	print("INFO list: %d rows, %d keys, %d mouse buttons" % [KeyList.ROWS.size(), keys_doc.size(), mouse_doc.size()])
 	# Every row has the fields the screens read, and its texts.
 	var bad: Array = []
@@ -178,7 +180,7 @@ func _scan(dir: String, found: Array) -> void:
 		if not f.ends_with(".gd"):
 			continue
 		var path: String = "%s/%s" % [dir, f]
-		if path == "res://presentation/main.gd" or path == "res://presentation/camera_rig.gd" or path == "res://ui/keys.gd":
+		if path == "res://presentation/main.gd" or path == "res://presentation/camera_rig.gd" or path == "res://ui/keys.gd" or path == "res://presentation/fx_watch.gd":   # fx_watch ends Watch mode on any input (documented with F2 in ui/keys.gd)
 			continue
 		var s: String = _strip(_read(path))
 		if s.contains("InputEventKey") or s.contains("physical_keycode") or not _tokens(s, "KEY_").is_empty() or s.contains("is_physical_key_pressed"):

@@ -174,3 +174,28 @@ RENDER's follow view is in `presentation/world_view.gd` and `camera_rig.gd`:
 - Status badges (fx_icons) are hidden in the follow view now. The POI screen labels (`poi_marks`) still draw in the
   follow view when the probe starts it without your HUD path (seen in my shots): please hide them while
   `view.in_follow()` if that is not done yet.
+
+## 2026-10-04 (evening) - follow view controls for the on-screen hint (V5 §19.7) (RENDER)
+
+The over-the-shoulder camera now has three controls. Please show them as the hint while the follow view is on:
+- **Move the mouse** - look around (orbit round the person; move the mouse up past the lowest tilt to look up at the
+  sky). No button is needed. The mouse over a HUD panel does not move the camera.
+- **Mouse wheel** - zoom (0.5 m face close-up to 8 m).
+- **R** - back behind the shoulder (Space stays pause).
+Also kept: right or middle drag still orbits / free-looks; Q / E swaps the shoulder. The camera no longer snaps back
+by itself, and its automatic framing swing waits 3 s after the player's last mouse look.
+API if you want a button: `world_view.rig().shoulder_return()`; the hover look can be switched with
+`rig().hover_look = false` (e.g. while a menu is open).
+
+## 2026-10-04 (evening) - Watch mode API (V5 §19.6) (RENDER)
+
+- `world_view.watch_start()` -> bool, `watch_stop()`, `watch_state()` -> `{active, id, who, what, caption, since}`.
+- It follows a person ~28 s, then another interesting one (at a party, talking, dancing, moving; not the last 6);
+  on a party, fight, drama, wedding, arrest, accident (breach, toxic leak, impact), protest or ship landing (from the
+  sim log and the running parties) it jumps there; several people -> a wider shot. Each change is a 0.35 s fade
+  through black (RENDER's own overlay, layer 90).
+- Any key, mouse button or a mouse move over 24 px ends it (fx_watch handles that itself; please also call
+  `watch_stop()` if your own UI takes focus).
+- Caption: RENDER draws "Who - what" at the bottom centre. If you want your own caption, set
+  `world_view.watch.show_caption = false` and read `watch_state().caption`.
+- Debug: `watch on|off|status`. Your part: the key, the menu entry and the title-screen start on showcase_v5.

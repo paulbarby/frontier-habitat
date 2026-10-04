@@ -1345,3 +1345,35 @@ numbers above); stool / bunk / lounger / water clips; frost on structures at nig
 - **Paused (2026-10-04), half-done 1:** overview >= 45 fps not proven: draw calls 1,317 -> 1,029 and npc/view CPU -30 % / -20 % (headless A/B), but every web run today was on a machine at 56-93 % load (overview 28.1 fps at 71 %); needs the orchestrator's quiet-machine run.
 - **Half-done 2:** framing: door-axis heading + 0 shoulder offset at doorways (headless in1 wall-centre 516 -> 244); web sheets 4/30 and 0/30 without the person, so 0/30 not proven. in4: 2.63 mm headless (followed person's 2x-4x speed changes 4.5 m/s^2 on screen); the web in4 run under load (16 fps) is not usable.
 - **Half-done 3:** §18.5 package capsules not started (waits for SIM's API). Gates all PASS on the final code; the doorway gate now draws near models (far LOD off). The Godot processes still running (run_tests.gd, tools/ui/test_v5_people.gd) belong to other agents, not RENDER.
+
+## 2026-10-04 (evening, V5 §19 and §18.5)
+- **§19.7 follow camera:** the mouse looks round with no button (over the 3D view; HUD panels take their own events);
+  moving it up past the lowest tilt turns the aim up to about 80 deg (the sky); wheel zooms; R or Space returns behind
+  the shoulder; no auto-snap (`auto_return` off); the automatic framing swing waits 3 s after a mouse look. Drag, Q/E
+  kept. Smoothing, wall push and arm unchanged. UI told (RENDER-to-UI.md).
+- **§19.9:** follow camera inside a habitat: no weather particles at all (field, storm sheets, dust, devils, columns),
+  and the sky, haze, grade and ambient lose the storm (`fx_particles.indoor_hide`, `fx_sky` st x (1 - indoor)).
+- **§19.8 airless:** no dust, smoke or steam of any kind (particles, rover and ship dust); emitters made before a planet
+  switch stop. Checked in the web build: black sky, no haze at the horizon, day and night, follow view looking up.
+- **§19.10 stars:** `presentation/fx_stars.gd`: 72 bright stars at their real positions (Orion, the Plough,
+  Cassiopeia, Cygnus, Scorpius, Crux, Leo, the Pleiades, the brightest singles), the sky turning with the day round a
+  35 deg pole; by night and in the airless day sky; original pattern names in `NAMES` for the UI.
+- **§19.11 ships:** the landing starts at 900 m up and 800 m out (was 150 / 140); a distance-sized light marks the
+  ship in the high part, with a re-entry glow on planets with air (none on airless); a burn light under the ship
+  lights the pad. Headless trace OK; the web shot did not catch the ship in frame (not verified by eye).
+- **§19.6 Watch mode:** `presentation/fx_watch.gd`, API `world_view.watch_start/stop/state`; events from the sim log and
+  running parties; fades; caption; any input ends it. Headless: switches every ~28 s. Events not yet seen live.
+- **§18.5 transport:** `presentation/fx_transport.gd` (hubs, tubes, brackets, junction manifolds, ports, capsules from
+  `capsules_view`). Capsules not seen: SIM's network moved nothing in showcase_v5 after `transport build`.
+- **§19.4:** Tall parts already hidden by doorway; Interior is merged, so ART-HAB moves props (RENDER-to-ART-HAB.md).
+- **§19.4 clear zone (orchestrator decision):** `fx_doors` hides a Tall part when its origin is in the door's clear zone
+  (1.90 m wide, 2.36 m deep) grown by its radius (room_meta `tall_zone` / `door_zone`; the 2.2 m rule only without data).
+  Doorway gate extended: clear-zone props (rays down, 5 x 6 points), the walk into the room (planner path), and every
+  doorway at an angle door_blocked.json now blocks (old saves; there only hideable Tall parts count). Result: 58
+  doorways, beam 0, gap 0, props 0 of 54, walk blocked 0 of 58, blocked-angle doorways 36 found / 36 tested: PASS.
+- **Gates (final code):** check 359/0; weather PASS; npc_check 165/0; doorway PASS (above); path v3 PASS (slide 0),
+  v4 PASS; airlock 0; cut 0 / doors 0; seat PASS; ground PASS (15,466 windows, 0 / 0).
+- **Perf (web, vsync 30 s, machine load 20-44 % during the run, not quiet):** overview 40.9 fps (1,061 draws), roofs off
+  41.1, room follow 46.5, dome follow 42.2 (orchestrator quiet run before: 41.7 / 44.7 / 52.7 / 54.6). Overview 45 not met.
+- **Final (2026-10-04):** Space removed from the follow input (R alone returns behind; Space stays pause). Dome A/B on the same machine, back to back: Playtest 3 build 54.0 / 48.5 fps vs now 52.3 / 46.2 (-2 fps); the extra cost is `camphys` 1.2-1.8 ms a frame (was 0.01) and +180-270 draw calls (people LOD2 outfits, transport parts); not fixed.
+- **Not done:** overview 45 fps (40.9), the ship-arrival web shot, the watch-mode event-switch shot.

@@ -64,8 +64,10 @@ def fill(plan, items, max_items=60, target=2.45):
             break
         fit.sort(key=lambda it: -it[1])
         fn, r = fit[k % min(len(fit), 3)]
+        n0, f0 = len(plan.n.verts), len(plan.n.faces)
         fn(plan, where[0], where[1], k)
-        plan.circle(where[0], where[1], r, tag="fill")
+        tg = plan.decor_tall(n0, f0, where[0], where[1], r)        # V5_DESIGN 19.4: hideable at a door
+        plan.circle(where[0], where[1], r, tag="fill" if tg == "decor" else tg)
         k += 1
     return IR.empty_patch(plan, people=people)
 
@@ -550,8 +552,10 @@ def park(rm):
         for (r_, kind) in ((rj + 0.5 * (R - rj) + 0.2, "tree"), (0.5 * rj + (0.7 if pond else 0.4), "bed")):
             x, y = polar(r_, a)
             if kind == "tree":
+                n0, f0 = len(plan.n.verts), len(plan.n.faces)
                 tree(plan, x, y, 3.0 + 0.5 * s, seed=tseed, crown=0.9 + 0.1 * s)
-                plan.circle(x, y, 0.35, tag="tree")
+                tg = plan.decor_tall(n0, f0, x, y, 0.35)
+                plan.circle(x, y, 0.35, tag="tree" if tg == "decor" else tg)
             else:
                 flower_bed(plan, x, y, r=0.55, seed=tseed)
                 plan.circle(x, y, 0.55, tag="bed")
@@ -898,9 +902,12 @@ def security_office(rm):
     lk = 0
     for a in (240.0, 262.0, 284.0)[:fu["stands"]]:
         x, y = polar(R - 0.05, a)
-        with at(plan, x, y, a + 180.0):
-            FU.wi_lockers(n, w=0.9, d=0.40, h=1.25, n=3)
-        plan.rect(*off(x, y, a + 180.0, 0.2), 0.21, 0.46, a + 180.0, tag="lockers")
+        # V5_DESIGN 19.4: the lockers are a Tall part (hidden by the game when a door's clear zone takes it, like the
+        # airlock suit racks), so they do not take the M office's door slots
+        lp = plan.tall(*off(x, y, a + 180.0, 0.2))
+        with lp.at(T(x, y, 0.0), RZ(a + 180.0)):
+            FU.wi_lockers(lp, w=0.9, d=0.40, h=1.25, n=3)
+        plan.rect(*off(x, y, a + 180.0, 0.2), 0.21, 0.46, a + 180.0, tag="lockers_t")
         anchor(plan, "Stand", *off(x, y, a + 180.0, 0.4 + 0.45), a, alias="Locker_%d" % lk)
         lk += 1
     # the holding cell at +X -Y, a bench outside it

@@ -1,5 +1,15 @@
 # ART-HAB → SIM
 
+## 2026-10-04 (evening) — door_blocked.json changed (V5_DESIGN 19.4 door clear zone)
+
+- `content/door_blocked.json` rebuilt for the clear-zone rule (1.9 m wide, 1.8 m deep from the door housing): 81 files
+  changed, free door angles 56,467 -> 47,165 deg in total. Every room keeps its slot minimum (S 4, M 6, L 7, XL 8);
+  airlocks are unchanged. Please refuse new links at the blocked angles as before.
+- Decor in the zone band is now hidden by RENDER at a door (no anchors on decor). The security office lockers
+  (`Anchor_Stand_*` with alias `Locker_*`) are hideable too, like the airlock suit racks: if a door hides them, please
+  do not send a colonist to that stand (RENDER has the rule data in room_meta: `tall_zone`).
+- Furniture counts and anchor names are unchanged.
+
 ## 2026-10-04 — package transport (V5_DESIGN 18.5): what the models give you
 
 - **Transport hub:** every `storehouse_*` and `cold_storage_*` file (all sizes) has `Anchor_Hub` (pad centre, z 0,

@@ -178,6 +178,10 @@ body {
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;
+// Release on GitHub Pages: index.pck is over GitHub's 100 MB file limit, so it is served from Cloudflare R2.
+// make_shell.mjs fills the constant below from env FH_PACK_URL; empty = index.pck next to this page.
+const FH_PACK_URL = '';
+if (FH_PACK_URL && FH_PACK_URL.charAt(0) !== '@') GODOT_CONFIG.mainPack = FH_PACK_URL;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 const engine = new Engine(GODOT_CONFIG);
 

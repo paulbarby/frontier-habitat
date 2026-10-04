@@ -117,27 +117,74 @@
   "music": {
     "mus_title": {
       "file": "mus_title.mp3",
-      "db": -4
+      "db": -4,
+      "name": "Landfall",
+      "mood": "calm",
+      "tags": [],
+      "states": [
+        "title"
+      ],
+      "default_on": true
     },
     "mus_day_1": {
       "file": "mus_day_1.mp3",
-      "db": -5
+      "db": -5,
+      "name": "Long Shift",
+      "mood": "steady",
+      "tags": [
+        "rhythmic"
+      ],
+      "states": [
+        "day"
+      ],
+      "default_on": false
     },
     "mus_day_2": {
       "file": "mus_day_2.mp3",
-      "db": -5
+      "db": -5,
+      "name": "Red Horizon",
+      "mood": "calm",
+      "tags": [],
+      "states": [
+        "day"
+      ],
+      "default_on": true
     },
     "mus_night": {
       "file": "mus_night.mp3",
-      "db": -4
+      "db": -4,
+      "name": "Dust and Stars",
+      "mood": "calm",
+      "tags": [],
+      "states": [
+        "night"
+      ],
+      "default_on": true
     },
     "mus_tension": {
       "file": "mus_tension.mp3",
-      "db": -8
+      "db": -8,
+      "name": "Hull Alarm",
+      "mood": "tense",
+      "tags": [
+        "tense",
+        "rhythmic"
+      ],
+      "states": [
+        "tension"
+      ],
+      "default_on": true
     },
     "mus_arrival": {
       "file": "mus_arrival.mp3",
-      "db": -6
+      "db": -6,
+      "name": "Arrival",
+      "mood": "event",
+      "tags": [],
+      "states": [
+        "cue"
+      ],
+      "default_on": true
     }
   },
   "world": {
@@ -241,5 +288,6 @@
       "max_at_once": 1,
       "repeat_s": 1.5
     }
-  }
+  },
+  "_music_note": "Tags measured with ffmpeg (tools: scratch ui_music_an.mjs): rhythm = strength of a regular pulse in the onset envelope (0..1), loudness RMS. mus_tension: rhythm 0.97, -13 dB; mus_day_1: rhythm 0.65 at 57 bpm, steady energy; the others 0.35-0.38. mood: calm | steady | tense | event. tags: rhythmic, tense. default_on false: off until the player turns it on (calm ambient music by day)."
 }

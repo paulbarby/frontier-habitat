@@ -208,8 +208,13 @@ def algae_bioreactor(rm):
     FU.pump(n, -0.30, 0.0, 0.0)
     FU.tank(n, 0.40, 0.0, 0.9, 0.30, mat="Metal", band="Accent", legs=False, seg=10)
     plan.rect(0.0, 0.0, 0.8, 0.45, 0.0, tag="skid")
+    # V5_DESIGN 19.4: in S and M the rows stay out of the door clear-zone band (1.8 m from the housing face), so
+    # the room keeps its door slots (S 4, M 6); L and XL have room for both
+    r_zone = rm.R - 0.32 - IK.ZONE_FACE - IK.ZONE_DEPTH - 0.15
     for yy in rows:
         half = chord_x(plan, abs(yy) + tr + 0.3, 0.15)
+        if s <= 1:
+            half = min(half, sqrt(max(0.0, r_zone ** 2 - (abs(yy) + 0.42) ** 2)) - 0.32)
         nt = int((2 * half - 0.4) // pitch_t)
         if nt < 2:
             continue

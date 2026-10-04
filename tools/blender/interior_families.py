@@ -258,8 +258,9 @@ def fill_decor(plan, kinds, max_n=None, walk=0.85, seed=0, step=0.7, align=None,
         if any(hypot(x - ax, y - ay) < need + avoid_r for (ax, ay) in avoid):
             continue
         yaw = align if align is not None else degrees(atan2(y, x)) + 90.0
+        n0, f0 = len(plan.n.verts), len(plan.n.faces)
         r = DECOR[kind](plan, x, y, yaw, k)
-        plan.circle(x, y, r, tag="decor")
+        plan.circle(x, y, r, tag=plan.decor_tall(n0, f0, x, y, r))
         placed += 1
         k += 1
     return placed

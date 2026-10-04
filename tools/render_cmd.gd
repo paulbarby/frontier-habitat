@@ -24,11 +24,23 @@ func _process(_d: float) -> bool:
 	if f == 2:
 		main._import_bytes(FileAccess.get_file_as_bytes(save))
 		return false
+	if f > 2:
+		# fixed 1/60 s frames (the sim and the view advance as in the game at 60 fps)
+		main.set_process(false)
+		main._process(1.0 / 60.0)
 	for st in steps:
 		if int(st[0]) == f:
 			var c: String = st[1]
 			var r
-			if c.begins_with("v "):
+			if c == "debugon":
+				main.boot["debug"] = "1"
+				main.sim.state["options"]["debug"] = true
+				r = "debug on"
+			elif c.begins_with("ship "):
+				main.sim.state["options"]["debug"] = true
+				main.submit("traffic_now", {"kind": c.get_slice(" ", 1), "in": float(c.get_slice(" ", 2))})
+				r = "submitted"
+			elif c.begins_with("v "):
 				r = main.view.debug_cmd(c.substr(2))
 			else:
 				r = main._on_cmd(c)

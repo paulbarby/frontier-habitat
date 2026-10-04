@@ -1,5 +1,5 @@
 // audio_probe.mjs — measures what a web build actually sends to the speakers.
-// usage: node tools/audio_probe.mjs [build dir=build/web] [--query "seed=1001"] [--music 0|1] [--min-db -45]
+// usage: node tools/audio_probe.mjs [build dir=build/web] [--query "seed=1001"] [--music 0|1] [--cmds "cmd;cmd"] [--min-db -45]
 //
 // Copies the build to a temp folder, adds an AnalyserNode tap on every connection to the Web Audio
 // destination, runs the game in invisible headless Chrome with the GPU (tools/shoot.mjs), and
@@ -18,6 +18,7 @@ const dir = path.resolve(ROOT, args[0] && !args[0].startsWith('--') ? args[0] : 
 const query = opt('query', 'seed=1001');
 const minDb = Number(opt('min-db', '-45'));
 const music = opt('music', '');
+const cmds = opt('cmds', '');   // commands run before the measurement, split by ";" (e.g. "volume sfx 0;agent 5;shoulder")
 
 const PROBE = `
 (function(){
@@ -56,6 +57,7 @@ fs.writeFileSync(path.join(tmp, 'index.html'), html);
 
 const steps = [{ wait: 3 }];
 if (music !== '') steps.push({ eval: `window.__fh && window.__fh.cmd ? String(window.__fh.cmd('volume music ${music}')) : 'no cmd'` });
+for (const c of cmds.split(';').map(s => s.trim()).filter(Boolean)) steps.push({ cmd: c });
 steps.push({ cmd: 'speed 1' }, { wait: 3 },
   { eval: `(async () => ({fps: window.__fh && window.__fh.fps, level: await window.__level(5000)}))()` });
 const stepsFile = path.join(tmp, 'steps.json');

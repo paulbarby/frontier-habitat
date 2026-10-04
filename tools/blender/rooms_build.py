@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import math
+from math import hypot
 import time
 import traceback
 
@@ -343,6 +344,53 @@ def cut_top_check(rm, objs, eps=0.006):
     return out
 
 
+def merge_spans(spans):
+    """Union of angle spans [(a0, a1)] (degrees, a0 may be negative across 0)."""
+    marks = set()
+    for a0, a1 in spans:
+        k = a0
+        while k <= a1 + 1e-6:
+            marks.add(int(round(k * 2)) % 720)
+            k += 0.5
+    if not marks:
+        return []
+    if len(marks) == 720:
+        return [(0.0, 360.0)]
+    start = next(k for k in range(720) if k in marks and (k - 1) % 720 not in marks)
+    out, cur = [], None
+    for i in range(720):
+        k = (start + i) % 720
+        if k in marks:
+            v = (start + i) / 2.0
+            if cur is None:
+                cur = [v, v]
+            else:
+                cur[1] = v
+        elif cur is not None:
+            out.append(cur)
+            cur = None
+    if cur is not None:
+        out.append(cur)
+    res = []
+    for a0, a1 in out:
+        if a0 >= 360.0:
+            a0, a1 = a0 - 360.0, a1 - 360.0
+        if a1 > 360.0 and a0 > 180.0:
+            a0, a1 = a0 - 360.0, a1 - 360.0
+        res.append((round(a0, 1), round(a1, 1)))
+    return sorted(res)
+
+
+def tall_zone(rm):
+    """Tall_* parts: (origin x, origin y, footprint radius) in model space."""
+    out = {}
+    for q in getattr(rm, "extra_parts", []):
+        if q.name.startswith("Tall_") and q.faces:
+            r = max([hypot(v.x - q.origin.x, v.y - q.origin.y) for v in q.verts] or [0.0])   # verts: model space
+            out[q.name] = (q.origin.x, q.origin.y, r)
+    return out
+
+
 def build_one(job):
     t0 = time.time()
     bdef = job["bdef"]
@@ -530,6 +578,23 @@ def build_one(job):
                                    shell=getattr(rm, "shell", None), name_sign_deg=getattr(rm, "name_sign_deg", None))
         if getattr(rm, "plan", None) is not None and rm.tid != "junction":
             spans, worst = IK.door_blocked(rm.plan)
+            lane_hits_ = dict(getattr(rm.plan, "lane_hits", {}))
+            lane_ang_ = dict(getattr(rm.plan, "lane_hit_angles", {}))
+            # V5_DESIGN 19.4 (Paul 2026-10-04): a door slot also needs its clear zone (1.9 m wide, 1.8 m deep from
+            # the housing face) free of every footprint except the parts the game hides at a door (TALL_TAGS)
+            if job["tid"] == "airlock":
+                # the airlock (2.8-4.0 m) is its chamber: a 1.8 m zone from any door reaches the chamber walls, which a
+                # walker goes round (RENDER 2026-10-03); it keeps the 0.9 m lane rule to its suit room
+                zsp = []
+            else:
+                zsp, _zw = IK.door_blocked(rm.plan, half=IK.ZONE_HW + 0.08, depth=IK.ZONE_DEPTH + 0.08)   # + a margin:
+            # things stand a few cm outside their footprints (counter tops, pots)
+            for t_, v_ in getattr(rm.plan, "lane_hits", {}).items():
+                lane_hits_[t_] = max(lane_hits_.get(t_, 0.0), v_)
+            for t_, v_ in getattr(rm.plan, "lane_hit_angles", {}).items():
+                lane_ang_.setdefault(t_, set()).update(v_)
+            rm.plan.lane_hits, rm.plan.lane_hit_angles = lane_hits_, lane_ang_
+            spans = merge_spans(spans + zsp)
             row["v3"]["door_blocked"] = spans
             row["v3"]["door_clear_min"] = worst
             row["v3"]["door_lane_hits"] = getattr(rm.plan, "lane_hits", {})
@@ -564,6 +629,38 @@ def build_one(job):
             row["v3"]["door_headroom"] = dict(z_clear=round(_DC.Z_CLEAR, 3), hits=dci,
                                               eave=getattr(rm, "eave", None), lift=round(getattr(rm, "lift", 0.0), 3))
             flags += dcf
+            # V5_DESIGN 19.4: 0 props in the clear zone of a door at any free angle.  A Tall_* part counts as hidden
+            # when the game's zone rule takes it (origin inside the zone grown by the part's radius: v3.tall_zone)
+            tz = tall_zone(rm)
+            row["v3"]["tall_zone"] = {k: [round(v[0], 3), round(v[1], 3), round(v[2], 3)] for k, v in tz.items()}
+            if isinstance(row["v3"].get("decals"), dict):
+                # render_nav_bake copies v3.decals into presentation/navgrid/room_meta.res: the game gets it as is
+                row["v3"]["decals"]["tall_zone"] = row["v3"]["tall_zone"]
+                row["v3"]["decals"]["door_zone"] = [IK.ZONE_HW, IK.ZONE_FACE, IK.ZONE_DEPTH]
+            if job["tid"] not in ("junction", "airlock"):
+                hide = {k: _DC.zone_hide_angles(v, rm.R - 0.32) for k, v in tz.items()}
+                zf, zi, zb = _DC.zone_check(objs, rm.R - 0.32, row["v3"].get("door_blocked") or [], tall_hide=hide)
+                geo_blocked = sorted(zb)
+                if zb and "door_blocked" in row["v3"]:
+                    # what stands in a zone without a footprint (or past it) blocks that angle too: door_blocked.json
+                    # stays true to the geometry
+                    sp2 = merge_spans(list(row["v3"]["door_blocked"]) + [(b_ - 0.5, b_ + 0.5) for b_ in zb])
+                    row["v3"]["door_blocked"] = sp2
+                    row["v3"]["door_free_deg"] = round(360.0 - sum(b1 - b0 for b0, b1 in sp2), 1)
+                    sl2, st2 = door_slots(sp2, rm.R - 0.32)
+                    row["v3"]["door_slots"] = sl2
+                    need2 = DOOR_SLOTS_MIN.get(job["key"], DOOR_SLOTS_MIN["m"])
+                    ml2 = job["bdef"].get("sizes", {}).get("max_links")
+                    if ml2:
+                        need2 = int(ml2[job["size"]])
+                    flags[:] = [f_ for f_ in flags if not f_.startswith("door slots:")]
+                    if job["tid"] not in ("airlock", "junction") and sl2 < need2:
+                        flags.append("door slots: %d < %d for size %s after the clear zone (props at %d angles: %s)"
+                                     % (sl2, need2, job["key"] or "m", len(zb), sorted(zi)))
+                    zf, zi, zb = _DC.zone_check(objs, rm.R - 0.32, sp2, tall_hide=hide)
+                row["v3"]["door_zone"] = dict(hits=zi, angles=len(zb), geometry_blocked=len(geo_blocked),
+                                              zone=[round(_DC.ZONE_HW * 2, 2), _DC.ZONE_FACE, _DC.ZONE_DEPTH])
+                flags += zf
     print("  %-24s %5d/%-5d tris  r=%.2f/%.2f  %4.1fs  %s%s" % (job["file"], tris, budget, radius, job["R"],
                                                               row["seconds"], "; ".join(flags) or "ok",
                                                               "  [v3]" if rm.v3 else ""))

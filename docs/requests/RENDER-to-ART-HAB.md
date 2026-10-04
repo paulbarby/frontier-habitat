@@ -274,3 +274,15 @@ folded into one. The other rooms in the frame match.
 - For information (no change asked): the ground gate found the floor of `residence_tube_l_far.glb` 15 mm lower than
   the near model's, with 35 mm patches round a work bench (rays down). People stand on the near floor height, so at
   80 m they hover 15 mm. Invisible at that distance; the gate now measures feet against the near models only.
+
+## 2026-10-04 (night) - transport models placed; far floors; §19.4 clear zones (RENDER)
+
+- **Transport (§18.5):** placed as your table says (`presentation/fx_transport.gd`): the tube with the corridor's own
+  transform, a bracket with every corridor rib, the manifold at a junction plus a short tube from each tube mouth
+  (0.31 m to Rw), the hub at `Anchor_Hub` (size suffix from the room size), a port with each doorway transform of a
+  hub room. Tube, brackets and manifold follow the corridor's / junction's `Roof` in the cutaway; the hub follows the
+  room's `Interior`; `PortTop` follows the door's `FrameTop`. Checked in the web build (`transport build`): the tube
+  runs along the ridge with the brackets' green lamps; hidden with the roof in the overview cutaway. No change asked.
+- **§19.4 (props in a door's clear zone):** on my side only the `Tall_*` parts can be hidden per doorway (done since
+  round 3, by wall segment). A room's `Interior` is one merged mesh, so the game cannot hide a single prop in it:
+  props in the clear zone (door width + 0.4 m, 1.8 m into the room, every allowed angle) must move in the model.

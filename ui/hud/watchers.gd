@@ -11,6 +11,7 @@ extends RefCounted
 ## - Nothing pops up and nothing enters the device profile on the title screen: the colony
 ##   behind the title is a showcase, not the player's.
 
+const Settings = preload("res://ui/settings.gd")
 const Profile = preload("res://ui/profile.gd")
 const Sfx = preload("res://ui/sfx.gd")
 const Kit = preload("res://ui/kit.gd")
@@ -127,6 +128,13 @@ func check() -> void:
 	var st: Dictionary = hud.main.sim.state
 	var in_grace: bool = int(st["tick"]) < _grace_tick
 	var quiet: bool = in_grace or _title()
+	# V5 section 19.3: the first time a rover depot or a vehicle exists on this device, one hint with the steps.
+	if not _title() and not bool(Settings.get_value("hint_vehicles")) and not in_grace and hud.v4.live("vehicles"):
+		var gd: Dictionary = hud.v4.vehicle_guide()
+		# SIM's guide says where the first trip stands: the hint comes when a depot or a vehicle exists (step after "depot") and the trip is not done.
+		if String(gd.get("step", "depot")) not in ["depot", "done"]:
+			Settings.set_value("hint_vehicles", true)
+			hud.panels.post("system", "Vehicles. Next: %s The Vehicles window (nav rail) lists the steps." % String(gd.get("text", "")), "notice", "rover", true)
 	# Awards
 	var aw: Dictionary = d.awards_state()
 	for id in aw:
